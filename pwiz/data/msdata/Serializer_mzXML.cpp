@@ -161,7 +161,7 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
         // insane: location="file://path/to" name="source.raw"
         case MS_Waters_raw_format:
             if (nameExtension == ".dat" && locationExtension == ".raw")
-                return bfs::basename(bfs::path(sf.location).leaf());
+                return bfs::basename(bfs::path(sf.location).filename());
             else if (nameExtension == ".raw")
                 return bfs::basename(sf.name);
             return "";
@@ -169,34 +169,34 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
         // location="file://path/to/source.d" name="Analysis.yep"
         case MS_Bruker_Agilent_YEP_format:
             if (nameExtension == ".yep" && locationExtension == ".d")
-                return bfs::basename(bfs::path(sf.location).leaf());
+                return bfs::basename(bfs::path(sf.location).filename());
             return "";
             
         // location="file://path/to/source.d" name="Analysis.baf"
         case MS_Bruker_BAF_format:
             if (nameExtension == ".baf" && locationExtension == ".d")
-                return bfs::basename(bfs::path(sf.location).leaf());
+                return bfs::basename(bfs::path(sf.location).filename());
             return "";
             
         // location="file://path/to/source.d" name="Analysis.tdf"
         case MS_Bruker_TDF_format:
             if (nameExtension == ".tdf" && locationExtension == ".d")
-                return bfs::basename(bfs::path(sf.location).leaf());
+                return bfs::basename(bfs::path(sf.location).filename());
             return "";
             
         // location="file://path/to/source.d" name="Analysis.tsf"
         case MS_Bruker_TSF_format:
             if (nameExtension == ".tsf" && locationExtension == ".d")
-                return bfs::basename(bfs::path(sf.location).leaf());
+                return bfs::basename(bfs::path(sf.location).filename());
             return "";
 
         // location="file://path/to/source.d/AcqData" name="msprofile.bin"
         case MS_Agilent_MassHunter_format:
-            if (bfs::path(sf.location).leaf() == "AcqData" &&
+            if (bfs::path(sf.location).filename() == "AcqData" &&
                 (bal::iends_with(sf.name, "msprofile.bin") ||
                  bal::iends_with(sf.name, "mspeak.bin") ||
                  bal::iends_with(sf.name, "msscan.bin")))
-                return bfs::basename(bfs::path(sf.location).parent_path().leaf());
+                return bfs::basename(bfs::path(sf.location).parent_path().filename());
             return "";
 
         // location="file://path/to" name="source.mzXML"
@@ -270,7 +270,7 @@ void write_parentFile(XMLWriter& xmlWriter, const MSData& msd)
 
         string fileName, fileType, fileSha1;
 
-        fileName = sf.location + "/" + sf.name;
+        fileName = (bfs::path(sf.location) / sf.name).string();
         switch (nativeIdFormat)
         {
             // nativeID formats from processed data file types
@@ -440,12 +440,14 @@ struct PrecursorInfo
     string charge;
     string collisionEnergy;
     string activation;
+    string ccs;
     double windowWideness;
+    
 
     bool empty() const 
     {
         return scanNum.empty() && mz.empty() && intensity.empty() && 
-               charge.empty() && collisionEnergy.empty() && activation.empty() && windowWideness == 0;
+               charge.empty() && collisionEnergy.empty() && activation.empty() && ccs.empty() && windowWideness == 0;
     }
 };
 
@@ -471,6 +473,7 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             info.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).value;
             info.intensity = it->selectedIons[0].cvParam(MS_peak_intensity).value;
             info.charge = it->selectedIons[0].cvParam(MS_charge_state).value;
+            info.ccs = it->selectedIons[0].cvParam(MS_collisional_cross_sectional_area).value;
         }
 
         if (!it->activation.empty())
@@ -514,7 +517,6 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
     return result;
 }
 
-
 void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precursorInfo)
 {
     xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
@@ -535,6 +537,8 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
             attributes.add("activationMethod", it->activation);
         if (it->windowWideness != 0)
             attributes.add("windowWideness", it->windowWideness);
+        if (!it->ccs.empty())
+            attributes.add("CCS", it->ccs);
 
         xmlWriter.startElement("precursorMz", attributes);
         xmlWriter.characters(it->mz, false);
@@ -642,6 +646,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     string retentionTime = getRetentionTime(scan);
     string lowMz = spectrum.cvParam(MS_lowest_observed_m_z).value;
     string highMz = spectrum.cvParam(MS_highest_observed_m_z).value;
+    string startMz = !scan.scanWindows.empty() ? scan.scanWindows[0].cvParamValueOrDefault(MS_scan_window_lower_limit, string()) : "";
+    string endMz = !scan.scanWindows.empty() ? scan.scanWindows[0].cvParamValueOrDefault(MS_scan_window_upper_limit, string()) : "";
     string basePeakMz = spectrum.cvParam(MS_base_peak_m_z).value;
     string basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).value;
     string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
@@ -685,6 +691,10 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
         attributes.add("lowMz", lowMz);
     if (!highMz.empty())
         attributes.add("highMz", highMz);
+    if (!startMz.empty())
+        attributes.add("startMz", startMz);
+    if (!endMz.empty())
+        attributes.add("endMz", endMz);
     if (!basePeakMz.empty())
         attributes.add("basePeakMz", basePeakMz);
     if (!basePeakIntensity.empty())
@@ -1136,9 +1146,9 @@ void fillInMetadata(MSData& msd)
         // path/to/source/1A/1/1SRef/fid, path/to/source/1B/1/1SRef/fid, lcp: path/to/source/1, run id: source (not "1")
         // path/to/source/1A/1/1SRef/fid, path/to/source/2A/1/1SRef/fid, lcp: path/to/source/, run id: source
         if (*lcp.rbegin() == '/')
-            msd.id = msd.run.id = BFS_STRING(bfs::path(lcp).leaf());
+            msd.id = msd.run.id = BFS_STRING(bfs::path(lcp).filename());
         else
-            msd.id = msd.run.id = BFS_STRING(bfs::path(lcp).parent_path().leaf());
+            msd.id = msd.run.id = BFS_STRING(bfs::path(lcp).parent_path().filename());
     }
 }
 

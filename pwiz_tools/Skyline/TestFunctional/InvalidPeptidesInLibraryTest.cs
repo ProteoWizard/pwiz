@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,7 +18,6 @@
  */
 
 using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
@@ -75,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editListDlg, editListDlg.OkDialog);
             RunUI(()=>
             {
-                peptideSettingsUI.PickedLibraries = peptideSettingsUI.PickedLibraries.Append(libName).ToArray();
+                peptideSettingsUI.PickedLibraries = new []{libName};
             });
             var messageDlg = ShowDialog<AlertDlg>(peptideSettingsUI.OkDialog);
             var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, libName, expectedInvalidCount,

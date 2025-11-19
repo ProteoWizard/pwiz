@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.Unifi;
 
 namespace pwiz.SkylineTestUtil
 {

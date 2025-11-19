@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,7 +28,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using TestRunnerLib;
 
 // Once-per-application setup information to perform logging with log4net.
@@ -72,7 +71,7 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// When false, tests should not access resources on the internet other than
-        /// downloading the test ZIP files. e.g. UniProt, Prosit, Chorus, etc.
+        /// downloading the test ZIP files. e.g. UniProt, Koina, Chorus, etc.
         /// </summary>
         protected bool AllowInternetAccess
         {
@@ -85,7 +84,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RunPerfTests
         {
-            get { return TestContext.GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
+            get { return TestContext.GetBoolValue("RunPerfTests", true); }  // Return true if unspecified
             set { TestContext.Properties["RunPerfTests"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
@@ -107,19 +106,23 @@ namespace pwiz.SkylineTestUtil
             set { TestContext.Properties["RecordAuditLogs"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
-        /// <summary>
-        /// This controls whether we run the various tests that are small molecule versions of our standard tests,
-        /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
-        /// molecule representations before proceeding.
-        /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
-        /// list below (partial matches suffice, so name carefully!)
-        /// </summary>
-        private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
+            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", true); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value.ToString(CultureInfo.InvariantCulture); }
         }
+
+        protected int TestPass
+        {
+            get { return (int) TestContext.GetLongValue("TestPass", 0); }
+            set { TestContext.Properties["TestPass"] = value.ToString(); }
+        }
+
+        /// <summary>
+        /// Controls whether or not certain machines run the often flaky TestToolService
+        /// </summary>
+        protected bool SkipTestToolService => Environment.MachineName.Equals(@"BRENDANX-UW7");
+        public const string MSG_SKIPPING_TEST_TOOL_SERVICE = @"AbstractUnitTest.SkipTestToolService is set for this machine, no test was actually performed";
 
         /// <summary>
         /// Perf tests (long running, huge-data-downloading) should be declared
@@ -239,6 +242,33 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public void UnzipTestFiles()
+        {
+            // Unzip test files.
+            if (TestFilesZipPaths != null)
+            {
+                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                {
+                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                        TestFilesPersistent, IsExtractHere(i));
+                }
+                CleanupPersistentDir(); // Clean up before recording metrics
+                foreach (var dir in TestFilesDirs)
+                {
+                    dir.RecordMetrics();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Override this function with any specific file deletions that need to
+        /// happen to avoid leaving files in the PersistentFilesDir.
+        /// </summary>
+        protected virtual void CleanupPersistentDir()
+        {
+        }
+
         private static string DownloadZipFile(string targetFolder, string zipPath, string zipFilePath)
         {
             if (!Directory.Exists(targetFolder))
@@ -256,13 +286,13 @@ namespace pwiz.SkylineTestUtil
 
                 try
                 {
-                    WebClient webClient = new WebClient();
+                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
                     using (var fs = new FileSaver(zipFilePath))
                     {
                         var timer = new Stopwatch();
                         Console.Write(@"# Downloading test data file {0}...", zipURL);
                         timer.Start();
-                        webClient.DownloadFile(zipURL.Split('\\')[0],
+                        httpClient.DownloadFile(zipURL.Split('\\')[0],
                             fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
                         Console.Write(@" done. Download time {0} sec ", timer.ElapsedMilliseconds / 1000);
                         fs.Commit();
@@ -271,6 +301,8 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception x)
                 {
+                    // HttpClientWithProgress already provides detailed error messages (network issues, DNS, proxy, etc.)
+                    // Just preserve the message and add context about which URL failed
                     message += string.Format("Could not download {0}: {1} ", zipURL, x.Message);
                     if (!retry)
                     {
@@ -434,6 +466,8 @@ namespace pwiz.SkylineTestUtil
             // mask the original error.
             if (TestFilesDirs != null && TestContext.CurrentTestOutcome == UnitTestOutcome.Passed)
             {
+                CleanupPersistentDir();
+
                 foreach (var dir in TestFilesDirs.Where(d => d != null))
                 {
                     dir.Cleanup();
@@ -475,7 +509,7 @@ namespace pwiz.SkylineTestUtil
         /// <returns>true iff ReSharper code analysis is detected</returns>
         public static bool SkipForResharperAnalysis()
         {
-            if (Helpers.RunningResharperAnalysis)
+            if (TryHelper.RunningResharperAnalysis)
             {
                 Console.Write(MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST); // Log this via console for TestRunner
                 return true;

@@ -38,17 +38,17 @@ namespace pwiz.Skyline.ToolsUI
             this.listBoxRemoteAccounts = new System.Windows.Forms.ListBox();
             this.lblRemoteAccounts = new System.Windows.Forms.Label();
             this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
-            this.tabProsit = new System.Windows.Forms.TabPage();
-            this.tbxPrositServer = new System.Windows.Forms.TextBox();
+            this.tabKoina = new System.Windows.Forms.TabPage();
+            this.tbxKoinaServer = new System.Windows.Forms.TextBox();
             this.ceLabel = new System.Windows.Forms.Label();
             this.ceCombo = new System.Windows.Forms.ComboBox();
-            this.prositServerStatusLabel = new System.Windows.Forms.Label();
+            this.koinaServerStatusLabel = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.iRTModelCombo = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.intensityModelCombo = new System.Windows.Forms.ComboBox();
-            this.prositServerLabel = new System.Windows.Forms.Label();
-            this.prositDescrLabel = new System.Windows.Forms.LinkLabel();
+            this.koinaServerLabel = new System.Windows.Forms.Label();
+            this.koinaDescrLabel = new System.Windows.Forms.LinkLabel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.tabLanguage = new System.Windows.Forms.TabPage();
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.ToolsUI
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabRemote.SuspendLayout();
-            this.tabProsit.SuspendLayout();
+            this.tabKoina.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabLanguage.SuspendLayout();
             this.tabMisc.SuspendLayout();
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPanorama);
             this.tabControl.Controls.Add(this.tabRemote);
-            this.tabControl.Controls.Add(this.tabProsit);
+            this.tabControl.Controls.Add(this.tabKoina);
             this.tabControl.Controls.Add(this.tabLanguage);
             this.tabControl.Controls.Add(this.tabMisc);
             this.tabControl.Controls.Add(this.tabDisplay);
@@ -144,28 +144,28 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditRemoteAccountList.UseVisualStyleBackColor = true;
             this.btnEditRemoteAccountList.Click += new System.EventHandler(this.btnEditRemoteAccountList_Click);
             // 
-            // tabProsit
+            // tabKoina
             // 
-            this.tabProsit.Controls.Add(this.tbxPrositServer);
-            this.tabProsit.Controls.Add(this.ceLabel);
-            this.tabProsit.Controls.Add(this.ceCombo);
-            this.tabProsit.Controls.Add(this.prositServerStatusLabel);
-            this.tabProsit.Controls.Add(this.label3);
-            this.tabProsit.Controls.Add(this.iRTModelCombo);
-            this.tabProsit.Controls.Add(this.label2);
-            this.tabProsit.Controls.Add(this.intensityModelCombo);
-            this.tabProsit.Controls.Add(this.prositServerLabel);
-            this.tabProsit.Controls.Add(this.prositDescrLabel);
-            this.tabProsit.Controls.Add(this.pictureBox1);
-            resources.ApplyResources(this.tabProsit, "tabProsit");
-            this.tabProsit.Name = "tabProsit";
-            this.tabProsit.UseVisualStyleBackColor = true;
+            this.tabKoina.Controls.Add(this.tbxKoinaServer);
+            this.tabKoina.Controls.Add(this.ceLabel);
+            this.tabKoina.Controls.Add(this.ceCombo);
+            this.tabKoina.Controls.Add(this.koinaServerStatusLabel);
+            this.tabKoina.Controls.Add(this.label3);
+            this.tabKoina.Controls.Add(this.iRTModelCombo);
+            this.tabKoina.Controls.Add(this.label2);
+            this.tabKoina.Controls.Add(this.intensityModelCombo);
+            this.tabKoina.Controls.Add(this.koinaServerLabel);
+            this.tabKoina.Controls.Add(this.koinaDescrLabel);
+            this.tabKoina.Controls.Add(this.pictureBox1);
+            resources.ApplyResources(this.tabKoina, "tabKoina");
+            this.tabKoina.Name = "tabKoina";
+            this.tabKoina.UseVisualStyleBackColor = true;
             // 
-            // tbxPrositServer
+            // tbxKoinaServer
             // 
-            resources.ApplyResources(this.tbxPrositServer, "tbxPrositServer");
-            this.tbxPrositServer.Name = "tbxPrositServer";
-            this.tbxPrositServer.ReadOnly = true;
+            resources.ApplyResources(this.tbxKoinaServer, "tbxKoinaServer");
+            this.tbxKoinaServer.Name = "tbxKoinaServer";
+            this.tbxKoinaServer.ReadOnly = true;
             // 
             // ceLabel
             // 
@@ -179,10 +179,10 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.ceCombo, "ceCombo");
             this.ceCombo.Name = "ceCombo";
             // 
-            // prositServerStatusLabel
+            // koinaServerStatusLabel
             // 
-            resources.ApplyResources(this.prositServerStatusLabel, "prositServerStatusLabel");
-            this.prositServerStatusLabel.Name = "prositServerStatusLabel";
+            resources.ApplyResources(this.koinaServerStatusLabel, "koinaServerStatusLabel");
+            this.koinaServerStatusLabel.Name = "koinaServerStatusLabel";
             // 
             // label3
             // 
@@ -210,22 +210,22 @@ namespace pwiz.Skyline.ToolsUI
             this.intensityModelCombo.Name = "intensityModelCombo";
             this.intensityModelCombo.SelectedIndexChanged += new System.EventHandler(this.intensityModelCombo_SelectedIndexChanged);
             // 
-            // prositServerLabel
+            // koinaServerLabel
             // 
-            resources.ApplyResources(this.prositServerLabel, "prositServerLabel");
-            this.prositServerLabel.Name = "prositServerLabel";
+            resources.ApplyResources(this.koinaServerLabel, "koinaServerLabel");
+            this.koinaServerLabel.Name = "koinaServerLabel";
             // 
-            // prositDescrLabel
+            // koinaDescrLabel
             // 
-            resources.ApplyResources(this.prositDescrLabel, "prositDescrLabel");
-            this.prositDescrLabel.Name = "prositDescrLabel";
-            this.prositDescrLabel.TabStop = true;
-            this.prositDescrLabel.UseCompatibleTextRendering = true;
-            this.prositDescrLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.prositDescrLabel_LinkClicked);
+            resources.ApplyResources(this.koinaDescrLabel, "koinaDescrLabel");
+            this.koinaDescrLabel.Name = "koinaDescrLabel";
+            this.koinaDescrLabel.TabStop = true;
+            this.koinaDescrLabel.UseCompatibleTextRendering = true;
+            this.koinaDescrLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.koinaDescrLabel_LinkClicked);
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::pwiz.Skyline.Properties.Resources.prosit_logo_dark_blue;
+            this.pictureBox1.Image = global::pwiz.Skyline.Properties.Resources.koina_logo_fdf731d5;
             resources.ApplyResources(this.pictureBox1, "pictureBox1");
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.TabStop = false;
@@ -358,8 +358,8 @@ namespace pwiz.Skyline.ToolsUI
             this.tabPanorama.PerformLayout();
             this.tabRemote.ResumeLayout(false);
             this.tabRemote.PerformLayout();
-            this.tabProsit.ResumeLayout(false);
-            this.tabProsit.PerformLayout();
+            this.tabKoina.ResumeLayout(false);
+            this.tabKoina.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabLanguage.ResumeLayout(false);
             this.tabMisc.ResumeLayout(false);
@@ -395,18 +395,18 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.ComboBox comboColorScheme;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnResetSettings;
-        private System.Windows.Forms.TabPage tabProsit;
+        private System.Windows.Forms.TabPage tabKoina;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.LinkLabel prositDescrLabel;
+        private System.Windows.Forms.LinkLabel koinaDescrLabel;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox iRTModelCombo;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox intensityModelCombo;
-        private System.Windows.Forms.Label prositServerLabel;
-        private System.Windows.Forms.Label prositServerStatusLabel;
+        private System.Windows.Forms.Label koinaServerLabel;
+        private System.Windows.Forms.Label koinaServerStatusLabel;
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;
-        private System.Windows.Forms.TextBox tbxPrositServer;
+        private System.Windows.Forms.TextBox tbxKoinaServer;
         private System.Windows.Forms.TextBox tbxSettingsFilePath;
         private System.Windows.Forms.Label lblSettingsPath;
     }

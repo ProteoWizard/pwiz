@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -112,10 +112,12 @@ namespace pwiz.Skyline.Model.AuditLog
         private readonly Stream _inner;
         private readonly SHA1CryptoServiceProvider _sha1;
         private readonly BlockHash _blockHash;
+        private readonly bool _keepOpen;
 
-        public HashingStream(Stream inner)
+        public HashingStream(Stream inner, bool keepOpen)
         {
             _inner = inner;
+            _keepOpen = keepOpen;
             _sha1 = new SHA1CryptoServiceProvider();
             _blockHash = new BlockHash(_sha1);
         }
@@ -123,13 +125,13 @@ namespace pwiz.Skyline.Model.AuditLog
         public static Stream CreateWriteStream(string path)
         {
             return new HashingStream(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, 4096,
-                FileOptions.SequentialScan));
+                FileOptions.SequentialScan), false);
         }
 
         public static Stream CreateReadStream(string path)
         {
             return new HashingStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
-                FileOptions.SequentialScan));
+                FileOptions.SequentialScan), false);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -166,19 +168,16 @@ namespace pwiz.Skyline.Model.AuditLog
             return Hash;
         }
 
-        public byte[] DoneBytes()
-        {
-            _blockHash.FinalizeHashBytes();
-            return HashBytes;
-        }
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
 
             if (disposing)
             {
-                _inner.Dispose();
+                if (!_keepOpen)
+                {
+                    _inner.Dispose();
+                }
                 _sha1.Dispose();
             }
         }

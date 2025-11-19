@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,8 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -38,6 +46,41 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             OnKeyDown(keyEventArgs);
             OnKeyUp(keyEventArgs);
+        }
+
+        public void ClickCurrentCell()
+        {
+            OnCellContentClick(new DataGridViewCellEventArgs(CurrentCell.ColumnIndex, CurrentCell.RowIndex));
+        }
+
+        protected override IEnumerable<PropertyDescriptor> GetColumnsToHide(ReportResults reportResults)
+        {
+            var baseColumns = base.GetColumnsToHide(reportResults);
+            if (reportResults is ClusteredReportResults)
+            {
+                return baseColumns;
+            }
+
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(reportResults.ItemProperties);
+            if (replicatePivotColumns == null || !replicatePivotColumns.HasConstantAndVariableColumns())
+            {
+                return baseColumns;
+            }
+            return baseColumns.Concat(replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Where(replicatePivotColumns.IsConstantColumn)));
+        }
+
+        protected override bool ProcessDataGridViewKey(KeyEventArgs e)
+        {
+            try
+            {
+                return base.ProcessDataGridViewKey(e);
+            }
+            catch (Exception exception)
+            {
+                ExceptionUtil.HandleProcessKeyException(this, exception, e.KeyData);
+                return true;
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,6 +19,7 @@
 using System;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -100,7 +101,7 @@ namespace pwiz.Skyline.EditUI
                 var simplePermutation = SimplePermutation;
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.Text = Resources.PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications;
+                    longWaitDlg.Text = EditUIResources.PermuteIsotopeModificationsDlg_OkDialog_Permuting_Isotope_Modifications;
                     longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                     {
                         var isotopePermuter = new IsotopeModificationPermuter(isotopeModification,
@@ -108,7 +109,7 @@ namespace pwiz.Skyline.EditUI
                         newDocument = isotopePermuter.PermuteIsotopeModifications(progressMonitor, newDocument);
                         if (!ReferenceEquals(newDocument, deferSettingsChangeDoc))
                         {
-                            var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, Resources.PermuteIsotopeModificationsDlg_OkDialog_Updating_settings);
+                            var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, EditUIResources.PermuteIsotopeModificationsDlg_OkDialog_Updating_settings);
                             newDocument = newDocument.EndDeferSettingsChanges(originalDocument, settingsChangeMonitor);
                         }
                     });
@@ -120,7 +121,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 if (!ReferenceEquals(newDocument, deferSettingsChangeDoc))
                 {
-                    SkylineWindow.ModifyDocument(Resources.PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications, doc =>
+                    SkylineWindow.ModifyDocument(EditUIResources.PermuteIsotopeModificationsDlg_OkDialog_Permute_isotope_modifications, doc =>
                     {
                         // This will be true because we have acquired the lock on SkylineWindow.DocumentChangeLock()
                         Assume.IsTrue(ReferenceEquals(doc, originalDocument));

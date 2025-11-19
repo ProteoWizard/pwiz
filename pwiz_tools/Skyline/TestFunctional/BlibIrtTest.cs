@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.SkylineTestUtil;
@@ -46,26 +48,12 @@ namespace pwiz.SkylineTestFunctional
 
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
-            // Library build
-            var buildLibrary = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+            RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Library);
 
-            RunUI(() =>
-            {
-                buildLibrary.LibraryName = "iRT standard peptides test";
-                buildLibrary.LibraryPath = outBlib;
-                buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
-                //buildLibrary.PreferEmbeddedSpectra = true;
-                buildLibrary.OkWizardPage();
-
-                buildLibrary.InputFileNames = new[] {searchResults};
-            });
-            WaitForConditionUI(() => buildLibrary.Grid.ScoreTypesLoaded);
-            RunUI(() => buildLibrary.Grid.SetScoreThreshold(0.05));
-
-            OkDialog(buildLibrary, buildLibrary.OkWizardPage);
-            var preferEmbeddedDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-            OkDialog(preferEmbeddedDlg, preferEmbeddedDlg.BtnYesClick);
-            VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
+            TestLibraryBuild(peptideSettings, outBlib, searchResults, DialogResult.Cancel);
+            TestLibraryBuild(peptideSettings, outBlib, searchResults, DialogResult.No);
+            // CONSIDER: Ideally, we would also test "Retry" by putting files in place to have it succeed
+            TestLibraryBuild(peptideSettings, outBlib, searchResults, DialogResult.Yes);
 
             // iRT calculator
             var editIrtCalc = ShowDialog<EditIrtCalcDlg>(peptideSettings.AddCalculator);
@@ -84,6 +72,35 @@ namespace pwiz.SkylineTestFunctional
             
             // Import peptide search
             RunUI(() => SkylineWindow.SaveDocument(testFilesDir.GetTestPath("test.sky")));
+            TestImportPeptideSearch(searchResults, DialogResult.Cancel);
+            TestImportPeptideSearch(searchResults, DialogResult.No);
+            // CONSIDER: Ideally, we would also test "Retry" by putting files in place to have it succeed
+            TestImportPeptideSearch(searchResults, DialogResult.Yes);
+        }
+
+        private static void TestLibraryBuild(PeptideSettingsUI peptideSettings, string outBlib, string searchResults, DialogResult dialogResult)
+        {
+            // Library build
+            var buildLibrary = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
+            RunUI(() =>
+            {
+                buildLibrary.LibraryName = "iRT standard peptides test";
+                buildLibrary.LibraryPath = outBlib;
+                buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
+                buildLibrary.OkWizardPage();
+
+                buildLibrary.InputFileNames = new[] {searchResults};
+            });
+            WaitForConditionUI(() => buildLibrary.Grid.ScoreTypesLoaded);
+            RunUI(() => buildLibrary.Grid.SetScoreThreshold(0.05));
+
+            OkDialog(buildLibrary, buildLibrary.OkWizardPage);
+            ChooseEmbedding(WaitForOpenForm<MultiButtonMsgDlg>(), dialogResult);
+        }
+
+        private void TestImportPeptideSearch(string searchResults, DialogResult dialogResult)
+        {
             var import = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             RunUI(() => { import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults }); });
             WaitForConditionUI(() => import.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
@@ -91,11 +108,41 @@ namespace pwiz.SkylineTestFunctional
             {
                 import.BuildPepSearchLibControl.Grid.SetScoreThreshold(0.05);
                 import.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
-                //import.BuildPepSearchLibControl.PreferEmbeddedSpectra = true;
             });
             WaitForConditionUI(() => import.IsNextButtonEnabled);
-            VerifyAddIrts(ShowDialog<AddIrtPeptidesDlg>(() => import.ClickNextButton()));
-            OkDialog(import, import.CancelDialog);
+            ChooseEmbedding(ShowDialog<MultiButtonMsgDlg>(() => import.ClickNextButton()), dialogResult);
+            if (dialogResult == DialogResult.Yes)
+                OkDialog(import, import.CancelDialog);
+            else
+                WaitForClosedForm(import);
+        }
+
+        private static void ChooseEmbedding(MultiButtonMsgDlg preferEmbeddedDlg, DialogResult dialogResult)
+        {
+            RunUI(() =>
+            {
+                AssertEx.AreComparableStrings(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError,
+                    preferEmbeddedDlg.Message);
+            });
+
+            if (dialogResult == DialogResult.Cancel)
+                OkDialog(preferEmbeddedDlg, preferEmbeddedDlg.BtnCancelClick);
+            else
+            {
+                if (dialogResult == DialogResult.No)
+                {
+                    // Click Retry once, and then Cancel
+                    OkDialog(preferEmbeddedDlg, preferEmbeddedDlg.Btn1Click);   // Retry
+                    var preferEmbeddedRetry = WaitForOpenForm<MultiButtonMsgDlg>();
+                    Assert.AreNotSame(preferEmbeddedDlg, preferEmbeddedRetry);
+                    OkDialog(preferEmbeddedRetry, preferEmbeddedRetry.BtnCancelClick);
+                }
+                else
+                {
+                    OkDialog(preferEmbeddedDlg, preferEmbeddedDlg.BtnYesClick);
+                    VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
+                }
+            }
         }
 
         private static void VerifyAddIrts(AddIrtPeptidesDlg dlg)

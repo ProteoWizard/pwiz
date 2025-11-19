@@ -45,6 +45,7 @@
 #include "boost/exception/all.hpp"
 #include "boost/range/algorithm/set_algorithm.hpp"
 #include "Logger.hpp"
+#include <random>
 
 
 using namespace pwiz::identdata;
@@ -959,7 +960,8 @@ vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<stri
         taskGroups.back().proteomeDataPtr = proteinDatabaseByFilepath[proteinDatabaseFilepath];
 
         // shuffled so that large and small input files get mixed
-        random_shuffle(inputFilepaths.begin(), inputFilepaths.end());
+        std::mt19937 rng(0);
+        std::shuffle(inputFilepaths.begin(), inputFilepaths.end(), rng);
 
         int processorsUsed = 0;
         for(const string& inputFilepath : inputFilepaths)
@@ -1281,7 +1283,8 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
             peptides.push_back(peptide);
 
         // distinctPeptideIdBySequence is sorted on peptide length, which is bad for the trie
-        random_shuffle(peptides.begin(), peptides.end());
+        std::mt19937 rng(0);
+        std::shuffle(peptides.begin(), peptides.end(), rng);
 
         // maps proteins indexes to protein ids (in the database)
         map<size_t, sqlite3_int64> proteinIdByIndex;
@@ -1778,6 +1781,8 @@ string Parser::parseSource(const string& inputFilepath)
 
 bfs::path Parser::outputFilepath(const string& inputFilepath)
 {
+    if (bal::iends_with(inputFilepath, ".dat")) // use parseSource for Mascot DAT input
+        return (bfs::path(inputFilepath).parent_path() / parseSource(inputFilepath)).replace_extension(".idpDB");
     if (bal::iends_with(inputFilepath, ".pep.xml"))
         return bal::ireplace_last_copy(inputFilepath, ".pep.xml", ".idpDB");
     return bfs::path(inputFilepath).replace_extension(".idpDB");

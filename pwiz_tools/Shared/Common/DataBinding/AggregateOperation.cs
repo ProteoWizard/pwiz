@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,6 +30,7 @@ namespace pwiz.Common.DataBinding
     public abstract class AggregateOperation : LabeledValues<string>
     {
         public static readonly AggregateOperation Count = new CountImpl();
+        public static readonly AggregateOperation CountDistinct = new CountDistinctImpl();
 
         public static readonly AggregateOperation Sum = new NumericAggregate(@"Sum",
             () => Resources.AggregateOperation_Sum_Sum, () => Resources.AggregateOperation_Sum_Sum__0_, 
@@ -38,6 +39,9 @@ namespace pwiz.Common.DataBinding
         public static readonly AggregateOperation Mean = new NumericAggregate(@"Mean",
             () => Resources.AggregateOperation_Mean_Mean, () => Resources.AggregateOperation_Mean_Mean__0_, 
             values => values.Mean());
+
+        public static readonly AggregateOperation Median =
+            new NumericAggregate(@"Median", () => Resources.AggregateOperation_Median_Median, () => Resources.AggregateOperation_Median_Median__0_, values => values.Median());
 
         public static readonly AggregateOperation Min = new SelectOne(@"Min",
             () => Resources.AggregateOperation_Min_Min, () => Resources.AggregateOperation_Min_Min__0_, 
@@ -61,8 +65,10 @@ namespace pwiz.Common.DataBinding
         public static readonly ImmutableList<AggregateOperation> ALL = ImmutableList.ValueOf(new[]
         {
             Sum,
-            Count, 
+            Count,
+            CountDistinct,
             Mean,
+            Median,
             Min,
             Max,
             StdDev,
@@ -93,7 +99,7 @@ namespace pwiz.Common.DataBinding
 
         public abstract object CalculateValue(DataSchema dataSchema, IEnumerable<object> values);
 
-        public IColumnCaption QualifyColumnCaption(IColumnCaption baseCaption)
+        public virtual IColumnCaption QualifyColumnCaption(IColumnCaption baseCaption)
         {
             return new AggregateCaption(this, baseCaption);
         }
@@ -124,9 +130,9 @@ namespace pwiz.Common.DataBinding
         private class CountImpl : AggregateOperation
         {
             public CountImpl() : base(@"Count",
-                () => Resources.CountImpl_CountImpl_Count, ()=>Resources.CountImpl_CountImpl_Count__0_)
+                () => Resources.CountImpl_CountImpl_Count, () => Resources.CountImpl_CountImpl_Count__0_)
             {
-                
+
             }
 
             public override object CalculateValue(DataSchema dataSchema, IEnumerable<object> values)
@@ -145,10 +151,36 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        private class CountDistinctImpl : AggregateOperation
+        {
+            public CountDistinctImpl() : base(@"CountDistinct",
+                () => Resources.CountDistinctImpl_CountDistinctImpl_Count_Distinct, 
+                ()=>Resources.CountDistinctImpl_CountDistinctImpl_Count_Distinct__0_)
+            {
+            }
+
+            public override object CalculateValue(DataSchema dataSchema, IEnumerable<object> values)
+            {
+                return values.Where(o => !ReferenceEquals(o, null)).Distinct().Count();
+            }
+
+            public override Type GetPropertyType(Type originalPropertyType)
+            {
+                return typeof(int);
+            }
+
+            public override bool IsValidForType(DataSchema dataSchema, Type type)
+            {
+                return true;
+            }
+        }
+
         private class NumericAggregate : AggregateOperation
         {
             private Func<IList<double>, double?> _calculator;
-            public NumericAggregate(string name, Func<string> getLabelFunc, Func<string> columnCaption, Func<IList<double>, double?> calculator)
+
+            public NumericAggregate(string name, Func<string> getLabelFunc, Func<string> columnCaption,
+                Func<IList<double>, double?> calculator)
                 : base(name, getLabelFunc, columnCaption)
             {
                 _calculator = calculator;

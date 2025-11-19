@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -394,7 +396,7 @@ namespace pwiz.SkylineTestData.Results
             {
                 var oldDoc = doc;
                 AssertEx.Serializable(oldDoc);
-                doc = ConvertToSmallMolecules(doc, ref docPath, null, smallMoleculeTestMode);
+                doc = AsSmallMoleculeTestUtil.ConvertToSmallMolecules(doc, ref docPath, null, smallMoleculeTestMode);
                 AssertEx.Serializable(doc);
                 expectedRevisionNumber = null;
 

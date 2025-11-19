@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .@. gmail.com>
  *
  * Copyright 2022
@@ -36,9 +36,9 @@ namespace pwiz.Skyline.Model.Proteome
         {
         }
 
-        private ProteinGroupMetadata(ProteinGroupMetadata other, WebSearchInfo webSearchInfo = null) : base(other.Name, other.Description)
+        private ProteinGroupMetadata(ProteinGroupMetadata other, WebSearchInfo webSearchInfo = null) : base(other.Name,
+            other.Description, other.PreferredName, other.Accession, other.Gene, other.Species, (webSearchInfo ?? other.WebSearchInfo).ToString())
         {
-            webSearchInfo ??= other.ProteinMetadataList.First().WebSearchInfo;
             ProteinMetadataList = ImmutableList<ProteinMetadata>.ValueOf(other.ProteinMetadataList);
         }
 
@@ -135,7 +135,8 @@ namespace pwiz.Skyline.Model.Proteome
         public override ProteinMetadata ChangeSingleProteinMetadata(ProteinMetadata singleProteinMetadata)
         {
             Assume.IsTrue(singleProteinMetadata?.ProteinMetadataList?.Count == 1);
-            return new ProteinGroupMetadata(ProteinMetadataList.ReplaceElement(singleProteinMetadata, m => m.Name == singleProteinMetadata!.Name));
+            
+            return new ProteinGroupMetadata(ProteinMetadataList.ReplaceAt(ProteinMetadataList.IndexOf(m => m.Name == singleProteinMetadata!.Name), singleProteinMetadata));
         }
 
         public override ProteinMetadata ChangeWebSearchInfo(WebSearchInfo webSearchInfo)
@@ -171,7 +172,7 @@ namespace pwiz.Skyline.Model.Proteome
                 return this;
             if (source is ProteinGroupMetadata sourceGroup)
             {
-                return new ProteinGroupMetadata(sourceGroup.ProteinMetadataList);
+                return new ProteinGroupMetadata(sourceGroup, WebSearchInfo);
             }
 
             Assume.Fail(@"cannot merge ProteinMetadata into ProteinGroupMetadata");
@@ -190,13 +191,12 @@ namespace pwiz.Skyline.Model.Proteome
 
         public bool Equals(ProteinGroupMetadata other)
         {
-            if (other == null)
-                return false;
-            if (!string.Equals(Name, other.Name))
-                return false;
-            if (!ArrayUtil.EqualsDeep(ProteinMetadataList, other.ProteinMetadataList))
-                return false;
-            return true;
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            bool equals = string.Equals(Name, other.Name) &&
+                          ArrayUtil.EqualsDeep(ProteinMetadataList, other.ProteinMetadataList);
+            return equals;
         }
 
         public override bool Equals(object obj)

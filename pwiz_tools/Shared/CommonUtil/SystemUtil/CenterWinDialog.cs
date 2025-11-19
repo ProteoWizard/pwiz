@@ -1,12 +1,17 @@
-﻿// https://stackoverflow.com/a/2576220
+// https://stackoverflow.com/a/2576220
 // Winforms-How can I make MessageBox appear centered on MainForm?
 
 using System;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Runtime.InteropServices;
+using pwiz.Common.SystemUtil.PInvoke;
 
+// DO NOT DELETE without due diligence on how this is used across all ProteoWizard projects.
+// As of 12/31/2024, it is not used in Skyline so VisualStudio will say it's unreferenced,
+// but it is used in MSConvertGUI which is separate from the Skyline solution.
+//
+// CONSIDER: move to pwiz_tools/MSConvertGUI
 namespace pwiz.Common.SystemUtil
 {
     public class CenterWinDialog : IDisposable
@@ -24,8 +29,8 @@ namespace pwiz.Common.SystemUtil
         {
             // Enumerate windows to find the message box
             if (mTries < 0) return;
-            EnumThreadWndProc callback = checkWindow;
-            if (EnumThreadWindows(GetCurrentThreadId(), callback, IntPtr.Zero))
+            User32.EnumThreadWindowsProc callback = checkWindow;
+            if (User32.EnumThreadWindows(Kernel32.GetCurrentThreadId(), callback, IntPtr.Zero))
             {
                 if (++mTries < 10) mOwner.BeginInvoke(new MethodInvoker(findDialog));
             }
@@ -34,38 +39,23 @@ namespace pwiz.Common.SystemUtil
         {
             // Checks if <hWnd> is a dialog
             StringBuilder sb = new StringBuilder(260);
-            GetClassName(hWnd, sb, sb.Capacity);
+            User32.GetClassName(hWnd, sb, sb.Capacity);
             if (sb.ToString() != @"#32770") return true;
             // Got it
             Rectangle frmRect = new Rectangle(mOwner.Location, mOwner.Size);
-            RECT dlgRect;
-            GetWindowRect(hWnd, out dlgRect);
-            MoveWindow(hWnd,
-                frmRect.Left + (frmRect.Width - dlgRect.Right + dlgRect.Left) / 2,
-                frmRect.Top + (frmRect.Height - dlgRect.Bottom + dlgRect.Top) / 2,
-                dlgRect.Right - dlgRect.Left,
-                dlgRect.Bottom - dlgRect.Top, true);
+
+            var dlgRect = new User32.RECT();
+            User32.GetWindowRect(hWnd, ref dlgRect);
+            User32.MoveWindow(hWnd,
+                frmRect.Left + (frmRect.Width - dlgRect.right + dlgRect.left) / 2,
+                frmRect.Top + (frmRect.Height - dlgRect.bottom + dlgRect.top) / 2,
+                dlgRect.right - dlgRect.left,
+                dlgRect.bottom - dlgRect.top, true);
             return false;
         }
         public void Dispose()
         {
             mTries = -1;
         }
-
-        // P/Invoke declarations
-        private delegate bool EnumThreadWndProc(IntPtr hWnd, IntPtr lp);
-        [DllImport("user32.dll")]
-        private static extern bool EnumThreadWindows(int tid, EnumThreadWndProc callback, IntPtr lp);
-        [DllImport("kernel32.dll")]
-        private static extern int GetCurrentThreadId();
-        [DllImport("user32.dll")]
-        private static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
-        [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, out RECT rc);
-        [DllImport("user32.dll")]
-        private static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "UnassignedField.Compiler")]
-        private struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
     }
 }

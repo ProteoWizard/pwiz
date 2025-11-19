@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -71,10 +71,7 @@ namespace pwiz.Common.Collections
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            for (int i = 0; i < Count; i++)
-            {
-                yield return new KeyValuePair<TKey, TValue>(Keys[i],Values[i]);
-            }
+            return Enumerable.Range(0, Count).Select(i => new KeyValuePair<TKey, TValue>(Keys[i], Values[i])).GetEnumerator();
         }
 
         public ImmutableList<TKey> Keys

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Themes;
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public RTReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            YAxis.Title.Text = Resources.RTReplicateGraphPane_RTReplicateGraphPane_Measured_Time;
+            YAxis.Title.Text = GraphsResources.RTReplicateGraphPane_RTReplicateGraphPane_Measured_Time;
         }
 
         public bool UpdateUIOnLibraryChanged()
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Clear();
             if (!resultsAvailable)
             {
-                Title.Text = Resources.RTReplicateGraphPane_UpdateGraph_No_results_available;
+                Title.Text = GraphsResources.RTReplicateGraphPane_UpdateGraph_No_results_available;
                 EmptyGraph(document);
                 return;
             }
@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is PeptideGroupTreeNode) && !(selectedTreeNode is TransitionGroupTreeNode))
             {
-                Title.Text = Resources.RTReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_retention_time_graph;
+                Title.Text = GraphsResources.RTReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_retention_time_graph;
                 CanShowRTLegend = false;
                 return;
             }
@@ -174,10 +174,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     var nodeGroup = docNode as TransitionGroupDocNode;
                     if (IsMultiSelect)
                     {
-                        var peptides = peptidePaths.Select(path => document.FindNode(path))
-                            .Cast<PeptideDocNode>().ToArray();
-                        var peptideDocNode = peptides.FirstOrDefault(
-                            peptide => 0 <= peptide.FindNodeIndex(docNode.Id));
+                        PeptideDocNode peptideDocNode = null;
+                        if (identityPath.Depth >= (int)SrmDocument.Level.Molecules)
+                        {
+                            peptideDocNode = (PeptideDocNode)document.FindNode(
+                                identityPath.GetPathTo((int)SrmDocument.Level.Molecules));
+                        }
                         if (peptideDocNode == null)
                         {
                             continue;
@@ -214,7 +216,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
-                        label = string.Format(Resources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
+                        label = string.Format(GraphsResources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
                     
                     CurveItem curveItem;
                     if(IsMultiSelect)
@@ -364,7 +366,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 Assume.IsNotNull(chromInfoData, @"chromInfoData");
                 Assume.IsNotNull(chromInfoData.ChromFileInfo, @"chromInfoData.ChromFileInfo");
-                return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out _);
+                return !RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FilePath, out _);
             }
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfoData)
@@ -382,10 +384,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var chromInfoData in chromInfoDatas)
                 {
                     var retentionTimeValues = getRetentionTimeValues(chromInfoData);
-                    RegressionLine regressionFunction = null;
+                    AlignmentFunction regressionFunction = null;
                     if (null != RetentionTimeTransform.RtTransformOp)
                     {
-                        RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FileId, out regressionFunction);
+                        RetentionTimeTransform.RtTransformOp.TryGetRegressionFunction(chromInfoData.ChromFileInfo.FilePath, out regressionFunction);
                     }
                     if (regressionFunction == null)
                     {

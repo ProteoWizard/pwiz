@@ -20,10 +20,10 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.SkylineTestUtil;
@@ -66,9 +66,7 @@ namespace TestPerf
             var docCurrent = SkylineWindow.Document;
             var transitionList = TestFilesDirs[0].GetTestPath(@"Skyline Transition List wo CCS.csv");
             // Transition list is suitably formatted with headers to just drop into the targets tree
-            SetCsvFileClipboardText(transitionList);
-            PasteSmallMoleculeListNoAutoManage(); // Paste the clipboard text, dismiss the offer to enable automanage
-            var document = WaitForDocumentLoaded();
+            var document = PasteSmallMoleculeListNoAutoManage(transitionList); // Paste the clipboard text, dismiss the offer to enable automanage
             AssertEx.IsDocumentState(document, null, 1, 4, 4, 4);
             {
                 var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);

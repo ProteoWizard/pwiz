@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
+using TestRunnerLib.PInvoke;
 
 namespace SkylineTester
 {
@@ -56,11 +57,10 @@ namespace SkylineTester
         {
             long waketime = (long)e.Argument;
 
-            using (SafeWaitHandle handle =
-                      CreateWaitableTimer(IntPtr.Zero, true,
+            using (SafeWaitHandle handle = Kernel32Test.CreateWaitableTimer(IntPtr.Zero, true,
                       GetType().Assembly.GetName().Name + "Timer_" + Guid.NewGuid()))
             {
-                if (SetWaitableTimer(handle, ref waketime, 0, IntPtr.Zero, IntPtr.Zero, true))
+                if (Kernel32Test.SetWaitableTimer(handle, ref waketime, 0, IntPtr.Zero, IntPtr.Zero, true))
                 {
                     using (EventWaitHandle wh = new EventWaitHandle(false,
                                                            EventResetMode.AutoReset))
@@ -75,20 +75,5 @@ namespace SkylineTester
                 }
             }
         }
-
-        [DllImport("kernel32.dll")]
-        public static extern SafeWaitHandle CreateWaitableTimer(IntPtr lpTimerAttributes,
-                                                                  bool bManualReset,
-                                                                string lpTimerName);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool SetWaitableTimer(SafeWaitHandle hTimer,
-                                                    [In] ref long pDueTime,
-                                                              int lPeriod,
-                                                           IntPtr pfnCompletionRoutine,
-                                                           IntPtr lpArgToCompletionRoutine,
-                                                             bool fResume);
-
     }
 }

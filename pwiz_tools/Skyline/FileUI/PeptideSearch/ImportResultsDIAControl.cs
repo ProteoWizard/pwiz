@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *
@@ -20,12 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
@@ -36,7 +35,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             DocumentContainer = documentContainer;
             BrowseResultsDialogText = browseResultsDialogText ??
-                                      Resources.ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files;
+                                      PeptideSearchResources.ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files;
 
             InitializeComponent();
 
@@ -45,6 +44,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             listResultsFiles.DisplayMember = @"Name";
             SimultaneousFiles = Settings.Default.ImportResultsSimultaneousFiles;
             DoAutoRetry = Settings.Default.ImportResultsDoAutoRetry;
+
+            // Hide the GPF checkbox during screenshots until we branch for 24.1 docs
+            if (Program.PauseSeconds != 0)
+            {
+                btnBrowse.Top = cbGpf.Top;
+                btnRemove.Top = cbGpf.Top;
+                cbGpf.Visible = false;
+            }
         }
 
         private BindingList<ImportPeptideSearch.FoundResultsFile> _foundResultsFiles;
@@ -61,6 +68,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get { return cbAutoRetry.Checked; }
             set { cbAutoRetry.Checked = value; }
+        }
+
+        public bool IsGpf
+        {
+            get => cbGpf.Checked;
+            set => cbGpf.Checked = value;
+        }
+
+        public bool HideFileAddRemoveButtons
+        {
+            get => btnBrowse.Visible;
+            set => btnBrowse.Visible = btnRemove.Visible = value;
         }
 
         public string Prefix { get; set; }
@@ -97,17 +116,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
                 dlgOpen.Text = BrowseResultsDialogText;
-                // The dialog expects null to mean no directory was supplied, so don't assign an empty string.
-                string initialDir = path ?? Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
-                dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
-
-                // Use saved source type, if there is one.
-                string sourceType = Settings.Default.SrmResultsSourceType;
-                if (!string.IsNullOrEmpty(sourceType))
-                    dlgOpen.SourceTypeName = sourceType;
-
+                dlgOpen.RestoreState(DocumentContainer.DocumentFilePath, Settings.Default.OpenDataSourceState);
+                // Passed in path overrides stored or document path
+                if (path != null)
+                    dlgOpen.InitialDirectory = new MsDataFilePath(path);
                 if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                     return;
+
+                Settings.Default.OpenDataSourceState = dlgOpen.GetState(DocumentContainer.DocumentFilePath);
 
                 var dataSources = dlgOpen.DataSources;
 

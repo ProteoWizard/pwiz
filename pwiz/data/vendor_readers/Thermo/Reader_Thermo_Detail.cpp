@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include <boost/range/algorithm/find_if.hpp>
+#include "pwiz/utility/misc/unit.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -111,6 +112,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Q_Exactive_HF:             return MS_Q_Exactive_HF;
         case InstrumentModelType_Q_Exactive_HF_X:           return MS_Q_Exactive_HF_X;
         case InstrumentModelType_Q_Exactive_UHMR:           return MS_Q_Exactive_UHMR;
+        case InstrumentModelType_Q_Exactive_Focus:          return MS_Q_Exactive_Focus;
         case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
         case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
         case InstrumentModelType_Orbitrap_Fusion:           return MS_Orbitrap_Fusion;
@@ -118,6 +120,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Orbitrap_Fusion_ETD:       return MS_Orbitrap_Fusion_ETD;
         case InstrumentModelType_Orbitrap_Ascend:           return MS_Orbitrap_Ascend;
         case InstrumentModelType_Orbitrap_ID_X:             return MS_Orbitrap_ID_X;
+        case InstrumentModelType_Orbitrap_IQ_X:             return MS_Orbitrap_IQ_X;
         case InstrumentModelType_TSQ_Quantiva:              return MS_TSQ_Quantiva;
         case InstrumentModelType_TSQ_Endura:                return MS_TSQ_Endura;
         case InstrumentModelType_TSQ_Altis:                 return MS_TSQ_Altis;
@@ -127,8 +130,14 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_TSQ_9000:                  return MS_TSQ_9000;
         case InstrumentModelType_Orbitrap_Exploris_120:     return MS_Orbitrap_Exploris_120;
         case InstrumentModelType_Orbitrap_Exploris_240:     return MS_Orbitrap_Exploris_240;
+        case InstrumentModelType_Orbitrap_Exploris_GC_240:  return MS_Orbitrap_Exploris_GC_240;
         case InstrumentModelType_Orbitrap_Exploris_480:     return MS_Orbitrap_Exploris_480;
+        case InstrumentModelType_Orbitrap_Exploris_GC:      return MS_Orbitrap_Exploris_GC_MS;
         case InstrumentModelType_Orbitrap_Eclipse:          return MS_Orbitrap_Eclipse;
+        case InstrumentModelType_Orbitrap_GC:               return MS_Orbitrap_Exploris_480;
+        case InstrumentModelType_Orbitrap_Astral:           return MS_Orbitrap_Astral;
+        case InstrumentModelType_Orbitrap_Astral_Zoom:      return MS_Orbitrap_Astral_Zoom;
+        case InstrumentModelType_Stellar:                   return MS_Stellar;
 
         default:
             throw std::runtime_error("[Reader_Thermo::translateAsInstrumentModel] Enumerated instrument model " + lexical_cast<string>(instrumentModelType) + " has no CV term mapping!");
@@ -206,6 +215,10 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
                 analyzerType = MS_magnetic_sector;
                 detectorType = MS_electron_multiplier;
                 break;
+            case MassAnalyzerType_Astral:
+                analyzerType = MS_asymmetric_track_lossless_time_of_flight_analyzer;
+                detectorType = MS_electron_multiplier;
+            break;
         }
 
         if (analyzerType != CVID_Unknown)
@@ -231,9 +244,13 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_UHMR:
+        case InstrumentModelType_Q_Exactive_Focus:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
+        case InstrumentModelType_Orbitrap_Exploris_GC_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
+        case InstrumentModelType_Orbitrap_Exploris_GC:
+        case InstrumentModelType_Orbitrap_GC:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -247,6 +264,21 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_orbitrap, 2));
             configurations.back().componentList.push_back(Component(MS_inductive_detector, 3));
+            break;
+
+        case InstrumentModelType_Orbitrap_Astral:
+        case InstrumentModelType_Orbitrap_Astral_Zoom:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_orbitrap, 3));
+            configurations.back().componentList.push_back(Component(MS_inductive_detector, 4));
+
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_asymmetric_track_lossless_time_of_flight_analyzer, 3));
+            configurations.back().componentList.push_back(Component(MS_electron_multiplier, 4));
             break;
 
         case InstrumentModelType_LTQ_FT:
@@ -267,6 +299,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Orbitrap_Fusion_ETD:
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
+        case InstrumentModelType_Orbitrap_IQ_X:
         case InstrumentModelType_Orbitrap_Eclipse:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -324,6 +357,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Stellar:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
@@ -460,6 +494,7 @@ PWIZ_API_DECL CVID translate(MassAnalyzerType type)
         case MassAnalyzerType_Triple_Quadrupole:    return MS_quadrupole;
         case MassAnalyzerType_Single_Quadrupole:    return MS_quadrupole;
         case MassAnalyzerType_Magnetic_Sector:      return MS_magnetic_sector;
+        case MassAnalyzerType_Astral:               return MS_asymmetric_track_lossless_time_of_flight_analyzer;
         case MassAnalyzerType_Unknown:
         default:
             return CVID_Unknown;
@@ -549,6 +584,126 @@ PWIZ_API_DECL void setActivationType(ActivationType activationType, ActivationTy
         activation.set(MS_multiphoton_dissociation);
     // ActivationType_Unknown:
 }
+
+
+MassListTable parseMassListTables(const std::string& instrumentMethod)
+{
+    MassListTable entries;
+    const std::string startToken = ">>>>>>>>>>>>> Mass List Table <<<<<<<<<<<<<<";
+    const std::string endToken = ">>>>>>>>>>>>> End Mass List Table <<<<<<<<<<<<<<";
+    size_t pos = 0;
+
+    while ((pos = instrumentMethod.find(startToken, pos)) != std::string::npos)
+    {
+        size_t tableStart = pos + startToken.size();
+        size_t tableEnd = instrumentMethod.find(endToken, tableStart);
+        if (tableEnd == std::string::npos) break;
+
+        std::istringstream iss(instrumentMethod.substr(tableStart, tableEnd - tableStart));
+        std::string line;
+        std::vector<std::string> headers;
+        std::vector<size_t> colIdx(5, std::string::npos);
+
+        // Find header line
+        while (std::getline(iss, line))
+        {
+            bal::trim(line);
+            if (line.empty()) continue;
+            if (line.find('|') != std::string::npos)
+            {
+                std::istringstream headerStream(line);
+                std::string header;
+                size_t idx = 0;
+                while (std::getline(headerStream, header, '|'))
+                {
+                    bal::trim(header);
+                    headers.push_back(header);
+                    if (header == "Compound") colIdx[0] = idx;
+                    else if (header == "Precursor (m/z)") colIdx[1] = idx;
+                    else if (header == "Product (m/z)") colIdx[2] = idx;
+                    else if (header == "Collision Energies (V)") colIdx[3] = idx;
+                    else if (header == "Polarity") colIdx[4] = idx;
+                    ++idx;
+                }
+                break;
+            }
+        }
+
+        // Only parse tables with all required columns
+        if (std::all_of(colIdx.begin(), colIdx.end(), [](size_t i) { return i != std::string::npos; }))
+        {
+            // Parse rows
+            while (std::getline(iss, line))
+            {
+                bal::trim(line);
+                if (line.empty() || line.find('|') == std::string::npos) continue;
+
+                std::istringstream rowStream(line);
+                std::string cell;
+                std::vector<std::string> cells;
+                while (std::getline(rowStream, cell, '|'))
+                    cells.push_back(bal::trim_copy(cell));
+
+                if (cells.size() < headers.size()) continue;
+
+                MassListTableEntry entry;
+                entry.compound = cells[colIdx[0]];
+                entry.precursor_mz = lexical_cast<double>(cells[colIdx[1]]);
+                entry.product_mz = lexical_cast<double>(cells[colIdx[2]]);
+                entry.collision_energy = lexical_cast<double>(cells[colIdx[3]]);
+                entry.polarity = cells[colIdx[4]];
+                entries[entry.precursor_mz][entry.product_mz] = entry;
+            }
+        }
+        pos = tableEnd + endToken.size();
+    }
+    return entries;
+}
+
+namespace {
+
+TEST_CASE("parseMassListTables()") {
+    MassListTable result = parseMassListTables(
+        R"(Stellar Method Summary	
+  	
+Creator: THERMO-RJM0O65J\Thermo Scientific          Last Modified: 09/11/2025 11:26:26 by THERMO-RJM0O65J\Thermo Scientific	
+  	
+Global Settings	
+	Use Ion Source Settings from Tune = Not Checked	
+	Method Duration (min) = 15	
+			Use Chromatographic Filter = False	
+>>>>>>>>>>>>> Mass List Table <<<<<<<<<<<<<<	
+                Center Mass (m/z)|           Isolation Window (m/z)|	
+                              125|                               50|	
+                              175|                               50|	
+                              225|                               50|	
+                              275|                               50|	
+                              325|                               50|	
+                              375|                               50|	
+>>>>>>>>>>>>> End Mass List Table <<<<<<<<<<<<<<	
+Experiment 2	
+>>>>>>>>>>>>> Mass List Table <<<<<<<<<<<<<<	
+Compound|  Formula|  Adduct|  Precursor (m/z)|  Precursor z|  Product (m/z)|  Retention Time (min)|  RT Window (min)|  Collision Energies (V)|  Polarity|	
+AcylCarnitine 14:2|  |  (no adduct)|  368.3|  1|  85.1|  1.4|  0.4|  27|  Positive|	
+AcylCarnitine 12:0|  |  (no adduct) | 344.3 | 1 | 84.1 | 1.5 | 0.4 | 24 | Negative |
+>>>>>>>>>>>>> End Mass List Table <<<<<<<<<<<<<<
+)");
+
+    CHECK(result.size() == 2);
+    CHECK(result[368.3][85.1].compound == "AcylCarnitine 14:2");
+    CHECK(result[368.3][85.1].precursor_mz == 368.3);
+    CHECK(result[368.3][85.1].product_mz == 85.1);
+    CHECK(result[368.3][85.1].collision_energy == 27);
+    CHECK(result[368.3][85.1].polarity == "Positive");
+
+    CHECK(result[344.3][84.1].compound == "AcylCarnitine 12:0");
+    CHECK(result[344.3][84.1].precursor_mz == 344.3);
+    CHECK(result[344.3][84.1].product_mz == 84.1);
+    CHECK(result[344.3][84.1].collision_energy == 24);
+    CHECK(result[344.3][84.1].polarity == "Negative");
+}
+
+} // namespace
 
 } // Thermo
 } // detail

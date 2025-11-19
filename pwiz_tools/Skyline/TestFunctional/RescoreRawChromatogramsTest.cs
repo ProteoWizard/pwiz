@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,10 +18,10 @@
  */
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var transitionGroup in molecule.TransitionGroups)
                 {
                     ChromatogramGroupInfo[] chromatogramGroupInfos = null;
-                    Helpers.TryTwice(() =>
+                    TryHelper.TryTwice(() =>
                     {
                         Assert.IsTrue(measuredResults.TryLoadChromatogram(0, molecule, transitionGroup, tolerance, out chromatogramGroupInfos));
                     });

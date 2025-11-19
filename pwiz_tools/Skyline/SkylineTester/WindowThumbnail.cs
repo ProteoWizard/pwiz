@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,8 +18,9 @@
  */
 using System;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 
 namespace SkylineTester
 {
@@ -28,6 +29,8 @@ namespace SkylineTester
     public partial class WindowThumbnail : UserControl
     {
         public static Form MainWindow;
+
+        private IntPtr _thumb;
 
         public WindowThumbnail()
         {
@@ -53,7 +56,7 @@ namespace SkylineTester
         {
             if (_thumb != IntPtr.Zero)
             {
-                DwmUnregisterThumbnail(_thumb);
+                DwmapiTest.DwmUnregisterThumbnail(_thumb);
                 _thumb = IntPtr.Zero;
             }
         }
@@ -68,7 +71,7 @@ namespace SkylineTester
             }
 
             IntPtr newThumb;
-            DwmRegisterThumbnail(MainWindow.Handle, window, out newThumb);
+            DwmapiTest.DwmRegisterThumbnail(MainWindow.Handle, window, out newThumb);
             if (newThumb == IntPtr.Zero)
             {
                 UnregisterThumb();
@@ -82,41 +85,43 @@ namespace SkylineTester
 
             Point locationOnForm = MainWindow.PointToClient(Parent.PointToScreen(Location));
 
-            PSIZE size;
-            DwmQueryThumbnailSourceSize(_thumb, out size);
+            PInvokeCommon.SIZE size;
+            DwmapiTest.DwmQueryThumbnailSourceSize(_thumb, out size);
 
-            DWM_THUMBNAIL_PROPERTIES props = new DWM_THUMBNAIL_PROPERTIES
+            var props = new DwmapiTest.THUMBNAIL_PROPERTIES
             {
-                dwFlags = DWM_TNP_VISIBLE | DWM_TNP_RECTDESTINATION | DWM_TNP_OPACITY,
+                dwFlags = (int)(DwmapiTest.TNPFlags.VISIBLE | DwmapiTest.TNPFlags.RECTDESTINATION | DwmapiTest.TNPFlags.OPACITY),
                 fVisible = true,
                 opacity = 255,
-                rcDestination = new Rect(
+                rcDestination = new User32.RECT(
                     locationOnForm.X,
                     locationOnForm.Y,
                     locationOnForm.X + Width,
                     locationOnForm.Y + Height)
             };
 
-            if (size.x < Width)
-                props.rcDestination.Right = props.rcDestination.Left + size.x;
-            if (size.y < Height)
-                props.rcDestination.Bottom = props.rcDestination.Top + size.y;
+            if (size.cx < Width)
+                props.rcDestination.right = props.rcDestination.left + size.cx;
+            if (size.cy < Height)
+                props.rcDestination.bottom = props.rcDestination.top + size.cy;
 
-            DwmUpdateThumbnailProperties(_thumb, ref props);
+            DwmapiTest.DwmUpdateThumbnailProperties(_thumb, ref props);
         }
 
         private IntPtr FindWindow(int processId)
         {
+            const ulong targetWindow = User32Test.WS_BORDER | User32Test.WS_VISIBLE;
+
             IntPtr window = IntPtr.Zero;
 
-            EnumWindows(
+            User32Test.EnumWindows(
                 delegate(IntPtr wnd, IntPtr param)
                 {
                     uint id;
-                    GetWindowThreadProcessId(wnd, out id);
+                    User32.GetWindowThreadProcessId(wnd, out id);
 
                     if ((int)id == processId &&
-                        (GetWindowLongA(wnd, GWL_STYLE) & TARGETWINDOW) == TARGETWINDOW)
+                        (User32Test.GetWindowLongA(wnd, User32Test.GWL_STYLE) & targetWindow) == targetWindow)
                     {
                         window = wnd;
                         return false;
@@ -127,77 +132,5 @@ namespace SkylineTester
 
             return window;
         }
-
-        private const int GWL_STYLE = -16;
-
-        private const ulong WS_VISIBLE = 0x10000000L;
-        private const ulong WS_BORDER = 0x00800000L;
-        private const ulong TARGETWINDOW = WS_BORDER | WS_VISIBLE;
-
-        private IntPtr _thumb;
-
-        private const int DWM_TNP_VISIBLE = 0x8;
-        private const int DWM_TNP_OPACITY = 0x4;
-        private const int DWM_TNP_RECTDESTINATION = 0x1;
-
-        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        private static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        static extern ulong GetWindowLongA(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
-        [DllImport("dwmapi.dll")]
-        static extern int DwmRegisterThumbnail(IntPtr dest, IntPtr src, out IntPtr thumb);
-
-        [DllImport("dwmapi.dll")]
-        static extern int DwmUnregisterThumbnail(IntPtr thumb);
-
-        [DllImport("dwmapi.dll")]
-        static extern int DwmQueryThumbnailSourceSize(IntPtr thumb, out PSIZE size);
-
-        [DllImport("dwmapi.dll")]
-        static extern int DwmUpdateThumbnailProperties(IntPtr hThumb, ref DWM_THUMBNAIL_PROPERTIES props);
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct DWM_THUMBNAIL_PROPERTIES
-        {
-            public int dwFlags;
-            public Rect rcDestination;
-            public Rect rcSource;
-            public byte opacity;
-            public bool fVisible;
-            public readonly bool fSourceClientAreaOnly;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct Rect
-        {
-            internal Rect(int left, int top, int right, int bottom)
-            {
-                Left = left;
-                Top = top;
-                Right = right;
-                Bottom = bottom;
-            }
-
-            public readonly int Left;
-            public readonly int Top;
-            public int Right;
-            public int Bottom;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct PSIZE
-        {
-            public readonly int x;
-            public readonly int y;
-        }
-
-
     }
 }

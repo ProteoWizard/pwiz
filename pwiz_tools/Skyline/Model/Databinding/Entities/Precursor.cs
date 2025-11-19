@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,13 +17,9 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -32,6 +28,9 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -191,14 +190,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return SequenceMassCalc.PersistentMZ(DocNode.PrecursorMz); }
         }
 
+        /// <summary>
+        /// Predicted collision energy, not to be confused with <see cref="ExplicitCollisionEnergy"/>.
+        /// </summary>
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]
-        public double CollisionEnergy
+        public double? CollisionEnergy
         {
             get
             {
-                // Note this is the predicited CE, explicit CE has its own display column
-                return SrmDocument.Settings.TransitionSettings.Prediction.CollisionEnergy
-                                  .GetCollisionEnergy(DocNode.PrecursorAdduct, GetRegressionMz());
+                var collisionEnergyRegression = SrmDocument.Settings.TransitionSettings.Prediction.CollisionEnergy;
+                if (collisionEnergyRegression == null || Equals(collisionEnergyRegression, CollisionEnergyList.NONE))
+                {
+                    return null;
+                }
+
+                return collisionEnergyRegression.GetCollisionEnergy(DocNode.PrecursorAdduct, GetRegressionMz());
             }
         }
 
@@ -492,7 +498,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             // Consider: maybe change TransitionGroupDocNode.ToString() to be this as well:
-            return TransitionGroupTreeNode.GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz, string.Empty);
+            return TransitionGroupDocNode.GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz, string.Empty);
         }
 
         [Obsolete]
@@ -503,9 +509,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             if (nodeCount == 1)
             {
-                return string.Format(Resources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___, this);
+                return string.Format(EntitiesResources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___, this);
             }
-            return string.Format(Resources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_, nodeCount);
+            return string.Format(EntitiesResources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_, nodeCount);
         }
 
         [Importable]
@@ -543,6 +549,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [ChildDisplayName("Exemplary{0}")]
+        public SourcedPeakValue ExemplaryPeak
+        {
+            get
+            {
+                return SourcedPeakValue.FromSourcedPeak(DataSchema.PeakBoundaryImputer.GetExemplaryPeak(Peptide.DocNode));
+            }
+        }
+
         [InvariantDisplayName("PrecursorLocator")]
         public string Locator { get { return GetLocator(); } }
 
@@ -575,6 +590,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
     }
+
 
     public class PrecursorResultSummary : SkylineObject
     {

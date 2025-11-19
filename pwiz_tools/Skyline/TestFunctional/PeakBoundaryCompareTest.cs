@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -448,7 +448,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var messageDlg = ShowDialog<MessageDlg>(action);
             Assert.AreEqual(messageDlg.Message, errorMessage);
-            messageDlg.OkDialog();
+            OkDialog(messageDlg, messageDlg.OkDialog);
         }
 
         private static void AddFile(ComparePeakPickingDlg dlg, string fileName, string filePath)

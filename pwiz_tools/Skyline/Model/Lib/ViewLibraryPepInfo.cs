@@ -236,8 +236,19 @@ namespace pwiz.Skyline.Model.Lib
         {
             TypedMass massH;
             if (Target != null)
-                massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
-                    .GetPrecursorMass(Target);
+            {
+                if (!Target.IsProteomic)
+                {
+                    massH = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC,
+                        transitionGroup.PrecursorAdduct.ApplyToMolecule(Target.Molecule.ParsedMolecule));
+                    return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct.AdductCharge));
+                }
+                else
+                {
+                    massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
+                        .GetPrecursorMass(Target);
+                }
+            }
             else
                 massH = new TypedMass(Key.PrecursorMz ?? 0, MassType.Monoisotopic);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
@@ -278,12 +289,8 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     var aa = modInfo.ModifiedAminoAcid;
                     var smod = new StaticMod(@"temp",
-                                             aa != 'X' ? aa.ToString(CultureInfo.InvariantCulture) : string.Join(@",", AminoAcid.All),
-                                             null,
-                                             null,
-                                             LabelAtoms.None,
-                                             modInfo.ModifiedMass,
-                                             modInfo.ModifiedMass);
+                        AminoAcid.IsAA(aa) ? aa.ToString() : null,
+                        null, null, LabelAtoms.None, modInfo.ModifiedMass, modInfo.ModifiedMass);
                     var exmod = new ExplicitMod(modInfo.IndexMod, smod);
                     staticModList.Add(exmod);
                 }
@@ -370,6 +377,11 @@ namespace pwiz.Skyline.Model.Lib
                 ModifiedAminoAcid = modifiedAminoAcid;
                 ModifiedMass = modifiedMass;
             }
+        }
+
+        public override string ToString()
+        {
+            return KeyString; // For debugging convenience, not user facing
         }
     }
 }

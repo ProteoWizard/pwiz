@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,13 +22,13 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -176,7 +176,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (comboName.SelectedIndex == -1)
                     {
-                        MessageDlg.Show(this, Resources.ImportResultsDlg_OkDialog_You_must_select_an_existing_set_of_results_to_which_to_append_new_data);
+                        MessageDlg.Show(this, FileUIResources.ImportResultsDlg_OkDialog_You_must_select_an_existing_set_of_results_to_which_to_append_new_data);
                         comboName.Focus();
                         return;
                     }
@@ -203,12 +203,12 @@ namespace pwiz.Skyline.FileUI
                         return;
                     if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
                     {
-                        helper.ShowTextBoxError(textName, Resources.ImportResultsDlg_OkDialog_A_result_name_may_not_contain_any_of_the_characters___0___, Path.GetInvalidFileNameChars());
+                        helper.ShowTextBoxError(textName, FileUIResources.ImportResultsDlg_OkDialog_A_result_name_may_not_contain_any_of_the_characters___0___, Path.GetInvalidFileNameChars());
                         return;
                     }
                     if (ResultsExist(name))
                     {
-                        helper.ShowTextBoxError(textName, Resources.ImportResultsDlg_OkDialog_The_specified_name_already_exists_for_this_document);
+                        helper.ShowTextBoxError(textName, FileUIResources.ImportResultsDlg_OkDialog_The_specified_name_already_exists_for_this_document);
                         return;
                     }
 
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.FileUI
             if (_warnOnMultiInjection && !IsOptimizing)
             {
                 if (MultiButtonMsgDlg.Show(this,
-                                Resources.ImportResultsDlg_CanCreateMultiInjectionMethods_The_current_document_does_not_appear_to_have_enough_transitions_to_require_multiple_injections,
+                                FileUIResources.ImportResultsDlg_CanCreateMultiInjectionMethods_The_current_document_does_not_appear_to_have_enough_transitions_to_require_multiple_injections,
                                  MessageBoxButtons.YesNo, DialogResult.No) == DialogResult.No)
                     return false;
             }
@@ -334,23 +334,12 @@ namespace pwiz.Skyline.FileUI
         {
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
-                dlgOpen.Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files;
-                // The dialog expects null to mean no directory was supplied, so don't assign
-                // an empty string.
-                string initialDir = Path.GetDirectoryName(documentSavedPath) ?? Settings.Default.SrmResultsDirectory;
-                if (string.IsNullOrEmpty(initialDir))
-                    initialDir = null;
-                dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
-                // Use saved source type, if there is one.
-                string sourceType = Settings.Default.SrmResultsSourceType;
-                if (!string.IsNullOrEmpty(sourceType))
-                    dlgOpen.SourceTypeName = sourceType;
-
+                dlgOpen.Text = FileUIResources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files;
+                dlgOpen.RestoreState(documentSavedPath, Settings.Default.OpenDataSourceState);
                 if (dlgOpen.ShowDialog(parent) != DialogResult.OK)
                     return null;
 
-                Settings.Default.SrmResultsDirectory = dlgOpen.CurrentDirectory.ToString();
-                Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
+                Settings.Default.OpenDataSourceState = dlgOpen.GetState(documentSavedPath);
 
                 var dataSources = dlgOpen.DataSources;
 
@@ -422,8 +411,8 @@ namespace pwiz.Skyline.FileUI
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.Text = Resources.ImportResultsDlg_GetWiffSubPaths_Sample_Names;
-                longWaitDlg.Message = string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_Reading_sample_names_from__0__, 
+                longWaitDlg.Text = FileUIResources.ImportResultsDlg_GetWiffSubPaths_Sample_Names;
+                longWaitDlg.Message = string.Format(FileUIResources.ImportResultsDlg_GetWiffSubPaths_Reading_sample_names_from__0__, 
                     Path.GetFileName(filePath));
                 string[] dataIds = null;
                 try
@@ -433,8 +422,8 @@ namespace pwiz.Skyline.FileUI
                 catch (Exception x)
                 {
                     string message = TextUtil.LineSeparate(
-                        string.Format(Resources.ImportResultsDlg_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__, filePath),
-                        Resources.ImportResultsDlg_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed,
+                        string.Format(FileUIResources.ImportResultsDlg_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__, filePath),
+                        FileUIResources.ImportResultsDlg_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed,
                         x.Message);
                     MessageDlg.ShowWithException(this, message, x);
                 }
@@ -456,9 +445,14 @@ namespace pwiz.Skyline.FileUI
         public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsDir()
         {
             string initialDir = Path.GetDirectoryName(_documentSavedPath);
+            // A saved results folder for this document path supersedes the document directory
+            var dlgState = Settings.Default.OpenDataSourceState;
+            if (dlgState != null && Equals(dlgState.DocumentPath, _documentSavedPath))
+                initialDir = dlgState.InitialDirectory;
+
             using (FolderBrowserDialog dlg = new FolderBrowserDialog())
             {
-                dlg.Description = Resources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory;
+                dlg.Description = FileUIResources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory;
                 dlg.ShowNewFolderButton = false;
                 dlg.SelectedPath = initialDir;
                 if (dlg.ShowDialog(this) != DialogResult.OK)
@@ -466,13 +460,14 @@ namespace pwiz.Skyline.FileUI
 
                 string dirRoot = dlg.SelectedPath;
 
-                Settings.Default.SrmResultsDirectory = dirRoot;
+                if (dlgState != null && Equals(dlgState.DocumentPath, _documentSavedPath))
+                    dlgState.InitialDirectory = dirRoot;
 
                 KeyValuePair<string, MsDataFileUri[]>[] namedPaths = DataSourceUtil.GetDataSourcesInSubdirs(dirRoot).ToArray();
                 if (namedPaths.Length == 0)
                 {
                     MessageDlg.Show(this,
-                        string.Format(Resources.ImportResultsDlg_GetDataSourcePathsDir_No_results_found_in_the_folder__0__, dirRoot));
+                        string.Format(FileUIResources.ImportResultsDlg_GetDataSourcePathsDir_No_results_found_in_the_folder__0__, dirRoot));
                     return null;
                 }
                 return namedPaths;

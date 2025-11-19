@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,6 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -197,7 +196,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             public override string ToString()
             {
-                return string.Format(Resources.Data_ToString__0__points, NumberOfPoints);
+                return string.Format(EntitiesResources.Data_ToString__0__points, NumberOfPoints);
             }
         }
 

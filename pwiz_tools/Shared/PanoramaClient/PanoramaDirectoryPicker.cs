@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Sophie Pallanck <srpall .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -78,6 +78,8 @@ namespace pwiz.PanoramaClient
                 back.Enabled = FolderBrowser.BackEnabled;
                 forward.Enabled = FolderBrowser.ForwardEnabled;
             }
+
+            IsLoaded = true;
         }
 
         private void Open_Click(object sender, EventArgs e)
@@ -169,6 +171,8 @@ namespace pwiz.PanoramaClient
             InitializeComponent();
 
             var server = new PanoramaServer(serverUri, user, pass);
+            _servers = new List<PanoramaServer> { server };
+
             FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
 
             InitializeDialog();

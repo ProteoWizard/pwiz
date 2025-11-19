@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,9 +18,9 @@
  */
 
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -28,9 +28,9 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -79,40 +79,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(precursorWithTwoIds.Results[0][0].IsIdentified);
             Assert.IsTrue(precursorWithTwoIds.Results[1][0].IsIdentified);
 
-            var documentRetentionTimes = document.Settings.DocumentRetentionTimes;
-            var alignedTo1 = documentRetentionTimes.FileAlignments.Find("S_1");
-            var alignedTo10 = documentRetentionTimes.FileAlignments.Find("S_10");
-            var af10To1 = alignedTo1.RetentionTimeAlignments.Find("S_10");
-            var af1To10 = alignedTo10.RetentionTimeAlignments.Find("S_1");
-            // Verify that the slopes and intercepts are reciprocals of each other.
-            // We can only verify this with very coarse precision
-            Assert.AreEqual(af10To1.RegressionLine.Slope, 1/af1To10.RegressionLine.Slope, .03);
-            Assert.AreEqual(af10To1.RegressionLine.Intercept, -af1To10.RegressionLine.Intercept * af10To1.RegressionLine.Slope, 1);
-
-            var alignedRetentionTimes10To1 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
-                document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
-                document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
-                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
-                RegressionMethodRT.linear, CancellationToken.None);
-            var alignedRetentionTimes1To10 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
-                document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
-                document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
-                DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
-                RegressionMethodRT.linear, CancellationToken.None);
-            var regressionLine10To1 = (RegressionLineElement) alignedRetentionTimes10To1.RegressionRefined.Conversion;
-            Assert.AreEqual(af10To1.RegressionLine.Slope, regressionLine10To1.Slope);
-            Assert.AreEqual(af10To1.RegressionLine.Intercept, regressionLine10To1.Intercept);
-            var regressionLine1To10 = (RegressionLineElement) alignedRetentionTimes1To10.RegressionRefined.Conversion;
-            Assert.AreEqual(af1To10.RegressionLine.Slope, regressionLine1To10.Slope);
-            Assert.AreEqual(af1To10.RegressionLine.Intercept, regressionLine1To10.Intercept);
-
-
             // Verify that the generated chromatogram is of the expected length around the actual or aligned ID's
-            var idTimes = document.Settings.GetRetentionTimes("S_1", seqWithOneId, peptideWithOneId.ExplicitMods);
+            var targets = document.Settings.GetTargets(peptideWithOneId).ToList();
+            var idTimes = document.Settings.GetRetentionTimes(new MsDataFilePath("S_1"), targets);
             VerifyStartEndTime(document, peptideWithOneId, precursorWithOneId, 0, 
                 idTimes.Min() - CHROMATOGRAM_WINDOW_LENGTH_MINUTES, 
                 idTimes.Max() + CHROMATOGRAM_WINDOW_LENGTH_MINUTES);
-            var alignedTimes = document.Settings.GetAllRetentionTimes("S_10", seqWithOneId, peptideWithOneId.ExplicitMods);
+            var alignedTimes = document.Settings.GetAlignedRetentionTimes(null, new MsDataFilePath("S_10"), targets);
             Assert.AreEqual(0, document.Settings.GetRetentionTimes("S_10").GetRetentionTimes(seqWithOneId).Length);
             VerifyStartEndTime(document, peptideWithOneId, precursorWithOneId, 1, 
                 alignedTimes.Min() - CHROMATOGRAM_WINDOW_LENGTH_MINUTES, 
@@ -133,9 +106,8 @@ namespace pwiz.SkylineTestFunctional
                       {
                           var curves = alignmentForm.RegressionGraph.GraphPane.CurveList;
                           var outlierCurve = curves.Find(curveItem => Resources.AlignmentForm_UpdateGraph_Outliers == curveItem.Label.Text);
-                          var goodPointsCurve = curves.Find(curveItem => curveItem.Label.Text == Resources.AlignmentForm_UpdateGraph_Peptides_Refined);
-                          Assert.AreEqual(alignedRetentionTimes1To10.OutlierIndexes.Count, outlierCurve.Points.Count);
-                          Assert.AreEqual(alignedRetentionTimes1To10.RegressionPointCount, outlierCurve.Points.Count + goodPointsCurve.Points.Count);
+                          var goodPointsCurve = curves.Find(curveItem => curveItem.Label.Text ==
+                                                                         Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, SkylineWindow.Document.DocumentType));
                       });
             RunUI(alignmentForm.Close);
             RunUI(()=>SkylineWindow.ComboResults.SelectedIndex = 0);

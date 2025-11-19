@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using SharedBatch;
 
@@ -38,7 +38,7 @@ namespace AutoQC
                 _panoramaSettings.ValidateSettings(true);
                 return true;
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
                 errorMessage = e.Message;
                 label_err_message.Text = errorMessage;

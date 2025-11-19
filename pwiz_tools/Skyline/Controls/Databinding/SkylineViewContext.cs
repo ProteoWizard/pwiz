@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -29,18 +28,24 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding.AuditLog;
 using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -128,6 +133,72 @@ namespace pwiz.Skyline.Controls.Databinding
             return true;
         }
 
+        protected override void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
+            RowItemEnumerator rowItemEnumerator, char separator)
+        {
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(rowItemEnumerator.ItemProperties);
+            if (true != replicatePivotColumns?.HasConstantAndVariableColumns())
+            {
+                base.WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
+                return;
+            }
+            var dsvWriter = CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats);
+
+            // Filter columns for main grid to be written out.
+            var filteredColumnDescriptors = rowItemEnumerator.ItemProperties.OfType<ColumnPropertyDescriptor>()
+                .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor)).ToList();
+
+            // Count main grid columns to add spaces.
+            var replicateVariablePropertyCounts = filteredColumnDescriptors.GroupBy(column => column.PivotKey ?? PivotKey.EMPTY)
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
+            // Create header line with property column and replicate headers.
+            var propertyCaption = LocalizationHelper.CallWithCulture(DataSchema.DataSchemaLocalizer.Language,
+                () => Model.Databinding.DatabindingResources.SkylineViewContext_WriteDataWithStatus_Property);
+            var headerLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1)
+                .Prepend(propertyCaption).ToList();
+            var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
+            var propertyLines = new List<List<string>> { headerLine };
+            var allRowItems = rowItemEnumerator.GetRowItems();
+            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+            {
+                // Add replicate to header line.
+                headerLine.Add(group.Key.ReplicateName);
+                headerLine.AddRange(Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[group.ToList()[0].PivotKey] - 1));
+
+                foreach (var column in group)
+                {
+                    if (!replicatePivotColumns.IsConstantColumn(column) || column.DisplayColumn.ColumnDescriptor == null)
+                    {
+                        continue;
+                    }
+
+                    var propertyPath = column.DisplayColumn.PropertyPath;
+                    if (!propertyLineDictionary.TryGetValue(propertyPath, out var propertyLine))
+                    {
+                        // Create a new row if property line does not exist yet.
+                        var propertyDisplayName = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+                        propertyLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1).Prepend(propertyDisplayName).ToList();
+                        propertyLineDictionary[propertyPath] = propertyLine;
+                        propertyLines.Add(propertyLine);
+                    }
+
+                    // Add value to property line.
+                    var rowItem = allRowItems.FirstOrDefault(item => column.GetValue(item) != null);
+                    var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
+                    propertyLine.AddRange(Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[column.PivotKey] - 1).Prepend(formattedValue));
+                }
+            }
+
+            // Write pivot replicate data.
+            foreach (var line in propertyLines)
+            {
+                dsvWriter.WriteRowValues(writer, line);
+            }
+            writer.WriteLine();
+            var newRowItemEnumerator = new RowItemEnumerator(allRowItems, new ItemProperties(filteredColumnDescriptors), rowItemEnumerator.ColumnFormats);
+            base.WriteDataWithStatus(progressMonitor, ref status, writer, newRowItemEnumerator, separator);
+        }
+
         protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
         {
             Settings.Default.PersistedViews.SetViewSpecList(viewGroup, viewSpecList);
@@ -161,7 +232,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 var skylineWindow = SkylineDataSchema.SkylineWindow;
                 if (skylineWindow != null)
                 {
-                    skylineWindow.ModifyDocument(Resources.SkylineViewContext_SaveViewSpecList_Change_Document_Reports, doc =>
+                    skylineWindow.ModifyDocument(DatabindingResources.SkylineViewContext_SaveViewSpecList_Change_Document_Reports, doc =>
                     {
                         var oldViewNames = new HashSet<string>(
                             doc.Settings.DataSettings.ViewSpecList.ViewSpecs.Select(spec => spec.Name));
@@ -182,7 +253,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var skylineWindow = SkylineDataSchema.SkylineWindow;
             if (skylineWindow != null)
             {
-                skylineWindow.ModifyDocument(Resources.SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports, doc =>
+                skylineWindow.ModifyDocument(DatabindingResources.SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports, doc =>
                 {
                     var oldViewSpecList = doc.Settings.DataSettings.ViewSpecList;
                     var newViewSpecList = changeViewSpecFunc(oldViewSpecList);
@@ -221,9 +292,12 @@ namespace pwiz.Skyline.Controls.Databinding
             yield return new TabularFileFormat('\t', TextUtil.FILTER_TSV);
         }
 
-        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
+        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons, Exception exception)
         {
-            return new AlertDlg(message, messageBoxButtons).ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
+            return new AlertDlg(message, messageBoxButtons)
+            {
+                Exception = exception
+            }.ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
         }
 
         public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
@@ -305,10 +379,10 @@ namespace pwiz.Skyline.Controls.Databinding
                     bool success = false;
                     using (var longWait = new LongWaitDlg())
                     {
-                        longWait.Text = Resources.ExportReportDlg_ExportReport_Generating_Report;
+                        longWait.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
                         var action = new Action<IProgressMonitor>(progressMonitor =>
                         {
-                            IProgressStatus status = new ProgressStatus(Resources.ExportReportDlg_ExportReport_Building_report);
+                            IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
                             progressMonitor.UpdateProgress(status);
                             using (var writer = new StreamWriter(stream))
                             {
@@ -327,9 +401,8 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             catch (Exception x)
             {
-                Trace.TraceWarning(@"Error exporting to file: {0}", x);
                 MessageDlg.ShowWithException(owner,
-                    string.Format(Resources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
+                    string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
                 return false;
             }
         }
@@ -353,6 +426,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
             progressMonitor ??= new SilentProgressMonitor(cancellationToken);
+            RowItemEnumerator rowItemEnumerator;
             using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
@@ -363,16 +437,17 @@ namespace pwiz.Skyline.Controls.Databinding
                         bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
                     }
                 }
-                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
-                    .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
-                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, separator);
-                if (progressMonitor.IsCanceled)
-                    return false;
-
-                writer.Flush();
-                progressMonitor.UpdateProgress(status = status.Complete());
+                rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
             }
+
+            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
+                .ChangeMessage(DatabindingResources.ExportReportDlg_ExportReport_Writing_report));
+            WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
+            if (progressMonitor.IsCanceled)
+                return false;
+            writer.Flush();
+            progressMonitor.UpdateProgress(status = status.Complete());
             return true;
         }
 
@@ -393,244 +468,24 @@ namespace pwiz.Skyline.Controls.Databinding
             return false;
         }
 
-        // ReSharper disable LocalizableElement
         public static ViewInfo GetDefaultViewInfo(ColumnDescriptor columnDescriptor)
         {
-            ViewSpec viewSpec = GetDefaultViewSpec(columnDescriptor);
-            bool addAnnotations = false;
-            if (columnDescriptor.PropertyType == typeof (TransitionResult))
+            var builtInReports = new BuiltInReports(((SkylineDataSchema)columnDescriptor.DataSchema).Document);
+            var columns = builtInReports.GetDefaultColumns(columnDescriptor.PropertyType);
+            ViewSpec viewSpec;
+            if (columns == null)
             {
-                viewSpec = viewSpec.SetColumns(new[]
-                {
-                    new ColumnSpec().SetName("PrecursorResult.PeptideResult.ResultFile.Replicate"),
-                    new ColumnSpec().SetName("Note"),
-                    new ColumnSpec().SetName("RetentionTime"),
-                    new ColumnSpec().SetName("Fwhm"),
-                    new ColumnSpec().SetName("StartTime"),
-                    new ColumnSpec().SetName("EndTime"),
-                    new ColumnSpec().SetName("Area"),
-                    new ColumnSpec().SetName("Background"),
-                    new ColumnSpec().SetName("AreaRatio"),
-                    new ColumnSpec().SetName("Height"),
-                    new ColumnSpec().SetName("PeakRank"),
-                });
-                addAnnotations = true;
-            } 
-            else if (columnDescriptor.PropertyType == typeof (PrecursorResult))
-            {
-                viewSpec = viewSpec.SetColumns(new[]
-                {
-                    new ColumnSpec().SetName("PeptideResult.ResultFile.Replicate"),
-                    new ColumnSpec().SetName("Note"), 
-                    new ColumnSpec().SetName("PrecursorPeakFoundRatio"),
-                    new ColumnSpec().SetName("BestRetentionTime"),
-                    new ColumnSpec().SetName("MaxFwhm"),
-                    new ColumnSpec().SetName("MinStartTime"),
-                    new ColumnSpec().SetName("MaxEndTime"),
-                    new ColumnSpec().SetName("TotalArea"),
-                    new ColumnSpec().SetName("TotalBackground"),
-                    new ColumnSpec().SetName("TotalAreaRatio"),
-                    new ColumnSpec().SetName("MaxHeight"),
-                    new ColumnSpec().SetName("LibraryDotProduct"),
-                    new ColumnSpec().SetName("IsotopeDotProduct"),
-                });
-                addAnnotations = true;
-            }
-            else if (columnDescriptor.PropertyType == typeof (PeptideResult))
-            {
-                viewSpec = viewSpec.SetColumns(new[]
-                {
-                    new ColumnSpec().SetName("ResultFile.Replicate"),
-                    new ColumnSpec().SetName("PeptidePeakFoundRatio"), 
-                    new ColumnSpec().SetName("PeptideRetentionTime"), 
-                    new ColumnSpec().SetName("RatioToStandard"), 
-                });
-                
-                var skylineDataSchema = (SkylineDataSchema)columnDescriptor.DataSchema;
-                PropertyPath propertyPathReplicate = PropertyPath.Parse("ResultFile.Replicate");
-                viewSpec = viewSpec.SetColumns(viewSpec.Columns.Concat(
-                    skylineDataSchema.GetAnnotations(typeof (Replicate))
-                        .Select(pd => new ColumnSpec(propertyPathReplicate.Property(pd.Name))))
-                    );
+                viewSpec = GetDefaultViewSpec(columnDescriptor);
             }
             else
             {
-                var columnsToRemove = new HashSet<PropertyPath> 
-                    {PropertyPath.Root.Property("Locator")};
-                bool addRoot = false;
-                bool docHasCustomIons = ((SkylineDataSchema)columnDescriptor.DataSchema).Document.CustomIonCount != 0;
-                bool docHasOnlyCustomIons = docHasCustomIons && ((SkylineDataSchema)columnDescriptor.DataSchema).Document.PeptideCount == 0;
-                
-                if (columnDescriptor.PropertyType == typeof(Protein))
-                {
-                    columnsToRemove.Add(PropertyPath.Root.Property("Name"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.AutoSelectPeptides)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Protein.ProteinSequenceCoverage)));
-                    if (docHasOnlyCustomIons)
-                    {
-                        // Peptide-oriented fields that make no sense in a small molecule context
-                        columnsToRemove.Add(PropertyPath.Root.Property("Accession"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("PreferredName"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("Gene"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("Species"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
-                    }
-                    addRoot = true;
-                }
-                else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Peptide))
-                {
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AutoSelectPrecursors)));
-                    columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("SequenceLength"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("PreviousAa"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("NextAa"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("RetentionTimeCalculatorScore"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("DocumentLocation"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ConcentrationMultiplier"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("InternalStandardConcentration"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("CalibrationCurve"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("FiguresOfMerit"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AutoSelectPrecursors)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AttributeGroupId)));
-                    foreach (var prop in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
-                        columnsToRemove.Add(PropertyPath.Root.Property(prop)); // By default don't show CAS, InChI etc
-                    if (docHasOnlyCustomIons)
-                    {
-                        // Peptide-oriented fields that make no sense in a small molecule context
-                        columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
-                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.FirstPosition)));
-                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.LastPosition)));
-                        columnsToRemove.Add(PropertyPath.Root.Property("MissedCleavages"));
-                    }
-                    if (!docHasCustomIons)
-                    {
-                        columnsToRemove.Add(PropertyPath.Root.Property("MoleculeName"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("MoleculeFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTime"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ExplicitRetentionTimeWindow"));
-                    }
-                    addRoot = true;
-                }
-                else if (columnDescriptor.PropertyType == typeof(Precursor))
-                {
-                    if (docHasOnlyCustomIons)
-                    {
-                        columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
-                    }
-                    if (!docHasCustomIons)
-                    {
-                        columnsToRemove.Add(PropertyPath.Root.Property("IonName"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("IonFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("NeutralFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("Adduct"));
-                    }
-                    columnsToRemove.Add(PropertyPath.Root.Property("CollisionEnergy"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("NeutralMass"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("TransitionCount"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("DeclusteringPotential"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore1"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore2"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore3"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("DecoyMzShift"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeMsec"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionalCrossSection"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobility"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityUnits"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("PrecursorConcentration"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.AutoSelectTransitions)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.TargetQualitativeIonRatio)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.LibraryIonMobility)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.SpectrumFilter)));
-                    addRoot = true;
-                }
-                else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Transition))
-                {
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitIonMobilityHighEnergyOffset"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCompensationVoltage"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ProductNeutralMass"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonType"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonOrdinal"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("CleavageAa"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LossNeutralMass"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LossFormulas"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("ProductDecoyMzShift"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistIndex"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistRank"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("FullScanFilterWidth"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryRank"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryIntensity"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistProportion"));
+                viewSpec = new ViewSpec().SetRowType(columnDescriptor.PropertyType)
+                    .SetColumns(columns.Select(pp => new ColumnSpec(pp)));
+                viewSpec = viewSpec.SetSublistId(SublistPaths.GetReplicateSublist(columnDescriptor.PropertyType));
+            }
 
-                    if (docHasOnlyCustomIons)
-                    {
-                        columnsToRemove.Add(PropertyPath.Root.Property("FragmentIon")); // Not interesting - only one product per precursor for small molecules
-                        columnsToRemove.Add(PropertyPath.Root.Property("Losses")); // Doesn't mean anything for non-peptides
-                    }
-                    if (!docHasCustomIons)
-                    {
-                        // Stuff that only applies to small molecules
-                        columnsToRemove.Add(PropertyPath.Root.Property("ProductIonFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ProductNeutralFormula"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("ProductAdduct"));
-                    }
-                    addRoot = true;
-                }
-                else if (columnDescriptor.PropertyType == typeof(Replicate))
-                {
-                    columnsToRemove.Add(PropertyPath.Root.Property("Name"));
-                    columnsToRemove.Add(PropertyPath.Root.Property("SampleDilutionFactor"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Replicate.BatchName)));
-                    addRoot = true;
-                }
-                viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
-                if (addRoot)
-                {
-                    viewSpec = viewSpec.SetColumns(new[] { new ColumnSpec(PropertyPath.Root) }.Concat(viewSpec.Columns));
-                }
-                viewSpec = viewSpec.SetColumns(viewSpec.Columns
-                    .Where(columnSpec => !columnsToRemove.Contains(columnSpec.PropertyPath)));
-            }
-            if (addAnnotations)
-            {
-                var skylineDataSchema = (SkylineDataSchema) columnDescriptor.DataSchema;
-                viewSpec = viewSpec.SetColumns(viewSpec.Columns.Concat(
-                    skylineDataSchema.GetAnnotations(columnDescriptor.PropertyType)
-                        .Select(pd => new ColumnSpec(PropertyPath.Root.Property(pd.Name)))));
-            }
             return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
         }
-
-        public static PropertyPath GetReplicateSublist(Type rowType)
-        {
-            if (rowType == typeof(SkylineDocument))
-            {
-                return PropertyPath.Root.Property("Replicates").LookupAllItems();
-            }
-            if (rowType == typeof(Replicate))
-            {
-                return PropertyPath.Root.Property("Files").LookupAllItems();
-            }
-
-            if (rowType == typeof(Protein))
-            {
-                return PropertyPath.Root.Property(nameof(Protein.Results)).LookupAllItems().Property("Value")
-                    .Property(nameof(Replicate.Files));
-            }
-            return PropertyPath.Root.Property("Results").LookupAllItems();
-        }
-        // ReSharper restore LocalizableElement
 
         public override void ExportViews(Control owner, ViewSpecList viewSpecList)
         {
@@ -638,7 +493,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 saveFileDialog.InitialDirectory = Settings.Default.ActiveDirectory;
                 saveFileDialog.CheckPathExists = true;
-                saveFileDialog.Filter = TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS);
+                saveFileDialog.Filter = TextUtil.FileDialogFilterAll(DatabindingResources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS);
                 saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner));
                 if (!string.IsNullOrEmpty(saveFileDialog.FileName))
                 {
@@ -649,12 +504,20 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public override void ExportViewsToFile(Control owner, ViewSpecList viewSpecList, string fileName)
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
-            SafeWriteToFile(owner, fileName, stream =>
+            try
             {
-                xmlSerializer.Serialize(stream, viewSpecList);
-                return true;
-            });
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
+                SafeWriteToFile(owner, fileName, stream =>
+                {
+                    xmlSerializer.Serialize(stream, viewSpecList);
+                    return true;
+                });
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(owner,
+                    string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
+            }
         }
 
         public override void ImportViews(Control owner, ViewGroup group)
@@ -663,7 +526,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 importDialog.InitialDirectory = Settings.Default.ActiveDirectory;
                 importDialog.CheckPathExists = true;
-                importDialog.Filter = TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports,
+                importDialog.Filter = TextUtil.FileDialogFilterAll(DatabindingResources.ExportReportDlg_ShowShare_Skyline_Reports,
                     ReportSpecList.EXT_REPORTS);
                 importDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner));
 
@@ -685,14 +548,14 @@ namespace pwiz.Skyline.Controls.Databinding
             catch (Exception x)
             {
                 new MessageBoxHelper(owner.FindForm()).ShowXmlParsingError(
-                    string.Format(Resources.SkylineViewContext_ImportViews_Failure_loading__0__, fileName),
+                    string.Format(DatabindingResources.SkylineViewContext_ImportViews_Failure_loading__0__, fileName),
                     fileName, x.InnerException ?? x);
                 return;
             }
             if (!views.ViewSpecs.Any())
             {
-                ShowMessageBox(owner, Resources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_,
-                    MessageBoxButtons.OK);
+                ShowMessageBox(owner, DatabindingResources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_,
+                    MessageBoxButtons.OK, null);
                 return;
             }
             CopyViewsToGroup(owner, group, views);
@@ -716,7 +579,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             bool proteomic = dataSchema.DefaultUiMode == UiModes.PROTEOMIC;
             yield return MakeRowSource<Protein>(dataSchema, 
-                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists,
+                proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : DatabindingResources.SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists,
                 () => new Proteins(dataSchema));
             yield return MakeRowSource<Model.Databinding.Entities.Peptide>(dataSchema, 
                 proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
@@ -916,6 +779,80 @@ namespace pwiz.Skyline.Controls.Databinding
                 return UiModes.AvailableModes(SkylineDataSchema.SkylineWindow.ModeUI);
             }
         }
+
+        protected override DataGridViewColumn CreateCustomColumn(PropertyDescriptor propertyDescriptor)
+        {
+            Type columnType = null;
+
+            // First, check for DataTypeSpecifierAttribute (marker type for properties with generic types like string)
+            var dataTypeSpecifier = propertyDescriptor.Attributes.OfType<DataTypeSpecifierAttribute>().FirstOrDefault();
+            if (dataTypeSpecifier != null)
+            {
+                PropertyTypeToColumnTypeMap.TryGetValue(dataTypeSpecifier.MarkerType, out columnType);
+            }
+
+            // Second, check UI-side mapping from property type to column type
+            // Check exact type match first, then check if property type is assignable from mapped type (for base classes)
+            if (columnType == null)
+            {
+                if (!PropertyTypeToColumnTypeMap.TryGetValue(propertyDescriptor.PropertyType, out columnType))
+                {
+                    // Check if property type derives from any mapped base type
+                    foreach (var kvp in PropertyTypeToColumnTypeMap)
+                    {
+                        if (kvp.Key.IsAssignableFrom(propertyDescriptor.PropertyType))
+                        {
+                            columnType = kvp.Value;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // If we found a column type, instantiate it
+            if (columnType != null)
+            {
+                try
+                {
+                    var constructor = columnType.GetConstructor(Array.Empty<Type>());
+                    if (constructor != null)
+                    {
+                        return (DataGridViewColumn)constructor.Invoke(Array.Empty<object>());
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Assume.Fail(string.Format(@"Exception constructing column of type {0}:{1}", columnType, exception));
+                }
+            }
+
+            // Fall back to base class implementation
+            return base.CreateCustomColumn(propertyDescriptor);
+        }
+
+        /// <summary>
+        /// UI-side mapping from property types to DataGridView column types.
+        /// This mapping allows the UI to control which column types are used for specific property types,
+        /// reducing backward dependencies from Model to UI.
+        /// Marker types (used with DataTypeSpecifierAttribute) allow properties with generic types
+        /// like string to specify which UI column type should be used without changing the property type.
+        /// </summary>
+        private static readonly Dictionary<Type, Type> PropertyTypeToColumnTypeMap = new Dictionary<Type, Type>
+        {
+            // Audit log types map to AuditLogColumn
+            { typeof(AuditLogRow.AuditLogRowText), typeof(AuditLogColumn) },
+            
+            // Model types with distinct types map to their UI column types
+            { typeof(NormalizationMethod), typeof(NormalizationMethodDataGridViewColumn) },
+            { typeof(ListItem), typeof(ListLookupDataGridViewColumn) },
+            { typeof(SampleType), typeof(SampleTypeDataGridViewColumn) },
+            { typeof(StandardType), typeof(StandardTypeDataGridViewColumn) },
+            
+            // Marker types for properties with generic types (like string, bool)
+            { typeof(SurrogateStandardName), typeof(SurrogateStandardDataGridViewColumn) },
+            { typeof(AnnotationPropertyDescriptor.TrueFalseAnnotation), typeof(DataGridViewCheckBoxColumn) },
+            { typeof(AnnotationPropertyDescriptor.ValueListAnnotation), typeof(AnnotationValueListDataGridViewColumn) }
+        };
 
         public override bool CanDisplayView(ViewSpec viewSpec)
         {

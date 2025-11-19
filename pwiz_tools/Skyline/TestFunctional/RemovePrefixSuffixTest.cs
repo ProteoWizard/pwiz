@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Simon MacLean <simon .at. teammaclean.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,11 +17,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -78,7 +80,15 @@ namespace pwiz.SkylineTestFunctional
 
             using (new WaitDocumentChange())
             {
-                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                SkylineWindow.BeginInvoke(new Action(()=>SkylineWindow.ImportResults()));
+                WaitForConditionUI(() => null != FindOpenForm<ImportResultsDlg>() || null != FindOpenForm<AlertDlg>());
+                var importResultsDlg = FindOpenForm<ImportResultsDlg>();
+                if (importResultsDlg == null)
+                {
+                    var alertDlg = FindOpenForm<AlertDlg>();
+                    Assert.IsNotNull(alertDlg, "Expected to find either ImportResultsDlg or AlertDlg");
+                    importResultsDlg = ShowDialog<ImportResultsDlg>(alertDlg.ClickNo);
+                }
                 RunUI(() =>
                 {
                     importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSources(TestFilesDir.FullPath).ToArray();

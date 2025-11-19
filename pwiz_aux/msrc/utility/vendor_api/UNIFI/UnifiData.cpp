@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id$
 //
 //
@@ -39,6 +39,7 @@
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+#include "ParallelDownloadQueue.hpp"
 #using <System.dll>
 #using <System.Core.dll>
 #using <System.Xml.dll>
@@ -50,25 +51,41 @@ using namespace pwiz::util;
 using namespace System;
 using namespace System::Web;
 using namespace System::Net;
+using namespace System::Net::Http;
 using namespace System::Net::Http::Headers;
 using namespace Newtonsoft::Json;
 using namespace Newtonsoft::Json::Linq;
 using namespace System::Runtime::Caching::Generic;
 using namespace System::Collections::Generic;
 using namespace System::Collections::Concurrent;
+using namespace Microsoft::Extensions::DependencyInjection;
 using System::Threading::Tasks::Task;
 using System::Threading::Tasks::TaskScheduler;
 using System::Threading::Tasks::Schedulers::QueuedTaskScheduler;
-using System::Net::Http::HttpClient;
 using System::Uri;
 using IdentityModel::Client::TokenClient;
 using IdentityModel::Client::TokenResponse;
 using std::size_t;
 
-auto toDouble = [](const auto& i) {return i; };
 
 namespace pwiz {
 namespace vendor_api {
+
+
+namespace
+{
+    public ref struct AccessTokenRequest
+    {
+        String^ Uri;
+        String^ Username;
+        String^ Password;
+        String^ Scope;
+        String^ Secret;
+        String^ ClientId;
+    };
+}
+
+
 namespace UNIFI {
 
 [ProtoBuf::ProtoContract]
@@ -172,433 +189,13 @@ public:
     !DDAMassSpectrum() { delete this; }
 };
 
-ref class ParallelDownloadQueue
-{
-    generic<typename T, typename TResult>
-    ref class Bind1
-    {
-        initonly T arg;
-        Func<T, TResult>^ const f;
-        TResult _() { return f(arg); }
-
-        public:
-        initonly Func<TResult>^ binder;
-        Bind1(Func<T, TResult>^ f, T arg) : f(f), arg(arg) {
-            binder = gcnew Func<TResult>(this, &Bind1::_);
-        }
-    };
-
-    generic<typename T, typename T2, typename TResult>
-    ref class Bind2
-    {
-        initonly T arg1;
-        initonly T2 arg2;
-        Func<T, T2, TResult>^ const f;
-        TResult _() { return f(arg1, arg2); }
-
-        public:
-        initonly Func<TResult>^ binder;
-        Bind2(Func<T, T2, TResult>^ f, T arg1, T2 arg2) : f(f), arg1(arg1), arg2(arg2) {
-            binder = gcnew Func<TResult>(this, &Bind2::_);
-        }
-    };
-
-    ref class Binder abstract sealed // static
-    {
-        public:
-        generic<typename T, typename TResult>
-        static Func<TResult>^ Create(Func<T, TResult>^ f, T arg) {
-            return (gcnew Bind1<T, TResult>(f, arg))->binder;
-        }
-
-        generic<typename T, typename T2, typename TResult>
-        static Func<TResult>^ Create(Func<T, T2, TResult>^ f, T arg1, T2 arg2) {
-            return (gcnew Bind2<T, T2, TResult>(f, arg1, arg2))->binder;
-        }
-    };
-
-    /// returns a JSON array or protobuf stream of the spectral intensities and masses (if the HTTP Accept header specifies 'application/octet-stream')
-    System::String^ spectrumEndpoint(size_t skip, size_t top) { return _sampleResultUrl + "/spectra/mass.mse?$skip=" + skip + "&$top=" + top; }
-
-    Uri^ _sampleResultUrl;
-    System::String^ _accessToken;
-    HttpClient^ _httpClient;
-    int _numSpectra;
-    cli::array<double>^ _binToDriftTime; // drift time for each of the 200 bins (0-base indexed) 
-    IMemoryCache<int, MSeMassSpectrum^>^ _cache;
-    IDictionary<int, Task^>^ _tasksByIndex;
-    System::Threading::CancellationTokenSource^ _cancelTokenSource;
-    int _chunkSize;
-    int _concurrentTasks;
-    QueuedTaskScheduler^ _queueScheduler;
-    TaskScheduler^ _primaryScheduler;
-    TaskScheduler^ _readaheadScheduler;
-    System::Threading::EventWaitHandle^ _waitForStart;
-    DateTime _startTime;
-    bool _unifiDebug;
-
-    //ConcurrentQueue<int>^ _chunkQueue;
-    ConcurrentQueue<HttpClient^>^ _httpClients;
-
-    public:
-    ParallelDownloadQueue(Uri^ url, System::String^ token, HttpClient^ client, int numSpectra, const vector<double>& binToDriftTime, IMemoryCache<int, MSeMassSpectrum^>^ cache, IDictionary<int, Task^>^ tasksByIndex, int chunkSize, int concurrentTasks)
-        : _chunkSize(chunkSize), _concurrentTasks(concurrentTasks)
-    {
-        _sampleResultUrl = url;
-        _accessToken = token;
-        _httpClient = client;
-        _numSpectra = numSpectra;
-        _binToDriftTime = ToSystemArray<double>(binToDriftTime, toDouble);
-        _cache = cache;
-        _tasksByIndex = tasksByIndex;
-        _httpClients = gcnew System::Collections::Concurrent::ConcurrentQueue<HttpClient^>();
-        _cancelTokenSource = gcnew System::Threading::CancellationTokenSource();
-        for (int i = 0; i < concurrentTasks+2; ++i)
-        {
-            auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-            webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-            webRequestHandler->PreAuthenticate = true;
-
-            auto httpClient = gcnew HttpClient(webRequestHandler);
-            httpClient->BaseAddress = gcnew Uri(_sampleResultUrl->GetLeftPart(System::UriPartial::Authority));
-            httpClient->DefaultRequestHeaders->Authorization = gcnew AuthenticationHeaderValue("Bearer", _accessToken);
-            httpClient->DefaultRequestHeaders->Accept->Add(gcnew MediaTypeWithQualityHeaderValue("application/octet-stream"));
-            httpClient->Timeout = System::TimeSpan::FromSeconds(60);
-
-            _httpClients->Enqueue(httpClient);
-        }
-
-        auto unifiDebug = System::Environment::GetEnvironmentVariable("UNIFI_DEBUG");
-        _unifiDebug = unifiDebug != nullptr && unifiDebug != "0";
-
-        if (_unifiDebug)
-            Console::Error->WriteLine("Chunk size: {0}, Num. spectra: {1}", chunkSize, numSpectra);
-
-        _queueScheduler = gcnew QueuedTaskScheduler();
-        _primaryScheduler = _queueScheduler->ActivateNewQueue(0);
-        _readaheadScheduler = _queueScheduler->ActivateNewQueue(1);
-
-        _waitForStart = gcnew System::Threading::EventWaitHandle(false, System::Threading::EventResetMode::AutoReset);
-        _startTime = DateTime::UtcNow;
-
-        //_chunkQueue = gcnew ConcurrentQueue<int>();
-        //for (int i = 0; i < _numSpectra; i += chunkSize)
-        //    _chunkQueue->Enqueue(i);
-    }
-
-    ~ParallelDownloadQueue()
-    {
-        Console::Error->WriteLine("Disposing queue and cancelling requests.");
-        _cancelTokenSource->Cancel();
-        //for each (Task^ task in _tasksByIndex->Values)
-        //    task->Wait();
-    }
-
-    static int getRequestLimitTask(System::Uri^ url, System::String^ accessToken)
-    {
-        auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-        webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-        webRequestHandler->PreAuthenticate = true;
-
-        auto httpClient = gcnew HttpClient(webRequestHandler);
-        httpClient->BaseAddress = gcnew Uri(url->GetLeftPart(System::UriPartial::Authority));
-        httpClient->DefaultRequestHeaders->Authorization = gcnew AuthenticationHeaderValue("Bearer", accessToken);
-        httpClient->DefaultRequestHeaders->Accept->Add(gcnew MediaTypeWithQualityHeaderValue("application/octet-stream"));
-        httpClient->Timeout = System::TimeSpan::FromSeconds(60);
-
-        System::Net::Http::HttpRequestMessage^ request;
-        System::Net::Http::HttpResponseMessage^ response;
-        for (int streamRetryCount = 1, streamMaxRetryCount = 15; streamRetryCount <= streamMaxRetryCount; ++streamRetryCount)
-        {
-            try
-            {
-                for (int requestRetryCount = 1, requestMaxRetryCount = 15; requestRetryCount <= requestMaxRetryCount; ++requestRetryCount)
-                {
-                    try
-                    {
-                        request = gcnew System::Net::Http::HttpRequestMessage(System::Net::Http::HttpMethod::Get, url);
-                        response = httpClient->SendAsync(request, System::Net::Http::HttpCompletionOption::ResponseContentRead)->Result;
-                        if (response->IsSuccessStatusCode)
-                            break;
-                    }
-                    catch (Exception^ e)
-                    {
-                        if (requestRetryCount < requestMaxRetryCount)
-                        {
-                            // try again
-                            System::Threading::Thread::Sleep(2000 * Math::Pow(2, requestRetryCount));
-                        }
-                        else
-                            throw gcnew Exception(System::String::Format("error requesting spectra chunk {0} ({2})", "0", e->ToString()->Replace("\r", "")->Split(L'\n')[0]));
-                    }
-                }
-                if (!response->IsSuccessStatusCode)
-                    throw gcnew Exception(System::String::Format("error requesting spectra chunk {0} (HTTP {1})", "0", response->StatusCode));
-            }
-            catch (Exception^ e)
-            {
-                // if TooManyRequests, deactivate current httpClient and retry the task with the next available httpClient
-                if (response->StatusCode == (HttpStatusCode) 429)
-                {
-                    return 1;
-                }
-
-                if (streamRetryCount >= streamMaxRetryCount)
-                    throw gcnew Exception(System::String::Format("error deserializing spectra chunk {0} protobuf: {1}", "0", e->ToString()->Replace("\r", "")->Split(L'\n')[0]), e);
-            }
-            finally
-            {
-                delete request;
-
-                if (response != nullptr)
-                    delete response;
-            }
-        }
-        return 0;
-    }
-
-    // launch maxConcurrentTasks HTTP requests at the same time and see how many fail with 429; return the number that did not fail
-    static int GetRequestLimit(System::String^ url, String^ accessToken, int maxConcurrentTasks)
-    {
-        DateTime start = DateTime::UtcNow;
-        auto tasks = gcnew System::Collections::Generic::List<System::Threading::Tasks::Task<int>^>();
-        auto uri = gcnew Uri(url);
-        for (int i=0; i < maxConcurrentTasks; ++i)
-        {
-            auto f = gcnew Func<Uri^, String^, int>(&ParallelDownloadQueue::getRequestLimitTask);
-            tasks->Add(Task::Factory->StartNew(Binder::Create(f, uri, accessToken)));
-        }
-
-        for each (auto task in tasks)
-        {
-            if (task->Result)
-                --maxConcurrentTasks;
-        }
-        return Math::Max(1, maxConcurrentTasks);
-    }
-
-    int runChunkTask(size_t taskIndex)
-    {
-        int currentThreadId = System::Threading::Thread::CurrentThread->ManagedThreadId;
-        if (_unifiDebug)
-            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Requesting chunk {0} on thread {1}", taskIndex, currentThreadId);
-
-        _waitForStart->Set();
-
-        HttpClient^ httpClient = nullptr;
-        while (!_httpClients->TryDequeue(httpClient)) {}
-        /*if (!_httpClientByThread->ContainsKey(currentThreadId))
-        {
-            auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-            webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-            webRequestHandler->PreAuthenticate = true;
-
-            httpClient = gcnew HttpClient(webRequestHandler);
-            httpClient->BaseAddress = gcnew Uri(_sampleResultUrl->GetLeftPart(System::UriPartial::Authority));
-            httpClient->DefaultRequestHeaders->Authorization = gcnew AuthenticationHeaderValue("Bearer", _accessToken);
-            httpClient->DefaultRequestHeaders->Accept->Add(gcnew MediaTypeWithQualityHeaderValue("application/octet-stream"));
-            httpClient->Timeout = System::TimeSpan::FromSeconds(60);
-
-            _httpClientByThread[currentThreadId] = httpClient;
-            Console::WriteLine("CREATING NEW HTTPCLIENT FOR THREAD {0}: {1} clients total", currentThreadId, _httpClientByThread->Count);
-        }
-        else
-            httpClient = _httpClientByThread[currentThreadId];*/
-
-        DateTime start = DateTime::UtcNow;
-        System::Net::Http::HttpRequestMessage^ request;
-        System::Net::Http::HttpResponseMessage^ response;
-        long bytesDownloaded = 0;
-        for (int streamRetryCount = 1, streamMaxRetryCount = 15; streamRetryCount <= streamMaxRetryCount; ++streamRetryCount)
-        {
-            try
-            {
-                auto requestStart = start;
-                for (int requestRetryCount = 1, requestMaxRetryCount = 15; requestRetryCount <= requestMaxRetryCount; ++requestRetryCount)
-                {
-                    try
-                    {
-                        requestStart = DateTime::UtcNow;
-                        request = gcnew System::Net::Http::HttpRequestMessage(System::Net::Http::HttpMethod::Get, spectrumEndpoint(taskIndex, _chunkSize));
-                        response = httpClient->SendAsync(request, System::Net::Http::HttpCompletionOption::ResponseContentRead, _cancelTokenSource->Token)->Result;
-                        if (response->IsSuccessStatusCode)
-                            break;
-                    }
-                    catch (Exception^ e)
-                    {
-                        if (requestRetryCount < requestMaxRetryCount)
-                        {
-                            // try again
-                            if (_unifiDebug)
-                                Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk request {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], requestRetryCount));
-                            System::Threading::Thread::Sleep(2000 * Math::Pow(2, requestRetryCount));
-                        }
-                        else
-                            throw gcnew Exception(System::String::Format("error requesting spectra chunk {0} on thread {1} ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0]));
-                    }
-                }
-                if (!response->IsSuccessStatusCode)
-                    throw gcnew Exception(System::String::Format("error requesting spectra chunk {0} (HTTP {1})", taskIndex, response->StatusCode));
-
-                DateTime stop = DateTime::UtcNow;
-
-                bytesDownloaded = response->Content->Headers->ContentLength.GetValueOrDefault(0);
-                //if (streamRetryCount == 1)
-                if (_unifiDebug)
-                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "Starting chunk {0} ({1}ms to send request and receive {2} bytes; {3:0.}KB/s)", taskIndex, (stop - requestStart).TotalMilliseconds, bytesDownloaded, bytesDownloaded / 1024 / (stop - requestStart).TotalSeconds);
-
-                start = DateTime::UtcNow;
-                auto lastSpectrum = start;
-                auto stream = response->Content->ReadAsStreamAsync()->Result;
-                long bytesParsed = 0;
-                for (int i = 0; i < _chunkSize && (taskIndex + i) < _numSpectra; ++i)
-                {
-                    //if(!_cache->Contains(taskIndex + i))// ((i % 50) == 0)
-                    {
-                        auto spectrum = getSpectrumFromStream(stream, bytesParsed, taskIndex, i, currentThreadId, lastSpectrum);
-
-                        if (!_cache->Contains(taskIndex + i))
-                        {
-                            //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
-                            _cache->Add(taskIndex + i, spectrum);
-                        }
-                    }
-                    /*else
-                    {
-                        auto spectrum = gcnew MSeMassSpectrum();
-                        spectrum->Masses = gcnew cli::array<double>(10);
-                        spectrum->Intensities = gcnew cli::array<double>(10);
-                        _cache->Add(taskIndex + i, spectrum);
-                    }*/
-                }
-                break; // successfully streamed chunk
-            }
-            catch (Exception^ e)
-            {
-                // if TooManyRequests, deactivate current httpClient and retry the task with the next available httpClient
-                if (response->StatusCode == (HttpStatusCode) 429)
-                {
-                    Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Deactivating HTTP client due to TooManyRequests response"));
-                    delete httpClient;
-                    while (!_httpClients->TryDequeue(httpClient)) {}
-                }
-
-                if (streamRetryCount < streamMaxRetryCount || response->StatusCode == (HttpStatusCode) 429)
-                {
-                    // try again
-                    if (_unifiDebug)
-                        Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + System::String::Format("Retrying spectra chunk download {0} on thread {1} (attempt #{3}) due to error ({2})", taskIndex, currentThreadId, e->ToString()->Replace("\r", "")->Split(L'\n')[0], streamRetryCount));
-
-                    if (response->StatusCode != (HttpStatusCode) 429)
-                        System::Threading::Thread::Sleep(2000 * Math::Pow(2, streamRetryCount));
-                    bytesDownloaded = 0;
-                }
-                else
-                    throw gcnew Exception(System::String::Format("error deserializing spectra chunk {0} protobuf: {1}", taskIndex, e->ToString()->Replace("\r", "")->Split(L'\n')[0]), e);
-            }
-            finally
-            {
-                delete request;
-
-                if (response != nullptr)
-                    delete response;
-            }
-        }
-
-        if (_unifiDebug)
-        {
-            DateTime stop = DateTime::UtcNow;
-            Console::Error->WriteLine((DateTime::UtcNow - _startTime).ToString("\\[h\\:mm\\:ss\\]\\ ") + "FINISHED chunk {0} on thread {1} ({2} bytes in {3}s); cache size {4}", taskIndex, currentThreadId, bytesDownloaded, (stop - start).TotalSeconds, _cache->Count);
-        }
-        _tasksByIndex->Remove(taskIndex); // remove the task
-        _httpClients->Enqueue(httpClient); // add client back to queue
-
-        return 0;
-    }
-
-    Task^ getChunkTask(size_t taskIndex, bool primary, bool waitForStart)
-    {
-        // if the taskIndex is greater than the number of spectra, do nothing
-        if (taskIndex >= _numSpectra)
-            return nullptr;
-
-        Task^ chunkTask;
-        if (!_tasksByIndex->TryGetValue(taskIndex, chunkTask))
-        {
-            auto f = gcnew Func<size_t, int>(this, &ParallelDownloadQueue::runChunkTask);
-            chunkTask = Task::Factory->StartNew(Binder::Create(f, taskIndex), System::Threading::CancellationToken::None, System::Threading::Tasks::TaskCreationOptions::PreferFairness, primary ? _primaryScheduler : _readaheadScheduler);
-            if (waitForStart)
-                _waitForStart->WaitOne();
-            _tasksByIndex->Add(taskIndex, chunkTask);
-        }
-        return chunkTask;
-    }
-
-    MSeMassSpectrum^ getSpectrumFromStream(System::IO::Stream^ stream, long& bytesDownloaded, int taskIndex, int spectrumIndex, int currentThreadId, DateTime lastSpectrum)
-    {
-        auto spectrum = ProtoBuf::Serializer::DeserializeWithLengthPrefix<MSeMassSpectrum^>(stream, ProtoBuf::PrefixStyle::Base128);
-        if (spectrum == nullptr)
-            throw gcnew Exception(System::String::Format("deserialized null spectrum for index {0} (spectrum {1})", spectrumIndex, taskIndex + spectrumIndex));
-
-        if (spectrum->Masses == nullptr)
-        {
-            spectrum->mzArray = new vector<double>();
-            spectrum->intensityArray = new vector<double>();
-            spectrum->driftTimeArray = nullptr;
-            if (!_cache->Contains(taskIndex + spectrumIndex))
-            {
-                //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
-                _cache->Add(taskIndex + spectrumIndex, spectrum);
-            }
-            return spectrum;
-        }
-        bytesDownloaded += sizeof(double) * spectrum->Masses->Length * 2;
-
-        if (bytesDownloaded == 0)
-            throw gcnew Exception(System::String::Format("empty array for index {0} (spectrum {1})", spectrumIndex, taskIndex + spectrumIndex));
-
-        // if a spectrum takes more than 5 seconds, something's wrong
-        if ((DateTime::UtcNow - lastSpectrum).TotalSeconds > 10.0)
-            throw gcnew Exception(System::String::Format("download is going too slow in chunk {0} on thread {1}: one spectrum ({2}) took {3}s", taskIndex, currentThreadId, taskIndex + spectrumIndex, (DateTime::UtcNow - lastSpectrum).TotalSeconds));
-        lastSpectrum = DateTime::UtcNow;
-
-        spectrum->mzArray = new vector<double>();
-        spectrum->intensityArray = new vector<double>();
-        spectrum->driftTimeArray = nullptr;
-        auto& mzArray = *spectrum->mzArray;
-        auto& intensityArray = *spectrum->intensityArray;
-
-        ToStdVector(spectrum->Masses, mzArray);
-        ToStdVector(spectrum->Intensities, intensityArray);
-
-        if (spectrum->ScanSize->Length > 1)
-        {
-            if (spectrum->ScanSize->Length != 200)
-                throw gcnew Exception("assumed ion-mobility spectrum but ScanSize.Length != 200");
-
-            spectrum->driftTimeArray = new vector<double>();
-            auto& driftTimeArray = *spectrum->driftTimeArray;
-            driftTimeArray.reserve(mzArray.size());
-
-            // calculate cumulative scan indexes
-            spectrum->ScanIndexes = gcnew System::Collections::Generic::List<int>(spectrum->ScanSize->Length);
-            spectrum->ScanIndexes->Add(0);
-            for (int j = 0; j < spectrum->ScanSize->Length; ++j)
-            {
-                if (j > 0) spectrum->ScanIndexes->Add(spectrum->ScanIndexes[j - 1] + spectrum->ScanSize[j - 1]);
-                for (int k = 0; k < spectrum->ScanSize[j]; ++k)
-                    driftTimeArray.push_back(_binToDriftTime[j]);
-            }
-        }
-        return spectrum;
-    }
-};
-
 class UnifiData::Impl
 {
     public:
-    Impl(const std::string& sampleResultUrl, bool combineIonMobilitySpectra) : _acquisitionStartTime(blt::not_a_date_time), _combineIonMobilitySpectra(combineIonMobilitySpectra)
+    virtual void connect(const std::string& sampleResultUrl, bool combineIonMobilitySpectra)
     {
+        _combineIonMobilitySpectra = combineIonMobilitySpectra;
+
         try
         {
             Uri^ temp;
@@ -615,14 +212,10 @@ class UnifiData::Impl
             _identityServerUrl = gcnew Uri(queryVars[L"identity"] == nullptr ? defaultIdentityServer : queryVars[L"identity"]);
             _clientScope = queryVars[L"scope"] == nullptr ? defaultClientScope : queryVars[L"scope"];
             _clientSecret = queryVars[L"secret"] == nullptr ? L"secret" : queryVars[L"secret"];
+            _clientId = queryVars[L"clientId"] == nullptr ? L"resourceownerclient" : queryVars[L"clientId"];
             _sampleResultUrl = gcnew Uri(temp->GetLeftPart(UriPartial::Path));
 
-            auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-            webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-            webRequestHandler->PreAuthenticate = true;
-
-            _httpClient = gcnew HttpClient(webRequestHandler);
-
+            initHttpClient();
             getAccessToken();
             getHttpClient();
 
@@ -640,7 +233,13 @@ class UnifiData::Impl
 #else
             int idealChunkReadahead = _chunkReadahead = 2;
 #endif
-            _chunkReadahead = ParallelDownloadQueue::GetRequestLimit(spectrumEndpoint(0, 1), _accessToken, _chunkReadahead);
+            auto firstSpectrumDownloadInfo = gcnew ParallelDownloadQueue::DownloadInfo();
+            firstSpectrumDownloadInfo->spectrumIndexStart = 0;
+            firstSpectrumDownloadInfo->spectrumIndexEnd = 1;
+            firstSpectrumDownloadInfo->userdata = gcnew IntPtr(this);
+            spectrumEndpoint(firstSpectrumDownloadInfo);
+            String^ acceptHeader = "application/octet-stream";
+            _chunkReadahead = ParallelDownloadQueue::GetRequestLimit(firstSpectrumDownloadInfo->spectrumEndpoint->ToString(), _httpClientFactory, _accessToken, acceptHeader, _chunkReadahead);
             _chunkSize = (double) idealChunkReadahead / _chunkReadahead * _chunkSize;
 
             if (queryVars[L"chunkSize"] != nullptr) _chunkSize = lexical_cast<int>(ToStdString(queryVars[L"chunkSize"]));
@@ -648,18 +247,36 @@ class UnifiData::Impl
 
             _cacheSize = _chunkSize * _chunkReadahead * 2;
 
-            _cache = gcnew MemoryCache<int, MSeMassSpectrum^>(_cacheSize);
+            _cache = gcnew MemoryCache<int, Object^>(_cacheSize);
             _cache->SetPolicy(LruEvictionPolicy<int, MSeMassSpectrum^>::typeid->GetGenericTypeDefinition());
 
-            _tasksByIndex = gcnew ConcurrentDictionary<int, Task^>();
-            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numNetworkSpectra, _binToDriftTime, _cache, _tasksByIndex, _chunkSize, _chunkReadahead);
+            // I would have preferred to use a virtual member function for spectrumEndpoint, but I couldn't figure out how to put it in an Action
+            auto spectrumEndpointAction = gcnew Action<ParallelDownloadQueue::DownloadInfo^>(&Impl::spectrumEndpoint);
+            auto getSpectraFromStreamAction = gcnew Action<IO::Stream^, ParallelDownloadQueue::DownloadInfo^>(&Impl::getSpectraFromStreamLoop);
+            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClientFactory, _numNetworkSpectra, _binToDriftTime, _chunkSize, _chunkReadahead,
+                acceptHeader, spectrumEndpointAction, getSpectraFromStreamAction, gcnew IntPtr(this));
         }
         CATCH_AND_FORWARD_EX(sampleResultUrl)
     }
 
+    virtual RemoteApi getRemoteApiType() { return RemoteApi::Unifi; }
+
+    virtual int getMsLevel(size_t index) const
+    {
+        bool evenIndex = index % 2 == 0;
+        return evenIndex ? 1 : 2;
+    }
+
+    virtual void getChannelAndScanIndex(size_t index, int& channelIndex, int& scanIndexInChannel) const
+    {
+        throw std::runtime_error("UNIFI spectra are not organized by channel");
+    }
+
     friend class UnifiData;
 
-    private:
+    virtual ~Impl() {}
+
+    protected:
     System::String^ tokenEndpoint() { return System::Uri(_identityServerUrl, _apiVersion == 3 ? L"/identity/connect/token" : L"/connect/token").ToString(); }
 
     /// returns JSON describing the sampleResult, for example:
@@ -1184,7 +801,11 @@ class UnifiData::Impl
     System::String^ spectrumCountEndpoint() { return _sampleResultUrl + "/spectra/mass.mse/$count"; }
 
     /// returns a JSON array or protobuf stream of the spectral intensities and masses (if the HTTP Accept header specifies 'application/octet-stream')
-    System::String^ spectrumEndpoint(size_t skip, size_t top) { return _sampleResultUrl + "/spectra/mass.mse?$skip=" + skip + "&$top=" + top; }
+    static void spectrumEndpoint(ParallelDownloadQueue::DownloadInfo^ downloadInfo)
+    {
+        auto instance = static_cast<Impl*>(safe_cast<IntPtr^>(downloadInfo->userdata)->ToPointer());
+        downloadInfo->spectrumEndpoint = instance->_sampleResultUrl + "/spectra/mass.mse?$skip=" + downloadInfo->taskIndex + "&$top=" + downloadInfo->chunkSize;
+    }
 
     /// returns a JSON array of the chromatogram times and intensities
     /*{
@@ -1202,7 +823,9 @@ class UnifiData::Impl
     gcroot<Uri^> _identityServerUrl;
     gcroot<System::String^> _clientScope;
     gcroot<System::String^> _clientSecret;
+    gcroot<System::String^> _clientId;
     gcroot<System::String^> _accessToken;
+    inline static gcroot<IHttpClientFactory^> _httpClientFactory;
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
     bool _unifiDebug;
@@ -1212,6 +835,8 @@ class UnifiData::Impl
     int _numNetworkSpectra; // number of spectra without accounting for drift scans
     int _numLogicalSpectra; // number of spectra with IMS spectra counting as 200 logical spectra
 
+    inline static gcroot<ConcurrentDictionary<String^, Object^>^> globalResponseCache = gcnew ConcurrentDictionary<String^, Object^>();
+
     gcroot<System::Collections::Generic::List<System::String^>^> _chromatogramIds; //  chromatogram GUIDs
     vector<UnifiChromatogramInfo> _chromatogramInfo;
 
@@ -1219,7 +844,7 @@ class UnifiData::Impl
     string _sampleDescription;
     int _replicateNumber;
     string _wellPosition;
-    blt::local_date_time _acquisitionStartTime; // UTC
+    boost::optional<blt::local_date_time> _acquisitionStartTime; // UTC
 
     struct FunctionInfo
     {
@@ -1240,11 +865,85 @@ class UnifiData::Impl
     bool _hasAnyIonMobilityData;
     vector<double> _binToDriftTime; // drift time for each of the 200 bins (0-base indexed) 
 
-    gcroot<MemoryCache<int, MSeMassSpectrum^>^> _cache;
-    gcroot<IDictionary<int, Task^>^> _tasksByIndex;
+    gcroot<MemoryCache<int, Object^>^> _cache;
     int _chunkSize;
     int _chunkReadahead;
     int _cacheSize;
+
+    static void getSpectraFromStreamLoop(IO::Stream^ stream, ParallelDownloadQueue::DownloadInfo^ downloadInfo)
+    {
+        auto instance = static_cast<Impl*>(safe_cast<IntPtr^>(downloadInfo->userdata)->ToPointer());
+        for (int i = downloadInfo->spectrumIndexStart; i < downloadInfo->spectrumIndexEnd; ++i)
+        {
+            getSpectraFromStream(instance, stream, downloadInfo, downloadInfo->taskIndex, i);
+        }
+    }
+
+    static void getSpectraFromStream(const Impl* instance, IO::Stream^ stream, ParallelDownloadQueue::DownloadInfo^ downloadInfo, int taskIndex, int spectrumIndex)
+    {
+        auto _cache = instance->_cache;
+        auto spectrum = ProtoBuf::Serializer::DeserializeWithLengthPrefix<MSeMassSpectrum^>(stream, ProtoBuf::PrefixStyle::Base128);
+        if (spectrum == nullptr)
+            throw gcnew Exception(System::String::Format("deserialized null spectrum for index {0} (spectrum {1})", spectrumIndex, taskIndex + spectrumIndex));
+
+        if (spectrum->Masses == nullptr)
+        {
+            spectrum->mzArray = new vector<double>();
+            spectrum->intensityArray = new vector<double>();
+            spectrum->driftTimeArray = nullptr;
+            if (!_cache->Contains(taskIndex + spectrumIndex))
+            {
+                //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
+                _cache->Add(taskIndex + spectrumIndex, spectrum);
+            }
+            return;
+        }
+        downloadInfo->bytesDownloaded += sizeof(double) * spectrum->Masses->Length * 2;
+
+        if (downloadInfo->bytesDownloaded == 0)
+            throw gcnew Exception(System::String::Format("empty array for index {0} (spectrum {1})", spectrumIndex, taskIndex + spectrumIndex));
+
+        // if a spectrum takes more than 5 seconds, something's wrong
+        auto timeElapsed = DateTime::UtcNow - downloadInfo->lastSpectrumRetrievedTime;
+        if (timeElapsed.TotalSeconds > 10.0)
+            throw gcnew Exception(System::String::Format("download is going too slow in chunk {0} on thread {1}: one spectrum ({2}) took {3}s", taskIndex, downloadInfo->currentThreadId, taskIndex + spectrumIndex, timeElapsed.TotalSeconds));
+        downloadInfo->lastSpectrumRetrievedTime = DateTime::UtcNow;
+
+        spectrum->mzArray = new vector<double>();
+        spectrum->intensityArray = new vector<double>();
+        spectrum->driftTimeArray = nullptr;
+        auto& mzArray = *spectrum->mzArray;
+        auto& intensityArray = *spectrum->intensityArray;
+
+        ToStdVector(spectrum->Masses, mzArray);
+        ToStdVector(spectrum->Intensities, intensityArray);
+
+        if (spectrum->ScanSize->Length > 1)
+        {
+            if (spectrum->ScanSize->Length != 200)
+                throw gcnew Exception("assumed ion-mobility spectrum but ScanSize.Length != 200");
+
+            spectrum->driftTimeArray = new vector<double>();
+            auto& driftTimeArray = *spectrum->driftTimeArray;
+            driftTimeArray.reserve(mzArray.size());
+
+            // calculate cumulative scan indexes
+            spectrum->ScanIndexes = gcnew System::Collections::Generic::List<int>(spectrum->ScanSize->Length);
+            spectrum->ScanIndexes->Add(0);
+            for (int j = 0; j < spectrum->ScanSize->Length; ++j)
+            {
+                if (j > 0) spectrum->ScanIndexes->Add(spectrum->ScanIndexes[j - 1] + spectrum->ScanSize[j - 1]);
+                for (int k = 0; k < spectrum->ScanSize[j]; ++k)
+                    driftTimeArray.push_back(instance->_binToDriftTime[j]);
+            }
+        }
+        if (!_cache->Contains(taskIndex + spectrumIndex))
+        {
+            //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
+            _cache->Add(taskIndex + spectrumIndex, spectrum);
+        }
+        return;
+    }
 
     size_t taskIndexFromSpectrumIndex(size_t index) { return (index / _chunkSize) * _chunkSize; }
 
@@ -1258,6 +957,29 @@ class UnifiData::Impl
         // 400-599 -> 2
         // etc.
         return (size_t) floor(logicalIndex / 200.0);
+    }
+
+    static System::Net::Http::HttpMessageHandler^ getWebRequestHandler()
+    {
+        auto handler = gcnew System::Net::Http::WebRequestHandler();
+        handler->UnsafeAuthenticatedConnectionSharing = true;
+        handler->PreAuthenticate = true;
+        handler->MaxConnectionsPerServer = 10;
+        return handler;
+    }
+
+    void initHttpClient()
+    {
+        if (!_httpClientFactory)
+        {
+            auto services = gcnew ServiceCollection();
+            auto builder = HttpClientFactoryServiceCollectionExtensions::AddHttpClient(services, "customClient");
+            Func<HttpMessageHandler^>^ getWebRequestDelegate = gcnew Func<HttpMessageHandler^>(&Impl::getWebRequestHandler);
+            HttpClientBuilderExtensions::ConfigurePrimaryHttpMessageHandler(builder, getWebRequestDelegate);
+            auto provider = ServiceCollectionContainerBuilderExtensions::BuildServiceProvider(services);
+            _httpClientFactory = ServiceProviderServiceExtensions::GetService<IHttpClientFactory^>(provider);
+        }
+        _httpClient = _httpClientFactory->CreateClient("customClient");
     }
 
     void getAccessToken()
@@ -1286,7 +1008,7 @@ class UnifiData::Impl
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
 
-        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, nullptr, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
+        auto tokenClient = gcnew TokenClient(tokenEndpoint(), _clientId, _clientSecret, nullptr, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
             throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
@@ -1517,13 +1239,17 @@ class UnifiData::Impl
 
                 UnifiChromatogramInfo info;
                 info.index = _chromatogramInfo.size();
-                info.id = ToStdString(chromatogramInfo->SelectToken("$.name")->ToString());
+                info.name = ToStdString(chromatogramInfo->SelectToken("$.name")->ToString());
                 auto detectorType = chromatogramInfo->SelectToken("$.detectorType")->ToString();
-                if (detectorType == "MS") info.detectorType = DetectorType::MS;
-                else if (detectorType == "UV") info.detectorType = DetectorType::UV;
-                else if (detectorType == "FLR") info.detectorType = DetectorType::FLR;
-                else if (detectorType == "IR") info.detectorType = DetectorType::IR;
-                else if (detectorType == "NMR") info.detectorType = DetectorType::NMR;
+                if (detectorType == "MS")
+                {
+                    if (bal::contains(info.name, "TIC"))
+                        info.type = UnifiChromatogramInfo::TIC;
+                }
+                else if (detectorType == "UV") info.type = UnifiChromatogramInfo::UV;
+                else if (detectorType == "FLR") info.type = UnifiChromatogramInfo::FLR;
+                else if (detectorType == "IR") info.type = UnifiChromatogramInfo::IR;
+                else if (detectorType == "NMR") info.type = UnifiChromatogramInfo::NMR;
                 _chromatogramInfo.emplace_back(info);
             }
         }
@@ -1582,8 +1308,10 @@ class UnifiData::Impl
         result.scanPolarity = (Polarity)spectrum->IonizationPolarity;
         result.energyLevel = (EnergyLevel)spectrum->EnergyLevel;
         int functionIndex = result.energyLevel == EnergyLevel::Low ? 0 : 1;
+        result.msLevel = functionIndex + 1;
         result.scanRange.first = _functionInfo.at(functionIndex).lowMass;
         result.scanRange.second = _functionInfo.at(functionIndex).highMass;
+        result.dataIsContinuous = true;
 
         if (_combineIonMobilitySpectra || !_hasAnyIonMobilityData)
         {
@@ -1624,15 +1352,14 @@ class UnifiData::Impl
         }
     }
 
-    void getSpectrum(size_t index, UnifiSpectrum& result, bool getBinaryData)
+    virtual void getSpectrum(size_t index, UnifiSpectrum& result, bool getBinaryData, bool doCentroid)
     {
         try
         {
             MSeMassSpectrum^ spectrum = nullptr;
             int networkIndex = networkIndexFromLogicalIndex(index);
             int taskIndex = taskIndexFromSpectrumIndex(networkIndex);
-
-            if (_cache->TryGet(networkIndex, spectrum))
+            if (_cache->TryGet(networkIndex, spectrum) && spectrum != nullptr)
             {
                 convertWatersToPwizSpectrum(spectrum, result, index, getBinaryData);
 
@@ -1645,7 +1372,7 @@ class UnifiData::Impl
 
                     int lastNetworkIndexOfChunk = taskIndex + ((_chunkSize + 1) * i - 1);
                     if (!_cache->Contains(lastNetworkIndexOfChunk)) // if cache contains last index for chunk, don't requeue it
-                        _queue->getChunkTask(taskIndex + _chunkSize * i, false, false);
+                        _queue->getChunkTask(taskIndex + _chunkSize * i, false, false, false);
                 }
 
                 // remove earlier spectra from the cache
@@ -1663,7 +1390,7 @@ class UnifiData::Impl
 
             // get the primary chunkTask;
             // if cache is empty, wait for primary chunk download to start before starting other chunks
-            auto chunkTask = _queue->getChunkTask(taskIndex, true, _cache->Count == 0);
+            auto chunkTask = _queue->getChunkTask(taskIndex, false, true, _cache->Count == 0);
 
             // also queue the next _chunkReadahead chunks
             for (int i = 1; i < _chunkReadahead; ++i)
@@ -1674,13 +1401,13 @@ class UnifiData::Impl
 
                 int lastNetworkIndexOfChunk = taskIndex + ((_chunkSize + 1) * i - 1);
                 if (!_cache->Contains(lastNetworkIndexOfChunk)) // if cache contains last index for chunk, don't requeue it
-                    _queue->getChunkTask(taskIndex + _chunkSize * i, false, false);
+                    _queue->getChunkTask(taskIndex + _chunkSize * i, false, false, false);
             }
             if (_unifiDebug)
                 Console::Error->WriteLine("WAITING for chunk {0}", taskIndex);
             chunkTask->Wait(); // wait for the task to finish
 
-            spectrum = _cache->Get(networkIndex);
+            spectrum = (MSeMassSpectrum^) _cache->Get(networkIndex);
             if (spectrum == nullptr)
                 throw std::runtime_error("spectrum still null after task finished: " + lexical_cast<string>(index));
 
@@ -1694,16 +1421,16 @@ class UnifiData::Impl
         return _chromatogramInfo;
     }
 
-    void getChromatogram(size_t index, UnifiChromatogram& chromatogram, bool getBinaryData)
+    virtual void getChromatogram(size_t index, UnifiChromatogram& chromatogram, bool getBinaryData)
     {
         try
         {
             if (index > _chromatogramInfo.size())
                 throw gcnew ArgumentOutOfRangeException("index");
 
-            chromatogram.id = _chromatogramInfo[index].id;
+            chromatogram.name = _chromatogramInfo[index].name;
             chromatogram.index = _chromatogramInfo[index].index;
-            chromatogram.detectorType = _chromatogramInfo[index].detectorType;
+            chromatogram.type = _chromatogramInfo[index].type;
 
             auto response = _httpClient->GetAsync(chromatogramEndpoint(_chromatogramIds->default[index]))->Result;
             if (!response->IsSuccessStatusCode)
@@ -1723,7 +1450,10 @@ class UnifiData::Impl
             {
                 chromatogram.arrayLength = 0;
                 for each (auto value in o->SelectToken("$.retentionTimes")->Children())
+                {
                     ++chromatogram.arrayLength;
+                    (void)value; // suppress warning
+                }
                 return;
             }
 
@@ -1750,11 +1480,29 @@ class UnifiData::Impl
 
 };
 
+} // UNIFI
+} // vendor_api
+} // pwiz
+
+
+#include "WatersConnectData.ipp"
+
+
+namespace pwiz {
+namespace vendor_api {
+namespace UNIFI {
 
 PWIZ_API_DECL
 UnifiData::UnifiData(const std::string& sampleResultUrl, bool combineIonMobilitySpectra)
-    : _impl(new Impl(sampleResultUrl, combineIonMobilitySpectra))
 {
+    if (bal::icontains(sampleResultUrl, "unifi/v1/"))
+        _impl.reset(new Impl);
+    else if (bal::contains(sampleResultUrl, "injectionId"))
+        _impl.reset(new waters_connect::WatersConnectImpl);
+    else
+        throw std::runtime_error("unsupported URL: " + sampleResultUrl);
+
+    _impl->connect(sampleResultUrl, combineIonMobilitySpectra);
 }
 
 PWIZ_API_DECL
@@ -1764,12 +1512,14 @@ UnifiData::~UnifiData()
 
 PWIZ_API_DECL size_t UnifiData::numberOfSpectra() const { return (size_t) _impl->_numLogicalSpectra; }
 
-PWIZ_API_DECL void UnifiData::getSpectrum(size_t index, UnifiSpectrum& spectrum, bool getBinaryData) const { _impl->getSpectrum(index, spectrum, getBinaryData); }
+PWIZ_API_DECL void UnifiData::getSpectrum(size_t index, UnifiSpectrum& spectrum, bool getBinaryData, bool doCentroid) const { return _impl->getSpectrum(index, spectrum, getBinaryData, doCentroid); }
+PWIZ_API_DECL int UnifiData::getMsLevel(size_t index) const { return _impl->getMsLevel(index); }
+PWIZ_API_DECL void UnifiData::getChannelAndScanIndex(size_t index, int& channelIndex, int& scanIndexInChannel) const { _impl->getChannelAndScanIndex(index, channelIndex, scanIndexInChannel); }
 
 PWIZ_API_DECL const std::vector<UnifiChromatogramInfo>& UnifiData::chromatogramInfo() const { return _impl->_chromatogramInfo;  }
 PWIZ_API_DECL void UnifiData::getChromatogram(size_t index, UnifiChromatogram& chromatogram, bool getBinaryData) const { return _impl->getChromatogram(index, chromatogram, getBinaryData); }
 
-PWIZ_API_DECL const boost::local_time::local_date_time& UnifiData::getAcquisitionStartTime() const { return _impl->_acquisitionStartTime; }
+PWIZ_API_DECL const boost::local_time::local_date_time& UnifiData::getAcquisitionStartTime() const { return _impl->_acquisitionStartTime.value(); }
 PWIZ_API_DECL const std::string& UnifiData::getSampleName() const { return _impl->_sampleName; }
 PWIZ_API_DECL const std::string& UnifiData::getSampleDescription() const { return _impl->_sampleDescription; }
 PWIZ_API_DECL int UnifiData::getReplicateNumber() const { return _impl->_replicateNumber; }
@@ -1782,7 +1532,9 @@ PWIZ_API_DECL bool UnifiData::canConvertDriftTimeAndCCS() const { return false; 
 PWIZ_API_DECL double UnifiData::driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const { return 0; }
 PWIZ_API_DECL double UnifiData::ccsToDriftTime(double ccs, double mz, int charge) const { return 0; }
 
-} // ABI
+PWIZ_API_DECL UnifiData::RemoteApi UnifiData::getRemoteApiType() const { return _impl->getRemoteApiType(); }
+
+} // UNIFI
 } // vendor_api
 } // pwiz
 

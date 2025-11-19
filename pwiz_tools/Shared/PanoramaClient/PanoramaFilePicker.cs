@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
@@ -57,7 +58,7 @@ namespace pwiz.PanoramaClient
             noFiles.Visible = false;
         }
 
-        public void InitializeDialog()
+        public void InitializeDialog(IProgressMonitor progressMonitor = null)
         {
             if (FolderBrowser == null)
             {
@@ -67,7 +68,7 @@ namespace pwiz.PanoramaClient
                 }
                 else
                 {
-                    FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath);
+                    FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath, progressMonitor);
                 }
             }
 
@@ -110,9 +111,9 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private static Uri BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam)
         {
-            var columnsQueryParam = columns != null ? "&query.columns=" + string.Join(",", columns) : string.Empty;
-            var sortQueryParam = !string.IsNullOrEmpty(sortParam) ? "&query.sort={sortParam}" : string.Empty;
-            var allQueryParams = $"schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}{columnsQueryParam}{sortQueryParam}";
+            var columnsQueryParam = columns != null ? @"&query.columns=" + string.Join(@",", columns) : string.Empty;
+            var sortQueryParam = !string.IsNullOrEmpty(sortParam) ? $@"&query.sort={sortParam}" : string.Empty;
+            var allQueryParams = $@"schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}{columnsQueryParam}{sortQueryParam}";
             var queryUri = PanoramaUtil.CallNewInterface(new Uri(server), @"query", folderPath, @"selectRows", allQueryParams);
             return queryUri;
         }
@@ -122,9 +123,11 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private JToken GetJson(Uri queryUri)
         {
-            var webClient = new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username, FolderBrowser.GetActiveServer().Password);
-            JToken json = webClient.Get(queryUri);
-            return json;
+            using (var requestHelper = new HttpPanoramaRequestHelper(FolderBrowser.GetActiveServer()))
+            {
+                JToken json = requestHelper.Get(queryUri);
+                return json;
+            }
         }
 
         /// <summary>
@@ -164,7 +167,7 @@ namespace pwiz.PanoramaClient
                         // in order to apply an InvariantCulture
                         var date = (string)file[@"creationdate"];
                         date = date.Remove(20, 4);
-                        var format = "ddd MMM dd HH:mm:ss yyyy";
+                        var format = @"ddd MMM dd HH:mm:ss yyyy";
                         DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
                         listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
                         var fileNode = fileName.EndsWith(EXT) || fileName.EndsWith(ZIP_EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
@@ -206,7 +209,7 @@ namespace pwiz.PanoramaClient
         private bool HasVersions(JToken json)
         {
             var rows = json[@"rows"];
-            return rows.Select(row => row[@"Replaced"].ToString()).Any(replaced => replaced.Equals("True"));
+            return rows.Select(row => row[@"Replaced"].ToString()).Any(replaced => replaced.Equals(@"True"));
         }
 
         /// <summary>
@@ -292,7 +295,7 @@ namespace pwiz.PanoramaClient
                 {
                     Name = serverName,
                     ToolTipText =
-                        $"Proteins: {row[@"File/Proteins"]}, Peptides: {row[@"File/Peptides"]}, Precursors: {row[@"File/Precursors"]}, Transitions: {row[@"File/Transitions"]}, Replicates: {row[@"File/Replicates"]}",
+                        $@"Proteins: {row[@"File/Proteins"]}, Peptides: {row[@"File/Peptides"]}, Precursors: {row[@"File/Precursors"]}, Transitions: {row[@"File/Transitions"]}, Replicates: {row[@"File/Replicates"]}",
                     Tag = size
                 };
                 if (showLatestVersion)
@@ -343,8 +346,8 @@ namespace pwiz.PanoramaClient
                                 // Add File/DocumentSize column when it is linked up
                                 var query = BuildQuery(FolderBrowser.GetActiveServer().URI.ToString(), path, @"TargetedMSRuns", @"Current",
                                     new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun", @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
-                                var sizeQuery = BuildQuery(FolderBrowser.GetActiveServer().URI.ToString(), path, "Runs", "Current",
-                                    new[] { "DocumentSize", "Id", "FileName" }, string.Empty);
+                                var sizeQuery = BuildQuery(FolderBrowser.GetActiveServer().URI.ToString(), path, @"Runs", @"Current",
+                                    new[] { @"DocumentSize", @"Id", @"FileName" }, string.Empty);
                                 _sizeInfoJson = GetJson(sizeQuery);
                                 _runsInfoJson = GetJson(query);
                             }
@@ -374,8 +377,7 @@ namespace pwiz.PanoramaClient
                     || ex is IOException
                     || ex is UnauthorizedAccessException)
                 {
-                    var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
-                    alert.ShowDialog();
+                    CommonAlertDlg.ShowException(FormUtil.FindTopLevelOwner(this), ex);
                 }
             }
         }
@@ -431,9 +433,8 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_,
-                    MessageBoxButtons.OK);
-                alert.ShowDialog();
+                using var alert = new CommonAlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_, MessageBoxButtons.OK);
+                alert.ShowDialog(FormUtil.FindTopLevelOwner(this));
             }
         }
 
@@ -660,6 +661,7 @@ namespace pwiz.PanoramaClient
         }
 
         #region Test Support
+
         public PanoramaFilePicker(Uri serverUri, string user, string pass,
             JToken folderJson, JToken fileJson, JToken sizeJson)
         {
@@ -671,7 +673,10 @@ namespace pwiz.PanoramaClient
 
             TestFileJson = fileJson;
             TestSizeJson = sizeJson;
+
             var server = new PanoramaServer(serverUri, user, pass);
+            _servers = new List<PanoramaServer> { server };
+
             FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
 
             InitializeDialog();
@@ -709,7 +714,7 @@ namespace pwiz.PanoramaClient
 
         public string VersionsOption => versionOptions.Text;
 
-        public void ClickFile(string name)
+        public bool ClickFile(string name)
         {
             listView.SelectedItems.Clear();
             foreach (ListViewItem item in listView.Items)
@@ -720,8 +725,11 @@ namespace pwiz.PanoramaClient
                     item.Selected = true;
                     listView.Select();
                     ClickOpen();
+                    return true;
                 }
             }
+
+            return false;
         }
 
         #endregion

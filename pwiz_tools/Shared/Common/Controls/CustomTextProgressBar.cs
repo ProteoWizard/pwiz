@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2022 University of Washington - Seattle, WA
@@ -18,7 +18,6 @@
 
 using System.Drawing;
 using System.Windows.Forms;
-using System;
 
 namespace pwiz.Common.Controls
 {
@@ -60,34 +59,32 @@ namespace pwiz.Common.Controls
             switch (m.Msg)
             {
                 case WM_PAINT:
-                    int m_Percent = Convert.ToInt32((Convert.ToDouble(Value) / Convert.ToDouble(Maximum)) * 100);
-                    dynamic flags = TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter |
-                                    TextFormatFlags.SingleLine | TextFormatFlags.WordEllipsis;
-
-                    using (Graphics g = Graphics.FromHwnd(Handle))
+                    using (var g = Graphics.FromHwnd(Handle))
                     {
-                        using (Brush textBrush = new SolidBrush(ForeColor))
-                        {
-
-                            switch (DisplayStyle)
-                            {
-                                case ProgressBarDisplayText.CustomText:
-                                    TextRenderer.DrawText(g, CustomText, Font,
-                                        new Rectangle(0, 0, Width, Height), Color.Black, flags);
-                                    break;
-                                case ProgressBarDisplayText.Percentage:
-                                    TextRenderer.DrawText(g, string.Format(@"{0}%", m_Percent), Font,
-                                        new Rectangle(0, 0, Width, Height), Color.Black, flags);
-                                    break;
-                            }
-
-                        }
+                        DrawText(g, new Rectangle(0, 0, Width, Height));
                     }
-
                     break;
             }
-
         }
 
+        public void DrawText(Graphics g, Rectangle rectangle)
+        {
+            int percent = (int) (Value * 100.0 / Maximum);
+            dynamic flags = TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter |
+                            TextFormatFlags.SingleLine | TextFormatFlags.WordEllipsis;
+
+            using var textBrush = new SolidBrush(ForeColor);
+
+            switch (DisplayStyle)
+            {
+                case ProgressBarDisplayText.CustomText:
+                    TextRenderer.DrawText(g, CustomText, Font, rectangle, Color.Black, flags);
+                    break;
+                case ProgressBarDisplayText.Percentage:
+                    TextRenderer.DrawText(g, string.Format(@"{0}%", percent), Font,
+                        rectangle, Color.Black, flags);
+                    break;
+            }
+        }
     }
 }

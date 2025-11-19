@@ -43,7 +43,6 @@
 #include "CommandLine.h"
 #include "SqliteRoutine.h"
 #include "boost/program_options.hpp"
-#include "boost/log/detail/snprintf.hpp"
 
 namespace ops = boost::program_options;
 
@@ -170,7 +169,7 @@ void BlibFilter::parseCommandLine(const int argc,
 
             ("best-scoring,b",
              value<bool>()->default_value(false),
-             "Description of option.  Default false.")
+             "Select only the spectrum with the best score for each peptide (spectrum TIC is used as tiebreaker).  Default false.")
 
             ;
 
@@ -216,7 +215,7 @@ void BlibFilter::attachAll()
 {
     Verbosity::status("Filtering redundant library '%s'.",
                       redundantFileName_.c_str());
-    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(),
+    snprintf(zSql, ZSQLBUFLEN, "ATTACH DATABASE '%s' as %s", SqliteRoutine::ESCAPE_APOSTROPHES(redundantFileName_).c_str(),
             redundantDbName_);
     sql_stmt(zSql);
 
@@ -236,7 +235,7 @@ string BlibFilter::getLSID()
 {
     // Use the same LSID as the redundant version, but replace
     // 'redundant' with 'nr'.
-    boost::log::aux::snprintf(zSql, ZSQLBUFLEN, "SELECT libLSID FROM %s.LibInfo", redundantDbName_);
+    snprintf(zSql, ZSQLBUFLEN, "SELECT libLSID FROM %s.LibInfo", redundantDbName_);
     
     int iRow, iCol;
     char** result;
@@ -263,7 +262,7 @@ string BlibFilter::getLSID()
 void BlibFilter::getNextRevision(int* major, int* minor)
 {
     // Use same revision as the redundant version
-   boost::log::aux::snprintf(zSql, ZSQLBUFLEN,   "SELECT majorVersion, minorVersion FROM %s.LibInfo", 
+   snprintf(zSql, ZSQLBUFLEN,   "SELECT majorVersion, minorVersion FROM %s.LibInfo", 
             redundantDbName_);
     
     int iRow, iCol;
@@ -348,6 +347,7 @@ void BlibFilter::buildNonRedundantLib() {
                 scoreType == "PEPTIDE PROPHET SOMETHING" ||
                 scoreType == "PROTEIN PILOT CONFIDENCE" ||
                 scoreType == "SCAFFOLD SOMETHING" ||
+                scoreType == "HARDKLOR IDOTP" ||
                 scoreType == "PEPTIDE SHAKER CONFIDENCE") {
                 higherIsBetter_[scoreTypeId] = true;
             } else {
@@ -430,6 +430,8 @@ void BlibFilter::buildNonRedundantLib() {
 
     int lastCharge=0;
 
+    SmallMolMetadata lastMoleculeAndAdduct;
+
     Verbosity::debug("Counting Spectra.");
     ProgressIndicator progress(getSpectrumCount(redundantDbName_));
 
@@ -439,16 +441,16 @@ void BlibFilter::buildNonRedundantLib() {
         //first Order by peptideModSeq and charge, filter by num peaks
         order_by = "peptideModSeq, precursorCharge " + optional_cols;
     }
-   boost::log::aux::snprintf(zSql, ZSQLBUFLEN,  
+    snprintf(zSql, ZSQLBUFLEN,  
             "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq,"
             "prevAA, nextAA, numPeaks, score, scoreType, "
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
             "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, "
             "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile "
             "FROM RefSpectraTransfer "
-            "WHERE numPeaks >= %i "
+            "WHERE numPeaks >= %i OR SpecIDinFile=\"\"" // Precursor-only entries have empty specIDs, keep those
             "ORDER BY %s", minPeaks_,
-            order_by.c_str());
+            order_by.c_str()); 
 
     smart_stmt pStmt;
     int rc = sqlite3_prepare(getDb(), zSql, -1, &pStmt, 0);
@@ -525,12 +527,12 @@ void BlibFilter::buildNonRedundantLib() {
             double ionMobilityValue = ionMobilityValueIndex > 0 ? sqlite3_column_double(pStmt, ionMobilityValueIndex) : 0;
             int ionMobilityType = ionMobilityTypeIndex > 0 ? sqlite3_column_int(pStmt, ionMobilityTypeIndex) : 0;
             tmpRef->setIonMobility(ionMobilityType == 1 ? ionMobilityValue : 0, ionMobilityType == 1 ? IONMOBILITY_DRIFTTIME_MSEC : IONMOBILITY_NONE);
-            tmpRef->setCollisionalCrossSection(ionMobilityType == 2 ? ionMobilityValue : 0);
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
         } else if (ionMobilityIndex > 0) {
             double ionMobilityValue = sqlite3_column_double(pStmt, ionMobilityIndex);
             IONMOBILITY_TYPE ionMobilityType = (ionMobilityTypeIndex > 0) ? (IONMOBILITY_TYPE)sqlite3_column_int(pStmt, ionMobilityTypeIndex) : IONMOBILITY_DRIFTTIME_MSEC;
             tmpRef->setIonMobility(ionMobilityValue, ionMobilityType);
-            tmpRef->setCollisionalCrossSection(sqlite3_column_double(pStmt, ccsIndex));
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
             if (molNameIndex > 0) {
                 // moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys
                 tmpRef->setMoleculeName(reinterpret_cast<const char*>(sqlite3_column_text(pStmt, molNameIndex)));
@@ -541,7 +543,7 @@ void BlibFilter::buildNonRedundantLib() {
             }
         } else {
             tmpRef->setIonMobility(0, IONMOBILITY_NONE);
-            tmpRef->setCollisionalCrossSection(0);
+            tmpRef->setCollisionalCrossSection(ccsIndex > 0 ? sqlite3_column_double(pStmt, ccsIndex) : 0);
         }
 
         if (startTimeIndex > 0 && endTimeIndex > 0) {
@@ -572,7 +574,7 @@ void BlibFilter::buildNonRedundantLib() {
         if (!useBestScoring_) // peaks not necessary in best scoring mode
         {
             int refSpectraId = sqlite3_column_int(pStmt, 0);
-            boost::log::aux::snprintf(idPos, ZSQLBUFLEN - qlen, "%i", refSpectraId);
+            snprintf(idPos, ZSQLBUFLEN - qlen, "%i", refSpectraId);
             peakRc = sqlite3_prepare(peakConnection, zSqlPeakQuery, -1, &peakStmt, NULL);
             check_rc(peakRc, zSqlPeakQuery, "Failed selecting peaks.");
             peakRc = sqlite3_step(peakStmt);
@@ -587,10 +589,10 @@ void BlibFilter::buildNonRedundantLib() {
             // is this slow for copying the peak vector? better to return a ptr?
             vector<PEAK_T> peaks = getUncompressedPeaks(numPeaks, numBytes1, comprM, numBytes2, comprI);
             sqlite3_finalize(peakStmt);
-            if (peaks.empty()) {
+            if (peaks.empty() && numPeaks != 0) { // Precursor-only entries have no MS2 peaks
                 Verbosity::error("Unable to read peaks for redundant library "
                     "spectrum %i, sequence %s, charge %i.",
-                    tmpRef->getLibSpecID(), (tmpRef->getSeq()).c_str(),
+                    tmpRef->getLibSpecID(), tmpRef->getDisplayName().c_str(),
                     tmpRef->getCharge());
             }
             tmpRef->setRawPeaks(peaks);
@@ -598,12 +600,16 @@ void BlibFilter::buildNonRedundantLib() {
         // TODO end nextRefSpec
 
         // if this spec has same seq and charge, add to the collection
-        if(pepModSeq.compare(lastPepModSeq) == 0 && lastCharge == charge) {
+        if(!pepModSeq.empty() ? 
+            pepModSeq == lastPepModSeq && lastCharge == charge : 
+            tmpRef->getSmallMolMetadata() == lastMoleculeAndAdduct)
+        {
             oneIon.push_back(tmpRef);
         } else {// filter & start new collection for a different seq and charge
             if(!oneIon.empty()) {
                 Verbosity::comment(V_DETAIL, "Selecting spec for %s, charge %i from %i spectra.",
-                                   lastPepModSeq.c_str(), lastCharge, oneIon.size());
+                    (lastPepModSeq.empty() ? lastMoleculeAndAdduct.moleculeName : lastPepModSeq).c_str(),
+                    lastCharge, oneIon.size());
                 compAndInsert(oneIon, bestSpectraIdAndCount);
                 clearVector(oneIon);
             }
@@ -611,8 +617,10 @@ void BlibFilter::buildNonRedundantLib() {
             oneIon.push_back(tmpRef);
             lastPepModSeq = pepModSeq;
             lastCharge = charge;
+            lastMoleculeAndAdduct = tmpRef->getSmallMolMetadata();
+
             Verbosity::comment(V_DETAIL, "Collecting spec for %s, charge %i,",
-                               pepModSeq.c_str(), charge);
+                tmpRef->getDisplayName().c_str(), charge);
         }
 
         rc = sqlite3_step(pStmt);
@@ -622,7 +630,7 @@ void BlibFilter::buildNonRedundantLib() {
     if (!oneIon.empty()) {
         progress.increment();
         Verbosity::comment(V_DETAIL, "Selecting spec for %s, charge %i from %i spectra.",
-                           lastPepModSeq.c_str(), lastCharge, oneIon.size());
+            oneIon.front()->getDisplayName().c_str(), lastCharge, oneIon.size());
         compAndInsert(oneIon, bestSpectraIdAndCount);
         clearVector(oneIon);
     }
@@ -833,6 +841,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
     for (int i = 0; i < num_spec; i++) {
         const RefSpectrum* spectrum = oneIon[i];
         int specIdRedundant = spectrum->getLibSpecID();
+        double retentionTime = spectrum->getRetentionTime();
         double startTime = spectrum->getStartTime();
         double endTime = spectrum->getEndTime();
         sqlite3_bind_int(insertStmt_, 1, specID);
@@ -842,7 +851,12 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon, vector<pair<int, in
         sqlite3_bind_double(insertStmt_, 5, spectrum->getCollisionalCrossSection());
         sqlite3_bind_double(insertStmt_, 6, spectrum->getIonMobilityHighEnergyOffset());
         sqlite3_bind_int(insertStmt_, 7, (int)spectrum->getIonMobilityType());
-        sqlite3_bind_double(insertStmt_, 8, spectrum->getRetentionTime());
+        if (retentionTime != 0)
+        {
+            sqlite3_bind_double(insertStmt_, 8, retentionTime);
+        } else {
+            sqlite3_bind_null(insertStmt_, 8);
+        }
         if (startTime != 0 && endTime != 0) {
             sqlite3_bind_double(insertStmt_, 9, startTime);
             sqlite3_bind_double(insertStmt_, 10, endTime);

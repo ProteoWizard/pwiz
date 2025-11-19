@@ -24,6 +24,7 @@ using System.Linq;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -45,7 +46,8 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ShareDocumentTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDocumentSharing()
         {
             TestDirectoryName = "ShareDocumentTest";
@@ -351,13 +353,11 @@ namespace pwiz.SkylineTestFunctional
             void VerifyContents(string s)
             {
                 using var zipFile = ZipFile.Read(s);
-                {
-                    // Confirm files have been correctly found
-                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW),
-                        $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
-                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW),
-                        $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
-                }
+                // Confirm files have been correctly found
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW),
+                    $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW),
+                    $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
             }
 
             var shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], null, S1_RAW);
@@ -395,13 +395,11 @@ namespace pwiz.SkylineTestFunctional
 
             var shareCompletePathWiff = DoShareWithRawFiles(TestFilesDirs[4]);
             using var zipFile = ZipFile.Read(shareCompletePathWiff);
-            {
-                // Confirm files have been correctly found
-                Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiff),
-                    $@"expected to find data file {dataNameWiff} in zip file");
-                Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiffScan),
-                    $@"expected to find data file {dataNameWiffScan} in zip file");
-            }
+            // Confirm files have been correctly found
+            Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiff),
+                $@"expected to find data file {dataNameWiff} in zip file");
+            Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiffScan),
+                $@"expected to find data file {dataNameWiffScan} in zip file");
         }
 
         private void SafeFileCopy(string sourceFileName, string destFileName)
@@ -416,82 +414,82 @@ namespace pwiz.SkylineTestFunctional
             var totalFilesCount = doc.MeasuredResults.Chromatograms.Count;
 
             string shareCompletePath = testFilesDir.GetTestPath($"{Path.GetFileName(directoryElsewhere)}{testFolder}.sky.zip");
-            var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
-            RunUI(() => Assert.IsNull(shareDlg.SelectedSkylineVersion));    // Expect using the currently saved format
-            // Check box must be checked in order for files to be zipped
-            int missingFilesCount = directoryElsewhere != null ? 1 : 0;
-            if (testFolder)
-                missingFilesCount++;
-            RunUI(() =>
+            RunLongDlg<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath), shareDlg =>
             {
-                shareDlg.IncludeReplicateFiles = true;
-                VerifyFileStatus(shareDlg, totalFilesCount, missingFilesCount);
-            });
-            var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
-            if (missingFilesCount == totalFilesCount)
-            {
-                // No checkboxes to test
-                RunUI(() => VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount));
-            }
-            else
-            {
-                // Turn a checkbox off and on and verify UI updates appropriately
+                RunUI(() => Assert.IsNull(shareDlg.SelectedSkylineVersion)); // Expect using the currently saved format
+                // Check box must be checked in order for files to be zipped
+                int missingFilesCount = directoryElsewhere != null ? 1 : 0;
+                if (testFolder)
+                    missingFilesCount++;
                 RunUI(() =>
                 {
-                    VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
-                    replicatePickDlg.SetFileChecked(0, false);
-                    VerifyCheckedState(replicatePickDlg, totalFilesCount, 1, missingFilesCount);
-                    replicatePickDlg.SetFileChecked(0, true);
-                    VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
-                    replicatePickDlg.IsSelectAll = false;
-                    VerifyCheckedState(replicatePickDlg, totalFilesCount, totalFilesCount-missingFilesCount, missingFilesCount);
-                    replicatePickDlg.IsSelectAll = true;
-                    VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
+                    shareDlg.IncludeReplicateFiles = true;
+                    VerifyFileStatus(shareDlg, totalFilesCount, missingFilesCount);
                 });
-            }
-            if (directoryElsewhere != null)
-            {
-                if (testFolder)
+                var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
+                if (missingFilesCount == totalFilesCount)
                 {
-                    // Test folder selector
-                    RunUI(() =>
-                        replicatePickDlg.SearchDirectoryForMissingFiles(directoryElsewhere)); // Exercise folder select
+                    // No checkboxes to test
+                    RunUI(() => VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount));
                 }
                 else
                 {
-                    // Test file selector
-                    var fileFinderDlg = ShowDialog<OpenDataSourceDialog>(() => replicatePickDlg.LocateMissingFiles());
+                    // Turn a checkbox off and on and verify UI updates appropriately
                     RunUI(() =>
                     {
-                        fileFinderDlg.SelectFile(directoryElsewhere); // Select sub folder
-                        fileFinderDlg.Open(); // Open folder
-                        string selectName = Path.GetFileName(filename);
-                        fileFinderDlg.SelectFile(selectName); // Select file
-                        Assert.AreEqual(selectName, fileFinderDlg.SelectedFiles.FirstOrDefault());
+                        VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
+                        replicatePickDlg.SetFileChecked(0, false);
+                        VerifyCheckedState(replicatePickDlg, totalFilesCount, 1, missingFilesCount);
+                        replicatePickDlg.SetFileChecked(0, true);
+                        VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
+                        replicatePickDlg.IsSelectAll = false;
+                        VerifyCheckedState(replicatePickDlg, totalFilesCount, totalFilesCount-missingFilesCount, missingFilesCount);
+                        replicatePickDlg.IsSelectAll = true;
+                        VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
                     });
-                    OkDialog(fileFinderDlg, fileFinderDlg.Open); // Accept selected files and close dialog
                 }
-            }
-
-            // Close and confirm results
-            RunUI(() => VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, 0));
-            OkDialog(replicatePickDlg, replicatePickDlg.OkDialog);
-            RunUI(() => VerifyFileStatus(shareDlg, totalFilesCount, 0));
-            // If the format is older and any directory is being added, Skyline should show an error.
-            if (SkylineWindow.SavedDocumentFormat.CompareTo(DocumentFormat.SHARE_DATA_FOLDERS) < 0 &&
-                shareDlg.GetIncludedAuxiliaryFiles().Any(Directory.Exists))
-            {
-                RunDlg<MessageDlg>(shareDlg.OkDialog, dlg =>
+                if (directoryElsewhere != null)
                 {
-                    Assert.AreEqual(Resources.ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_, dlg.Message);
-                    dlg.OkDialog();
-                });
-                RunUI(() => shareDlg.SelectedSkylineVersion = SkylineVersion.CURRENT);
-            }
-            OkDialog(shareDlg, shareDlg.OkDialog);
+                    if (testFolder)
+                    {
+                        // Test folder selector
+                        RunUI(() =>
+                            replicatePickDlg.SearchDirectoryForMissingFiles(directoryElsewhere)); // Exercise folder select
+                    }
+                    else
+                    {
+                        // Test file selector
+                        var fileFinderDlg = ShowDialog<OpenDataSourceDialog>(() => replicatePickDlg.LocateMissingFiles());
+                        RunUI(() =>
+                        {
+                            fileFinderDlg.SelectFile(directoryElsewhere); // Select sub folder
+                            fileFinderDlg.Open(); // Open folder
+                            string selectName = Path.GetFileName(filename);
+                            fileFinderDlg.SelectFile(selectName); // Select file
+                            Assert.AreEqual(selectName, fileFinderDlg.SelectedFiles.FirstOrDefault());
+                        });
+                        OkDialog(fileFinderDlg, fileFinderDlg.Open); // Accept selected files and close dialog
+                    }
+                }
 
-            WaitForCondition(() => File.Exists(shareCompletePath));
+                // Close and confirm results
+                RunUI(() => VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, 0));
+                OkDialog(replicatePickDlg, replicatePickDlg.OkDialog);
+                RunUI(() => VerifyFileStatus(shareDlg, totalFilesCount, 0));
+                // If the format is older and any directory is being added, Skyline should show an error.
+                if (SkylineWindow.SavedDocumentFormat.CompareTo(DocumentFormat.SHARE_DATA_FOLDERS) < 0 &&
+                    shareDlg.GetIncludedAuxiliaryFiles().Any(Directory.Exists))
+                {
+                    RunDlg<MessageDlg>(shareDlg.OkDialog, dlg =>
+                    {
+                        Assert.AreEqual(Resources.ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_, dlg.Message);
+                        dlg.OkDialog();
+                    });
+                    RunUI(() => shareDlg.SelectedSkylineVersion = SkylineVersion.CURRENT);
+                }
+            }, shareDlg => shareDlg.OkDialog());
 
+            AssertEx.FileExists(shareCompletePath);
             return shareCompletePath;
         }
 

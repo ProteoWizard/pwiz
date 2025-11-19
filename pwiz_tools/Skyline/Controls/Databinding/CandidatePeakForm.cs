@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 new ViewInfo(rootColumn, GetDefaultViewSpec()));
             var viewContext = new SkylineViewContext(_dataSchema, new []{rowSourceInfo});
             BindingListSource.SetViewContext(viewContext);
-            Text = TabText = Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks;
+            Text = TabText = DatabindingResources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks;
             DataboundGridControl.DataGridView.CellFormatting += DataGridView_OnCellFormatting;
             DataboundGridControl.DataGridView.CurrentCellDirtyStateChanged += DataGridView_OnCurrentCellDirtyStateChanged;
             _originalPeakColor = GetOriginalPeakColor();
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Controls.Databinding
             QueueUpdateRowSource();
         }
 
-        private void QueueUpdateRowSource()
+        public void QueueUpdateRowSource()
         {
             _updatePending = true;
             BeginInvoke(new Action(UpdateRowSource));
@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private ViewSpec GetDefaultViewSpec()
         {
-            var viewSpec = new ViewSpec().SetName(Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks).SetColumns(new[]
+            var viewSpec = new ViewSpec().SetName(DatabindingResources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks).SetColumns(new[]
             {
                 new ColumnSpec(PropertyPath.Root),
                 new ColumnSpec(PropertyPath.Root.Property(nameof(CandidatePeakGroup.PeakGroupRetentionTime))),
@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
-            var chromFileInfoId = chromatogramSet.MSDataFileInfos.First().FileId;
+            var chromFileInfoId = GetChromFileInfoId(peptideDocNode, replicateIndex, chromatogramSet);
             foreach (var comparableGroup in peptideDocNode.GetComparableGroups())
             {
                 var transitionGroups = ImmutableList.ValueOf(comparableGroup.Select(tg => tg.TransitionGroup));
@@ -340,6 +340,43 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             return null;
+        }
+
+        private ChromFileInfoId GetChromFileInfoId(PeptideDocNode peptideDocNode, int replicateIndex, ChromatogramSet chromatogramSet)
+        {
+            if (chromatogramSet.MSDataFileInfos.Count == 1)
+            {
+                return chromatogramSet.MSDataFileInfos[0].FileId;
+            }
+
+            IList<ReferenceValue<ChromFileInfoId>> candidateFileIds = Array.Empty<ReferenceValue<ChromFileInfoId>>();
+            if (peptideDocNode.Results != null)
+            {
+                candidateFileIds = peptideDocNode.GetSafeChromInfo(replicateIndex)
+                    .Select(info => ReferenceValue.Of(info.FileId)).ToList();
+            }
+
+            if (candidateFileIds.Count == 0)
+            {
+                candidateFileIds = chromatogramSet.MSDataFileInfos.Select(file => ReferenceValue.Of(file.FileId))
+                    .ToList();
+            }
+
+            if (candidateFileIds.Count == 1)
+            {
+                return candidateFileIds[0];
+            }
+            
+            var graphChrom = SkylineWindow.GetGraphChrom(chromatogramSet.Name);
+            if (true == graphChrom?.Visible)
+            {
+                var graphChromFileId = graphChrom.GetChromFileInfoId();
+                if (graphChromFileId != null && candidateFileIds.Contains(graphChromFileId))
+                {
+                    return graphChromFileId;
+                }
+            }
+            return candidateFileIds.FirstOrDefault();
         }
 
         private class Selector
@@ -413,7 +450,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public new bool IsComplete
+        public override bool IsComplete
         {
             get
             {

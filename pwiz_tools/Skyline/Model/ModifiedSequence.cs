@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model
 {
 
     /// <summary>
-    /// Holds an unmodified sequence and a list of explicit modifications (i.e. StatidMod and AminoAcid index).
+    /// Holds an unmodified sequence and a list of explicit modifications (i.e. StaticMod and AminoAcid index).
     /// This enables the sequence to be formatted in a number of ways, including mass deltas, or modification names.
     /// </summary>
     public class ModifiedSequence : ProteomicSequence
@@ -141,6 +141,15 @@ namespace pwiz.Skyline.Model
             _defaultMassType = defaultMassType;
         }
 
+        public ModifiedSequence(string modifiedSequence, MassType defaultMassType)
+        {
+            _unmodifiedSequence = FastaSequence.StripModifications(modifiedSequence);
+            var mods = ModificationMatcher.EnumerateMods(modifiedSequence)
+                .Select(i => MakeModification(_unmodifiedSequence, new ExplicitMod(i.IndexInUnmodifiedSequence, i.Mod)));
+            _defaultMassType = defaultMassType;
+            _explicitMods = ImmutableList<Modification>.ValueOf(mods);
+        }
+
         [Browsable(false)]
         public ImmutableList<Modification> ExplicitMods
         {
@@ -201,8 +210,6 @@ namespace pwiz.Skyline.Model
             result.Append(_unmodifiedSequence.Substring(seqCharsReturned));
             return result.ToString();
         }
-
-
 
         public override string ToString()
         {
@@ -360,6 +367,7 @@ namespace pwiz.Skyline.Model
             public string ShortName { get { return StaticMod.ShortName; } }
             public ParsedMolecule Formula { get; private set; }
             public int? UnimodId { get { return StaticMod.UnimodId; } }
+            public string UnimodIdWithName { get { return StaticMod.UnimodId + @":" + StaticMod.Name; } }
             public double MonoisotopicMass { get; private set; }
             public double AverageMass { get; private set; }
 

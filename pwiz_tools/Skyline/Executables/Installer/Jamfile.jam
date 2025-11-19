@@ -71,16 +71,15 @@ rule msbuild_deploy ( targets + : sources * : properties * )
     setup_templates $(targets) : $(sources) : $(properties) ;
     
     local .artifact-name = [ on $(targets) return $(ARTIFACT_NAME) ] ;
-    local .pfx-password = [ MATCH --pfx-password=(.*) : [ modules.peek : ARGV ] ] ;
 
-    if [ path.exists $(PFX_PATH) ] && $(.pfx-password)
+    if [ path.exists $(CRT_PATH) ]
     {
-        echo "NOTE: signing Skyline MSI with key at: $(PFX_PATH)" ;
-        SIGNTOOL_COMMAND on $(targets) = "if %ERRORLEVEL% EQU 0 signtool sign /f \"$(PFX_PATH)\" /p $(.pfx-password) /tr http://timestamp.digicert.com /v \"$(.artifact-name).msi\"" ;
+        echo "NOTE: signing Skyline MSI with key at: $(CRT_PATH)" ;
+        SIGNTOOL_COMMAND on $(targets) = "if %ERRORLEVEL% EQU 0 signtool sign /csp \"DigiCert Signing Manager KSP\" /kc $(CRT_KEY) /f \"$(CRT_PATH)\" /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 /v \"$(.artifact-name).msi\"" ;
     }
     else
     {
-        echo "NOTE: not signing Skyline MSI because $(PFX_PATH) does not exist or --pfx-password not set." ;
+        echo "NOTE: not signing Skyline MSI because $(CRT_PATH) does not exist." ;
     }
 }
 
@@ -151,7 +150,8 @@ rule test_msi ( targets + : sources * : properties * )
 
 actions test_msi
 {
-    set name=TestSkylineInstall
+    set "SUITE=Skyline admin installer test"
+    set name=%SUITE%: TestSkylineInstall
     $(TEST_PRECOMMAND)
 
     $(MSVC_CURRENT_SETUP_SCRIPT)
@@ -160,15 +160,16 @@ actions test_msi
     copy "$(LOCATION)\$(ARTIFACT_NAME).msi" "%TEMP%"
     $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-install.log" /norestart /i "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress ALLUSERS=2 MSIINSTALLPERUSER=1
     set EXIT=%ERRORLEVEL%
-    IF %EXIT% NEQ 0 echo Install failed with code %EXIT%.
     set status=%EXIT%
-    $(TEST_POSTCOMMAND)
     IF %EXIT% NEQ 0 (
+      echo Install failed with code %EXIT%.
+      type "%TEMP%\$(ARTIFACT_NAME)-install.log"
       copy "%TEMP%\$(ARTIFACT_NAME)-install.log" "$(LOCATION)"
       del "%TEMP%\$(ARTIFACT_NAME).msi"
       $(TEST_POSTCOMMAND)
       exit %EXIT%
     )
+    $(TEST_POSTCOMMAND)
 
     chcp 437
     set PATH_TMP=%PATH%
@@ -176,19 +177,23 @@ actions test_msi
     copy "$(SKYLINE_BUILD_PATH)\*Test*.dll" "$(INSTALL_PATH)" >nul
     copy "$(SKYLINE_BUILD_PATH)\Microsoft*.dll" "$(INSTALL_PATH)" >nul
     copy "$(SKYLINE_BUILD_PATH)\TestRunner.exe*" "$(INSTALL_PATH)" >nul
-    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 600000 "$(INSTALL_PATH)\TestRunner.exe" log=TestDataInstalled.log test=TestData.dll,TestDdaSearch loop=1 offscreen=0 language=en $(.teamcity-test-decoration)
+    $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 600000 "$(INSTALL_PATH)\TestRunner.exe" log=TestDataInstalled.log teamcitytestsuite="%SUITE%" test=TestData.dll,TestDdaSearch loop=1 offscreen=0 language=en $(.teamcity-test-decoration)
     set TEST_EXIT=%ERRORLEVEL%
     IF %TEST_EXIT% NEQ 0 echo Deployment test failed with code %TEST_EXIT%.
     set PATH=%PATH_TMP%
     
-    set name=TestSkylineUninstall
+    set name=%SUITE%: TestSkylineUninstall
     $(TEST_PRECOMMAND)
 
     echo Uninstalling $(ARTIFACT_NAME)...
     $(PWIZ_LIBRARIES_PATH)\tuxliketimeout.exe 120000 msiexec /qn /l* "%TEMP%\$(ARTIFACT_NAME)-uninstall.log" /norestart /x "%TEMP%\$(ARTIFACT_NAME).msi" REBOOT=ReallySuppress
     set EXIT=%ERRORLEVEL%
+    set status=%EXIT%
     IF %TEST_EXIT% NEQ 0 IF %EXIT% NEQ 0 set status=%EXIT%
-    IF %EXIT% NEQ 0 echo Uninstall failed with code %EXIT%.
+    IF %EXIT% NEQ 0 (
+      echo Uninstall failed with code %EXIT%.
+      type "%TEMP%\$(ARTIFACT_NAME)-uninstall.log"
+    )
 
     set status=%TEST_EXIT%
     $(TEST_POSTCOMMAND)

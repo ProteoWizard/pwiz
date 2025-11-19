@@ -60,7 +60,17 @@ class SpecFileReader {
     virtual bool getSpectrum(PSM* psm,
                              SPEC_ID_TYPE findBy,
                              SpecData& returnData,
-                             bool getPeaks){    
+                             bool getPeaks)
+    {
+        bool isMS1 = psm->isPrecursorOnly();
+        if (isMS1)
+        {
+            getPeaks = false;
+            if (psm->specKey == -1 && findBy == SPEC_ID_TYPE::SCAN_NUM_ID)
+            {
+                findBy = NAME_ID; // Look up by constructed ID since there's no actual spectrum associated
+            }
+        }
         switch(findBy){
         case NAME_ID:
             return getSpectrum(psm->specName, returnData, getPeaks);

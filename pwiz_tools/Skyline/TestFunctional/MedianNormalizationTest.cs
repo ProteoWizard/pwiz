@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -276,17 +276,17 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsNotNull(protein);
                     var replicate = (Replicate) row.Cells[colReplicate.Index].Value;
                     Assert.IsNotNull(replicate);
-                    var abundance = (double?) row.Cells[colProteinAbundance.Index].Value;
+                    var abundance = (Protein.AbundanceValue) row.Cells[colProteinAbundance.Index].Value;
                     Assert.IsNotNull(abundance);
                     var diagnosis = replicate.ChromatogramSet.Annotations.GetAnnotation(ANNOTIONNAME_DIAGNOSIS);
                     if (diagnosis == "AD")
                     {
-                        proteinAbundanceDenominators.Add(protein.IdentityPath, abundance.Value);
+                        proteinAbundanceDenominators.Add(protein.IdentityPath, abundance.Raw);
                     }
                     else
                     {
                         Assert.AreEqual("PD", diagnosis);
-                        proteinAbundanceNumerators.Add(protein.IdentityPath, abundance.Value);
+                        proteinAbundanceNumerators.Add(protein.IdentityPath, abundance.Raw);
                     }
                 }
             });
@@ -386,7 +386,7 @@ namespace pwiz.SkylineTestFunctional
             var dictionary = new Dictionary<IdentityPath, double>();
             foreach (RowItem rowItem in foldChangeGrid.DataboundGridControl.BindingListSource)
             {
-                var foldChangeRow = (FoldChangeBindingSource.FoldChangeRow) rowItem.Value;
+                var foldChangeRow = (FoldChangeRow) rowItem.Value;
                 if (foldChangeRow.MsLevel == 2)
                 {
                     var identityPath = foldChangeRow.Peptide?.IdentityPath ?? foldChangeRow.Protein.IdentityPath;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,6 +27,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
@@ -508,10 +509,10 @@ namespace pwiz.Skyline.Util
             foreach (TItem item in list)
             {
                 if (Equals(item, default(TItem)))
-                    throw new InvalidDataException(Resources.XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element);
+                    throw new InvalidDataException(UtilResources.XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element);
                 IXmlElementHelper<TItem> helper = FindHelper(item, helpers);
                 if (helper == null)
-                    throw new InvalidOperationException(string.Format(Resources.XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__, typeof(TItem)));
+                    throw new InvalidOperationException(string.Format(UtilResources.XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type__0__, typeof(TItem)));
                 writer.WriteElement(helper.ElementNames[0], item);
             }
         }
@@ -729,6 +730,24 @@ namespace pwiz.Skyline.Util
                 }
             }
             return defaultValue;
+        }
+
+        public static TAttr GetRequiredEnumAttribute<TAttr>(this XmlReader reader, Enum name, EnumCase enumCase)
+        {
+            string value = reader.GetAttribute(name);
+            if (!string.IsNullOrEmpty(value))
+            {
+                try
+                {
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
+                }
+            }
+
+            throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value ?? @"<null>", name));
         }
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue)
@@ -997,12 +1016,12 @@ namespace pwiz.Skyline.Util
                 {
                     if (column == 0 && IsSmallAndWhiteSpace(path))
                     {
-                        var message = TextUtil.LineSeparate(Resources.XmlUtil_GetInvalidDataMessage_The_file_is_empty,
-                            Resources.XmlUtil_GetInvalidDataMessage_It_may_have_been_truncated_during_file_transfer);
+                        var message = TextUtil.LineSeparate(UtilResources.XmlUtil_GetInvalidDataMessage_The_file_is_empty,
+                            UtilResources.XmlUtil_GetInvalidDataMessage_It_may_have_been_truncated_during_file_transfer);
                         return message;
                     }
 
-                    return Resources.XmlUtil_GetInvalidDataMessage_The_file_does_not_appear_to_be_valid_XML;
+                    return UtilResources.XmlUtil_GetInvalidDataMessage_The_file_does_not_appear_to_be_valid_XML;
                 }
             }
             while (x != null)
@@ -1145,7 +1164,7 @@ namespace pwiz.Skyline.Util
 
                 if (attrs.Length < 1)
                     throw new InvalidOperationException(
-                        string.Format(Resources.XmlElementHelper_XmlElementHelper_The_class__0__has_no__1__,
+                        string.Format(UtilResources.XmlElementHelper_XmlElementHelper_The_class__0__has_no__1__,
                                       type.FullName, typeof (XmlRootAttribute).Name));
 
                 XmlRootAliasAttribute[] aliases = (XmlRootAliasAttribute[])

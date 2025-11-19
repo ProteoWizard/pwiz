@@ -159,4 +159,7 @@
   <data name="unscroll" xml:space="preserve">
     <value>Отменить прокрутку</value>
   </data>
+  <data name="move_label" xml:space="preserve">
+    <value>Используйте Alt-click чтобы передвинуть метку</value>
+  </data>
 </root>

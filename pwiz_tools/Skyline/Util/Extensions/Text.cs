@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.SystemUtil;
@@ -35,17 +34,31 @@ namespace pwiz.Skyline.Util.Extensions
     /// </summary>
     public static class TextUtil
     {
+        public const string HYPHEN = "-";
+        public const string SPACE = " ";
+        public const string CARET = @"^";
+        public const string AMPERSAND = @"&";
+        public const string AT = @"@";
+        public const string EQUAL = @"=";
+        public const string FORWARD_SLASH = @"/";
+        public const string SEMICOLON = @";";
+        public const string UNDERSCORE = @"_";
+        public const string LEFT_PARENTHESIS = @"(";
+        public const string RIGHT_PARENTHESIS = @")";
+        public const string LEFT_SQUARE_BRACKET = @"[";
+        public const string RIGHT_SQUARE_BRACKET = @"]";
+
         public const string EXT_CSV = ".csv";
         public const string EXT_TSV = ".tsv";
 
         public static string FILTER_CSV
         {
-            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
         }
 
         public static string FILTER_TSV
         {
-            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
         }
 
         public const char SEPARATOR_CSV = ',';
@@ -70,8 +83,8 @@ namespace pwiz.Skyline.Util.Extensions
         /// The CSV separator character for a given culture.  Like Excel, a comma
         /// is used unless the decimal separator is a comma.  This allows exported CSV
         /// files to be imported directly into Excel on the same system.
-        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         /// </summary>
+        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
         public static char GetCsvSeparator(IFormatProvider cultureInfo)
         {
             var numberFormat = cultureInfo.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
@@ -368,14 +381,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// <returns>A single string containing the original set separated by new lines</returns>
         public static string LineSeparate(IEnumerable<string> lines)
         {
-            var sb = new StringBuilder();
-            foreach (string line in lines)
-            {
-                if (sb.Length > 0)
-                    sb.AppendLine();
-                sb.Append(line);
-            }
-            return sb.ToString();
+            return CommonTextUtil.LineSeparate(lines);
         }
 
         /// <summary>
@@ -389,20 +395,28 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Utility function for <see cref="string"/> like <see cref="File"/> ReadLines().
+        /// </summary>
+        /// <param name="text">Text possibly multi-line</param>
+        /// <returns>Enumerable lines without line endings</returns>
+        public static IEnumerable<string> ReadLines(this string text)
+        {
+            using var reader = new StringReader(text);
+            var lines = new List<string>();
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                lines.Add(line);
+            return lines;
+        }
+
+        /// <summary>
         /// This function can be used as a replacement for String.Join(" ", ...)
         /// </summary>
         /// <param name="values">A set of strings to be separated by spaces</param>
         /// <returns>A single string containing the original set separated by spaces</returns>
         public static string SpaceSeparate(IEnumerable<string> values)
         {
-            var sb = new StringBuilder();
-            foreach (string value in values)
-            {
-                if (sb.Length > 0)
-                    sb.Append(SEPARATOR_SPACE);
-                sb.Append(value);
-            }
-            return sb.ToString();
+            return CommonTextUtil.SpaceSeparate(values);
         }
 
         /// <summary>
@@ -460,7 +474,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string AppendColon(string left)
         {
-            return left + Resources.ColonEndOfLine;
+            return left + ExtensionsResources.ColonEndOfLine;
         }
 
         /// <summary>
@@ -468,7 +482,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string ColonSeparate(string left, string right)
         {
-            return string.Format(Resources.ColonSeparator, left, right);
+            return string.Format(ExtensionsResources.ColonSeparator, left, right);
         }
 
         /// <summary>
@@ -570,6 +584,24 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        private const int TAB_SIZE = 4;
+        
+        public static string GetIndentation(int indentLevel, int tabSize = TAB_SIZE)
+        {
+            if (indentLevel <= 0)
+                return string.Empty;
+
+            return new string(' ', tabSize * indentLevel);
+        }
+
+        public static string Indent(this string s, int indentLevel, int tabSize = TAB_SIZE)
+        {
+            if (s == null || indentLevel <= 0)
+                return s;
+
+            return GetIndentation(indentLevel, tabSize) + s;
+        }
+
         /// <summary>
         /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")
         /// </summary>
@@ -616,7 +648,7 @@ namespace pwiz.Skyline.Util.Extensions
         public static string FileDialogFiltersAll(params string[] filters)
         {
             var listFilters = filters.ToList();
-            listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
+            listFilters.Add(FileDialogFilter(ExtensionsResources.TextUtil_FileDialogFiltersAll_All_Files, @".*"));
             return string.Join(@"|", listFilters);
         }
 
@@ -627,12 +659,12 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string EncryptString(string str)
         {
-            return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(str), null, DataProtectionScope.CurrentUser));
+            return CommonTextUtil.EncryptString(str);
         }
 
         public static string DecryptString(string str)
         {
-            return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(str), null, DataProtectionScope.CurrentUser));
+            return CommonTextUtil.DecryptString(str);
         }
 
         /// <summary>
@@ -753,6 +785,50 @@ namespace pwiz.Skyline.Util.Extensions
             }
             return true;
         }
+
+        /// <summary>
+        /// Insert spaces if necessary to ensure that the string has no regions with
+        /// more than <paramref name="maxWordLength"/> non-whitespace characters.
+        /// This ensures that text measuring code will not spend too long looking for
+        /// word breaks.
+        /// </summary>
+        public static string EnforceMaxWordLength(string str, int maxWordLength)
+        {
+            if (str.Length <= maxWordLength)
+            {
+                return str;
+            }
+
+            int currentWordLength = 0;
+            StringBuilder stringBuilder = null;
+            
+            for (int i = 0; i < str.Length; i++)
+            {
+                var ch = str[i];
+                if (char.IsWhiteSpace(ch) || ch == '-')
+                {
+                    currentWordLength = 0;
+                }
+                else
+                {
+                    if (currentWordLength == maxWordLength)
+                    {
+                        stringBuilder ??= new StringBuilder(str.Substring(0, i));
+                        stringBuilder.Append(' ');
+                        currentWordLength = 0;
+                    }
+                    currentWordLength++;
+                }
+
+                stringBuilder?.Append(ch);
+            }
+
+            if (stringBuilder == null)
+            {
+                return str;
+            }
+            return stringBuilder.ToString();
+        }
     }
 
     /// <summary>
@@ -778,7 +854,7 @@ namespace pwiz.Skyline.Util.Extensions
     /// the names of the columns, and all following lines contain data for each column.
     /// When ctor's optional hasHeaders arg == false, then columns are named "0", "1","2","3" etc.
     /// </summary>
-    public class DsvFileReader
+    public class DsvFileReader : IDisposable
     {
         private char _separator;
         private string[] _currentFields;
@@ -928,13 +1004,13 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
-        /// If loading from a file, use this to dispose the text reader.
+        /// IDisposable pattern implementation for using clause to dispose of the reader,
+        /// in case it is a StreamReader holding onto a file handle.
         /// </summary>
         public void Dispose()
         {
             _reader.Dispose();
         }
-
     }
 
     public class LineColNumberedIoException : IOException
@@ -966,9 +1042,9 @@ namespace pwiz.Skyline.Util.Extensions
         private static string FormatMessage(string message, long lineNum, int colIndex)
         {
             if (colIndex == -1)
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
+                return string.Format(ExtensionsResources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
             else
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
+                return string.Format(ExtensionsResources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
         }
 
         public string PlainMessage { get; private set; }

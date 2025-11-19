@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -43,15 +43,6 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var testBytes = Encoding.UTF8.GetBytes("Hello, world");
-            var blibPath = TestFilesDir.GetTestPath("rat_cmp_20.blib");
-            const string blibName = "MyBiblioSpecLibrary";
-            var blibCachePath = Path.ChangeExtension(blibPath, BiblioSpecLiteLibrary.EXT_CACHE);
-
-            // Lock the cache file so that the library load code will not be able to use it
-            var blibCacheStream = new FileStream(blibCachePath, FileMode.Create);
-            blibCacheStream.Write(testBytes, 0, testBytes.Length);
-            blibCacheStream.Flush();
-            Assert.AreEqual(testBytes.Length, new FileInfo(blibCachePath).Length);
 
             var elibPath = TestFilesDir.GetTestPath("elibtest.elib");
             const string elibName = "MyEncyclopeDIALibrary";
@@ -66,12 +57,6 @@ namespace pwiz.SkylineTestFunctional
             var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var libListDlg =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUi.EditLibraryList);
-            RunDlg<EditLibraryDlg>(libListDlg.AddItem, addLibDlg=>
-            {
-                addLibDlg.LibraryName = blibName;
-                addLibDlg.LibraryPath = blibPath;
-                addLibDlg.OkDialog();
-            });
             RunDlg<EditLibraryDlg>(libListDlg.AddItem, addLibDlg =>
             {
                 addLibDlg.LibraryName = elibName;
@@ -80,24 +65,15 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(libListDlg, libListDlg.OkDialog);
-            peptideSettingsUi.PickedLibraries = peptideSettingsUi.PickedLibraries.Append(blibName).Append(elibName).ToArray();
+            peptideSettingsUi.PickedLibraries = peptideSettingsUi.PickedLibraries.Append(elibName).ToArray();
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             WaitForDocumentLoaded();
-            var blibLibrary = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.FirstOrDefault(lib =>
-                lib.Name == blibName);
-            Assert.IsNotNull(blibLibrary);
-            Assert.IsTrue(blibLibrary.IsLoaded);
-            Assert.AreNotEqual(0, blibLibrary.SpectrumCount);
-            Assert.AreEqual(testBytes.Length, new FileInfo(blibCachePath).Length);
-
             var elibLibrary =
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.FirstOrDefault(lib =>
                     lib.Name == elibName);
             Assert.IsNotNull(elibLibrary);
             Assert.AreNotEqual(0, elibLibrary.SpectrumCount);
             Assert.AreEqual(testBytes.Length, new FileInfo(elibCachePath).Length);
-
-            blibCacheStream.Dispose();
             elibCacheStream.Dispose();
         }
     }

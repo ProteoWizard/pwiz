@@ -259,7 +259,7 @@
     <value>229, 22</value>
   </data>
   <data name="addSelectedModificationsToolStripMenuItem.Text" xml:space="preserve">
-    <value>添加所选修饰(&amp;S)</value>
+    <value>添加所选修饰(&amp;E)</value>
   </data>
   <data name="addStructuralModificationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>229, 22</value>

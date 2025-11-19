@@ -36,6 +36,8 @@
 #include <boost/thread.hpp>
 #include <sqlite3pp.h>
 
+#include "Parser.hpp"
+
 
 using namespace pwiz::proteome;
 using namespace pwiz::chemistry;
@@ -136,9 +138,7 @@ void testIdpQonvert(const string& idpQonvertPath, const bfs::path& testDataPath)
     vector<bfs::path> idpDbFiles;
     for(const bfs::path& idFile : idFiles)
     {
-        idpDbFiles.push_back(idFile);
-        string idpDbFilepath = bal::replace_all_copy(idpDbFiles.back().string(), ".pep.xml", ".pepXML");
-        idpDbFiles.back() = bfs::path(idpDbFilepath).replace_extension(".idpDB");
+        idpDbFiles.push_back(IDPicker::Parser::outputFilepath(idFile.string()).string());
 
         unit_assert(bfs::exists(idpDbFiles.back()));
         sqlite3pp::database db(idpDbFiles.back().string());
@@ -917,7 +917,7 @@ int main(int argc, char* argv[])
             bfs::create_directory(outputTestDataPath);
             for(const bfs::path& filepath : testDataFiles)
                 if (!bal::starts_with(filepath.filename().string(), ".")) // don't try to copy .svn directory
-                    bfs::copy_file(filepath, outputTestDataPath / filepath.filename(), bfs::copy_option::overwrite_if_exists);
+                    bfs::copy(filepath, outputTestDataPath / filepath.filename(), bfs::copy_options::overwrite_existing);
 
             testIdpQonvert(idpQonvertPath, outputTestDataPath.string());
             testIdpAssemble(idpQonvertPath, idpAssemblePath, outputTestDataPath.string());

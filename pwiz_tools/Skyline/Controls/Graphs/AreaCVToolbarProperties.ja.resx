@@ -313,7 +313,7 @@
     <value>OK</value>
   </data>
   <data name="labelMinLog10.Text" xml:space="preserve">
-    <value>最小値の Log10 のエリア(&amp;A):</value>
+    <value>最小値の Log10 のエリア(&amp;A)：</value>
   </data>
   <data name="labelMaxLog10.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
@@ -469,7 +469,7 @@
     <value>1</value>
   </data>
   <data name="labelMaxLog10.Text" xml:space="preserve">
-    <value>最大 Log10 のエリア(&amp;E):</value>
+    <value>最大 Log10 のエリア(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;labelQValueCutoff.Parent" xml:space="preserve">
     <value>$this</value>

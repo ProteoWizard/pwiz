@@ -93,6 +93,9 @@ public ref class MSDataFile : public MSData
         property bool gzipped;
         property bool useWorkerThreads;
 
+        property int mzMLb_compression_level;
+        property int mzMLb_chunk_size;
+
         /// <summary>
         /// when true, if an error is seen when enumerating a spectrum or chromatogram, it will be skipped and enumeration will continue;
         /// when false an error will immediately stop enumeration
@@ -111,6 +114,8 @@ public ref class MSDataFile : public MSData
 			indexed = true;
             useWorkerThreads = true;
             continueOnError = false;
+            mzMLb_compression_level = 4;
+            mzMLb_chunk_size = 1048576;
         }
     };
 

@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.FileUI.PeptideSearch
+namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     partial class ImportResultsDIAControl
     {
@@ -36,6 +36,7 @@
             this.cbAutoRetry = new System.Windows.Forms.CheckBox();
             this.comboSimultaneousFiles = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.cbGpf = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // labelResultsFiles
@@ -86,11 +87,18 @@
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
+            // cbGpf
+            // 
+            resources.ApplyResources(this.cbGpf, "cbGpf");
+            this.cbGpf.Name = "cbGpf";
+            this.cbGpf.UseVisualStyleBackColor = true;
+            // 
             // ImportResultsDIAControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.cbGpf);
             this.Controls.Add(this.cbAutoRetry);
             this.Controls.Add(this.comboSimultaneousFiles);
             this.Controls.Add(this.label1);
@@ -113,5 +121,6 @@
         private System.Windows.Forms.CheckBox cbAutoRetry;
         private System.Windows.Forms.ComboBox comboSimultaneousFiles;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox cbGpf;
     }
 }

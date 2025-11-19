@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -34,11 +34,11 @@ namespace pwiz.Skyline.Properties
 
         public override string Title
         {
-            get { return Resources.MetadataRuleSetList_Title_Rule_Sets; }
+            get { return PropertiesResources.MetadataRuleSetList_Title_Rule_Sets; }
         }
         public override string Label
         {
-            get { return Resources.MetadataRuleSetList_Label_Rule_Set; }
+            get { return PropertiesResources.MetadataRuleSetList_Label_Rule_Set; }
         }
 
         public override MetadataRuleSet CopyItem(MetadataRuleSet item)

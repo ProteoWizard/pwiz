@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Properties;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -118,13 +118,13 @@ namespace pwiz.Skyline.Model.Results
             if (times.Length != intensities.Length)
             {
                 throw new InvalidDataException(
-                    string.Format(Resources.ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count,
+                    string.Format(ResultsResources.ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count,
                     times.Length, intensities.Length));
             }
             if (massErrors != null && massErrors.Length != intensities.Length)
             {
                 throw new InvalidDataException(
-                    string.Format(Resources.ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_,
+                    string.Format(ResultsResources.ChromCollector_ReleaseChromatogram_Intensities___0___and_mass_errors___1___disagree_in_point_count_,
                     intensities.Length, massErrors.Length));
             }
             timeIntensities = new TimeIntensities(times, intensities, massErrors, scanIds);
@@ -410,7 +410,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // Check sort ordering within blocks.  Checking across blocks is too time consuming.
             if (_blockIndex > 0 && Comparer<TData>.Default.Compare(_block._data[_blockIndex-1], data) > 0)
-                throw new InvalidDataException(Resources.Block_VerifySort_Expected_sorted_data);
+                throw new InvalidDataException(ResultsResources.Block_VerifySort_Expected_sorted_data);
             base.Add(chromatogramIndex, data, writer);
         }
 
@@ -418,7 +418,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // Check sort ordering within blocks.  Checking across blocks is too time consuming.
             if (_blockIndex > 0 && Comparer<TData>.Default.Compare(_block._data[_blockIndex - 1], data) > 0)
-                throw new InvalidDataException(Resources.Block_VerifySort_Expected_sorted_data);
+                throw new InvalidDataException(ResultsResources.Block_VerifySort_Expected_sorted_data);
             base.AddShared(data);
         }
     }
@@ -695,7 +695,7 @@ namespace pwiz.Skyline.Model.Results
                     // We make some effort to generate unique file names so that more than one instance
                     // of Skyline can load the same raw data file simultaneously.
                     var xicDir = GetSpillDirectory(cachePath);
-                    Helpers.Try<Exception>(() =>
+                    TryHelper.Try<Exception>(() =>
                     {
                         string fileName = FileStreamManager.Default.GetTempFileName(xicDir, string.Format(@"{0:X03}", groupIndex & 0xFFF));    // Need uniquifying groupId because GetTempFileName is limited to 65,535 files with the same prefix in a folder
                         // Create the FileStream with a buffer size of 1 so that it never buffers, and therefore

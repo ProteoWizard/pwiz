@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.SettingsUI
 {
     partial class RTDetails
     {
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RTDetails));
-            this.gridStatistics = new pwiz.Common.Controls.CommonDataGridView();
+            this.gridStatistics = new pwiz.Skyline.Controls.DataGridViewEx();
             this.Peptide = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Hydrophobicity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Predicted = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -109,7 +109,7 @@
 
         #endregion
 
-        private pwiz.Common.Controls.CommonDataGridView gridStatistics;
+        private pwiz.Skyline.Controls.DataGridViewEx gridStatistics;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.DataGridViewTextBoxColumn Peptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn Hydrophobicity;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -26,17 +26,22 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Model.Lib.LibraryManager;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -182,18 +187,22 @@ namespace pwiz.Skyline.SettingsUI
             comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
             comboWeighting.Items.AddRange(RegressionWeighting.All.Cast<object>().ToArray());
             comboWeighting.SelectedItem = _peptideSettings.Quantification.RegressionWeighting;
+
             comboRegressionFit.Items.AddRange(RegressionFit.All.Cast<object>().ToArray());
             comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
+            UpdateLodOptions(_peptideSettings.Quantification.LodCalculation ?? LodCalculation.NONE);
+
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
-
-            comboLodMethod.Items.AddRange(LodCalculation.ALL.Cast<object>().ToArray());
-            comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
             tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
             cbxSimpleRatios.Checked = _peptideSettings.Quantification.SimpleRatios;
             UpdateComboNormalizationMethod();
+            cbxImputeMissingPeaks.Checked = _peptideSettings.Imputation.ImputeMissingPeaks;
+            tbxMaxRtShift.Text = _peptideSettings.Imputation.MaxRtShift?.ToString() ?? string.Empty;
+            tbxMaxPeakWidthVariation.Text = (_peptideSettings.Imputation.MaxPeakWidthVariation * 100)?.ToString() ?? string.Empty;
+            UpdateAlignmentDropdown();
         }
 
         /// <summary>
@@ -359,11 +368,11 @@ namespace pwiz.Skyline.SettingsUI
                 if (backgroundProteome.DatabaseInvalid)
                 {
 
-                    var message = TextUtil.LineSeparate(string.Format(Resources.PeptideSettingsUI_ValidateNewSettings_Failed_to_load_background_proteome__0__,
+                    var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.PeptideSettingsUI_ValidateNewSettings_Failed_to_load_background_proteome__0__,
                                                                       backgroundProteomeSpec.Name),                                                        
                                                         string.Format(File.Exists(backgroundProteomeSpec.DatabasePath)
-                                                                        ? Resources.PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_file
-                                                                        : Resources.PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_,
+                                                                        ? SettingsUIResources.PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_file
+                                                                        : SettingsUIResources.PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_,
                                                                       backgroundProteomeSpec.DatabasePath));
                     MessageDlg.Show(this, message);
                     tabControl1.SelectedIndex = 0;
@@ -401,6 +410,22 @@ namespace pwiz.Skyline.SettingsUI
 
             var prediction = new PeptidePrediction(retentionTime, useMeasuredRT, measuredRTWindow);
             Helpers.AssignIfEquals(ref prediction, Prediction);
+
+            var imputation = ImputationSettings.DEFAULT.ChangeAlignmentTarget(AlignmentTarget)
+                .ChangeImputeMissing(ImputeMissingPeaks).ChangeAlignmentTarget(AlignmentTarget);
+            if (!string.IsNullOrEmpty(tbxMaxRtShift.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(tbxMaxRtShift, 0, null, out var maxRtShift))
+                    return null;
+                imputation = imputation.ChangeMaxRtShift(maxRtShift);
+            }
+
+            if (!string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(tbxMaxPeakWidthVariation, 0, null, out var maxPeakWidthVariation))
+                    return null;
+                imputation = imputation.ChangeMaxPeakWidthVariation(maxPeakWidthVariation / 100);
+            }
 
             // Validate and hold filter settings
             int excludeNTermAAs;
@@ -441,54 +466,7 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref filter, Filter);
 
             // Validate and hold libraries
-            PeptideLibraries libraries;
-            IList<LibrarySpec> librarySpecs = _driverLibrary.Chosen;
-            if (librarySpecs.Count == 0)
-                libraries = new PeptideLibraries(PeptidePick.library, null, null, false, librarySpecs, new Library[0]);
-            else
-            {
-                int? peptideCount = null;
-                if (cbLimitPeptides.Checked)
-                {
-                    int peptideCountVal;
-                    if (!helper.ValidateNumberTextBox(textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
-                            PeptideLibraries.MAX_PEPTIDE_COUNT, out peptideCountVal))
-                        return null;
-                    peptideCount = peptideCountVal;
-                }
-                PeptidePick pick = (PeptidePick) comboMatching.SelectedIndex;
-
-                IList<Library> librariesLoaded = new Library[librarySpecs.Count];
-                bool documentLibrary = false;
-                if (Libraries != null)
-                {
-                    // Use existing library spec's, if nothing was changed.
-                    // Avoid changing the libraries, just because the the picking
-                    // algorithm changed.
-                    if (ArrayUtil.EqualsDeep(librarySpecs, Libraries.LibrarySpecs))
-                    {
-                        librarySpecs = Libraries.LibrarySpecs;
-                        librariesLoaded = Libraries.Libraries;
-                        documentLibrary = Libraries.HasDocumentLibrary;
-                    }
-                    else
-                    {
-                        // Set to true only if one of the selected libraries is a document library.
-                        documentLibrary = librarySpecs.Any(libSpec => libSpec != null && libSpec.IsDocumentLibrary);
-                    }
-
-                    // Otherwise, leave the list of loaded libraries empty,
-                    // and let the LibraryManager refill it.  This ensures a
-                    // clean save of library specs only in the user config, rather
-                    // than a mix of library specs and libraries.
-                }
-
-                PeptideRankId rankId = (PeptideRankId) comboRank.SelectedItem;
-                if (comboRank.SelectedIndex == 0)
-                    rankId = null;
-
-                libraries = new PeptideLibraries(pick, rankId, peptideCount, documentLibrary, librarySpecs, librariesLoaded);
-            }
+            PeptideLibraries libraries = GetPeptideLibraries(showMessages);
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // Validate and hold modifications
@@ -513,7 +491,8 @@ namespace pwiz.Skyline.SettingsUI
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             Helpers.AssignIfEquals(ref modifications, _peptideSettings.Modifications);
 
-            PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem);
+            PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem)
+                .ChangeScoreQValueMap(ScoreQValueMap.FromDocument(_parent.DocumentUI));
             Helpers.AssignIfEquals(ref integration, Integration);
 
             QuantificationSettings quantification = QuantificationSettings.DEFAULT
@@ -526,7 +505,7 @@ namespace pwiz.Skyline.SettingsUI
             if (Equals(quantification.LodCalculation, LodCalculation.TURNING_POINT) &&
                 !Equals(quantification.RegressionFit, RegressionFit.BILINEAR))
             {
-                MessageDlg.Show(this, Resources.PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__);
+                MessageDlg.Show(this, SettingsUIResources.PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__);
                 comboLodMethod.Focus();
                 return null;
             }
@@ -563,7 +542,56 @@ namespace pwiz.Skyline.SettingsUI
             quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
-                    .ChangeAbsoluteQuantification(quantification);
+                .ChangeAbsoluteQuantification(quantification).ChangeImputation(imputation);
+        }
+
+        private PeptideLibraries GetPeptideLibraries(bool showMessages)
+        {
+            var helper = new MessageBoxHelper(this, showMessages);
+            IList<LibrarySpec> librarySpecs = _driverLibrary.Chosen;
+            if (librarySpecs.Count == 0)
+                return new PeptideLibraries(PeptidePick.library, null, null, false, librarySpecs, new Library[0]);
+            int? peptideCount = null;
+            if (cbLimitPeptides.Checked)
+            {
+                int peptideCountVal;
+                if (!helper.ValidateNumberTextBox(textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
+                        PeptideLibraries.MAX_PEPTIDE_COUNT, out peptideCountVal))
+                    return null;
+                peptideCount = peptideCountVal;
+            }
+            PeptidePick pick = (PeptidePick)comboMatching.SelectedIndex;
+
+            IList<Library> librariesLoaded = new Library[librarySpecs.Count];
+            bool documentLibrary = false;
+            if (Libraries != null)
+            {
+                // Use existing library spec's, if nothing was changed.
+                // Avoid changing the libraries, just because the picking
+                // algorithm changed.
+                if (ArrayUtil.EqualsDeep(librarySpecs, Libraries.LibrarySpecs))
+                {
+                    librarySpecs = Libraries.LibrarySpecs;
+                    librariesLoaded = Libraries.Libraries;
+                    documentLibrary = Libraries.HasDocumentLibrary;
+                }
+                else
+                {
+                    // Set to true only if one of the selected libraries is a document library.
+                    documentLibrary = librarySpecs.Any(libSpec => libSpec != null && libSpec.IsDocumentLibrary);
+                }
+
+                // Otherwise, leave the list of loaded libraries empty,
+                // and let the LibraryManager refill it.  This ensures a
+                // clean save of library specs only in the user config, rather
+                // than a mix of library specs and libraries.
+            }
+
+            PeptideRankId rankId = (PeptideRankId)comboRank.SelectedItem;
+            if (comboRank.SelectedIndex == 0)
+                rankId = null;
+
+            return new PeptideLibraries(pick, rankId, peptideCount, documentLibrary, librarySpecs, librariesLoaded);
         }
 
         public void OkDialog()
@@ -575,7 +603,7 @@ namespace pwiz.Skyline.SettingsUI
             // Only update, if anything changed
             if (!Equals(MakeDocIndependent(settings), MakeDocIndependent(_peptideSettings)))
             {
-                if (!_parent.ChangeSettingsMonitored(this, Resources.PeptideSettingsUI_OkDialog_Changing_peptide_settings,
+                if (!_parent.ChangeSettingsMonitored(this, SettingsUIResources.PeptideSettingsUI_OkDialog_Changing_peptide_settings,
                                                      s => s.ChangePeptideSettings(settings)))
                 {
                     return;
@@ -728,64 +756,276 @@ namespace pwiz.Skyline.SettingsUI
 
             // Libraries built for full-scan filtering can have important retention time information,
             // and the redundant libraries are more likely to be desirable for showing spectra.
-            using (var dlg = new BuildLibraryDlg(_parent))
+            using var dlg = new BuildLibraryDlg(_parent);
+            dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
+            if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                 {
-                    if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
+                    using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
+                    editLibDlg.LibraryPath = dlg.AddLibraryFile;
+                    if (editLibDlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList))
+                        _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
+                    }
+
+                    return;
+                }
+
+                BuildLibrary(dlg.Builder);
+            }
+        }
+
+        private void BuildLibrary(ILibraryBuilder builder)
+        {
+            IsBuildingLibrary = true;
+
+            var warning = (builder as ILibraryBuildWarning)?.GetWarning();
+            if (!string.IsNullOrEmpty(warning))
+            {
+                if (MultiButtonMsgDlg.Show(this, warning, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                {
+                    IsBuildingLibrary = false;
+                    return;
+                }
+            }
+
+            var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
+
+            bool retry;
+            do
+            {
+                using (var longWaitDlg = new LongWaitDlg(_parent))
+                {
+                    var status = longWaitDlg.PerformWork(_parent, 500, progressMonitor =>
+                        _libraryManager.BuildLibraryBackground(_parent, builder, progressMonitor, buildState));
+
+                    if (status.IsError)
+                    {
+                        if (ReportLibraryBuildFailure)
                         {
-                            editLibDlg.LibraryPath = dlg.AddLibraryFile;
-                            if (editLibDlg.ShowDialog(this) == DialogResult.OK)
-                            {
-                                _driverLibrary.List.Add(editLibDlg.LibrarySpec);
-                                _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
-                            }
+                            Console.WriteLine(@"Library {0} build failed", builder.LibrarySpec.Name);
                         }
+
+                        // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
+                        var builderLite = builder as BiblioSpecLiteBuilder;
+                        if (builderLite != null && BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(status.ErrorException))
+                        {
+                            var response = BuildPeptideSearchLibraryControl.ShowLibraryMissingExternalSpectraError(this, status.ErrorException);
+                            if (response == UpdateProgressResponse.cancel)
+                                return;
+
+                            builderLite.PreferEmbeddedSpectra = response == UpdateProgressResponse.normal;
+
+                            retry = true;
+                            continue;
+                        }
+                        else
+                        {
+                            MessageDlg.ShowException(this, status.ErrorException);
+                        }
+                    }
+                    else if (status.IsCanceled)
+                    {
+                        IsBuildingLibrary = false;
                         return;
                     }
 
-                    IsBuildingLibrary = true;
-
-                    var builder = dlg.Builder;
-
-                    // assume success and cleanup later
-                    Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
-                    _driverLibrary.LoadList();
-                    var libraryIndex = listLibraries.Items.IndexOf(builder.LibrarySpec.Name);
-                    if (libraryIndex >= 0)
-                        listLibraries.SetItemChecked(libraryIndex, true);
-
-                    var currentForm = this;
-
-                    _libraryManager.BuildLibrary(_parent, builder, (buildState, success) =>
-                    {
-                        _parent.LibraryBuildCompleteCallback(buildState, success);
-
-                        if (!success)
-                        {
-                            if (ReportLibraryBuildFailure)
-                                Console.WriteLine(@"Library {0} build failed", builder.LibrarySpec.Name);
-
-                            _parent.Invoke(new Action(() =>
-                            {
-                                if (Settings.Default.SpectralLibraryList.Contains(builder.LibrarySpec))
-                                    Settings.Default.SpectralLibraryList.Remove(builder.LibrarySpec);
-                            }));
-
-                            // TODO: handle the case of cleaning up a PeptideSettingsUI form other than the one that launched this library build
-                            if (ReferenceEquals(currentForm, this) && !IsDisposed && !Disposing)
-                                currentForm.Invoke(new Action(() =>
-                                {
-                                    _driverLibrary.LoadList();
-                                    listLibraries.Items.Remove(builder.LibrarySpec.Name);
-                                }));
-                        }
-                        IsBuildingLibrary = false;
-                    });
+                    retry = false;
                 }
+            } while (retry);
+
+            CompleteLibraryBuild(buildState);
+
+            Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
+            _driverLibrary.LoadList();
+            var libraryIndex = listLibraries.Items.IndexOf(builder.LibrarySpec.Name);
+            if (libraryIndex >= 0)
+                listLibraries.SetItemChecked(libraryIndex, true);
+
+            IsBuildingLibrary = false;
+        }
+
+        private static bool PerformLongWork(Control parent, string text, Action<IProgressMonitor> work)
+        {
+            using var longWait = new LongWaitDlg();
+            longWait.Text = text;   // CONSIDER: Should this really be the form title or should it be the starting Message?
+            var status = longWait.PerformWork(parent, 800, work);
+            // Note that we can't trust that the status not being complete has any useful meaning here
+            if (status.IsCanceled)
+                return false;
+            if (status.IsError)
+            {
+                MessageDlg.ShowException(parent, status.ErrorException);
+                return false;
+            }
+            return true;
+        }
+
+        private static bool PerformLongWorkWithErrorMessage(Control parent, string text, string errorMessage,
+            Action<IProgressMonitor> work)
+        {
+            return PerformLongWork(parent, text, monitor =>
+            {
+                try
+                {
+                    work(monitor);
+                }
+                catch (Exception x)
+                {
+                    throw new IOException(TextUtil.LineSeparate(errorMessage, x.Message), x);
+                }
+            });
+        }
+
+        public void CompleteLibraryBuild(BuildState buildState)
+        {
+            if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+            {
+                MessageDlg.Show(this, buildState.ExtraMessage);
+            }
+
+            if (buildState.IrtStandard != null && !buildState.IrtStandard.IsEmpty)
+            {
+                // Load library
+                Library lib = null;
+                if (!PerformLongWork(this, SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_library, 
+                        monitor =>
+                        {
+                            lib = _libraryManager.TryGetLibrary(buildState.LibrarySpec) ??
+                                  _libraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
+                            if (lib != null)
+                            {
+                                foreach (var stream in lib.ReadStreams)
+                                    stream.CloseStream();
+                            }
+                        }))
+                {
+                    return;
+                }
+                // Add iRTs to library
+                if (AddIrts(IrtRegressionType.DEFAULT, lib, buildState.LibrarySpec, buildState.IrtStandard, this, true, out _))
+                    AddRetentionTimePredictor(buildState);
+            }
+        }
+
+        public static bool AddIrts(IrtRegressionType regressionType, Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm, out IrtStandard outStandard)
+        {
+            outStandard = standard;
+            if (lib == null || !lib.IsLoaded || standard == null || standard.IsEmpty)
+                return false;
+
+            IRetentionTimeProvider[] irtProviders = null;
+            var isAuto = standard.IsAuto;
+            List<IrtStandard> autoStandards = null;
+            var cirtPeptides = Array.Empty<DbIrtPeptide>();
+
+            var standard1 = standard;
+            if (!PerformLongWork(parent, SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers,
+                    monitor =>
+                    {
+                        ImportPeptideSearch.GetLibIrtProviders(lib, standard1, monitor,
+                            out irtProviders, out autoStandards, out cirtPeptides);
+                    }))
+            {
+                return false;
+            }
+
+            int? numCirt = null;
+            if (cirtPeptides.Length >= RCalcIrt.MIN_PEPTIDES_COUNT)
+            {
+                using var dlg = new AddIrtStandardsDlg(cirtPeptides.Length,
+                    string.Format(
+                        Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_,
+                        cirtPeptides.Length));
+                if (dlg.ShowDialog(parent) != DialogResult.OK)
+                    return false;
+                numCirt = dlg.StandardCount;
+            }
+            else if (isAuto)
+            {
+                switch (autoStandards.Count)
+                {
+                    case 0:
+                        standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, IrtPeptidePicker.Pick(irtProviders, 10));
+                        break;
+                    case 1:
+                        standard = autoStandards[0];
+                        break;
+                    default:
+                        using (var selectIrtStandardDlg = new SelectIrtStandardDlg(autoStandards))
+                        {
+                            if (selectIrtStandardDlg.ShowDialog(parent) != DialogResult.OK)
+                                return false;
+                            standard = selectIrtStandardDlg.Selected;
+                        }
+                        break;
+                }
+            }
+
+            ProcessedIrtAverages processed = null;
+            if (!PerformLongWorkWithErrorMessage(parent, 
+                    SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Processing_retention_times,
+                    Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
+                    monitor =>
+                    {
+                        processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders,
+                            standard.Peptides.ToArray(), cirtPeptides, regressionType, monitor,
+                            out var newStandardPeptides);
+                        if (newStandardPeptides != null)
+                        {
+                            standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
+                        }
+                    }))
+            {
+                return false;
+            }
+
+            using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, processed))
+            {
+                if (resultsDlg.ShowDialog(parent) != DialogResult.OK)
+                    return false;
+            }
+
+            var recalibrate = false;
+            if (processed.CanRecalibrateStandards(standard.Peptides))
+            {
+                using var dlg = new MultiButtonMsgDlg(
+                    TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
+                        Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false);
+
+                recalibrate = dlg.ShowDialog(parent) == DialogResult.Yes;
+            }
+
+            if (!processed.DbIrtPeptides.Any())
+                return false;
+
+            if (!PerformLongWorkWithErrorMessage(parent, 
+                    SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library,
+                    SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_,
+                    monitor =>
+                    {
+                        ImportPeptideSearch.CreateIrtDb(libSpec.FilePath, processed, standard.Peptides.ToArray(),
+                            recalibrate, regressionType, monitor);
+                    }))
+            {
+                return false;
+            }
+            outStandard = standard;
+            return true;
+        }
+
+        private void AddRetentionTimePredictor(BuildState buildState)
+        {
+            var predictorName = Helpers.GetUniqueName(buildState.LibrarySpec.Name, Settings.Default.RetentionTimeList.Select(rt => rt.Name).ToArray());
+            using var addPredictorDlg = new AddRetentionTimePredictorDlg(predictorName, buildState.LibrarySpec.FilePath, false);
+            if (addPredictorDlg.ShowDialog(this) == DialogResult.OK)
+            {
+                Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
+                Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
+                _driverRT.LoadList(addPredictorDlg.Regression.Name);
             }
         }
 
@@ -802,7 +1042,7 @@ namespace pwiz.Skyline.SettingsUI
                 midasLibSpecs = midasLibSpecs.Where(lib => Equals(lib.Name, MidasLibSpec.GetName(_parent.DocumentFilePath))).ToArray();
                 if (midasLibSpecs.Length != 1)
                 {
-                    MessageDlg.Show(this, Resources.PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_);
+                    MessageDlg.Show(this, SettingsUIResources.PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_);
                     return;
                 }
                 midasLibSpecs = new[] {midasLibSpecs[0]};
@@ -816,8 +1056,8 @@ namespace pwiz.Skyline.SettingsUI
                     MidasLibrary midasLib = null;
                     using (var longWait = new LongWaitDlg())
                     {
-                        longWait.Text = Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library;
-                        longWait.Message = string.Format(Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath));
+                        longWait.Text = SettingsUIResources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library;
+                        longWait.Message = string.Format(SettingsUIResources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath));
                         longWait.PerformWork(this, 800, monitor => midasLib =
                             _libraryManager.LoadLibrary(midasLibSpec, () => new DefaultFileLoadMonitor(monitor)) as MidasLibrary);
                     }
@@ -825,7 +1065,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (midasLib == null)
                     {
                         MessageDlg.Show(this, string.Format(
-                            Resources.PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__, Path.GetFileName(midasLibSpec.FilePath)));
+                            SettingsUIResources.PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__, Path.GetFileName(midasLibSpec.FilePath)));
                         return;
                     }
 
@@ -939,9 +1179,9 @@ namespace pwiz.Skyline.SettingsUI
                 IEnumerable<LibrarySpec> chosen = _eventChosenLibraries ?? _driverLibrary.Chosen;
                 if (!IsValidRankId(rankId, chosen))
                 {
-                    var message = TextUtil.LineSeparate(string.Format(Resources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Not_all_libraries_chosen_support_the__0__ranking_for_peptides,
+                    var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Not_all_libraries_chosen_support_the__0__ranking_for_peptides,
                                                                       rankId),
-                                                        Resources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Do_you_want_to_uncheck_the_ones_that_do_not);
+                                                        SettingsUIResources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Do_you_want_to_uncheck_the_ones_that_do_not);
                     if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) == DialogResult.OK)
                     {
                         foreach (int i in listLibraries.CheckedIndices)
@@ -1022,7 +1262,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var result = MultiButtonMsgDlg.Show(
                     this,
-                    Resources.PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes,
+                    SettingsUIResources.PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes,
                     MultiButtonMsgDlg.BUTTON_YES,
                     MultiButtonMsgDlg.BUTTON_NO,
                     true);
@@ -1182,6 +1422,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 UpdateComboNormalizationMethod();
             }
+
+            if (tabControl1.SelectedTab == tabPrediction)
+            {
+                UpdateAlignmentDropdown();
+            }
         }
         #region Functional testing support
 
@@ -1204,6 +1449,12 @@ namespace pwiz.Skyline.SettingsUI
         public void ChooseRegression(string name)
         {
             comboRetentionTime.SelectedItem = name;
+        }
+
+        public string RetentionTimeRegressionName
+        {
+            get { return comboRetentionTime.SelectedItem.ToString(); }
+            set { comboRetentionTime.SelectedItem = value; }
         }
 
         public void UseMeasuredRT(bool use)
@@ -1546,6 +1797,42 @@ namespace pwiz.Skyline.SettingsUI
             set { comboLodMethod.SelectedItem = value; }
         }
 
+        public bool ImputeMissingPeaks
+        {
+            get
+            {
+                return cbxImputeMissingPeaks.Checked;
+            }
+            set
+            {
+                cbxImputeMissingPeaks.Checked = value;
+            }
+        }
+
+        public double? MaxRtShift
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxRtShift.Text) ? (double?) null : double.Parse(tbxMaxRtShift.Text);
+            }
+            set
+            {
+                tbxMaxRtShift.Text = value.ToString();
+            }
+        }
+
+        public double? MaxPeakWidthVariation
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text) ? (double?)null : double.Parse(tbxMaxPeakWidthVariation.Text);
+            }
+            set
+            {
+                tbxMaxPeakWidthVariation.Text = value.ToString();
+            }
+        }
+
         #endregion
 
         public sealed class LabelTypeComboDriver
@@ -1579,7 +1866,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 LabelIS = labelIS;
                 Combo = combo;
-                Combo.DisplayMember = Resources.LabelTypeComboDriver_LabelTypeComboDriver_LabelType;
+                Combo.DisplayMember = SettingsUIResources.LabelTypeComboDriver_LabelTypeComboDriver_LabelType;
                 ComboIS = comboIS;
                 ListBoxIS = listBoxIS;
                 LoadList(null, modifications.InternalStandardTypes,
@@ -1629,7 +1916,7 @@ namespace pwiz.Skyline.SettingsUI
                         _singleStandard = (heavyMods.Count <= 1);
                         if (_singleStandard && Usage == UsageType.ModificationsPicker && ComboIS != null)
                         {
-                            LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;
+                            LabelIS.Text = SettingsUIResources.LabelTypeComboDriver_LoadList_Internal_standard_type;
                             ComboIS.Items.Clear();
                             ComboIS.Items.Add(Resources.LabelTypeComboDriver_LoadList_none);
                             ComboIS.Items.Add(IsotopeLabelType.light);
@@ -1644,7 +1931,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         else
                         {
-                            LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_types;
+                            LabelIS.Text = SettingsUIResources.LabelTypeComboDriver_LoadList_Internal_standard_types;
                             ListBoxIS.Items.Clear();
                             ListBoxIS.Items.Add(IsotopeLabelType.light);
                             if (internalStandardTypes.Contains(IsotopeLabelType.light))
@@ -1683,7 +1970,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
 
-                    Combo.Items.Add(Resources.LabelTypeComboDriver_LoadList_Edit_list);
+                    Combo.Items.Add(SettingsUIResources.LabelTypeComboDriver_LoadList_Edit_list);
                     if (Combo.SelectedIndex < 0)
                         Combo.SelectedIndex = 0;
                     // If no internal standard selected yet, use the first heavy mod type
@@ -1760,7 +2047,7 @@ namespace pwiz.Skyline.SettingsUI
 
             private bool EditListSelected()
             {
-                return (Resources.LabelTypeComboDriver_LoadList_Edit_list == Combo.SelectedItem.ToString());
+                return (SettingsUIResources.LabelTypeComboDriver_LoadList_Edit_list == Combo.SelectedItem.ToString());
             }
 
             public void SelectedIndexChangedEvent()
@@ -1907,6 +2194,121 @@ namespace pwiz.Skyline.SettingsUI
                 _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
             }
             ChangeTooltip(listLibraries, librarySpec?.ItemDescription?.ToString() ?? _librariesOriginalTooltip);
+        }
+
+        private void comboRegressionFit_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateLodOptions(comboLodMethod.SelectedItem as LodCalculation);
+
+            // If the user chooses "Bilinear" for the regression method, then
+            // change the LodCalculation and Max LOQ CV to the recommended values
+            if (comboRegressionFit.SelectedItem == RegressionFit.BILINEAR &&
+                _peptideSettings.Quantification.RegressionFit != RegressionFit.BILINEAR)
+            {
+                if (LodCalculation.NONE.Equals(comboLodMethod.SelectedItem))
+                {
+                    comboLodMethod.SelectedItem = LodCalculation.TURNING_POINT_STDERR;
+                }
+                if (!QuantMaxLoqCv.HasValue)
+                {
+                    QuantMaxLoqCv = 20;
+                }
+            }
+        }
+
+        private void UpdateLodOptions(LodCalculation current)
+        {
+            var  options = new List<object>();
+            options.AddRange(LodCalculation.ForRegressionFit(comboRegressionFit.SelectedItem as RegressionFit));
+            comboLodMethod.Items.Clear();
+            comboLodMethod.Items.AddRange(options.ToArray());
+            if (options.Contains(current))
+            {
+                comboLodMethod.SelectedItem = current;
+            }
+            else
+            {
+                comboLodMethod.SelectedItem = LodCalculation.NONE;
+            }
+            ComboHelper.AutoSizeDropDown(comboLodMethod);
+        }
+
+        public void SetSelectedLibrary(string name)
+        {
+            listLibraries.SelectedItem = name;
+        }
+
+        private bool _firstAlignmentOptionInvalid;
+        private void UpdateAlignmentDropdown()
+        {
+            var peptideSettings = _peptideSettings.ChangeLibraries(GetPeptideLibraries(false) ?? _peptideSettings.Libraries);
+            var options = new List<AlignmentTargetSpec>();
+            var current = AlignmentTarget ?? peptideSettings.Imputation.AlignmentTarget ?? AlignmentTargetSpec.Default;
+            foreach (var option in AlignmentTargetSpec.GetOptions(peptideSettings))
+            {
+                if (Equals(AlignmentTargetSpec.Default, option) || Equals(current, option) || !option.IsSameAsDefault(peptideSettings))
+                {
+                    options.Add(option);
+                }
+            }
+            
+            if (!options.Contains(current))
+            {
+                _firstAlignmentOptionInvalid = true;
+                pictureBoxRunAlignmentError.Visible = true;
+                options.Insert(0, current);
+            }
+            else
+            {
+                _firstAlignmentOptionInvalid = false;
+                pictureBoxRunAlignmentError.Visible = false;
+            }
+
+            var tooltipLines = new List<string>
+            {
+                SettingsUIResources.PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip
+            };
+            var items = new List<KeyValuePair<string, AlignmentTargetSpec>>();
+            
+            foreach (var option in options)
+            {
+                items.Add(new KeyValuePair<string, AlignmentTargetSpec>(option.GetLabel(peptideSettings), option));
+                var tooltip = option.GetTooltip(peptideSettings, ModeUI);
+                if (!string.IsNullOrEmpty(tooltip))
+                {
+                    tooltipLines.Add(TextUtil.ColonSeparate(option.GetLabel(peptideSettings), tooltip));
+                }
+            }
+            comboRunToRunAlignment.Items.Clear();
+            comboRunToRunAlignment.Items.AddRange(items.Cast<object>().ToArray());
+            comboRunToRunAlignment.SelectedIndex = options.IndexOf(current);
+            ComboHelper.AutoSizeDropDown(comboRunToRunAlignment);
+            
+            helpTip.SetToolTip(comboRunToRunAlignment, TextUtil.LineSeparate(tooltipLines));
+        }
+
+        public AlignmentTargetSpec AlignmentTarget
+        {
+            get
+            {
+                return (comboRunToRunAlignment.SelectedItem as KeyValuePair<string, AlignmentTargetSpec>?)?.Value;
+            }
+            set
+            {
+                var options = comboRunToRunAlignment.Items.Cast<KeyValuePair<string, AlignmentTargetSpec>>()
+                    .Select(kvp => kvp.Value).ToList();
+                int selectedIndex = options.IndexOf(value);
+                if (selectedIndex < 0)
+                {
+                    throw new ArgumentException();
+                }
+                comboRunToRunAlignment.SelectedIndex = selectedIndex;
+            }
+        }
+
+        private void comboRunToRunAlignment_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            pictureBoxRunAlignmentError.Visible = _firstAlignmentOptionInvalid && comboRunToRunAlignment.SelectedIndex == 0;
         }
     }
 }

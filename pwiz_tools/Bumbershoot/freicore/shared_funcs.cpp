@@ -1634,7 +1634,7 @@ namespace freicore
     {
         BOOST_FOREACH( string searchPath, searchPathList )
         {
-            path filepath = path(searchPath) / path(filename).leaf();
+            path filepath = path(searchPath) / path(filename).filename();
             if( exists(filepath) )
                 return filepath.string();
         }

@@ -183,10 +183,12 @@ rule blib-test-search ( name : args * : output-name : reference-names + : inputs
 if NT = $(.os)
 {
     .percent = "%%" ;
+    .slash = "\\" ;
 }
 else
 {
     .percent = "%" ;
+    .slash = "/" ;
 }
 
 # Add --unicode to optional arguments section to test that a format supports Unicode input paths
@@ -209,9 +211,13 @@ blib-test-build duplicates : -o : output/duplicates.blib : duplicates.check : $(
 blib-test-build ssl-rt : -o : output/ssl-rt.blib : ssl-rt.check : $(TEST_INPUTS_PATH)/ssl-with-rt.ssl ;
 blib-test-build ssl-index-rt : -o : output/ssl-index-rt.blib : ssl-index-rt.check : $(TEST_INPUTS_PATH)/ssl-index-with-rt.ssl ;
 blib-test-build ssl-name-rt : -o : output/ssl-name-rt.blib : ssl-name-rt.check : $(TEST_INPUTS_PATH)/ssl-name-with-rt.ssl ;
+blib-test-build-basic ssl-ims : -o : $(TEST_INPUTS_PATH)/ssl-with-ims.ssl ;
 blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : $(TEST_INPUTS_PATH)/ssl-small-mol.ssl ;
 blib-test-build ssl-invalid-sequence : -o -e@Only_uppercase_letters : output/ssl-invalid-sequence.blib : ssl-invalid-sequence.check : $(TEST_INPUTS_PATH)/ssl-invalid-sequence.ssl ;
 blib-test-build ssl-crosslink : -o -K : output/ssl-crosslink.blib : ssl-crosslink.check : $(TEST_INPUTS_PATH)/ssl-crosslink.ssl ;
+
+# Test with the tab-delimited Hardklor format
+blib-test-build hardklor : -o : output/hardklor.blib : hardklor.check : $(TEST_INPUTS_PATH)/hardklor.hk.bs.kro ;
 
 # Test building with percolator XML files
 
@@ -240,8 +246,13 @@ blib-test-build comet : -o : output/comet.blib : comet.check zbuild.skip-lines :
 blib-test-build comet-prg2012-wiff : -o -c@0 : output/comet-prg2012-wiff.blib : comet-prg2012-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/201208-378803-cm.pep.xml : <vendor-api-support>off:<build>no ;
 blib-test-build msfragger-tims : -o : output/msfragger-tims.blib : msfragger-tims.check  : "$(TEST_INPUTS_PATH)/Hela$(.percent)20QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML" ;
 blib-test-build msfragger-thermo : -o : output/msfragger-thermo.blib : msfragger-thermo.check  : $(TEST_INPUTS_PATH)/BSA_min_21.pepXML ;
-blib-test-build peptideprophet-msfragger-thermo-mzml : -o : output/peptideprophet-msfragger-thermo-mzml.blib : peptideprophet-msfragger-thermo-mzml.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml.pep.xml ;
-blib-test-build peptideprophet-msfragger-bruker-mgf : -o : output/peptideprophet-msfragger-bruker-mgf.blib : peptideprophet-msfragger-bruker-mgf.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-bruker-mgf.pep.xml ;
+blib-test-build-basic peptideprophet-msfragger-thermo-mzml : -o : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml.pep.xml ;
+blib-test-build-basic peptideprophet-msfragger-thermo-mzml-nativeid : -o : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml-nativeid.pep.xml ;
+blib-test-build-basic peptideprophet-msfragger-bruker-mgf : -o : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-bruker-mgf.pep.xml ;
+blib-test-build-basic peptideprophet-msfragger-bruker-mgf-nativeid : -o : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-bruker-mgf-nativeid.pep.xml ;
+blib-test-build-basic peptideprophet-msfragger-bruker-mzml-nativeid : -o : $(TEST_INPUTS_PATH)/interact-peptideprophet-msfragger-bruker-mzml-nativeid.pep.xml ;
+blib-test-build-basic msfragger-check-parent-path-first : -o : $(TEST_INPUTS_PATH)/msfragger-check-parent-path-first.pepXML ;
+blib-test-build-basic msfragger-check-parent-path-first-with-missing-file : -o -e@inputs$(.slash)msfragger-check-parent-path-first : $(TEST_INPUTS_PATH)/msfragger-check-parent-path-first-with-missing-file.pepXML ;
 
 # Test other xml formats (idpicker, xtandem)
 
@@ -258,12 +269,14 @@ blib-test-build tinyPlink-proxl : -o : output/tinyPlink-proxl.blib : tinyPlink-p
 blib-test-build tinyPeptideProphet-proxl : -o : output/tinyPeptideProphet-proxl.blib : tinyPeptideProphet-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyPeptideProphet.proxl.xml ;
 blib-test-build tinyMerox-proxl : -o : output/tinyMerox-proxl.blib : tinyMerox-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyMerox.proxl.xml ;
 blib-test-build tiny-msf : --unicode -o : output/tiny-msf.blib : tiny-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.msf ;
+blib-test-build tiny-msf-keep : --unicode -o -K : output/tiny-msf-keep.blib : tiny-msf-keep.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.msf : <dependency>tiny-msf ;
 blib-test-build tiny-v2-msf : -o : output/tiny-v2-msf.blib : tiny-v2-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
 blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResult.blib : tiny-v2-filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
 blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered-pdResult.blib : md_special_filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
 blib-test-build example-pdResult-confidence3 : -o -c@0.99 : output/example-pdResult-confidence3.blib : example-pdResult-confidence3.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
 blib-test-build example-pdResult-numeric : -o -c@0.96 : output/example-pdResult-numeric.blib : example-pdResult-numeric.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
 blib-test-build-basic pd-3_1 : -o -c@0.5 : $(TEST_INPUTS_PATH)/230807_P1_Neo_ES904_TMTProPrecision_1ug_DIA1Th_HCD30_Survey.pdResult ;
+blib-test-build-basic pdResult-no-spectra : -o -e@~exported_without_the_appropriate~ : $(TEST_INPUTS_PATH)/pdResult-no-spectra.pdResult ;
 
 blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
 blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;
@@ -318,9 +331,14 @@ blib-test-build peptideshaker-mzid : --unicode -o : output/MoTai_PeptideShaker.b
 blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : metamorpheus.check : $(TEST_INPUTS_PATH)/metamorpheus.mzid ;
 
 # Test DiaNN specLib format
-blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
-blib-test-build diann-speclib-diapasef : -o : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef-lib.speclib ;
-blib-test-build-basic msfragger-diann : -o : $(TEST_INPUTS_PATH)/library.tsv.speclib ;
+blib-test-build diann-speclib : -o -c@0 : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
+blib-test-build diann-speclib-diapasef : -o -c@0.97 : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef-lib.speclib ;
+blib-test-build-basic diann-mod-test : -o -c@0 : $(TEST_INPUTS_PATH)/diann-mod-test.tsv.speclib ;
+blib-test-build-basic diann-mass-mod-test : -o -c@0 : $(TEST_INPUTS_PATH)/diann-mass-mods.tsv.speclib ;
+blib-test-build-basic msfragger-diann : -o -c@0 : $(TEST_INPUTS_PATH)/library.tsv.speclib ;
+blib-test-build-basic msfragger-diann-predicted : -o -c@0 : $(TEST_INPUTS_PATH)/diann-predicted/lib.predicted.speclib ;
+blib-test-build diann2-synchro-pasef : -o -c@0 : output/diann2-synchro-pasef.blib : diann2-synchro-pasef.check : $(TEST_INPUTS_PATH)/diann2-synchro-pasef/report-lib.parquet.skyline.speclib : <toolset>gcc:<build>no <runtime-debugging>on:<build>no ;
+blib-test-build diann2-parquet : -o -c@0 : output/diann2-parquet.blib : diann2-parquet.check : $(TEST_INPUTS_PATH)/diann2-parquet/report-lib.parquet.skyline.speclib : <toolset>gcc:<build>no <runtime-debugging>on:<build>no ;
 
 # Test Bruker Paser TSV format
 blib-test-build-basic paser-hela-dia : -o : $(TEST_INPUTS_PATH)/paser/hela_dia_normalizationOFF_results.tsv ;

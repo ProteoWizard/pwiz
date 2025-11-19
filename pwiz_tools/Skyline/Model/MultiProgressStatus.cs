@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,8 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
@@ -70,7 +70,17 @@ namespace pwiz.Skyline.Model
             throw new NotImplementedException();
         }
 
+        public IProgressStatus ChangeSegmentName(string prop)
+        {
+            throw new NotImplementedException();
+        }
+
         public IProgressStatus ChangeSegments(int segment, int segmentCount)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IProgressStatus ChangeSegments(int segment, IList<int> segmentEndPercentages)
         {
             throw new NotImplementedException();
         }
@@ -91,6 +101,8 @@ namespace pwiz.Skyline.Model
         }
 
         public string Message { get { return string.Empty; } }
+        public IList<int> SegmentPercentEnds => null;
+        public string SegmentName { get { return string.Empty; } }
         public ImmutableList<ChromatogramLoadingStatus> ProgressList { get; private set; }
 
         public Exception ErrorException
@@ -203,6 +215,9 @@ namespace pwiz.Skyline.Model
                 return percent / ProgressList.Count;
             }
         }
+
+        public int PercentZoomStart => 0;
+        public int PercentZoomEnd => 100;
 
         public int ZoomedPercentComplete => PercentComplete;
 

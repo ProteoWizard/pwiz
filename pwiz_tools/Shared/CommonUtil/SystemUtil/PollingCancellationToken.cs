@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,12 +28,12 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public class PollingCancellationToken : IDisposable
     {
-        private const int POLLING_INTERVAL = 100;
         private Func<bool> _isCancelledFunc;
         private CancellationTokenSource _cancellationTokenSource;
         private bool _isDisposed;
         public PollingCancellationToken(Func<bool> isCancelledFunc) : this (CancellationToken.None, isCancelledFunc)
         {
+            PollingInterval = 100;
         }
 
         public PollingCancellationToken(CancellationToken token, Func<bool> isCancelledFunc)
@@ -50,6 +50,8 @@ namespace pwiz.Common.SystemUtil
                 return _cancellationTokenSource.Token;
             }
         }
+
+        public int PollingInterval { get; set; }
 
         public void Dispose()
         {
@@ -77,7 +79,7 @@ namespace pwiz.Common.SystemUtil
                         return;
                     }
                 }
-                Thread.Sleep(POLLING_INTERVAL);
+                Thread.Sleep(PollingInterval);
             }
         }
     }

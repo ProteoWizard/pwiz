@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
@@ -74,14 +74,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     nodeGroups.Add(nodeGroup);
                     groupPaths.Add(GroupPaths[i]);
                 }
+                NodePeps.Clear();
+                NodePeps.AddRange(nodePeps);
+                NodeGroups.Clear();
+                NodeGroups.AddRange(nodeGroups);
+                GroupPaths.Clear();
+                GroupPaths.AddRange(groupPaths);
             }
-
-            NodePeps.Clear();
-            NodePeps.AddRange(nodePeps);
-            NodeGroups.Clear();
-            NodeGroups.AddRange(nodeGroups);
-            GroupPaths.Clear();
-            GroupPaths.AddRange(groupPaths);
         }
 
         private double GetHeight(ChromInfoList<TransitionGroupChromInfo> transitionGroupChromInfos)

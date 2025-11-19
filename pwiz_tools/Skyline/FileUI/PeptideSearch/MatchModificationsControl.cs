@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -34,7 +34,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         public enum ModType { structural, heavy };
 
-        public struct ListBoxModification
+        public struct ListBoxModification : IEquatable<ListBoxModification>
         {
             public StaticMod Mod { get; private set; }
             public ModType? ModificationType { get; private set; }
@@ -57,13 +57,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     sb.Append(' ');
                     if (ModificationType == ModType.heavy)
-                        sb.Append(Resources.ListBoxModification_ToString__isotopic_label_);
+                        sb.Append(PeptideSearchResources.ListBoxModification_ToString__isotopic_label_);
                     else if (Mod.IsVariable)
-                        sb.Append(Resources.ListBoxModification_ToString__variable_);
+                        sb.Append(PeptideSearchResources.ListBoxModification_ToString__variable_);
                     else
-                        sb.Append(Resources.ListBoxModification_ToString__fixed_);
+                        sb.Append(PeptideSearchResources.ListBoxModification_ToString__fixed_);
                 }
                 return string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__, Mod.Name, sb);
+            }
+
+            public bool Equals(ListBoxModification other)
+            {
+                return Equals(Mod, other.Mod) && ModificationType == other.ModificationType;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is ListBoxModification other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Mod != null ? Mod.GetHashCode() : 0) * 397) ^ ModificationType.GetHashCode();
+                }
             }
         }
 
@@ -128,10 +146,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             if (ImportPeptideSearch.IsDDASearch)
             {
-                labelModifications.Text = Resources.MatchModificationsControl_ModificationLabelText_DDA_Search;
-                btnAddModification.Text = Resources.MatchModificationsControl_Initialize__Edit_modifications;
-                menuItemAddStructuralModification.Text = Resources.MatchModificationsControl_Initialize_Edit__structural_modifications___;
-                menuItemAddHeavyModification.Text = Resources.MatchModificationsControl_Initialize_Edit__heavy_modifications___;
+                labelModifications.Text = PeptideSearchResources.MatchModificationsControl_ModificationLabelText_DDA_Search;
+                btnAddModification.Text = PeptideSearchResources.MatchModificationsControl_Initialize__Edit_modifications;
+                menuItemAddStructuralModification.Text = PeptideSearchResources.MatchModificationsControl_Initialize_Edit__structural_modifications___;
+                menuItemAddHeavyModification.Text = PeptideSearchResources.MatchModificationsControl_Initialize_Edit__heavy_modifications___;
             }
 
             ImportPeptideSearch.InitializeModifications(document);

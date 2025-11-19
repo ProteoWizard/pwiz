@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Crosslinking
     /// This object can also represent an empty ion, which the transition fragment includes zero atoms from one
     /// of the crosslinked peptides.
     /// </summary>
-    public struct IonOrdinal : IComparable<IonOrdinal>
+    public struct IonOrdinal : IComparable<IonOrdinal>, IEquatable<IonOrdinal>
     {
         private IonType _ionType;
 
@@ -174,6 +174,24 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return Ordinal.CompareTo(ionFragment.Ordinal);
+        }
+
+        public bool Equals(IonOrdinal other)
+        {
+            return _ionType == other._ionType && Ordinal == other.Ordinal;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is IonOrdinal other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((int)_ionType * 397) ^ Ordinal;
+            }
         }
     }
 }

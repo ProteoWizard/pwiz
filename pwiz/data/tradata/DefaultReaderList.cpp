@@ -29,6 +29,7 @@
 #include "References.hpp"
 #include "pwiz/data/tradata/Version.hpp"
 #include "boost/xpressive/xpressive_dynamic.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
 
 
 namespace bxp = boost::xpressive;
@@ -39,40 +40,6 @@ namespace tradata {
 
 
 namespace {
-
-string GetXMLRootElement(const string& fileheader)
-{
-    const static bxp::sregex e = bxp::sregex::compile("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
-
-    // convert Unicode to ASCII
-    string asciiheader;
-    asciiheader.reserve(fileheader.size());
-    BOOST_FOREACH(char c, fileheader)
-    {
-        if(c > 0)
-            asciiheader.push_back(c);
-    }
-
-    bxp::smatch m;
-    if (bxp::regex_search(asciiheader, m, e))
-        return m[1];
-    throw runtime_error("[GetXMLRootElement] Root element not found (header is not well-formed XML)");
-}
-
-string GetXMLRootElement(istream& is)
-{
-    char buf[513];
-    is.read(buf, 512);
-    return GetXMLRootElement(buf);
-}
-
-string GetXMLRootElementFromFile(const string& filepath)
-{
-    pwiz::util::random_access_compressed_ifstream file(filepath.c_str());
-    if (!file)
-        throw runtime_error("[GetXMLRootElementFromFile] Error opening file");
-    return GetXMLRootElement(file);
-}
 
 SoftwarePtr getSoftwarePwiz(vector<SoftwarePtr>& softwarePtrs)
 {
@@ -152,7 +119,7 @@ class Reader_traML : public Reader
     {
         try
         {
-            string rootElement = GetXMLRootElement(is);
+            string rootElement = minimxml::xml_root_element(is);
             if (rootElement == "TraML")
                 return Type_traML;
         }

@@ -1,0 +1,9 @@
+{
+    "dotnet.preferCSharpExtension": true,
+    "dotnet.defaultSolution": "pwiz_tools/Skyline/Skyline.sln",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.env.windows": {
+        "LANG": "en_US.UTF-8",
+        "LC_ALL": "en_US.UTF-8"
+    }
+}

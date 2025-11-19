@@ -25,6 +25,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -228,7 +229,7 @@ namespace pwiz.SkylineTestData.Results
                     fsScans.FileStream, fsPeaks.FileStream, fsScores.FileStream);
                 fs.Commit();
             }
-            using (var writer = new XmlTextWriter(skyFilePath, Encoding.UTF8))
+            using (var writer = new XmlTextWriter(skyFilePath, new UTF8Encoding(false))) // UTF-8 without BOM
             {
                 writer.Formatting = Formatting.Indented;
                 var ser = new XmlSerializer(typeof (SrmDocument));

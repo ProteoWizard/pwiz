@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System.Linq;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model
 {
@@ -36,11 +36,13 @@ namespace pwiz.Skyline.Model
         public PeptideModifications MatcherPepMods { get; set; }
 
         public void CreateMatches(SrmSettings settings, IEnumerable<LibKey> libKeys,
-            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy)
+            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy,
+            string libraryName)
         {
             _dictAAMassPairs = new Dictionary<AATermKey, List<string>>();
             _libKeys = libKeys.GetEnumerator();
-            InitMatcherSettings(settings, defSetStatic, defSetHeavy);
+            LibraryName = libraryName;
+            InitMatcherSettings(settings, defSetStatic, defSetHeavy, libraryName);
             MatcherPepMods = CreateMatcherPeptideSettings(settings);
         }
 
@@ -58,12 +60,15 @@ namespace pwiz.Skyline.Model
                 foreach (var matchPair in Matches)
                 {
                     var structuralMod = matchPair.Value.StructuralMod;
-                        StaticMod mod1 = structuralMod;
+                    StaticMod mod1 = structuralMod;
                     if (structuralMod != null && !lightMods.Contains(mod => mod.Equivalent(mod1)))
                     {
                         // Make all found structural mods variable, unless they are preexisting modifications.
                         if (!UserDefinedTypedMods.ContainsKey(structuralMod) || structuralMod.IsUserSet)
-                            structuralMod = structuralMod.ChangeVariable(true);
+                        {
+                            if (structuralMod.IsVariablePossible)
+                                structuralMod = structuralMod.ChangeVariable(true);
+                        }
                         // Set modification to be implicit if it appears to be implicit in the library.
                         if (!UserDefinedTypedMods.ContainsKey(structuralMod) && !IsVariableMod(structuralMod))
                             structuralMod = structuralMod.ChangeExplicit(false);
@@ -195,7 +200,7 @@ namespace pwiz.Skyline.Model
                             else if (!Equals(@"?", massString))
                             {
                                 // Get more information on a failure that was posted to the exception web page
-                                throw new FormatException(string.Format(Resources.LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_, massString));
+                                throw new FormatException(string.Format(ModelResources.LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_correct_format_, massString));
                             }
                         }
                     }
@@ -622,7 +627,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private struct AATermKey
+        private struct AATermKey : IEquatable<AATermKey>
         {
             public AATermKey(char? aa, ModTerminus? terminus)
             {
@@ -635,10 +640,9 @@ namespace pwiz.Skyline.Model
 
             #region object overrides
 
-            private bool Equals(AATermKey other)
+            public bool Equals(AATermKey other)
             {
-                return other._aa.Equals(_aa) &&
-                    other._terminus.Equals(_terminus);
+                return other._aa.Equals(_aa) && other._terminus.Equals(_terminus);
             }
 
             public override bool Equals(object obj)

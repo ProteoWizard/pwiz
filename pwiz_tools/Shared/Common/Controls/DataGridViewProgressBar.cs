@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id$
 //
 //
@@ -23,8 +23,8 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil.PInvoke;
 
 
 namespace CustomProgressCell
@@ -37,6 +37,13 @@ namespace CustomProgressCell
         public DataGridViewProgressColumn()
         {
             CellTemplate = new DataGridViewProgressCell();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                CellTemplate.Dispose();
+            base.Dispose(disposing);
         }
     }
 }
@@ -122,10 +129,6 @@ namespace CustomProgressCell
             _animationStopTimer.Tick += (x, y) => { _animationStepTimer.Stop(); _animationStopTimer.Stop(); };
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = false)]
-        static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr w, IntPtr l);
-        const uint PBM_SETSTATE = 0x0410; // 1040
-
         enum ProgressBarState
         {
             Normal = 1, // green
@@ -133,9 +136,20 @@ namespace CustomProgressCell
             Warning = 3 // yellow
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _progressBar.Dispose();
+                _animationStepTimer.Dispose();
+                _animationStopTimer.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         private void SetProgressBarState(ProgressBarState state)
         {
-            SendMessage(_progressBar.Handle, PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
+            User32.SendMessage(_progressBar.Handle, User32.WinMessageType.PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
         }
 
         protected override void OnDataGridViewChanged()
@@ -179,7 +193,7 @@ namespace CustomProgressCell
             try
             {
                 // Draw the ProgressBar to an in-memory bitmap
-                Bitmap bmp = new Bitmap(cellBounds.Width, cellBounds.Height);
+                using Bitmap bmp = new Bitmap(cellBounds.Width, cellBounds.Height);
                 Rectangle bmpBounds = new Rectangle(0, 0, cellBounds.Width, cellBounds.Height);
                 _progressBar.Size = cellBounds.Size;
                 _progressBar.DrawToBitmap(bmp, bmpBounds);

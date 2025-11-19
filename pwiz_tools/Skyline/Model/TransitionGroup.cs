@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -114,6 +115,10 @@ namespace pwiz.Skyline.Model
             int diffOffset = tran1.CleavageOffset - tran2.CleavageOffset;
             if (diffOffset != 0)
                 return diffOffset;
+            if (tran1.IonType == IonType.precursor)
+                return tran1.MassIndex - tran2.MassIndex;
+            if (tran1.IonType == IonType.custom)
+                return tran1.CustomIon.MonoisotopicMassMz.CompareTo(tran2.CustomIon.MonoisotopicMassMz);
             return 0;
         }
 
@@ -522,11 +527,12 @@ namespace pwiz.Skyline.Model
                 }
 
                 double ionMz = IsProteomic ? 
-                    SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorAdduct) :
-                    PrecursorAdduct.MzFromNeutralMass(CustomMolecule.GetMass(massTypeIon), massTypeIon);
+                    SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), productAdduct) :
+                    productAdduct.MzFromNeutralMass(CustomMolecule.GetMass(massTypeIon), massTypeIon);
 
                 if (losses == null)
                 {
+                    Assume.AreEqual(productAdduct, PrecursorAdduct);
                     if (precursorMS1 && isotopeDist != null && ensureMassesAreMeasurable)
                     {
                         foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
@@ -556,7 +562,7 @@ namespace pwiz.Skyline.Model
                     continue;
                 if (!useFilter || !precursorIsProduct ||
                         !libraryFilter || IsMatched(transitionRanks, ionMz, IonType.precursor,
-                                                    PrecursorAdduct, losses))
+                                                    productAdduct, losses))
                 {
                     yield return CreateTransitionNode(0, precursorMassPredict, null, losses,
                                                       precursorIsProduct ? transitionRanks : null, productAdduct);
@@ -772,7 +778,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private readonly struct LossId : IComparable
+        private readonly struct LossId : IComparable, IEquatable<LossId>
         {
             public LossId(IonType ionType, double mass, int charge)
             {
@@ -942,7 +948,7 @@ namespace pwiz.Skyline.Model
                 else if (MIN_PRECURSOR_CHARGE > charge || charge > MAX_PRECURSOR_CHARGE)
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__,
+                        string.Format(ModelResources.TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__,
                             charge, MIN_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
                 }
             }
@@ -953,7 +959,7 @@ namespace pwiz.Skyline.Model
                     (DecoyMassShift < MIN_PRECURSOR_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRECURSOR_DECOY_MASS_SHIFT))
                 {
                     throw new InvalidDataException(
-                        string.Format(Resources.TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__,
+                        string.Format(ModelResources.TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__,
                                       DecoyMassShift, MIN_PRECURSOR_DECOY_MASS_SHIFT, MAX_PRECURSOR_DECOY_MASS_SHIFT));
                 }
             }

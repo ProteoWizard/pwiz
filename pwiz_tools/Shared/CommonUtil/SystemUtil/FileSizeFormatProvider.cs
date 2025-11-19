@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,6 +36,8 @@ namespace pwiz.Common.SystemUtil
         private const Decimal ONE_KILO_BYTE = 1024M;
         private const Decimal ONE_MEGA_BYTE = ONE_KILO_BYTE * 1024M;
         private const Decimal ONE_GIGA_BYTE = ONE_MEGA_BYTE * 1024M;
+        private const decimal ONE_TERA_BYTE = ONE_GIGA_BYTE * 1024M;
+        private const decimal ONE_PETA_BYTE = ONE_TERA_BYTE * 1024M;
 
         public string Format(string format, object arg, IFormatProvider formatProvider)
         {
@@ -62,7 +64,17 @@ namespace pwiz.Common.SystemUtil
 
             string suffix;
 
-            if (size > ONE_GIGA_BYTE)
+            if (size > ONE_PETA_BYTE)
+            {
+                size /= ONE_PETA_BYTE;
+                suffix = @" PB";
+            }
+            else if (size > ONE_TERA_BYTE)
+            {
+                size /= ONE_TERA_BYTE;
+                suffix = @" TB";
+            }
+            else if (size > ONE_GIGA_BYTE)
             {
                 size /= ONE_GIGA_BYTE;
                 suffix = @" GB";

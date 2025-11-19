@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,7 @@
 using System;
 using System.ComponentModel;
 using System.Deployment.Application;
-using System.Net;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -135,7 +135,7 @@ namespace pwiz.Skyline
 
                 using (var longWaitUpdate = new LongWaitDlg())
                 {
-                    longWaitUpdate.Text = string.Format(Resources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name);
+                    longWaitUpdate.Text = string.Format(SkylineResources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name);
                     longWaitUpdate.Message = GetProgressMessage(0, _updateInfo.UpdateSizeBytes ?? 0);
                     longWaitUpdate.ProgressValue = 0;
                     AutoResetEvent endUpdateEvent = null;
@@ -240,7 +240,7 @@ namespace pwiz.Skyline
 
         private string GetProgressMessage(long bytesCompleted, long totalBytes)
         {
-            return string.Format(Resources.UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__, _updateInfo.AvailableVersion,
+            return string.Format(SkylineResources.UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__, _updateInfo.AvailableVersion,
                 new FileSize(bytesCompleted), new FileSize(totalBytes));
         }
 
@@ -372,16 +372,18 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    var webClient = new WebClient();
-                    string applicationPage = webClient.DownloadString(_applicationDeployment.UpdateLocation);
+                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                    string applicationPage = httpClient.DownloadString(_applicationDeployment.UpdateLocation);
                     // ReSharper disable once LocalizableElement
                     Match match = Regex.Match(applicationPage, "<assemblyIdentity .*version=\"([^\"]*)\"");
                     if (match.Success)
                         return new Version(match.Groups[1].Value);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // Fall through to returning null
+                    // Ignore but log to debug console in debug builds
+                    // Detailed error from HttpClientWithProgress preserved for diagnostics
+                    Debug.WriteLine($@"Failed to check for updates: {ex.Message}");
                 }
                 return null;
             }

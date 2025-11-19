@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,10 +22,12 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.PeakFinding;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -47,6 +49,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_BOUNDARIES = Color.LightGray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
         public static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.FromArgb(30, Color.BlueViolet);
+        public static readonly Color COLOR_IMPUTED_PEAK_SHADE = Color.FromArgb(30, Color.ForestGreen);
 
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
         private const int MIN_BEST_BOUNDARY_HEIGHT = 20;
@@ -82,7 +85,7 @@ namespace pwiz.Skyline.Controls.Graphs
                               TransitionDocNode transition,
                               ChromatogramInfo chromatogram,
                               TransitionChromInfo tranPeakInfo,
-                              RegressionLine timeRegressionFunction,
+                              AlignmentFunction timeRegressionFunction,
                               bool[] annotatePeaks,
                               double[] dotProducts,
                               double bestProduct,
@@ -163,7 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public TransitionDocNode TransitionNode { get; private set; }
         public ChromatogramInfo Chromatogram { get; private set; }
         public TransitionChromInfo TransitionChromInfo { get; private set; }
-        public RegressionLine TimeRegressionFunction { get; private set; }
+        public AlignmentFunction TimeRegressionFunction { get; private set; }
         public TransformChrom? TransformChrom { get; set; }
         public ScaledRetentionTime ScaleRetentionTime(double measuredTime)
         {
@@ -186,6 +189,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool HideBest { get; set; }
 
         public double BestPeakTime { get { return _bestPeakTimeIndex != -1 ? _measuredTimes[_bestPeakTimeIndex] : 0; } }
+        public PeakBounds ImputedBounds { get; set; }
 
         public string CurveAnnotation { get; set; }
         public PeptideGraphInfo GraphInfo { get; set; }
@@ -299,13 +303,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     string title = Chromatogram.FilePath.GetSampleOrFileName();
                     var extractor = Chromatogram.Header.Extractor;
                     if (extractor == ChromExtractor.base_peak)
-                        return string.Format(Resources.ChromGraphItem_Title__0____base_peak, title);
+                        return string.Format(GraphsResources.ChromGraphItem_Title__0____base_peak, title);
                     if (extractor == ChromExtractor.summed)
-                        return string.Format(Resources.ChromGraphItem_Title__0____TIC, title);
+                        return string.Format(GraphsResources.ChromGraphItem_Title__0____TIC, title);
                     return Chromatogram.GroupInfo.ChromatogramGroupId?.Target?.ToString() ?? @"no summary text";
                 }
                 if (OptimizationStep.HasValue && !OptimizationStep.Value.Equals(0))
-                    return string.Format(Resources.ChromGraphItem_Title_Step__0_, OptimizationStep);
+                    return string.Format(GraphsResources.ChromGraphItem_Title_Step__0_, OptimizationStep);
 
                 return GetTitle(TransitionGroupNode, TransitionNode);
             }
@@ -448,12 +452,25 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddOriginalPeakAnnotation(ChromPeak bestPeak, GraphObjList annotations)
         {
-            var start = ScaleRetentionTime(bestPeak.StartTime);
-            var end = ScaleRetentionTime(bestPeak.EndTime);
+            AddPeakAnnotation(bestPeak.StartTime, bestPeak.EndTime, annotations, GraphObjType.original_peak_shading, COLOR_ORIGINAL_PEAK_SHADE);
+        }
+        private void AddImputedBoundsAnnotation(PeakBounds peakBounds, GraphObjList annotations)
+        {
+            if (peakBounds != null)
+            {
+                AddPeakAnnotation(peakBounds.StartTime, peakBounds.EndTime, annotations, GraphObjType.imputed_peak_shading, COLOR_IMPUTED_PEAK_SHADE);
+            }
+        }
+
+        private void AddPeakAnnotation(double startTime, double endTime, GraphObjList annotations,
+            GraphObjType graphObjType, Color color)
+        {
+            var start = ScaleRetentionTime(startTime);
+            var end = ScaleRetentionTime(endTime);
             var width = end.DisplayTime - start.DisplayTime;
             var originalPeakShadingBox = new BoxObj(start.DisplayTime, 0, width, 1)
             {
-                Fill = new Fill(COLOR_ORIGINAL_PEAK_SHADE),
+                Fill = new Fill(color),
                 ZOrder = ZOrder.F_BehindGrid,
                 Border = new Border { IsVisible = false },
                 IsClippedToChartRect = true,
@@ -461,6 +478,7 @@ namespace pwiz.Skyline.Controls.Graphs
             };
             originalPeakShadingBox.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
             annotations.Add(originalPeakShadingBox);
+
         }
 
         public override void AddAnnotations(MSGraphPane graphPane, Graphics g,
@@ -473,65 +491,65 @@ namespace pwiz.Skyline.Controls.Graphs
             // Calculate maximum y for potential retention time indicators
             PointF ptTop = new PointF(0, graphPane.Chart.Rect.Top);
 
-            if (GraphChromatogram.ShowRT != ShowRTChrom.none)
+            if (RetentionMsMs != null)
             {
-                if (RetentionMsMs != null)
+                foreach (double retentionTime in RetentionMsMs)
                 {
-                    foreach (double retentionTime in RetentionMsMs)
+                    Color color = COLOR_MSMSID_TIME;
+                    if (SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs))
                     {
-                        Color color = COLOR_MSMSID_TIME;
-                        if (SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs))
-                        {
-                            color = ColorScheme.ChromGraphItemSelected;
-                        }
-                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
-                            Resources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
-                            ScaleRetentionTime(retentionTime));
+                        color = ColorScheme.ChromGraphItemSelected;
                     }
-                }
-                if (MidasRetentionMsMs != null)
-                {
-                    foreach (var retentionTime in MidasRetentionMsMs)
-                    {
-                        var color = SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs)
-                            ? ColorScheme.ChromGraphItemSelected
-                            : COLOR_MSMSID_TIME;
-                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, string.Empty, GraphObjType.midas_spectrum, color, ScaleRetentionTime(retentionTime));
-                    }
-                }
-                if (AlignedRetentionMsMs != null)
-                {
-                    foreach (var time in AlignedRetentionMsMs)
-                    {
-                        var scaledTime = ScaleRetentionTime(time);
-                        var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
-                                               scaledTime.DisplayTime, 1)
-                        {
-                            ZOrder = ZOrder.F_BehindGrid,
-                            Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
-                            IsClippedToChartRect = true,
-                            Tag = new GraphObjTag(this, GraphObjType.aligned_ms_id, scaledTime),
-                        };
-                        annotations.Add(line);
-                    }
-                }
-                if (UnalignedRetentionMsMs != null)
-                {
-                    foreach (var time in UnalignedRetentionMsMs)
-                    {
-                        var scaledTime = ScaleRetentionTime(time);
-                        var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
-                                               scaledTime.DisplayTime, 1)
-                        {
-                            ZOrder = ZOrder.F_BehindGrid,
-                            Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
-                            IsClippedToChartRect = true,
-                            Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),
-                        };
-                        annotations.Add(line);
-                    }
+                    AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
+                        GraphsResources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
+                        ScaleRetentionTime(retentionTime));
                 }
             }
+            if (MidasRetentionMsMs != null)
+            {
+                foreach (var retentionTime in MidasRetentionMsMs)
+                {
+                    var color = SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs)
+                        ? ColorScheme.ChromGraphItemSelected
+                        : COLOR_MSMSID_TIME;
+                    AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, string.Empty, GraphObjType.midas_spectrum, color, ScaleRetentionTime(retentionTime));
+                }
+            }
+            if (AlignedRetentionMsMs != null)
+            {
+                foreach (var time in AlignedRetentionMsMs)
+                {
+                    var scaledTime = ScaleRetentionTime(time);
+                    var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
+                                           scaledTime.DisplayTime, 1)
+                    {
+                        ZOrder = ZOrder.F_BehindGrid,
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                        IsClippedToChartRect = true,
+                        Tag = new GraphObjTag(this, GraphObjType.aligned_ms_id, scaledTime),
+                    };
+                    annotations.Add(line);
+                }
+            }
+            if (UnalignedRetentionMsMs != null)
+            {
+                foreach (var time in UnalignedRetentionMsMs)
+                {
+                    var scaledTime = ScaleRetentionTime(time);
+                    var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
+                                           scaledTime.DisplayTime, 1)
+                    {
+                        ZOrder = ZOrder.F_BehindGrid,
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                        IsClippedToChartRect = true,
+                        Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),
+                    };
+                    annotations.Add(line);
+                }
+            }
+
+            AddImputedBoundsAnnotation(ImputedBounds, annotations);
+
 
             // If explicit retention time is in use, show that instead of predicted since it overrides
             if (RetentionExplicit != null)
@@ -544,7 +562,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         g,
                         annotations,
                         ptTop,
-                        Resources.ChromGraphItem_AddAnnotations_Explicit,
+                        GraphsResources.ChromGraphItem_AddAnnotations_Explicit,
                         GraphObjType.predicted_rt_window,
                         COLOR_RETENTION_TIME,
                         ScaleRetentionTime(time));
@@ -578,7 +596,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                g,
                                                annotations,
                                                ptTop,
-                                               Resources.ChromGraphItem_AddAnnotations_Predicted,
+                                               GraphsResources.ChromGraphItem_AddAnnotations_Predicted,
                                                GraphObjType.predicted_rt_window,
                                                COLOR_RETENTION_TIME,
                                                ScaleRetentionTime(time));
@@ -1029,7 +1047,8 @@ namespace pwiz.Skyline.Controls.Graphs
             best_peak,
             raw_time,
             peak,
-            original_peak_shading
+            original_peak_shading, 
+            imputed_peak_shading
         }
 
         public class GraphObjTag
@@ -1066,7 +1085,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class FailedChromGraphItem : NoDataChromGraphItem
     {
         public FailedChromGraphItem(TransitionGroupDocNode nodeGroup, Exception x)
-            : base(string.Format(Resources.FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__, ChromGraphItem.GetTitle(nodeGroup), x.Message))
+            : base(string.Format(GraphsResources.FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__, ChromGraphItem.GetTitle(nodeGroup), x.Message))
         {            
         }
     }
@@ -1074,19 +1093,19 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class NotFoundChromGraphItem : NoDataChromGraphItem
     {
         public NotFoundChromGraphItem(TransitionDocNode nodeTran)
-            : base(string.Format(Resources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeTran)))
+            : base(string.Format(GraphsResources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeTran)))
         {
         }
 
         public NotFoundChromGraphItem(TransitionGroupDocNode nodeGroup)
-            : base(string.Format(Resources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeGroup)))
+            : base(string.Format(GraphsResources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeGroup)))
         {
         }
     }
 
     public sealed class UnavailableChromGraphItem : NoDataChromGraphItem
     {
-        public UnavailableChromGraphItem(string message) : base(message ?? Resources.UnavailableChromGraphItem_UnavailableChromGraphItem_Chromatogram_information_unavailable)
+        public UnavailableChromGraphItem(string message) : base(message ?? GraphsResources.UnavailableChromGraphItem_UnavailableChromGraphItem_Chromatogram_information_unavailable)
         {
         }
     }
@@ -1157,12 +1176,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void CustomizeYAxis(Axis axis)
         {
-            CustomizeAxis(axis, Resources.AbstractChromGraphItem_CustomizeYAxis_Intensity);
+            CustomizeAxis(axis, GraphsResources.AbstractChromGraphItem_CustomizeYAxis_Intensity);
         }
 
         public void CustomizeXAxis(Axis axis)
         {
-            CustomizeAxis(axis, Resources.AbstractChromGraphItem_CustomizeXAxis_Retention_Time);
+            CustomizeAxis(axis, GraphsResources.AbstractChromGraphItem_CustomizeXAxis_Retention_Time);
         }
 
         private static void CustomizeAxis(Axis axis, string title)

@@ -58,7 +58,6 @@
       : using a System.ComponentModel.TypeConverter
       : and then encoded with base64 encoding.
   -->
-
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
@@ -99,102 +98,102 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc" xml:space="preserve">
-        <value>得分是 1 还是 0 取决于该峰是否与 MS/MS 鉴定的保留时间重叠。</value>
-    </data>
+    <value>得分是 1 还是 0 取决于该峰是否与 MS/MS 鉴定的保留时间重叠。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc" xml:space="preserve">
-        <value>“洗脱”为 true 的所有母离子之间离子对峰的部分。</value>
-    </data>
+    <value>“洗脱”为 true 的所有母离子之间离子对峰的部分。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreDefaultCalc" xml:space="preserve">
-        <value>“洗脱”为 true 的离子对峰的部分。
+    <value>“洗脱”为 true 的离子对峰的部分。
 如有内标母离子，则使用内标母离子计算，否则使用分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc" xml:space="preserve">
-        <value>“洗脱”为 true 的内标母离子之间离子对的部分。</value>
-    </data>
+    <value>“洗脱”为 true 的内标母离子之间离子对的部分。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCalc" xml:space="preserve">
-        <value>离子对峰面积之和取以 10 为底的对数。
+    <value>离子对峰面积之和取以 10 为底的对数。
 如有内标母离子，则使用内标母离子计算，否则使用分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCorrelationCalc" xml:space="preserve">
-        <value>MS2 离子对面积相对于库强度（如有）的归一化对比角度。
+    <value>MS2 离子对面积相对于库强度（如有）的归一化对比角度。
 否则为 MS1 离子对面积相对于预测的同位素分布的点积。
 如有内标母离子，则使用内标母离子进行计算，否则使用分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedCoElutionCalc" xml:space="preserve">
-        <value>MQuest 共洗脱得分，按离子对峰面积之和加权。
+    <value>MQuest 共洗脱得分，按离子对峰面积之和加权。
 如有内标母离子，则使用内标母离子计算，否则使用分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedShapeCalc" xml:space="preserve">
-        <value>MQuest 形状得分，按离子对峰面积之和加权。
+    <value>MQuest 形状得分，按离子对峰面积之和加权。
 如果存在内标母离子，则使用内标母离子进行计算，否则使用分析物母离子。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCalc" xml:space="preserve">
-        <value>分析物母离子之间的离子对峰面积之和取以 10 为底的对数。</value>
-    </data>
+    <value>分析物母离子之间的离子对峰面积之和取以 10 为底的对数。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCorrelationCalc" xml:space="preserve">
-        <value>MS2 离子对面积相对于库强度的归一化对比角度。
+    <value>MS2 离子对面积相对于库强度的归一化对比角度。
 使用分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestReferenceCorrelationCalc" xml:space="preserve">
-        <value>分析物和内标离子对峰面积之间相关性的归一化对比角度。</value>
-    </data>
+    <value>分析物和内标离子对峰面积之间相关性的归一化对比角度。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimePredictionCalc" xml:space="preserve">
-        <value>预测的保留时间与峰顶时间之差。</value>
-    </data>
+    <value>预测的保留时间与峰顶时间之差。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimeSquaredPredictionCalc" xml:space="preserve">
-        <value>预测的保留时间与峰顶时间之差的平方。</value>
-    </data>
+    <value>预测的保留时间与峰顶时间之差的平方。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCalc" xml:space="preserve">
-        <value>不同内标母离子的离子对峰面积之和取以 10 为底的对数。</value>
-    </data>
+    <value>不同内标母离子的离子对峰面积之和取以 10 为底的对数。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCorrelationCalc" xml:space="preserve">
-        <value>MS2 离子对面积相对于库强度的归一化对比角度。
+    <value>MS2 离子对面积相对于库强度的归一化对比角度。
 使用内标母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedCoElutionCalc" xml:space="preserve">
-        <value>MQuest 共洗脱得分，按离子对峰面积之和加权。
+    <value>MQuest 共洗脱得分，按离子对峰面积之和加权。
 使用内标母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedShapeCalc" xml:space="preserve">
-        <value>MQuest 形状得分，按离子对峰面积之和加权。
+    <value>MQuest 形状得分，按离子对峰面积之和加权。
 使用内标母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedCoElutionCalc" xml:space="preserve">
-        <value>按离子对面积之和加权的分析物母离子的 MQuest 共洗脱得分</value>
-    </data>
+    <value>按离子对面积之和加权的分析物母离子的 MQuest 共洗脱得分</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedReferenceCoElutionCalc" xml:space="preserve">
-        <value>MQuest 共洗脱得分，按离子对峰面积之和加权。</value>
-    </data>
+    <value>MQuest 共洗脱得分，按离子对峰面积之和加权。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedReferenceShapeCalc" xml:space="preserve">
-        <value>MQuest 形状得分，按离子对峰面积之和加权。</value>
-    </data>
+    <value>MQuest 形状得分，按离子对峰面积之和加权。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc" xml:space="preserve">
-        <value>MQuest 形状得分，按离子对峰面积之和加权。
+    <value>MQuest 形状得分，按离子对峰面积之和加权。
 使用分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenCrossWeightedShapeCalc" xml:space="preserve">
-        <value>MS1 离子和 MS2 离子之间的形状相关性得分。
+    <value>MS1 离子和 MS2 离子之间的形状相关性得分。
 如有内标母离子，则使用内标母离子计算，否则使用分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenIsotopeDotProductCalc" xml:space="preserve">
-        <value>MS1 离子对面积与预测的同位素分布的归一化对比角度。
+    <value>MS1 离子对面积与预测的同位素分布的归一化对比角度。
 使用得分最高的分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenPrecursorMassErrorCalc" xml:space="preserve">
-        <value>按离子对面积加权的各分析物 MS1 离子对的平均质量误差。</value>
-    </data>
+    <value>按离子对面积加权的各分析物 MS1 离子对的平均质量误差。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenProductMassErrorCalc" xml:space="preserve">
-        <value>按离子对面积加权的各分析物 MS2 离子对的平均质量误差。</value>
-    </data>
+    <value>按离子对面积加权的各分析物 MS2 离子对的平均质量误差。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenSignalNoiseCalc" xml:space="preserve">
-        <value>峰高与峰边界外中位数强度之比的对数。
+    <value>峰高与峰边界外中位数强度之比的对数。
 使用分析物母离子计算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenStandardProductMassErrorCalc" xml:space="preserve">
-        <value>内标 MS2 离子对的平均质量误差，按离子对面积加权。</value>
-    </data>
+    <value>内标 MS2 离子对的平均质量误差，按离子对面积加权。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenStandardSignalNoiseCalc" xml:space="preserve">
-        <value>峰高与峰边界外中位数强度之比的对数。
+    <value>峰高与峰边界外中位数强度之比的对数。
 使用内标母离子计算。</value>
-    </data>
+  </data>
 </root>

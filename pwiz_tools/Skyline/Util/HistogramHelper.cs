@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -6,7 +6,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
-using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Util
@@ -38,7 +37,7 @@ namespace pwiz.Skyline.Util
             var count = peptideAnnotationPairs.Count;
             if (results.Count != count)
             {
-                MessageDlg.Show(sender, string.Format(Resources.HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides, MAX_FINDRESULTS_PEPTIDES, count));
+                MessageDlg.Show(sender, string.Format(UtilResources.HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides, MAX_FINDRESULTS_PEPTIDES, count));
                 results = results.GetRange(0, MAX_FINDRESULTS_PEPTIDES);
             }
 

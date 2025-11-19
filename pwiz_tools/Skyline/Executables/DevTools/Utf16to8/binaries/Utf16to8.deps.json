@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Utf16to8/1.0.0": {
+        "runtime": {
+          "Utf16to8.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Utf16to8/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

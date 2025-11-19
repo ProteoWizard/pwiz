@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -60,7 +60,7 @@ namespace pwiz.SkylineTest.MSstats
         
         private void TestGroupComparison(TextReader textReader, bool includeInteraction, IDictionary<string, LinearFitResult> expectedResults)
         {
-            var csvReader = new DsvFileReader(textReader, ',');
+            using var csvReader = new DsvFileReader(textReader, ',');
             var dataRowsByProtein = ToDataRows(ReadCsvFile(csvReader));
             Assert.AreNotEqual(0, dataRowsByProtein.Count);
             var cache = new QrFactorizationCache();

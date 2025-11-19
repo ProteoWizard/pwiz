@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -64,15 +64,17 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Library;
             });
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettingsUi.ShowBuildLibraryDlg);
+            const string libraryName = "ProxlLibrary";
             RunUI(() =>
             {
-                buildLibraryDlg.LibraryName = "ProxlLibrary";
+                buildLibraryDlg.LibraryName = libraryName;
                 buildLibraryDlg.LibraryPath = TestFilesDir.GetTestPath("MyProxlLibrary.blib");
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new []{TestFilesDir.GetTestPath("ProxlTest.proxl.xml") });
             });
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+            WaitForConditionUI(() => peptideSettingsUi.PickedLibraries.Contains(libraryName));
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
             var transitionSettingsUi = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);

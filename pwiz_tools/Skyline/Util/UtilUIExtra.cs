@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,8 +24,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -91,14 +91,14 @@ namespace pwiz.Skyline.Util
                     // Byte count from the beginning of the clipboard to the start of the context, or -1 if no context
                     case @"starthtml":
                         if (startHmtl != 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHtml_is_already_declared);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartHtml_is_already_declared);
                         startHmtl = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the context, or -1 if no context.
                     case @"endhtml":
                         if (startHmtl == 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML);
                         int endHtml = int.Parse(val);
 
                         _fullText = rawClipboardText.Substring(startHmtl, endHtml - startHmtl);
@@ -107,14 +107,14 @@ namespace pwiz.Skyline.Util
                     //  Byte count from the beginning of the clipboard to the start of the fragment.
                     case @"startfragment":
                         if (startFragment != 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_is_already_declared);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartFragment_is_already_declared);
                         startFragment = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the fragment.
                     case @"endfragment":
                         if (startFragment == 0)
-                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment);
+                            throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment);
                         int endFragment = int.Parse(val);
                         _fragment = rawClipboardText.Substring(startFragment, endFragment - startFragment);
                         break;
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Util
 
             if (_fullText == null && _fragment == null)
             {
-                throw new FormatException(Resources.HtmlFragment_HtmlFragment_No_data_specified);
+                throw new FormatException(UtilResources.HtmlFragment_HtmlFragment_No_data_specified);
             }
         }
 
@@ -218,7 +218,11 @@ namespace pwiz.Skyline.Util
         public static string ClipBoardText(string htmlFragment, string title, Uri sourceUrl)
         {
             if (title == null)
-                title = @"From Clipboard"; // CONSIDER: localize? This is a title for an HTML page. I think the encodings different.
+            {
+                // Use a blank title if none was specified.
+                // The title shows up when pasting into GMail.
+                title = string.Empty;
+            }
 
             StringBuilder sb = new StringBuilder();
 
@@ -290,7 +294,7 @@ EndSelection:<<<<<<<3
             {
                 foreach (object item in comboBox.Items)
                 {
-                    string valueToMeasure = item.ToString();
+                    string valueToMeasure = comboBox.GetItemText(item);
 
                     int currentWidth = TextRenderer.MeasureText(g, valueToMeasure, comboBox.Font).Width;
                     if (currentWidth > widestWidth)
@@ -304,33 +308,33 @@ EndSelection:<<<<<<<3
 
     public static class ClipboardHelper
     {
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetOpenClipboardWindow();
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
         public static string GetPasteErrorMessage()
         {
-            return GetOpenClipboardMessage(Resources.ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_);
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_);
         }
 
         public static string GetCopyErrorMessage()
         {
-            return GetOpenClipboardMessage(Resources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetCopyErrorMessage_Failed_setting_data_to_clipboard_);
+        }
+
+        public static string GetGenericClipboardErrorMessage()
+        {
+            return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_);
         }
 
         public static string GetOpenClipboardMessage(string prefix)
         {
             try
             {
-                IntPtr hwnd = GetOpenClipboardWindow();
+                IntPtr hwnd = User32.GetOpenClipboardWindow();
                 if (hwnd != IntPtr.Zero)
                 {
                     uint processId;
-                    GetWindowThreadProcessId(hwnd, out processId);
+                    User32.GetWindowThreadProcessId(hwnd, out processId);
                     var process = Process.GetProcessById((int)processId);
                     var message = prefix + Environment.NewLine;
-                    message += string.Format(Resources.ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open,
+                    message += string.Format(UtilResources.ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open,
                             process.ProcessName, processId);
                     return message;
                 }
@@ -396,6 +400,34 @@ EndSelection:<<<<<<<3
                 MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetPasteErrorMessage());
                 return null;
             }
+        }
+
+        public static bool IsCut(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.X) || keys == (Keys.Shift | Keys.Delete);
+        }
+        
+        public static bool IsCopy(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.C) || keys == (Keys.Control | Keys.Insert);
+        }
+
+        public static bool IsPaste(Keys keys)
+        {
+            return keys == (Keys.Control | Keys.V) || keys == (Keys.Shift | Keys.Insert);
+        }
+
+        public static string GetClipboardErrorMessageForKeystroke(Keys keys)
+        {
+            if (IsPaste(keys))
+            {
+                return GetPasteErrorMessage();
+            }
+            if (IsCopy(keys) || IsCut(keys))
+            {
+                return GetCopyErrorMessage();
+            }
+            return GetGenericClipboardErrorMessage();
         }
     }
 }

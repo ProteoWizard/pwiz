@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -229,7 +229,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 return null;
             }
-            var calibrationCurve = peptideEntity.GetCalibrationCurveFitter().GetCalibrationCurve();
+
+            var calibrationCurveFitter = peptideEntity.GetCalibrationCurveFitter();
+            var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
             var concentrationMultiplier = peptideEntity.ConcentrationMultiplier.GetValueOrDefault(1);
             double? bestLoq = null;
             foreach (var grouping in peptideResults.OrderByDescending(g => g.Key))
@@ -237,7 +239,7 @@ namespace pwiz.SkylineTestFunctional
                 if (options.MaxLoqBias.HasValue)
                 {
                     var areas = grouping
-                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea)
+                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea.Strict)
                         .Where(area => area.HasValue).Cast<double>().ToArray();
                     if (areas.Length == 0)
                     {
@@ -260,7 +262,7 @@ namespace pwiz.SkylineTestFunctional
                 if (options.MaxLoqCv.HasValue)
                 {
                     var stats = new Statistics(grouping.Select(peptideResult =>
-                        peptideResult.Quantification.Value.NormalizedArea).OfType<double>());
+                        peptideResult.Quantification.Value.NormalizedArea.Strict).OfType<double>());
                     if (stats.Length > 1)
                     {
                         var cv = stats.StdDev() / stats.Mean();

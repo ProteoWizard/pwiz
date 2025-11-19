@@ -41,6 +41,7 @@ rule vendor-api-requirements ( properties * )
        [ mbi-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
        ! <vendor-api-support>off in $(properties) &&
+       ! <runtime-debugging>on in $(properties) &&
        <address-model>64 in $(properties)
     {
         result += <source>Reader_Mobilion_Detail.cpp ;
@@ -56,6 +57,7 @@ rule vendor-api-usage-requirements ( properties * )
        [ mbi-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
        ! <vendor-api-support>off in $(properties) &&
+       ! <runtime-debugging>on in $(properties) &&
        <address-model>64 in $(properties)
     {
         result += <define>PWIZ_READER_MOBILION ;
@@ -79,6 +81,14 @@ rule vendor-api-usage-requirements ( properties * )
         else if ! [ mbi-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <address-model>32 in $(properties)
+        {
+            echo "[$(READER_PATH)] 32-bit build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <runtime-debugging>on in $(properties)
+        {
+            echo "[$(READER_PATH)] Debug build: $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
@@ -131,6 +141,14 @@ rule test-requirements ( properties * )
     else if ! [ mbi-dll-location $(API_PATH) : $(properties) ]
     {
         warn-once "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if <address-model>32 in $(properties)
+    {
+        warn-once "[$(READER_PATH)] 32-bit build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+    }
+    else if <runtime-debugging>on in $(properties)
+    {
+        warn-once "[$(READER_PATH)] Debug build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
     }
 
     return $(result) ;

@@ -318,7 +318,7 @@ struct PWIZ_API_DECL Frame
 
     virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
                                          bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const = 0;
-    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter) const = 0;
+    virtual size_t getCombinedSpectrumDataSize(bool ignoreZeroIntensityPoints, const std::vector<pwiz::chemistry::MzMobilityWindow>& mzMobilityFilter, double& tic, double& minMz, double& maxMz) const = 0;
 
     virtual ~Frame() {}
 };

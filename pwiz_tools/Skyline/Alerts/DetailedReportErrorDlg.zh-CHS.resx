@@ -246,7 +246,7 @@
     <value>5</value>
   </data>
   <data name="textBoxMsg.Text" xml:space="preserve">
-    <value />
+    <value></value>
   </data>
   <data name="&gt;&gt;textBoxMsg.Name" xml:space="preserve">
     <value>textBoxMsg</value>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 
@@ -33,8 +34,10 @@ namespace pwiz.Skyline.Controls
         private readonly UndoManager _undoManager;
         private readonly ToolStripMenuItem _undoMenuItem;
         private readonly ToolStripSplitButton _undoButton;
+        private UndoRedoList _undoList;
         private readonly ToolStripMenuItem _redoMenuItem;
         private readonly ToolStripSplitButton _redoButton;
+        private UndoRedoList _redoList;
         private readonly Action<Action> _runUIAction;
 
         public UndoRedoButtons(UndoManager undoManager,
@@ -63,6 +66,36 @@ namespace pwiz.Skyline.Controls
                 _redoButton, false);
         }
 
+        public void ShowUndo(bool show)
+        {
+            ShowButtonDropdown(_undoButton, show, ref _undoList);
+        }
+
+        public void ShowRedo(bool show)
+        {
+            ShowButtonDropdown(_redoButton, show, ref _redoList);
+        }
+
+        private void ShowButtonDropdown(ToolStripDropDownItem button, bool show, ref UndoRedoList list)
+        {
+            if (show)
+            {
+                button.ShowDropDown();
+                if (list != null)
+                    list.Closing += DenyListClosing;
+            }
+            else if (list != null)
+            {
+                list.Closing -= DenyListClosing;
+                list.Close();
+            }
+        }
+
+        private void DenyListClosing(object sender, CancelEventArgs e)
+        {
+            e.Cancel = true;
+        }
+
         void undoManager_StacksChanged(object sender, EventArgs e)
         {
             _runUIAction(UpdateButtons);
@@ -78,9 +111,12 @@ namespace pwiz.Skyline.Controls
 
         void PopulateDropDownButton(ToolStripDropDownItem button, bool undo)
         {
-            UndoRedoList undoRedoList = new UndoRedoList();
+            var undoRedoList = new UndoRedoList();
             undoRedoList.ShowList(button, undo, _undoManager);
+            if (undo)
+                _undoList = undoRedoList;
+            else
+                _redoList = undoRedoList;
         }
-
     }
 }

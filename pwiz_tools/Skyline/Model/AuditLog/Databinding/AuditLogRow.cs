@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,10 +23,10 @@ using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.ElementLocators;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
 {
@@ -121,7 +121,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get { return _isMultipleUndo; }
         }
 
-        [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
         public AuditLogRowText UndoRedoMessage
         {
@@ -133,7 +132,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             }
         }
 
-        [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
         public AuditLogRowText SummaryMessage
         {

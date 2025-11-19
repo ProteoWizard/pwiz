@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Alerts
+namespace pwiz.Skyline.Alerts
 {
     partial class MsFraggerDownloadDlg
     {
@@ -29,29 +29,25 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MsFraggerDownloadDlg));
-            this.tbUsageConditions = new System.Windows.Forms.TextBox();
             this.cbAgreeToLicense = new System.Windows.Forms.CheckBox();
             this.rtbAgreeToLicense = new System.Windows.Forms.RichTextBox();
-            this.tbName = new System.Windows.Forms.TextBox();
-            this.lblName = new System.Windows.Forms.Label();
+            this.tbFirstName = new System.Windows.Forms.TextBox();
+            this.lblFirstName = new System.Windows.Forms.Label();
             this.lblEmail = new System.Windows.Forms.Label();
             this.tbEmail = new System.Windows.Forms.TextBox();
             this.lblInstitution = new System.Windows.Forms.Label();
             this.tbInstitution = new System.Windows.Forms.TextBox();
-            this.cbReceiveUpdateEmails = new System.Windows.Forms.CheckBox();
             this.btnAccept = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.tbLastName = new System.Windows.Forms.TextBox();
+            this.lblLastName = new System.Windows.Forms.Label();
+            this.tbVerificationCode = new System.Windows.Forms.TextBox();
+            this.lblVerificationCode = new System.Windows.Forms.Label();
+            this.btnRequestVerificationCode = new System.Windows.Forms.Button();
+            this.rtbUsageConditions = new System.Windows.Forms.RichTextBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // tbUsageConditions
-            // 
-            resources.ApplyResources(this.tbUsageConditions, "tbUsageConditions");
-            this.tbUsageConditions.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tbUsageConditions.Name = "tbUsageConditions";
-            this.tbUsageConditions.ReadOnly = true;
-            this.tbUsageConditions.TabStop = false;
             // 
             // cbAgreeToLicense
             // 
@@ -65,19 +61,21 @@
             resources.ApplyResources(this.rtbAgreeToLicense, "rtbAgreeToLicense");
             this.rtbAgreeToLicense.BackColor = System.Drawing.SystemColors.Control;
             this.rtbAgreeToLicense.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbAgreeToLicense.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.rtbAgreeToLicense.Name = "rtbAgreeToLicense";
             this.rtbAgreeToLicense.ReadOnly = true;
             this.rtbAgreeToLicense.TabStop = false;
             // 
-            // tbName
+            // tbFirstName
             // 
-            resources.ApplyResources(this.tbName, "tbName");
-            this.tbName.Name = "tbName";
+            resources.ApplyResources(this.tbFirstName, "tbFirstName");
+            this.tbFirstName.Name = "tbFirstName";
+            this.tbFirstName.TextChanged += new System.EventHandler(this.tbTextChanged);
             // 
-            // lblName
+            // lblFirstName
             // 
-            resources.ApplyResources(this.lblName, "lblName");
-            this.lblName.Name = "lblName";
+            resources.ApplyResources(this.lblFirstName, "lblFirstName");
+            this.lblFirstName.Name = "lblFirstName";
             // 
             // lblEmail
             // 
@@ -88,6 +86,7 @@
             // 
             resources.ApplyResources(this.tbEmail, "tbEmail");
             this.tbEmail.Name = "tbEmail";
+            this.tbEmail.TextChanged += new System.EventHandler(this.tbTextChanged);
             // 
             // lblInstitution
             // 
@@ -98,12 +97,7 @@
             // 
             resources.ApplyResources(this.tbInstitution, "tbInstitution");
             this.tbInstitution.Name = "tbInstitution";
-            // 
-            // cbReceiveUpdateEmails
-            // 
-            resources.ApplyResources(this.cbReceiveUpdateEmails, "cbReceiveUpdateEmails");
-            this.cbReceiveUpdateEmails.Name = "cbReceiveUpdateEmails";
-            this.cbReceiveUpdateEmails.UseVisualStyleBackColor = true;
+            this.tbInstitution.TextChanged += new System.EventHandler(this.tbTextChanged);
             // 
             // btnAccept
             // 
@@ -122,13 +116,54 @@
             // tableLayoutPanel1
             // 
             resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
-            this.tableLayoutPanel1.Controls.Add(this.lblName, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.lblEmail, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.lblInstitution, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.tbName, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.tbInstitution, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.tbEmail, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.tbLastName, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.lblLastName, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.lblFirstName, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.lblEmail, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.lblInstitution, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.tbFirstName, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.tbInstitution, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.tbEmail, 1, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            // 
+            // tbLastName
+            // 
+            resources.ApplyResources(this.tbLastName, "tbLastName");
+            this.tbLastName.Name = "tbLastName";
+            this.tbLastName.TextChanged += new System.EventHandler(this.tbTextChanged);
+            // 
+            // lblLastName
+            // 
+            resources.ApplyResources(this.lblLastName, "lblLastName");
+            this.lblLastName.Name = "lblLastName";
+            // 
+            // tbVerificationCode
+            // 
+            resources.ApplyResources(this.tbVerificationCode, "tbVerificationCode");
+            this.tbVerificationCode.Name = "tbVerificationCode";
+            this.tbVerificationCode.TextChanged += new System.EventHandler(this.tbVerificationCodeChanged);
+            // 
+            // lblVerificationCode
+            // 
+            resources.ApplyResources(this.lblVerificationCode, "lblVerificationCode");
+            this.lblVerificationCode.Name = "lblVerificationCode";
+            // 
+            // btnRequestVerificationCode
+            // 
+            resources.ApplyResources(this.btnRequestVerificationCode, "btnRequestVerificationCode");
+            this.btnRequestVerificationCode.Name = "btnRequestVerificationCode";
+            this.btnRequestVerificationCode.UseVisualStyleBackColor = true;
+            this.btnRequestVerificationCode.Click += new System.EventHandler(this.btnRequestVerificationCode_Click);
+            // 
+            // rtbUsageConditions
+            // 
+            resources.ApplyResources(this.rtbUsageConditions, "rtbUsageConditions");
+            this.rtbUsageConditions.BackColor = System.Drawing.SystemColors.Control;
+            this.rtbUsageConditions.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.rtbUsageConditions.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.rtbUsageConditions.Name = "rtbUsageConditions";
+            this.rtbUsageConditions.ReadOnly = true;
+            this.rtbUsageConditions.TabStop = false;
             // 
             // MsFraggerDownloadDlg
             // 
@@ -136,13 +171,15 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnRequestVerificationCode);
+            this.Controls.Add(this.lblVerificationCode);
+            this.Controls.Add(this.tbVerificationCode);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnAccept);
-            this.Controls.Add(this.cbReceiveUpdateEmails);
             this.Controls.Add(this.rtbAgreeToLicense);
             this.Controls.Add(this.cbAgreeToLicense);
-            this.Controls.Add(this.tbUsageConditions);
+            this.Controls.Add(this.rtbUsageConditions);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "MsFraggerDownloadDlg";
@@ -156,19 +193,22 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.TextBox tbUsageConditions;
         private System.Windows.Forms.CheckBox cbAgreeToLicense;
         private System.Windows.Forms.RichTextBox rtbAgreeToLicense;
-        private System.Windows.Forms.TextBox tbName;
-        private System.Windows.Forms.Label lblName;
+        private System.Windows.Forms.TextBox tbFirstName;
+        private System.Windows.Forms.Label lblFirstName;
         private System.Windows.Forms.Label lblEmail;
         private System.Windows.Forms.TextBox tbEmail;
         private System.Windows.Forms.Label lblInstitution;
         private System.Windows.Forms.TextBox tbInstitution;
-        private System.Windows.Forms.CheckBox cbReceiveUpdateEmails;
         private System.Windows.Forms.Button btnAccept;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label lblLastName;
+        private System.Windows.Forms.TextBox tbLastName;
+        private System.Windows.Forms.TextBox tbVerificationCode;
+        private System.Windows.Forms.Label lblVerificationCode;
+        private System.Windows.Forms.Button btnRequestVerificationCode;
+        private System.Windows.Forms.RichTextBox rtbUsageConditions;
     }
 }

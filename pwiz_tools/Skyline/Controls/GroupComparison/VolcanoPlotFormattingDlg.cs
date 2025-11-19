@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,6 +23,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -33,8 +35,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public partial class VolcanoPlotFormattingDlg : FormEx, ColorGrid<MatchRgbHexColor>.IColorGridOwner
     {
-        private readonly FoldChangeBindingSource.FoldChangeRow[] _foldChangeRows;
-        private readonly Action<List<MatchRgbHexColor>> _updateGraph;
+        private readonly object[] _foldChangeRows;
+        private readonly Action<IEnumerable<MatchRgbHexColor>> _updateGraph;
         private readonly BindingList<MatchRgbHexColor> _bindingList;
 
         private readonly int _expressionIndex;
@@ -44,15 +46,33 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
 
         public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
-            FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph)
+            FoldChangeRow[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
+            this(true, colorRows, foldChangeRows, updateGraph, 
+                volcanoPlot.PerProtein, volcanoPlot.Document)
+        {
+        }
+
+        public VolcanoPlotFormattingDlg(SummaryRelativeAbundanceGraphPane relativeAbundanceGraph,
+            IEnumerable<MatchRgbHexColor> colorRows, object[] proteinAbundances, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
+            this(false, colorRows, proteinAbundances, updateGraph, 
+                Settings.Default.AreaProteinTargets, relativeAbundanceGraph.GraphSummary.DocumentUIContainer.DocumentUI)
+        {
+        }
+
+        private VolcanoPlotFormattingDlg(bool hasFoldChangeResults, IEnumerable<MatchRgbHexColor> colorRows,
+            object[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph, bool perProtein, SrmDocument document)
         {
             InitializeComponent();
+            HasFoldChangeResults = hasFoldChangeResults;
+            AnyMolecules = document.HasSmallMolecules;
+            AnyProteomic = document.IsEmptyOrHasPeptides;
+            PerProtein = perProtein;
+            Document = document;
 
-            VolcanoPlot = volcanoPlot;
             _foldChangeRows = foldChangeRows;
             _updateGraph = updateGraph;
 
-            _bindingList = new BindingList<MatchRgbHexColor>(colorRows);
+            _bindingList = new BindingList<MatchRgbHexColor>(colorRows.Select(row=>row.Clone()).ToList());
             _bindingList.ListChanged += _bindingList_ListChanged;
 
             regexColorRowGrid1.AllowUserToOrderColumns = true;
@@ -134,8 +154,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             UpdateAdvancedColumns();
 
             regexColorRowGrid1.Owner = this;
-
+            if (!hasFoldChangeResults)
+            {
+                Text = GroupComparisonResources.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting;
+            }
             SetExpressionMinimumWidth();
+            layoutLabelsBox.Checked = Settings.Default.GroupComparisonAvoidLabelOverlap;
         }
 
         public class PointSizeStringPair
@@ -179,7 +203,19 @@ namespace pwiz.Skyline.Controls.GroupComparison
             base.OnHandleDestroyed(e);
         }
 
+        public void Select(IdentityPath identityPath)
+        {
+            DotPlotUtil.Select(Program.MainWindow, identityPath);
+        }
         public FoldChangeVolcanoPlot VolcanoPlot { get; private set; }
+
+        public SummaryRelativeAbundanceGraphPane RelativeAbundanceGraph { get; private set; }
+
+        public bool AnyProteomic { get; set; }
+        public bool AnyMolecules { get; set; }
+        public bool PerProtein { get; set; }
+        public bool HasFoldChangeResults { get; set; }
+        public SrmDocument Document { get; set; }
 
         private void SetExpressionMinimumWidth()
         {
@@ -282,24 +318,24 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public MatchExpression GetDefaultMatchExpression(string regex)
         {
             MatchOption? matchOption = null;
-            if (VolcanoPlot.PerProtein)
+            if (PerProtein)
             {
-                if (VolcanoPlot.AnyProteomic)
+                if (AnyProteomic)
                 {
                     matchOption = DisplayModeToMatchOption(SequenceTree.ProteinsDisplayMode);
                 }
-                else if (VolcanoPlot.AnyMolecules)
+                else if (AnyMolecules)
                 {
                     matchOption = MatchOption.MoleculeGroupName;
                 }
             }
             else
             {
-                if (VolcanoPlot.AnyProteomic)
+                if (AnyProteomic)
                 {
                     matchOption = MatchOption.PeptideSequence;
                 }
-                else if (VolcanoPlot.AnyMolecules)
+                else if (AnyMolecules)
                 {
                     matchOption = MatchOption.MoleculeName;
                 }
@@ -354,7 +390,52 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return column;
         }
 
-        public BindingList<MatchRgbHexColor> GetCurrentBindingList()
+        public MatchRgbHexColor AddRow(MatchRgbHexColor match = null)
+        {
+            if (IsLastRowEmpty)
+            {
+                // Testing for screenshots needs to be able to activate
+                // the form which puts to focus on the grid and adds an
+                // empty row to the binding list. This was causing tests
+                // to fail when they tried to change the binding list
+                // with a dirty row. Silently removing the row below fixes
+                // the issue.
+                _bindingList.RaiseListChangedEvents = false;
+                try
+                {
+                    regexColorRowGrid1.DataGridView.CancelEdit();
+                    _bindingList.RemoveAt(_bindingList.Count - 1);
+                }
+                finally
+                {
+                    _bindingList.RaiseListChangedEvents = true;
+                }
+            }
+
+            if (match == null)
+                return _bindingList.AddNew();
+
+            _bindingList.Add(match);
+            return match;
+        }
+
+        private bool IsLastRowEmpty => Equals(_bindingList.LastOrDefault(), MatchRgbHexColor.EMPTY);
+
+        public PointSymbol GetRowPointSymbol(int rowIndex)
+        {
+            return _bindingList[rowIndex].PointSymbol;
+        }
+
+        public void SetRowPointSymbol(int rowIndex, PointSymbol pointSymbol)
+        {
+            _bindingList[rowIndex].PointSymbol = pointSymbol;
+        }
+
+        /// <summary>
+        /// Used by the <see cref="ColorGrid{T}"/> but not for general use.
+        /// Extend the testing interface if you need more.
+        /// </summary>
+        BindingList<MatchRgbHexColor> ColorGrid<MatchRgbHexColor>.IColorGridOwner.GetCurrentBindingList()
         {
             return _bindingList;
         }
@@ -368,6 +449,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void advancedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             UpdateAdvancedColumns();
+        }
+        private void layoutLabelsBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = layoutLabelsBox.Checked;
+            _updateGraph(ResultList);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -37,6 +37,15 @@ namespace pwiz.Common.Collections
 
         public static bool EqualsDeep<TKey,TValue>(IDictionary <TKey,TValue> dict1, IDictionary<TKey,TValue> dict2)
         {
+            if (ReferenceEquals(dict1, dict2))
+            {
+                return true;
+            }
+
+            if (dict1 == null || dict2 == null)
+            {
+                return false;
+            }
             if (dict1.Count != dict2.Count)
             {
                 return false;
@@ -205,7 +214,7 @@ namespace pwiz.Common.Collections
             // Compare using natural non-lexicographical order for easier human readability.
             // Compatible with both numbers (which have priority) as well as letter
             // e.g. (a1b,a20b,a3b --> a1b,a3b,a20b).
-            return NaturalComparer.Compare(o1.ToString(), o2.ToString()); 
+            return NaturalStringComparer.Compare(o1.ToString(), o2.ToString()); 
         }
 
         public static Comparer<object> ColumnValueComparer

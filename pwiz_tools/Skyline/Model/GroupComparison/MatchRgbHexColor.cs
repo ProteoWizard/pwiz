@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -50,6 +50,8 @@ namespace pwiz.Skyline.Model.GroupComparison
     [XmlRoot(XML_ROOT)]
     public class MatchRgbHexColor : RgbHexColor, ICloneable
     {
+        public static readonly MatchRgbHexColor EMPTY = new MatchRgbHexColor();
+
         public const string XML_ROOT = "format_detail";
         private string _expression;
         private bool _labeled;
@@ -134,9 +136,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
-        public object Clone()
+        public MatchRgbHexColor Clone()
         {
-            return MemberwiseClone();
+            return (MatchRgbHexColor) MemberwiseClone();
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         protected bool Equals(MatchRgbHexColor other)

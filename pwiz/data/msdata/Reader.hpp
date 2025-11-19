@@ -59,6 +59,12 @@ class PWIZ_API_DECL Reader
         /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
         bool combineIonMobilitySpectra;
 
+        /// when true, diaPASEF data is combined frame-by-frame instead of grouped by isolation window
+        bool passEntireDiaPasefFrame;
+
+        /// when true, include precursor isolation range arrays in Bruker DiaPASEF in passEntireDiaPasefFrame mode
+        bool includeIsolationArrays;
+
         /// when true, scans with only calibration data will be ignored (currently Waters lockmass only)
         bool ignoreCalibrationScans;
 
@@ -98,6 +104,8 @@ class PWIZ_API_DECL Reader
 
         Config();
         Config(const Config& rhs);
+
+        void instrumentMetadataError(const std::string& msg) const;
     };
 
 

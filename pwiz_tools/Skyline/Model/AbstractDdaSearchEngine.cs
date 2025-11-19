@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Viktoria Dorfer <viktoria.dorfer .at. fh-hagenberg.at>,
  *                  Bioinformatics Research Group, University of Applied Sciences Upper Austria
  *
@@ -25,19 +25,36 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
     public abstract class AbstractDdaSearchEngine : IDisposable
     {
+        public class MzToleranceUnits
+        {
+            public MzToleranceUnits(string name, MzTolerance.Units unit)
+            {
+                Name = name;
+                Unit = unit;
+            }
+
+            public string Name { get; }
+            public MzTolerance.Units Unit { get; }
+        }
+
         public abstract string[] FragmentIons { get; }
         public abstract string[] Ms2Analyzers { get; }
+        public virtual MzToleranceUnits[] PrecursorIonToleranceUnitTypes { get; } = { new MzToleranceUnits(@"Da", MzTolerance.Units.mz), new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm) };
+        public virtual MzToleranceUnits[] FragmentIonToleranceUnitTypes { get; } = { new MzToleranceUnits(@"Da", MzTolerance.Units.mz), new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm) };
         public abstract string EngineName { get; }
+        public abstract string CutoffScoreName { get; }
+        public abstract string CutoffScoreLabel { get; }
+        public abstract double DefaultCutoffScore { get; }
         public abstract Bitmap SearchEngineLogo { get; }
+        public abstract string SearchEngineBlurb { get; } // Text shown below the search engine logo
         public MsDataFileUri[] SpectrumFileNames { get; protected set; }
         protected string[] FastaFileNames { get; set; }
 
@@ -49,7 +66,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
@@ -57,7 +74,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
@@ -65,7 +82,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, bool defaultValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = false;
                 MaxValue = true;
             }
@@ -74,16 +91,16 @@ namespace pwiz.Skyline.Model
             {
                 Name = name;
                 MinValue = string.Empty;
-                _value = defaultValue ?? string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
                 ValidValues = validValues;
             }
 
-            public Setting(Setting other)
+            public Setting(Setting other, object newValue = null)
             {
                 Name = other.Name;
                 MinValue = other.MinValue;
                 MaxValue = other.MaxValue;
-                _value = other.Value;
+                _value = DefaultValue = newValue ?? other.Value;
                 ValidValues = other.ValidValues;
             }
             
@@ -100,6 +117,9 @@ namespace pwiz.Skyline.Model
                 set { _value = Validate(value); }
             }
 
+            public object DefaultValue { get; }
+            public bool IsDefault => Equals(DefaultValue, _value);
+
             public object Validate(object value)
             {
                 // incoming value must either be a string or value type must stay the same
@@ -114,14 +134,14 @@ namespace pwiz.Skyline.Model
                     case string s:
                         if (ValidValues?.Any(o => o.Equals(value)) == false)
                             throw new ArgumentOutOfRangeException(string.Format(
-                                "The value {0} is not valid for the argument {1} which must one of: {2}",
-                                s, Name, string.Join(@", ", ValidValues)));
+                                Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                                value, Name, string.Join(@", ", ValidValues)));
                         return value;
 
                     case bool b:
                         if (!bool.TryParse(value.ToString(), out bool tmpb))
                             throw new ArgumentException(string.Format(
-                                Resources.Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__,
+                                ModelResources.Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__,
                                 value, Name));
                         return tmpb;
 
@@ -165,9 +185,14 @@ namespace pwiz.Skyline.Model
             public string ToString(bool withEqualSign, IFormatProvider provider = null)
             {
                 string delimiter = withEqualSign ? @" =" : string.Empty;
+                return $@"{Name}{delimiter} {ValueToString(provider)}";
+            }
+
+            public string ValueToString(IFormatProvider provider = null)
+            {
                 if (Value is double d)
-                    return $@"{Name}{delimiter} {d.ToString(@"F", provider)}";
-                return $@"{Name}{delimiter} {Value}";
+                    return d.ToString(@"F", provider);
+                return Value.ToString();
             }
 
             public string AuditLogText => ToString();
@@ -184,13 +209,14 @@ namespace pwiz.Skyline.Model
         public abstract void SetFragmentIons(string ions);
         public abstract void SetMs2Analyzer(string analyzer);
         public abstract void SetEnzyme(Enzyme enzyme, int maxMissedCleavages);
+        public abstract void SetCutoffScore(double cutoffScore);
 
         public delegate void NotificationEventHandler(object sender, IProgressStatus status);
         public abstract event NotificationEventHandler SearchProgressChanged;
 
         public abstract bool Run(CancellationTokenSource cancelToken, IProgressStatus status);
 
-        public void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
+        public virtual void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
         {
             SpectrumFileNames = searchFilenames;
         }
@@ -214,6 +240,11 @@ namespace pwiz.Skyline.Model
 
         public abstract void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods_);
 
-        public abstract void Dispose();
+        public bool IsDisposed;
+
+        public virtual void Dispose()
+        {
+            IsDisposed = true;
+        }
     }
 }

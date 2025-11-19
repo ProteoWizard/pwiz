@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(r => !ReferenceEquals(_parameters, r) && Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, Resources.EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_, name);
+                helper.ShowTextBoxError(textName, SettingsUIResources.EditCoVDlg_btnOk_Click_The_compensation_voltage_parameters___0___already_exist_, name);
                 return;
             }
 

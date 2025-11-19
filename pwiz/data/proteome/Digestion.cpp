@@ -307,7 +307,7 @@ string Digestion::disambiguateCleavageAgentRegex(const string& cleavageAgentRege
     // match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
     // followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
     // 4 capture groups: [!=] [A-Z] for each look:                 0                1                        2                3
-    const static bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
+    const bxp::sregex cutNoCutRegex = bxp::sregex::compile("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
 
     if (cleavageAgentRegex.find_first_of("BJXZ") == string::npos)
         return cleavageAgentRegex;

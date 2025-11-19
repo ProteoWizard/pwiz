@@ -54,9 +54,9 @@ namespace pwiz.SkylineTestFunctional
             var noPolarityPath = TestFilesDir.GetTestPath("no_polarity.mzML"); // Converted by older msconvert without any ion polarity sense, so all positive
             var replicateName = Path.GetFileNameWithoutExtension(replicatePath);
 
-            var docProperPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, replicatePath);
-            var docNoPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, noPolarityPath);
-            var docNegPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, allNegativePath);
+            var docProperPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, replicatePath, false);
+            var docNoPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, noPolarityPath, true);
+            var docNegPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, allNegativePath, true);
 
             var transProperPolarity = docProperPolarity.MoleculeTransitions.ToArray();
             var transNoPolarity = docNoPolarity.MoleculeTransitions.ToArray();
@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
 
         // Load a skyline doc, half of which is positve charges and half negative, so we can verify interaction with 
         // polarity in the replicate mass spec files
-        private SrmDocument LoadDocWithReplicate(TestFilesDir testFilesDir, string replicateName, string replicatePath)
+        private SrmDocument LoadDocWithReplicate(TestFilesDir testFilesDir, string replicateName, string replicatePath, bool expectAutomanage)
         {
             var docPathBase = testFilesDir.GetTestPath("NegativeIonChromatograms.sky");
             var docPath = docPathBase.Replace(".sky", replicatePath.Split('\\').Last() + ".sky"); // Make sure name in unique
@@ -134,7 +134,11 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(col4Dlg, col4Dlg.OkDialog);
-            DismissAutoManageDialog(docEmpty); // Say no to the offer to set new nodes to automanage
+
+            if (expectAutomanage)
+            {
+                DismissAutoManageDialog(); // Say no to the offer to set new nodes to automanage
+            }
 
             var document = WaitForDocumentChangeLoaded(docEmpty);
 

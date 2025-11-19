@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -54,9 +54,9 @@ namespace pwiz.Skyline.Model
     public class PersistedViews : SerializableViewGroups
     {
         public static readonly ViewGroup MainGroup = new ViewGroup(@"main",
-            () => Resources.PersistedViews_MainGroup_Main);
+            () => ModelResources.PersistedViews_MainGroup_Main);
         public static readonly ViewGroup ExternalToolsGroup = new ViewGroup(@"external_tools",
-            () => Resources.PersistedViews_ExternalToolsGroup_External_Tools);
+            () => ModelResources.PersistedViews_ExternalToolsGroup_External_Tools);
 
         /// <summary>
         /// Construct a new PersistedViews, migrating over the values from the old ViewSpecList 
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model
         public int RevisionIndex { get; private set; }
         // v12 adds small mol peak boundaries report
         // v13 adds small mol transitions report and small mol RT Results report
-        public int RevisionIndexCurrent { get { return 13; } } 
+        public int RevisionIndexCurrent { get { return 14; } } 
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -201,6 +201,11 @@ namespace pwiz.Skyline.Model
                 reportStrings.Add(REPORTS_V13); // Including molecule RT results and molecule transitions result report
             }
 
+            if (revisionIndex >= 14)
+            {
+                reportStrings.Add(REPORTS_V14);
+            }
+
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
             foreach (var reportString in reportStrings)
@@ -222,6 +227,7 @@ namespace pwiz.Skyline.Model
                 {"Molecule RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_RT_Results)},
                 {"Molecule Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
+                {"Detailed Info", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetDefaults_Detailed_Info)}
             };
             // ReSharper restore LocalizableElement
 
@@ -541,6 +547,15 @@ namespace pwiz.Skyline.Model
   </view>
 </views>";
 
+        private const string REPORTS_V14 = @"<views>
+  <view name='Detailed Info' rowsource='pwiz.Skyline.Model.AuditLog.Databinding.AuditLogRow' sublist='Details!*' uimode='proteomic'>
+    <column name='Time' />
+    <column name='Details!*.AllInfoMessage' />
+    <column name='Reason' />
+    <column name='User' />
+    <column name='SkylineVersion' />
+  </view>
+</views>";
 
 
         // ReSharper restore LocalizableElement

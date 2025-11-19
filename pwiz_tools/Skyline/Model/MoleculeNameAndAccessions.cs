@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -51,6 +51,9 @@ namespace pwiz.Skyline.Model
         {
             return Equals(Name, other.Name) && AccessionNumbers.InconsistentWith(other.AccessionNumbers);
         }
+
+        // Look for labels buried in descriptions, e.g. InChi's /i section
+        public Dictionary<string, int> FindLabels() => AccessionNumbers?.FindLabels();
 
         public bool IsEmpty => string.IsNullOrEmpty(Name) && MoleculeAccessionNumbers.IsNullOrEmpty(AccessionNumbers);
 

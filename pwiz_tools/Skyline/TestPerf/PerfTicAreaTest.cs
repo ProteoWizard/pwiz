@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -57,7 +58,7 @@ namespace TestPerf
             ticAreas.Add("XlinkRawFile.mzML", 1007182479360);
 
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("PerfTicAreaTest.sky")));
-            ImportResultsFiles(ticAreas.Keys.Select(fileName=> new MsDataFilePath(TestFilesDir.GetTestPath(fileName))).ToArray());
+            ImportResultsFiles(ticAreas.Keys.Select(fileName=> new MsDataFilePath(TestFilesDir.GetTestPath(fileName))).ToArray(), 4200);
 
             Assert.IsNotNull(SkylineWindow.Document.Settings.MeasuredResults);
             foreach (var chromatogramSet in SkylineWindow.Document.Settings.MeasuredResults.Chromatograms)

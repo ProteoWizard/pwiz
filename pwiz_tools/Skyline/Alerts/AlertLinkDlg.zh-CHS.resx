@@ -181,10 +181,10 @@
     <value>1</value>
   </data>
   <data name="pictureBox1.ImageLocation" xml:space="preserve">
-    <value />
+    <value></value>
   </data>
   <data name="pictureBox1.InitialImage" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
+    <value></value>
   </data>
   <data name="pictureBox1.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 11</value>

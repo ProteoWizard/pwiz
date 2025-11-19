@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,11 +28,11 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib.Midas
@@ -114,15 +114,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
             {
                 if (_spectra == null)
                 {
-                    return new LibraryFiles();
+                    return LibraryFiles.EMPTY;
                 }
-                else
-                {
-                    return new LibraryFiles
-                    {
-                        FilePaths = _spectra.Keys.Select(key => key.FilePath).Distinct()
-                    };
-                }
+
+                var sourceFiles = _spectra.Keys.Select(key => key.FilePath).Distinct().ToList();
+                return new LibraryFiles(sourceFiles);
             }
         }
 
@@ -297,7 +293,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             if (!info.Exists || info.Length == 0)
                 return false;
 
-            var progress = new ProgressStatus(string.Empty).ChangeMessage(Resources.MidasLibrary_Load_Loading_MIDAS_library);
+            var progress = new ProgressStatus(string.Empty).ChangeMessage(MidasResources.MidasLibrary_Load_Loading_MIDAS_library);
             monitor.UpdateProgress(progress);
 
             var spectra = new Dictionary<DbResultsFile, List<DbSpectrum>>();
@@ -308,7 +304,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 {
                     var libInfo = session.CreateCriteria(typeof(DbLibInfo)).List<DbLibInfo>();
                     if (libInfo.Count != 1)
-                        throw new Exception(Resources.MidasLibrary_Load_Error_reading_LibInfo_from_MIDAS_library);
+                        throw new Exception(MidasResources.MidasLibrary_Load_Error_reading_LibInfo_from_MIDAS_library);
 
                     SchemaVersion = libInfo[0].SchemaVersion;
                     LibraryGuid = libInfo[0].Guid;
@@ -631,7 +627,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
         {
             // Get spectra from results files
             var newSpectra = new List<DbSpectrum>();
-            var progress = new ProgressStatus(string.Empty).ChangeMessage(Resources.MidasLibrary_AddSpectra_Reading_MIDAS_spectra);
+            var progress = new ProgressStatus(string.Empty).ChangeMessage(MidasResources.MidasLibrary_AddSpectra_Reading_MIDAS_spectra);
             const int percentResultsFiles = 80;
             failedFiles = new List<MsDataFilePath>();
             for (var i = 0; i < resultsFiles.Length; i++)
@@ -687,11 +683,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
             var midasLib = !File.Exists(libSpec.FilePath) ? Create(libSpec) : Load(libSpec, monitor);
             if (midasLib == null)
             {
-                monitor.UpdateProgress(progress.ChangeErrorException(new Exception(Resources.MidasLibrary_AddSpectra_Error_loading_MIDAS_library_for_adding_spectra_)));
+                monitor.UpdateProgress(progress.ChangeErrorException(new Exception(MidasResources.MidasLibrary_AddSpectra_Error_loading_MIDAS_library_for_adding_spectra_)));
                 return;
             }
 
-            progress = progress.ChangeMessage(Resources.MidasLibrary_AddSpectra_Adding_spectra_to_MIDAS_library);
+            progress = progress.ChangeMessage(MidasResources.MidasLibrary_AddSpectra_Adding_spectra_to_MIDAS_library);
             monitor.UpdateProgress(progress);
 
             var results = new Dictionary<string, DbResultsFile>();

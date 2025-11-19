@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="ImsSynthAllIons" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.136" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -11,57 +11,57 @@
       <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
     </fileContent>
     <sourceFileList count="11">
-      <sourceFile id="Contents.xml" name="Contents.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="Contents.xml" name="Contents.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2fa741b5e58cdb30b6fd93725eb18ebc886d88a1"/>
       </sourceFile>
-      <sourceFile id="DefaultMassCal.xml" name="DefaultMassCal.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="DefaultMassCal.xml" name="DefaultMassCal.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="12d2ce613a04f551b448a4bbfac4e325420ebf35"/>
       </sourceFile>
-      <sourceFile id="Devices.xml" name="Devices.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="Devices.xml" name="Devices.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="dcce66e15851909ee51c7a07fd1c86653e9ef66a"/>
       </sourceFile>
-      <sourceFile id="IMSFrame.bin" name="IMSFrame.bin" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="IMSFrame.bin" name="IMSFrame.bin" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="3ce5aa5abf4c8fcec26edde734557c043eaceba8"/>
       </sourceFile>
-      <sourceFile id="IMSFrame.xsd" name="IMSFrame.xsd" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="IMSFrame.xsd" name="IMSFrame.xsd" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c0618bcf6aaa48c9df4797f6723e94fb8a097865"/>
       </sourceFile>
-      <sourceFile id="IMSFrameMeth.xml" name="IMSFrameMeth.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="IMSFrameMeth.xml" name="IMSFrameMeth.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ceec85311c85304783dcc26918ca536e2efc3c12"/>
       </sourceFile>
-      <sourceFile id="MSProfile.bin" name="MSProfile.bin" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="MSProfile.bin" name="MSProfile.bin" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9348fd6d5e210c044182a3c68c0b7b27c6b25bc9"/>
       </sourceFile>
-      <sourceFile id="MSScan.bin" name="MSScan.bin" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="MSScan.bin" name="MSScan.bin" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="f2973c427aba60c39a597cf344f7bf68e1bc8cd7"/>
       </sourceFile>
-      <sourceFile id="MSScan.xsd" name="MSScan.xsd" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="MSScan.xsd" name="MSScan.xsd" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="28ef7a09b57bce4a15779602301bc61416964681"/>
       </sourceFile>
-      <sourceFile id="MSTS.xml" name="MSTS.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="MSTS.xml" name="MSTS.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e24d77fc2304e0569972233a678cff010fdb1d53"/>
       </sourceFile>
-      <sourceFile id="sample_info.xml" name="sample_info.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
+      <sourceFile id="sample_info.xml" name="sample_info.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthAllIons.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c3ae90991a5f991cf3695865f5d8f4888dbaa559"/>
@@ -78,7 +78,7 @@
     <software id="MassHunter" version="6200 series TOF/6500 series Q-TOF B.06.00 (B6000)">
       <cvParam cvRef="MS" accession="MS:1000678" name="MassHunter Data Acquisition" value=""/>
     </software>
-    <software id="pwiz" version="3.0.20071">
+    <software id="pwiz" version="3.0.24026">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -101,7 +101,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -141,7 +141,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -199,7 +199,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -239,7 +239,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="18.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -297,7 +297,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="230.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -337,7 +337,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="364.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -395,7 +395,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1595.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -435,7 +435,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2359.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -493,7 +493,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="7495.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -533,7 +533,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="9767.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -591,7 +591,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="25807.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -631,7 +631,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="29264.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -689,7 +689,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="66295.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -729,7 +729,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="65104.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -787,7 +787,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.27302e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -827,7 +827,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.08197e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -885,7 +885,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.82878e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -925,7 +925,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.34515e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -983,10 +983,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.97128e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="502.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="399.076020797129" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="399.224855946667" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="6.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.133261801529" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="399.018783897582" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="400.267478960204" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1025,10 +1027,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.26291e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1175.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="282.091853745095" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="358.233461559295" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="3.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.078194037555" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="231.046511736352" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="382.223483448112" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1085,10 +1089,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.64467e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="6249.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="399.030230949103" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="399.201956425217" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="70.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.950105036533" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="401.299981939431" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1127,10 +1133,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.00884e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="13819.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="282.043732084404" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="358.233461559295" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="29.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.088285009499" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.994251634639" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="401.231107030554" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1187,10 +1195,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.35386e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="40002.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.97299733344" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="400.244549555418" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="443.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.91576782263" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.28783851877" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1229,10 +1239,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.14152e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="68753.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="231.020380946622" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="358.233461559295" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="139.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.098376145637" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.976832914288" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.207386188208" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1289,10 +1301,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.87548e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.43738e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.950105036533" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="401.196671792737" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="1590.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.892877167666" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="403.242386560626" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1331,10 +1345,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.05722e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.8718e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="231.002961241106" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="382.212280060726" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="375.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.098376145637" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.959414850714" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.276344836108" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1391,10 +1407,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.10877e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.9244e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.927213396404" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="401.254064676737" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="3233.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.881432086474" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="403.28841744568" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1433,10 +1451,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.96821e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.87051e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.994251634639" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="382.234686999692" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="574.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.098376145637" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.959414850714" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.299332365627" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1493,10 +1513,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.55863e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.37041e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.927213396404" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="401.265543746119" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="3727.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.881432086474" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="403.28841744568" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1535,10 +1557,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.67244e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.48924e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.994251634639" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="382.234686999692" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="498.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.098376145637" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.959414850714" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.28783851877" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1595,10 +1619,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.69918e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.20113e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.938659134371" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="401.242585771548" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="2434.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.881432086474" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="403.265401674765" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1637,10 +1663,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.72476e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.21998e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="231.011671011767" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="358.25515425366" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="245.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.098376145637" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.968123800404" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.253357963365" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1697,10 +1725,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.06119e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="81410.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.961551102889" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="400.278943908889" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="901.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.904322413051" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.322320551924" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1739,10 +1769,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.45213e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="33392.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="231.037801308914" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="358.16838741686" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="68.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.098376145637" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="230.985542192366" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="401.277022979695" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1799,10 +1831,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.5594e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="17024.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.995890287122" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="399.270656959895" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="189.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.938659134371" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.253357963365" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1841,10 +1875,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.90732e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4715.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="282.091853745095" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="358.24430782438" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="11.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="310.088285009499" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="231.020380946622" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="400.256014175714" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1901,10 +1937,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.45112e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1957.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="399.076020797129" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="399.236305953683" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="22.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.156159352649" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="398.984443728184" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="401.242585771548" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -1943,10 +1981,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.31396e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="134.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="282.082229084569" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="358.190078140895" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="1.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="282.082229084569" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="282.062980256098" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="358.222615458404" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -2003,10 +2043,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.69032e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="78.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="399.110364907187" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="399.236305953683" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="2.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="399.064573088831" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="399.270656959895" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -2045,7 +2087,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.15098e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2103,7 +2145,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.96848e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2143,7 +2185,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.4955e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2201,7 +2243,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.78746e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2241,7 +2283,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="77638.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2299,7 +2341,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="80474.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2339,7 +2381,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="29980.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2397,7 +2439,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="27022.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2437,7 +2479,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="8432.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2495,7 +2537,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="6715.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2535,7 +2577,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1584.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2593,7 +2635,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1173.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2633,7 +2675,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="70.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2691,7 +2733,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="91.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2731,7 +2773,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2789,7 +2831,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2829,7 +2871,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2887,7 +2929,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2927,7 +2969,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -2985,7 +3027,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3025,7 +3067,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3083,7 +3125,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3123,7 +3165,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3181,7 +3223,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3221,7 +3263,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3279,7 +3321,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3319,7 +3361,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3377,7 +3419,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3417,7 +3459,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3475,7 +3517,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3515,7 +3557,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3573,7 +3615,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3613,7 +3655,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3671,7 +3713,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3711,7 +3753,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="176.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3769,7 +3811,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="13.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3809,7 +3851,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2693.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3867,7 +3909,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="602.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3907,7 +3949,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="17781.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -3965,7 +4007,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="6312.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4005,7 +4047,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="64260.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4063,7 +4105,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="34985.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4103,7 +4145,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.09089e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4143,7 +4185,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.50838e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4201,7 +4243,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.92554e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4241,7 +4283,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="98482.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4299,7 +4341,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.92554e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4339,7 +4381,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="36360.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4397,7 +4439,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.09089e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4437,7 +4479,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="7525.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4495,7 +4537,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="34985.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4535,7 +4577,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="799.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4593,7 +4635,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="6312.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4633,7 +4675,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="20.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4691,7 +4733,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="602.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4731,7 +4773,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4789,7 +4831,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="13.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -4829,7 +4871,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="2"/>
         <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="-nan" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>

@@ -184,6 +184,9 @@
   <data name="originalPeakMenuItem.Text" xml:space="preserve">
     <value>元のピーク</value>
   </data>
+  <data name="exemplaryPeakMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
   <data name="massErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
@@ -216,6 +219,12 @@
   </data>
   <data name="transitionsContextMenuItem.Text" xml:space="preserve">
     <value>トランジション</value>
+  </data>
+  <data name="relativeAbundanceFormattingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="relativeAbundanceFormattingMenuItem.Text" xml:space="preserve">
+    <value>フォーマット中...</value>
   </data>
   <data name="transformChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -266,7 +275,7 @@
     <value>209, 6</value>
   </data>
   <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 508</value>
+    <value>213, 552</value>
   </data>
   <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
     <value>contextMenuChromatogram</value>
@@ -275,34 +284,34 @@
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="allRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
+    <value>173, 22</value>
   </data>
   <data name="allRTContextMenuItem.Text" xml:space="preserve">
     <value>すべて</value>
   </data>
   <data name="bestRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
+    <value>173, 22</value>
   </data>
   <data name="bestRTContextMenuItem.Text" xml:space="preserve">
     <value>最良ピーク</value>
   </data>
   <data name="thresholdRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
+    <value>173, 22</value>
   </data>
   <data name="thresholdRTContextMenuItem.Text" xml:space="preserve">
     <value>閾値より上...</value>
   </data>
   <data name="noneRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
+    <value>173, 22</value>
   </data>
   <data name="noneRTContextMenuItem.Text" xml:space="preserve">
     <value>なし</value>
   </data>
   <data name="rawTimesMenuItemSplitter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 6</value>
+    <value>170, 6</value>
   </data>
   <data name="rawTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 22</value>
+    <value>173, 22</value>
   </data>
   <data name="rawTimesContextMenuItem.Text" xml:space="preserve">
     <value>生データの時間を表示</value>
@@ -425,25 +434,25 @@
     <value>Savitzky-Golayスムージング</value>
   </data>
   <data name="autoZoomNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
+    <value>202, 22</value>
   </data>
   <data name="autoZoomNoneContextMenuItem.Text" xml:space="preserve">
     <value>なし</value>
   </data>
   <data name="autoZoomBestPeakContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
+    <value>202, 22</value>
   </data>
   <data name="autoZoomBestPeakContextMenuItem.Text" xml:space="preserve">
     <value>最良ピーク</value>
   </data>
   <data name="autoZoomRTWindowContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
+    <value>202, 22</value>
   </data>
   <data name="autoZoomRTWindowContextMenuItem.Text" xml:space="preserve">
     <value>保持時間ウィンドウ</value>
   </data>
   <data name="autoZoomBothContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
+    <value>202, 22</value>
   </data>
   <data name="autoZoomBothContextMenuItem.Text" xml:space="preserve">
     <value>両方</value>
@@ -458,7 +467,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.460, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;applyPeakAllGraphMenuItem.Name" xml:space="preserve">
     <value>applyPeakAllGraphMenuItem</value>
@@ -700,6 +709,12 @@
   <data name="&gt;&gt;splitGraphContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;relativeAbundanceFormattingMenuItem.Name" xml:space="preserve">
+    <value>relativeAbundanceFormattingMenuItem</value>
+  </data>
+  <data name="&gt;&gt;relativeAbundanceFormattingMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;transformChromContextMenuItem.Name" xml:space="preserve">
     <value>transformChromContextMenuItem</value>
   </data>
@@ -808,10 +823,16 @@
   <data name="&gt;&gt;toolStripSeparator26.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;exemplaryPeakMenuItem.Name" xml:space="preserve">
+    <value>exemplaryPeakMenuItem</value>
+  </data>
+  <data name="&gt;&gt;exemplaryPeakMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ChromatogramContextMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=24.1.1.460, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

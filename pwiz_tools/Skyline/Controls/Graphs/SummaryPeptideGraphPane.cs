@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,10 +21,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -55,7 +56,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             PaneKey = paneKey;
             string xAxisTitle = 
-                Helpers.PeptideToMoleculeTextMapper.Translate(Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide, 
+                Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide, 
                     graphSummary.DocumentUIContainer.DocumentUI.DocumentType);
             if (null != paneKey.IsotopeLabelType && !paneKey.IsotopeLabelType.IsLight)
             {
@@ -142,19 +143,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 CurveList.Add(curveItem);
             }
 
+            UpdateAxes();
             if (ShowSelection && SelectedIndex != -1)
             {
-                double yValue = _graphData.SelectedMaxY;
-                double yMin = _graphData.SelectedMinY;
-                double height = yValue - yMin;
-                GraphObjList.Add(new BoxObj(SelectedIndex + .5, yValue, 0.99,
-                                            height, Color.Black, Color.Empty)
-                {
-                    IsClippedToChartRect = true,
-                });
+                DrawSelectionBox(SelectedIndex, _graphData.SelectedMaxY, _graphData.SelectedMinY);
             }
-
-            UpdateAxes();
         }
 
         protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein,
@@ -169,10 +162,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (Settings.Default.AreaLogScale && allowLogScale)
             {
-                YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
+                YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
-                YAxis.Scale.MinAuto = false;
-                FixedYMin = YAxis.Scale.Min = 1;
+                YAxis.Scale.MinAuto = true;
+                FixedYMin = null;
                 YAxis.Scale.Max = _graphData.MaxY * 10;
             }
             else
@@ -228,22 +221,31 @@ namespace pwiz.Skyline.Controls.Graphs
 
             XAxis.Scale.TextLabels = _graphData.Labels;
             ScaleAxisLabels();
-
+            RemoveInvalidPointValues();
             AxisChange();            
         }
 
         public abstract class GraphData : Immutable
         {
+            protected Dictionary<ReferenceValue<ChromFileInfoId>, MsDataFileUri> _filePaths;
             // ReSharper disable PossibleMultipleEnumeration
             protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
                              int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp, 
                              PaneKey paneKey)
             {
+                _filePaths = new Dictionary<ReferenceValue<ChromFileInfoId>, MsDataFileUri>();
+                if (document.MeasuredResults != null)
+                {
+                    foreach (var msDataFileInfo in document.Settings.MeasuredResults.MSDataFileInfos)
+                    {
+                        _filePaths[msDataFileInfo.FileId] = msDataFileInfo.FilePath;
+                    }
+                }
                 RetentionTimeTransformOp = retentionTimeTransformOp;
                 // Determine the shortest possible unique ID for each peptide or molecule
-                var sequences = new List<Tuple<string, bool>>();
+                var sequences = new List<UniquePrefixGenerator.TargetLabel>();
                 foreach (var nodePep in document.Molecules)
-                    sequences.Add(new Tuple<string, bool>(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
+                    sequences.Add(new UniquePrefixGenerator.TargetLabel(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
                 var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
 
                 int pointListCount = 0;
@@ -590,7 +592,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return pointPair;
             }
 
-            protected RetentionTimeValues ScaleRetentionTimeValues(ChromFileInfoId chromFileInfoId, RetentionTimeValues retentionTimeValues)
+            protected RetentionTimeValues ScaleRetentionTimeValues(ChromFileInfoId fileId, RetentionTimeValues retentionTimeValues)
             {
                 if (retentionTimeValues == null)
                 {
@@ -600,8 +602,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return retentionTimeValues;
                 }
-                RegressionLine regressionFunction;
-                if (!RetentionTimeTransformOp.TryGetRegressionFunction(chromFileInfoId, out regressionFunction))
+
+                if (!_filePaths.TryGetValue(fileId, out var filePath))
+                {
+                    return null;
+                }
+                AlignmentFunction regressionFunction;
+                if (!RetentionTimeTransformOp.TryGetRegressionFunction(filePath, out regressionFunction))
                 {
                     return null;
                 }

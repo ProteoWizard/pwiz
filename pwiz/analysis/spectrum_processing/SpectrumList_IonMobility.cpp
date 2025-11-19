@@ -48,6 +48,7 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
 {
     units_ = IonMobilityUnits::none;
     has_mzML_combined_ion_mobility_ = false;
+ //   isPassEntireDiaPasefFrame_ = false;
     if (dynamic_cast<detail::SpectrumList_Agilent*>(&*innermost()) != NULL)
     {
         equipment_ = IonMobilityEquipment::AgilentDrift;
@@ -66,6 +67,7 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
         {
             equipment_ = IonMobilityEquipment::BrukerTIMS;
             units_ = IonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
+            //isPassEntireDiaPasefFrame_ = (dynamic_cast<detail::SpectrumList_Bruker*>(&*innermost()))->isPassEntireDiaPasefFrame();
         }
     }
     else if (dynamic_cast<detail::SpectrumList_Thermo*>(&*innermost()) != NULL)
@@ -110,6 +112,11 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
                     units_ = IonMobilityUnits::drift_time_msec;
                 for (const auto& binaryArray : spectrum->binaryDataArrayPtrs)
                 {
+                    if (binaryArray->cvParamChild(MS_scanning_quadrupole_position_lower_bound_m_z_array).cvid != CVID_Unknown)
+                    {
+                        //isPassEntireDiaPasefFrame_ = true;
+                        continue;
+                    }
                     CVID ionMobilityArrayType = binaryArray->cvParamChild(MS_ion_mobility_array).cvid;
                     if (ionMobilityArrayType == CVID_Unknown)
                         continue;
@@ -135,6 +142,11 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
                 spectrum = inner->spectrum(0, true);
                 for (const auto& binaryArray : spectrum->binaryDataArrayPtrs)
                 {
+                    if (binaryArray->cvParamChild(MS_scanning_quadrupole_position_lower_bound_m_z_array).cvid != CVID_Unknown)
+                    {
+                        //isPassEntireDiaPasefFrame_ = true;
+                        continue;
+                    }
                     CVID ionMobilityArrayType = binaryArray->cvParamChild(MS_ion_mobility_array).cvid;
                     if (ionMobilityArrayType == CVID_Unknown)
                         continue;
@@ -164,6 +176,11 @@ PWIZ_API_DECL SpectrumList_IonMobility::IonMobilityUnits SpectrumList_IonMobilit
 {
     return units_;
 }
+
+//PWIZ_API_DECL bool SpectrumList_IonMobility::isPassEntireDiaPasefFrame() const
+//{
+ //   return isPassEntireDiaPasefFrame_;
+//}
 
 PWIZ_API_DECL bool SpectrumList_IonMobility::accept(const msdata::SpectrumListPtr& inner)
 {
@@ -199,13 +216,13 @@ PWIZ_API_DECL double SpectrumList_IonMobility::ionMobilityToCCS(double ionMobili
     switch (equipment_)
     {
         default:
-            throw runtime_error("SpectrumList_IonMobility::ionMobilityToCCS] function only supported when reading native Agilent, Bruker, or Waters files with ion mobility data");
+            throw runtime_error("SpectrumList_IonMobility::ionMobilityToCCS] function only supported when reading native Agilent, Bruker, Mobilion, or Waters files with ion mobility data");
 
         case IonMobilityEquipment::AgilentDrift:
         case IonMobilityEquipment::BrukerTIMS:
         case IonMobilityEquipment::WatersDrift:
         case IonMobilityEquipment::UIMFDrift:
-        //case IonMobilityEquipment::MobilIonDrift:         // TODO when API supplies it
+        case IonMobilityEquipment::MobilIonDrift:
             return sl_->ionMobilityToCCS(ionMobility, mz, charge);
     }
 }
@@ -216,13 +233,13 @@ PWIZ_API_DECL double SpectrumList_IonMobility::ccsToIonMobility(double ccs, doub
     switch (equipment_)
     {
         default:
-            throw runtime_error("SpectrumList_IonMobility::ccsToIonMobility] function only supported when reading native Agilent, Bruker, or Waters files with ion mobility data");
+            throw runtime_error("SpectrumList_IonMobility::ccsToIonMobility] function only supported when reading native Agilent, Bruker, Mobilion, or Waters files with ion mobility data");
 
         case IonMobilityEquipment::AgilentDrift:
         case IonMobilityEquipment::BrukerTIMS:
         case IonMobilityEquipment::WatersDrift:
         case IonMobilityEquipment::UIMFDrift:
-        //case IonMobilityEquipment::MobilIonDrift:         // TODO when API supplies it
+        case IonMobilityEquipment::MobilIonDrift:
             return sl_->ccsToIonMobility(ccs, mz, charge);
     }
 }

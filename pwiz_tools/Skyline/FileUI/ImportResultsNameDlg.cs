@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,9 +21,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
@@ -54,7 +53,7 @@ namespace pwiz.Skyline.FileUI
             }
             else if (string.IsNullOrEmpty(prefix))
             {
-                labelExplanation.Text = Resources.ImportResultsNameDlg_CommonSuffix;
+                labelExplanation.Text = FileUIResources.ImportResultsNameDlg_CommonSuffix;
                 ShrinkHeight(heightDistance);
                 textPrefix.Visible = false;
                 labelPrefix.Visible = false;
@@ -63,7 +62,7 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                labelExplanation.Text = Resources.ImportResultsNameDlg_CommonPrefix_and_Suffix;
+                labelExplanation.Text = FileUIResources.ImportResultsNameDlg_CommonPrefix_and_Suffix;
             }
         }
 
@@ -124,12 +123,12 @@ namespace pwiz.Skyline.FileUI
         {
             if (!string.IsNullOrEmpty(Prefix) && !string.IsNullOrEmpty(_prefixInitial) && !_prefixInitial.StartsWith(Prefix))
             {
-                MessageDlg.Show(this, string.Format(Resources.ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_prefix_of_the_files_chosen, Prefix));
+                MessageDlg.Show(this, string.Format(FileUIResources.ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_prefix_of_the_files_chosen, Prefix));
                 return;
             }
             if (!string.IsNullOrEmpty(Suffix) && !string.IsNullOrEmpty(_suffixInitial) && !_suffixInitial.EndsWith(Suffix))
             {
-                MessageDlg.Show(this, string.Format(Resources.ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_suffix_of_the_files_chosen, Suffix));
+                MessageDlg.Show(this, string.Format(FileUIResources.ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_suffix_of_the_files_chosen, Suffix));
                 return;
             }
 

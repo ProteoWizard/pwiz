@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -97,7 +97,9 @@ namespace pwiz.Skyline.Model
         public ExportMethodType MethodType { get; set; }
         public bool IsPrecursorLimited { get; set; }
         public bool FullScans { get; set; }
-        public bool IsolationList { get; set; }
+
+        public enum IsolationStrategy{ transition, precursor, all}
+        public IsolationStrategy IsolationList { get; set; }
         public int? MaxTransitions { get; set; }
         public int MinTransitions { get; set; }
         public int PrimaryTransitionCount { get; set; }
@@ -133,7 +135,7 @@ namespace pwiz.Skyline.Model
                 FieldSeparatorReplacement = @"_";  // For use in formats where quoting the value does not suffice, as reportedly in xcalibur
             }
         }
-        public char FieldSeparator { get; private set; }
+        public char FieldSeparator { get; set; }
         public string FieldSeparatorReplacement { get; private set; }
 
         public Dictionary<string, StringBuilder> MemoryOutput { get; private set; }
@@ -183,7 +185,7 @@ namespace pwiz.Skyline.Model
                 RequiredPeptides = GetRequiredPeptides();
                 if (MaxTransitions.HasValue && RequiredPeptides.TransitionCount > MaxTransitions)
                 {
-                    throw new IOException(string.Format(Resources.AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__,
+                    throw new IOException(string.Format(ModelResources.AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__,
                                                         RequiredPeptides.TransitionCount, MaxTransitions));
                 }
             }
@@ -223,9 +225,14 @@ namespace pwiz.Skyline.Model
             fileIterator.NextFile();
         }
 
-        public string GetCompound(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        public string GetCompound(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, bool showLabelType = false)
         {
-            return nodePep.Peptide.IsCustomMolecule ? nodeGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence;
+            string compoundName = nodePep.Peptide.IsCustomMolecule
+                ? nodeGroup.CustomMolecule.InvariantName
+                : Document.Settings.GetModifiedSequence(nodePep).Sequence;
+            if (showLabelType)
+                compoundName = string.Format(@"{0} ({1})", compoundName, nodeGroup.TransitionGroup.LabelType);
+            return compoundName;
         }
 
         public string GetCAS(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
@@ -337,7 +344,7 @@ namespace pwiz.Skyline.Model
                         if (DocNode is TransitionGroupDocNode && !ReferenceEquals(group, DocNode))
                             continue;
 
-                        var groupPrimary = !IsolationList && PrimaryTransitionCount > 0
+                        var groupPrimary = IsolationList != IsolationStrategy.precursor && PrimaryTransitionCount > 0
                             ? peptide.GetPrimaryResultsGroup(group)
                             : null;
 
@@ -369,7 +376,7 @@ namespace pwiz.Skyline.Model
         private void ExportScheduledBuckets(FileIterator fileIterator)
         {
             if (!MaxTransitions.HasValue)
-                throw new InvalidOperationException(Resources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
+                throw new InvalidOperationException(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
 
             bool singleWindow = ExportInstrumentType.IsSingleWindowInstrumentType(InstrumentType);
 
@@ -409,7 +416,7 @@ namespace pwiz.Skyline.Model
                     {
                         if (!peptideSchedule.CanSchedule)
                         {
-                            throw new IOException(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled,
+                            throw new IOException(string.Format(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled,
                                                                 Document.Settings.GetDisplayName(nodePep)));
                         }
                         listRequired.Add(peptideSchedule);
@@ -436,8 +443,8 @@ namespace pwiz.Skyline.Model
                 if (listScheduleNext.TransitionCount == RequiredPeptides.TransitionCount)
                 {
                     string itemName = IsPrecursorLimited
-                                          ? Resources.AbstractMassListExporter_ExportScheduledBuckets_precursors
-                                          : Resources.AbstractMassListExporter_ExportScheduledBuckets_transitions;
+                                          ? ModelResources.AbstractMassListExporter_ExportScheduledBuckets_precursors
+                                          : ModelResources.AbstractMassListExporter_ExportScheduledBuckets_transitions;
                     var sb = new StringBuilder();
                     foreach (var peptideSchedule in listSchedules)
                     {
@@ -450,15 +457,15 @@ namespace pwiz.Skyline.Model
                         }
                     }
 
-                    var message = new StringBuilder(Resources.AbstractMassListExporter_ExportScheduledBuckets_Failed_to_schedule_the_following_peptides_with_the_current_settings);
+                    var message = new StringBuilder(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Failed_to_schedule_the_following_peptides_with_the_current_settings);
                     message.AppendLine().AppendLine().AppendLine(sb.ToString());
                     if (OptimizeStepCount == 0)
                     {
-                        message.AppendLine().AppendLine(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count, itemName));
+                        message.AppendLine().AppendLine(string.Format(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count, itemName));
                     }
                     else
                     {
-                        message.Append(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count, itemName));
+                        message.Append(string.Format(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count, itemName));
                     }
                     throw new IOException(message.ToString());
                 }
@@ -505,7 +512,7 @@ namespace pwiz.Skyline.Model
         private void BorrowTransitions(PeptideScheduleBucket bucketUnder, PeptideScheduleBucket bucketOver, int balanceCount)
         {
             if (!MaxTransitions.HasValue)
-                throw new InvalidOperationException(Resources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
+                throw new InvalidOperationException(ModelResources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
 
             foreach (var schedule in bucketOver.ToArray().RandomOrder(ArrayUtil.RANDOM_SEED))
             {
@@ -565,9 +572,20 @@ namespace pwiz.Skyline.Model
         private void WriteTransitions(FileIterator fileIterator, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
-            var transitions = !IsolationList
-                ? GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter)
-                : new TransitionDocNode[] { null };
+            var transitions = new List<TransitionDocNode>();
+            switch (IsolationList)
+            {
+                case IsolationStrategy.precursor:
+                    transitions.Add(null);
+                    break;
+                case IsolationStrategy.transition:
+                    transitions.AddRange(GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter));
+                    break;
+                case IsolationStrategy.all:
+                    transitions.Add(null);
+                    transitions.AddRange(GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter));
+                    break;
+            }
 
             // When exporting CoV optimization methods, only write top ranked transitions.
             var onlyTopRankedTransitions =
@@ -587,11 +605,11 @@ namespace pwiz.Skyline.Model
                     bool transitionWritten = false;
                     for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
                     {
-                        // But avoid writing zero or negative CE values, which will just mess up actuisition
+                        // But avoid writing zero or negative CE values, which will just mess up acquisition
                         // Always write the highest CE if no other transition has been written, even if it is
                         // negative, since not doing so makes it a lot harder to understand why a particular
                         // transition did not get written at all.
-                        if (Equals(OptimizeType, ExportOptimize.CE) && GetCollisionEnergy(nodePep, nodeGroup, nodeTran, i) <= 0)
+                        if (Equals(OptimizeType, ExportOptimize.CE) && !IsAllowedCE(GetCollisionEnergy(nodePep, nodeGroup, nodeTran, i)))
                         {
                             if (transitionWritten || i < OptimizeStepCount)
                                 continue;
@@ -601,6 +619,19 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+        }
+
+        private bool IsAllowedCE(double ce)
+        {
+            if (ce > 0)
+                return true;
+            if (CanOptimizeWithoutEquations && ce == 0)
+            {
+                // Allow zero as a return value when the predictor is set to "None"
+                return Equals(CollisionEnergyList.NONE,
+                    Document.Settings.TransitionSettings.Prediction.CollisionEnergy);
+            }
+            return false;
         }
 
         private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
@@ -742,6 +773,8 @@ namespace pwiz.Skyline.Model
         }
 
         protected abstract string InstrumentType { get; }
+
+        protected virtual bool CanOptimizeWithoutEquations => false;
 
         public virtual bool HasHeaders { get { return false; } }
 
@@ -976,7 +1009,7 @@ namespace pwiz.Skyline.Model
                     {
                         _saver = new FileSaver(FileName);
                         if (!_saver.CanSave())
-                            throw new IOException(string.Format(Resources.FileIterator_Init_Cannot_save_to__0__, FileName));
+                            throw new IOException(string.Format(ModelResources.FileIterator_Init_Cannot_save_to__0__, FileName));
 
                         _writer = new StreamWriter(_saver.SafeName);
                     }
@@ -994,7 +1027,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var storedList in _storedTransitions.Values)
                 {
-                    var storedEnumerable = storedList.First().Exporter.IsolationList
+                    var storedEnumerable = storedList.First().Exporter.IsolationList == IsolationStrategy.precursor
                         ? storedList.AsEnumerable()
                         : storedList.OrderBy(stored => stored.Exporter.GetProductMz(stored.Transition.Mz, stored.Step));
                     foreach (var stored in storedEnumerable)
@@ -1091,7 +1124,7 @@ namespace pwiz.Skyline.Model
                                         bool sortByMz)
             {
                 if (!HasFile)
-                    throw new IOException(Resources.FileIterator_WriteTransition_Unexpected_failure_writing_transitions);
+                    throw new IOException(ModelResources.FileIterator_WriteTransition_Unexpected_failure_writing_transitions);
 
                 if (!sortByMz)
                 {
@@ -1127,10 +1160,11 @@ namespace pwiz.Skyline.Model
 
                     foreach (var group in peptide.TransitionGroups.Where(exporter.PassesPolarityFilter))
                     {
-                        if (exporter.IsolationList)
+                        if (exporter.IsolationList != IsolationStrategy.transition)
                         {
                             WriteTransition(exporter, seq, peptide, group, null, null, 0, sortByMz);
-                            continue;
+                            if(exporter.IsolationList == IsolationStrategy.precursor)
+                                continue;
                         }
 
                         foreach (var transition in group.Transitions.Where(exporter.PassesPolarityFilter))

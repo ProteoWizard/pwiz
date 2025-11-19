@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -66,7 +67,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             var selectedPeaks = GetSelectedPeaks(dataGridView).Distinct().ToArray();
             if (selectedPeaks.Length == 0)
             {
-                MessageDlg.Show(parent, Resources.RemovePeaksAction_RemovePeaks_No_peaks_are_selected);
+                MessageDlg.Show(parent, RowActionsResources.RemovePeaksAction_RemovePeaks_No_peaks_are_selected);
                 return;
             }
 
@@ -81,13 +82,13 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             var skylineWindow = GetSkylineWindow(dataGridView);
             lock (skylineWindow.GetDocumentChangeLock())
             {
-                skylineWindow.ModifyDocument(Resources.RemovePeaksAction_RemovePeaks_Remove_peaks,
+                skylineWindow.ModifyDocument(RowActionsResources.RemovePeaksAction_RemovePeaks_Remove_peaks,
                     doc =>
                     {
                         var longOperationRunner = new LongOperationRunner
                         {
                             ParentControl = parent,
-                            JobTitle = Resources.RemovePeaksAction_RemovePeaks_Removing_Peaks
+                            JobTitle = RowActionsResources.RemovePeaksAction_RemovePeaks_Removing_Peaks
                         };
                         SrmDocument resultDocument = doc;
                         doc = doc.BeginDeferSettingsChanges();
@@ -178,21 +179,21 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
                 if (peakCount == 1)
                 {
                     return proteomic 
-                            ? Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_
-                            : Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_molecule_peak_;
+                            ? RowActionsResources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_peptide_peak_
+                            : RowActionsResources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_molecule_peak_;
                 }
 
                 if (nodeCount == 1)
                 {
                     return string.Format(proteomic
-                        ? Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_
-                        : Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_molecule_, peakCount);
+                        ? RowActionsResources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_peptide_
+                        : RowActionsResources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_molecule_, peakCount);
                 }
 
                 return string.Format(proteomic
                     ? Resources
                         .RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_
-                    : Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__molecules_, peakCount, nodeCount);
+                    : RowActionsResources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__molecules_, peakCount, nodeCount);
             }
 
             public override IEnumerable<Result> GetSelectedResults(BoundDataGridView dataGridView)
@@ -215,8 +216,8 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
                 return docType == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? Resources.RemovePeptides_MenuItemText_Remove_Peptide_Peaks___
-                    : Resources.RemovePeptides_MenuItemText_Remove_Molecule_Peaks___;
+                    ? RowActionsResources.RemovePeptides_MenuItemText_Remove_Peptide_Peaks___
+                    : RowActionsResources.RemovePeptides_MenuItemText_Remove_Molecule_Peaks___;
             }
 
             protected override SrmDocument RemovePeaks(SrmDocument document, IGrouping<IdentityPath, ResultFileKey> peaks)
@@ -254,14 +255,14 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             {
                 if (peakCount == 1)
                 {
-                    return Resources.RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_;
+                    return RowActionsResources.RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_transition_peak_;
                 }
 
                 if (nodeCount == 1)
                 {
-                    return string.Format(Resources.RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_transition_, peakCount);
+                    return string.Format(RowActionsResources.RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_transition_, peakCount);
                 }
-                return string.Format(Resources.RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__transitions_, peakCount, nodeCount);
+                return string.Format(RowActionsResources.RemoveTransitions_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__transitions_, peakCount, nodeCount);
             }
 
             public override IEnumerable<Result> GetSelectedResults(BoundDataGridView dataGridView)
@@ -296,7 +297,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
 
             public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                return Resources.RemoveTransitions_MenuItemText_Remove_Transition_Peaks___;
+                return RowActionsResources.RemoveTransitions_MenuItemText_Remove_Transition_Peaks___;
             }
         }
 
@@ -306,7 +307,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             {
                 if (peakCount == 1)
                 {
-                    return Resources.RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_precursor_peak_;
+                    return RowActionsResources.RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_this_precursor_peak_;
                 }
 
                 if (nodeCount == 1)
@@ -314,7 +315,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
                     return string.Format(Resources.RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from_one_precursor_, peakCount);
                 }
 
-                return string.Format(Resources.RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_, peakCount, nodeCount);
+                return string.Format(RowActionsResources.RemovePrecursors_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__precursors_, peakCount, nodeCount);
             }
 
             public override IEnumerable<Result> GetSelectedResults(BoundDataGridView dataGridView)
@@ -353,7 +354,7 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
 
             public override string GetMenuItemText(SrmDocument.DOCUMENT_TYPE docType)
             {
-                return Resources.RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___;
+                return RowActionsResources.RemovePrecursors_MenuItemText_Remove_Precursor_Peaks___;
             }
         }
     }

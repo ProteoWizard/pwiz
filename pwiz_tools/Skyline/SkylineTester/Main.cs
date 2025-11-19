@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -241,7 +241,9 @@ namespace SkylineTester
             TestsRun = 0;
             if (Directory.Exists(_resultsDir))
                 Try.Multi<Exception>(() => Directory.Delete(_resultsDir, true), 4, false);
-            DeleteTestRunnerConfigFiles();
+            // Don't delete config files when pausing for screenshots
+            if (!args.Contains("pause=") || args.Contains("pause=0"))
+                DeleteTestRunnerConfigFiles();
 
             var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
             _testRunnerIndex = new List<int>();
@@ -362,9 +364,10 @@ namespace SkylineTester
         {
             foreach (var language in GetLanguages())
             {
-                string name;
-                if (_languageNames.TryGetValue(language, out name))
-                    yield return name;
+                yield return _languageNames
+                    .Where(lang => lang.Key.StartsWith(language))
+                    .Select(lang => lang.Value)
+                    .First();
             }
         }
 

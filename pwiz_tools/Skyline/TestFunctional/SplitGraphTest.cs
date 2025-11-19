@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
                 //AssertCurveListsSame(graphChromatogram.CurveList, libraryMatchGraphControl.GraphPane.CurveList);
                 AssertCurveListsSame(graphChromatogram.CurveList,
                     peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath &&
-                        !c.IsY2Axis).ToList()); //exclude the dotp graph from the count.
+                        !c.IsY2Axis)); //exclude the dotp graph from the count.
                 SkylineWindow.ShowProductTransitions();
             });
             WaitForGraphs();
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertCurveListsSame(graphChromatogram.CurveList,
                     libraryMatchGraphControl.GraphPane.CurveList);
                 AssertCurveListsSame(graphChromatogram.CurveList,
-                    peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis).ToList());
+                    peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis));
                 SkylineWindow.ShowAllTransitions();
                 SkylineWindow.ShowSplitChromatogramGraph(true);
             });
@@ -115,9 +115,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, graphChromatogramGraphControl.MasterPane.PaneList.Count);
             Assert.AreEqual(2, peakAreaSummary.GraphControl.MasterPane.PaneList.Count);
             AssertCurveListsSame(graphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[0]),
-                peakAreaSummary.GraphControl.MasterPane.PaneList[0].CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis).ToList());
+                peakAreaSummary.GraphControl.MasterPane.PaneList[0].CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis));
             AssertCurveListsSame(graphChromatogram.GetCurveList(graphChromatogramGraphControl.MasterPane.PaneList[1]),
-                peakAreaSummary.GraphControl.MasterPane.PaneList[1].CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis).ToList());
+                peakAreaSummary.GraphControl.MasterPane.PaneList[1].CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis));
         }
 
         private static void AssertCurveListsSame(List<CurveItem> curveList1, List<CurveItem> curveList2)

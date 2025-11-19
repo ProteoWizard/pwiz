@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestFunctional
                 colMassErrors.DefaultCellStyle.Format);
             var strRawSpectrumIds = (string)row.Cells[colSpectrumIds.Index].FormattedValue;
             Assert.IsNotNull(strRawSpectrumIds);
-            var rawSpectrumIds = strRawSpectrumIds.Split(csvSeparator).ToArray();
+            var rawSpectrumIds = strRawSpectrumIds.Split(csvSeparator);
             var msDataFileScanIds = SkylineWindow.Document.Settings.MeasuredResults.LoadMSDataFileScanIds(
                 chromatogram.FilePath, out _);
             var expectedSpectrumIds = chromatogram.TimeIntensities.ScanIds

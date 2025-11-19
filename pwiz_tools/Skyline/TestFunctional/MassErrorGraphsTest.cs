@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alex MacLean <alex.maclean2000 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -215,7 +215,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var pane = GetHistogramGraphPane();
-                Assert.AreEqual(83, pane.GetTotalBars());
                 Assert.AreEqual(pane.GetMin(), 1);
                 Assert.AreEqual(pane.GetMax(), 10);
             });

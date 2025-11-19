@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,10 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
@@ -173,12 +172,12 @@ namespace pwiz.Skyline.Controls
             if (index == 0)
             {
                 return _undo
-                           ? Resources.UndoRedoList_GetLabelText_Undo_1_Action
-                           : Resources.UndoRedoList_GetLabelText_Redo_1_Action;
+                           ? ControlsResources.UndoRedoList_GetLabelText_Undo_1_Action
+                           : ControlsResources.UndoRedoList_GetLabelText_Redo_1_Action;
             }
             return string.Format(_undo 
-                ? Resources.UndoRedoList_GetLabelText_Undo__0__Actions
-                : Resources.UndoRedoList_GetLabelText_Redo__0__Actions,
+                ? ControlsResources.UndoRedoList_GetLabelText_Undo__0__Actions
+                : ControlsResources.UndoRedoList_GetLabelText_Redo__0__Actions,
                 (index + 1));
         }
 
@@ -201,18 +200,12 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         class ListBoxEx : ListBox
         {
-            private const int WM_VSCROLL = 0x0115;
-            private const int SB_VERT = 1;
-
-            [DllImport("user32.dll")]
-            private static extern int GetScrollPos(IntPtr hWnd, int nBar);
-
             protected override void WndProc(ref Message m)
             {
                 base.WndProc(ref m);
-                if (m.Msg == WM_VSCROLL)
+                if (m.Msg == (int)User32.WinMessageType.WM_VSCROLL)
                 {
-                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = GetScrollPos(m.HWnd, SB_VERT)};
+                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = User32.GetScrollPos(m.HWnd, Orientation.Vertical)};
                     if (Scroll != null) // For ReSharper
                         Scroll.Invoke(this, scrollEventArgs);
                 }

@@ -17,11 +17,15 @@ Settings > Peptide Settings -- Library > Libraries > "heavy" > Path is "heavy.bl
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(2) (C-term K)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Amino acid is "K"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Monoisotopic mass is "8.014199"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > Average mass is "7.941847"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 13C is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(2) (C-term K)" > 15N is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:13C(6)15N(4) (C-term R)" was added
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Amino acid is "R"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Terminus is "C"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Monoisotopic mass is "10.008269"
+Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > Average mass is "9.928665"
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 13C is True
 Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" > "Label:13C(6)15N(4) (C-term R)" > 15N is True
 Settings > Peptide Settings -- Quantification > Normalization method changed from "None" to "Ratio to Heavy"
@@ -95,16 +99,16 @@ LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mu
 SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
 		
 
-Undo Redo : Imported results from "heavy-PRM.mzXML"
-Summary   : Imported results from "heavy-PRM.mzXML"
+Undo Redo : Imported results from "heavy-PRM.raw"
+Summary   : Imported results from "heavy-PRM.raw"
 All Info  :
-Imported results from "heavy-PRM.mzXML"
-Import results settings > File names : contains "heavy-PRM.mzXML"
+Imported results from "heavy-PRM.raw"
+Import results settings > File names : contains "heavy-PRM.raw"
 Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
-    "heavy-PRM.mzXML"
+    "heavy-PRM.raw"
 ],
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
@@ -138,28 +142,28 @@ Undo Redo : Imported results from 9 files
 Summary   : Imported results from 9 files
 All Info  :
 Imported results from 9 files
-Import results settings > File names : contains "G1_rep1.mzXML"
-Import results settings > File names : contains "G1_rep2.mzXML"
-Import results settings > File names : contains "G1_rep3.mzXML"
-Import results settings > File names : contains "G2M_rep1.mzXML"
-Import results settings > File names : contains "G2M_rep2.mzXML"
-Import results settings > File names : contains "G2M_rep3.mzXML"
-Import results settings > File names : contains "S_rep1.mzXML"
-Import results settings > File names : contains "S_rep2.mzXML"
-Import results settings > File names : contains "S_rep3.mzXML"
+Import results settings > File names : contains "G1_rep1.raw"
+Import results settings > File names : contains "G1_rep2.raw"
+Import results settings > File names : contains "G1_rep3.raw"
+Import results settings > File names : contains "G2M_rep1.raw"
+Import results settings > File names : contains "G2M_rep2.raw"
+Import results settings > File names : contains "G2M_rep3.raw"
+Import results settings > File names : contains "S_rep1.raw"
+Import results settings > File names : contains "S_rep2.raw"
+Import results settings > File names : contains "S_rep3.raw"
 Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
-    "G1_rep1.mzXML",
-    "G1_rep2.mzXML",
-    "G1_rep3.mzXML",
-    "G2M_rep1.mzXML",
-    "G2M_rep2.mzXML",
-    "G2M_rep3.mzXML",
-    "S_rep1.mzXML",
-    "S_rep2.mzXML",
-    "S_rep3.mzXML"
+    "G1_rep1.raw",
+    "G1_rep2.raw",
+    "G1_rep3.raw",
+    "G2M_rep1.raw",
+    "G2M_rep2.raw",
+    "G2M_rep3.raw",
+    "S_rep1.raw",
+    "S_rep2.raw",
+    "S_rep3.raw"
 ],
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
@@ -370,7 +374,7 @@ Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Control group 
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Value to compare against is "G2M"
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Identity Annotation is "BioReplicate"
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Normalization method is "Ratio to Heavy"
-Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Summary method is "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Summary method is "Sum of transition areas"
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Confidence level is "95"
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Protein scope is True
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Use zero for missing peaks is False
@@ -382,7 +386,7 @@ Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Control group va
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Value to compare against is "S"
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Identity Annotation is "BioReplicate"
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Normalization method is "Ratio to Heavy"
-Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Summary method is "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Summary method is "Sum of transition areas"
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Confidence level is "95"
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Protein scope is True
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Use zero for missing peaks is False

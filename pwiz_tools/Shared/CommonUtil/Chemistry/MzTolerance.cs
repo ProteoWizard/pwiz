@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
@@ -85,20 +86,15 @@ namespace pwiz.Common.Chemistry
             return (a >= b - this) && (a <= b + this);
         }
 
-        /// <summary>returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)</summary>
-        public bool LessThanTolerance(double a, double b)
-        {
-            return (a < b - this);
-        }
-
         public string UnitName => Enum.GetName(typeof(Units), Unit);
         public string UnitText => Resources.ResourceManager.GetString(nameof(Units) + "_" + UnitName);
 
         public override string ToString()
         {
-            return $"{Value} {UnitText}";
+            return $@"{Value} {UnitText}";
         }
 
+        [Localizable(false)]
         public string AuditLogText => $"\"{Value}\" {UnitText}";
         public bool IsName => false;
 

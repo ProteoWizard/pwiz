@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,9 +31,11 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -67,6 +69,7 @@ namespace pwiz.SkylineTestData
 
         private const string ZIP_FILE = @"TestData\Results\FullScan.zip";
         private const string COMMAND_FILE = @"TestData\CommandLineTest.zip";
+        private const string PROTDB_FILE = @"TestFunctional\AssociateProteinsTest.zip";
 
         private new static string RunCommand(params string[] args)
         {
@@ -78,8 +81,24 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleReplicateOutTest()
         {
+            DoConsoleReplicateOutTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleReplicateOutTestWithAuditLogging()
+        {
+            DoConsoleReplicateOutTest(true);
+        }
+
+        [TestMethod]
+        private void DoConsoleReplicateOutTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(docPath);
+            }
             string outPath = TestFilesDir.GetTestPath("Imported_single.sky");
 
             // Import the first RAW file (or mzML for international)
@@ -96,7 +115,11 @@ namespace pwiz.SkylineTestData
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
             AssertResult.IsDocumentResultsState(doc, "Single", 3, 3, 0, 21, 0);
 
-
+            if (auditLogging)
+            {
+                var docWithAuditLog = DeserializeWithAuditLog(outPath);
+                AssertLastEntry(docWithAuditLog.AuditLog, MessageType.imported_result);
+            }
 
             //Test --import-append
             var dataFile2 = TestFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
@@ -114,6 +137,12 @@ namespace pwiz.SkylineTestData
             AssertResult.IsDocumentResultsState(doc, "Single", 6, 6, 0, 42, 0);
 
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+
+            if (auditLogging)
+            {
+                var docWithAuditLog = DeserializeWithAuditLog(outPath);
+                AssertLastEntry(docWithAuditLog.AuditLog, MessageType.imported_result);
+            }
         }
 
         [TestMethod]
@@ -300,18 +329,36 @@ namespace pwiz.SkylineTestData
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
         }
 
+        /// <summary>
+        /// Run command that should cause an error and validate the output contains the expected output
+        /// </summary>
+        private void RunCommandAndValidateError(string[] extraSettings, string expectedOutput, bool printErrors = false)
+        {
+            FileEx.SafeDelete("testError.sky");
+            var output = RunCommand(new[] { "--new=testError.sky" }.Concat(extraSettings).ToArray());
+            StringAssert.Contains(output, expectedOutput);
+            if (printErrors)
+                Console.WriteLine(expectedOutput);
+        }
+
         [TestMethod]
         public void ConsoleNewDocumentTest()
         {
-            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
+            TestFilesDirs = new []
+            {
+                new TestFilesDir(TestContext, ZIP_FILE),
+                new TestFilesDir(TestContext, PROTDB_FILE)
+            };
+
+            string existingDocPath = TestFilesDirs[0].GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string docPath = TestFilesDirs[0].GetTestPath("ConsoleNewDocumentTest.sky");
+            string fastaPath = TestFilesDirs[0].GetTestPath("sample.fasta");
+            string protdbPath = TestFilesDirs[1].GetTestPath("AssociateProteinMatches.protdb");
 
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
             {
                 "--new=" + docPath,
-                "--overwrite",
                 "--full-scan-precursor-isotopes=Count",
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-res=5",
@@ -327,6 +374,15 @@ namespace pwiz.SkylineTestData
                 "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
+                "--pep-digest-enzyme=Chymotrypsin",
+                "--pep-max-missed-cleavages=9",
+                "--pep-unique-by=Protein",
+                "--pep-min-length=4",
+                "--pep-max-length=42",
+                "--pep-exclude-nterminal-aas=2",
+                "--pep-exclude-potential-ragged-ends",
+                "--background-proteome-file=" + protdbPath,
+                "--save-settings", // save the protdb to Settings.Default so we can test --background-proteome-name later
                 "--library-product-ions=6",
                 "--library-min-product-ions=6",
                 "--library-match-tolerance=" + 0.05 + "mz",
@@ -338,10 +394,10 @@ namespace pwiz.SkylineTestData
                 "--instrument-dynamic-min-mz",
                 "--instrument-method-mz-tolerance=" + 0.42,
                 "--instrument-triggered-chromatograms",
+                "--integrate-all"
             };
 
             string output = RunCommand(settings);
-            StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
             AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
             AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
 
@@ -359,7 +415,17 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(TransitionFilter.StartFragmentFinder.ION_1.Label, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Label);
             Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Label);
             Assert.AreEqual(0, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
+            Assert.AreEqual(9, doc.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages);
+            Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
+            Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(protdbPath), doc.Settings.PeptideSettings.BackgroundProteome.Name);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
+            Assert.AreEqual(4, doc.Settings.PeptideSettings.Filter.MinPeptideLength);
+            Assert.AreEqual(42, doc.Settings.PeptideSettings.Filter.MaxPeptideLength);
+            Assert.AreEqual(2, doc.Settings.PeptideSettings.Filter.ExcludeNTermAAs);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.DigestSettings.ExcludeRaggedEnds);
             Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.IonCount);
             Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.MinIonCount);
             Assert.AreEqual(new MzTolerance(0.05), doc.Settings.TransitionSettings.Libraries.IonMatchMzTolerance);
@@ -371,6 +437,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Instrument.IsDynamicMin);
             Assert.AreEqual(0.42, doc.Settings.TransitionSettings.Instrument.MzMatchTolerance);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Instrument.TriggeredAcquisition);
+            Assert.AreEqual(true, doc.Settings.TransitionSettings.Integration.IsIntegrateAll);
 
             // test trying to associate proteins without a FASTA set
             Settings.Default.LastProteinAssociationFastaFilepath = null;
@@ -383,7 +450,18 @@ namespace pwiz.SkylineTestData
             StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
             StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
 
-            // test importing FASTA and associating proteins
+            // test associating proteins with the dedicated argument for specifying the FASTA (rather than --import-fasta=)
+            Settings.Default.LastProteinAssociationFastaFilepath = null;
+            settings = new[]
+            {
+                "--in=" + existingDocPath,
+                "--associate-proteins-fasta=" + fastaPath,
+            };
+            output = RunCommand(settings);
+            StringAssert.Contains(output, 
+                string.Format(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath)));
+
+            // test importing FASTA and associating proteins and adding special ions
             settings = new[]
             {
                 "--in=" + docPath,
@@ -394,15 +472,21 @@ namespace pwiz.SkylineTestData
                 "--associate-proteins-minimal-protein-list",
                 "--associate-proteins-remove-subsets",
                 "--associate-proteins-min-peptides=2",
+                "--tran-product-add-special-ion=TMT-127L",
+                "--tran-product-add-special-ion=TMT-127H",
+                "--integrate-all=false" // test lower case bool
             };
             output = RunCommand(settings);
             doc = ResultsUtil.DeserializeDocument(docPath);
-            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+            StringAssert.Contains(output, 
+                string.Format(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath)));
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
             Assert.AreEqual(2, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
+            Assert.AreEqual(2, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
+            Assert.AreEqual(false, doc.Settings.TransitionSettings.Integration.IsIntegrateAll);
 
             // test associating proteins in a file with a previously imported FASTA
             settings = new[]
@@ -416,14 +500,15 @@ namespace pwiz.SkylineTestData
 
             output = RunCommand(settings);
             doc = ResultsUtil.DeserializeDocument(docPath);
-            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+            StringAssert.Contains(output, 
+                string.Format(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath)));
             Assert.AreEqual(false, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.Removed, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
             Assert.AreEqual(false, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
             Assert.AreEqual(1, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
 
-            // test changing parameter order
+            // test changing parameter order and adding special ions after clearing them
             settings = new[]
             {
                 "--new=" + docPath,
@@ -431,6 +516,9 @@ namespace pwiz.SkylineTestData
                 "--full-scan-precursor-res=5",
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-isotopes=Count",
+                "--tran-product-clear-special-ions",
+                "--tran-product-add-special-ion=TMT-127L",
+                "--tran-product-add-special-ion=TMT-127H"
             };
 
             output = RunCommand(settings);
@@ -439,46 +527,127 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
+            Assert.AreEqual(2, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
 
-            File.Delete(docPath);
-
-            // test parameter validation: analyzer specified with isotopes=none
+            // test case insensitive enum parsing
             settings = new[]
             {
                 "--new=" + docPath,
+                "--overwrite",
+                "--pep-digest-enzyme=chymotrypsin",
+                "--pep-unique-by=proTEiN",
+                "--library-pick-product-ions=FilTER"
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual("Chymotrypsin", doc.Settings.PeptideSettings.Enzyme.Name);
+            Assert.AreEqual(PeptideFilter.PeptideUniquenessConstraint.protein, doc.Settings.PeptideSettings.Filter.PeptideUniqueness);
+            Assert.AreEqual(TransitionLibraryPick.filter, doc.Settings.TransitionSettings.Libraries.Pick);
+
+            // test using existing background proteome name
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--background-proteome-name=" + Path.GetFileNameWithoutExtension(protdbPath)
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(protdbPath), doc.Settings.PeptideSettings.BackgroundProteome.Name);
+
+            // test new background proteome with explicit name
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--background-proteome-file=" + protdbPath,
+                "--background-proteome-name=protdb"
+            };
+
+            RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(true, doc.Settings.HasBackgroundProteome);
+            Assert.AreEqual(protdbPath, doc.Settings.PeptideSettings.BackgroundProteome.DatabasePath);
+            Assert.AreEqual("protdb", doc.Settings.PeptideSettings.BackgroundProteome.Name);
+
+            File.Delete(docPath);
+        }
+
+        [TestMethod]
+        public void ConsoleArgumentValidationTest()
+        {
+            // parameter validation: analyzer specified with isotopes=none
+            var settings = new[]
+            {
                 "--full-scan-precursor-isotopes=None",
                 "--full-scan-precursor-analyzer=centroided",
             };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output, string.Format(
+            RunCommandAndValidateError(settings, string.Format(
                 Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
                 CommandArgs.ARG_FULL_SCAN_PRECURSOR_ANALYZER.ArgumentText,
                 CommandArgs.ARG_FULL_SCAN_PRECURSOR_RES.ArgumentText));
 
-            // test parameter validation: DDA method with isolation scheme
+            // parameter validation: DDA method with isolation scheme
             settings = new[]
             {
-                "--new=" + docPath,
                 "--full-scan-acquisition-method=DDA",
                 "--full-scan-isolation-scheme=All Ions",
             };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output, string.Format(
+            RunCommandAndValidateError(settings, string.Format(
                 Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode,
                 FullScanAcquisitionMethod.DDA.Label));
 
-            // test parameter validation: DIA method without isolation scheme
-            settings = new[]
-            {
-                "--new=" + docPath,
-                "--full-scan-acquisition-method=DIA",
-            };
+            // parameter validation: DIA method without isolation scheme
+            settings = new[] { "--full-scan-acquisition-method=DIA" };
 
-            output = RunCommand(settings);
-            StringAssert.Contains(output,
-                Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+            RunCommandAndValidateError(settings, Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+
+            // parameter validation: int min
+            settings = new[] { "--pep-min-length=" + (PeptideFilter.MIN_MIN_LENGTH - 1) };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
+                PeptideFilter.MIN_MIN_LENGTH - 1, CommandArgs.ARG_PEPTIDE_MIN_LENGTH.ArgumentText, PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH));
+
+            // parameter validation: int max
+            settings = new[] { "--pep-max-length=" + (PeptideFilter.MAX_MAX_LENGTH + 1) };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
+                PeptideFilter.MAX_MAX_LENGTH + 1, CommandArgs.ARG_PEPTIDE_MAX_LENGTH.ArgumentText, PeptideFilter.MIN_MAX_LENGTH, PeptideFilter.MAX_MAX_LENGTH));
+
+            // parameter validation: bad bool
+            settings = new[] { "--pep-exclude-potential-ragged-ends=maybe" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified,
+                CommandArgs.ARG_PEPTIDE_EXCLUDE_POTENTIAL_RAGGED_ENDS.ArgumentText));
+
+            // parameter validation: bad enzyme
+            settings = new[] { "--pep-digest-enzyme=nope" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                "nope", CommandArgs.ARG_PEPTIDE_ENZYME_NAME.ArgumentText, string.Join(", ", Settings.Default.EnzymeList.Select(e => e.Name))));
+
+            // parameter validation: unknown background proteome name
+            settings = new[] { "--background-proteome-name=alien" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                "alien", CommandArgs.ARG_BGPROTEOME_NAME.ArgumentText, string.Join(", ", Settings.Default.BackgroundProteomeList.Select(e => e.Name))));
+
+            // parameter validation: bad background proteome path
+            settings = new[] { "--background-proteome-file=missing" };
+
+            RunCommandAndValidateError(settings, string.Format(
+                Resources.CommandLine_SetPeptideDigestSettings_Error__Could_not_find_background_proteome_file__0_, "missing"));
         }
 
         [TestMethod]
@@ -527,6 +696,161 @@ namespace pwiz.SkylineTestData
 
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath2);
                 Assert.AreEqual(FullScanPrecursorIsotopes.Percent, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            }
+        }
+
+        [TestMethod]
+        public void ConsoleModsTest()
+        {
+
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            
+            // test --pep-add-mod, --pep-add-unimod, --pep-add-mod-aa, and --pep-add-mod-term
+            {
+                var mods = new Dictionary<object, StaticMod>
+                {
+                    // either long name or tuple with short/unimod name, AA, and terminus
+                    {"Acetyl (N-term)", null},
+                    {"Phospho (ST)", null},
+                    {"Acetyl:13C(2) (K)", null},
+                    {"Water Loss (D, E, S, T)", null},
+                    {(4, "C", ""), UniMod.GetModification("Carbamidomethyl (C)", out _)},
+                    {("Oxi", "M", ""), UniMod.GetModification("Oxidation (M)", out _)},
+                    {(258, "", "C"), UniMod.GetModification("Label:18O(1) (C-term)", out _)},
+                    {("Ach", "", ""), UniMod.GetModification("Archaeol (C)", out _)},
+                    {(949, "", ""), UniMod.GetModification("3-deoxyglucosone (R)", out _)},
+                    
+                };
+
+                var settings = new[]
+                {
+                    "--in=" + docPath,
+                    "--save"
+                };
+
+                string[] AddModArgs(string[] args, object nameOrId, string aas, string terminus)
+                {
+                    var modSettings = nameOrId switch
+                    {
+                        string name => settings.Append("--pep-add-mod=" + name),
+                        int unimodId => settings.Append("--pep-add-unimod=" + unimodId),
+                        _ => throw new ArgumentException()
+                    };
+                    if (!aas.IsNullOrEmpty())
+                        modSettings = modSettings.Append("--pep-add-unimod-aa=" + aas);
+                    if (!terminus.IsNullOrEmpty())
+                        modSettings = modSettings.Append("--pep-add-unimod-term=" + terminus);
+                    return modSettings.ToArray();
+                }
+
+                foreach (var mod in mods)
+                {
+                    if (mod.Key is string longName)
+                        settings = settings.AppendToNew("--pep-add-mod=" + longName);
+                    else if (mod.Key is ValueTuple<string, string, string> shortNameInfo)
+                        settings = AddModArgs(settings, shortNameInfo.Item1, shortNameInfo.Item2, shortNameInfo.Item3);
+                    else if (mod.Key is ValueTuple<int, string, string> unimodInfo)
+                        settings = AddModArgs(settings, unimodInfo.Item1, unimodInfo.Item2, unimodInfo.Item3);
+                }
+
+                string output = AbstractUnitTestEx.RunCommand(settings);
+                var doc = ResultsUtil.DeserializeDocument(docPath);
+
+                foreach (var mod in mods)
+                {
+                    var expectedMod = mod.Value ?? UniMod.GetModification(mod.Key as string, out _);
+
+                    // Settings > Peptide Settings -- Modifications > Structural modifications : "Oxidation (M)" was added
+                    var isotopeType = IsotopeLabelType.light;
+                    var modSection = PropertyNames.PeptideModifications_StaticModifications;
+                    if (!UniMod.IsStructuralModification(expectedMod.Name))
+                    {
+                        // Settings > Peptide Settings -- Modifications > Isotope modifications > "heavy" : "Label:18O(1) (C-term)" was added
+                        isotopeType = IsotopeLabelType.heavy;
+                        modSection = isotopeType.ToString().Quote();
+                    }
+
+                    // test the mod was added in the command output
+                    StringAssert.Contains(output, string.Format(AuditLogStrings.added_to, modSection, expectedMod.Name.Quote()));
+
+                    // test the mod is set in the document
+                    doc.Settings.PeptideSettings.Modifications.GetModifications(isotopeType).Contains(m => m.EquivalentAll(expectedMod));
+                }
+            }
+
+            // test --pep-clear-mods
+            {
+                var settings = new[]
+                {
+                    "--in=" + docPath,
+                    "--save",
+                    "--pep-clear-mods"
+                };
+
+                string output = AbstractUnitTestEx.RunCommand(settings);
+                var doc = ResultsUtil.DeserializeDocument(docPath);
+                
+                StringAssert.Contains(output, string.Format(AuditLogStrings.removed_all, PropertyNames.PeptideModifications_StaticModifications));
+                StringAssert.Contains(output, string.Format(AuditLogStrings.removed_all, IsotopeLabelType.heavy.ToString().Quote()));
+                Assert.AreEqual(0, doc.Settings.PeptideSettings.Modifications.StaticModifications.Count);
+            }
+
+            // test invalid values for mod parameters
+            {
+                // ReSharper disable RedundantArgumentDefaultValue
+                const bool printErrors = false; // set to true for easy viewing of what the error messages actually look like
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Foo" },
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                        "Foo", ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match), printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Foo", "--pep-add-unimod-term=N" },
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                        "Foo", ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match), printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxidation" },
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                        "Oxidation", ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match), printErrors);
+
+                RunCommandAndValidateError(new [] { "--pep-add-mod=Oxi" },
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                        "Oxi", ModelResources.ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match));
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-unimod-term=N" },
+                    string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_,
+                        "Oxi", string.Format(ModelResources.ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_,
+                            TextUtil.ColonSeparate(PropertyNames.StaticMod_Terminus, "N"))), printErrors);
+                
+                RunCommandAndValidateError(new[] { "--pep-add-unimod-term=N" },
+                    Resources.PeptideMod_SetTerminus_A_peptide_modification_must_be_added_before_giving_it_a_terminal_or_amino_acid_specificity_, printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod-variable=True" },
+                    Resources.PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_, printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-mod-variable=X" },
+                    new CommandArgs.ValueInvalidBoolException(CommandArgs.ARG_PEPTIDE_ADD_MOD_VARIABLE, "X").Message, printErrors);
+
+                // Variable failure on loss-only modification
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Water Loss (D, E, S, T)", "--pep-add-mod-variable=true" },
+                    DocSettingsResources.StaticMod_Validate_Loss_only_modifications_may_not_be_variable, printErrors);
+
+                // Variable failure for amino acid labeling modification
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Label:13C(6)15N(2) (K)", "--pep-add-mod-variable=true" },
+                    DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_, printErrors);
+
+                // Variable failure for formulaic isotope labeling modification
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Label:18O(1) (C-term)", "--pep-add-mod-variable=true" },
+                    DocSettingsResources.StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_, printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-mod=Oxi", "--pep-add-unimod-term=Z" },
+                    new CommandArgs.ValueInvalidModTerminusException(CommandArgs.ARG_PEPTIDE_ADD_MOD_TERM, "Z").Message, printErrors);
+
+                RunCommandAndValidateError(new[] { "--pep-add-unimod=35", "--pep-add-unimod-aa=1" },
+                    new CommandArgs.ValueInvalidAminoAcidException(CommandArgs.ARG_PEPTIDE_ADD_MOD_AA, "1").Message, printErrors);
+
+                Assert.IsFalse(printErrors, "Set printErrors to false before committing.");
+                // ReSharper restore RedundantArgumentDefaultValue
             }
         }
 
@@ -642,8 +966,9 @@ namespace pwiz.SkylineTestData
             // A document with results that should be able to export a spectral library
             var docWithResults = TestFilesDir.GetTestPath("msstatstest.sky");
             var exportPath = TestFilesDir.GetTestPath("out_lib.blib"); // filepath to export library to
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
             // Test error (no peptide precursors)
-            var output = RunCommand("--new=" + "new.sky", // Create a new document
+            var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
                 "--exp-speclib-file=" + exportPath // Export a spectral library
             );
@@ -681,36 +1006,37 @@ namespace pwiz.SkylineTestData
             var expectedExportTargetsBestPeaks = TestFilesDir.GetTestPathLocale("MProphet_expected_targets_only_best_peaks_only.csv");
             // The expected export when excluding the "Intensity" and "Standard signal to noise" features.
             var expectedExportExcludeFeatures = TestFilesDir.GetTestPathLocale("MProphet_expected_exclude_features.csv");
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
             // A string that is not a feature name or a mProphet file header
             const string invalidFeatureName = "-la";
 
             // Test error (no targets)
-            var output = RunCommand("--new=" + "new.sky", // Create a new document
+            var output = RunCommand("--new=" + newDocumentPath, // Create a new document
                 "--overwrite", // Overwrite, as the file may already exist in the bin
-                "--exp-mprophet-file=" + exportPath // Export mProphet features
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_targets_for_which_to_export_mProphet_features_), output);
             // Test error (no results)
             output = RunCommand("--in=" + docWithNoResultsPath, // Load a document with no results
-                "--exp-mprophet-file=" + exportPath // Export mProphet features
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_Error__The_document_must_contain_results_to_export_mProphet_features_), output);
             // Test error (invalid feature name)
             output = RunCommand("--in=" + docWithResults, // Load a document with no results
-                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
                 "--exp-mprophet-exclude-feature=" + invalidFeatureName
             );
             CheckRunCommandOutputContains(string.Format(Resources
                 .CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_, invalidFeatureName), output);
             // Test export
             output = RunCommand("--in=" + docWithResults, // Load a document with results
-                "--exp-mprophet-file=" + exportPath // Export mProphet features
+                "--exp-mprophet-features=" + exportPath // Export mProphet features
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             AssertEx.FileEquals(expectedExport, exportPath);
             // Test export with target peptides only and best scoring peaks only
             output = RunCommand("--in=" + docWithResults, // Load a document with results
-                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
                 "--exp-mprophet-targets-only", // Export should not include decoys peptides
                 "--exp-mprophet-best-peaks-only" // Export should contain best scoring peaks
             );
@@ -719,12 +1045,120 @@ namespace pwiz.SkylineTestData
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             // Test export with some scores excluded
             output = RunCommand("--in=" + docWithResults, // Load a document with results
-                "--exp-mprophet-file=" + exportPath, // Export mProphet features
+                "--exp-mprophet-features=" + exportPath, // Export mProphet features
                 "--exp-mprophet-exclude-feature=" + "Intensity", // Export should not contain an "Intensity" column
                 "--exp-mprophet-exclude-feature=" + "Standard signal to noise" // Export should not contain a "Standard signal to noise" column
             );
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportMProphetFeatures_mProphet_features_file__0__exported_successfully_, exportPath), output);
             AssertEx.FileEquals(expectedExportExcludeFeatures, exportPath);
+        }
+
+        [TestMethod]
+        public void ConsoleExportAnnotationsTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleExportAnnotationsTest.zip");
+            var exportPath = TestFilesDir.GetTestPath("out.csv");
+            var documentWithAnnotations = TestFilesDir.GetTestPath("Study9_1_Site56C_Final_CURVE_Annotated_reduced.sky");
+            var expectedIncludeProperties = TestFilesDir.GetTestPath("expected_annotations_include_properties.csv");
+            var expectedIncludeObjects = TestFilesDir.GetTestPath("expected_annotations_include_objects.csv");
+            var expectedAnnotationsNoBlankRows = TestFilesDir.GetTestPath("expected_annotations_no_blank_rows.csv");
+            var newDocumentPath = TestFilesDir.GetTestPath("new.sky");
+            const string invalidName = "-la";
+
+            // Test error (invalid include-object name)
+            var output = RunCommand("--new=" + newDocumentPath, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-object=" + invalidName // Test specifying an invalid object name
+            );
+            CheckRunCommandOutputContains(string.Format(CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                invalidName,
+                "--exp-annotations-include-object", string.Join(", ", CommandArgs.GetAllHandlerNames())), output);
+            // Test error (no annotations and not including properties)
+            output = RunCommand("--new=" + newDocumentPath, // Create a document
+                "--overwrite", // Overwrite, as the file may already exist in the bin
+                "--exp-annotations=" + exportPath // Export annotations
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Error__The_document_must_contain_annotations_in_order_to_export_annotations_), output);
+            // Test export with some object types included (everything else excluded) 
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-object=" + "PrecursorResult", // Include "PrecursorResult" object type
+                "--exp-annotations-include-object=" + "TransitionResult" // Include "TransitionResult" object type
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedIncludeObjects, exportPath);
+            // Test export with properties included
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-include-properties" // Include all properties
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedIncludeProperties, exportPath);
+            // Test export with blank rows excluded
+            output = RunCommand("--in=" + documentWithAnnotations, // Load a document that already contains annotations
+                "--exp-annotations=" + exportPath, // Export annotations
+                "--exp-annotations-remove-blank-rows" // Remove blank rows
+            );
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportAnnotations_Annotations_file__0__exported_successfully_, exportPath), output);
+            AssertEx.FileEquals(expectedAnnotationsNoBlankRows, exportPath);
+        }
+
+        [TestMethod]
+        public void ConsoleAnnotationsExportToImportTest()
+        {
+            DoConsoleAnnotationsExportToImportTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleAnnotationsExportToImportTestWithAuditLogging()
+        {
+            DoConsoleAnnotationsExportToImportTest(true);
+        }
+
+        [TestMethod]
+        private void DoConsoleAnnotationsExportToImportTest(bool auditLogging)
+        {
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\ConsoleAnnotationsExportToImportTest.zip");
+            var documentWithAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_heavily_annotated.sky");
+            var documentWithoutAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_no_annotations.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(documentWithoutAnnotations);
+            }
+
+            var documentWithImportedAnnotations = TestFilesDir.GetTestPath("Study 7ii (site 52)_imported_annotations.sky");
+            var annotationsPath = TestFilesDir.GetTestPath("original_annotations.csv");
+            var newAnnotationsPath = TestFilesDir.GetTestPath("annotations_from_new_document.csv");
+            // Load a document that already contains annotations and export annotations
+            RunCommand(
+                "--in=" + documentWithAnnotations, 
+                "--exp-annotations=" + annotationsPath 
+            );
+            // Load the same document with empty annotations and import the annotations exported in the last step
+            // Then save the annotations and the document for comparison
+            RunCommand(
+                "--in=" + documentWithoutAnnotations,
+                "--import-annotations=" + annotationsPath,
+                "--exp-annotations=" + newAnnotationsPath, 
+                "--out=" + documentWithImportedAnnotations
+            );
+            // Assert that annotations exported from the document with imported annotations match annotations
+            // exported from the original document
+            AssertEx.FileEquals(annotationsPath, newAnnotationsPath);
+            // Assert that the chromatograms (and their annotations) are identical
+            var originalDocument = ResultsUtil.DeserializeDocument(documentWithAnnotations);
+            var outputDocument = ResultsUtil.DeserializeDocument(documentWithImportedAnnotations);
+            Assert.AreEqual(originalDocument.Settings.MeasuredResults.Chromatograms, 
+                outputDocument.MeasuredResults.Chromatograms);
+
+            if (auditLogging)
+            {
+                var outputDocumentWithAuditLog =
+                    DeserializeWithAuditLog(documentWithImportedAnnotations);
+                Assert.IsTrue(outputDocumentWithAuditLog.Settings.DataSettings.IsAuditLoggingEnabled);
+                AssertLastEntry(outputDocumentWithAuditLog.AuditLog, MessageType.imported_annotations);
+            }
         }
 
         private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
@@ -744,8 +1178,23 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleAddDecoysTest()
         {
+            DoConsoleAddDecoysTest(false);
+        }
+
+        [TestMethod]
+        public void ConsoleAddDecoysTestWithAuditLogging()
+        {
+            DoConsoleAddDecoysTest(true);
+        }
+
+        public void DoConsoleAddDecoysTest(bool auditLogging)
+        {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            if (auditLogging)
+            {
+                EnableAuditLogging(docPath);
+            }
             string outPath = TestFilesDir.GetTestPath("DecoysAdded.sky");
             string output = RunCommand("--in=" + docPath,
                                        "--decoys-add",
@@ -753,16 +1202,34 @@ namespace pwiz.SkylineTestData
             const int expectedPeptides = 7;
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_REVERSE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             output = RunCommand("--in=" + docPath,
                                        "--decoys-add=" + CommandArgs.ARG_VALUE_DECOYS_ADD_SHUFFLE);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectedPeptides, DecoyGeneration.SHUFFLE_SEQUENCE));
+            if (auditLogging)
+            {
+                var outputDocument =
+                    DeserializeWithAuditLog(outPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.added_peptide_decoys);
+            }
 
             const string badDecoyMethod = "shift";
             output = RunCommand("--in=" + docPath,
@@ -774,8 +1241,14 @@ namespace pwiz.SkylineTestData
                                        "--decoys-add");
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Error__Attempting_to_add_decoys_to_document_with_decoys_);
 
-            output = RunCommand("--in=" + outPath, "--decoys-discard");
+            string discardedDecoysPath = TestFilesDir.GetTestPath("DecoysDiscarded.sky");
+            output = RunCommand("--in=" + outPath, "--decoys-discard", "--out=" + discardedDecoysPath);
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Decoys_discarded);
+            if (auditLogging)
+            {
+                var outputDocument = DeserializeWithAuditLog(discardedDecoysPath);
+                AssertLastEntry(outputDocument.AuditLog, MessageType.deleted_target);
+            }
 
             output = RunCommand("--in=" + outPath, "--decoys-add", "--decoys-discard");
             AssertEx.Contains(output, Resources.CommandLine_AddDecoys_Decoys_discarded);
@@ -1279,7 +1752,7 @@ namespace pwiz.SkylineTestData
                                 "--exp-strategy=single",
                                 "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"),
                                 "--exp-template=" + thermoTemplate);
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_instrument__0__is_not_compatible_with_scheduled_methods_,"Thermo LTQ")));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_instrument__0__is_not_compatible_with_scheduled_methods_, ExportInstrumentType.THERMO_LTQ)));
             Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_));
 
             //Error: not all peptides have RT info
@@ -1355,8 +1828,6 @@ namespace pwiz.SkylineTestData
             CommandArgs.Argument[] valueListArgs = 
             {
                 CommandArgs.ARG_REPORT_FORMAT,
-                CommandArgs.ARG_EXP_TRANSITION_LIST_INSTRUMENT,
-                CommandArgs.ARG_EXP_METHOD_INSTRUMENT,
                 CommandArgs.ARG_EXP_STRATEGY,
                 CommandArgs.ARG_EXP_METHOD_TYPE,
                 CommandArgs.ARG_EXP_OPTIMIZING,
@@ -1368,6 +1839,29 @@ namespace pwiz.SkylineTestData
                 output = RunCommand(args);
                 AssertEx.Contains(output, new CommandArgs.ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
             }
+
+            // Transition list, isolation list, and method export
+            string bogusInstrument = string.Format(
+                SkylineResources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
+                bogusValue);
+            args[3] = CommandArgs.ARG_EXP_TRANSITION_LIST_INSTRUMENT.ArgumentText + "=" + bogusValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output,
+                bogusInstrument,
+                TextUtil.LineSeparate(ExportInstrumentType.TRANSITION_LIST_TYPES),
+                SkylineResources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
+            args[3] = CommandArgs.ARG_EXP_ISOLATION_LIST_INSTRUMENT.ArgumentText + "=" + bogusValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output,
+                bogusInstrument,
+                TextUtil.LineSeparate(ExportInstrumentType.ISOLATION_LIST_TYPES),
+                SkylineResources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
+            args[3] = CommandArgs.ARG_EXP_METHOD_INSTRUMENT.ArgumentText + "=" + bogusValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output,
+                bogusInstrument,
+                TextUtil.LineSeparate(ExportInstrumentType.METHOD_TYPES),
+                SkylineResources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
 
             CommandArgs.Argument[] valueIntArguments =
             {
@@ -3564,12 +4058,6 @@ namespace pwiz.SkylineTestData
                 : pathToRaw;
         }
 
-        private static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)
-        {
-            Assert.IsTrue(actualMessage.Contains(expectedMessage),
-                string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
-        }
-
         private class TestPanoramaClient : BaseTestPanoramaClient
         {
             public ServerStateEnum MyServerState { get; set; }
@@ -3591,21 +4079,21 @@ namespace pwiz.SkylineTestData
             {
                 if (ServerStateEnum.available != MyServerState)
                 {
-                    throw new PanoramaServerException(MyServerState, "Invalid server state", ServerUri);
+                    throw new PanoramaServerException(new ErrorMessageBuilder(MyServerState.Error(ServerUri)).ErrorDetail("Invalid server state").ToString());
                 }
                 if (UserStateEnum.valid != MyUserState)
                 {
-                    throw new PanoramaServerException(MyUserState, "Invalid user state", ServerUri);
+                    throw new PanoramaServerException(new ErrorMessageBuilder(MyUserState.Error(ServerUri)).ErrorDetail("Invalid user state").ToString());
                 }
 
                 return new PanoramaServer(ServerUri, Username, Password);
             }
 
-            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+            public override void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true)
             {
                 if (MyFolderState != FolderState.valid)
                 {
-                    throw new PanoramaServerException(MyFolderState, folderPath, null, ServerUri, null, Username);
+                    throw new PanoramaServerException(MyFolderState.Error(ServerUri, folderPath, Username));
                 }
             }
         }
@@ -3617,5 +4105,6 @@ namespace pwiz.SkylineTestData
                 throw new Exception("GetServerState threw an exception");
             }    
         }
+
     }
 }

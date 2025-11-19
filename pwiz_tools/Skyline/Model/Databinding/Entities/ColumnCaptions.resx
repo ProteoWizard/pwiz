@@ -144,6 +144,33 @@
   <data name="Analyzer">
     <value>Analyzer</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>Apex Analyte Ion Count</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>Apex Analyte Ion Count Fragment</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>Apex Analyte Ion Count MS1</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>Apex Spectrum ID</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>Apex Spectrum ID Fragment</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>Apex Spectrum ID MS1</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>Apex Total Ion Count</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>Apex Total Ion Count Fragment</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>Apex Total Ion Count MS1</value>
+  </data>
   <data name="Area">
     <value>Area</value>
   </data>
@@ -219,6 +246,15 @@
   <data name="CalculatedConcentration">
     <value>Calculated Concentration</value>
   </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>Calculated Concentration Message</value>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>Calculated Concentration Raw</value>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>Calculated Concentration Strict</value>
+  </data>
   <data name="CalibrationCurve">
     <value>Calibration Curve</value>
   </data>
@@ -285,6 +321,9 @@
   <data name="ConfidenceLevel">
     <value>Confidence Level</value>
   </data>
+  <data name="ConstantNeutralLoss">
+    <value>Constant Neutral Loss</value>
+  </data>
   <data name="CountTruncated">
     <value>Count Truncated</value>
   </data>
@@ -348,6 +387,9 @@
   <data name="DetectionZScore">
     <value>Detection Z Score</value>
   </data>
+  <data name="DissociationMethod">
+    <value>Dissociation Method</value>
+  </data>
   <data name="DriftTimeFragment">
     <value>Drift Time Fragment</value>
   </data>
@@ -371,6 +413,30 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>Exclude From Calibration</value>
+  </data>
+  <data name="ExemplaryEndTime">
+    <value>Exemplary End Time</value>
+  </data>
+  <data name="ExemplaryFilePath">
+    <value>Exemplary File Path</value>
+  </data>
+  <data name="ExemplaryLibraryName">
+    <value>Exemplary Library Name</value>
+  </data>
+  <data name="ExemplaryPeak">
+    <value>Exemplary Peak</value>
+  </data>
+  <data name="ExemplaryReplicateName">
+    <value>Exemplary Replicate Name</value>
+  </data>
+  <data name="ExemplaryRetentionTime">
+    <value>Exemplary Retention Time</value>
+  </data>
+  <data name="ExemplaryScore">
+    <value>Exemplary Score</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>Exemplary Start Time</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
     <value>Explicit Analyte Concentration</value>
@@ -477,6 +543,15 @@
   <data name="Identified">
     <value>Identified</value>
   </data>
+  <data name="ImputedEndTime">
+    <value>Imputed End Time</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>Imputed Peak</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>Imputed Start Time</value>
+  </data>
   <data name="InChI">
     <value>InChI</value>
   </data>
@@ -540,6 +615,9 @@
   <data name="IsDecoy">
     <value>Is Decoy</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>Isolation Window Width</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>Isotope Dist Index</value>
   </data>
@@ -566,6 +644,39 @@
   </data>
   <data name="LastPosition">
     <value>Last Position</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>LC Peak Analyte Ion Count</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>LC Peak Analyte Ion Count Fragment</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>LC Peak Analyte Ion Count MS1</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>LC Peak Ion Metrics Fragment</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>LC Peak Ion Metrics MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>LC Peak Total Ion Count</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>LC Peak Total Ion Count Fragment</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>LC Peak Total Ion Count MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>LC Peak Total Ion Current Area</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>LC Peak Total Ion Current Area Fragment</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>LC Peak Total Ion Current Area MS1</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>Library Collision Cross Section</value>
@@ -708,6 +819,9 @@
   <data name="MedianPeakArea">
     <value>Median Peak Area</value>
   </data>
+  <data name="Message">
+    <value>Message</value>
+  </data>
   <data name="Min">
     <value>Min</value>
   </data>
@@ -767,6 +881,21 @@
   </data>
   <data name="MoleculeListAbundance">
     <value>Molecule List Abundance</value>
+  </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>Molecule List Abundance Message</value>
+  </data>
+  <data name="MoleculeListAbundanceRaw">
+    <value>Molecule List Abundance Raw</value>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>Molecule List Abundance Strict</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>Molecule List Abundance Transition Averaged</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>Molecule List Abundance Transition Summed</value>
   </data>
   <data name="MoleculeListLocator">
     <value>Molecule List Locator</value>
@@ -837,6 +966,15 @@
   <data name="NormalizedArea">
     <value>Normalized Area</value>
   </data>
+  <data name="NormalizedAreaMessage">
+    <value>Normalized Area Message</value>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>Normalized Area Raw</value>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>Normalized Area Strict</value>
+  </data>
   <data name="NumberOfPoints">
     <value>Number of Points</value>
   </data>
@@ -851,6 +989,21 @@
   </data>
   <data name="OptStep">
     <value>Opt Step</value>
+  </data>
+  <data name="OriginalEndTime">
+    <value>Original End Time</value>
+  </data>
+  <data name="OriginalPeak">
+    <value>Original Peak</value>
+  </data>
+  <data name="OriginalRetentionTime">
+    <value>Original Retention Time</value>
+  </data>
+  <data name="OriginalScore">
+    <value>Original Score</value>
+  </data>
+  <data name="OriginalStartTime">
+    <value>Original Start Time</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>Peak Group End Time</value>
@@ -954,6 +1107,15 @@
   <data name="PrecursorCalculatedConcentration">
     <value>Precursor Calculated Concentration</value>
   </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>Precursor Calculated Concentration Message</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>Precursor Calculated Concentration Raw</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>Precursor Calculated Concentration Strict</value>
+  </data>
   <data name="PrecursorCharge">
     <value>Precursor Charge</value>
   </data>
@@ -983,6 +1145,15 @@
   </data>
   <data name="PrecursorNormalizedArea">
     <value>Precursor Normalized Area</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>Precursor Normalized Area Message</value>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>Precursor Normalized Area Raw</value>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>Precursor Normalized Area Strict</value>
   </data>
   <data name="PrecursorNote">
     <value>Precursor Note</value>
@@ -1044,11 +1215,29 @@
   <data name="ProductNeutralMass">
     <value>Product Neutral Mass</value>
   </data>
+  <data name="ProportionTruncated">
+    <value>Proportion Truncated</value>
+  </data>
   <data name="Protein">
     <value>Protein</value>
   </data>
   <data name="ProteinAbundance">
     <value>Protein Abundance</value>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>Protein Abundance Message</value>
+  </data>
+  <data name="ProteinAbundanceRaw">
+    <value>Protein Abundance Raw</value>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>Protein Abundance Strict</value>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>Protein Abundance Transition Averaged</value>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>Protein Abundance Transition Summed</value>
   </data>
   <data name="ProteinAccession">
     <value>Protein Accession</value>
@@ -1122,6 +1311,9 @@
   <data name="RatioToStandard">
     <value>Ratio To Standard</value>
   </data>
+  <data name="Raw">
+    <value>Raw</value>
+  </data>
   <data name="RawData">
     <value>Raw Data</value>
   </data>
@@ -1142,6 +1334,21 @@
   </data>
   <data name="Reason">
     <value>Reason</value>
+  </data>
+  <data name="ReintegratedEndTime">
+    <value>Reintegrated End Time</value>
+  </data>
+  <data name="ReintegratedPeak">
+    <value>Reintegrated Peak</value>
+  </data>
+  <data name="ReintegratedRetentionTime">
+    <value>Reintegrated Retention Time</value>
+  </data>
+  <data name="ReintegratedScore">
+    <value>Reintegrated Score</value>
+  </data>
+  <data name="ReintegratedStartTime">
+    <value>Reintegrated Start Time</value>
   </data>
   <data name="Replicate">
     <value>Replicate</value>
@@ -1302,8 +1509,14 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
   </data>
+  <data name="Strict">
+    <value>Strict</value>
+  </data>
   <data name="SummaryMessage">
     <value>Summary Message</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>Surrogate External Standard</value>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>Target Qualitative Ion Ratio</value>

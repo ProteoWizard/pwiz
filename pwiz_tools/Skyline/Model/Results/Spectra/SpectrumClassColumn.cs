@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,14 +17,16 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -35,11 +37,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
     public abstract class SpectrumClassColumn
     {
         public static readonly SpectrumClassColumn Ms1Precursors =
-            new PrecursorsColumn(nameof(SpectrumClass.Ms1Precursors), spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(1)), () => Resources.SpectrumClassColumn_Ms1Precursors_MS1);
+            new PrecursorsColumn(nameof(SpectrumClass.Ms1Precursors),
+                spectrum => SpectrumPrecursorMzs(spectrum.GetPrecursors(1)),
+                () => SpectraResources.SpectrumClassColumn_Ms1Precursors_MS1);
 
         public static readonly SpectrumClassColumn Ms2Precursors =
-            new PrecursorsColumn(nameof(SpectrumClass.Ms2Precursors), 
-                spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(2)), ()=>Resources.SpectrumClassColumn_Ms2Precursors_MS2);
+            new PrecursorsColumn(nameof(SpectrumClass.Ms2Precursors),
+                spectrum => SpectrumPrecursorMzs(spectrum.GetPrecursors(2)),
+                () => SpectraResources.SpectrumClassColumn_Ms2Precursors_MS2);
 
         public static readonly SpectrumClassColumn ScanDescription =
             MakeColumn(nameof(SpectrumClass.ScanDescription), spectrum => spectrum.ScanDescription);
@@ -65,10 +70,20 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public static readonly SpectrumClassColumn Analyzer =
             MakeColumn(nameof(SpectrumClass.Analyzer), spectrum => spectrum.Analyzer);
 
+        public static readonly SpectrumClassColumn IsolationWindowWidth = MakeColumn(
+            nameof(SpectrumClass.IsolationWindowWidth),
+            spectrum => GetIsolationWindowWidth(spectrum.GetPrecursors(1)));
+
+        public static readonly SpectrumClassColumn DissociationMethod = MakeColumn(
+            nameof(SpectrumClass.DissociationMethod), GetDissociationMethod);
+
+        public static readonly SpectrumClassColumn ConstantNeutralLoss = MakeColumn(
+            nameof(SpectrumClass.ConstantNeutralLoss), spectrum => spectrum.ConstantNeutralLoss);
+
         public static readonly ImmutableList<SpectrumClassColumn> ALL = ImmutableList.ValueOf(new[]
         {
             Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth, CompensationVoltage,
-            PresetScanConfiguration, MsLevel, Analyzer
+            PresetScanConfiguration, MsLevel, Analyzer, IsolationWindowWidth, DissociationMethod, ConstantNeutralLoss
         });
 
         public static readonly ImmutableList<SpectrumClassColumn> MS1 = ImmutableList.ValueOf(new[]
@@ -244,6 +259,73 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             return null;
+        }
+
+        private static double? GetIsolationWindowWidth(IEnumerable<SpectrumPrecursor> precursors)
+        {
+            double totalWidth = 0;
+            Tuple<double, double> currentRange = null;
+            foreach (var precursor in precursors.OrderBy(precursor=>precursor.PrecursorMz - precursor.IsolationWindowLowerWidth))
+            {
+                double? lowerMz = precursor.PrecursorMz - precursor.IsolationWindowLowerWidth;
+                double? upperMz = precursor.PrecursorMz + precursor.IsolationWindowUpperWidth;
+                if (!lowerMz.HasValue || !upperMz.HasValue)
+                {
+                    continue;
+                }
+                if (lowerMz <= currentRange?.Item2)
+                {
+                    currentRange = Tuple.Create(currentRange.Item1,
+                        Math.Max(currentRange.Item2, upperMz.Value));
+                }
+                else
+                {
+                    if (currentRange != null)
+                    {
+                        totalWidth += currentRange.Item2 - currentRange.Item1;
+                    }
+
+                    currentRange = Tuple.Create(lowerMz.Value, upperMz.Value);
+                }
+            }
+
+            if (currentRange != null)
+            {
+                return totalWidth + currentRange.Item2 - currentRange.Item1;
+            }
+            Assume.AreEqual(0.0, totalWidth);
+            return null;
+        }
+        
+        private static string GetDissociationMethod(SpectrumMetadata spectrumMetadata)
+        {
+            if (spectrumMetadata.MsLevel <= 1)
+            {
+                return null;
+            }
+
+            var dissociationMethods  = Enumerable.Range(1, spectrumMetadata.MsLevel - 1)
+                .SelectMany(spectrumMetadata.GetPrecursors).Select(precursor => precursor.DissociationMethod)
+                .Where(method => !string.IsNullOrEmpty(method)).Distinct().ToList();
+            if (dissociationMethods.Count == 0)
+            {
+                return null;
+            }
+
+            if (dissociationMethods.Count == 1)
+            {
+                return dissociationMethods[0];
+            }
+            return TextUtil.SpaceSeparate(dissociationMethods);
+        }
+
+        /// <summary>
+        /// Returns a SpectrumPrecursors with only the m/z values (i.e. ignoring collision energy and isolation window width)
+        /// </summary>
+        private static SpectrumPrecursors SpectrumPrecursorMzs(IEnumerable<SpectrumPrecursor> precursors)
+        {
+            return SpectrumPrecursors.FromPrecursors(precursors.Select(precursor =>
+                new SpectrumPrecursor(precursor.PrecursorMz)));
         }
     }
 }

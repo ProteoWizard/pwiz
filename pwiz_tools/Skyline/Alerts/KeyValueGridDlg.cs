@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -28,18 +29,6 @@ namespace pwiz.Skyline.Alerts
 {
     public class KeyValueGridDlg
     {
-        /// <summary>
-        /// Shows a simple dialog with a grid of labels (for keys) and textboxes (for values).
-        /// The keys are always strings and the values are typed (but must be convertible to and from string obviously).
-        /// If the (optional) validateValue action throws an exception, a message box will show the user
-        /// the exception message and the invalid textbox value will be returned to its previous value.
-        /// </summary>
-        public static void Show<TValue>(string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
-            Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null)
-        {
-            Show(null, title, gridValues, valueToString, stringToValue, validateValue, validValuesForValue);
-        }
-
         /// <summary>
         /// Shows a simple dialog with a grid of labels (for keys) and textboxes (for values).
         /// The keys are always strings and the values are typed (but must be convertible to and from string obviously).
@@ -73,6 +62,7 @@ namespace pwiz.Skyline.Alerts
             var keyToControl = new Dictionary<string, Control>();
             var controlToSetting = new Dictionary<object, TValue>();
             int row = 1;
+            var ctlTextRepresentation = new StringBuilder();
             foreach (var kvp in gridValues.OrderBy(kvp => kvp.Key))
             {
                 var lbl = new Label
@@ -84,7 +74,20 @@ namespace pwiz.Skyline.Alerts
                 };
 
                 Control valueControl = null;
-                if (bool.TryParse(valueToString(kvp.Value), out bool b))
+                var validValues = validValuesForValue?.Invoke(kvp.Value)?.ToArray();
+                if (validValues != null && validValues.Length > 0)
+                {
+                    var comboBox = new ComboBox
+                    {
+                        Dock = DockStyle.Fill,
+                        Height = lbl.Height,
+                        DropDownStyle = ComboBoxStyle.DropDownList
+                    };
+                    comboBox.Items.AddRange(validValues.Cast<object>().ToArray());
+                    comboBox.SelectedIndex = validValues.IndexOf(s => s == valueToString(kvp.Value));
+                    valueControl = comboBox;
+                }
+                else if (bool.TryParse(valueToString(kvp.Value), out bool b))
                 {
                     valueControl = new CheckBox
                     {
@@ -93,22 +96,6 @@ namespace pwiz.Skyline.Alerts
                         Height = lbl.Height
                     };
                     valueControl.Margin = new Padding(valueControl.Margin.Left, 0, 0, 0);
-                }
-                else
-                {
-                    var validValues = validValuesForValue?.Invoke(kvp.Value)?.ToArray();
-                    if (validValues != null && validValues.Length > 0)
-                    {
-                        var comboBox = new ComboBox
-                        {
-                            Dock = DockStyle.Fill,
-                            Height = lbl.Height,
-                            DropDownStyle = ComboBoxStyle.DropDownList
-                        };
-                        comboBox.Items.AddRange(validValues.Cast<object>().ToArray());
-                        comboBox.SelectedIndex = validValues.IndexOf(s => s == valueToString(kvp.Value));
-                        valueControl = comboBox;
-                    }
                 }
 
                 if (valueControl == null)
@@ -140,13 +127,14 @@ namespace pwiz.Skyline.Alerts
                 layout.Controls.Add(valueControl, 1, row);
                 keyToControl[kvp.Key] = valueControl;
                 controlToSetting[valueControl] = kvp.Value;
+                ctlTextRepresentation.AppendLine($@"{kvp.Key} = {valueToString(kvp.Value)}");
                 row++;
             }
 
             var activeScreen = parent == null ? Screen.PrimaryScreen : Screen.FromHandle(parent.Handle); 
             int defaultHeight = Math.Min(3 * activeScreen.Bounds.Height / 4, layout.GetRowHeights().Sum() + 50);
 
-            using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK))
+            using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK, ctlTextRepresentation.ToString()))
             {
                 dlg.Text = title;
                 dlg.ClientSize = new Size(400, defaultHeight);

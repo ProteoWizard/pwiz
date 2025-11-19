@@ -34,7 +34,6 @@ using namespace System::Collections::Generic;
 #include "WiffFile.hpp"
 #endif
 #include "pwiz/utility/misc/Filesystem.hpp"
-
 using namespace SCIEX::Apis::Data::v1;
 using namespace SCIEX::Apis::Data::v1::Contracts;
 
@@ -130,9 +129,9 @@ struct Experiment2Impl : public Experiment
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
 
-    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
+    virtual double getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const;
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                        double& basePeakX, double& basePeakY) const;
+                        double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
     virtual ScanType getScanType() const;
@@ -183,7 +182,7 @@ struct Spectrum2Impl : public Spectrum
     virtual int getMSLevel() const;
 
     virtual bool getHasIsolationInfo() const;
-    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const;
 
     virtual bool getHasPrecursorInfo() const;
     virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const;
@@ -205,9 +204,41 @@ struct Spectrum2Impl : public Spectrum
     // cache each possible combination of addZeros/doCentroid (probably will only use one, but it avoids need for logic of checking previous setting)
     mutable gcroot<ISpectrum^> msSpectrumCache[2][2];
     mutable gcroot<ISpectrum^> lastSpectrum;
+    static bool framingZerosThrowsError;
+    static bool doCentroidThrowsError;
 
     ISpectrum^ getSpectrumWithOptions(bool addZeros, bool doCentroid) const
     {
+        try
+        {
+            return getSpectrumWithOptionsInner(addZeros, doCentroid);
+        }
+        catch (Exception^ ex)
+        {
+            if (addZeros && !framingZerosThrowsError)
+            {
+                framingZerosThrowsError = true;
+                System::Console::Error->WriteLine("[WiffFile2::getSpectrumWithOptions] sample={0} experiment={1} cycle={2} scanTime={3} error adding framing zeros ({4}); retrying without framing zeros and disabling framing zeros for further spectra",
+                                                  experiment->wiffFile_->msSample->Id, experiment->msExperiment->Id, cycle, scanTime, ex->Message);
+                return getSpectrumWithOptions(false, doCentroid);
+            }
+
+            if (doCentroid && !doCentroidThrowsError)
+            {
+                doCentroidThrowsError = true;
+                System::Console::Error->WriteLine("[WiffFile2::getSpectrumWithOptions] sample={0} experiment={1} cycle={2} scanTime={3} error centroiding spectrum ({4}); retrying without centroiding and disabling centroiding for further spectra",
+                                                  experiment->wiffFile_->msSample->Id, experiment->msExperiment->Id, cycle, scanTime, ex->Message);
+                return getSpectrumWithOptions(addZeros, false);
+            }
+
+            throw;
+        }
+    }
+
+    ISpectrum^ getSpectrumWithOptionsInner(bool addZeros, bool doCentroid) const
+    {
+        addZeros = addZeros && !framingZerosThrowsError;
+        doCentroid = doCentroid && !doCentroidThrowsError;
         auto& msSpectrum = msSpectrumCache[addZeros ? 1 : 0][doCentroid ? 1 : 0];
         if ((ISpectrum^) msSpectrum == nullptr)
         {
@@ -223,8 +254,7 @@ struct Spectrum2Impl : public Spectrum
             if (spectraReader->MoveNext())
                 msSpectrum = spectraReader->GetCurrent();
             else
-                throw gcnew Exception(String::Format("[WiffFile2::getSpectrumWithOptions] sample={0} experiment={1} cycle={2} scanTime={3} returned null spectrum",
-                                                     spectrumRequest->SampleId, spectrumRequest->ExperimentId, cycle, scanTime));
+                throw gcnew Exception("null spectrum");
         }
 
         lastSpectrum = msSpectrum;
@@ -257,6 +287,9 @@ struct Spectrum2Impl : public Spectrum
     }
 };
 
+bool Spectrum2Impl::framingZerosThrowsError = false;
+bool Spectrum2Impl::doCentroidThrowsError = false;
+
 typedef boost::shared_ptr<Spectrum2Impl> Spectrum2ImplPtr;
 
 
@@ -266,7 +299,7 @@ WiffFile2Impl::WiffFile2Impl(const string& wiffpath)
     try
     {
         auto sampleRequest = DataReader()->RequestFactory->CreateSamplesReadRequest();
-        sampleRequest->AbsolutePathToWiffFile = ToSystemString(bfs::canonical(wiffpath, bfs::current_path()).string());
+        sampleRequest->AbsolutePathToWiffFile = ToSystemString(pwiz::util::canonical(wiffpath).string());
 
         allSamples = gcnew List<ISample^>();
 
@@ -568,14 +601,15 @@ void Experiment2Impl::getSRM(size_t index, Target& target) const
     CATCH_AND_FORWARD
 }
 
-void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
+double Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const
 {
     double x, y;
-    getSIC(index, times, intensities, x, y);
+    getSIC(index, times, intensities, x, y, ignoreScheduledLimits);
+    return y;
 }
 
 void Experiment2Impl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                            double& basePeakX, double& basePeakY) const
+                            double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const
 {
     try
     {
@@ -692,7 +726,7 @@ int Spectrum2Impl::getMSLevel() const
 
 bool Spectrum2Impl::getHasIsolationInfo() const { return experiment->experimentType == Product; }
 
-void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy) const
+void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit, double& collisionEnergy, double& electronKineticEnergy, FragmentationMode& fragmentationMode) const
 {
     try
     {
@@ -715,6 +749,15 @@ void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, doubl
             collisionEnergy = collisionEnergyRamp->CollisionEnergyRampStart;
         else
             collisionEnergy = (collisionEnergyRamp->CollisionEnergyRampEnd + collisionEnergyRamp->CollisionEnergyRampStart) / 2;
+            
+        fragmentationMode = FragmentationMode_CID;
+        IExperiment^ msExperiment = experiment->msExperiment;
+        if(msExperiment->FragmentationMode.HasValue && (msExperiment->FragmentationMode.Value == SCIEX::Apis::Data::v1::Types::FragmentationMode::EAD || msExperiment->FragmentationMode.Value == Types::FragmentationMode::EAD_Conventional_Trapping))
+        {
+            fragmentationMode = FragmentationMode_EAD;
+            if(msExperiment->ElectronKe.HasValue)
+                electronKineticEnergy = msExperiment->ElectronKe.Value;            
+        }
     }
     CATCH_AND_FORWARD
 }
@@ -796,8 +839,7 @@ void WiffFile2Impl::setSample(int sample) const
             IList<ISample^>^ unwrappedAllSamples = allSamples;
             this->msSample = (ISample^)unwrappedAllSamples[sample - 1];
 
-            auto experimentRequest = DataReader()->RequestFactory->CreateExperimentsReadRequest();
-            experimentRequest->SampleId = msSample->Id;
+            auto experimentRequest = DataReader()->RequestFactory->CreateExperimentsReadRequest(msSample->Id, true);
 
             currentSampleExperiments = gcnew List<IExperiment^>();
 

@@ -87,9 +87,9 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     {
         bfs::path sourcePath = functionFilepaths[i];
         SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = BFS_STRING(sourcePath.leaf());
-        sourceFile->name = BFS_STRING(sourcePath.leaf());
-        sourceFile->location = "file://" + BFS_COMPLETE(sourcePath.branch_path()).string();
+        sourceFile->id = BFS_STRING(sourcePath.filename());
+        sourceFile->name = BFS_STRING(sourcePath.filename());
+        sourceFile->location = "file://" + BFS_COMPLETE(sourcePath.parent_path()).string();
         sourceFile->set(MS_Waters_nativeID_format);
         sourceFile->set(MS_Waters_raw_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
@@ -115,11 +115,27 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
             continue;
 
         SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = BFS_STRING(sourcePath.leaf());
-        sourceFile->name = BFS_STRING(sourcePath.leaf());
-        sourceFile->location = string("file://") + BFS_COMPLETE(sourcePath.branch_path()).string();
+        sourceFile->id = BFS_STRING(sourcePath.filename());
+        sourceFile->name = BFS_STRING(sourcePath.filename());
+        sourceFile->location = string("file://") + BFS_COMPLETE(sourcePath.parent_path()).string();
         sourceFile->set(MS_no_nativeID_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
+    }
+
+    for (int function : rawdata->FunctionIndexList())
+    {
+        try
+        {
+            int msLevel;
+            CVID spectrumType;
+            translateFunctionType(WatersToPwizFunctionType(rawdata->Info.GetFunctionType(function)), msLevel, spectrumType);
+            if (spectrumType != CVID_Unknown)
+                msd.fileDescription.fileContent.set(spectrumType);
+        }
+        catch (...) // unable to translate function type
+        {
+            cerr << "[Reader_Waters::fillInMetadata] Unable to translate function type \"" + rawdata->Info.GetFunctionTypeString(rawdata->Info.GetFunctionType(function)) + "\"" << endl;
+        }
     }
 
     SoftwarePtr softwareMassLynx(new Software);

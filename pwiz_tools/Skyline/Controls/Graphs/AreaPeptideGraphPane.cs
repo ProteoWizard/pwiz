@@ -39,14 +39,22 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void UpdateAxes()
         {
-            YAxis.Title.Text = Resources.AreaPeptideGraphPane_UpdateAxes_Peak_Area; 
+            YAxis.Title.Text = GraphsResources.AreaPeptideGraphPane_UpdateAxes_Peak_Area; 
 
             base.UpdateAxes();
             // reformat YAxis for labels
             var maxY = GraphHelper.GetMaxY(CurveList, this);
             GraphHelper.ReformatYAxis(this, maxY);
 
-            FixedYMin = YAxis.Scale.Min = Settings.Default.AreaLogScale ? 1 : 0;
+            if (Settings.Default.AreaLogScale)
+            {
+                YAxis.Scale.MinAuto = true;
+                FixedYMin = null;
+            }
+            else
+            {
+                FixedYMin = 0;
+            }
         }
 
         internal class AreaGraphData : GraphData

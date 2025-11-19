@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -75,12 +75,12 @@ namespace pwiz.Skyline.Model.Results
 
         private static double MedianOfArray(double[] values)
         {
-            double upperMedian = Statistics.QNthItem(values, values.Length / 2);
+            double upperMedian = values.QNthItem(values.Length / 2);
             if (1 == (values.Length & 1))
             {
                 return upperMedian;
             }
-            double lowerMedian = Statistics.QNthItem(values, values.Length / 2 - 1);
+            double lowerMedian = values.QNthItem(values.Length / 2 - 1);
             return (upperMedian + lowerMedian) / 2;
         }
 

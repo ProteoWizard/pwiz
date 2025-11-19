@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Viktoria Dorfer <viktoria.dorfer .at. fh-hagenberg.at>,
  *                  Bioinformatics Research Group, University of Applied Sciences Upper Austria
  *
@@ -30,11 +30,13 @@ using MSAmanda.Core;
 using MSAmanda.Utils;
 using MSAmanda.InOutput;
 using MSAmanda.InOutput.Output;
+using pwiz.BiblioSpec;
 using MSAmandaSettings = MSAmanda.InOutput.Settings;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using MSAmandaEnzyme = MSAmanda.Utils.Enzyme;
 using OperationCanceledException = System.OperationCanceledException;
 using pwiz.Skyline.Properties;
@@ -68,13 +70,14 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
         private const string CONSIDERED_CHARGES = "ConsideredCharges";
 
-        public const string MS_AMANDA_TMP = @"~SK_MSAmanda";
+        public static string MSAmandaTmp => Program.FunctionalTest ? TemporaryDirectory.TEMP_PREFIX : @"~SK_MSAmanda";
+
         private readonly TemporaryDirectory _baseDir; // Created as %TMP%/~SK_MSAmanda/<random dirname>
         // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
 
         public MSAmandaSearchWrapper()
         {
-            _baseDir = new TemporaryDirectory(tempPrefix: MS_AMANDA_TMP + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
+            _baseDir = new TemporaryDirectory(tempPrefix: MSAmandaTmp + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
             Settings = new MSAmandaSettings();
             helper = new MSHelper();
             helper.InitLogWriter(_baseDir.DirPath);
@@ -90,13 +93,13 @@ namespace pwiz.Skyline.Model.DdaSearch
             using (var d = new CurrentDirectorySetter(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)))
             {
                 if (!AvailableSettings.ParseEnzymeFile(ENZYME_FILENAME, "", AvailableSettings.AllEnzymes))
-                    throw new Exception(string.Format(Resources.DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found, ENZYME_FILENAME));
+                    throw new Exception(string.Format(DdaSearchResources.DdaSearch_MSAmandaSearchWrapper_enzymes_file__0__not_found, ENZYME_FILENAME));
                 if (!AvailableSettings.ParseUnimodFile(UNIMOD_FILENAME, AvailableSettings.AllModifications))
-                    throw new Exception(string.Format(Resources.DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found, UNIMOD_FILENAME));
+                    throw new Exception(string.Format(DdaSearchResources.DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found, UNIMOD_FILENAME));
                 if (!AvailableSettings.ParseOboFiles())
-                    throw new Exception(Resources.DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found);
+                    throw new Exception(DdaSearchResources.DdaSearch_MSAmandaSearchWrapper_Obo_files_not_found);
                 if (!AvailableSettings.ReadInstrumentsFile(INSTRUMENTS_FILENAME))
-                    throw new Exception(string.Format(Resources.DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found, INSTRUMENTS_FILENAME));
+                    throw new Exception(string.Format(DdaSearchResources.DdaSearch_MSAmandaSearchWrapper_Instruments_file_not_found, INSTRUMENTS_FILENAME));
             }
 
             AdditionalSettings = new Dictionary<string, Setting>
@@ -116,6 +119,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             amandaInputParser?.Dispose();
             _baseDir.Dispose();
             //AvailableSettings = new SettingsFile(null, Settings, mzID);
+            base.Dispose();
         }
 
         private void Helper_SearchProgressChanged(string message)
@@ -160,10 +164,21 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
+        public override void SetCutoffScore(double cutoffScore)
+        {
+            // Do nothing. MS Amanda does not seem to give this value to Percolator
+        }
+
+        private const string _cutoffScoreName = ScoreType.PERCOLATOR_QVALUE;
+
         public override string[] FragmentIons => Settings.ChemicalData.Instruments.Keys.ToArray();
         public override string[] Ms2Analyzers => new[] { @"Default" };
         public override string EngineName => @"MS Amanda";
+        public override string CutoffScoreName => _cutoffScoreName;
+        public override string CutoffScoreLabel => PropertyNames.CutoffScore_PERCOLATOR_QVALUE;
+        public override double DefaultCutoffScore { get; } = new ScoreType(_cutoffScoreName, ScoreType.PROBABILITY_INCORRECT).DefaultValue;
         public override Bitmap SearchEngineLogo => Resources.MSAmandaLogo;
+        public override string  SearchEngineBlurb => string.Empty;
 
         public override void SetPrecursorMassTolerance(MzTolerance tol)
         {
@@ -283,7 +298,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 if (e.InnerException is TaskCanceledException)
                 {
-                    helper.WriteMessage(Resources.DdaSearch_Search_is_canceled, true);
+                    helper.WriteMessage(DdaSearchResources.DdaSearch_Search_is_canceled, true);
                 }
                 else
                     Program.ReportException(e);
@@ -291,12 +306,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
             catch (OperationCanceledException)
             {
-                helper.WriteMessage(Resources.DdaSearch_Search_is_canceled, true);
+                helper.WriteMessage(DdaSearchResources.DdaSearch_Search_is_canceled, true);
                 _success = false;
             }
             catch (Exception ex)
             {
-                helper.WriteMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message), true);
+                helper.WriteMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message), true);
                 _success = false;
             }
             finally
@@ -361,8 +376,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             List<Modification> mods = new List<Modification>();
             if (mod.AAs != null)
-                foreach (var a in mod.AAs)
-                mods.Add(GenerateNewModification(mod, a));
+                foreach (var a in mod.AminoAcids)
+                    mods.Add(GenerateNewModification(mod, a));
             else
                 mods.Add(GenerateNewModification(mod, ' '));
             return mods;

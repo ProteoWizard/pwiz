@@ -85,6 +85,7 @@ static vector<string> supportedTypes = {
     "final_fragment.csv",
     ".proxl.xml",
     ".ssl",
+    ".hk.bs.kro", // Hardklor result file postprocessed by BullseyeSharp
     ".mlb",
     ".speclib",
     ".tsv",
@@ -105,7 +106,8 @@ void BlibBuilder::usage()
         "   -H                Use more than one decimal place when describing mass modifications.\n"
         "   -C  <file size>   Minimum file size required to use caching for .dat files.  Specifiy units as B,K,G or M.  Default 800M.\n"
         "   -c <cutoff>       Score threshold (0-1) for PSMs to be included in library. Higher threshold is more exclusive.\n"
-        "   -v  <level>       Level of output to stderr (silent, error, status, warn).  Default status.\n"
+        "   -v  <level>       Level of output to stderr (silent, error, status, warn).  Default warn.\n"
+        "   -T                Add prefixes to log output showing time elapsed.\n"
         "   -L                Write status and warning messages to log file.\n"
         "   -m <size>         SQLite memory cache size in Megs. Default 250M.\n"
         "   -l <level>        ZLib compression level (0-?). Default 3.\n"
@@ -118,7 +120,8 @@ void BlibBuilder::usage()
         "   -E                Prefer reading peaks from embedded spectra (currently only affects MaxQuant msms.txt)\n"
         "   -A                Output messages noting ambiguously matched spectra (spectra matched to multiple peptides)\n"
         "   -K                Keep ambiguously matched spectra\n"
-        "   -t                Only output score types (no library build).\n";
+        "   -t                Only output score types (no library build).\n"
+        "   -z <charges>      Only output PSMs with these charges, e.g. \"2,3\".\n";
 
     cerr << usage << endl;
     exit(1);
@@ -535,6 +538,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
     } else if (switchName == 'v' && ++i < argc) {
         V_LEVEL v_level = Verbosity::string_to_level(argv[i]);
         Verbosity::set_verbosity(v_level);
+    } else if (switchName == 'T') {
+        Verbosity::set_timestamp(true);
     } else if (switchName == 'x' && ++i < argc) {
         maxQuantModsPath = string(argv[i]);
     } else if (switchName == 'p' && ++i < argc) {
@@ -718,6 +723,17 @@ bool has_extension(string name, string ext)
 {
     return bal::iends_with(name, ext);
 }
+
+bool BlibBuilder::keepCharge(int z) const
+{
+    if (precursorCharges_.size() > 0)
+    {
+        // Ignore items with unwanted charges
+        return precursorCharges_.find(z) != precursorCharges_.end();
+    }
+    return true;
+}
+
 
 /**
  * Call super classe's insertPeaks with our level of compression

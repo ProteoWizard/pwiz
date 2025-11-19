@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Lucia Espona <espona .at. imsb.biol.ethz.ch>,
  *                  IMSB, ETHZ
  *
@@ -50,6 +50,18 @@ namespace pwiz.Skyline.EditUI
             set { comboDecoysGenerationMethod.SelectedItem = value; }
         }
 
+        public bool PreservePrecursorMass
+        {
+            get
+            {
+                return cbxPreservePrecursorMass.Checked;
+            }
+            set
+            {
+                cbxPreservePrecursorMass.Checked = value;
+            }
+        }
+
         public GenerateDecoysDlg(SrmDocument document)
         {
             _document = document;
@@ -83,7 +95,7 @@ namespace pwiz.Skyline.EditUI
             if (!Equals(DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE) && numComparableGroups < numDecoys)
             {
                 helper.ShowTextBoxError(textNumberOfDecoys,
-                                        Resources.GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_,
+                                        EditUIResources.GenerateDecoysDlg_OkDialog_The_number_of_peptides__0__must_be_less_than_the_number_of_peptide_precursor_models_for_decoys__1___or_use_the___2___decoy_generation_method_,
                                         null, numComparableGroups, DecoyGeneration.SHUFFLE_SEQUENCE);
                 return;
             }
@@ -95,6 +107,11 @@ namespace pwiz.Skyline.EditUI
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void comboDecoysGenerationMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            cbxPreservePrecursorMass.Enabled = !DecoyGeneration.ADD_RANDOM.Equals(DecoysMethod);
         }
     }
 }

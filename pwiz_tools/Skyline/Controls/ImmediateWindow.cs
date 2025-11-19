@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -72,6 +73,16 @@ namespace pwiz.Skyline.Controls
                     // This supresses the newline character if RunLine modified the textBoxText
                     e.Handled = true;
                 }
+            }
+        }
+
+        private void textImWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    _parent.FocusDocument();
+                    break;
             }
         }
 
@@ -209,7 +220,7 @@ namespace pwiz.Skyline.Controls
             var skylineWindow = _parent;
             if (skylineWindow != null)
             {
-                skylineWindow.ClipboardControlLostFocus(skylineWindow);
+                skylineWindow.ClipboardControlLostFocus(this);
             }
         }
     }

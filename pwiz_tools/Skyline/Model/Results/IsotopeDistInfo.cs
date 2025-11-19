@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Results
 
         private int BaseMassIndex { get; set; }
 
-        private IList<MzRankProportion> ExpectedPeaks
+        public IList<MzRankProportion> ExpectedPeaks
         {
             get { return _expectedDistribution; }
             set { _expectedDistribution = MakeReadOnly(value); }
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
-        private struct MzRankProportion : IEquatable<MzRankProportion>
+        public struct MzRankProportion : IEquatable<MzRankProportion>
         {
             public MzRankProportion(double mz, int rank, float proportion) : this()
             {

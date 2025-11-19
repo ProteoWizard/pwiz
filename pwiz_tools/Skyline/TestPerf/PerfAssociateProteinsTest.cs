@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. protein.ms>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -44,7 +44,7 @@ namespace TestPerf
         {
             TestFilesZipPaths = new[]
             {
-                @"https://skyline.gs.washington.edu/tutorials/SrmTutorialTest.zip",
+                @"https://skyline.ms/tutorials/SrmTutorialTest.zip",
                 @"TestTutorial\SRMViews.zip"
             };
             RunFunctionalTest();

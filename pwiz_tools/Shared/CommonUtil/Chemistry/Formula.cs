@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -309,7 +309,17 @@ namespace pwiz.Common.Chemistry
                 // Allow apostrophe for heavy isotopes (e.g. C' for 13C)
                 else if (!Char.IsWhiteSpace(ch))
                 {
-                    currentElement = currentElement + ch;
+                    // Watch out for unicode subscripts
+                    var n = ch - '\u2080'; // Subscript zero '₀'
+                    if (n >= 0 && n <= 9)
+                    {
+                        currentQuantity = (currentQuantity ?? 0) * 10 + n;
+                    }
+                    else
+                    {
+                        // Presumably part of an element description
+                        currentElement = currentElement + ch;
+                    }
                 }
             }
             CloseOutCurrentElement(); // Finish up the last element
@@ -420,7 +430,7 @@ namespace pwiz.Common.Chemistry
                 return result.ToString();
             }
 
-            result.Append("-");
+            result.Append(@"-");
             foreach (var entry in this)
             {
                 if (entry.Value < 0)

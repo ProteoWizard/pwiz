@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="ImsSynthCCS" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.136" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -11,57 +11,57 @@
       <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
     </fileContent>
     <sourceFileList count="11">
-      <sourceFile id="Contents.xml" name="Contents.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="Contents.xml" name="Contents.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="b39d71f7eb9c67f83e8ace52c68e18d408e608e1"/>
       </sourceFile>
-      <sourceFile id="DefaultMassCal.xml" name="DefaultMassCal.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="DefaultMassCal.xml" name="DefaultMassCal.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="12d2ce613a04f551b448a4bbfac4e325420ebf35"/>
       </sourceFile>
-      <sourceFile id="Devices.xml" name="Devices.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="Devices.xml" name="Devices.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="dcce66e15851909ee51c7a07fd1c86653e9ef66a"/>
       </sourceFile>
-      <sourceFile id="IMSFrame.bin" name="IMSFrame.bin" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="IMSFrame.bin" name="IMSFrame.bin" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="afa881afb79f75edf7300274868278914bbb53c2"/>
       </sourceFile>
-      <sourceFile id="IMSFrame.xsd" name="IMSFrame.xsd" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="IMSFrame.xsd" name="IMSFrame.xsd" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c0618bcf6aaa48c9df4797f6723e94fb8a097865"/>
       </sourceFile>
-      <sourceFile id="IMSFrameMeth.xml" name="IMSFrameMeth.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="IMSFrameMeth.xml" name="IMSFrameMeth.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="8cb02d94baf46ec1ba4d90e55ec8dec95f68f4df"/>
       </sourceFile>
-      <sourceFile id="MSProfile.bin" name="MSProfile.bin" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="MSProfile.bin" name="MSProfile.bin" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="032946efe549a56825f576401dddd80daf7c2396"/>
       </sourceFile>
-      <sourceFile id="MSScan.bin" name="MSScan.bin" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="MSScan.bin" name="MSScan.bin" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="465a02b48f2618eb3fff896a5ba95e1e5c86e31a"/>
       </sourceFile>
-      <sourceFile id="MSScan.xsd" name="MSScan.xsd" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="MSScan.xsd" name="MSScan.xsd" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="28ef7a09b57bce4a15779602301bc61416964681"/>
       </sourceFile>
-      <sourceFile id="MSTS.xml" name="MSTS.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="MSTS.xml" name="MSTS.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="7638bfd31b78b603a6af89a78102a988ece4399e"/>
       </sourceFile>
-      <sourceFile id="sample_info.xml" name="sample_info.xml" location="file:///C:/pwiz.git/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
+      <sourceFile id="sample_info.xml" name="sample_info.xml" location="file:///C:/dev/pwiz/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynthCCS.d/AcqData">
         <cvParam cvRef="MS" accession="MS:1001508" name="Agilent MassHunter nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1001509" name="Agilent MassHunter format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="0f241c4c548de8c9b8f11f766eecc95ee94c2702"/>
@@ -78,7 +78,7 @@
     <software id="MassHunter" version="6200 series TOF/6500 series Q-TOF B.06.00 (B6000)">
       <cvParam cvRef="MS" accession="MS:1000678" name="MassHunter Data Acquisition" value=""/>
     </software>
-    <software id="pwiz" version="3.0.20071">
+    <software id="pwiz" version="3.0.24026">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -101,10 +101,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4.589521e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.067027e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="3808.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="399.1676083745" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="177.026538135528" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="402.276344836108" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="403.28841744568" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -143,10 +145,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="4.163944e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="7.48872e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="3771.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="533.359407250285" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="259.520737647494" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="540.463302565319" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="540.489947355584" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -185,9 +189,11 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.83136e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2551.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="608.151394214118" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="68.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="608.264454447105" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="607.953564092292" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="611.406067789418" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -227,10 +233,12 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.559354e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="1.55076e05" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="2496.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000504" name="base peak m/z" value="608.278587715102" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <cvParam cvRef="MS" accession="MS:1000528" name="lowest observed m/z" value="607.840532757478" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
-        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="608.391659770068" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000527" name="highest observed m/z" value="613.348848939036" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
@@ -269,7 +277,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.335025e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -309,7 +317,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="3.146799e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -349,7 +357,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.986366e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
@@ -389,7 +397,7 @@
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
         <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.848273e06" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="0.0" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
         <cvParam cvRef="MS" accession="MS:1000128" name="profile spectrum" value=""/>
         <scanList count="1">
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>

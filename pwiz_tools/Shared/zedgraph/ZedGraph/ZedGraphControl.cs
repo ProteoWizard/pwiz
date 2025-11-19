@@ -476,6 +476,9 @@ namespace ZedGraph
 		private int _dragIndex;
 		private CurveItem _dragCurve;
 		private PointPair _dragStartPair;
+
+		private LabeledPoint _dragText;
+		private bool _isTextDragging;
 		/// <summary>
 		/// private field that stores the state of the scale ranges prior to starting a panning action.
 		/// </summary>
@@ -619,7 +622,7 @@ namespace ZedGraph
                 }
                 catch (Exception exception)
                 {
-                    Trace.TraceWarning(@"Error when painting a zedGraph:{0}", exception);
+                    Trace.TraceInformation(@"Error when painting a zedGraph:{0}", exception); // N.B. see TraceWarningListener for output details
                 }
 			}
 

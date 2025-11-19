@@ -23,10 +23,10 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ImportResultsControl(ImportPeptideSearch importPeptideSearch, string documentPath)
         {
             ImportPeptideSearch = importPeptideSearch;
-            DocumentDirectory = Path.GetDirectoryName(documentPath);
+            DocumentPath = documentPath;
 
             InitializeComponent();
 
@@ -86,8 +86,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool ResultsFilesMissing { get { return MissingResultsFiles.Any(); } }
 
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
-        private string DocumentDirectory { get; set; }
-        public bool ExcluedSpectrumSourceFilesVisible { get { return cbExcludeSourceFiles.Visible; } }
+        private string DocumentDirectory => Path.GetDirectoryName(DocumentPath);
+        private string DocumentPath { get; set; }
+        public bool ExcludeSpectrumSourceFilesVisible { get { return cbExcludeSourceFiles.Visible; } }
         public bool ExcludeSpectrumSourceFiles
         {
             get { return cbExcludeSourceFiles.Checked; }
@@ -97,7 +98,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public void InitializeChromatogramsPage(SrmDocument document)
         {
             ImportPeptideSearch.InitializeSpectrumSourceFiles(document);
-            UpdateResultsFiles(ImportPeptideSearch.GetDirsToSearch(DocumentDirectory), false);
+            UpdateResultsFiles(ImportPeptideSearch.GetDirsToSearch(DocumentDirectory), false, !ImportPeptideSearch.IsFeatureDetection);
         }
 
         private void browseToResultsFileButton_Click(object sender, EventArgs e)
@@ -105,15 +106,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             MsDataFileUri[] dataSources;
             using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
-                dlg.Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
-                dlg.InitialDirectory = new MsDataFilePath(DocumentDirectory);
-                // Use saved source type, if there is one.
-                string sourceType = Settings.Default.SrmResultsSourceType;
-                if (!string.IsNullOrEmpty(sourceType))
-                    dlg.SourceTypeName = sourceType;
-
+                dlg.Text = PeptideSearchResources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
+                dlg.RestoreState(DocumentPath, Settings.Default.OpenDataSourceState);
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
+
+                Settings.Default.OpenDataSourceState = dlg.GetState(DocumentPath);
 
                 dataSources = dlg.DataSources;
             }
@@ -133,7 +131,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Ask the user for the directory to search
             using (var dlg = new FolderBrowserDialog())
             {
-                dlg.Description = Resources.ImportResultsControl_findResultsFilesButton_Click_Results_Directory;
+                dlg.Description = PeptideSearchResources.ImportResultsControl_findResultsFilesButton_Click_Results_Directory;
                 dlg.ShowNewFolderButton = false;
                 dlg.SelectedPath = Path.GetDirectoryName(DocumentDirectory);
                 if (dlg.ShowDialog(WizardForm) != DialogResult.OK)
@@ -142,28 +140,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // See if we're still missing any files, and update UI accordingly
                 var dirsToSearch = new List<string> {dlg.SelectedPath};
                 dirsToSearch.AddRange(ImportPeptideSearch.GetSubdirectories(dlg.SelectedPath));
-                if (!UpdateResultsFiles(dirsToSearch, true))
+                if (!UpdateResultsFiles(dirsToSearch, true, !ImportPeptideSearch.IsFeatureDetection))
                 {
-                    MessageDlg.Show(WizardForm, Resources.ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_);
+                    MessageDlg.Show(WizardForm, PeptideSearchResources.ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_);
                 }
             }
         }
 
-        public bool UpdateResultsFiles(IEnumerable<string> dirPaths, bool overwrite)
+        public bool UpdateResultsFiles(IEnumerable<string> dirPaths, bool overwrite, bool needsResultsFiles = true)
         {
-            using (var longWaitDlg = new LongWaitDlg())
+            if (needsResultsFiles) // Feature finding does not require this step
             {
-                longWaitDlg.Text = Resources.ImportResultsControl_FindResultsFiles_Searching_for_Results_Files;
-                try
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
-                        ImportPeptideSearch.UpdateSpectrumSourceFilesFromDirs(dirPaths, overwrite, longWaitBroker));
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(
-                        Resources.ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_,
-                        x.Message), x);
+                    longWaitDlg.Text = Resources.ImportResultsControl_FindResultsFiles_Searching_for_Results_Files;
+                    try
+                    {
+                        longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
+                            ImportPeptideSearch.UpdateSpectrumSourceFilesFromDirs(dirPaths, overwrite, longWaitBroker));
+                    }
+                    catch (Exception x)
+                    {
+                        MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(
+                            Resources.ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_,
+                            x.Message), x);
+                    }
                 }
             }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,11 +21,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -92,6 +95,8 @@ namespace pwiz.Skyline.Model.Results
             get { return DataSets.Count > 0 ? DataSets[0].FirstKey : ChromKey.EMPTY; }
         }
 
+        public double? MaxTime { get; private set; }
+
         public int IndexInFile { get; set; }
 
         internal IEnumerable<IEnumerable<ChromDataSet>> ComparableDataSets
@@ -153,10 +158,9 @@ namespace pwiz.Skyline.Model.Results
 
         public delegate PeakBounds ExplicitPeakBoundsFunc(TransitionGroup transitionGroup, Transition transition);
 
-        public void PickChromatogramPeaks()
+        public void PickChromatogramPeaks(ExplicitPeakBounds explicitPeakBounds)
         {
             ExplicitPeakBoundsFunc explicitPeakBoundsFunc = null;
-            var explicitPeakBounds = _settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
             if (explicitPeakBounds != null)
             {
                 var peakBounds = explicitPeakBounds.IsEmpty
@@ -761,8 +765,12 @@ namespace pwiz.Skyline.Model.Results
         {
             var allPeaks = new List<PeptideChromDataPeak>();
             var listUnmerged = new List<ChromDataSet>(dataSets);
-            var listEnumerators = listUnmerged.Select(dataSet => dataSet.PeakSets.GetEnumerator()).ToList();
-
+            using var allEnumerators = new DisposableCollection<IEnumerator<ChromDataPeakList>>();
+            foreach (var dataSet in listUnmerged)
+            {
+                allEnumerators.Add(dataSet.PeakSets.GetEnumerator());
+            }
+            var listEnumerators = allEnumerators.ToList();
             // Initialize an enumerator for each set of raw peaks, or remove
             // the set, if the list is found to be empty
             for (int i = listEnumerators.Count - 1; i >= 0; i--)
@@ -786,7 +794,7 @@ namespace pwiz.Skyline.Model.Results
                     var dataSet = listUnmerged[i];
                     var dataPeakList = listEnumerators[i].Current;
                     if (dataPeakList == null)
-                        throw new InvalidOperationException(Resources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
+                        throw new InvalidOperationException(ResultsResources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
                     if (Compare(dataPeakList, dataSet.IsStandard, maxPeak, maxStandard) > 0)
                     {
                         maxPeak = dataPeakList;
@@ -871,17 +879,19 @@ namespace pwiz.Skyline.Model.Results
 
         private void AddDataSet(ChromDataSet chromDataSet)
         {
-            if (DataSets.Count != 0)
+            if (DataSets.Count == 0)
             {
-                var firstMaxTime = DataSets[0].FirstKey.OptionalMaxTime;
-                var nextMaxTime = chromDataSet.FirstKey.OptionalMaxTime;
-                if (firstMaxTime != nextMaxTime)
+                MaxTime = chromDataSet.FirstKey.OptionalMaxTime;
+            }
+            else if (MaxTime.HasValue)
+            {
+                if (chromDataSet.FirstKey.OptionalMaxTime.HasValue)
                 {
-                    string peptideName = NodePep == null ? string.Empty : NodePep.ModifiedSequenceDisplay;
-                    string message = string.Format(
-                        Resources.PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___,
-                        peptideName, firstMaxTime, nextMaxTime);
-                    throw new InvalidOperationException(message);
+                    MaxTime = Math.Max(MaxTime.Value, chromDataSet.FirstKey.OptionalMaxTime.Value);
+                }
+                else
+                {
+                    MaxTime = null;
                 }
             }
 
@@ -950,6 +960,16 @@ namespace pwiz.Skyline.Model.Results
                     var dataSet = DataSets[i];
                     if (explicitRT < dataSet.MinRawTime || dataSet.MaxRawTime < explicitRT)
                     {
+                        string precursorText = GetTextForNode(NodePep, dataSet.NodeGroup, null);
+                        if (dataSet.MinRawTime > dataSet.MaxRawTime)
+                        {
+                            Messages.WriteAsyncUserMessage(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_, precursorText);
+                        }
+                        else
+                        {
+                            Messages.WriteAsyncUserMessage(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                                precursorText, explicitRT, dataSet.MinRawTime, dataSet.MaxRawTime);
+                        }
                         DataSets.RemoveAt(i);
                     }
                     else
@@ -957,8 +977,18 @@ namespace pwiz.Skyline.Model.Results
                         for (var j = dataSet.Chromatograms.Count - 1; j >= 0; j--)
                         {
                             var chrom = dataSet.Chromatograms[j];
-                            if (explicitRT < chrom.Times.First() || chrom.Times.Last() < explicitRT)
+                            if (!chrom.Times.Any() || (explicitRT < chrom.Times.First() || chrom.Times.Last() < explicitRT))
                             {
+                                string transitionText = GetTextForNode(NodePep, dataSet.NodeGroup, chrom.DocNode);
+                                if (!chrom.Times.Any())
+                                {
+                                    Messages.WriteAsyncUserMessage(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_, transitionText);
+                                }
+                                else
+                                {
+                                    Messages.WriteAsyncUserMessage(ResultsResources.PeptideChromDataSets_FilterByRetentionTime_Discarding_chromatograms_for___0___because_the_explicit_retention_time__1__is_not_between__2__and__3_,
+                                        transitionText, explicitRT, chrom.Times.First(), chrom.Times.Last());
+                                }
                                 dataSet.Chromatograms.RemoveAt(j);
                             }
                         }
@@ -966,6 +996,25 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             return DataSets.Any();
+        }
+
+        /// <summary>
+        /// Returns text which can be used to identify a precursor or transition in an error message
+        /// </summary>
+        private string GetTextForNode(PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode,
+            TransitionDocNode transitionDocNode)
+        {
+            string text = NodePep.CustomMolecule?.ToString() ?? NodePep.GetCrosslinkedSequence();
+            if (transitionGroupDocNode != null && peptideDocNode.Children.Count > 1)
+            {
+                text = TextUtil.SpaceSeparate(text,
+                    transitionGroupDocNode.TransitionGroup.ToString());
+            }
+            if (transitionDocNode != null)
+            {
+                text = TextUtil.SpaceSeparate(text, transitionDocNode.Transition.ToString());
+            }
+            return text;
         }
 
         private bool HasEquivalentGroupNode(TransitionGroupDocNode nodeGroup)
@@ -1056,7 +1105,7 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
-                    Ms2TranstionDotpData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                    Ms2TranstionDotpData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1 && t.NodeTran.ParticipatesInScoring).ToArray(); // Don't use reporter ions in peak picking
                     if (Data.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DDA)
                     {
                         Ms2TranstionPeakData = ChromDataPeakList.EMPTY;

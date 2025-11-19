@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -26,6 +26,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
@@ -259,9 +260,9 @@ namespace pwiz.Skyline.Model.Tools
         private void Validate()
         {
             if (string.IsNullOrEmpty(Title))
-                throw new InvalidDataException(Resources.ToolDescription_Validate_Tools_must_have_a_title);
+                throw new InvalidDataException(ToolsResources.ToolDescription_Validate_Tools_must_have_a_title);
             if (string.IsNullOrEmpty(Command))
-                throw new InvalidDataException(Resources.ToolDescription_Validate_Tools_must_have_a_command_line);
+                throw new InvalidDataException(ToolsResources.ToolDescription_Validate_Tools_must_have_a_command_line);
         }
 
         public XmlSchema GetSchema()
@@ -383,13 +384,13 @@ namespace pwiz.Skyline.Model.Tools
     /// <summary>
     /// An exception to be thrown when a WebTool fails to open.
     /// </summary>
-    public class WebToolException : Exception
+    public class WebToolException : UserMessageException
     {
         /// <summary>
         /// Returns an instance of WebToolException.
         /// An exception to be thrown when a WebTool fails to open.
         /// </summary>
-        public WebToolException (string errorMessage, string link)
+        public WebToolException (string errorMessage, string link) : base(errorMessage)
         {
             _link = link;
             _errorMessage = errorMessage;
@@ -409,14 +410,14 @@ namespace pwiz.Skyline.Model.Tools
         }
     }
 
-    public class ToolExecutionException : Exception
+    public class ToolExecutionException : UserMessageException
     {
         public ToolExecutionException(string message) : base(message){}
 
         public ToolExecutionException(string message, Exception innerException) : base(message, innerException){}
     }
 
-    public class ToolDeprecatedException : Exception
+    public class ToolDeprecatedException : UserMessageException
     {
         public ToolDeprecatedException(string message) : base(message) { }
 
@@ -446,7 +447,7 @@ namespace pwiz.Skyline.Model.Tools
             {
                 throw new ToolExecutionException(
                     string.Format(
-                        Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
+                        ToolsResources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
                         toolTitle, reportTitle));
             }
             IProgressStatus status =

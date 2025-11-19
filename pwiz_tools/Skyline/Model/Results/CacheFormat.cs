@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -43,7 +43,8 @@ namespace pwiz.Skyline.Model.Results
         Sixteen = 16, // Skewness and Kurtosis
         Seventeen = 17, // Adds optimization step to ChromTransition
         Eighteen = 18, // Add Spectrum Class Filter to ChromGroupHeaderInfo
-        CURRENT = Eighteen,
+        Nineteen = 19, // Add max peak score to ChromGroupHeaderInfo
+        CURRENT = Nineteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -163,7 +164,7 @@ namespace pwiz.Skyline.Model.Results
         public static readonly CacheFormat CURRENT = new CacheFormat
         {
             FormatVersion = CacheFormatVersion.CURRENT,
-            VersionRequired = CacheFormatVersion.Fourteen,
+            VersionRequired = GetVersionRequired(CacheFormatVersion.CURRENT),
             CachedFileSize = Marshal.SizeOf<CachedFileHeaderStruct>(),
             ChromGroupHeaderSize = Marshal.SizeOf<ChromGroupHeaderInfo>(),
             ChromPeakSize = Marshal.SizeOf<ChromPeak>(),
@@ -199,7 +200,7 @@ namespace pwiz.Skyline.Model.Results
         /// However, the required version does need to be updated whenever variable length things are added which older versions
         /// will not know how to skip.
         /// </summary>
-        private static CacheFormatVersion GetVersionRequired(CacheFormatVersion formatVersion)
+        public static CacheFormatVersion GetVersionRequired(CacheFormatVersion formatVersion)
         {
             if (formatVersion <= CacheHeaderStruct.WithStructSizes)
             {
@@ -210,8 +211,13 @@ namespace pwiz.Skyline.Model.Results
             {
                 return CacheHeaderStruct.WithStructSizes;
             }
-            // Version Fourteen added some variable length fields ("lenSampleId", "lenSerialNumber") to the end of CachedFileHeaders.
-            return CacheFormatVersion.Fourteen;
+            if (formatVersion < CacheFormatVersion.Seventeen)
+            {
+                // Version Fourteen added some variable length fields ("lenSampleId", "lenSerialNumber") to the end of CachedFileHeaders.
+                return CacheFormatVersion.Fourteen;
+            }
+            // Version Seventeen completely changed ChromGroupHeaderInfo and ChromTransition
+            return CacheFormatVersion.Seventeen;
         }
 
 
@@ -269,7 +275,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new InvalidOperationException();
             }
-            return ChromGroupHeaderInfo.ItemSerializer(ChromGroupHeaderSize);
+            return ChromGroupHeaderInfo.ItemSerializer(FormatVersion, ChromGroupHeaderSize);
         }
 
         public IItemSerializer<ChromTransition> ChromTransitionSerializer()

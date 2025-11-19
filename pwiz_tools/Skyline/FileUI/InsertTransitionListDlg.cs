@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Henry Estberg <henrye1 .at. outlook.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,8 +19,8 @@
 
 using System;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -73,11 +73,9 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        [DllImport("user32.dll")]
-        static extern bool HideCaret(IntPtr hWnd);
         private void textBox1_HideCaret(object sender, EventArgs e)
         {
-            HideCaret(textBox1.Handle);// Don't show the blinking cursor
+            textBox1.HideCaret(); // Don't show the blinking cursor
         }
     }
 }

@@ -58,7 +58,6 @@
       : using a System.ComponentModel.TypeConverter
       : and then encoded with base64 encoding.
   -->
-
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
@@ -99,103 +98,103 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc" xml:space="preserve">
-        <value>スコアは、ピークがMS/MS同定の保持時間と重なるか否かで1または0になります。</value>
-    </data>
+    <value>スコアは、ピークがMS/MS同定の保持時間と重なるか否かで1または0になります。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreCalc" xml:space="preserve">
-        <value>「共溶出」が真であるすべてのプリカーサーにまたがるトランジションピークの割合</value>
-    </data>
+    <value>「共溶出」が真であるすべてのプリカーサーにまたがるトランジションピークの割合</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreDefaultCalc" xml:space="preserve">
-        <value>「共溶出」が真であるトランジションピークの割合。
+    <value>「共溶出」が真であるトランジションピークの割合。
 内標準プリカーサー (存在する場合) で計算。それ以外はアナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreStandardCalc" xml:space="preserve">
-        <value>「共溶出」が真である標準プリカーサー全体のトランジションピークの割合</value>
-    </data>
+    <value>「共溶出」が真である標準プリカーサー全体のトランジションピークの割合</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCalc" xml:space="preserve">
-        <value>トランジションピーク面積の合計のLog10。
+    <value>トランジションピーク面積の合計のLog10。
 内標準プリカーサー (存在する場合) で計算。それ以外の場合はアナライトプリカーサー。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCorrelationCalc" xml:space="preserve">
-        <value>ライブラリ強度 (存在する場合) に対するMS2トランジション面積の正規化コントラスト角度。
+    <value>ライブラリ強度 (存在する場合) に対するMS2トランジション面積の正規化コントラスト角度。
 それ以外の場合は予測同位体分布に対するMS1トランジション面積の比率内積
 内標準プリカーサー (存在する場合) で計算。それ以外はアナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedCoElutionCalc" xml:space="preserve">
-        <value>合計トランジション面積で加重されたMQuest共溶出
+    <value>合計トランジション面積で加重されたMQuest共溶出
 スコア。
 内標準プリカーサー (存在する場合) で計算。それ以外はアナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedShapeCalc" xml:space="preserve">
-        <value>合計トランジションピーク面積で加重されたMQuest形状スコア。
+    <value>合計トランジションピーク面積で加重されたMQuest形状スコア。
 内標準プリカーサー (存在する場合) で計算。それ以外はアナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCalc" xml:space="preserve">
-        <value>アナライトプリカーサー全体の合計トランジションピーク面積のLog10。</value>
-    </data>
+    <value>アナライトプリカーサー全体の合計トランジションピーク面積のLog10。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCorrelationCalc" xml:space="preserve">
-        <value>ライブラリ強度に対するMS2トランジション面積の正規化コントラスト角度。
+    <value>ライブラリ強度に対するMS2トランジション面積の正規化コントラスト角度。
 アナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestReferenceCorrelationCalc" xml:space="preserve">
-        <value>アナライトトランジションピーク面積と内標準トランジションピーク面積の相関関係を表す正規化コントラスト角度。</value>
-    </data>
+    <value>アナライトトランジションピーク面積と内標準トランジションピーク面積の相関関係を表す正規化コントラスト角度。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimePredictionCalc" xml:space="preserve">
-        <value>予測保持時間とピーク頂点時間の差</value>
-    </data>
+    <value>予測保持時間とピーク頂点時間の差</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimeSquaredPredictionCalc" xml:space="preserve">
-        <value>予測保持時間とピーク頂点時間の二乗差</value>
-    </data>
+    <value>予測保持時間とピーク頂点時間の二乗差</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCalc" xml:space="preserve">
-        <value>内標準プリカーサー全体の合計トランジションピーク面積のLog10。</value>
-    </data>
+    <value>内標準プリカーサー全体の合計トランジションピーク面積のLog10。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCorrelationCalc" xml:space="preserve">
-        <value>ライブラリ強度に対するMS2トランジション面積の正規化コントラスト角度。
+    <value>ライブラリ強度に対するMS2トランジション面積の正規化コントラスト角度。
 内標準プリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedCoElutionCalc" xml:space="preserve">
-        <value>合計トランジションピーク面積で加重されたMQuest共溶出スコア。
+    <value>合計トランジションピーク面積で加重されたMQuest共溶出スコア。
 内標準プリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardWeightedShapeCalc" xml:space="preserve">
-        <value>合計トランジションピーク面積で加重されたMQuest形状スコア。
+    <value>合計トランジションピーク面積で加重されたMQuest形状スコア。
 内標準プリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedCoElutionCalc" xml:space="preserve">
-        <value>合計トランジション面積で加重されたアナライトプリカーサーのMQuest共溶出スコア。</value>
-    </data>
+    <value>合計トランジション面積で加重されたアナライトプリカーサーのMQuest共溶出スコア。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedReferenceCoElutionCalc" xml:space="preserve">
-        <value>合計トランジションピーク面積で加重されたMQuest共溶出スコア。</value>
-    </data>
+    <value>合計トランジションピーク面積で加重されたMQuest共溶出スコア。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedReferenceShapeCalc" xml:space="preserve">
-        <value>合計トランジションピーク面積で加重されたMQuest形状スコア。</value>
-    </data>
+    <value>合計トランジションピーク面積で加重されたMQuest形状スコア。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestWeightedShapeCalc" xml:space="preserve">
-        <value>合計トランジションピーク面積で加重されたMQuest形状スコア。
+    <value>合計トランジションピーク面積で加重されたMQuest形状スコア。
 アナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenCrossWeightedShapeCalc" xml:space="preserve">
-        <value>MS1イオンとMS2イオンの間の形状相関スコア。
+    <value>MS1イオンとMS2イオンの間の形状相関スコア。
 内標準プリカーサー (存在する場合) で計算。それ以外の場合はアナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenIsotopeDotProductCalc" xml:space="preserve">
-        <value>予測同位体分布に対するMS1トランジション面積の正規化コントラスト角度。
+    <value>予測同位体分布に対するMS1トランジション面積の正規化コントラスト角度。
 最高スコアのアナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenPrecursorMassErrorCalc" xml:space="preserve">
-        <value>トランジション面積で加重されたアナライトMS1トランジション全体の平均質量誤差。</value>
-    </data>
+    <value>トランジション面積で加重されたアナライトMS1トランジション全体の平均質量誤差。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenProductMassErrorCalc" xml:space="preserve">
-        <value>トランジション面積で加重されたアナライトMS2トランジション全体の平均質量誤差。</value>
-    </data>
+    <value>トランジション面積で加重されたアナライトMS2トランジション全体の平均質量誤差。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenSignalNoiseCalc" xml:space="preserve">
-        <value>ピークの高さとピークの境界を越えた強度の中央値との比の対数。
+    <value>ピークの高さとピークの境界を越えた強度の中央値との比の対数。
 アナライトプリカーサーで計算。</value>
-    </data>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenStandardProductMassErrorCalc" xml:space="preserve">
-        <value>トランジション面積で加重された内標準MS2トランジション全体の平均質量誤差。</value>
-    </data>
+    <value>トランジション面積で加重された内標準MS2トランジション全体の平均質量誤差。</value>
+  </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenStandardSignalNoiseCalc" xml:space="preserve">
-        <value>ピークの高さとピークの境界を越えた強度の中央値との比の対数。
+    <value>ピークの高さとピークの境界を越えた強度の中央値との比の対数。
 内標準プリカーサーで計算。</value>
-    </data>
+  </data>
 </root>

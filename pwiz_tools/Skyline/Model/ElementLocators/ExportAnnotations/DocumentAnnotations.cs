@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,17 +24,17 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 {
     /// <summary>
-    /// Class for importing and exporting all of the annotations in a Skyline document.
+    /// Class for importing and exporting all the annotations in a Skyline document.
     /// </summary>
     public class DocumentAnnotations
     {
@@ -45,6 +45,8 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
         public const string PROPERTY_PREFIX = "property_";
 
         private IDictionary<string, ElementHandler> _elementHandlers;
+        private HashSet<ElementRef> _notFoundRefs = new HashSet<ElementRef>();
+        
         // ReSharper restore LocalizableElement
         public DocumentAnnotations(SkylineDataSchema skylineDataSchema)
         {
@@ -105,18 +107,27 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             return value.ToString();
         }
 
-        public SrmDocument ReadAnnotationsFromFile(CancellationToken cancellationToken, string filename)
+        public ModifiedDocument ReadAnnotationsFromStream(CancellationToken cancellationToken, string filename,
+            Stream stream)
         {
-            using (var streamReader = new StreamReader(filename))
+            var streamReader = new StreamReader(stream);
+            var originalDocument = Document;
+            var modifiedDocument =
+                new ModifiedDocument(ReadAnnotationsFromTextReader(cancellationToken, streamReader));
+            if (ReferenceEquals(originalDocument, modifiedDocument.Document))
             {
-                return ReadAnnotationsFromTextReader(cancellationToken, streamReader);
+                return null;
             }
+
+            return modifiedDocument.ChangeAuditLogEntry(AuditLogEntry.CreateSingleMessageEntry(
+                new MessageInfo(MessageType.imported_annotations, modifiedDocument.Document.DocumentType,
+                    filename)));
         }
 
         public SrmDocument ReadAnnotationsFromTextReader(CancellationToken cancellationToken, TextReader textReader)
         {
             DataSchema.BeginBatchModifyDocument();
-            var dsvReader = new DsvFileReader(textReader, TextUtil.SEPARATOR_CSV);
+            using var dsvReader = new DsvFileReader(textReader, TextUtil.SEPARATOR_CSV);
             ReadAllAnnotations(cancellationToken, dsvReader);
             DataSchema.CommitBatchModifyDocument(string.Empty, null);
             return DataSchema.Document;
@@ -128,7 +139,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             int locatorColumnIndex = fieldNames.IndexOf(COLUMN_LOCATOR);
             if (locatorColumnIndex < 0)
             {
-                throw new InvalidDataException(string.Format(Resources.Columns_Columns_Missing_column___0__,
+                throw new InvalidDataException(string.Format(ExportAnnotationsResources.Columns_Columns_Missing_column___0__,
                     COLUMN_LOCATOR));
             }
             string[] row;
@@ -145,7 +156,8 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                 SkylineObject element = handler.FindElement(elementRef);
                 if (element == null)
                 {
-                    throw ElementNotFoundException(elementRef);
+                    _notFoundRefs.Add(elementRef);
+                    continue;
                 }
                 for (int icol = 0; icol < fieldNames.Count; icol++)
                 {
@@ -195,11 +207,6 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             }
         }
 
-        private static Exception ElementNotFoundException(ElementRef elementRef)
-        {
-            return new InvalidDataException(string.Format(Resources.DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___, elementRef));
-        }
-
         private static Exception ElementNotSupportedException(ElementRef elementRef)
         {
             throw new InvalidDataException(string.Format(@"Importing annotations is not supported for the element {0}.",
@@ -208,7 +215,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
 
         private static Exception AnnotationDoesNotApplyException(string name, ElementRef elementRef)
         {
-            return new InvalidDataException(string.Format(Resources.DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___,
+            return new InvalidDataException(string.Format(ExportAnnotationsResources.DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___,
                 name, elementRef));
         }
 
@@ -300,6 +307,22 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                 }
             }
             skylineObject.SetAnnotation(annotationDef, value);
+        }
+
+        public string GetWarningMessage()
+        {
+            if (_notFoundRefs.Count == 0)
+            {
+                return null;
+            }
+
+            var message = _notFoundRefs.Count == 1
+                ? ElementLocatorsResources.DocumentAnnotations_GetWarningMessage_The_following_element_could_not_be_found_
+                : string.Format(ElementLocatorsResources.DocumentAnnotations_GetWarningMessage_The_following__0__elements_could_not_be_found_, _notFoundRefs.Count);
+
+            return TextUtil.LineSeparate(
+                _notFoundRefs.Select(locator => locator.ToString()).OrderBy(s => s)
+                    .Prepend(message));
         }
     }
 }

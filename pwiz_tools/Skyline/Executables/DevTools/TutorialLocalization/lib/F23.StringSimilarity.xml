@@ -1,0 +1,669 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>F23.StringSimilarity</name>
+    </assembly>
+    <members>
+        <member name="M:F23.StringSimilarity.Cosine.#ctor(System.Int32)">
+            <summary>
+            Implements Cosine Similarity between strings. The strings are first
+            transformed in vectors of occurrences of k-shingles(sequences of k
+            characters). In this n-dimensional space, the similarity between the two
+            strings is the cosine of their respective vectors.
+            </summary>
+            <param name="k"></param>
+        </member>
+        <member name="M:F23.StringSimilarity.Cosine.#ctor">
+            <summary>
+            Implements Cosine Similarity between strings. The strings are first
+            transformed in vectors of occurrences of k-shingles(sequences of k
+            characters). In this n-dimensional space, the similarity between the two
+            strings is the cosine of their respective vectors.
+            
+            Default k is 3.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.Cosine.Similarity(System.String,System.String)">
+            <summary>
+            Compute the cosine similarity between strings.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The cosine similarity in the range [0, 1]</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.Cosine.Norm(System.Collections.Generic.IDictionary{System.String,System.Int32})">
+            <summary>
+            Compute the norm L2 : sqrt(Sum_i( v_i²)).
+            </summary>
+            <param name="profile"></param>
+            <returns></returns>
+        </member>
+        <member name="M:F23.StringSimilarity.Cosine.Distance(System.String,System.String)">
+            <summary>
+            Returns 1.0 - similarity.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>1.0 - the cosine similarity in the range [0, 1]</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.Cosine.Similarity(System.Collections.Generic.IDictionary{System.String,System.Int32},System.Collections.Generic.IDictionary{System.String,System.Int32})">
+            <summary>
+            
+            </summary>
+            <param name="profile1"></param>
+            <param name="profile2"></param>
+            <returns></returns>
+        </member>
+        <member name="T:F23.StringSimilarity.Damerau">
+            <summary>
+            Implementation of Damerau-Levenshtein distance with transposition (also 
+            sometimes calls unrestricted Damerau-Levenshtein distance).
+            It is the minimum number of operations needed to transform one string into
+            the other, where an operation is defined as an insertion, deletion, or
+            substitution of a single character, or a transposition of two adjacent
+            characters.
+            It does respect triangle inequality, and is thus a metric distance.
+            This is not to be confused with the optimal string alignment distance, which
+            is an extension where no substring can be edited more than once.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.Damerau.Distance(System.String,System.String)">
+            <summary>
+            Compute the distance between strings: the minimum number of operations
+            needed to transform one string into the other(insertion, deletion,
+            substitution of a single character, or a transposition of two adjacent
+            characters).
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The computed distance.</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.Experimental.Sift4">
+            <summary>
+            Sift4 - a general purpose string distance algorithm inspired by JaroWinkler
+            and Longest Common Subsequence.
+            Original JavaScript algorithm by siderite, java port by Nathan Fischer 2016.
+            https://siderite.dev/blog/super-fast-and-accurate-string-distance.html
+            https://blackdoor.github.io/blog/sift4-java/
+            </summary>
+        </member>
+        <member name="P:F23.StringSimilarity.Experimental.Sift4.MaxOffset">
+            <summary>
+            Gets or sets the maximum distance to search for character transposition.
+            Compuse cost of algorithm is O(n . MaxOffset)
+            </summary>
+        </member>
+        <member name="T:F23.StringSimilarity.Experimental.Sift4.Offset">
+            <summary>
+            Used to store relation between same character in different positions
+            c1 and c2 in the input strings.
+            </summary>
+            <remarks>
+            .NET port notes: should this be a struct instead?
+            </remarks>
+        </member>
+        <member name="M:F23.StringSimilarity.Experimental.Sift4.Distance(System.String,System.String)">
+            <summary>
+            Sift4 - a general purpose string distance algorithm inspired by JaroWinkler
+            and Longest Common Subsequence.
+            Original JavaScript algorithm by siderite, java port by Nathan Fischer 2016.
+            https://siderite.dev/blog/super-fast-and-accurate-string-distance.html
+            https://blackdoor.github.io/blog/sift4-java/
+            </summary>
+            <param name="s1"></param>
+            <param name="s2"></param>
+            <returns></returns>
+        </member>
+        <member name="T:F23.StringSimilarity.ICharacterInsDel">
+            <summary>
+            As an adjunct to <see cref="T:F23.StringSimilarity.ICharacterSubstitution"/>, this interface
+            allows you to specify the cost of deletion or insertion of a
+            character.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.ICharacterInsDel.DeletionCost(System.Char)">
+            <summary>
+            Computes the deletion cost.
+            </summary>
+            <param name="c">The character being deleted.</param>
+            <returns>The cost to be allocated to deleting the given character,
+            in the range [0, 1].</returns>
+        </member>
+        <member name="M:F23.StringSimilarity.ICharacterInsDel.InsertionCost(System.Char)">
+            <summary>
+            Computes the insertion cost.
+            </summary>
+            <param name="c">The character being inserted.</param>
+            <returns>The cost to be allocated to inserting the given character,
+            in the range [0, 1].</returns>
+        </member>
+        <member name="T:F23.StringSimilarity.ICharacterSubstitution">
+             Used to indicate the cost of character substitution.
+            
+             Cost should always be in [0.0 .. 1.0]
+             For example, in an OCR application, cost('o', 'a') could be 0.4
+             In a checkspelling application, cost('u', 'i') could be 0.4 because these are
+             next to each other on the keyboard...
+        </member>
+        <member name="M:F23.StringSimilarity.ICharacterSubstitution.Cost(System.Char,System.Char)">
+            <summary>
+            Indicate the cost of substitution c1 and c2.
+            </summary>
+            <param name="c1">The first character of the substitution.</param>
+            <param name="c2">The second character of the substitution.</param>
+            <returns>The cost in the range [0, 1].</returns>
+        </member>
+        <member name="T:F23.StringSimilarity.Interfaces.IMetricSpanDistance">
+            <summary>
+            Span distances that implement this interface are metrics, which means:
+             - d(x, y) ≥ 0     (non-negativity, or separation axiom)
+             - d(x, y) = 0   if and only if   x = y     (identity, or coincidence axiom)
+             - d(x, y) = d(y, x)     (symmetry)
+             - d(x, z) ≤ d(x, y) + d(y, z)     (triangle inequality).
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.Interfaces.IMetricSpanDistance.Distance``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Compute and return the metric distance.
+            </summary>
+            <param name="b1">The first span.</param>
+            <param name="b2">The second span.</param>
+            <returns>The metric distance.</returns>
+        </member>
+        <member name="T:F23.StringSimilarity.Interfaces.IMetricStringDistance">
+            <summary>
+            String distances that implement this interface are metrics, which means:
+             - d(x, y) ≥ 0     (non-negativity, or separation axiom)
+             - d(x, y) = 0   if and only if   x = y     (identity, or coincidence axiom)
+             - d(x, y) = d(y, x)     (symmetry)
+             - d(x, z) ≤ d(x, y) + d(y, z)     (triangle inequality).
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.Interfaces.IMetricStringDistance.Distance(System.String,System.String)">
+            <summary>
+            Compute and return the metric distance.
+            </summary>
+            <param name="s1"></param>
+            <param name="s2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:F23.StringSimilarity.Interfaces.ISpanDistance.Distance``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
+             <summary>
+             Compute and return a measure of distance.
+             Must be >= 0.
+            
+             This method operates on spans such as byte arrays.
+             Note that, when used on bytes, string encodings that
+             use more than one byte per codepoint (such as UTF-8)
+             are not supported and will most likely return
+             incorrect results.
+             </summary>
+             <param name="b1">The first span.</param>
+             <param name="b2">The second span.</param>
+             <returns>The measure of distance between the spans.</returns>
+        </member>
+        <member name="M:F23.StringSimilarity.Interfaces.ISpanSimilarity.Similarity``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Compute and return a measure of similarity between 2 spans.
+            </summary>
+            <param name="s1">The first span</param>
+            <param name="s2">The second span</param>
+            <returns>Similarity (0 means both spans are completely different)</returns>
+        </member>
+        <member name="M:F23.StringSimilarity.Interfaces.IStringDistance.Distance(System.String,System.String)">
+            <summary>
+            Compute and return a measure of distance.
+            Must be >= 0.
+            </summary>
+            <param name="s1"></param>
+            <param name="s2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:F23.StringSimilarity.Interfaces.IStringSimilarity.Similarity(System.String,System.String)">
+            <summary>
+            Compute and return a measure of similarity between 2 strings.
+            </summary>
+            <param name="s1">The first string</param>
+            <param name="s2">The second string</param>
+            <returns>Similarity (0 means both strings are completely different)</returns>
+        </member>
+        <member name="T:F23.StringSimilarity.Jaccard">
+            <summary>
+            Each input string is converted into a set of n-grams, the Jaccard index is
+            then computed as |V1 inter V2| / |V1 union V2|.
+            Like Q-Gram distance, the input strings are first converted into sets of
+            n-grams (sequences of n characters, also called k-shingles), but this time
+            the cardinality of each n-gram is not taken into account.
+            Distance is computed as 1 - cosine similarity.
+            Jaccard index is a metric distance.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.Jaccard.#ctor(System.Int32)">
+            <summary>
+            The strings are first transformed into sets of k-shingles (sequences of k
+            characters), then Jaccard index is computed as |A inter B| / |A union B|.
+            The default value of k is 3.
+            </summary>
+            <param name="k"></param>
+        </member>
+        <member name="M:F23.StringSimilarity.Jaccard.#ctor">
+            <summary>
+            The strings are first transformed into sets of k-shingles (sequences of k
+            characters), then Jaccard index is computed as |A inter B| / |A union B|.
+            The default value of k is 3.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.Jaccard.Similarity(System.String,System.String)">
+            <summary>
+            Compute jaccard index: |A inter B| / |A union B|.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The Jaccard index in the range [0, 1]</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.Jaccard.Distance(System.String,System.String)">
+            <summary>
+            Distance is computed as 1 - similarity.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>1 - the Jaccard similarity.</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.JaroWinkler">
+            The Jaro–Winkler distance metric is designed and best suited for short
+            strings such as person names, and to detect typos; it is (roughly) a
+            variation of Damerau-Levenshtein, where the substitution of 2 close
+            characters is considered less important then the substitution of 2 characters
+            that a far from each other.
+            Jaro-Winkler was developed in the area of record linkage (duplicate
+            detection) (Winkler, 1990). It returns a value in the interval [0.0, 1.0].
+            The distance is computed as 1 - Jaro-Winkler similarity.
+        </member>
+        <member name="P:F23.StringSimilarity.JaroWinkler.Threshold">
+            <summary>
+            The current value of the threshold used for adding the Winkler bonus. The default value is 0.7.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.JaroWinkler.#ctor">
+            <summary>
+            Creates a new instance with default threshold (0.7)
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.JaroWinkler.#ctor(System.Double)">
+            <summary>
+            Creates a new instance with given threshold to determine when Winkler bonus should
+            be used. Set threshold to a negative value to get the Jaro distance.
+            </summary>
+            <param name="threshold"></param>
+        </member>
+        <member name="M:F23.StringSimilarity.JaroWinkler.Similarity(System.String,System.String)">
+            <summary>
+            Compute Jaro-Winkler similarity.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The Jaro-Winkler similarity in the range [0, 1]</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.JaroWinkler.Distance(System.String,System.String)">
+            <summary>
+            Return 1 - similarity.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>1 - similarity</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.Levenshtein">
+            The Levenshtein distance between two words is the Minimum number of
+            single-character edits (insertions, deletions or substitutions) required to
+            change one string into the other.
+        </member>
+        <member name="M:F23.StringSimilarity.Levenshtein.Distance(System.String,System.String)">
+            <summary>
+            Equivalent to Distance(s1, s2, Int32.MaxValue).
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The Levenshtein distance between strings</returns>
+        </member>
+        <member name="M:F23.StringSimilarity.Levenshtein.Distance(System.String,System.String,System.Int32)">
+             <summary>
+             The Levenshtein distance, or edit distance, between two words is the
+             Minimum number of single-character edits (insertions, deletions or
+             substitutions) required to change one word into the other.
+            
+             http://en.wikipedia.org/wiki/Levenshtein_distance
+            
+             It is always at least the difference of the sizes of the two strings.
+             It is at most the length of the longer string.
+             It is zero if and only if the strings are equal.
+             If the strings are the same size, the HamMing distance is an upper bound
+             on the Levenshtein distance.
+             The Levenshtein distance verifies the triangle inequality (the distance
+             between two strings is no greater than the sum Levenshtein distances from
+             a third string).
+            
+             Implementation uses dynamic programMing (Wagner–Fischer algorithm), with
+             only 2 rows of data. The space requirement is thus O(m) and the algorithm
+             runs in O(mn).
+             </summary>
+             <param name="s1">The first string to compare.</param>
+             <param name="s2">The second string to compare.</param>
+             <param name="limit">The maximum result to compute before stopping. This
+             means that the calculation can terminate early if you
+             only care about strings with a certain similarity.
+             Set this to Int32.MaxValue if you want to run the
+             calculation to completion in every case.</param>
+             <returns>The Levenshtein distance between strings</returns>
+             <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.LongestCommonSubsequence">
+             The longest common subsequence (LCS) problem consists in finding the longest
+             subsequence common to two (or more) sequences. It differs from problems of
+             finding common substrings: unlike substrings, subsequences are not required
+             to occupy consecutive positions within the original sequences.
+            
+             It is used by the diff utility, by Git for reconciling multiple changes, etc.
+            
+             The LCS distance between Strings X (length n) and Y (length m) is n + m - 2
+             |LCS(X, Y)| min = 0 max = n + m
+            
+             LCS distance is equivalent to Levenshtein distance, when only insertion and
+             deletion is allowed (no substitution), or when the cost of the substitution
+             is the double of the cost of an insertion or deletion.
+            
+             ! This class currently implements the dynamic programming approach, which has
+             a space requirement O(m * n)!
+        </member>
+        <member name="M:F23.StringSimilarity.LongestCommonSubsequence.Distance(System.String,System.String)">
+            <summary>
+            Return the LCS distance between strings s1 and s2, computed as |s1| +
+            |s2| - 2 * |LCS(s1, s2)|.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>
+            The LCS distance between strings s1 and s2, computed as |s1| +
+            |s2| - 2 * |LCS(s1, s2)|
+            </returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.LongestCommonSubsequence.Length(System.String,System.String)">
+            <summary>
+             Return the length of Longest Common Subsequence (LCS) between strings s1
+             and s2.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The length of LCS(s2, s2)</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.MetricLCS">
+            <summary>
+            Distance metric based on Longest Common Subsequence, from the notes "An
+            LCS-based string metric" by Daniel Bakkelund.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.MetricLCS.Distance(System.String,System.String)">
+            <summary>
+            Distance metric based on Longest Common Subsequence, computed as
+            1 - |LCS(s1, s2)| / max(|s1|, |s2|).
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>LCS distance metric</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.NGram">
+            <summary>
+            N-Gram Similarity as defined by Kondrak, "N-Gram Similarity and Distance",
+            String Processing and Information Retrieval, Lecture Notes in Computer
+            Science Volume 3772, 2005, pp 115-126.
+            
+            The algorithm uses affixing with special character '\n' to increase the
+            weight of first characters. The normalization is achieved by dividing the
+            total similarity score the original length of the longest word.
+            
+            total similarity score the original length of the longest word.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.NGram.Distance(System.String,System.String)">
+            <summary>
+            Compute n-gram distance.
+            </summary>
+            <param name="s0">The first string to compare.</param>
+            <param name="s1">The second string to compare.</param>
+            <returns>The computed n-gram distance in the range [0, 1]</returns>
+            <exception cref="T:System.ArgumentNullException">If s0 or s1 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.NormalizedLevenshtein">
+            This distance is computed as levenshtein distance divided by the length of
+            the longest string. The resulting value is always in the interval [0.0 1.0]
+            but it is not a metric anymore! The similarity is computed as 1 - normalized
+            distance.
+        </member>
+        <member name="M:F23.StringSimilarity.NormalizedLevenshtein.Distance(System.String,System.String)">
+            <summary>
+            Compute distance as Levenshtein(s1, s2) / max(|s1|, |s2|).
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The computed distance in the range [0, 1]</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.NormalizedLevenshtein.Similarity(System.String,System.String)">
+            <summary>
+            Return 1 - distance.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>1 - distance</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.OptimalStringAlignment.Distance(System.String,System.String)">
+            <summary>
+            Compute the distance between strings: the minimum number of operations
+            needed to transform one string into the other (insertion, deletion,
+            substitution of a single character, or a transposition of two adjacent
+            characters) while no substring is edited more than once.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>the OSA distance</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.QGram">
+            Q-gram distance, as defined by Ukkonen in "Approximate string-matching with
+            q-grams and maximal matches". The distance between two strings is defined as
+            the L1 norm of the difference of their profiles (the number of occurences of
+            each n-gram): SUM( |V1_i - V2_i| ). Q-gram distance is a lower bound on
+            Levenshtein distance, but can be computed in O(m + n), where Levenshtein
+            requires O(m.n).
+        </member>
+        <member name="M:F23.StringSimilarity.QGram.#ctor(System.Int32)">
+            <summary>
+            Q-gram similarity and distance. Defined by Ukkonen in "Approximate
+            string-matching with q-grams and maximal matches",
+            http://www.sciencedirect.com/science/article/pii/0304397592901434 The
+            distance between two strings is defined as the L1 norm of the difference
+            of their profiles (the number of occurences of each k-shingle). Q-gram
+            distance is a lower bound on Levenshtein distance, but can be computed in
+            O(|A| + |B|), where Levenshtein requires O(|A|.|B|)
+            </summary>
+            <param name="k"></param>
+        </member>
+        <member name="M:F23.StringSimilarity.QGram.#ctor">
+            <summary>
+            Q-gram similarity and distance. Defined by Ukkonen in "Approximate
+            string-matching with q-grams and maximal matches",
+            http://www.sciencedirect.com/science/article/pii/0304397592901434 The
+            distance between two strings is defined as the L1 norm of the difference
+            of their profiles (the number of occurence of each k-shingle). Q-gram
+            distance is a lower bound on Levenshtein distance, but can be computed in
+            O(|A| + |B|), where Levenshtein requires O(|A|.|B|)
+            Default k is 3.
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.QGram.Distance(System.String,System.String)">
+            <summary>
+            The distance between two strings is defined as the L1 norm of the
+            difference of their profiles (the number of occurence of each k-shingle).
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The computed Q-gram distance.</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.QGram.Distance(System.Collections.Generic.IDictionary{System.String,System.Int32},System.Collections.Generic.IDictionary{System.String,System.Int32})">
+            <summary>
+            Compute QGram distance using precomputed profiles.
+            </summary>
+            <param name="profile1"></param>
+            <param name="profile2"></param>
+            <returns></returns>
+        </member>
+        <member name="T:F23.StringSimilarity.RatcliffObershelp">
+             <summary>
+             Ratcliff/Obershelp pattern recognition
+             
+             The Ratcliff/Obershelp algorithm computes the similarity of two strings a
+             the doubled number of matching characters divided by the total number of
+             characters in the two strings.Matching characters are those in the longest
+             common subsequence plus, recursively, matching characters in the unmatched
+             region on either side of the longest common subsequence.
+             The Ratcliff/Obershelp distance is computed as 1 - Ratcliff/Obershelp
+             similarity.
+            
+             Author: Ligi https://github.com/dxpux (as a patch for fuzzystring)
+             Ported to java from .net by denmase
+             Ported back to .NET by paulirwin to retain compatibility with upstream Java project
+             </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.RatcliffObershelp.Similarity(System.String,System.String)">
+            <summary>
+            Compute the Ratcliff-Obershelp similarity between strings.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The RatcliffObershelp similarity in the range [0, 1]</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.RatcliffObershelp.Distance(System.String,System.String)">
+            <summary>
+            Return 1 - similarity.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>1 - similarity</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="P:F23.StringSimilarity.ShingleBased.k">
+            <summary>
+            Return k, the length of k-shingles (aka n-grams).
+            </summary>
+        </member>
+        <member name="F:F23.StringSimilarity.ShingleBased.SPACE_REG">
+            <summary>
+            Pattern for finding multiple following spaces
+            </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.ShingleBased.#ctor(System.Int32)">
+            <summary> 
+            </summary>
+            <param name="k"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If k is less than or equal to 0.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.SorensenDice">
+            Similar to Jaccard index, but this time the similarity is computed as 2 * |V1
+            inter V2| / (|V1| + |V2|). Distance is computed as 1 - cosine similarity.
+        </member>
+        <member name="M:F23.StringSimilarity.SorensenDice.#ctor(System.Int32)">
+             <summary>
+             Sorensen-Dice coefficient, aka Sørensen index, Dice's coefficient or
+             Czekanowski's binary (non-quantitative) index.
+            
+             The strings are first converted to boolean sets of k-shingles (sequences
+             of k characters), then the similarity is computed as 2 * |A inter B| /
+             (|A| + |B|). Attention: Sorensen-Dice distance (and similarity) does not
+             satisfy triangle inequality.
+             </summary>
+             <param name="k"></param>
+        </member>
+        <member name="M:F23.StringSimilarity.SorensenDice.#ctor">
+             <summary>
+             Sorensen-Dice coefficient, aka Sørensen index, Dice's coefficient or
+             Czekanowski's binary (non-quantitative) index.
+            
+             The strings are first converted to boolean sets of k-shingles (sequences
+             of k characters), then the similarity is computed as 2 * |A inter B| /
+             (|A| + |B|). Attention: Sorensen-Dice distance (and similarity) does not
+             satisfy triangle inequality.
+             Default k is 3.
+             </summary>
+        </member>
+        <member name="M:F23.StringSimilarity.SorensenDice.Similarity(System.String,System.String)">
+            <summary>
+            Similarity is computed as 2 * |A inter B| / (|A| + |B|).
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The computed Sorensen-Dice similarity.</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="M:F23.StringSimilarity.SorensenDice.Distance(System.String,System.String)">
+            <summary>
+            Returns 1 - similarity.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>1.0 - the computed similarity</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+        <member name="T:F23.StringSimilarity.WeightedLevenshtein">
+            Implementation of Levenshtein that allows to define different weights for
+            different character substitutions.
+        </member>
+        <member name="M:F23.StringSimilarity.WeightedLevenshtein.#ctor(F23.StringSimilarity.ICharacterSubstitution)">
+            <summary>
+            Instantiate with provided character substitution.
+            </summary>
+            <param name="characterSubstitution">The strategy to determine character substitution weights.</param>
+        </member>
+        <member name="M:F23.StringSimilarity.WeightedLevenshtein.#ctor(F23.StringSimilarity.ICharacterSubstitution,F23.StringSimilarity.ICharacterInsDel)">
+            <summary>
+            Instantiate with provided character substitution, insertion, and
+            deletion weights.
+            </summary>
+            <param name="characterSubstitution">The strategy to determine character substitution weights.</param>
+            <param name="characterInsDel">The strategy to determine character insertion/deletion weights.</param>
+        </member>
+        <member name="M:F23.StringSimilarity.WeightedLevenshtein.Distance(System.String,System.String)">
+            <summary>
+            Equivalent to Distance(s1, s2, Double.MaxValue).
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <returns>The computed weighted Levenshtein distance.</returns>
+        </member>
+        <member name="M:F23.StringSimilarity.WeightedLevenshtein.Distance(System.String,System.String,System.Double)">
+            <summary>
+            Compute Levenshtein distance using provided weights for substitution.
+            </summary>
+            <param name="s1">The first string to compare.</param>
+            <param name="s2">The second string to compare.</param>
+            <param name="limit">The maximum result to compute before stopping. This
+            means that the calculation can terminate early if you
+            only care about strings with a certain similarity.
+            Set this to Double.MaxValue if you want to run the
+            calculation to completion in every case.</param>
+            <returns>The computed weighted Levenshtein distance.</returns>
+            <exception cref="T:System.ArgumentNullException">If s1 or s2 is null.</exception>
+        </member>
+    </members>
+</doc>

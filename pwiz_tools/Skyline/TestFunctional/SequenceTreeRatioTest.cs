@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -68,6 +68,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyDisplayText(Func<TransitionTreeNode, string> getTextFunc)
         {
+            WaitForGraphs();
             RunUI(() =>
             {
                 foreach (var peptideGroupTreeNode in SkylineWindow.SequenceTree.GetSequenceNodes())

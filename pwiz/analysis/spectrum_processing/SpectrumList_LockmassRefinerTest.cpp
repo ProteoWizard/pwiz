@@ -108,12 +108,15 @@ enum class PeakPicking
     CWT
 };
 
-void test(const string& filepath, double lockmassMz, double lockmassTolerance, PeakPicking peakPickingMode)
+bool test(const string& filepath, double lockmassMz, double lockmassTolerance, PeakPicking peakPickingMode, bool ddaProcessing)
 {
     if (os_) *os_ << filepath << " " << lockmassMz << " " << lockmassTolerance << " " << static_cast<int>(peakPickingMode) << endl;
 
     ExtendedReaderList readerList;
-    MSDataFile msd(filepath, &readerList);
+    Reader::Config readerConfig;
+    readerConfig.ddaProcessing = ddaProcessing;
+    MSData msd;
+    readerList.read(filepath, msd, 0, readerConfig);
 
     string suffix;
     switch (peakPickingMode)
@@ -122,6 +125,9 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance, P
         case PeakPicking::CWT: suffix = "-centroid-cwt"; break;
         default: break;
     }
+
+    if (ddaProcessing)
+        suffix += "-ddaProcessing";
 
     bfs::path targetResultFilename = bfs::path(__FILE__).parent_path() / "SpectrumList_LockmassRefinerTest.data" / (msd.run.id + suffix + ".mzML");
 
@@ -180,24 +186,25 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance, P
     if (lockmassMz == 0)
     {
         unit_assert(diff);
+        return diff; // lockmass refinement SHOULD change the results
     }
-    else
+
+    if (diff)
     {
-        if (diff)
+        if (os_) *os_ << diff;
+        if (generateMzML)
         {
-            if (os_) *os_ << diff;
-            if (generateMzML)
-            {
-                if (os_) *os_ << "Writing new reference file: " << targetResultFilename.string() << endl;
-                MSDataFile::WriteConfig writeConfig;
-                writeConfig.indexed = false;
-                writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
-                writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
-                MSDataFile::write(msd, targetResultFilename.string(), writeConfig);
-            }
+            if (os_) *os_ << "Writing new reference file: " << targetResultFilename.string() << endl;
+            MSDataFile::WriteConfig writeConfig;
+            writeConfig.indexed = false;
+            writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
+            writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+            MSDataFile::write(msd, targetResultFilename.string(), writeConfig);
         }
-        unit_assert(!diff);
+        else
+            unit_assert(!diff);
     }
+    return !diff;
 }
 
 
@@ -223,21 +230,27 @@ int main(int argc, char* argv[])
         vector<string> rawpaths;
         parseArgs(args, rawpaths);
 
-        int tests = 0;
+        int tests = 0, testsFailed = 0;
         for(const string& filepath : rawpaths)
         {
             if (bal::ends_with(filepath, "ATEHLSTLSEK_profile.raw"))
             {
                 ++tests;
-                test(filepath, 684.3469, 0.1, PeakPicking::None);
-                test(filepath, 0, 0.1, PeakPicking::None);
-                test(filepath, 684.3469, 0.1, PeakPicking::Vendor);
-                test(filepath, 0, 0.1, PeakPicking::Vendor);
-                test(filepath, 684.3469, 0.1, PeakPicking::CWT);
-                test(filepath, 0, 0.1, PeakPicking::CWT);
+                if (!test(filepath, 684.3469, 0.1, PeakPicking::None, false)) ++testsFailed;
+                if (!test(filepath, 0, 0.1, PeakPicking::None, false)) ++testsFailed;
+                if (!test(filepath, 684.3469, 0.1, PeakPicking::Vendor, false)) ++testsFailed;
+                if (!test(filepath, 0, 0.1, PeakPicking::Vendor, false)) ++testsFailed;
+                if (!test(filepath, 684.3469, 0.1, PeakPicking::CWT, false)) ++testsFailed;
+                if (!test(filepath, 0, 0.1, PeakPicking::CWT, false)) ++testsFailed;
+
+                if (!test(filepath, 684.3469, 0.1, PeakPicking::Vendor, true)) ++testsFailed;
+                if (!test(filepath, 0, 0.1, PeakPicking::Vendor, true)) ++testsFailed;
+                if (!test(filepath, 684.3469, 0.1, PeakPicking::CWT, true)) ++testsFailed;
+                if (!test(filepath, 0, 0.1, PeakPicking::CWT, true)) ++testsFailed;
             }
         }
 
+        unit_assert_operator_equal(0, testsFailed);
         if (tests == 0)
             throw runtime_error("did not run any tests");
     }

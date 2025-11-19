@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.FileUI.PeptideSearch
+namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     partial class TransitionSettingsControl
     {
@@ -56,6 +56,9 @@
             this.panelIonFilter = new System.Windows.Forms.Panel();
             this.comboMatchToleranceUnit = new System.Windows.Forms.ComboBox();
             this.label7 = new System.Windows.Forms.Label();
+            this.btnEditSpectrumFilter = new System.Windows.Forms.Button();
+            this.tbxSpectrumFilter = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
             this.panelIonFilter.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -215,11 +218,32 @@
             resources.ApplyResources(this.label7, "label7");
             this.label7.Name = "label7";
             // 
+            // btnEditSpectrumFilter
+            // 
+            resources.ApplyResources(this.btnEditSpectrumFilter, "btnEditSpectrumFilter");
+            this.btnEditSpectrumFilter.Name = "btnEditSpectrumFilter";
+            this.btnEditSpectrumFilter.UseVisualStyleBackColor = true;
+            this.btnEditSpectrumFilter.Click += new System.EventHandler(this.btnEditSpectrumFilter_Click);
+            // 
+            // tbxSpectrumFilter
+            // 
+            resources.ApplyResources(this.tbxSpectrumFilter, "tbxSpectrumFilter");
+            this.tbxSpectrumFilter.Name = "tbxSpectrumFilter";
+            this.tbxSpectrumFilter.ReadOnly = true;
+            // 
+            // label13
+            // 
+            resources.ApplyResources(this.label13, "label13");
+            this.label13.Name = "label13";
+            // 
             // TransitionSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.btnEditSpectrumFilter);
+            this.Controls.Add(this.tbxSpectrumFilter);
+            this.Controls.Add(this.label13);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.comboMatchToleranceUnit);
             this.Controls.Add(this.panelIonFilter);
@@ -274,5 +298,8 @@
         private System.Windows.Forms.Panel panelIonFilter;
         private System.Windows.Forms.ComboBox comboMatchToleranceUnit;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Button btnEditSpectrumFilter;
+        private System.Windows.Forms.TextBox tbxSpectrumFilter;
+        private System.Windows.Forms.Label label13;
     }
 }

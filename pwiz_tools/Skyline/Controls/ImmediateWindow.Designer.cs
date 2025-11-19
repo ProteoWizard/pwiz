@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls
 {
     partial class ImmediateWindow
     {
@@ -42,6 +42,7 @@
             this.textImWindow.DragDrop += new System.Windows.Forms.DragEventHandler(this.textImWindow_DragDrop);
             this.textImWindow.DragEnter += new System.Windows.Forms.DragEventHandler(this.textImWindow_DragEnter);
             this.textImWindow.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textImWindow_KeyPress);
+            this.textImWindow.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textImWindow_KeyDown);
             // 
             // contextMenuStrip1
             // 

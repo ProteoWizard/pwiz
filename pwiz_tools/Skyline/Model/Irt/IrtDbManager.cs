@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -109,6 +109,18 @@ namespace pwiz.Skyline.Model.Irt
                     standards.Add(pep);
                 else
                     library.Add(pep);
+            }
+
+            if (calc.IsUsable)
+            {
+                // Watch out for stale db read
+                var calcStandardPeptides = calc.GetStandardPeptides().ToHashSet();
+                var calcLibraryPeptides = calc.GetLibraryPeptides().ToHashSet();
+                if (standards.Any(s => !calcStandardPeptides.Contains(s.ModifiedTarget)) ||
+                    library.Any(l => !calcLibraryPeptides.Contains(l.ModifiedTarget)))
+                {
+                    calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null));
+                }
             }
 
             var duplicates = IrtDb.CheckForDuplicates(standards, library);

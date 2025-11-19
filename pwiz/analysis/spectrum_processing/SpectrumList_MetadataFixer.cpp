@@ -24,6 +24,8 @@
 
 
 #include "SpectrumList_MetadataFixer.hpp"
+
+#include "pwiz/utility/misc/almost_equal.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 
@@ -77,34 +79,69 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MetadataFixer::spectrum(size_t index, boo
     if (!mzArray.get() || !intensityArray.get())
         return s;
 
-    BinaryData<double>& mzs = mzArray->data;
-    BinaryData<double>& intensities = intensityArray->data;
+    const BinaryData<double>& mzs = mzArray->data;
+    const BinaryData<double>& intensities = intensityArray->data;
 
-    double tic = 0;
-    if (!mzs.empty())
-    {
-        double bpmz, bpi = -1;
-        for (size_t i=0, end=mzs.size(); i < end; ++i)
-        {
-            tic += intensities[i];
-            if (bpi < intensities[i])
-            {
-                bpi = intensities[i];
-                bpmz = mzs[i];
-            }
-        }
+    const auto metadata = calculatePeakMetadata(mzs, intensities);
 
-        replaceCvParam(*s, MS_base_peak_intensity, bpi, MS_number_of_detector_counts);
-        replaceCvParam(*s, MS_base_peak_m_z, bpmz, MS_m_z);
-        replaceCvParam(*s, MS_lowest_observed_m_z, mzs.front(), MS_m_z);
-        replaceCvParam(*s, MS_highest_observed_m_z, mzs.back(), MS_m_z);
-    }
-
-    replaceCvParam(*s, MS_TIC, tic, MS_number_of_detector_counts);
+    replaceCvParam(*s, MS_base_peak_intensity, metadata.basePeakY, MS_number_of_detector_counts);
+    replaceCvParam(*s, MS_base_peak_m_z, metadata.basePeakX, MS_m_z);
+    replaceCvParam(*s, MS_lowest_observed_m_z, metadata.lowestX, MS_m_z);
+    replaceCvParam(*s, MS_highest_observed_m_z, metadata.highestX, MS_m_z);
+    replaceCvParam(*s, MS_TIC, metadata.totalY, MS_number_of_detector_counts);
 
     return s;
 }
 
+template <typename XType, typename YType>
+SpectrumList_MetadataFixer::PeakMetadata calculatePeakMetadata(const std::vector<XType>& xArray, const std::vector<YType>& yArray)
+{
+    SpectrumList_MetadataFixer::PeakMetadata result;
+    if (!xArray.empty())
+    {
+        result.basePeakX = result.basePeakY = -1;
+        result.lowestX = std::numeric_limits<double>::max();
+        result.highestX = std::numeric_limits<double>::min();
+        auto xItr = xArray.begin();
+        auto yItr = yArray.begin();
+        for (; xItr != xArray.end() && yItr != yArray.end(); ++xItr, ++yItr)
+        {
+            const auto y = static_cast<double>(*yItr);
+            if (almost_equal(y, 0.0))
+                continue;
+
+            const auto x = static_cast<double>(*xItr);
+            if (x > result.highestX)
+                result.highestX = x;
+            if (x < result.lowestX)
+                result.lowestX = x;
+
+            result.totalY += y;
+            if (result.basePeakY < y)
+            {
+                result.basePeakY = y;
+                result.basePeakX = x;
+            }
+        }
+    }
+    else
+    {
+        result.basePeakX = result.basePeakY = 0;
+        result.lowestX = 0;
+        result.highestX = 0;
+    }
+
+    return result;
+}
+
+SpectrumList_MetadataFixer::PeakMetadata SpectrumList_MetadataFixer::calculatePeakMetadata(const std::vector<float>& x, const std::vector<float>& y)
+{ return pwiz::analysis::calculatePeakMetadata(x, y); }
+
+SpectrumList_MetadataFixer::PeakMetadata SpectrumList_MetadataFixer::calculatePeakMetadata(const std::vector<double>& x, const std::vector<float>& y)
+{ return pwiz::analysis::calculatePeakMetadata(x, y); }
+
+SpectrumList_MetadataFixer::PeakMetadata SpectrumList_MetadataFixer::calculatePeakMetadata(const std::vector<double>& x, const std::vector<double>& y)
+{ return pwiz::analysis::calculatePeakMetadata(x, y); }
 
 } // namespace analysis 
 } // namespace pwiz

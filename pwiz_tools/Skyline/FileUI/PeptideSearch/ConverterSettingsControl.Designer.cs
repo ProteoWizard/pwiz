@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.FileUI.PeptideSearch
+namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     partial class ConverterSettingsControl
     {
@@ -31,16 +31,22 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConverterSettingsControl));
             this.btnAdditionalSettings = new System.Windows.Forms.Button();
-            this.converterTabControl = new System.Windows.Forms.TabControl();
+            this.converterTabControl = new pwiz.Skyline.Controls.WizardPages();
             this.msconvertTabPage = new System.Windows.Forms.TabPage();
             this.diaUmpireTabPage = new System.Windows.Forms.TabPage();
-            this.cbEstimateBg = new System.Windows.Forms.CheckBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.cbInstrumentPreset = new System.Windows.Forms.ComboBox();
+            this.diaUmpireSettingsPanel = new System.Windows.Forms.Panel();
             this.lblInstrumentPreset = new System.Windows.Forms.Label();
+            this.cbInstrumentPreset = new System.Windows.Forms.ComboBox();
+            this.cbEstimateBg = new System.Windows.Forms.CheckBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.cbDiaUmpire = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.diaUmpireDescriptionPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.converterTabControl.SuspendLayout();
             this.diaUmpireTabPage.SuspendLayout();
+            this.diaUmpireSettingsPanel.SuspendLayout();
+            this.diaUmpireDescriptionPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnAdditionalSettings
@@ -66,26 +72,25 @@
             // 
             // diaUmpireTabPage
             // 
-            this.diaUmpireTabPage.Controls.Add(this.cbEstimateBg);
-            this.diaUmpireTabPage.Controls.Add(this.label1);
-            this.diaUmpireTabPage.Controls.Add(this.btnAdditionalSettings);
-            this.diaUmpireTabPage.Controls.Add(this.cbInstrumentPreset);
-            this.diaUmpireTabPage.Controls.Add(this.lblInstrumentPreset);
+            this.diaUmpireTabPage.Controls.Add(this.diaUmpireDescriptionPanel);
+            this.diaUmpireTabPage.Controls.Add(this.diaUmpireSettingsPanel);
             resources.ApplyResources(this.diaUmpireTabPage, "diaUmpireTabPage");
             this.diaUmpireTabPage.Name = "diaUmpireTabPage";
             this.diaUmpireTabPage.UseVisualStyleBackColor = true;
             // 
-            // cbEstimateBg
+            // diaUmpireSettingsPanel
             // 
-            resources.ApplyResources(this.cbEstimateBg, "cbEstimateBg");
-            this.cbEstimateBg.Name = "cbEstimateBg";
-            this.toolTip.SetToolTip(this.cbEstimateBg, resources.GetString("cbEstimateBg.ToolTip"));
-            this.cbEstimateBg.UseVisualStyleBackColor = true;
+            this.diaUmpireSettingsPanel.Controls.Add(this.btnAdditionalSettings);
+            this.diaUmpireSettingsPanel.Controls.Add(this.lblInstrumentPreset);
+            this.diaUmpireSettingsPanel.Controls.Add(this.cbInstrumentPreset);
+            this.diaUmpireSettingsPanel.Controls.Add(this.cbEstimateBg);
+            resources.ApplyResources(this.diaUmpireSettingsPanel, "diaUmpireSettingsPanel");
+            this.diaUmpireSettingsPanel.Name = "diaUmpireSettingsPanel";
             // 
-            // label1
+            // lblInstrumentPreset
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.lblInstrumentPreset, "lblInstrumentPreset");
+            this.lblInstrumentPreset.Name = "lblInstrumentPreset";
             // 
             // cbInstrumentPreset
             // 
@@ -94,10 +99,40 @@
             resources.ApplyResources(this.cbInstrumentPreset, "cbInstrumentPreset");
             this.cbInstrumentPreset.Name = "cbInstrumentPreset";
             // 
-            // lblInstrumentPreset
+            // cbEstimateBg
             // 
-            resources.ApplyResources(this.lblInstrumentPreset, "lblInstrumentPreset");
-            this.lblInstrumentPreset.Name = "lblInstrumentPreset";
+            resources.ApplyResources(this.cbEstimateBg, "cbEstimateBg");
+            this.cbEstimateBg.Name = "cbEstimateBg";
+            this.toolTip.SetToolTip(this.cbEstimateBg, resources.GetString("cbEstimateBg.ToolTip"));
+            this.cbEstimateBg.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            // 
+            // cbDiaUmpire
+            // 
+            this.diaUmpireDescriptionPanel.SetFlowBreak(this.cbDiaUmpire, true);
+            resources.ApplyResources(this.cbDiaUmpire, "cbDiaUmpire");
+            this.cbDiaUmpire.Name = "cbDiaUmpire";
+            this.toolTip.SetToolTip(this.cbDiaUmpire, resources.GetString("cbDiaUmpire.ToolTip"));
+            this.cbDiaUmpire.UseVisualStyleBackColor = true;
+            this.cbDiaUmpire.CheckedChanged += new System.EventHandler(this.cbDiaUmpire_CheckedChanged);
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.diaUmpireDescriptionPanel.SetFlowBreak(this.label1, true);
+            this.label1.Name = "label1";
+            // 
+            // diaUmpireDescriptionPanel
+            // 
+            resources.ApplyResources(this.diaUmpireDescriptionPanel, "diaUmpireDescriptionPanel");
+            this.diaUmpireDescriptionPanel.Controls.Add(this.label1);
+            this.diaUmpireDescriptionPanel.Controls.Add(this.cbDiaUmpire);
+            this.diaUmpireDescriptionPanel.Controls.Add(this.label2);
+            this.diaUmpireDescriptionPanel.Name = "diaUmpireDescriptionPanel";
             // 
             // ConverterSettingsControl
             // 
@@ -107,14 +142,17 @@
             this.Name = "ConverterSettingsControl";
             this.converterTabControl.ResumeLayout(false);
             this.diaUmpireTabPage.ResumeLayout(false);
-            this.diaUmpireTabPage.PerformLayout();
+            this.diaUmpireSettingsPanel.ResumeLayout(false);
+            this.diaUmpireSettingsPanel.PerformLayout();
+            this.diaUmpireDescriptionPanel.ResumeLayout(false);
+            this.diaUmpireDescriptionPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
         private System.Windows.Forms.Button btnAdditionalSettings;
-        private System.Windows.Forms.TabControl converterTabControl;
+        private pwiz.Skyline.Controls.WizardPages converterTabControl;
         private System.Windows.Forms.TabPage msconvertTabPage;
         private System.Windows.Forms.TabPage diaUmpireTabPage;
         private System.Windows.Forms.ComboBox cbInstrumentPreset;
@@ -122,5 +160,9 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox cbEstimateBg;
         private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.CheckBox cbDiaUmpire;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Panel diaUmpireSettingsPanel;
+        private System.Windows.Forms.FlowLayoutPanel diaUmpireDescriptionPanel;
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Layout;
@@ -55,38 +56,41 @@ namespace pwiz.Common.DataBinding
         /// </summary>
         public virtual void WriteHeaderRow(TextWriter writer, IEnumerable<PropertyDescriptor> propertyDescriptors)
         {
-            bool first = true;
-            foreach (var pd in propertyDescriptors)
-            {
-                if (!first)
-                {
-                    writer.Write(Separator);
-                }
-                first = false;
-                writer.Write(ToDsvField(pd.DisplayName));
-            }
-            writer.WriteLine();
+            var transformedEnumerator = propertyDescriptors.AsEnumerable()
+                .Select(pd => pd.DisplayName);
+            WriteRowValues(writer, transformedEnumerator);
         }
+
 
         /// <summary>
         /// Writes out a row containing the formatted values
         /// </summary>
         public virtual void WriteDataRow(TextWriter writer, RowItem rowItem, IEnumerable<PropertyDescriptor> propertyDescriptors)
         {
+            var transformedEnumerator = propertyDescriptors.AsEnumerable()
+                .Select(pd =>  GetFormattedValue(rowItem, pd));
+            WriteRowValues(writer, transformedEnumerator);
+        }
+
+        /// <summary>
+        /// Writes out a row containing the given string values
+        /// </summary>
+        public virtual void WriteRowValues(TextWriter writer, IEnumerable<string> rowValues)
+        {
             bool first = true;
-            foreach (var pd in propertyDescriptors)
+            foreach (var rowValue in rowValues)
             {
                 if (!first)
                 {
                     writer.Write(Separator);
                 }
                 first = false;
-                writer.Write(ToDsvField(GetFormattedValue(rowItem, pd)));
+                writer.Write(ToDsvField(rowValue));
             }
             writer.WriteLine();
         }
-
-        protected virtual string GetFormattedValue(RowItem rowItem, PropertyDescriptor propertyDescriptor)
+        
+        public virtual string GetFormattedValue(RowItem rowItem, PropertyDescriptor propertyDescriptor)
         {
             CultureInfo oldCulture = Thread.CurrentThread.CurrentCulture;
             CultureInfo oldUiCulture = Thread.CurrentThread.CurrentUICulture;

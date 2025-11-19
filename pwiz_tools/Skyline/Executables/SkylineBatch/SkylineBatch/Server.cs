@@ -1,4 +1,4 @@
-﻿using SharedBatch;
+using SharedBatch;
 using System;
 using System.Collections.Immutable;
 using System.IO;
@@ -10,8 +10,8 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using Newtonsoft.Json.Linq;
 using SkylineBatch.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace SkylineBatch
 {
@@ -67,45 +67,23 @@ namespace SkylineBatch
 
         public static long GetSize(Uri remoteUri, string username, string password, CancellationToken cancelToken)
         {
-            long result = -1;
-            using (var wc = new UTF8WebClient())
+            using (var httpClient = new HttpClientWithProgress())
             {
                 if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                 {
-                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
+                    httpClient.AddAuthorizationHeader(Server.GetBasicAuthHeader(username, password));
                 }
 
-                Stream stream = null;
-                Exception serverException = null;
-                var sizeThread = new Thread(() =>
+                try
                 {
-                    try
-                    {
-
-                        // ReSharper disable once AccessToDisposedClosure - must dispose wc after cancellation or close
-                        stream = wc.OpenRead(remoteUri);
-
-                        // TODO: figure out why this stopped working
-                        // ReSharper disable once AccessToDisposedClosure
-                        result = Convert.ToInt64(wc.ResponseHeaders["Content-Length"]);
-                    }
-                    catch (Exception e)
-                    {
-                        serverException = e;
-                    }
-                });
-                sizeThread.Start();
-                while (sizeThread.IsAlive)
-                {
-                    if (cancelToken.IsCancellationRequested)
-                        sizeThread.Abort();
+                    var response = httpClient.GetResponseHeadersRead(remoteUri);
+                    return response.Content.Headers.ContentLength ?? -1;
                 }
-                if (stream != null) stream.Dispose();
-                wc.Dispose();
-                if (serverException != null)
-                    throw serverException;
+                catch (Exception)
+                {
+                    return -1;
+                }
             }
-            return result;
         }
     }
 
@@ -153,13 +131,14 @@ namespace SkylineBatch
         {
             if (remoteFileSource == null)
                 throw new ArgumentException(Resources.Server_ValidateInputs_No_remote_file_source_was_specified__Please_choose_a_remote_file_source_);
+            string url = remoteFileSource.URI.AbsoluteUri + relativeUrl;
             try
             {
-                _ = new Uri(remoteFileSource.URI.AbsoluteUri + relativeUrl);
+                _ = new Uri(url);
             }
             catch (Exception)
             {
-                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
+                throw new ArgumentException(TextUtil.LineSeparate(Resources.RemoteFileSource_ValidateInputs_Error_parsing_the_URL_, url, Resources.RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_));
             }
         }
 
@@ -307,7 +286,7 @@ namespace SkylineBatch
             }
             catch (Exception)
             {
-                throw new ArgumentException(Resources.DataServerInfo_ServerFromUi_Error_parsing_the_URL__Please_correct_the_URL_and_try_again_);
+                throw new ArgumentException(TextUtil.LineSeparate(Resources.RemoteFileSource_ValidateInputs_Error_parsing_the_URL_, url ,Resources.RemoteFileSource_ValidateInputs_Please_correct_the_URL_and_try_again_));
             }
             if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 return;
@@ -518,17 +497,4 @@ namespace SkylineBatch
         #endregion
     }
 
-    public class UTF8WebClient : WebClient
-    {
-        public UTF8WebClient()
-        {
-            Encoding = Encoding.UTF8;
-        }
-
-        public JObject Get(Uri uri)
-        {
-            var response = DownloadString(uri);
-            return JObject.Parse(response);
-        }
-    }
 }

@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline
@@ -41,7 +41,7 @@ namespace pwiz.Skyline
             _commandArgs = new CommandArgs(consoleOut, false);
             if (!_commandArgs.ParseArgs(args))
             {
-                consoleOut.WriteLine(Resources.CommandLine_Run_Exiting___);
+                consoleOut.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
                 return;
             }
 

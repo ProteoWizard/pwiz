@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,13 +25,13 @@ using System.Xml;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization
@@ -261,15 +261,13 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.normalization_method, node.NormalizationMethod.Name);
             }
             writer.WriteAttributeIfString(ATTR.attribute_group_id, node.AttributeGroupId);
+            writer.WriteAttributeIfString(ATTR.surrogate_calibration_curve, node.SurrogateCalibrationCurve);
 
             if (isCustomIon)
             {
                 peptide.CustomMolecule.WriteXml(writer, Adduct.EMPTY);
                 // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
-                if (!Equals(peptide.Target, peptide.OriginalMoleculeTarget))
-                {
-                    writer.WriteAttributeString(ATTR.chromatogram_target, peptide.OriginalMoleculeTarget.ToSerializableString());
-                }
+                writer.WriteAttributeIfString(ATTR.chromatogram_target, node.OriginalMoleculeTarget?.ToSerializableString());
             }
             else
             {
@@ -323,7 +321,7 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                         catch (Exception ex)
                         {
-                            throw new NotSupportedException(string.Format(Resources.DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__, node.ModifiedSequenceDisplay, DocumentFormat), ex);
+                            throw new NotSupportedException(string.Format(SerializationResources.DocumentWriter_WritePeptideXml_Unable_to_convert_crosslinks_in__0__to_document_format__1__, node.ModifiedSequenceDisplay, DocumentFormat), ex);
                         }
                     }
                 }
@@ -601,7 +599,7 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq,
                         false)); // formatNarrow = false; We want InvariantCulture, not the local format
                 }
-                Assume.IsTrue(group.PrecursorAdduct.IsProteomic);
+                Assume.IsTrue(group.PrecursorAdduct.IsProteomic, @"expected IsProteomic tag on adduct");
             }
             else
             {
@@ -651,7 +649,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
         }
 
-        private static void WriteTransitionGroupChromInfo(XmlWriter writer, TransitionGroupChromInfo chromInfo)
+        private void WriteTransitionGroupChromInfo(XmlWriter writer, TransitionGroupChromInfo chromInfo)
         {
             if (chromInfo.OptimizationStep != 0)
                 writer.WriteAttribute(ATTR.step, chromInfo.OptimizationStep);
@@ -679,7 +677,29 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.qvalue, chromInfo.QValue);
             writer.WriteAttributeNullable(ATTR.zscore, chromInfo.ZScore);
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
+            var originalPeak = chromInfo.OriginalPeak;
+            if (originalPeak != null && originalPeak.StartTime.Equals(chromInfo.StartRetentionTime) && originalPeak.EndTime.Equals(chromInfo.EndRetentionTime))
+            {
+                writer.WriteAttribute(ATTR.original_score, originalPeak.Score);
+                originalPeak = null;
+            }
             WriteAnnotations(writer, chromInfo.Annotations);
+            WriteScoredPeak(writer, EL.original_peak, originalPeak);
+            WriteScoredPeak(writer, EL.reintegrated_peak, chromInfo.ReintegratedPeak);
+        }
+
+        private void WriteScoredPeak(XmlWriter writer, string el, ScoredPeakBounds scoredPeak)
+        {
+            if (scoredPeak == null || DocumentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                return;
+            }
+            writer.WriteStartElement(el);
+            writer.WriteAttribute(ATTR.score, scoredPeak.Score);
+            writer.WriteAttribute(ATTR.retention_time, scoredPeak.ApexTime);
+            writer.WriteAttribute(ATTR.start_time, scoredPeak.StartTime);
+            writer.WriteAttribute(ATTR.end_time, scoredPeak.EndTime);
+            writer.WriteEndElement();
         }
 
         /// <summary>
@@ -734,7 +754,8 @@ namespace pwiz.Skyline.Model.Serialization
                 if (!transition.IsCustom())
                 {
                     writer.WriteAttribute(ATTR.cleavage_aa, transition.AA.ToString(CultureInfo.InvariantCulture));
-                    writer.WriteAttribute(ATTR.loss_neutral_mass, nodeTransition.LostMass); //po
+                    if (nodeTransition.HasLoss)
+                        writer.WriteAttribute(ATTR.loss_neutral_mass, nodeTransition.LostMass); //po
                 }
             }
 

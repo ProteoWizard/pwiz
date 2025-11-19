@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,7 @@ using System;
 using System.Collections;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -164,5 +164,48 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(property);
             return property.GetValue(item);
         }
+
+        /// <summary>
+        /// Opens a combo box in the current cell of a grid, and prevents the combo box from closing until Dispose'd.
+        /// </summary>
+        public IDisposable ShowComboBox()
+        {
+            return new ShowGridComboBox(DataGridView);
+        }
+
+        private class ShowGridComboBox : IDisposable
+        {
+            private DataGridView _dataGridView;
+            public ShowGridComboBox(DataGridView dataGridView)
+            {
+                _dataGridView = dataGridView;
+                _dataGridView.Invoke(new Action(() =>
+                {
+                    _dataGridView.BeginEdit(false);
+                    var comboBox = (ComboBox)dataGridView.EditingControl;
+                    comboBox.DropDownClosed += PreventComboClosing;
+                    comboBox.DroppedDown = true;
+                }));
+            }
+
+            public void Dispose()
+            {
+                _dataGridView.Invoke(new Action(() =>
+                {
+                    var comboBox = (ComboBox)_dataGridView.EditingControl;
+                    comboBox.DropDownClosed -= PreventComboClosing;
+                }));
+            }
+
+            private static void PreventComboClosing(object sender, EventArgs args)
+            {
+                var comboBox = (ComboBox)sender;
+                if (!comboBox.DroppedDown)
+                {
+                    comboBox.DroppedDown = true;
+                }
+            }
+        }
+
     }
 }

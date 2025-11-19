@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
@@ -92,7 +93,8 @@ namespace pwiz.SkylineTestFunctional
         private ViewLibraryDlg _viewLibUI;
         private bool asSmallMolecules;
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestLibraryExplorerAsSmallMolecules()
         {
             if (SkipSmallMoleculeTestVersions())

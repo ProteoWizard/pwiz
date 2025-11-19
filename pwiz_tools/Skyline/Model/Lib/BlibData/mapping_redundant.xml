@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <hibernate-mapping xmlns="urn:nhibernate-mapping-2.2">
   <class name="DbLibInfo" table="LibInfo">
     <id name="LibLSID">
@@ -72,6 +72,7 @@
       <column name="id" not-null="true"/>
     </id>
     <property name="ScoreType" column="scoreType"/>
+    <property name="ProbabilityType" column="probabilityType"/>
   </class>
   <class name="DbSpectrumSourceFiles" table="SpectrumSourceFiles">
     <id name="Id">
@@ -81,6 +82,7 @@
     <property name="FileName" column="fileName"/>
     <property name="IdFileName" column="idFileName"/>
     <property name="CutoffScore" column="cutoffScore"/>
+    <property name="WorkflowType" column="workflowType"/>
   </class>
   <class name="DbRefSpectraPeakAnnotationsRedundant" table="RefSpectraPeakAnnotations">
     <id name="Id">

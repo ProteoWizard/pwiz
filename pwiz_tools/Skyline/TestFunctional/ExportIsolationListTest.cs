@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,16 +18,19 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -124,7 +127,6 @@ namespace pwiz.SkylineTestFunctional
                 ConvertDocumentToSmallMolecules(SmallMoleculeTestMode, AsSmallMoleculesNegativeMode);
                 WaitForDocumentLoaded();
             }
-
             var t46 = 46.790;
             var t39 = 39.900;
             var halfWin = 1.0;
@@ -151,6 +153,16 @@ namespace pwiz.SkylineTestFunctional
             var zLast = AsSmallMoleculesNegative ? -3 : 3;
             var ceFirst = AsSmallMoleculesNegative ? 20.3 : 20.4;
             var ceLast = AsSmallMoleculesNegative ? 19.1 : 19.2;
+
+            // Test an issue found in the PeptideFinder class with mixed polarity docs
+            if (SkylineWindow.Document.IsMixedPolarity())
+            {
+                var beyondMaxNegMz = (from precursor in SkylineWindow.Document.MoleculeTransitionGroups
+                    where precursor.PrecursorMz.IsNegative
+                    select precursor.PrecursorMz.RawValue).Min()-100.0;
+                var finder = new PeptideFinder(SkylineWindow.Document);
+                AssertEx.IsNull(finder.FindPeptide(new SignedMz(beyondMaxNegMz))); // This will throw a "polarity mismatch" exception if the issue is not fixed
+            }
 
             // Export Agilent unscheduled DDA list.
             ExportIsolationList(
@@ -189,8 +201,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoUnscheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Standard,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, string.Empty, string.Empty, nce, peptideA),
-                FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, string.Empty, string.Empty, nce, peptideB));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, string.Empty, string.Empty, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, string.Empty, string.Empty, nce));
 
             // Export Thermo scheduled DDA list.
             if (!AsSmallMoleculesNegative) // .skyd file chromatograms are not useful in this conversion due to mass shift
@@ -198,8 +210,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoScheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce, peptideA),
-                FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce, peptideB));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce));
 
             // Export Agilent unscheduled Targeted list.
             ExportIsolationList(
@@ -223,8 +235,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoUnscheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, string.Empty, string.Empty, nce, peptideA),
-                FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, string.Empty, string.Empty, nce, peptideB));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, string.Empty, string.Empty, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, string.Empty, string.Empty, nce));
 
             // Export Thermo scheduled Targeted list.
             if (!AsSmallMoleculesNegative) // .skyd file chromatograms are not useful in this conversion due to mass shift
@@ -232,15 +244,15 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoScheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce, peptideA),
-                FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce, peptideB));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce));
 
             // Export Thermo Fusion unscheduled Targeted list.
             var thermoFusionMassListExporter = new ThermoFusionMassListExporter(SkylineWindow.Document);
             ExportIsolationList(
                 "FusionUnscheduledTargeted.csv",
                 ExportInstrumentType.THERMO_FUSION, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
-                thermoFusionMassListExporter.GetHeader(_fieldSeparator),
+                thermoFusionMassListExporter.GetHeader(_fieldSeparator), 
                 FieldSeparate(mzFirst, zFirst, string.Empty, string.Empty, nce),
                 FieldSeparate(mzLast, zLast, string.Empty, string.Empty, nce));
 
@@ -253,6 +265,62 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, nce),
                 FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, nce));
 
+            // Export Thermo Stellar unscheduled isolation list
+            var runStart = "0";
+            var runEnd = "30";
+            var thermoStellarMassListExporter = new ThermoStellarMassListExporter(SkylineWindow.Document);
+            double defaultNCE = ThermoStellarMassListExporter.DEFAULT_NCE;
+            var checkStrings = new List<string>
+            {
+                thermoStellarMassListExporter.GetHeader(),
+                FieldSeparate(mzFirst, zFirst, runStart, runEnd, defaultNCE),
+                FieldSeparate(mzLast, zLast, runStart, runEnd, defaultNCE)
+            };
+            ExportIsolationList(
+                "StellarIsolationList.csv",
+                ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Standard,
+                checkStrings.ToArray());
+            for (int i = 1; i <= CollisionEnergyRegression.DEFAULT_STEP_COUNT; i++)
+            {
+                checkStrings.Add(FieldSeparate(mzFirst, zFirst, runStart, runEnd, defaultNCE + i));
+                checkStrings.Add(FieldSeparate(mzFirst, zFirst, runStart, runEnd, defaultNCE - i));
+                checkStrings.Add(FieldSeparate(mzLast, zLast, runStart, runEnd, defaultNCE + i));
+                checkStrings.Add(FieldSeparate(mzLast, zLast, runStart, runEnd, defaultNCE - i));
+            }
+            ExportIsolationList(
+                "StellarNceOptIsolationList.csv",
+                ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Standard, null, true,
+                checkStrings.ToArray()
+            );
+            if (!AsSmallMoleculesNegative || AsExplicitRetentionTimes)
+            {
+                const int customNCE = 20;
+                const int customStepCount = 3;
+                const double customStepSize = 2.5;
+                var ceRegression = new CollisionEnergyRegression("NCE 20",
+                    new[] { new ChargeRegressionLine(2, 0, customNCE) }, customStepSize, customStepCount);
+                checkStrings = new List<string>
+                {
+                    thermoStellarMassListExporter.GetHeader(),
+                    FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE),
+                    FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE)
+                };
+                ExportIsolationList(
+                    "StellarScheduledIsolationList.csv",
+                    ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Scheduled, ceRegression, false,
+                    checkStrings.ToArray());
+                for (int i = 1; i <= customStepCount; i++)
+                {
+                    checkStrings.Add(FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE + i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzFirst, zFirst, t46 - halfWin, t46 + halfWin, customNCE - i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE + i*customStepSize));
+                    checkStrings.Add(FieldSeparate(mzLast, zLast, t39 - halfWin, t39 + halfWin, customNCE - i*customStepSize));
+                }
+                ExportIsolationList(
+                    "StellarScheduledNceOptIsolationList.csv",
+                    ExportInstrumentType.THERMO_STELLAR, FullScanAcquisitionMethod.PRM, ExportMethodType.Scheduled, ceRegression, true,
+                    checkStrings.ToArray());
+            }
             string fragmentsFirst;
             if (!AsSmallMoleculesNegative)
                 fragmentsFirst = FieldSeparate("582.3190", "951.4782", "595.3086", "708.3927", "837.4353", "1017.5251");
@@ -336,11 +404,23 @@ namespace pwiz.SkylineTestFunctional
             // Check error if analyzer is not set correctly.
             CheckMassAnalyzer(ExportInstrumentType.AGILENT_TOF, FullScanMassAnalyzerType.tof);
             CheckMassAnalyzer(ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanMassAnalyzerType.orbitrap);
+
+            if (!AsExplicitRetentionTimes)
+            {
+                TestAgilentNegativeRt();
+            }
         }
 
         private void ExportIsolationList(
-            string csvFilename, string instrumentType, FullScanAcquisitionMethod acquisitionMethod, 
+            string csvFilename, string instrumentType, FullScanAcquisitionMethod acquisitionMethod,
             ExportMethodType methodType, params string[] checkStrings)
+        {
+            ExportIsolationList(csvFilename, instrumentType, acquisitionMethod, methodType, null, false, checkStrings);
+        }
+
+        private void ExportIsolationList(
+            string csvFilename, string instrumentType, FullScanAcquisitionMethod acquisitionMethod,
+            ExportMethodType methodType, CollisionEnergyRegression ceRegression, bool ceOptimize, params string[] checkStrings)
         {
             // Set acquisition method, mass analyzer type, resolution, etc.
             if (Equals(instrumentType, ExportInstrumentType.AGILENT_TOF))
@@ -350,12 +430,26 @@ namespace pwiz.SkylineTestFunctional
                     .ChangeProductResolution(FullScanMassAnalyzerType.tof, 10000, null)
                     .ChangeAcquisitionMethod(acquisitionMethod, null)))));
             }
+            else if (Equals(instrumentType, ExportInstrumentType.THERMO_STELLAR))
+            {
+                RunUI(() => SkylineWindow.ModifyDocument("Set Stellar full-scan settings", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
+                    .ChangePrecursorResolution(FullScanMassAnalyzerType.qit, 1.0, null)
+                    .ChangeProductResolution(FullScanMassAnalyzerType.qit, 1.0, null)
+                    .ChangeAcquisitionMethod(acquisitionMethod, null)))));
+            }
             else
             {
                 RunUI(() => SkylineWindow.ModifyDocument("Set Orbitrap full-scan settings", doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs => fs
                     .ChangePrecursorResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
                     .ChangeProductResolution(FullScanMassAnalyzerType.orbitrap, 60000, 400)
                     .ChangeAcquisitionMethod(acquisitionMethod, null)))));
+            }
+
+            if (ceRegression != null)
+            {
+                RunUI(() => SkylineWindow.ModifyDocument("Set NCE prediction settings", doc =>
+                    doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(p => p
+                        .ChangeCollisionEnergy(ceRegression)))));
             }
 
             // Open Export Method dialog, and set method to scheduled or standard.
@@ -371,7 +465,14 @@ namespace pwiz.SkylineTestFunctional
                 exportMethodDlg.InstrumentType = instrumentType;
                 exportMethodDlg.MethodType = methodType;
                 exportMethodDlg.PolarityFilter = exportPolarityFilter;
-                Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                if (!instrumentType.StartsWith("Thermo"))
+                    Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                else
+                {
+                    Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
+                    if (ceOptimize)
+                        exportMethodDlg.OptimizeType = ExportOptimize.CE;
+                }
                 Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
                 Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
                 Assert.IsFalse(exportMethodDlg.IsMaxTransitionsEnabled);
@@ -447,6 +548,89 @@ namespace pwiz.SkylineTestFunctional
                 sb.Append(_fieldSeparator);
             }
             return sb.ToString();
+        }
+
+        private void TestAgilentNegativeRt()
+        {
+            // remove the results to force the use of predicted RTs
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults,
+                dlg =>
+                {
+                    dlg.RemoveAllReplicates();
+                    dlg.OkDialog();
+                });
+            // Set RT predictor to produce negative times
+            const float regressionWindow = 1.4f;
+            var rtRegression = new RetentionTimeRegression("NegativeRt",
+                new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A), 
+                .45, -7.8, regressionWindow, new MeasuredRetentionTime[0]);
+            RunUI(() =>
+            {
+                SkylineWindow.ModifyDocument("Set RT prediction with negative RTs", doc =>
+                {
+                    return doc.ChangeSettings(
+                        doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(rtRegression))
+                            .ChangePeptidePrediction(p => p.ChangeUseMeasuredRTs(false)));
+                });
+            });
+            // Export the transitions list for a scheduled method
+            string csvPath = TestFilesDirs[0].GetTestPath("negativeRtTest.csv");
+            var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+            RunUI(() =>
+            {
+                exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT_MASSHUNTER_12;
+                exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+            });
+            RunDlg<MultiButtonMsgDlg>(
+                () => exportMethodDlg.OkDialog(csvPath),
+                messageDlg =>
+                {
+                    //AssertEx.AreComparableStrings(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, messageDlg.Message, 1);
+                    messageDlg.ClickYes();
+                });
+
+            string[] paths = { csvPath };
+            if (SkylineWindow.Document.IsMixedPolarity())
+            {
+                // Mixed polarity documents result in two files 
+                paths = new[]
+                {
+                    TestFilesDirs[0].GetTestPath("negativeRtTest_negative_0001.csv"),
+                    TestFilesDirs[0].GetTestPath("negativeRtTest_positive_0001.csv")
+                };
+            }
+
+            // Verify that all peptides have had their predicted retention time moved so that the retention time window subtracted from
+            // the predicted retention time is at least AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME
+            foreach (var path in paths)
+            {
+                using var resReader = new DsvFileReader(path, TextUtil.SEPARATOR_TSV);
+                while (resReader.ReadLine() != null)
+                {
+                    Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT Window (min)"),
+                        NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtWindow));
+                    Assert.AreEqual(regressionWindow, rtWindow);
+                    Assert.IsTrue(float.TryParse(resReader.GetFieldByName("RT (min)"),
+                        NumberStyles.Float | NumberStyles.AllowThousands, _cultureInfo, out var rtPredicted));
+                    var pepSequence = resReader.GetFieldByName("Compound Name");
+                    float halfWindow = rtWindow / 2;
+                    float minPredictedTime = halfWindow + AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME;
+                    if (pepSequence == "YIC[+57.021464]DNQDTISSK.light" || pepSequence == "IKNLQSLDPSH.light")
+                    {
+                        // These two peptides are known to have predicted retention times less than rtWindow
+                        Assert.AreEqual(rtPredicted, minPredictedTime,
+                            "Peptide {0} retention time {1} should be equal to half-RT Window {2} plus minimum {3}",
+                            pepSequence, rtPredicted, halfWindow, AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME);
+                    }
+                    else
+                    {
+                        // All other peptides should have a predicted retention time that is greater than rtWindow
+                        Assert.IsTrue(rtPredicted >= minPredictedTime,
+                            "Peptide {0} retention time {1} should be greater than or equal to half-RT Window {2} plus minimum {3}",
+                            pepSequence, rtPredicted, halfWindow, AgilentMassListExporter.AGILENT_MIN_START_ACQUISITION_TIME);
+                    }
+                }
+            }
         }
     }
 

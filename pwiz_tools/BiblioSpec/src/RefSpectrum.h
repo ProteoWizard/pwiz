@@ -106,6 +106,7 @@ class RefSpectrum : public Spectrum
   //getters
   int getCharge() const;
   string getSeq() const;
+  string getDisplayName() const;
   string getMods() const;
   int getLibID() const;
   int getLibSpecID() const;
@@ -120,6 +121,7 @@ class RefSpectrum : public Spectrum
   string getAdduct() const;
   string getInchiKey() const;
   string getotherKeys() const;
+  const SmallMolMetadata getSmallMolMetadata() const; // Small molecule stuff
   
   // Sets result string to a tab seperated concatenation of molecule name, formula,
   // inchikey, otherkeys and adduct when this is non-proteomic (has no mods).
@@ -133,7 +135,7 @@ class RefSpectrum : public Spectrum
 };
 
 //sort by both charge and sequence
-struct compRefSpecIon : public binary_function<RefSpectrum, RefSpectrum, bool>
+struct compRefSpecIon
 {
   bool operator()(RefSpectrum s1, RefSpectrum s2) {
     if( s1.getCharge() == s2.getCharge() ) {
@@ -145,7 +147,8 @@ struct compRefSpecIon : public binary_function<RefSpectrum, RefSpectrum, bool>
 };
 
 //sort by both charge and sequence
-struct compRefSpecPtrIon : public binary_function<RefSpectrum*, RefSpectrum*, bool>{
+struct compRefSpecPtrIon
+{
   bool operator()(RefSpectrum* s1, RefSpectrum* s2) {
     if( s1->getCharge() == s2->getCharge() ) {
       if (s1->getSeq() == s2->getSeq()) {
@@ -159,7 +162,7 @@ struct compRefSpecPtrIon : public binary_function<RefSpectrum*, RefSpectrum*, bo
   }
 };
 
-struct compRefSpecPtrId : public binary_function<RefSpectrum*, RefSpectrum*, bool>
+struct compRefSpecPtrId
 {
   bool operator()(RefSpectrum* s1, RefSpectrum* s2) {return s1->getLibSpecID() <  s2->getLibSpecID();}
 };

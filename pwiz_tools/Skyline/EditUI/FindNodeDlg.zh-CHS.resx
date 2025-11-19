@@ -291,18 +291,6 @@
   <data name="radioDown.Text" xml:space="preserve">
     <value>向下(&amp;D)</value>
   </data>
-  <data name="&gt;&gt;radioDown.Name" xml:space="preserve">
-    <value>radioDown</value>
-  </data>
-  <data name="&gt;&gt;radioDown.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioDown.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;radioDown.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="radioUp.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -317,18 +305,6 @@
   </data>
   <data name="radioUp.Text" xml:space="preserve">
     <value>向上(&amp;U)</value>
-  </data>
-  <data name="&gt;&gt;radioUp.Name" xml:space="preserve">
-    <value>radioUp</value>
-  </data>
-  <data name="&gt;&gt;radioUp.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioUp.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;radioUp.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="cbCaseSensitive.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

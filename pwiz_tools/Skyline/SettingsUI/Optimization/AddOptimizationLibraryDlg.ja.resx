@@ -223,7 +223,7 @@
     <value>4</value>
   </data>
   <data name="radioFile.Text" xml:space="preserve">
-    <value>最適化ライブラリファイル(&amp;O):</value>
+    <value>最適化ライブラリファイル(&amp;O)：</value>
   </data>
   <data name="&gt;&gt;radioFile.Name" xml:space="preserve">
     <value>radioFile</value>

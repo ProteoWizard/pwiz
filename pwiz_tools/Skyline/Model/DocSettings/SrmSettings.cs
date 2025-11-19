@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,8 +27,8 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Crosslinking;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
@@ -43,6 +43,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Serialization;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -264,7 +265,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (precursorCalc == null)
             {
                 // Try to track down this exception:
-                // https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
+                // https://skyline.ms/announcements/home/issues/exceptions/thread.view?entityId=217d79c8-9a84-1032-ae5f-da2025829168&_anchor=19667#row:19667
                 throw new InvalidDataException(
                     String.Format(@"unable to locate precursor calculator for isotope label type {0} and mods {1}",
                         labelType == null ? @"(null)" : labelType.ToString(),
@@ -530,7 +531,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangeMeasuredResults(MeasuredResults prop)
         {
+            ValidateMeasuredResults(prop);
+
             return ChangeProp(ImClone(this), im => im.MeasuredResults = prop);
+        }
+
+        private void ValidateMeasuredResults(MeasuredResults measuredResults)
+        {
+            if (measuredResults != null && measuredResults.Chromatograms.Count == 0)
+                throw new ArgumentException(@"MeasuredResults must have at least one ChromatogramSet. Use null to remove all results.");
         }
 
         public SrmSettings ChangeIsResultsJoiningDisabled(bool prop)
@@ -557,7 +566,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // If the name is already set, and there are no measured results or document library
             // then this instance will do.
-            if (Equals(Name, saveName) && MeasuredResults == null && !PeptideSettings.Libraries.HasDocumentLibrary)
+            if (Equals(Name, saveName) && MeasuredResults == null && !PeptideSettings.Libraries.HasDocumentLibrary && Equals(DocumentRetentionTimes.EMPTY, DocumentRetentionTimes))
                 return this;
 
             // Change the name, and remove results information which is document specific
@@ -566,8 +575,47 @@ namespace pwiz.Skyline.Model.DocSettings
             var dataSettings = settingsSavable.DataSettings;
             dataSettings = dataSettings.ChangeListDefs(dataSettings.Lists.Select(list => list.DeleteAllRows()));
             settingsSavable = settingsSavable.ChangeDataSettings(dataSettings);
+            settingsSavable = settingsSavable.ChangeDocumentRetentionTimes(DocumentRetentionTimes.EMPTY);
             settingsSavable.MeasuredResults = null;
             return settingsSavable;
+        }
+
+        public SrmSettings ChangeDocumentLibraryPath(string newPath)
+        {
+            var peptideLibraries = PeptideSettings.Libraries;
+            var specs = new LibrarySpec[peptideLibraries.LibrarySpecs.Count];
+            var libs = new Library[specs.Length];
+            BiblioSpecLiteLibrary oldDocumentLibrary = null;
+            BiblioSpecLiteLibrary newDocumentLibrary = null;
+            for (int i = 0; i < specs.Length; i++)
+            {
+                if (peptideLibraries.LibrarySpecs[i].IsDocumentLibrary)
+                {
+                    var newDocumentLibrarySpec = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newPath);
+                    specs[i] = newDocumentLibrarySpec;
+                    oldDocumentLibrary = libs[i] as BiblioSpecLiteLibrary;
+                    if (oldDocumentLibrary != null)
+                    {
+                        newDocumentLibrary = oldDocumentLibrary.ChangeLibrarySpec(newDocumentLibrarySpec, FileStreamManager.Default.ConnectionPool);
+                        libs[i] = newDocumentLibrary;
+                    }
+                }
+                else
+                {
+                    specs[i] = peptideLibraries.LibrarySpecs[i];
+                    libs[i] = peptideLibraries.Libraries[i];
+                }
+            }
+
+            var result = ChangePeptideSettings(PeptideSettings.ChangeLibraries(
+                peptideLibraries.ChangeLibraries(specs, libs)));
+            if (newDocumentLibrary != null)
+            {
+                result = result.ChangeDocumentRetentionTimes(
+                    result.DocumentRetentionTimes.ChangeLibrary(oldDocumentLibrary, newDocumentLibrary));
+            }
+
+            return result;
         }
 
         #endregion
@@ -630,16 +678,20 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Cached standard types
         /// </summary>
-        private ImmutableDictionary<StandardType, ImmutableList<PeptideDocNode>> _cachedPeptideStandards;
-        private static readonly PeptideDocNode[] EMPTY_STANDARDS = new PeptideDocNode[0];
+        private ImmutableDictionary<StandardType, ImmutableList<IdPeptideDocNode>> _cachedPeptideStandards;
 
-        public IEnumerable<PeptideDocNode> GetPeptideStandards(StandardType standardType)
+        public ImmutableList<IdPeptideDocNode> GetPeptideStandards(StandardType standardType)
         {
-            ImmutableList<PeptideDocNode> standardPeptides;
+            ImmutableList<IdPeptideDocNode> standardPeptides;
             if (_cachedPeptideStandards == null || !_cachedPeptideStandards.TryGetValue(standardType, out standardPeptides))
-                return EMPTY_STANDARDS; // So that emptiness is reference equal
+                return ImmutableList<IdPeptideDocNode>.EMPTY;
 
             return standardPeptides;
+        }
+
+        public IEnumerable<IdPeptideDocNode> GetSurrogateStandards(string name)
+        {
+            return GetPeptideStandards(StandardType.SURROGATE_STANDARD).Where(idPep=>idPep.PeptideDocNode.ModifiedTarget.InvariantName == name);
         }
 
         public SrmSettings CachePeptideStandards(IList<DocNode> peptideGroupDocNodesOrig,
@@ -650,7 +702,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return this;
 
             // Build an initial mutable dictionay and lists
-            var cachedPeptideStandards = new Dictionary<StandardType, IList<PeptideDocNode>>();
+            var cachedPeptideStandards = new Dictionary<StandardType, List<IdPeptideDocNode>>();
             foreach (PeptideGroupDocNode nodePepGroup in peptideGroupDocNodes)
             {
                 foreach (var nodePep in nodePepGroup.Molecules)
@@ -658,37 +710,37 @@ namespace pwiz.Skyline.Model.DocSettings
                     var standardType = nodePep.GlobalStandardType;
                     if (standardType == null)
                         continue;
-                    IList<PeptideDocNode> listPeptideAndGroup;
+                    List<IdPeptideDocNode> listPeptideAndGroup;
                     if (!cachedPeptideStandards.TryGetValue(standardType, out listPeptideAndGroup))
                     {
-                        listPeptideAndGroup = new List<PeptideDocNode>();
+                        listPeptideAndGroup = new List<IdPeptideDocNode>();
                         cachedPeptideStandards.Add(standardType, listPeptideAndGroup);
                     }
                     // Update the PeptideChromInfo before adding it to the list
                     var nodeWithUpdatedResults = nodePep.ChangeSettings(this, new SrmSettingsDiff(this, true));
                     if (nodePep.Equals(nodeWithUpdatedResults))
                     {
-                        listPeptideAndGroup.Add(nodePep);
+                        listPeptideAndGroup.Add(new IdPeptideDocNode(nodePepGroup.PeptideGroup, nodePep));
                     }
                     else
                     {
-                        listPeptideAndGroup.Add(nodeWithUpdatedResults);
+                        listPeptideAndGroup.Add(new IdPeptideDocNode(nodePepGroup.PeptideGroup, nodeWithUpdatedResults));
                     }
                 }
             }
             // Create new read-only lists, if necessary
             bool createdNewList = false;
-            var cachedPeptideStandardsRo = new Dictionary<StandardType, ImmutableList<PeptideDocNode>>();
+            var cachedPeptideStandardsRo = new Dictionary<StandardType, ImmutableList<IdPeptideDocNode>>();
             foreach (var pair in cachedPeptideStandards)
             {
                 var standardType = pair.Key;
                 var peptidesNew = pair.Value;
-                ImmutableList<PeptideDocNode> peptides;
+                ImmutableList<IdPeptideDocNode> peptides;
                 if (_cachedPeptideStandards == null ||
                     !_cachedPeptideStandards.TryGetValue(standardType, out peptides) ||
                     !ArrayUtil.EqualsDeep(peptides, peptidesNew))
                 {
-                    peptides = MakeReadOnly(peptidesNew);
+                    peptides = ImmutableList.ValueOf(peptidesNew);
                     createdNewList = true;
                 }
                 cachedPeptideStandardsRo.Add(standardType, peptides);
@@ -699,7 +751,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (_cachedPeptideStandards == null || _cachedPeptideStandards.Count == cachedPeptideStandardsRo.Count)
                     return this;
             }
-            var prop = new ImmutableDictionary<StandardType, ImmutableList<PeptideDocNode>>(cachedPeptideStandardsRo);
+            var prop = new ImmutableDictionary<StandardType, ImmutableList<IdPeptideDocNode>>(cachedPeptideStandardsRo);
             return ChangeProp(ImClone(this), im => im._cachedPeptideStandards = prop);
         }
 
@@ -846,7 +898,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var peptideStandards = GetPeptideStandards(StandardType.GLOBAL_STANDARD);
             if (peptideStandards != null)
             {
-                foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.TransitionGroups))
+                foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.PeptideDocNode.TransitionGroups))
                 {
                     var chromInfos = nodeGroup.GetSafeChromInfo(resultsIndex);
                     foreach (var groupChromInfo in chromInfos)
@@ -859,16 +911,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             return globalStandardArea;
-        }
-
-        public IEnumerable<PeptideDocNode> GetInternalStandards(string internalStandardName)
-        {
-            if (null == internalStandardName)
-            {
-                return GetPeptideStandards(StandardType.GLOBAL_STANDARD);
-            }
-            return GetPeptideStandards(StandardType.SURROGATE_STANDARD)
-                .Where(pep => pep.ModifiedTarget.Sequence == internalStandardName);
         }
 
         public bool LibrariesContainMeasurablePeptide(Peptide peptide, IList<Adduct> precursorCharges, ExplicitMods mods)
@@ -1017,36 +1059,37 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 // Use the explicitly specified CCS value if provided, and if we know how to convert to IM
                 var im = instrumentInfo.IonMobilityFromCCS(nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.Value,
-                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(im,
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
-                // Now get the window width
-                var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
-                return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
+                if (imAndCCS.IonMobility.Mobility.HasValue) // Did CCS conversion succeed?
+                {
+                    // Now get the window width
+                    var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
+                    return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
+                }
             }
-            else if (nodeGroup.ExplicitValues.IonMobility.HasValue)
+            if (nodeGroup.ExplicitValues.IonMobility.HasValue)
             {
-                // Use the explicitly specified IM value
+                // Use the explicitly specified IM value if no CCS provided, or if CCS=>IM conversion failed
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
-                if (instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
+                if (!nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && // Retain original CCS if CCS=>IM failed
+                    instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
                 {
                     // Try to get a CCS value for this explicitly stated IM value - useful in reports
-                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                     imAndCCS = imAndCCS.ChangeCollisionalCrossSection(ccs);
                 }
                 // Now get the window width
                 var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
                 return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
             }
-            else
-            {
-                // Use library values
-                return GetIonMobilityHelper(nodePep, nodeGroup,
-                    instrumentInfo,
-                    libraryIonMobilityInfo, ionMobilityMax);
-            }
+            // Use library values
+            return GetIonMobilityHelper(nodePep, nodeGroup,
+                instrumentInfo,
+                libraryIonMobilityInfo, ionMobilityMax);
         }
 
         /// <summary>
@@ -1098,17 +1141,17 @@ namespace pwiz.Skyline.Model.DocSettings
                 ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
             {
                 // Try to get a CCS value for this IM value - useful in reports
-                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge, nodeGroup.Peptide);
                 result = result.ChangeCollisionCrossSection(ccs);
             }
             return result ?? IonMobilityFilter.EMPTY;
         }
 
-        public bool TryGetRetentionTimes(Target sequence, Adduct adduct, ExplicitMods mods, MsDataFileUri filePath,
+        public bool TryGetRetentionTimes(PeptideDocNode peptideDocNode, Adduct precursorAdduct, MsDataFileUri filePath,
             out IsotopeLabelType type, out double[] retentionTimes)
         {
             var libraries = PeptideSettings.Libraries;
-            foreach (var typedSequence in GetTypedSequences(sequence, mods, adduct))
+            foreach (var typedSequence in GetTypedSequences(peptideDocNode.SourceUnmodifiedTarget, peptideDocNode.SourceExplicitMods, precursorAdduct))
             {
                 var key = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
                 if (libraries.TryGetRetentionTimes(key, filePath, out retentionTimes))
@@ -1123,23 +1166,20 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public double[] GetBestRetentionTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
+        public double[] GetBestRetentionTimes(PeptideDocNode nodePep, ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
-            if (!nodePep.IsProteomic)
-                return new double[0]; // No retention time prediction for small molecules
-
-            var lookupSequence = nodePep.SourceUnmodifiedTarget;
-            var lookupMods = nodePep.SourceExplicitMods;
+            var targets = GetTargets(nodePep).ToList();
+            
             if (filePath != null)
             {
-                var times = GetRetentionTimes(filePath, lookupSequence, lookupMods);
+                var times = GetRetentionTimes(filePath, targets);
                 if (times.Length > 0)
                     return times;
-                times = GetAllRetentionTimes(filePath, lookupSequence, lookupMods);
+                times = GetAlignedRetentionTimes(chromatogramSet, filePath, targets);
                 if (times.Length > 0)
                     return times;
             }
-            return GetUnalignedRetentionTimes(lookupSequence, lookupMods);
+            return GetUnalignedRetentionTimes(targets);
         }
 
         /// <summary>
@@ -1179,69 +1219,79 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        public double[] GetRetentionTimes(string filePath, Target peptideSequence, ExplicitMods explicitMods,
-            RetentionTimeAlignmentIndex alignmentIndex = null)
+        public double[] GetRetentionTimes(MsDataFileUri filePath, IList<Target> targets)
         {
-            return GetRetentionTimes(MsDataFileUri.Parse(filePath), peptideSequence, explicitMods, alignmentIndex);
-        }
-
-        public double[] GetRetentionTimes(MsDataFileUri filePath, Target peptideSequence, ExplicitMods explicitMods,
-            RetentionTimeAlignmentIndex alignmentIndex = null)
-        {
-            string basename = filePath.GetFileNameWithoutExtension();
-            var source = DocumentRetentionTimes.RetentionTimeSources.Find(basename);
-            if (source == null)
+            foreach (var library in PeptideSettings.Libraries.Libraries.Where(lib => true == lib?.IsLoaded))
             {
-                return new double[0];
-            }
-            var library = PeptideSettings.Libraries.GetLibrary(source.Library);
-            if (library == null)
-            {
-                return new double[0];
-            }
-            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods, Adduct.EMPTY, true)
-                .Select(typedSequence => typedSequence.ModifiedSequence);
-
-            int? index = (alignmentIndex != null ? alignmentIndex.FileIndex : null);
-
-            var times = library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index).ToArray();
-
-            if (alignmentIndex != null)
-                alignmentIndex.FileIndex = index;
-            return times;
-        }
-
-        public double[] GetAlignedRetentionTimes(MsDataFileUri filePath, Target peptideSequence, ExplicitMods explicitMods)
-        {
-            string basename = filePath.GetFileNameWithoutExtension();
-            var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(basename);
-
-            return GetAlignedRetentionTimes(new RetentionTimeAlignmentIndices(fileAlignments), peptideSequence, explicitMods);
-        }
-
-        public double[] GetAlignedRetentionTimes(RetentionTimeAlignmentIndices alignmentIndices, Target peptideSequence, ExplicitMods explicitMods)
-        {
-            var times = new List<double>();
-            if (alignmentIndices != null)
-            {
-                foreach (var alignmentIndex in alignmentIndices)
+                var times = library.GetRetentionTimes(filePath, targets);
+                if (times != null)
                 {
-                    var unalignedTimes = GetRetentionTimes(MsDataFileUri.Parse(alignmentIndex.Alignment.Name), peptideSequence, explicitMods, alignmentIndex);
-                    foreach (var unalignedTime in unalignedTimes)
+                    return times as double[] ?? times.ToArray();
+                }
+            }
+
+            return Array.Empty<double>();
+        }
+
+        public double[] GetAlignedRetentionTimes(ChromatogramSet chromatogramSet, MsDataFileUri filePath, IList<Target> targets)
+        {
+            var alignmentFunction = DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, filePath, true);
+            if (alignmentFunction == null)
+            {
+                return Array.Empty<double>();
+            }
+            var batchNames = new List<string> { null };
+            if (!string.IsNullOrEmpty(chromatogramSet?.BatchName))
+            {
+                batchNames.Insert(0, chromatogramSet.BatchName);
+            }
+
+            foreach (var library in PeptideSettings.Libraries.Libraries)
+            {
+                if (true != library?.IsLoaded)
+                {
+                    continue;
+                }
+
+                var libraryAlignment = DocumentRetentionTimes.GetLibraryAlignment(library.Name);
+                if (libraryAlignment == null)
+                {
+                    continue;
+                }
+
+                foreach (var batchName in batchNames)
+                {
+                    HashSet<string> spectrumSourceFiles = null;
+                    if (!string.IsNullOrEmpty(batchName))
                     {
-                        var alignedTime = alignmentIndex.Alignment.RegressionLine.GetY(unalignedTime);
+                        spectrumSourceFiles =
+                            GetSpectrumSourceFilesInBatch(libraryAlignment.Library.LibraryFiles, batchName).ToHashSet();
+                        if (spectrumSourceFiles.Count == 0)
+                        {
+                            continue;
+                        }
+                    }
+
+                    var times = new List<double>();
+                    foreach (var normalizedTime in libraryAlignment.GetNormalizedRetentionTimes(spectrumSourceFiles,
+                                 targets))
+                    {
+                        var alignedTime = alignmentFunction.GetY(normalizedTime);
+                        // Console.Out.WriteLine("Mapping normalized time {0} to {1} for file {2}", normalizedTime, alignedTime, filePath.GetFileName());
                         times.Add(alignedTime);
+                    }
+                    if (times.Count > 0)
+                    {
+                        return times.ToArray();
                     }
                 }
             }
-            return times.ToArray();
+            return Array.Empty<double>();
         }
 
-        public double[] GetUnalignedRetentionTimes(Target peptideSequence, ExplicitMods explicitMods)
+        public double[] GetUnalignedRetentionTimes(ICollection<Target> targets)
         {
             var times = new List<double>();
-            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods, Adduct.EMPTY, true)
-                .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
                 if (null == library)
@@ -1251,65 +1301,62 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (var source in library.ListRetentionTimeSources())
                 {
                     int? index = null;
-                    times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index));
+                    times.AddRange(library.GetRetentionTimesWithSequences(source.Name, targets, ref index));
                 }
             }
             return times.ToArray();
         }
 
-        public double[] GetRetentionTimesNotAlignedTo(MsDataFileUri fileNotAlignedTo, Target peptideSequence,
-            ExplicitMods explicitMods, SignedMz[] precursorMzs)
+        public double[] GetRetentionTimesNotAlignedTo(ChromatogramSet chromatogramSet, MsDataFileUri fileNotAlignedTo, ICollection<Target> targets, ICollection<SignedMz> precursorMzs)
         {
-            var times = new List<double>();
-            string basename = fileNotAlignedTo.GetFileNameWithoutExtension();
-            var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(basename);
-            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods, Adduct.EMPTY, true)
-                .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
-
-            foreach (var library in PeptideSettings.Libraries.Libraries.Where(library => library != null))
+            if (null != DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, fileNotAlignedTo,
+                    true))
             {
-                // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                // ReSharper disable HeuristicUnreachableCode
+                return Array.Empty<double>();
+            }
+            var result = new List<double>();
+            foreach (var library in PeptideSettings.Libraries.Libraries)
+            {
+                if (true != library?.IsLoaded)
+                {
+                    continue;
+                }
+
+                result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
                     foreach (var midasSpectra in precursorMzs.Select(precursorMz => GetMidasSpectra(precursorMz.Value)))
                     {
-                        times.AddRange(midasSpectra.Where(spectrum => spectrum.RetentionTime.HasValue && !Equals(spectrum.FileName, fileNotAlignedTo.GetFileName()))
-                                                   .Select(spectrum => spectrum.RetentionTime.GetValueOrDefault()));
+                        result.AddRange(midasSpectra.Where(spectrum => spectrum.RetentionTime.HasValue && !Equals(spectrum.FileName, fileNotAlignedTo.GetFileName()))
+                            .Select(spectrum => spectrum.RetentionTime.GetValueOrDefault()));
                     }
                 }
-                else
-                {
-                    foreach (var source in library.ListRetentionTimeSources())
-                    {
-                        if (MeasuredResults.IsBaseNameMatch(source.Name, basename) ||
-                            (null != fileAlignments && null != fileAlignments.RetentionTimeAlignments.Find(source.Name)))
-                        {
-                            continue;
-                        }
-                        int? indexIgnore = null;
-                        // ReSharper disable PossibleMultipleEnumeration
-                        times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref indexIgnore));
-                        // ReSharper restore PossibleMultipleEnumeration
-                    }
-                }
-                // ReSharper restore HeuristicUnreachableCode
-                // ReSharper restore ConditionIsAlwaysTrueOrFalse
             }
-            return times.ToArray();
+
+            return result.ToArray();
         }
 
-        public double[] GetAllRetentionTimes(string filePath, Target peptideSequence, ExplicitMods explicitMods)
+        public IEnumerable<string> GetSpectrumSourceFilesInBatch(LibraryFiles libraryFiles, string batchName)
         {
-            return GetAllRetentionTimes(MsDataFileUri.Parse(filePath), peptideSequence, explicitMods);
+            if (MeasuredResults == null)
+            {
+                return null;
+            }
+
+            return MeasuredResults.Chromatograms.Where(chromatogramSet => chromatogramSet.BatchName == batchName)
+                .SelectMany(chromatogramSet => chromatogramSet.MSDataFilePaths).Distinct()
+                .Select(libraryFiles.FindIndexOf).Distinct().Select(libraryFiles.FilePaths.ElementAtOrDefault);
         }
 
-        public double[] GetAllRetentionTimes(MsDataFileUri filePath, Target peptideSequence, ExplicitMods explicitMods)
+        public IEnumerable<Target> GetTargets(PeptideDocNode peptideDocNode)
         {
-            var times = new List<double>();
-            times.AddRange(GetRetentionTimes(filePath, peptideSequence, explicitMods));
-            times.AddRange(GetAlignedRetentionTimes(filePath, peptideSequence, explicitMods));
-            return times.ToArray();
+            if (peptideDocNode == null)
+            {
+                return Array.Empty<Target>();
+            }
+
+            return GetTypedSequences(peptideDocNode.SourceUnmodifiedTarget, peptideDocNode.SourceExplicitMods,
+                Adduct.EMPTY, peptideDocNode.IsProteomic).Select(typedSequence => typedSequence.ModifiedSequence);
         }
 
         private IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false)
@@ -1405,7 +1452,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
                 }
-                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues && filePath != null)
+                if (dict.Count < targetIons.Length && imFiltering.UseSpectralLibraryIonMobilityValues)
                 {
                     var libraries = PeptideSettings.Libraries;
                     if (libraries.TryGetSpectralLibraryIonMobilities(targetIons, filePath, out var ionMobilities) && ionMobilities != null)
@@ -1424,17 +1471,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     : LibraryIonMobilityInfo.EMPTY;
             }
             return null;
-        }
-
-        /// <summary>
-        /// Returns the times at which a peptide was found in a particular file.
-        /// </summary>
-        public double[] GetRetentionTimes(LibraryRetentionTimes retentionTimes, Target sequence, ExplicitMods mods, Adduct adduct)
-        {
-            return (from typedSequence in GetTypedSequences(sequence, mods, adduct)
-                    from time in retentionTimes.GetRetentionTimes(typedSequence.ModifiedSequence)
-                    select time)
-                .ToArray();
         }
 
         /// <summary>
@@ -1517,7 +1553,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var peptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
             var enumDocNodes = peptide.CreateDocNodes(this, this);
-            return enumDocNodes.GetEnumerator().MoveNext();
+            return enumDocNodes.Any();
         }
 
         public bool Accept(string peptideSequence)
@@ -1855,7 +1891,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     var librarySpec = libraries.LibrarySpecs[i];
                     if (librarySpec == null)
-                        throw new InvalidDataException(Resources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
+                        throw new InvalidDataException(DocSettingsResources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
                     librarySpecs[iSpec] = librarySpec;
                     if (!File.Exists(librarySpec.FilePath))
                     {
@@ -1935,7 +1971,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     (!defSet.StaticModList.Contains(mod.ChangeExplicit(false)) || (mod.IsVariable && allowVariableOverwrite)) &&
                     // A variable modification set explicitly, can show up as explicit only in a document.
                     // This condition makes sure it doesn't overwrite the existing variable mod.
-                    (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
+                    // Carefully because not all mods can be made variable without throwing
+                    (!mod.IsExplicit || !defSet.StaticModList.Contains(m => Equals(mod.ChangeVariable(false), m.ChangeVariable(false)))))
                 {
                     newStaticMods.Add(mod.IsUserSet ? mod.ChangeExplicit(false) : mod);
                     if (!overwrite)
@@ -1944,7 +1981,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (defSet.StaticModList.Any(existingMod => Equals(existingMod.Name, modName)))
                         {
                             throw new InvalidDataException(
-                                string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                string.Format(DocSettingsResources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
                                     modName));
                         }
                     }
@@ -1964,7 +2001,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             if (defSet.HeavyModList.Any(existingMod => Equals(existingMod.Name, modName)))
                             {
                                 throw new InvalidDataException(
-                                    string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                    string.Format(DocSettingsResources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
                                         modName));
                             }
                         }
@@ -1975,7 +2012,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 defSet.StaticModList.Add(mod);
             foreach(StaticMod mod in newHeavyMods)
                 defSet.HeavyModList.Add(mod);
-         }
+        }
 
         /// <summary>
         /// Returns true if any of the runs in this Document have been successfully aligned 
@@ -1983,44 +2020,22 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasAlignedTimes()
         {
-            return
-                DocumentRetentionTimes.FileAlignments.Values.Any(
-                    fileRetentionTimeAlignments => fileRetentionTimeAlignments.RetentionTimeAlignments.Count > 0);
+            return DocumentRetentionTimes.AnyLibraryAlignments();
         }
 
         /// <summary>
         /// Returns true if there are any runs in this Document that have not been aligned against
-        /// all of the runs in the Libraries in this Document.
+        /// all the runs in the Libraries in this Document.
         /// </summary>
         public bool HasUnalignedTimes()
         {
-            if (!HasResults)
+            if (TryGetAlignmentTarget(out var alignmentTarget) && alignmentTarget == null)
             {
-                return false;
+                return true;
             }
-            foreach (var chromatogramSet in MeasuredResults.Chromatograms)
-            {
-                foreach (var msDataFileInfo in chromatogramSet.MSDataFileInfos)
-                {
-                    var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(msDataFileInfo);
-                    if (fileAlignments == null)
-                    {
-                        return true;
-                    }
-                    foreach (var source in DocumentRetentionTimes.RetentionTimeSources.Values)
-                    {
-                        if (source.Name == fileAlignments.Name)
-                        {
-                            continue;
-                        }
-                        if (null == fileAlignments.RetentionTimeAlignments.Find(source.Name))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
+
+            return MeasuredResults.MSDataFilePaths.Any(file =>
+                DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, file, true) == null);
         }
 
         /// <summary>
@@ -2085,6 +2100,42 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            if (documentFormat < DocumentFormat.VERSION_24_11)
+            {
+                if (!result.TransitionSettings.FullScan.SpectrumClassFilter.IsEmpty)
+                {
+                    var fullScan = result.TransitionSettings.FullScan;
+                    if (fullScan.SpectrumClassFilter.Clauses.Contains(TransitionFullScan.IgnoreSimScansFilter))
+                    {
+                        fullScan = fullScan.ChangeIgnoreSimScans(true);
+                    }
+
+                    fullScan = fullScan.ChangeSpectrumFilter(default);
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(fullScan));
+                }
+            }
+            if (documentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                if (!Equals(ImputationSettings.DEFAULT, result.PeptideSettings.Imputation))
+                {
+                    result = result.ChangePeptideSettings(
+                        result.PeptideSettings.ChangeImputation(ImputationSettings.DEFAULT));
+                }
+
+                result = result.ChangeDocumentRetentionTimes(DocumentRetentionTimes.EMPTY);
+            }
+
+            if (documentFormat < DocumentFormat.ELECTRON_IONIZATION)
+            {
+                if (Equals(FullScanAcquisitionMethod.EI, result.TransitionSettings.FullScan.AcquisitionMethod))
+                {
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(
+                        result.TransitionSettings.FullScan.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA,
+                            new IsolationScheme(null, Array.Empty<IsolationWindow>(),
+                                IsolationScheme.SpecialHandlingType.ALL_IONS))));
+                }
+            }
+
             return result;
         }
 
@@ -2104,6 +2155,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
             return infoSet.FirstOrDefault(chromatogramGroupInfo =>
                 Equals(chromatogramGroupInfo.FilePath, dataFilePath));
+        }
+
+        public AlignmentTargetSpec GetAlignmentTargetSpec()
+        {
+            return PeptideSettings.Imputation?.AlignmentTarget ?? AlignmentTargetSpec.Default;
+        }
+
+        public bool TryGetAlignmentTarget(out AlignmentTarget alignmentTarget)
+        {
+            var spec = GetAlignmentTargetSpec();
+            if (spec.IsChromatogramPeaks)
+            {
+                alignmentTarget = DocumentRetentionTimes.MedianDocumentRetentionTimes;
+                return alignmentTarget != null;
+            }
+
+            return spec.TryGetAlignmentTarget(this, out alignmentTarget);
         }
 
         #region Implementation of IXmlSerializable
@@ -2222,13 +2290,13 @@ namespace pwiz.Skyline.Model.DocSettings
             // We want Skyline to be able to read older documents where <measured_results> come before <data_settings>
             if (reader.IsStartElement(new XmlElementHelper<MeasuredResults>().ElementNames[0]))
             {
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>()?.NullIfEmpty();
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;   
             }
             else
             {
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>()?.NullIfEmpty();
             }
             DocumentRetentionTimes = reader.DeserializeElement<DocumentRetentionTimes>() ?? DocumentRetentionTimes.EMPTY;
             reader.ReadEndElement();
@@ -2244,7 +2312,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(DataSettings);
             if (MeasuredResults != null)
                 writer.WriteElement(MeasuredResults);
-            if (!DocumentRetentionTimes.IsEmpty)
+            if (DocumentRetentionTimes.AnyAlignments())
                 writer.WriteElement(DocumentRetentionTimes);
         }
 
@@ -2362,7 +2430,22 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 _store[(int)ionType + OFFSET_I, index] = value;
             }
-        }    
+        }
+
+        public T GetIonValue(IonType ionType, int ionNumber)
+        {
+            if (ionType.IsNTerminal())
+                return this[ionType, ionNumber - 1];
+            return this[ionType, _store.GetLength(1) - ionNumber];
+        }
+
+        public void SetIonValue(IonType ionType, int ionNumber, T value)
+        {
+            if (ionType.IsNTerminal())
+                this[ionType, ionNumber - 1] = value;
+            else
+                this[ionType, _store.GetLength(1) - ionNumber] = value;
+        }
     }
 
 
@@ -2797,8 +2880,12 @@ namespace pwiz.Skyline.Model.DocSettings
             // If the results changed, then update the results information which has changed
             DiffResults = !EqualExceptAnnotations(settingsNew.MeasuredResults, settingsOld.MeasuredResults);
             // If the integration strategy has changed, then force a full update of all results
-            if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll)
+            if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll
+                || !Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation)
+                || !settingsNew.DocumentRetentionTimes.Equivalent(settingsOld.DocumentRetentionTimes))
+            {
                 DiffResults = DiffResultsAll = true;
+            }
             // If the match tolerance has changed, then force a full update of all results
             if (newTran.Instrument.MzMatchTolerance != oldTran.Instrument.MzMatchTolerance)
                 DiffResults = DiffResultsAll = true;

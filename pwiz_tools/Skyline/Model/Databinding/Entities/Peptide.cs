@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -51,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [OneToMany(ForeignKey = "Peptide")]
-        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [HideWhen(AncestorOfType = typeof(FoldChangeRow))]
         public IList<Precursor> Precursors
         {
             get
@@ -63,7 +62,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [ProteomicDisplayName("PeptideResults")]
         [InvariantDisplayName("MoleculeResults")]
         [OneToMany(ForeignKey = "Peptide")]
-        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [HideWhen(AncestorOfType = typeof(FoldChangeRow))]
         public IDictionary<ResultKey, PeptideResult> Results
         {
             get { return _cachedValues.GetValue2(this); }
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new PeptideDocNode(new Model.Peptide(null, @"X", null, null, 0));
         }
 
-        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeBindingSource.FoldChangeRow)})]
+        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeRow)})]
         [InvariantDisplayName("MoleculeList", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Protein Protein
         {
@@ -166,7 +165,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                 {
-                    return DocNode.CustomMolecule.Formula ?? string.Empty;
+                    return DocNode.CustomMolecule.HasChemicalFormula ? DocNode.CustomMolecule.Formula : string.Empty;
                 }
                 else
                 {
@@ -177,7 +176,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
         [Importable(Formatter = typeof(StandardType.PropertyFormatter))]
         public StandardType StandardType
         {
@@ -193,7 +191,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 }
                 if (StandardType == StandardType.IRT || value == StandardType.IRT)
                 {
-                    throw new InvalidOperationException(Resources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
+                    throw new InvalidOperationException(EntitiesResources.Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator);
                 }
                 ModifyDocument(EditColumnDescription(nameof(StandardType), value).ChangeElementRef(GetElementRef()),
                     doc => doc.ChangeStandardType(value, new[]{IdentityPath}));
@@ -331,7 +329,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DataGridViewColumnType(typeof(NormalizationMethodDataGridViewColumn))]
         [Importable(Formatter = typeof(NormalizationMethod.PropertyFormatter))]
         public NormalizationMethod NormalizationMethod
         {
@@ -340,6 +337,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 ChangeDocNode(EditColumnDescription(nameof(NormalizationMethod), value),
                     docNode=>docNode.ChangeNormalizationMethod(value));
+            }
+        }
+
+
+        [DataTypeSpecifier(typeof(SurrogateStandardName))]
+        [Importable]
+        public string SurrogateExternalStandard
+        {
+            get { return DocNode.SurrogateCalibrationCurve; }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(SurrogateExternalStandard), value),
+                    docNode => docNode.ChangeSurrogateCalibrationCurve(value));
             }
         }
 
@@ -429,7 +439,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         if (DocNode.HasPrecursorConcentrations &&
                             Settings.Default.CalibrationCurveOptions.SingleBatch)
                         {
-                            Settings.Default.CalibrationCurveOptions.SingleBatch = false;
+                            Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(false);
                             calibrationForm.UpdateUI(false);
                         }
                     }
@@ -449,8 +459,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public PeptideQuantifier GetPeptideQuantifier()
         {
-            var quantifier = PeptideQuantifier.GetPeptideQuantifier(()=>DataSchema.GetReplicateSummaries().GetNormalizationData(), 
-                SrmDocument.Settings, Protein.DocNode, DocNode);
+            var quantifier = PeptideQuantifier.GetPeptideQuantifier(DataSchema.LazyNormalizationData, 
+                SrmDocument.Settings, Protein.DocNode.PeptideGroup, DocNode);
             return quantifier;
         }
 
@@ -464,13 +474,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             if (nodeCount == 1)
             {
                 return string.Format(DataSchema.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___
-                    : Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___, this);
+                    ? EntitiesResources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___
+                    : EntitiesResources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_molecule___0___, this);
             }
             return string.Format(
                 DataSchema.ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
                 ? Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_
-                : Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_, nodeCount);
+                : EntitiesResources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__molecules_, nodeCount);
         }
 
         // Small molecule IDs (in PREFERRED_ACCESSION_TYPE_ORDER) - keep these at end
@@ -563,7 +573,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             protected override CalibrationCurveFitter CalculateValue(Peptide owner)
             {
-                return new CalibrationCurveFitter(owner.GetPeptideQuantifier(), owner.SrmDocument.Settings);
+                return CalibrationCurveFitter.GetCalibrationCurveFitter(owner.DataSchema.LazyNormalizationData,
+                    owner.SrmDocument.Settings,
+                    new IdPeptideDocNode(owner.Protein.DocNode.PeptideGroup, owner.DocNode));
             }
 
             protected override ImmutableList<Precursor> CalculateValue1(Peptide owner)
@@ -577,5 +589,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return owner.MakeResults();
             }
         }
+    }
+
+    /// <summary>
+    /// Marker type used with DataTypeSpecifierAttribute to indicate that a string property
+    /// represents a surrogate standard name and should use SurrogateStandardDataGridViewColumn
+    /// in the UI without creating a compile-time dependency from Model to UI.
+    /// </summary>
+    public class SurrogateStandardName
+    {
     }
 }

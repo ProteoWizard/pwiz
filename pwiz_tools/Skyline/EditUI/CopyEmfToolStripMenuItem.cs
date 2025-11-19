@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,9 +18,9 @@
  */
 using System;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using ZedGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
@@ -37,16 +37,6 @@ namespace pwiz.Skyline.EditUI
     /// </summary>
     public sealed class CopyEmfToolStripMenuItem : ToolStripMenuItem
     {
-
-        [DllImport("user32.dll")]
-        static extern bool OpenClipboard(IntPtr hWndNewOwner);
-        [DllImport("user32.dll")]
-        static extern bool EmptyClipboard();
-        [DllImport("user32.dll")]
-        static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
-        [DllImport("user32.dll")]
-        static extern bool CloseClipboard();
-
         public CopyEmfToolStripMenuItem(ZedGraphControl zedGraphControl)
         {
             ZedGraphControl = zedGraphControl;
@@ -64,14 +54,14 @@ namespace pwiz.Skyline.EditUI
         {
             Metafile mf = zedGraphControl.MasterPane.GetMetafile();
             bool success = false;
-            if (OpenClipboard(zedGraphControl.Handle))
+            if (User32.OpenClipboard(zedGraphControl.Handle))
             {
-                if (EmptyClipboard())
+                if (User32.EmptyClipboard())
                 {
                     success = true;
-                    SetClipboardData(14 /*CF_ENHMETAFILE*/, mf.GetHenhmetafile());
+                    User32.SetClipboardData(User32.CF_ENHMETAFILE, mf.GetHenhmetafile());
                     // CONSIDER(nicksh): It would be nice if we also set the CF_BITMAP
-                    CloseClipboard();
+                    User32.CloseClipboard();
                 }
             }
 
@@ -84,7 +74,7 @@ namespace pwiz.Skyline.EditUI
                 if (zedGraphControl.IsShowCopyMessage)
                 {
                     MessageDlg.Show(zedGraphControl,
-                        Resources.CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard);
+                        EditUIResources.CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard);
                 }
             }
         }

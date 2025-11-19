@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -109,15 +109,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Protobuf, Version=3.5.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath>
-    </Reference>
-    <Reference Include="Grpc.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\Grpc.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Grpc.Core.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
+    <Reference Include="Grpc.Core.Api, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\Grpc.Core.Api.dll</HintPath>
     </Reference>
@@ -163,59 +155,114 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
+    <Compile Include="AddIrtStandardsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
     <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
+    <Compile Include="AlertDlgTest.cs" />
+    <Compile Include="AlignedIdTimesTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
+    <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
+    <Compile Include="AssociateProteinsParsimonySettingsTest.cs" />
+    <Compile Include="AssociateProteinsWhileLoadingTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="AutoSelectPeptidesTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
+    <Compile Include="AutoZoomTest.cs" />
     <Compile Include="BatchCalibrationGroupComparisonTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
+    <Compile Include="ChargedLossesLibraryTest.cs" />
+    <Compile Include="ChromatogramExtractionRangeTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
+    <Compile Include="ConstantNeutralLossTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="CopyProteinGroupTest.cs" />
     <Compile Include="CrosslinkImsTest.cs" />
     <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="DetectionsPlotErrorTest.cs" />
+    <Compile Include="DissociationMethodTest.cs" />
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
+    <Compile Include="EditablePivotTest.cs" />
+    <Compile Include="LookupGroupComparisonTest.cs" />
+    <Compile Include="HelpDocumentationContentTest.cs" />
+    <Compile Include="ManagingSearchToolsTest.cs" />
     <Compile Include="EditNeutralLossesTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
     <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
     <Compile Include="ExportPropertiesTest.cs" />
     <Compile Include="FindNodeCancelTest.cs" />
+    <Compile Include="FullScanPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
+    <Compile Include="ImmediateWindowWarningsTest.cs" />
+    <Compile Include="ImportPromptToSaveTest.cs" />
+    <Compile Include="ImportResultsFilesRestoreTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="IrtCalibrationTest.cs" />
+    <Compile Include="InternationalFilenamesTest.cs" />
+    <Compile Include="KeyboardShortcutHelpTest.cs" />
+    <Compile Include="LegacyIgnoreSimTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="LiteDropdownListTest.cs" />
+    <Compile Include="LogScaleAxisTest.cs" />
     <Compile Include="MedianNormalizationTest.cs" />
     <Compile Include="MessageBoxHelperTest.cs" />
+    <Compile Include="MinimizeWithEmptyFilesTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
+    <Compile Include="MissingOptStepsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="Ms1SpectrumFilterTest.cs" />
+    <Compile Include="MultiInjectCandidatePeakTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
+    <Compile Include="MultiInjectReplicatePivotTest.cs" />
+    <Compile Include="MultiInjectRescoreTest.cs" />
+    <Compile Include="ChangeDocumentGuidTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
+    <Compile Include="PanoramaClientPublishTest.cs" />
+    <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
+    <Compile Include="PeakImputationImportTest.cs" />
+    <Compile Include="PeakImputationRescoreTest.cs" />
+    <Compile Include="PeakImputationWithBatchesTest.cs" />
+    <Compile Include="PeakImputationTest.cs" />
+    <Compile Include="PeakMetricsTest.cs" />
+    <Compile Include="PrmCeOptimizationTest.cs" />
+    <Compile Include="QcTraceChromatogramTest.cs" />
     <Compile Include="QcTraceNameTest.cs" />
+    <Compile Include="RedundantComboBoxTest.cs" />
+    <Compile Include="RemoveAnnotationTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
+    <Compile Include="RenameMoleculeTest.cs" />
+    <Compile Include="ReplicateNameMetadataRuleTest.cs" />
+    <Compile Include="ReplicatePivotColumnsTest.cs" />
+    <Compile Include="ReplicatePivotGridTest.cs" />
+    <Compile Include="RescoreInPlaceTest.cs" />
+    <Compile Include="RescoreSimultaneousTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
+    <Compile Include="RunToRunAlignmentTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />
+    <Compile Include="SequenceTreeExpandCollapseTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="SkipZoomScansTest.cs" />
+    <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
+    <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="SkydFileModifiedTest.cs" />
     <Compile Include="SpectrumGridTest.cs" />
     <Compile Include="ToolServiceTestSharedClasses.cs" />
     <Compile Include="EditSpectrumFilterTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
+    <Compile Include="UnalignedRetentionTimesTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
@@ -238,6 +285,7 @@
     <Compile Include="DuplicateSmallMoleculePrecursorTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
+    <Compile Include="HttpClientWithProgressIntegrationTest.cs" />
     <Compile Include="InstrumentMinMaxTimeTest.cs" />
     <Compile Include="InvalidPeptideRankIdTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
@@ -376,10 +424,10 @@
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
-    <Compile Include="PrositSkylineIntegrationTest.cs" />
+    <Compile Include="KoinaSkylineIntegrationTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
-    <Compile Include="PythonInstallerTest.cs" />
+    <Compile Include="PythonInstallerLegacyDlgTest.cs" />
     <Compile Include="QuantitativeTest.cs" />
     <Compile Include="RefineProteinListDlgTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />
@@ -449,6 +497,10 @@
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
@@ -489,6 +541,10 @@
       <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
       <Name>SkylineTool</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
+      <Project>{e3f0e34f-f9e6-4360-996f-e2054e4fa1ae}</Project>
+      <Name>TestRunnerLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestUtil\TestUtil.csproj">
       <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
       <Name>TestUtil</Name>
@@ -497,6 +553,7 @@
   <ItemGroup>
     <None Include="AccessServerTest.zip" />
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
+    <None Include="AddIrtStandardsTest.zip" />
     <None Include="AddLibraryTest.zip" />
     <None Include="AddMixedLibraryTest.zip" />
     <None Include="AgilentCeOptimizationTest.zip" />
@@ -520,10 +577,10 @@
     <None Include="ChromGraphTransformTest.zip" />
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
+    <None Include="ConstantNeutralLossTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkImsTest.zip" />
     <None Include="CrosslinkingTest.zip" />
-    <None Include="CrosslinkNeutralLossTest.zip" />
     <None Include="DdaPeakIntegrationTest.zip" />
     <None Include="DdaSearchTest.zip" />
     <None Include="DecoyTargetMatchTest.zip" />
@@ -549,6 +606,7 @@
     <None Include="ExportChromatogramTest.zip" />
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
+    <EmbeddedResource Include="ExportMethodDialogThermoTest.json" />
     <None Include="ExportSpectralLibraryTest.zip" />
     <None Include="ExpressionAnnotationsTest.zip" />
     <None Include="FiguresOfMeritTest.zip" />
@@ -560,6 +618,7 @@
     <None Include="HighPrecModsTest.zip" />
     <None Include="HighReplicateCountTest.zip" />
     <None Include="IgnoreSimScansTest.zip" />
+    <None Include="ImmediateWindowWarningsTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportEncyclopeDiaLibraryTest.zip" />
@@ -573,6 +632,7 @@
     <None Include="InvalidPeptideRankIdTest.zip" />
     <None Include="InvalidPeptidesInLibraryTest.zip" />
     <None Include="IonMobilityTest.zip" />
+    <None Include="IrtCalibrationTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />
@@ -608,16 +668,18 @@
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PasteTransitionListTest.zip" />
     <None Include="PeakAreaDotpGraphTest.zip" />
+    <None Include="PeakAreaRelativeAbundanceGraphTest.zip" />
     <None Include="PeakAreaPeptideGraphTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PermuteIsotopeModificationsTest.zip" />
     <None Include="PivotEditorTest.zip" />
     <None Include="PrecursorTest.zip" />
-    <None Include="PrositSkylineIntegrationTest.zip" />
+    <None Include="KoinaSkylineIntegrationTest.zip" />
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
+    <None Include="PythonInstallerTest.zip" />
     <None Include="QcTraceNameTest.zip" />
     <None Include="QualitativeIonRatioTest.zip" />
     <None Include="QuantitativePeakAreaTest.zip" />
@@ -626,7 +688,8 @@
     <None Include="ReimportResultsTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
     <None Include="RemovePrefixSuffixTest.zip" />
-    <None Include="RenameProteinsTest.zip" />
+    <None Include="RenameMoleculeTest.zip" />
+    <None Include="ReplicatePivotGridTest.zip" />
     <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />
     <None Include="RescoreImportDocumentTest.zip" />
@@ -669,6 +732,7 @@
     <None Include="UIModeTest.zip" />
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
+    <None Include="VolcanoPlotLayoutTest.zip" />
     <None Include="ZedGraphClipboardTest.zip" />
   </ItemGroup>
   <ItemGroup>

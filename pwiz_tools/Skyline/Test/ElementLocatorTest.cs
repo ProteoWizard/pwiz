@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -47,6 +47,17 @@ namespace pwiz.SkylineTest
                 new KeyValuePair<string, string>("attr3&%", "att3Value*\"")
             }).ChangeParent(locatorPeptide);
             VerifyElementLocator(docKey);
+        }
+
+        [TestMethod]
+        public void TestEmptyNameElementLocator()
+        {
+            var locatorProtein = new ElementLocator("", null).ChangeParent(DocumentRef.PROTOTYPE.ToElementLocator()).ChangeType("MoleculeGroup");
+            VerifyElementLocator(locatorProtein);
+            var locatorPeptide = new ElementLocator("ELVIS", null).ChangeParent(locatorProtein).ChangeType("Molecule");
+            VerifyElementLocator(locatorPeptide);
+            var locatorEmptyPeptide = new ElementLocator("", null).ChangeParent(locatorProtein).ChangeType("Molecule");
+            VerifyElementLocator(locatorEmptyPeptide);
         }
 
         [TestMethod]

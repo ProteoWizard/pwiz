@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,7 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Lib
 {

@@ -185,12 +185,12 @@ namespace
 }
 
 //
-// MascotReader::Impl
+// MascotReaderImpl
 //
-class MascotReader::Impl
+class MascotReaderImpl
 {
 public:
-    Impl()
+    MascotReaderImpl()
     {
         varmodPattern = bxp::sregex::compile("(.*) \\((Protein)?\\s*([NC]-term)?\\s*(.*?)\\)");
         varmodListOfChars = bxp::sregex::compile("([A-Z]+)");
@@ -201,7 +201,7 @@ public:
         if (config.iterationListenerRegistry && config.iterationListenerRegistry->broadcastUpdateMessage(IterationListener::UpdateMessage(0, 0, "opening Mascot DAT file")) == IterationListener::Status_Cancel)
             return;
 
-        ms_mascotresfile file(filename.c_str());
+        ms_mascotresfile_dat file(filename.c_str());
 
         if (file.isValid())
         {
@@ -235,7 +235,7 @@ public:
         }
     }
 
-    void addMzid(ms_mascotresfile& file, IdentData& result)
+    void addMzid(ms_mascotresfile_dat& file, IdentData& result)
     {
         result.id = "MZID";
         result.name = file.params().getCOM();
@@ -307,7 +307,7 @@ public:
     }
     
     // Add Mascot to the analysis software
-    void addMascotSoftware(ms_mascotresfile & file, IdentData& mzid)
+    void addMascotSoftware(ms_mascotresfile_dat& file, IdentData& mzid)
     {
         AnalysisSoftwarePtr as(new AnalysisSoftware("AS_0"));
         as->version = file.getMascotVer();
@@ -344,7 +344,7 @@ public:
 
 
     // Add the FASTA file search database
-    void addSearchDatabases(ms_mascotresfile & file, IdentData& mzid)
+    void addSearchDatabases(ms_mascotresfile_dat& file, IdentData& mzid)
     {
         bool isDecoy = file.params().getDECOY() != 0;
         for (int i=1; i<=file.params().getNumberOfDatabases();i++)
@@ -373,7 +373,7 @@ public:
         return cvid;
     }
 
-    EnzymePtr getEnzyme(ms_mascotresfile& file)
+    EnzymePtr getEnzyme(ms_mascotresfile_dat& file)
     {
         ms_searchparams& msp = file.params();
         string enzymeName = msp.getCLE();
@@ -468,7 +468,7 @@ public:
         }
     }
     
-    void addAnalysisProtocol(ms_mascotresfile & file, IdentData& mzid)
+    void addAnalysisProtocol(ms_mascotresfile_dat& file, IdentData& mzid)
     {
         ms_searchparams& p = file.params();
         
@@ -642,7 +642,7 @@ public:
             decryptMod(token, 0, p, mzid);
     }
 
-    void searchInformation(ms_mascotresfile & file, IdentData& mzid)
+    void searchInformation(ms_mascotresfile_dat& file, IdentData& mzid)
     {
         mzid.creationDate = pwiz::util::encode_xml_datetime(bpt::second_clock::universal_time());
         mzid.cvs = defaultCVList();
@@ -660,7 +660,7 @@ public:
     /**
      * Handles all the input parameters.
      */
-    void searchParameters(ms_mascotresfile & file, IdentData& mzid)
+    void searchParameters(ms_mascotresfile_dat& file, IdentData& mzid)
     {
         addUser(file.params(), mzid);
         addMassTable(file.params(), mzid);
@@ -759,7 +759,7 @@ public:
         return mzid.dataCollection.analysisData.spectrumIdentificationList.back();
     }
 
-    void guessTitleFormatRegex(ms_mascotresfile& file, IdentData& mzid)
+    void guessTitleFormatRegex(ms_mascotresfile_dat& file, IdentData& mzid)
     {
         string firstSpectrumID = ms_inputquery(file, 1).getStringTitle(true);
         bxp::smatch what;
@@ -810,7 +810,7 @@ public:
         }
     };
 
-    void fillSpectrumIdentificationList(ms_mascotresfile& file, IdentData& mzid, const IterationListenerRegistry* ilr, bool decoyMode)
+    void fillSpectrumIdentificationList(ms_mascotresfile_dat& file, IdentData& mzid, const IterationListenerRegistry* ilr, bool decoyMode)
     {
         if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(0, 0, decoyMode ? "creating decoy peptide summary" : "creating peptide summary")) == IterationListener::Status_Cancel)
             return;
@@ -1041,7 +1041,7 @@ public:
             return;
     }
 
-    void fillProteinDetectionList(ms_mascotresfile& file, IdentData& mzid, const IterationListenerRegistry* ilr)
+    void fillProteinDetectionList(ms_mascotresfile_dat& file, IdentData& mzid, const IterationListenerRegistry* ilr)
     {
         ms_peptidesummary& results = *peptideSummary;
 
@@ -1117,7 +1117,7 @@ public:
             return;
     }
 
-    void inputData(ms_mascotresfile & file, IdentData& mzid, const string& filename)
+    void inputData(ms_mascotresfile_dat& file, IdentData& mzid, const string& filename)
     {
         // add source file
         SourceFilePtr sourceFile(new SourceFile());
@@ -1184,19 +1184,12 @@ private:
     static const char* error_id;
 };
 
-const char* MascotReader::Impl::owner_person_id = "doc_owner_person";
-const char* MascotReader::Impl::provider_id = "provider";
-const char* MascotReader::Impl::mz_id = "mz_id";
-const char* MascotReader::Impl::intensity_id = "intensity_id";
-const char* MascotReader::Impl::error_id = "error_id";
+const char* MascotReaderImpl::owner_person_id = "doc_owner_person";
+const char* MascotReaderImpl::provider_id = "provider";
+const char* MascotReaderImpl::mz_id = "mz_id";
+const char* MascotReaderImpl::intensity_id = "intensity_id";
+const char* MascotReaderImpl::error_id = "error_id";
 
-//
-// MascotReader::MascotReader
-//
-MascotReader::MascotReader()
-    : pimpl(new MascotReader::Impl())
-{
-}
 
 //
 // MascotReader::read
@@ -1206,7 +1199,8 @@ void MascotReader::read(const string& filename,
                         IdentData& result,
                         const Reader::Config& config) const
 {
-    pimpl->read(filename, head, result, config);
+    MascotReaderImpl reader;
+    reader.read(filename, head, result, config);
 }
 
 //
@@ -1245,10 +1239,6 @@ namespace pwiz {
 namespace identdata {
 
 
-PWIZ_API_DECL MascotReader::MascotReader()
-{
-}
-
 PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                                       const std::string& head,
                                       IdentData& result,
@@ -1272,13 +1262,6 @@ PWIZ_API_DECL void MascotReader::read(const std::string& filename,
 {
     throw std::runtime_error("[MascotReader::read] no mascot support enabled.");
 }
-
-class MascotReader::Impl
-{
-    Impl() {}
-    ~Impl() {}
-};
-
 
 } // namespace identdata 
 } // namespace pwiz 

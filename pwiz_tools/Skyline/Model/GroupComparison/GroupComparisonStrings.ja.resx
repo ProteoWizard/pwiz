@@ -359,8 +359,8 @@
     <comment>Example: TIC Normalized Peak Area</comment>
   </data>
   <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
-	  <value>中央値の正規化{0}</value>
-      <comment>Example: Median Normalized Peak Area</comment>
+    <value>中央値の正規化{0}</value>
+    <comment>Example: Median Normalized Peak Area</comment>
   </data>
   <data name="EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve" xml:space="preserve">
     <value>バッチ校正曲線</value>

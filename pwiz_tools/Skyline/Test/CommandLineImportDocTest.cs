@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -201,12 +201,6 @@ namespace pwiz.SkylineTest
             // Cache should now contain results for both documents
             long newCacheLen = new FileInfo(cachePersistPath4).Length;
             Assert.AreEqual(expectCacheLen, newCacheLen);        
-        }
-
-        private static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)
-        {
-            Assert.IsTrue(actualMessage.Contains(expectedMessage),
-                string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.CommonMsData;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -49,6 +50,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SimpleWiffTest.sky")));
+            var docBefore = WaitForDocumentLoaded();
 
             // Import results from 2 wiff files ("firstfile.wiff" and "secondfile.wiff")
             // the wiff files are identical, and have 4 samples in them:
@@ -67,7 +69,6 @@ namespace pwiz.SkylineTestFunctional
                 openDataSourceDlg.Open();
             });
             var importResultsSamplesDlg = WaitForOpenForm<ImportResultsSamplesDlg>();
-            var docBefore = SkylineWindow.Document;
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
             WaitForDocumentChangeLoaded(docBefore);
             Assert.AreEqual(1, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);

@@ -27,10 +27,9 @@
  * decide what to add to the string.
  */
 
-#include <cstdarg>
-#include <cstdio>
 #include <exception>
 #include <string>
+#include <boost/format.hpp>
 
 namespace BiblioSpec{
 
@@ -38,23 +37,38 @@ namespace BiblioSpec{
     protected:
         std::string msgStr_;
         bool hasFilename_;
-        
+
+        static std::string formatStringForward(boost::format& message)
+        {
+            return message.str();
+        }
+
+        template <typename TValue, typename... TArgs>
+        std::string formatStringForward(boost::format& message, TValue&& arg, TArgs&&... args)
+        {
+            message % std::forward<TValue>(arg);
+            return formatStringForward(message, std::forward<TArgs>(args)...);
+        }
+
     public:
         BlibException() 
             : hasFilename_(false)
         {
             msgStr_ = "BiblioSpec exception thrown.";
         }
-        
-        BlibException(bool filename, const char* format, ...) 
+
+        template <typename... TArgs>
+        BlibException(bool filename, const char* format, TArgs&&... args)
             : hasFilename_(filename)
         {
-            va_list args;
-            va_start(args, format);
-            char buffer[4096];
-            
-            vsprintf(buffer, format, args);
-            msgStr_ = buffer;
+            boost::format message(format);
+            msgStr_ = formatStringForward(message, std::forward<TArgs>(args)...);
+        }
+
+        BlibException(bool filename, const std::string& message)
+            : hasFilename_(filename)
+        {
+            msgStr_ = message;
         }
 
         ~BlibException()throw(){}
@@ -63,17 +77,15 @@ namespace BiblioSpec{
             hasFilename_ = hasIt;
         }
 
-       virtual bool hasFilename(){
+        virtual bool hasFilename(){
             return hasFilename_;
         }
 
-        virtual void addMessage(const char* format, ...){
-            va_list args;
-            va_start(args, format);
-            char buffer[4096];
-            
-            vsprintf(buffer, format, args);
-            msgStr_ += buffer;
+        template <typename... TArgs>
+        void addMessage(const char* format, TArgs&&... args)
+        {
+            boost::format message(format);
+            msgStr_ += formatStringForward(message, std::forward<TArgs>(args)...);
         }
         
         virtual const char* what() const throw()

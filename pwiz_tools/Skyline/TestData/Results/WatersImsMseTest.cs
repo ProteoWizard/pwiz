@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -52,13 +53,15 @@ namespace pwiz.SkylineTestData.Results
 
         private enum DriftFilterType { none, library }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void WatersImsMseNoDriftTimesChromatogramTest()
         {
             WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void WatersImsMseLibraryDriftTimesChromatogramTest()
         {
             WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
@@ -66,19 +69,22 @@ namespace pwiz.SkylineTestData.Results
             WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width);
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMolecules()
         {
             WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMoleculeMasses()
         {
             WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void WatersImsMseLibraryDriftTimesChromatogramTestAsSmallMolecules()
         {
             WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
@@ -115,7 +121,7 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 document = docContainer.Document;
             }
-            document = ConvertToSmallMolecules(document, ref docPath, new[] {mz5Path}, asSmallMolecules);
+            document = AsSmallMoleculeTestUtil.ConvertToSmallMolecules(document, ref docPath, new[] {mz5Path}, asSmallMolecules);
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
                 float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;

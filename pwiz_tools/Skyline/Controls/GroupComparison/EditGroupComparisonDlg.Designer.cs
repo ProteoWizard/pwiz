@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.GroupComparison
+namespace pwiz.Skyline.Controls.GroupComparison
 {
     partial class EditGroupComparisonDlg
     {

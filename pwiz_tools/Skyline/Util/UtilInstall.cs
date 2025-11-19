@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,41 +16,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using Ionic.Zip;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
-using Ionic.Zip;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util.Extensions;
+using System.Threading;
+using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Util
 {
     public interface IAsynchronousDownloadClient : IDisposable
     {
         /// <summary>
-        /// Attempts to download the file located at the specified address to the specified
-        /// file path. This function returns true if the download succeeded.
+        /// Downloads the file and throws on error or cancellation.
         /// </summary>
-        bool DownloadFileAsync(Uri address, string path, out Exception error);
+        void DownloadFileAsyncOrThrow(Uri address, string path);
     }
     
     public class MultiFileAsynchronousDownloadClient : IAsynchronousDownloadClient
     {
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
-        private readonly WebClient _webClient;
-        private int FilesDownloaded { get; set; }
 
-        // indicate aspects of the most recent download
-        private bool DownloadComplete { get; set; }
-        private bool DownloadSucceeded { get; set; }
-        private Exception DownloadError { get; set; }
 
         /// <summary>
         /// The asynchronous download client links a webClient to a LongWaitBroker. It supports
@@ -62,66 +55,25 @@ namespace pwiz.Skyline.Util
         public MultiFileAsynchronousDownloadClient(IProgressMonitor waitBroker, int files)
         {
             _progressMonitor = waitBroker;
-            _progressStatus = new ProgressStatus();
-            _webClient = new WebClient();
-            FilesDownloaded = 0;
-
-            _webClient.DownloadProgressChanged += (sender, args) =>
-            {
-                _progressMonitor.UpdateProgress(_progressStatus.ChangePercentComplete((int) Math.Min(100, ((((double) FilesDownloaded)/files)*100)
-                                                                                                          + ((1.0/files)*args.ProgressPercentage))));
-            };
-
-            _webClient.DownloadFileCompleted += (sender, args) =>
-                {
-                    FilesDownloaded++;
-                    DownloadError = args.Error;
-                    DownloadSucceeded = (args.Error == null);
-                    DownloadComplete = true;
-                };
+            _progressStatus = new ProgressStatus().ChangeSegments(0, files);
         }
 
-        /// <summary>
-        /// Downloads a file asynchronously
-        /// </summary>
-        /// <param name="address">The Uri of the file to download</param>
-        /// <param name="path">The path to download the file to, including the name of 
-        /// the file, e.g "C:\Users\Trevor\Downloads\example.txt"</param>
-        /// <param name="error">Contains the error if any</param>
-        /// <exception cref="ToolExecutionException">Thrown if the user cancels the download 
-        /// using the instances' LongWaitBroker</exception>
-        /// <returns>True if the download was successful, otherwise false</returns>
-        public bool DownloadFileAsync(Uri address, string path, out Exception error)
+
+        public void DownloadFileAsyncOrThrow(Uri address, string path)
         {
-            // reset download status
-            DownloadComplete = false;
-            DownloadSucceeded = false;
-
-            Match file = Regex.Match(address.AbsolutePath, @"[^/]*$");
-            _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file));
+            var file = Regex.Match(address.AbsolutePath, @"[^/]*$");
+            _progressStatus = _progressStatus.ChangeMessage(string.Format(UtilResources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file));
             _progressMonitor.UpdateProgress(_progressStatus);
-            _webClient.DownloadFileAsync(address, path);
 
-            // while downloading, check to see if the user has canceled the operation
-            while (!DownloadComplete)
-            {
-                if (_progressMonitor.UpdateProgress(_progressStatus) == UpdateProgressResponse.cancel)
-                {
-                    _webClient.CancelAsync();
-                    throw new ToolExecutionException(
-                        Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
-                }
-            }
-
-            error = DownloadError;
-            return DownloadSucceeded;
+            using var httpClient = new HttpClientWithProgress(_progressMonitor, _progressStatus);
+            httpClient.DownloadFile(address, path);
         }
  
         #region IDisposable Members
 
         public void Dispose()
         {
-            _webClient.Dispose();
+            // nothing to dispose currently
         }
 
         #endregion
@@ -158,6 +110,21 @@ namespace pwiz.Skyline.Util
         /// If true, the file must be a ZIP file and it will unzipped into InstallPath after downloading.
         /// </summary>
         public bool Unzip;
+        
+        /// <summary>
+        /// The enum-based value for this kind of tool in the SearchTool system (that allows users to provide their own local versions of tools).
+        /// </summary>
+        public SearchToolType ToolType;
+
+        /// <summary>
+        /// The final path to the executable tool.
+        /// </summary>
+        public string ToolPath;
+
+        /// <summary>
+        /// Extra argument to pass to the tool's command-line.
+        /// </summary>
+        public string ToolExtraArgs;
     }
 
     public static class JavaDownloadInfo
@@ -169,13 +136,20 @@ namespace pwiz.Skyline.Util
         /// </summary>
         static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
-        public static string JavaBinary => Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe");
+        public static string JavaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Java, Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe"));
+        public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java, JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3));
 
         // TODO: Try to find a pre-existing installation of Java instead of downloading: https://stackoverflow.com/questions/3038140/how-to-determine-windows-java-installation-location
         public static FileDownloadInfo[] FilesToDownload => new[]
         {
-            new FileDownloadInfo {Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true} 
+            new FileDownloadInfo
+            {
+                Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.Java, ToolPath = JavaBinary, ToolExtraArgs = JavaExtraArgs
+            }
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
+
+        public static string JavaMaxHeapArg(long maxHeapBytes) => $@"-Xmx{maxHeapBytes / 1024 / 1024}M";
     }
 
     public static class Java8DownloadInfo
@@ -188,11 +162,16 @@ namespace pwiz.Skyline.Util
         /// </summary>
         static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory());
-        public static string JavaBinary => Path.Combine(JavaDirectory, JRE_SUBDIRECTORY, @"bin", @"java.exe");
+        public static string JavaBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Java8, Path.Combine(JavaDirectory, JRE_SUBDIRECTORY, @"bin", @"java.exe"));
+        public static string JavaExtraArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Java8, JavaDownloadInfo.JavaMaxHeapArg(2 * MemoryInfo.TotalBytes / 3));
 
         public static FileDownloadInfo[] FilesToDownload => new[]
         {
-            new FileDownloadInfo {Filename = JRE_FILENAME, InstallPath = JavaDirectory, CheckInstalledPath = JavaBinary, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true}
+            new FileDownloadInfo
+            {
+                Filename = JRE_FILENAME, InstallPath = JavaDirectory, CheckInstalledPath = JavaBinary, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.Java8, ToolPath = JavaBinary, ToolExtraArgs = JavaExtraArgs
+            }
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
     }
 
@@ -202,14 +181,19 @@ namespace pwiz.Skyline.Util
 
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {
-            if (requiredFile.Unzip)
-            {
-                if (requiredFile.CheckInstalledPath != null)
-                    return File.Exists(requiredFile.CheckInstalledPath) || Directory.Exists(requiredFile.CheckInstalledPath);
-                return Directory.Exists(requiredFile.InstallPath);
-            }
-            else
-                return File.Exists(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            string requiredFilePath = requiredFile.Unzip
+                ? requiredFile.CheckInstalledPath ?? requiredFile.InstallPath
+                : Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
+            requiredFilePath = Settings.Default.SearchToolList.GetToolPathOrDefault(requiredFile.ToolType, requiredFilePath);
+
+            bool alreadyDownloaded = File.Exists(requiredFilePath) || Directory.Exists(requiredFilePath);
+
+            if (!alreadyDownloaded)
+                return false;
+            
+            if (!Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType))
+                Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+            return true;
         }
 
         public static IEnumerable<FileDownloadInfo> FilesNotAlreadyDownloaded(IEnumerable<FileDownloadInfo> requiredFiles)
@@ -217,9 +201,22 @@ namespace pwiz.Skyline.Util
             return requiredFiles.Where(f => !FileAlreadyDownloaded(f));
         }
 
+        public static IEnumerable<SearchTool> SearchToolsConfiguredButMissing(IEnumerable<FileDownloadInfo> requiredFiles)
+        {
+            foreach(var requiredFile in requiredFiles)
+            {
+                if (Settings.Default.SearchToolList.ContainsKey(requiredFile.ToolType))
+                {
+                    var searchTool = Settings.Default.SearchToolList[requiredFile.ToolType];
+                    if (!searchTool.AutoInstalled && !File.Exists(searchTool.Path))
+                        yield return searchTool;
+                }
+            }
+        }
+
         private static void LogToConsole(string message)
         {
-            if (Helpers.RunningResharperAnalysis)
+            if (TryHelper.RunningResharperAnalysis)
             {
                 Trace.WriteLine(@"# (ReSharper Analysis Trace) " + message);
             }
@@ -239,8 +236,16 @@ namespace pwiz.Skyline.Util
                     unzipTimer = new Stopwatch();
                 }
 
-                foreach (var requiredFile in filesNotAlreadyDownloaded)
+                void addSearchToolsForRequiredFilesGroup(IEnumerable<FileDownloadInfo> requiredFiles)
                 {
+                    foreach(var requiredFile in requiredFiles)
+                        Settings.Default.SearchToolList.Add(new SearchTool(requiredFile.ToolType, requiredFile.ToolPath, requiredFile.ToolExtraArgs, requiredFile.InstallPath, true));
+                }
+
+                foreach (var requiredFileGroup in filesNotAlreadyDownloaded.GroupBy(f => f.Filename))
+                {
+                    var requiredFile = requiredFileGroup.First();
+                    
                     // For testing, replace the hostname with the Skyline tool testing mirror path on AWS
                     var downloadUrl = requiredFile.DownloadUrl;
                     if (Program.UnitTest && !Program.UseOriginalURLs)
@@ -257,7 +262,7 @@ namespace pwiz.Skyline.Util
                         LogToConsole($@"Using cached test data from {downloadUrl} in {downloadFilename} as {destinationFilename}...");
                         if (!requiredFile.Unzip)
                         {
-                            Helpers.TryTwice(() => File.Copy(downloadFilename, destinationFilename));
+                            TryHelper.TryTwice(() => File.Copy(downloadFilename, destinationFilename));
                         }
                         downloadTimer = null;
                     }
@@ -271,12 +276,7 @@ namespace pwiz.Skyline.Util
 
                         using (var fileSaver = new FileSaver(downloadFilename))
                         {
-                            if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName, out var downloadError))
-                            {
-                                throw new Exception(TextUtil.LineSeparate(
-                                    Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_,
-                                    downloadUrl.ToString()), downloadError);
-                            }
+                            client.DownloadFileAsyncOrThrow(downloadUrl, fileSaver.SafeName);
                             fileSaver.Commit();
                         }
 
@@ -291,6 +291,7 @@ namespace pwiz.Skyline.Util
                     {
                         if (useCachedDownloads && !File.Exists(destinationFilename))
                             File.Copy(downloadFilename, destinationFilename);
+                        addSearchToolsForRequiredFilesGroup(requiredFileGroup);
                         continue;
                     }
 
@@ -317,6 +318,7 @@ namespace pwiz.Skyline.Util
                     {
                         FileEx.SafeDelete(downloadFilename);
                     }
+                    addSearchToolsForRequiredFilesGroup(requiredFileGroup);
                 }
 
                 if (downloadTimer != null)
@@ -332,30 +334,10 @@ namespace pwiz.Skyline.Util
             return true;
         }
 
-        private static string GetCachedDownloadsDirectory()
+        public static string GetCachedDownloadsDirectory()
         {
             return Path.Combine(ToolDescriptionHelpers.GetSkylineInstallationPath(), @"CachedDownloadsForTests");
         }
-    }
-
-    // The test Asynchronous Download Client allows us to simulate downloading files from the internet
-    public class TestAsynchronousDownloadClient : IAsynchronousDownloadClient
-    {
-        public bool DownloadSuccess { get; set; }
-        public bool CancelDownload { get; set; }
-
-        public bool DownloadFileAsync(Uri address, string fileName, out Exception error)
-        {
-            error = null;
-            if (CancelDownload)
-                throw new ToolExecutionException(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
-            return DownloadSuccess;
-        }
-
-        public void Dispose()
-        {
-        }
-
     }
 
     public interface ISkylineProcessRunnerWrapper
@@ -363,40 +345,19 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Wrapper interface for the NamedPipeProcessRunner class
         /// </summary>
-        int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer);
+        int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default);
     }
 
     public class SkylineProcessRunnerWrapper : ISkylineProcessRunnerWrapper
     {
-        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
+        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default)
         {
-            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer);
+            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer, createNoWindow, cancellationToken);
         }
     }
 
     // The test Named PipeProcess Runner allows us to simulate running NamedPipeProcessRunner.exe
     // by specifying its return code and whether the pipe connected or not
-    public class TestSkylineProcessRunner : ISkylineProcessRunnerWrapper
-    {
-        public bool ConnectSuccess { get; set; }
-        public bool UserOkRunAsAdministrator { get { return _userOkRunAsAdministrator; } set { _userOkRunAsAdministrator = value; } }
-        private bool _userOkRunAsAdministrator = true; 
-        public int ExitCode { get; set; }
-        public string stringToWriteToWriter { get; set; }
-        
-        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
-        {
-            if (!UserOkRunAsAdministrator)
-            {
-                throw new System.ComponentModel.Win32Exception(Resources.TestSkylineProcessRunner_RunProcess_The_operation_was_canceled_by_the_user_);
-            }
-            if (!ConnectSuccess)
-                throw new IOException(Resources.TestNamedPipeProcessRunner_RunProcess_Error_running_process);
-            if (!string.IsNullOrEmpty(stringToWriteToWriter))
-                writer.WriteLine(stringToWriteToWriter);
-            return ExitCode;
-        }
-    }
 
     /// <summary>
     /// The IProcessRunner serves as a wrapper class for running a process synchronously
@@ -415,34 +376,6 @@ namespace pwiz.Skyline.Util
         {
             process.Start();
             process.WaitForExit();
-            return process.ExitCode;
-        }
-    }
-
-    // The test Process Runner allows us to simulate the (a)synchronous execution of a Process by specifying
-    // its return code
-    public class TestRunProcess : IRunProcess
-    {
-        public int ExitCode { get; set; }
-
-        public int RunProcess(Process process)
-        {
-            return ExitCode;
-        }
-    }
-
-    public class AsynchronousRunProcess : IRunProcess
-    {   
-        public int RunProcess(Process process)
-        {
-            bool finished = false;
-            process.EnableRaisingEvents = true;
-            process.Exited += (sender, args) => finished = true;
-            process.Start();
-            while (!finished)
-            {
-                // continue
-            }
             return process.ExitCode;
         }
     }

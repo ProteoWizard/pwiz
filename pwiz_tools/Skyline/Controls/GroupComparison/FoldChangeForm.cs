@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private IDocumentUIContainer _documentContainer;
         private string _groupComparisonName;
         private Form _owner;
+        protected bool _dataChanged = true;
         public FoldChangeForm()
         {
             InitializeComponent();
@@ -86,7 +87,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 if (null != _documentContainer)
                 {
-                    FoldChangeBindingSource = FindOrCreateBindingSource(_documentContainer, _groupComparisonName);
+                    var newBindingSource = FindOrCreateBindingSource(_documentContainer, _groupComparisonName);
+                    _dataChanged = newBindingSource != FoldChangeBindingSource;
+                    FoldChangeBindingSource = newBindingSource;
                     if (IsHandleCreated)
                     {
                         FoldChangeBindingSource.AddRef();
@@ -142,7 +145,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             get
             {
-                return FoldChangeBindingSource.IsComplete;
+                return true == FoldChangeBindingSource?.IsComplete;
             }
         }
 
@@ -251,12 +254,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
 
             var index = 0;
-            menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Grid, null, OnGridClick));
+            menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Grid, null, OnGridClick));
             if (!(sender.ParentForm is FoldChangeVolcanoPlot))
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Volcano_Plot, null, OnVolcanoPlotClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Volcano_Plot, null, OnVolcanoPlotClick));
             if(!(sender.ParentForm is FoldChangeBarGraph))
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Bar_Graph, null, OnBarGraphClick));
-            menuStrip.Items.Insert(index++, new ToolStripMenuItem(Resources.FoldChangeForm_BuildContextMenu_Settings, null, OnSettingsClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Bar_Graph, null, OnBarGraphClick));
+            menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonResources.FoldChangeForm_BuildContextMenu_Settings, null, OnSettingsClick));
             menuStrip.Items.Insert(index++, new ToolStripSeparator());
         }
 
@@ -280,12 +283,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             Program.MainWindow.ShowGroupComparisonWindow(_groupComparisonName);
         }
 
-        protected IEnumerable<FoldChangeBindingSource.FoldChangeRow> GetFoldChangeRows(
+        protected IEnumerable<FoldChangeRow> GetFoldChangeRows(
             BindingListSource bindingListSource)
         {
             return bindingListSource.OfType<RowItem>()
                 .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.AbstractFoldChangeRow>()
+                .OfType<AbstractFoldChangeRow>()
                 .SelectMany(row => row.GetFoldChangeRows());
         }
 
@@ -328,6 +331,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         {
                             grid.ViewToRestore = ViewName.Parse(parsed.Parts[2]);
                         }
+                    }
+
+                    if (foldChangeForm is FoldChangeVolcanoPlot volcano)
+                    {
+                        if (parsed.Parts.Count >= 3)
+                            volcano.SetLayout(groupComparisonName, parsed.Parts[2]);
                     }
 
                     return foldChangeForm;

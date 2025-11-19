@@ -1,0 +1,108 @@
+#
+# $Id$
+#
+#
+# Original author: Brian Pratt <bspratt at uw.edu>,
+#                  MacCoss Lab, Department of Genome Sciences, UW
+#
+# Copyright 2022 University of Washington - Seattle, WA
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+project
+    : requirements
+    ;
+
+exe Hardklor
+  : # sources
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/adler32.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/compress.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/crc32.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/deflate.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/gzio.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/infback.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/inffast.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/inflate.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/inftrees.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/trees.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/uncompr.c
+    $(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3/zutil.c
+    $(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib/xmlparse.c
+    $(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib/xmlrole.c
+    $(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib/xmltok.c
+    $(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib/xmltok_impl.c
+    $(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib/xmltok_ns.c
+    MSToolKit/src/MSToolkit/MSObject.cpp
+    MSToolKit/src/MSToolkit/MSReader.cpp
+    MSToolKit/src/MSToolkit/mzMLWriter.cpp
+    MSToolKit/src/MSToolkit/pepXMLWriter.cpp
+    MSToolKit/src/MSToolkit/Spectrum.cpp
+    MSToolKit/src/mzParser/BasicChromatogram.cpp
+    MSToolKit/src/mzParser/BasicSpectrum.cpp
+    MSToolKit/src/mzParser/Czran.cpp
+    MSToolKit/src/mzParser/MSNumpress.cpp
+    MSToolKit/src/mzParser/mzParser.cpp
+    MSToolKit/src/mzParser/mzp_base64.cpp
+    MSToolKit/src/mzParser/PWIZface.cpp
+    MSToolKit/src/mzParser/RAMPface.cpp
+    MSToolKit/src/mzParser/saxhandler.cpp
+    MSToolKit/src/mzParser/saxmzmlhandler.cpp
+    MSToolKit/src/mzParser/saxmzxmlhandler.cpp
+    Hardklor/CAveragine.cpp
+    Hardklor/CHardklor.cpp
+    Hardklor/CHardklor2.cpp
+    Hardklor/CHardklorFileReader.cpp
+    Hardklor/CHardklorOutput.cpp
+    Hardklor/CHardklorParser.cpp
+    Hardklor/CHardklorProtein.cpp
+    Hardklor/CHardklorSetting.cpp
+    Hardklor/CHardklorVariant.cpp
+    Hardklor/CMercury8.cpp
+    Hardklor/CModelLibrary.cpp
+    Hardklor/CNoiseReduction.cpp
+    Hardklor/CPeriodicTable.cpp
+    Hardklor/CSpecAnalyze.cpp
+    Hardklor/CSplitSpectrum.cpp
+    Hardklor/FFT-HK.cpp
+    Hardklor/FFT.cpp
+    Hardklor/HardklorApp.cpp
+    Hardklor/S2N.cpp
+    Hardklor/Smooth.cpp
+    Hardklor/SpecAnalyzeSupport.cpp  
+    : # requirements
+    <include>MSToolKit/include
+    <include>$(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib
+    <include>$(PWIZ_ROOT_PATH)/libraries/zlib-1.2.3
+    <define>XML_STATIC
+    <define>_PROTEOWIZARD
+    <define>_CRT_SECURE_NO_WARNINGS
+    <define>_NO_THERMORAW
+    <define>_NOSQLITE
+    <define>_LARGEFILE_SOURCE
+    <define>_FILE_OFFSET_BITS=64
+    <define>HAVE_MEMMOVE
+    <toolset>msvc:<cxxflags>/wd4131                 # warning: uses old-style declarator
+    <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from ... to ..., possible loss of data
+    <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant
+    <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
+    <toolset>msvc:<cxxflags>/wd4189                 # warning: local variable is initialized but not referenced
+    <toolset>msvc:<cxxflags>/wd4389                 # warning: signed/unsigned mismatch
+    <toolset>msvc:<cxxflags>/wd4101                 # warning: unreferenced local variable
+    <toolset>msvc:<cxxflags>/wd4706                 # warning: assignment within conditional expression
+    <toolset>msvc:<cxxflags>/wd4505                 # warning: unreferenced function with internal linkage has been removed    
+    <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+
+    <link>static
+
+    ;
+

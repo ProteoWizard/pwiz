@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -62,7 +62,7 @@ namespace pwiz.Common.DataBinding
         void ImportViews(Control owner, ViewGroup group);
         void ImportViewsFromFile(Control owner, ViewGroup group, string fileName);
         void CopyViewsToGroup(Control owner, ViewGroup group, ViewSpecList viewSpecList);
-        DialogResult ShowMessageBox(Control owner, string messsage, MessageBoxButtons messageBoxButtons);
+        DialogResult ShowMessageBox(Control owner, string messsage, MessageBoxButtons messageBoxButtons, Exception exception);
         Icon ApplicationIcon { get; }
         DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor);
         void OnDataError(object sender, DataGridViewDataErrorEventArgs dataGridViewDataErrorEventArgs);

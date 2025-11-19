@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.ToolsUI
+namespace pwiz.Skyline.ToolsUI
 {
     partial class EditRemoteAccountDlg
     {
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditRemoteAccountDlg));
             this.lblServerUrl = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -41,13 +42,28 @@
             this.comboAccountType = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBoxUnifi = new System.Windows.Forms.GroupBox();
+            this.tbxClientId = new System.Windows.Forms.TextBox();
+            this.lblClientId = new System.Windows.Forms.Label();
             this.tbxClientSecret = new System.Windows.Forms.TextBox();
             this.lblClientSecret = new System.Windows.Forms.Label();
             this.tbxClientScope = new System.Windows.Forms.TextBox();
             this.lblClientScope = new System.Windows.Forms.Label();
             this.tbxIdentityServer = new System.Windows.Forms.TextBox();
             this.lblIdentityServer = new System.Windows.Forms.Label();
+            this.wizardPagesByAccountType = new pwiz.Skyline.Controls.WizardPages();
+            this.tabUnifiSettings = new System.Windows.Forms.TabPage();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.cbArdiaDeleteRawAfterImport = new System.Windows.Forms.CheckBox();
+            this.btnLogoutArdia = new System.Windows.Forms.Button();
+            this.textArdiaAlias_Username = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textArdiaServerURL = new System.Windows.Forms.TextBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBoxUnifi.SuspendLayout();
+            this.wizardPagesByAccountType.SuspendLayout();
+            this.tabUnifiSettings.SuspendLayout();
+            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblServerUrl
@@ -118,6 +134,8 @@
             // groupBoxUnifi
             // 
             resources.ApplyResources(this.groupBoxUnifi, "groupBoxUnifi");
+            this.groupBoxUnifi.Controls.Add(this.tbxClientId);
+            this.groupBoxUnifi.Controls.Add(this.lblClientId);
             this.groupBoxUnifi.Controls.Add(this.tbxClientSecret);
             this.groupBoxUnifi.Controls.Add(this.lblClientSecret);
             this.groupBoxUnifi.Controls.Add(this.tbxClientScope);
@@ -126,6 +144,16 @@
             this.groupBoxUnifi.Controls.Add(this.lblIdentityServer);
             this.groupBoxUnifi.Name = "groupBoxUnifi";
             this.groupBoxUnifi.TabStop = false;
+            // 
+            // tbxClientId
+            // 
+            resources.ApplyResources(this.tbxClientId, "tbxClientId");
+            this.tbxClientId.Name = "tbxClientId";
+            // 
+            // lblClientId
+            // 
+            resources.ApplyResources(this.lblClientId, "lblClientId");
+            this.lblClientId.Name = "lblClientId";
             // 
             // tbxClientSecret
             // 
@@ -157,24 +185,87 @@
             resources.ApplyResources(this.lblIdentityServer, "lblIdentityServer");
             this.lblIdentityServer.Name = "lblIdentityServer";
             // 
+            // wizardPagesByAccountType
+            // 
+            resources.ApplyResources(this.wizardPagesByAccountType, "wizardPagesByAccountType");
+            this.wizardPagesByAccountType.Controls.Add(this.tabUnifiSettings);
+            this.wizardPagesByAccountType.Controls.Add(this.tabPage2);
+            this.wizardPagesByAccountType.Multiline = true;
+            this.wizardPagesByAccountType.Name = "wizardPagesByAccountType";
+            this.wizardPagesByAccountType.SelectedIndex = 0;
+            this.wizardPagesByAccountType.TabStop = false;
+            // 
+            // tabUnifiSettings
+            // 
+            this.tabUnifiSettings.BackColor = System.Drawing.SystemColors.Control;
+            this.tabUnifiSettings.Controls.Add(this.groupBoxUnifi);
+            this.tabUnifiSettings.Controls.Add(this.textUsername);
+            this.tabUnifiSettings.Controls.Add(this.lblUsername);
+            this.tabUnifiSettings.Controls.Add(this.lblPassword);
+            this.tabUnifiSettings.Controls.Add(this.textPassword);
+            this.tabUnifiSettings.Controls.Add(this.lblServerUrl);
+            this.tabUnifiSettings.Controls.Add(this.textServerURL);
+            resources.ApplyResources(this.tabUnifiSettings, "tabUnifiSettings");
+            this.tabUnifiSettings.Name = "tabUnifiSettings";
+            // 
+            // tabPage2
+            // 
+            this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage2.Controls.Add(this.cbArdiaDeleteRawAfterImport);
+            this.tabPage2.Controls.Add(this.btnLogoutArdia);
+            this.tabPage2.Controls.Add(this.textArdiaAlias_Username);
+            this.tabPage2.Controls.Add(this.label2);
+            this.tabPage2.Controls.Add(this.label3);
+            this.tabPage2.Controls.Add(this.textArdiaServerURL);
+            resources.ApplyResources(this.tabPage2, "tabPage2");
+            this.tabPage2.Name = "tabPage2";
+            // 
+            // cbArdiaDeleteRawAfterImport
+            // 
+            resources.ApplyResources(this.cbArdiaDeleteRawAfterImport, "cbArdiaDeleteRawAfterImport");
+            this.cbArdiaDeleteRawAfterImport.Name = "cbArdiaDeleteRawAfterImport";
+            this.cbArdiaDeleteRawAfterImport.UseVisualStyleBackColor = true;
+            // 
+            // btnLogoutArdia
+            // 
+            resources.ApplyResources(this.btnLogoutArdia, "btnLogoutArdia");
+            this.btnLogoutArdia.Name = "btnLogoutArdia";
+            this.toolTip1.SetToolTip(this.btnLogoutArdia, resources.GetString("btnLogoutArdia.ToolTip"));
+            this.btnLogoutArdia.UseVisualStyleBackColor = true;
+            this.btnLogoutArdia.Click += new System.EventHandler(this.btnLogoutArdia_Click);
+            // 
+            // textArdiaAlias_Username
+            // 
+            resources.ApplyResources(this.textArdiaAlias_Username, "textArdiaAlias_Username");
+            this.textArdiaAlias_Username.Name = "textArdiaAlias_Username";
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            // 
+            // label3
+            // 
+            resources.ApplyResources(this.label3, "label3");
+            this.label3.Name = "label3";
+            // 
+            // textArdiaServerURL
+            // 
+            resources.ApplyResources(this.textArdiaServerURL, "textArdiaServerURL");
+            this.textArdiaServerURL.Name = "textArdiaServerURL";
+            // 
             // EditRemoteAccountDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.groupBoxUnifi);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.comboAccountType);
             this.Controls.Add(this.btnTest);
-            this.Controls.Add(this.lblServerUrl);
+            this.Controls.Add(this.wizardPagesByAccountType);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
-            this.Controls.Add(this.textServerURL);
-            this.Controls.Add(this.textPassword);
-            this.Controls.Add(this.lblPassword);
-            this.Controls.Add(this.lblUsername);
-            this.Controls.Add(this.textUsername);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.comboAccountType);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "EditRemoteAccountDlg";
@@ -182,6 +273,11 @@
             this.ShowInTaskbar = false;
             this.groupBoxUnifi.ResumeLayout(false);
             this.groupBoxUnifi.PerformLayout();
+            this.wizardPagesByAccountType.ResumeLayout(false);
+            this.tabUnifiSettings.ResumeLayout(false);
+            this.tabUnifiSettings.PerformLayout();
+            this.tabPage2.ResumeLayout(false);
+            this.tabPage2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -207,5 +303,17 @@
         private System.Windows.Forms.TextBox tbxClientScope;
         private System.Windows.Forms.Label lblClientScope;
         private System.Windows.Forms.TextBox tbxIdentityServer;
+        private Controls.WizardPages wizardPagesByAccountType;
+        private System.Windows.Forms.TabPage tabUnifiSettings;
+        private System.Windows.Forms.TabPage tabPage2;
+        internal System.Windows.Forms.TextBox textArdiaAlias_Username;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textArdiaServerURL;
+        private System.Windows.Forms.Button btnLogoutArdia;
+        private System.Windows.Forms.CheckBox cbArdiaDeleteRawAfterImport;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.TextBox tbxClientId;
+        private System.Windows.Forms.Label lblClientId;
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -107,6 +107,7 @@ namespace SkylineTester
                     {
                         "SkylineNightlyShim.exe",
                         "SkylineNightly.exe",
+                        "SkylineNightly.exe.config",
                         "SkylineNightly.pdb",
                         "Microsoft.Win32.TaskScheduler.dll",
                         "DotNetZip.dll"
@@ -124,7 +125,9 @@ namespace SkylineTester
                     var files = new List<string>
                     {
                         "BlibBuild.exe",
+                        "BlibBuild.exe.config",
                         "BlibFilter.exe",
+                        "BlibFilter.exe.config",
                         "MassLynxRaw.dll",
                         "timsdata.dll",
                         "baf2sql_c.dll",
@@ -201,7 +204,14 @@ namespace SkylineTester
                                 continue;
                             testZipDirectory = Path.Combine(zipFilesDirectory,
                                 testZipDirectory.Substring(solutionDirectory.Length + 1));
-                            AddFile(testZipFile, zipFile, testZipDirectory);
+                            if (Directory.Exists(testZipFile))
+                            {
+                                AddFolder(testZipFile, zipFile, Path.Combine(testZipDirectory, Path.GetFileName(testZipFile)));
+                            }
+                            else
+                            {
+                                AddFile(testZipFile, zipFile, testZipDirectory);
+                            }
                         }
 
                         // Add tutorial audit logs
@@ -217,9 +227,18 @@ namespace SkylineTester
                             var parentDirectory = Path.GetDirectoryName(file);
                             if (string.IsNullOrEmpty(parentDirectory))
                                 continue;
-                            int relativePathStart = parentDirectory.LastIndexOf('\\',
-                                parentDirectory.IndexOf(@"Test.data", StringComparison.InvariantCulture));
-                            parentDirectory = parentDirectory.Substring(relativePathStart + 1);
+                            int indexTestData =
+                                parentDirectory.IndexOf(@"Test.data", StringComparison.InvariantCulture);
+                            if (indexTestData >= 0)
+                            {
+                                int relativePathStart = parentDirectory.LastIndexOf('\\', indexTestData);
+                                parentDirectory = parentDirectory.Substring(relativePathStart + 1);
+                            }
+                            else
+                            {
+                                parentDirectory = parentDirectory.Substring(
+                                    Path.GetDirectoryName(solutionDirectory)?.Length + 1 ?? 0);
+                            }
                             AddFile(file, zipFile,
                                 Path.Combine(SkylineTesterWindow.SkylineTesterFiles, parentDirectory));
                         }
@@ -262,6 +281,19 @@ namespace SkylineTester
             zipFile.AddFile(filePath, zipDirectory);
         }
 
+        static void AddFolder(string folderPath, ZipFile zipFile, string zipDirectory)
+        {
+            foreach (var file in Directory.GetFiles(folderPath))
+            {
+                zipFile.AddFile(file, zipDirectory);
+            }
+
+            foreach (var directory in Directory.GetDirectories(folderPath))
+            {
+                AddFolder(directory, zipFile, Path.Combine(zipDirectory, Path.GetFileName(directory)));
+            }
+        }
+
         static void FindZipFiles(string directory, List<string> zipFilesList)
         {
             // Does this directory contains any .cs files?
@@ -270,6 +302,7 @@ namespace SkylineTester
 
             // Get all zip files in the current directory.
             zipFilesList.AddRange(Directory.GetFiles(directory, "*.zip"));
+            zipFilesList.AddRange(Directory.GetDirectories(directory, "*.data"));
 
             // Get all sub-directories in current directory:
             var subDirectories = Directory.GetDirectories(directory);
@@ -293,3 +326,4 @@ namespace SkylineTester
         }
     }
 }
+

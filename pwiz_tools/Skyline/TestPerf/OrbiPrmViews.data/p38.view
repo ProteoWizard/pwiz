@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--DigitalRune Docking Windows configuration file.-->
+<!--!!! AUTOMATICALLY GENERATED CONTENT. DO NOT MODIFY !!!-->
+<DockPanel FormatVersion="1.0" DockLeftPortion="0.24610580425669" DockRightPortion="0.249339681576173" DockTopPortion="0.25" DockBottomPortion="0.25" ActiveDocumentPane="2" ActivePane="0">
+  <Contents Count="16">
+    <Content ID="0" PersistString="pwiz.Skyline.Controls.SequenceTreeForm|0(0(0),1),1(0,1),2(0,1),3(0),4(0),5(0),6(0),7(0,1),8(0,1),9(0,1),10(0),11(0,1),12(0,1),13(0,1(0)),14(0),15(0),16(0,1),17(0,1),18(0,1)|1,1|1" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="1" PersistString="pwiz.Skyline.Controls.Graphs.GraphSpectrum" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="2" PersistString="pwiz.Skyline.Controls.Graphs.GraphSummary|RTGraphController|replicate" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="3" PersistString="pwiz.Skyline.Controls.Graphs.GraphSummary|AreaGraphController|replicate" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="4" PersistString="pwiz.Skyline.Controls.Graphs.GraphSummary|RTGraphController|schedule" AutoHidePortion="0.25" IsHidden="True" IsFloating="True" />
+    <Content ID="5" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|G1_rep1" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="6" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|G1_rep2" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="7" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|G1_rep3" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="8" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|G2M_rep1" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="9" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|G2M_rep2" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="10" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|G2M_rep3" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="11" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|S_rep1" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="12" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|S_rep2" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="13" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|S_rep3" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="14" PersistString="pwiz.Skyline.Controls.GroupComparison.FoldChangeGrid|G2M-vs-G1|.default" AutoHidePortion="0.25" IsHidden="False" IsFloating="True" />
+    <Content ID="15" PersistString="pwiz.Skyline.Controls.GroupComparison.FoldChangeBarGraph|G2M-vs-G1" AutoHidePortion="0.25" IsHidden="False" IsFloating="True" />
+  </Contents>
+  <Panes Count="11">
+    <Pane ID="0" DockState="DockLeft" ActiveContent="0">
+      <Contents Count="1">
+        <Content ID="0" RefID="0" />
+      </Contents>
+    </Pane>
+    <Pane ID="1" DockState="DockLeft" ActiveContent="1">
+      <Contents Count="1">
+        <Content ID="0" RefID="1" />
+      </Contents>
+    </Pane>
+    <Pane ID="2" DockState="Document" ActiveContent="5">
+      <Contents Count="3">
+        <Content ID="0" RefID="5" />
+        <Content ID="1" RefID="8" />
+        <Content ID="2" RefID="11" />
+      </Contents>
+    </Pane>
+    <Pane ID="3" DockState="Floating" ActiveContent="-1">
+      <Contents Count="1">
+        <Content ID="0" RefID="3" />
+      </Contents>
+    </Pane>
+    <Pane ID="4" DockState="DockRight" ActiveContent="-1">
+      <Contents Count="1">
+        <Content ID="0" RefID="4" />
+      </Contents>
+    </Pane>
+    <Pane ID="5" DockState="DockRight" ActiveContent="3">
+      <Contents Count="1">
+        <Content ID="0" RefID="3" />
+      </Contents>
+    </Pane>
+    <Pane ID="6" DockState="Floating" ActiveContent="-1">
+      <Contents Count="2">
+        <Content ID="0" RefID="4" />
+        <Content ID="1" RefID="2" />
+      </Contents>
+    </Pane>
+    <Pane ID="7" DockState="Document" ActiveContent="12">
+      <Contents Count="3">
+        <Content ID="0" RefID="6" />
+        <Content ID="1" RefID="9" />
+        <Content ID="2" RefID="12" />
+      </Contents>
+    </Pane>
+    <Pane ID="8" DockState="Document" ActiveContent="13">
+      <Contents Count="3">
+        <Content ID="0" RefID="7" />
+        <Content ID="1" RefID="10" />
+        <Content ID="2" RefID="13" />
+      </Contents>
+    </Pane>
+    <Pane ID="9" DockState="DockRight" ActiveContent="2">
+      <Contents Count="1">
+        <Content ID="0" RefID="2" />
+      </Contents>
+    </Pane>
+    <Pane ID="10" DockState="Floating" ActiveContent="15">
+      <Contents Count="2">
+        <Content ID="0" RefID="14" />
+        <Content ID="1" RefID="15" />
+      </Contents>
+    </Pane>
+  </Panes>
+  <DockZones>
+    <DockZone ID="0" DockState="Document" ZOrderIndex="1">
+      <NestedPanes Count="3">
+        <Pane ID="0" RefID="2" PrevPane="-1" Alignment="Right" Proportion="0.5" />
+        <Pane ID="1" RefID="7" PrevPane="2" Alignment="Right" Proportion="0.666666666666667" />
+        <Pane ID="2" RefID="8" PrevPane="7" Alignment="Right" Proportion="0.5" />
+      </NestedPanes>
+    </DockZone>
+    <DockZone ID="1" DockState="DockLeft" ZOrderIndex="3">
+      <NestedPanes Count="2">
+        <Pane ID="0" RefID="0" PrevPane="-1" Alignment="Bottom" Proportion="0.5" />
+        <Pane ID="1" RefID="1" PrevPane="0" Alignment="Bottom" Proportion="0.5" />
+      </NestedPanes>
+    </DockZone>
+    <DockZone ID="2" DockState="DockRight" ZOrderIndex="2">
+      <NestedPanes Count="3">
+        <Pane ID="0" RefID="4" PrevPane="-1" Alignment="Bottom" Proportion="0.5" />
+        <Pane ID="1" RefID="5" PrevPane="4" Alignment="Top" Proportion="0.5" />
+        <Pane ID="2" RefID="9" PrevPane="5" Alignment="Bottom" Proportion="0.5" />
+      </NestedPanes>
+    </DockZone>
+    <DockZone ID="3" DockState="DockTop" ZOrderIndex="4">
+      <NestedPanes Count="0" />
+    </DockZone>
+    <DockZone ID="4" DockState="DockBottom" ZOrderIndex="5">
+      <NestedPanes Count="0" />
+    </DockZone>
+  </DockZones>
+  <FloatingWindows Count="3">
+    <FloatingWindow ID="0" Bounds="421, 525, 600, 440" ZOrderIndex="0">
+      <NestedPanes Count="1">
+        <Pane ID="0" RefID="3" PrevPane="-1" Alignment="Right" Proportion="0.5" />
+      </NestedPanes>
+    </FloatingWindow>
+    <FloatingWindow ID="1" Bounds="281, 298, 579, 424" ZOrderIndex="1">
+      <NestedPanes Count="1">
+        <Pane ID="0" RefID="6" PrevPane="-1" Alignment="Right" Proportion="0.5" />
+      </NestedPanes>
+    </FloatingWindow>
+    <FloatingWindow ID="2" Bounds="586, 252, 548, 693" ZOrderIndex="2">
+      <NestedPanes Count="1">
+        <Pane ID="0" RefID="10" PrevPane="-1" Alignment="Right" Proportion="0.5" />
+      </NestedPanes>
+    </FloatingWindow>
+  </FloatingWindows>
+</DockPanel>

@@ -21,10 +21,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
@@ -70,13 +74,29 @@ namespace pwiz.SkylineTestFunctional
 
             using (new WaitDocumentChange())
             {
-                RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
+                RunLongDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
                 {
-                    transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan;
-                    transitionSettingsUI.IgnoreSimScans = true;
-                    transitionSettingsUI.OkDialog();
-                });
+                    RunUI(() =>
+                    {
+                        transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Instrument;
+                    });
+                    RunDlg<EditSpectrumFilterDlg>(transitionSettingsUI.EditSpectrumFilter,
+                        editSpectrumFilterDlg =>
+                        {
+                            editSpectrumFilterDlg.SelectPage(0);
+                            var row = editSpectrumFilterDlg.RowBindingList.AddNew();
+                            Assert.IsNotNull(row);
+                            row.SetProperty(SpectrumClassColumn.ScanWindowWidth);
+                            row.SetOperation(FilterOperations.OP_IS_GREATER_THAN);
+                            row.SetValue(SpectrumFilter.SIM_ISOLATION_CUTOFF);
+                            editSpectrumFilterDlg.OkDialog();
+                        });
+                }, transitionSettingsUI=>transitionSettingsUI.OkDialog());
             }
+
+            Assert.AreEqual(TransitionFullScan.IgnoreSimScansFilter,
+                SkylineWindow.Document.Settings.TransitionSettings.FullScan.SpectrumClassFilter.Clauses
+                    .FirstOrDefault());
 
             using (new WaitDocumentChange(null, true))
             {

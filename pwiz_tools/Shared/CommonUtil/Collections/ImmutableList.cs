@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -140,18 +140,20 @@ namespace pwiz.Common.Collections
         }
 
         /// <summary>
-        /// Private constructor to disallow any other implementations of this class.
+        /// GetHashCode implementation which cannot be overridden
+        /// in derived classes in order to preserve the semantics
+        /// that ImmutableList instances are equal if and only if
+        /// they contain the same items.
         /// </summary>
-        private ImmutableList()
-        {
-        }
-
-        public override int GetHashCode()
+        public sealed override int GetHashCode()
         {
             return CollectionUtil.GetHashCodeDeep(this);
         }
 
-        public override bool Equals(object o)
+        /// <summary>
+        /// Equals implementation which cannot be overridden.
+        /// </summary>
+        public sealed override bool Equals(object o)
         {
             if (o == null)
             {
@@ -161,12 +163,34 @@ namespace pwiz.Common.Collections
             {
                 return true;
             }
+            if (GetType() == o.GetType())
+            {
+                return SameTypeEquals((ImmutableList<T>)o);
+            }
+
             var that = o as ImmutableList<T>;
             if (null == that)
             {
                 return false;
             }
+
+            if (Count != that.Count)
+            {
+                return false;
+            }
+
             return this.SequenceEqual(that);
+        }
+
+        /// <summary>
+        /// Virtual equals implementation which is only called if the list being
+        /// compared against is the same type as this. Derived classes may override
+        /// this if they have a more efficient way of comparing against other
+        /// instances of themselves (e.g. <see cref="ConstantList{T}"/>)
+        /// </summary>
+        protected virtual bool SameTypeEquals(ImmutableList<T> list)
+        {
+            return Count == list.Count && this.SequenceEqual(list);
         }
 
         public abstract int Count { get; }
@@ -204,10 +228,32 @@ namespace pwiz.Common.Collections
 
         public abstract IEnumerator<T> GetEnumerator();
 
-        public abstract bool Contains(T item);
-        public abstract void CopyTo(T[] array, int arrayIndex);
+        public virtual bool Contains(T item)
+        {
+            return this.AsEnumerable().Contains(item);
+        }
+        public virtual void CopyTo(T[] array, int arrayIndex) 
+        {
+            foreach (var item in this)
+            {
+                array[arrayIndex++] = item;
+            }
+        }
 
-        public abstract int IndexOf(T item);
+        public virtual int IndexOf(T item)
+        {
+            int index = 0;
+            foreach (var v in this)
+            {
+                if (Equals(v, item))
+                {
+                    return index;
+                }
+                index++;
+            }
+
+            return -1;
+        }
         public abstract T this[int index] { get; }
 
         T IList<T>.this[int index]
@@ -216,12 +262,12 @@ namespace pwiz.Common.Collections
             set { throw new InvalidOperationException(); }
         }
 
-        public abstract ImmutableList<T> ReplaceAt(int index, T value);
-
-        /// <summary>
-        /// Replaces the first item in the list that matches the predicate with the given value; throws IndexOutOfRange if no item is replaced.
-        /// </summary>
-        public abstract ImmutableList<T> ReplaceElement(T value, Func<T, bool> predicate);
+        public virtual ImmutableList<T> ReplaceAt(int index, T value)
+        {
+            var array = this.ToArray();
+            array[index] = value;
+            return ImmutableList.ValueOf(array);
+        }
 
         private class Impl : ImmutableList<T>
         {
@@ -270,12 +316,6 @@ namespace pwiz.Common.Collections
                 var newArray = (T[])_items.Clone();
                 newArray[index] = value;
                 return new Impl(newArray);
-            }
-
-            public override ImmutableList<T> ReplaceElement(T value, Func<T, bool> predicate)
-            {
-                int index = Array.FindIndex(_items, t => predicate(t));
-                return ReplaceAt(index, value);
             }
         }
 
@@ -332,14 +372,90 @@ namespace pwiz.Common.Collections
                 }
                 return new SingletonImpl(value);
             }
+        }
+    }
 
-            public override ImmutableList<T> ReplaceElement(T value, Func<T, bool> predicate)
+    public class ConstantList<T> : ImmutableList<T>
+    {
+        private int _count;
+        private T _value;
+        public ConstantList(int count, T value)
+        {
+            _count = count;
+            _value = value;
+        }
+
+        public override IEnumerator<T> GetEnumerator()
+        {
+            return Enumerable.Repeat(_value, _count).GetEnumerator();
+        }
+
+        public override int Count
+        {
+            get { return _count; }
+        }
+
+        public override T this[int index]
+        {
+            get
             {
-                if (!predicate(_item))
-                {
-                    throw new IndexOutOfRangeException();
-                }
-                return ReplaceAt(0, value);
+                if (index < 0 || index >= _count)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+                return _value;
+            }
+        }
+
+        protected override bool SameTypeEquals(ImmutableList<T> list)
+        {
+            var that = (ConstantList<T>) list;
+            return Count == list.Count && Equals(_value, that._value);
+        }
+    }
+
+    /// <summary>
+    /// Efficiently stores a list of <see cref="Nullable"/> by using
+    /// <see cref="IntegerList.Bits"/>.
+    /// </summary>
+    public class NullableList<T> : ImmutableList<T?> where T : struct
+    {
+        private ImmutableList<int> _hasValueList;
+        private ImmutableList<T> _values;
+
+        public NullableList(IEnumerable<T?> items)
+        {
+            var values = new List<T>();
+            var hasValues = new List<int>();
+            foreach (var item in items)
+            {
+                values.Add(item.GetValueOrDefault());
+                hasValues.Add(item.HasValue ? 1 : 0);
+            }
+
+            _hasValueList = IntegerList.FromIntegers(hasValues);
+            if (typeof(T) == typeof(int))
+            {
+                _values = (ImmutableList<T>)(object)IntegerList.FromIntegers((List<int>)(object) values);
+            }
+            else
+            {
+                _values = values.ToImmutable();
+            }
+        }
+
+        public override int Count
+        {
+            get { return _values.Count; }
+        }
+        public override IEnumerator<T?> GetEnumerator()
+        {
+            return Enumerable.Range(0, Count).Select(i => this[i]).GetEnumerator();
+        }
+
+        public override T? this[int index]
+        {
+            get
+            {
+                return _hasValueList[index] == 0 ? (T?) null : _values[index];
             }
         }
     }

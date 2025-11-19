@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Irt
 {
@@ -126,7 +127,7 @@ namespace pwiz.Skyline.Model.Irt
             return persistPath;
         }
 
-        private DbIrtPeptide NewPeptide(DbIrtPeptide dbPeptide)
+        private static DbIrtPeptide NewPeptide(DbIrtPeptide dbPeptide)
         {
             return new DbIrtPeptide(dbPeptide.ModifiedTarget,
                                     dbPeptide.Irt,
@@ -137,6 +138,11 @@ namespace pwiz.Skyline.Model.Irt
         public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             RequireUsable();
+            if (IsAlignmentOnly)
+            {
+                minCount = 0;
+                return Array.Empty<Target>();
+            }
 
             var pepArr = peptides.ToArray();
             var returnStandard = pepArr.Where(_database.IsStandard).Distinct().ToArray();
@@ -149,7 +155,7 @@ namespace pwiz.Skyline.Model.Irt
                 inStandardButNotTargets.ExceptWith(pepArr);
                 //Console.Out.WriteLine(@"Database standards: {0}", string.Join(@"; ", _database.StandardPeptides));
                 //Console.Out.WriteLine(@"Chosen ({0}): {1}", pepArr.Length, string.Join(@"; ", pepArr.Select(pep => pep.ToString())));
-                throw new IncompleteStandardException(this, databaseCount, inStandardButNotTargets);
+                throw new IncompleteStandardException(this, databaseCount, MinStandardCount(databaseCount), inStandardButNotTargets);
             }
 
             minCount = MinStandardCount(databaseCount);
@@ -159,6 +165,13 @@ namespace pwiz.Skyline.Model.Irt
         public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
             return ChooseRegressionPeptides(peptides, out _);
+        }
+
+        public bool IsStandard(Target seq)
+        {
+            RequireUsable();
+
+            return _database.IsStandard(seq);
         }
 
         public override double? ScoreSequence(Target seq)
@@ -179,12 +192,22 @@ namespace pwiz.Skyline.Model.Irt
         private void RequireUsable()
         {
             if (!IsUsable)
-                throw new InvalidOperationException(Resources.RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_);
+                throw new InvalidOperationException(IrtResources.RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_);
+        }
+
+        public override bool IsAlignmentOnly
+        {
+            get { return IsUsable && !GetStandardPeptides().Any(); }
         }
 
         public IEnumerable<Target> GetStandardPeptides()
         {
             return _database.StandardPeptides;
+        }
+
+        public IEnumerable<Target> GetLibraryPeptides()
+        {
+            return _database.LibraryPeptides;
         }
 
         public IEnumerable<DbIrtPeptide> GetDbIrtPeptides()
@@ -217,7 +240,7 @@ namespace pwiz.Skyline.Model.Irt
                 }
             }
 
-            IProgressStatus status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times);
+            IProgressStatus status = new ProgressStatus(IrtResources.LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times);
             var dictPeptideAverages = new Dictionary<Target, IrtPeptideAverages>();
             var providerData = new List<RetentionTimeProviderData>();
             var runCount = 0;
@@ -226,7 +249,7 @@ namespace pwiz.Skyline.Model.Irt
                 if (monitor.IsCanceled)
                     return null;
                 monitor.UpdateProgress(status = status.ChangeMessage(string.Format(
-                    Resources.LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__,
+                    IrtResources.LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__,
                     retentionTimeProvider.Name)));
 
                 runCount++;
@@ -523,6 +546,52 @@ namespace pwiz.Skyline.Model.Irt
         }
 
         #endregion
+
+        #region test support
+
+        /// <summary>
+        /// Saves the database with peptides represented as small molecules.
+        /// </summary>
+        /// <param name="pathDestDir">The directory to save to</param>
+        /// <param name="document">The document for which peptides are to be kept</param>
+        /// <returns>The full path to the file saved</returns>
+        public override string PersistAsSmallMolecules(string pathDestDir, SrmDocument document)
+        {
+            RequireUsable();
+            return PersistAsSmallMolecules(PersistencePath, pathDestDir, _database);
+        }
+
+        public static string PersistAsSmallMolecules(string currentPersistencePath, string pathDestDir = null, IrtDb database = null)
+        {
+            database ??= IrtDb.GetIrtDb(currentPersistencePath, null);
+            pathDestDir ??= Path.GetDirectoryName(currentPersistencePath) ?? string.Empty;
+
+            var persistPath = Path.Combine(pathDestDir, Path.GetFileName(currentPersistencePath) ?? string.Empty);  // ReSharper
+            if (!string.IsNullOrEmpty(persistPath))
+            {
+                var dir = Path.GetDirectoryName(persistPath) ?? string.Empty;
+                var fname = Path.GetFileNameWithoutExtension(persistPath)+@"_"+ RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + Path.GetExtension(persistPath);
+                persistPath = Path.Combine(dir, fname);
+            }
+
+            using var fs = new FileSaver(persistPath);
+            var irtDb = IrtDb.CreateIrtDb(fs.SafeName);
+
+            var dbPeptides = database.ReadPeptides().ToList();
+            var persistPeptides = dbPeptides.Select(NewPeptide).ToList();
+            for (var i = 0; i < persistPeptides.Count; i++)
+            {
+                var dbPeptide = persistPeptides[i];
+                dbPeptide.ModifiedTarget = new Target(RefinementSettings.MoleculeFromPeptideSequence(dbPeptide.PeptideModSeq));
+                persistPeptides[i] = dbPeptide;
+            }
+
+            irtDb.UpdatePeptides(persistPeptides);
+            fs.Commit();
+
+            return persistPath;
+        }
+        #endregion
     }
 
     public sealed class ProcessedIrtAverages
@@ -598,7 +667,7 @@ namespace pwiz.Skyline.Model.Irt
                     max = standard;
             }
             if (min == null || max == null)
-                throw new Exception(Resources.EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_);
+                throw new Exception(IrtResources.EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_);
 
             var statX = new Statistics(peptideBestIrtTimes[min.ModifiedTarget].Item2, peptideBestIrtTimes[max.ModifiedTarget].Item2);
             var statY = new Statistics(peptideBestIrtTimes[min.ModifiedTarget].Item1, peptideBestIrtTimes[max.ModifiedTarget].Item1);
@@ -607,7 +676,7 @@ namespace pwiz.Skyline.Model.Irt
             foreach (var peptide in standardPeptideList)
             {
                 if (!peptideBestIrtTimes.TryGetValue(peptide.ModifiedTarget, out var times))
-                    throw new Exception(Resources.ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_);
+                    throw new Exception(IrtResources.ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_);
                 newStandardPeptideList.Add(new DbIrtPeptide(peptide) { Irt = line.GetY(times.Item2) });
             }
             return newStandardPeptideList;
@@ -643,8 +712,15 @@ namespace pwiz.Skyline.Model.Irt
             IReadOnlyList<DbIrtPeptide> standardPeptides, IReadOnlyList<DbIrtPeptide> heavyStandardPeptides)
         {
             RetentionTimeProvider = retentionTimes;
-
             Peptides = new List<Peptide>(standardPeptides.Count);
+
+            if (standardPeptides.Count == 0)
+            {
+                RegressionRefined = Regression = new RegressionLine(1, 0);
+                RegressionSuccess = true;
+                return;
+            }
+
             for (var i = 0; i < standardPeptides.Count; i++)
             {
                 var heavy = heavyStandardPeptides[i] != null;
@@ -823,7 +899,7 @@ namespace pwiz.Skyline.Model.Irt
                 var inStandardButNotTargets = new SortedSet<Target>(_dictStandards.Keys);
                 inStandardButNotTargets.ExceptWith(peptideArray);
 
-                throw new IncompleteStandardException(this, standardsCount, inStandardButNotTargets);
+                throw new IncompleteStandardException(this, standardsCount, RCalcIrt.MinStandardCount(standardsCount), inStandardButNotTargets);
             }
 
             minCount = RCalcIrt.MinStandardCount(standardsCount);
@@ -838,17 +914,27 @@ namespace pwiz.Skyline.Model.Irt
 
     public class IncompleteStandardException : CalculatorException
     {
-        //This will only be thrown by ChooseRegressionPeptides so it is OK to have an error specific to regressions.
-        private static string ERROR => Resources
-            .IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__;
-
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
-        public IncompleteStandardException(RetentionScoreCalculatorSpec calc, int standardPeptideCount, ICollection<Target> missingPeptides)
-            : base(String.Format(ERROR, calc.Name, standardPeptideCount, missingPeptides.Count,
-                string.Join(Environment.NewLine, missingPeptides.Select(o => o.Sequence))))
+        public IncompleteStandardException(RetentionScoreCalculatorSpec calc, int standardCount, int minStandardCount,
+            ICollection<Target> missingTargets) : base(MissingTargetsMessage(calc, standardCount, minStandardCount,
+            missingTargets))
         {
             Calculator = calc;
+        }
+
+        private static string MissingTargetsMessage(RetentionScoreCalculatorSpec calc, int standardCount,
+            int minStandardCount, ICollection<Target> missingTargets)
+        {
+            var lines = new List<string>
+            {
+                string.Format(
+                    IrtResources.IncompleteStandardException_MissingTargetsMessage_The_calculator__0__requires_at_least__1__of_its__2__standard_peptides__The_following__3__peptides_are_missing_,
+                    calc.Name, minStandardCount, standardCount, missingTargets.Count),
+                string.Empty
+            };
+            lines.AddRange(missingTargets.Select(target => target.ToString()));
+            return TextUtil.LineSeparate(lines);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
@@ -47,8 +46,6 @@ namespace SkylineTester
             args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));
             if (MainWindow.ShowFormNamesTutorial.Checked)
                 args.Append(" showformnames=on");
-            if (MainWindow.ShowMatchingPagesTutorial.Checked)
-                args.Append(" showpages=on");
             if (MainWindow.TutorialsDemoMode.Checked)
                 args.Append(" demo=on");
             else
@@ -58,18 +55,16 @@ namespace SkylineTester
                     pauseSeconds = -2; // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
                 else if (MainWindow.PauseTutorialsScreenShots.Checked)
                 {
-                    int startingPage;
-                    if (Int32.TryParse(MainWindow.PauseStartingPage.Text, out startingPage) && startingPage > 1)
-                        args.Append(" startingpage=").Append(startingPage);
+                    int startingScreenshot;
+                    if (Int32.TryParse(MainWindow.PauseStartingScreenshot.Text, out startingScreenshot) && startingScreenshot > 1)
+                        args.Append(" startingshot=").Append(startingScreenshot);
                 }
                 else if (!Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;
                 args.Append(" pause=").Append(pauseSeconds);
             }
-            args.Append(" screenshotlist=\"");
-            args.Append(Path.Combine(MainWindow.RootDir, "ScreenShotForms.txt"));
-            args.Append("\" test=");
-            args.Append(String.Join(",", testList));
+            args.Append(" test=");
+            args.Append(string.Join(",", testList));
 
             MainWindow.AddTestRunner(args.ToString());
             MainWindow.RunCommands();

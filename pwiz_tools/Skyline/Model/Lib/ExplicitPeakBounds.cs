@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,7 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.Collections;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -34,6 +42,11 @@ namespace pwiz.Skyline.Model.Lib
         public double StartTime { get; private set; }
         public double EndTime { get; private set; }
         public double Score { get; private set; }
+
+        public PeakBounds PeakBounds
+        {
+            get { return new PeakBounds(StartTime, EndTime); }
+        }
 
         protected bool Equals(ExplicitPeakBounds other)
         {
@@ -67,6 +80,126 @@ namespace pwiz.Skyline.Model.Lib
         public override string ToString()
         {
             return string.Format(@"[{0:F04},{1:F04}]:{2:F04}", StartTime, EndTime, Score);
+        }
+
+        public ScoredPeakBounds ToScoredPeak()
+        {
+            return new ScoredPeakBounds((float)(StartTime + EndTime) / 2, (float)StartTime, (float)EndTime, (float)Score);
+        }
+    }
+
+    public class ExplicitPeakBoundsDict<TKey> : Immutable, IReadOnlyDictionary<TKey, ExplicitPeakBounds> where TKey : IComparable
+    {
+        public static readonly ExplicitPeakBoundsDict<TKey> EMPTY =
+            new ExplicitPeakBoundsDict<TKey>(Array.Empty<KeyValuePair<TKey, ExplicitPeakBounds>>());
+        private ImmutableList<TKey> _keys;
+        private float[] _startTimes;
+        private float[] _endTimes;
+        private float[] _scores;
+
+        public ExplicitPeakBoundsDict(IEnumerable<KeyValuePair<TKey, ExplicitPeakBounds>> entries)
+        {
+            var list = entries.OrderBy(entry => entry.Key).ToList();
+            _keys = ImmutableList.ValueOf(list.Select(e => e.Key));
+            _startTimes = list.Select(e => (float) e.Value.StartTime).ToArray();
+            _endTimes = list.Select(e => (float)e.Value.EndTime).ToArray();
+            if (list.Any(entry=>!ExplicitPeakBounds.UNKNOWN_SCORE.Equals(entry.Value.Score)))
+            {
+                _scores = list.Select(e => (float) e.Value.Score).ToArray();
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<KeyValuePair<TKey, ExplicitPeakBounds>> GetEnumerator()
+        {
+            return Keys.Zip(Values, (k, v) => new KeyValuePair<TKey, ExplicitPeakBounds>(k, v)).GetEnumerator();
+        }
+
+        public int Count
+        {
+            get
+            {
+                return _keys.Count;
+            }
+        }
+
+        public bool ContainsKey(TKey key)
+        {
+            return IndexOfKey(key) >= 0;
+        }
+
+        public bool TryGetValue(TKey key, out ExplicitPeakBounds value)
+        {
+            int index = IndexOfKey(key);
+            if (index < 0)
+            {
+                value = null;
+                return false;
+            }
+
+            value = GetExplicitPeakBoundsAt(index);
+            return true;
+        }
+
+        public ExplicitPeakBounds this[TKey key]
+        {
+            get
+            {
+                if (TryGetValue(key, out var value))
+                {
+                    return value;
+                }
+
+                throw new KeyNotFoundException();
+            }
+        }
+
+        public KeyValuePair<TKey, ExplicitPeakBounds> this[int index]
+        {
+            get
+            {
+                return new KeyValuePair<TKey, ExplicitPeakBounds>(_keys[index], GetExplicitPeakBoundsAt(index));
+            }
+        }
+
+        public IEnumerable<TKey> Keys
+        {
+            get { return _keys; }
+        }
+
+        public IEnumerable<ExplicitPeakBounds> Values
+        {
+            get
+            {
+                return Enumerable.Range(0, Count).Select(GetExplicitPeakBoundsAt);
+            }
+        }
+
+        private int IndexOfKey(TKey key)
+        {
+            int i = CollectionUtil.BinarySearch(_keys, key);
+            return i < 0 ? -1 : i;
+        }
+
+        private ExplicitPeakBounds GetExplicitPeakBoundsAt(int index)
+        {
+            return new ExplicitPeakBounds(_startTimes[index], _endTimes[index],
+                _scores == null ? ExplicitPeakBounds.UNKNOWN_SCORE : _scores[index]);
+        }
+
+        public ExplicitPeakBoundsDict<TKey> ValueFromCache(ValueCache valueCache)
+        {
+            var newKeys = valueCache.CacheValue(_keys);
+            if (ReferenceEquals(newKeys, _keys))
+            {
+                return this;
+            }
+
+            return ChangeProp(ImClone(this), im => im._keys = newKeys);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -26,7 +26,7 @@ namespace CommonTest.DataBinding.SampleData
             
         }
 
-        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
+        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons, Exception exception)
         {
             // ReSharper disable once LocalizableElement
             return MessageBox.Show(owner, message, "Test View Context", messageBoxButtons);

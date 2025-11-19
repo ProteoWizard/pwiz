@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -37,6 +36,7 @@ using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
 using SkylineTester.Properties;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 using Label = System.Windows.Forms.Label;
 using Timer = System.Windows.Forms.Timer;
@@ -51,7 +51,7 @@ namespace SkylineTester
         public const string SkylineTesterFiles = "SkylineTester Files";
 
         public const string DocumentationLink =
-            "https://skyline.gs.washington.edu/labkey/wiki/home/development/page.view?name=SkylineTesterDoc";
+            "https://skyline.ms/wiki/home/development/page.view?name=SkylineTesterDoc";
 
         public string Git { get; private set; }
         public string Devenv { get; private set; }
@@ -87,9 +87,9 @@ namespace SkylineTester
 
         private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
         {
-            {"en", "English"},
-            {"fr", "French"},
-            {"tr", "Turkish"},
+            {"en-US", "English"},
+            {"fr-FR", "French"},
+            {"tr-TR", "Turkish"},
             {"ja", "Japanese"},
             {"zh-CHS", "Chinese"}
         };
@@ -222,7 +222,7 @@ namespace SkylineTester
 
             // Refresh shell if association changed.
             if (checkRegistry == null)
-                SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+                Shell32Test.SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
 
             _runButtons = new[]
             {
@@ -271,6 +271,18 @@ namespace SkylineTester
                         statusLabel.Text = line.Substring(3);
                     });
                     return false;
+                }
+
+                // Detect TestRunner completion
+                if (line.StartsWith("Tests finished in "))
+                {
+                    RunUI(() =>
+                    {
+                        // Clear the running test name and reset status
+                        RunningTestName = null;
+                        statusLabel.Text = "Tests completed";
+                    });
+                    return true; // Still show this line in output
                 }
 
                 if (line.StartsWith("...skipped ") ||
@@ -346,9 +358,6 @@ namespace SkylineTester
             loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
         }
 
-        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
-
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
         {
             try
@@ -390,6 +399,9 @@ namespace SkylineTester
 
                 RunUI(() =>
                 {
+                    if (!Equals(testSet.SelectedItem, testSetValue))
+                        return;
+
                     testsTree.Nodes.Clear();
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();
@@ -426,8 +438,9 @@ namespace SkylineTester
                     tutorialsTree.Nodes.Clear();
                     tutorialsTree.Nodes.Add(new TreeNode("Tutorial tests", tutorialNodes));
                     tutorialsTree.ExpandAll();
-                    tutorialsTree.Nodes[0].Checked = true;
-                    TabTests.CheckAllChildNodes(tutorialsTree.Nodes[0], true);
+                    // More common to choose just one tutorial to run on the tutorials tab
+                    // tutorialsTree.Nodes[0].Checked = true;
+                    // TabTests.CheckAllChildNodes(tutorialsTree.Nodes[0], true);
 
                     // Add forms to forms tree view.
                     _tabForms.CreateFormsGrid();
@@ -477,9 +490,7 @@ namespace SkylineTester
                 var myId = Process.GetCurrentProcess().Id;
                 var query = string.Format("SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {0}", myId);
                 var search = new ManagementObjectSearcher("root\\CIMV2", query);
-                var results = search.Get().GetEnumerator();
-                results.MoveNext();
-                var queryObj = results.Current;
+                var queryObj = search.Get().Cast<ManagementBaseObject>().First();
                 var parentId = (uint) queryObj["ParentProcessId"];
                 var parent = Process.GetProcessById((int) parentId);
                 // Only go interactive if our parent process is not named "SkylineNightly"
@@ -1064,7 +1075,6 @@ namespace SkylineTester
                 tutorialsDemoMode,
                 tutorialsLanguage,
                 showFormNamesTutorial,
-                showMatchingPagesTutorial,
                 tutorialsTree,
 
                 // Tests
@@ -1088,6 +1098,7 @@ namespace SkylineTester
                 runParallel,
                 runSerial,
                 parallelWorkerCount,
+                coverageCheckbox,
 
                 // Build
                 buildTrunk,
@@ -1498,7 +1509,7 @@ namespace SkylineTester
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
         public RadioButton      ModeTutorialsCoverShots     { get { return modeTutorialsCoverShots; } }
-        public TextBox          PauseStartingPage           { get { return pauseStartingPage; } }
+        public TextBox          PauseStartingScreenshot           { get { return pauseStartingScreenshot; } }
         public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
         public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
@@ -1517,12 +1528,12 @@ namespace SkylineTester
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
         public RadioButton      RunParallel                 { get { return runParallel; } }
+        public CheckBox         RunCoverage                 { get { return coverageCheckbox; } }
         public NumericUpDown    RunParallelWorkerCount      { get { return parallelWorkerCount; } }
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
         public CheckBox         ShowFormNames               { get { return showFormNames; } }
-        public CheckBox         ShowMatchingPagesTutorial   { get { return showMatchingPagesTutorial; } }
         public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
         public ComboBox         TestSet                     { get { return testSet; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
@@ -1743,14 +1754,6 @@ namespace SkylineTester
             labelSelectedFormsCount.Text = formsGrid.SelectedRows.Count + " selected";
         }
 
-        private void pauseTutorialsScreenShots_CheckedChanged(object sender, EventArgs e)
-        {
-            bool pauseChecked = pauseTutorialsScreenShots.Checked;
-            showMatchingPagesTutorial.Enabled = pauseChecked;
-            if (!pauseChecked)
-                showMatchingPagesTutorial.Checked = false;
-        }
-
         private void comboBoxRunStats_SelectedIndexChanged(object sender, EventArgs e)
         {
             _tabRunStats.Process(GetSelectedLog(comboBoxRunStats), GetSelectedLog(comboBoxRunStatsCompare));
@@ -1949,8 +1952,76 @@ namespace SkylineTester
             labelParallelOffscreenHint.Location = Offscreen.Location;
             Offscreen.Visible = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
             labelParallelOffscreenHint.Visible = !Offscreen.Visible;
+
+            if (runSerial.Checked)
+            {
+                coverageCheckbox.Checked = false;
+                coverageCheckbox.Enabled = false;
+            }
+            else
+            {
+                coverageCheckbox.Enabled = true;
+                runMode.SelectedItem = "Test";  // Only Test mode supported in parallel testing
+            }
+        }
+
+        private void coverageCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (coverageCheckbox.Checked)
+            {
+                runSerial.Enabled = false;
+                runParallel.Checked = true;
+            }
+            else
+            {
+                runSerial.Enabled = true;
+            }
+        }
+
+        private void runMode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Adjust settings to match the mode
+            var runModeTest = RunTestMode.SelectedItem.ToString();
+            bool offScreenEnabled = true;
+            bool translationLanguagesOnly = false;
+            if (!Equals(runModeTest, "Test"))
+            {
+                runSerial.Checked = true;
+                bool isRunQuality = Equals(runModeTest, "Quality");
+                if (!isRunQuality)
+                    testSet.SelectedItem = "Tutorial tests";
+                if (isRunQuality || Equals(runModeTest, "Demo"))
+                    runIndefinitely.Checked = true;
+                else // Screenshots, Auto-Screenshots, Covershot
+                {
+                    runLoops.Checked = true;
+                    runLoopsCount.Text = 1.ToString();
+                    Offscreen.Checked = false;  // Can't do screenshots offscreen
+                    offScreenEnabled = false;
+                    translationLanguagesOnly = true;
+                }
+            }
+
+            TestsFrench.Enabled = TestsTurkish.Enabled = !translationLanguagesOnly;
+            if (translationLanguagesOnly)
+                TestsFrench.Checked = TestsTurkish.Checked = false;
+            Offscreen.Enabled = offScreenEnabled;
         }
 
         #endregion Control events
+
+        private void SkylineTesterWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.F5:
+                    if (e.Shift)
+                        Stop();
+                    else
+                        Run();
+                    e.Handled = true;
+                    break;
+            }
+        }
     }
 }

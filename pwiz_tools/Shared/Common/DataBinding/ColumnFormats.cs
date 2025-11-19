@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 
@@ -26,6 +27,8 @@ namespace pwiz.Common.DataBinding
     public class ColumnFormats
     {
         private Dictionary<ColumnId, ColumnFormat> _formats = new Dictionary<ColumnId, ColumnFormat>();
+        private int _defaultFrozenColumnCount;
+        private bool? _defaultFrozenEnabled;
         public void SetFormat(ColumnId columnId, ColumnFormat columnFormat)
         {
             if (columnFormat.IsEmpty)
@@ -37,6 +40,33 @@ namespace pwiz.Common.DataBinding
                 _formats[columnId] = columnFormat;
             }
             FireFormatChanged();
+        }
+
+        public int DefaultFrozenColumnCount
+        {
+            get
+            {
+                return _defaultFrozenColumnCount;
+            }
+            set
+            {
+                _defaultFrozenColumnCount = value;
+                FireFormatChanged();
+            }
+        }
+
+        public bool DefaultFrozenEnabled
+        {
+            get
+            {
+                // Deduce value until explicitly set.
+                return _defaultFrozenEnabled ?? _formats.Values.All(format => format.Frozen == null);
+            }
+            set
+            {
+                _defaultFrozenEnabled = value;
+                FireFormatChanged();
+            }
         }
 
         public ColumnFormat GetFormat(ColumnId columnId)
@@ -79,9 +109,16 @@ namespace pwiz.Common.DataBinding
             return ChangeProp(ImClone(this), im => im.Width = width);
         }
 
+        public bool? Frozen { get; private set; }
+
+        public ColumnFormat ChangeFrozen(bool? frozen)
+        {
+            return ChangeProp(ImClone(this), im => im.Frozen = frozen);
+        }
+
         protected bool Equals(ColumnFormat other)
         {
-            return string.Equals(Format, other.Format) && Width == other.Width;
+            return string.Equals(Format, other.Format) && Width == other.Width && Frozen == other.Frozen;
         }
 
         public override bool Equals(object obj)
@@ -98,6 +135,7 @@ namespace pwiz.Common.DataBinding
             {
                 var hashCode = (Format != null ? Format.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Width.GetHashCode();
+                hashCode = (hashCode * 397) ^ Frozen.GetHashCode();
                 return hashCode;
             }
         }

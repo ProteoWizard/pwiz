@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -369,6 +369,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 RemoveColumn(VisibleColumns[i].PropertyPath);
         }
 
+        public void SelectColumn(int index)
+        {
+            ListViewHelper.SelectIndex(listViewColumns, index);
+        }
+
         public void ActivateColumn(int index)
         {
             ListViewHelper.SelectIndex(listViewColumns, index);
@@ -379,7 +384,16 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             availableFieldsTreeColumns.TopNode = availableFieldsTreeColumns.Nodes[0];
             availableFieldsTreeColumns.Nodes[0].EnsureVisible();
+        }
 
+        public void MoveColumnsUp()
+        {
+            MoveColumns(true);
+        }
+
+        public void MoveColumnsDown()
+        {
+            MoveColumns(false);
         }
         #endregion
     }

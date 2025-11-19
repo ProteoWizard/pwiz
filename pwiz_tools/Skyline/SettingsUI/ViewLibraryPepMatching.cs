@@ -32,7 +32,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 
@@ -80,7 +79,7 @@ namespace pwiz.Skyline.SettingsUI
         public void SetBackgroundProteome(BackgroundProteome backgroundProteome)
         {
             _backgroundProteome = backgroundProteome;
-       }
+        }
 
         /// <summary>
         /// Matches library peptides to the current document settings and adds them to the document.
@@ -95,7 +94,12 @@ namespace pwiz.Skyline.SettingsUI
             if (MatchedPeptideCount == 0)
                 return;
 
-            if (broker.ShowDialog(wnd => EnsureDuplicateProteinFilter(wnd, entryCreators)) == DialogResult.Cancel)
+            // LEGACY: This is a one-off case where we need to show a dialog during long-wait processing.
+            // We cast to LongWaitDlg directly rather than keeping ShowDialog on ILongWaitBroker, since
+            // non-UI implementations (CommandProgressMonitor, AssociateProteinResults.ProgressImpl) cannot support this pattern.
+            // This allows us to remove UI dependencies from ILongWaitBroker while preserving existing behavior.
+            var brokerUI = broker as LongWaitDlg;
+            if (brokerUI != null && brokerUI.ShowDialog(wnd => EnsureDuplicateProteinFilter(wnd, entryCreators)) == DialogResult.Cancel)
                 return;
 
             IdentityPath selectedPath;
@@ -676,7 +680,7 @@ namespace pwiz.Skyline.SettingsUI
                     // ignore it.
                     if (peptideGroupDocNode.Children.Contains(nodePep => Equals(((PeptideDocNode) nodePep).Key, newNodePep.Key)))
                     {
-                        Console.WriteLine(Resources.ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present, newNodePep.Peptide.Target);
+                        Console.WriteLine(SettingsUIResources.ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present, newNodePep.Peptide.Target);
                         continue;
                     }
                     // Otherwise, add it to the list of children for the PeptideGroupNode.
@@ -782,8 +786,8 @@ namespace pwiz.Skyline.SettingsUI
                 // If library provides a RefSpectraProteins table, use that to name the group
                 // TODO(bspratt) for now we will use RefSpectraProteins names only for small molecules
                 var genericLibraryPeptidesGroupName = hasSmallMolecules
-                    ? Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
-                    : Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
+                    ? SettingsUIResources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules
+                    : SettingsUIResources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides;
                 var nodeName = string.IsNullOrEmpty(proteinName) || 
                                listPeptides.Any(p => p.IsProteomic) // TODO(bspratt) revisit this caution-driven decision
                     ? genericLibraryPeptidesGroupName

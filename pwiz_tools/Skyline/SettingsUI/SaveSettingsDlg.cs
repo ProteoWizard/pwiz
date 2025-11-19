@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -58,8 +58,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (name == settings.Name)
                 {
-                    var message = TextUtil.LineSeparate(String.Format(Resources.SaveSettingsDlg_OnClosing_The_name__0__already_exists, name),
-                                                        Resources.SaveSettingsDlg_OnClosing_Do_you_want_to_overwrite_the_existing_settings);
+                    var message = TextUtil.LineSeparate(String.Format(SettingsUIResources.SaveSettingsDlg_OnClosing_The_name__0__already_exists, name),
+                                                        SettingsUIResources.SaveSettingsDlg_OnClosing_Do_you_want_to_overwrite_the_existing_settings);
                     var result = MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel, DialogResult.Cancel);
                     if (result == DialogResult.OK)
                         break;

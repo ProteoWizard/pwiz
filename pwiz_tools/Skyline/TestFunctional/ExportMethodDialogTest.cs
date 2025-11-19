@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -527,8 +527,9 @@ namespace pwiz.SkylineTestFunctional
                     thermoActual = thermoActualTemp;
             }
 
-
             ExportWithExplicitCollisionEnergyValues(TestFilesDirs[0].FullPath, thermoActual);
+
+            ThermoInstrumentDetectionErrorsTest();
 
             // Agilent method
             {
@@ -574,6 +575,79 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(exportMethodDlg);
             }
             AssertEx.NoDiff(File.ReadAllText(abSciexWithResultsExpected), File.ReadAllText(abSciexWithResultsActual));
+        }
+
+        private void ThermoInstrumentDetectionErrorsTest()
+        {
+            var clazz = typeof(ExportMethodDlgTest);
+            var testsDllFinder = ThermoDllFinderTestCase.LoadAll(
+                clazz.Assembly.GetManifestResourceStream(clazz, "ExportMethodDialogThermoTest.json"));
+            var dllFinderServices = ThermoDllFinder.DEFAULT_SERVICES;
+            try
+            {
+                // No valid installation
+                ThermoDllFinder.DEFAULT_SERVICES = testsDllFinder.Last().DllFinderServices;
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+                // Lack of valid Thermo instrument should cause the first instrument type (Agilent 6400) to be the default
+                var firstInstrumentType = ExportInstrumentType.AGILENT6400;
+                RunUI(() => Assert.AreEqual(firstInstrumentType, exportMethodDlg.InstrumentType));
+
+                // No valid installation
+                var messageDlg = ShowDialog<MessageDlg>(() => exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO);
+                RunUI(() => AssertEx.Contains(messageDlg.Message, ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_,
+                    TextUtil.LineSeparate(string.Format(ModelResources.ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_missing_required_files_, "C:\\Thermo\\instrumentSoftwarePath", "OrbitrapAstral"),
+                        "Thermo.TNG.MethodXMLInterface.dll")));
+                OkDialog(messageDlg, messageDlg.OkDialog);
+
+                // Unknown installation type
+                var testUnknownInstrument = testsDllFinder[1];
+                ThermoDllFinder.DEFAULT_SERVICES = testUnknownInstrument.DllFinderServices;
+                messageDlg = ShowDialog<MessageDlg>(() => exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO);
+                RunUI(() => AssertEx.Contains(messageDlg.Message, string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_,
+                    testUnknownInstrument.ExpectedInstrumentType)));
+                OkDialog(messageDlg, messageDlg.OkDialog);
+
+                // CONSIDER: More failure reasons? Though these are tested in the unit test
+
+                // Should be set back to the first element in the list
+                RunUI(() => Assert.AreEqual(firstInstrumentType, exportMethodDlg.InstrumentType));
+                OkDialog(exportMethodDlg, exportMethodDlg.CancelDialog);
+
+                // Test instrument type restoring code
+                // Test failure silently selects the first element
+                Settings.Default.ExportInstrumentType = ExportInstrumentType.THERMO_ASTRAL;
+                RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
+                    dlg =>
+                    {
+                        Assert.AreEqual(firstInstrumentType, dlg.InstrumentType);
+                        dlg.CancelDialog();
+                    });
+                // Test a valid installation leaves "Thermo" selected
+                var testWithAstralSuccess = testsDllFinder[0];
+                ThermoDllFinder.DEFAULT_SERVICES = testWithAstralSuccess.DllFinderServices;
+                RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
+                    dlg =>
+                    {
+                        Assert.AreEqual(ExportInstrumentType.THERMO_ASTRAL, dlg.InstrumentType);
+                        Assert.AreEqual(ExportInstrumentType.THERMO, dlg.InstrumentTypeSelectedText);
+                        dlg.CancelDialog();
+                    });
+                // Test a valid installation with a different Thermo instrument type saved in user.config
+                // still starts with "Thermo" selected
+                Settings.Default.ExportInstrumentType = ExportInstrumentType.THERMO_STELLAR;
+                RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
+                    dlg =>
+                    {
+                        Assert.AreEqual(ExportInstrumentType.THERMO_ASTRAL, dlg.InstrumentType);
+                        Assert.AreEqual(ExportInstrumentType.THERMO, dlg.InstrumentTypeSelectedText);
+                        dlg.CancelDialog();
+                    });
+            }
+            finally
+            {
+                Settings.Default.ExportInstrumentType = null;
+                ThermoDllFinder.DEFAULT_SERVICES = dllFinderServices;
+            }
         }
 
         private void BrukerTOFMethodTest()
@@ -852,40 +926,13 @@ namespace pwiz.SkylineTestFunctional
                 // Change the current document to use explicit CE values, verify that this changes the output
                 var ce = 1; // Starting at 1 means some transitions will not have all CE steps
                 expectedTrans = 1;
-                for (bool changing = true; changing; )
+                foreach (var tranPath in document.EnumeratePathsAtLevel(IdentityPath.ROOT, SrmDocument.Level.Transitions))
                 {
-                    changing = false;
-                    foreach (var peptideGroupDocNode in document.MoleculeGroups)
-                    {
-                        var pepGroupPath = new IdentityPath(IdentityPath.ROOT, peptideGroupDocNode.Id);
-                        foreach (var nodePep in peptideGroupDocNode.Molecules)
-                        {
-                            var pepPath = new IdentityPath(pepGroupPath, nodePep.Id);
-                            foreach (var nodeTransitionGroup in nodePep.TransitionGroups)
-                            {
-                                var tgPath = new IdentityPath(pepPath, nodeTransitionGroup.Id);
-                                foreach (var nodeTransition in nodeTransitionGroup.Transitions)
-                                {
-                                    if (!nodeTransition.ExplicitValues.CollisionEnergy.HasValue)
-                                    {
-                                        var tranPath = new IdentityPath(tgPath, nodeTransition.Id);
-                                        document = (SrmDocument)document.ReplaceChild(tranPath.Parent,
-                                            nodeTransition.ChangeExplicitValues(nodeTransition.ExplicitValues.ChangeCollisionEnergy(ce++)));
-                                        changing = true;
-                                        // Add to expected transition count, limiting to account for CE <= 0 while CE space is explored
-                                        expectedTrans += Math.Min(ce - 2, 5) + 6;
-                                        break;
-                                    }
-                                }
-                                if (changing)
-                                    break;
-                            }
-                            if (changing)
-                                break;
-                        }
-                        if (changing)
-                            break;
-                    }
+                    var nodeTransition = (TransitionDocNode) document.FindNode(tranPath);
+                    document = (SrmDocument)document.ReplaceChild(tranPath.Parent,
+                        nodeTransition.ChangeExplicitValues(nodeTransition.ExplicitValues.ChangeCollisionEnergy(ce++)));
+                    // Add to expected transition count, limiting to account for CE <= 0 while CE space is explored
+                    expectedTrans += Math.Min(ce - 2, 5) + 6;
                 }
             }
             SkylineWindow.SetDocument(original, SkylineWindow.Document);

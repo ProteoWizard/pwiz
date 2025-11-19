@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms dot net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,6 @@
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -73,7 +72,7 @@ namespace pwiz.SkylineTest
             }
             if (File.Exists(eicarTestFile))  // Don't leave this lying around - it can cause problems with automated backups etc
             {
-                Helpers.TryTwice(() =>
+                TryHelper.TryTwice(() =>
                 {
                     File.WriteAllText(eicarTestFile, string.Empty); // So antivirus doesn't flag on recycle bin
                     File.Delete(eicarTestFile);

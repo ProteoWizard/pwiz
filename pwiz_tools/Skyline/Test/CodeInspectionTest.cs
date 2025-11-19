@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms dot net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -26,24 +26,31 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml.Linq;
+using AssortResources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using TestRunnerLib.PInvoke;
 using Environment = System.Environment;
 
 namespace pwiz.SkylineTest
@@ -68,7 +75,7 @@ namespace pwiz.SkylineTest
                 "AbstractFunctionalTest", // Only files containing this string get inspected for this
                 @"RunUI\(.*(Ok|Cancel)Dialog[^_].*", // Forbidden pattern - match RunUI(()=>foo.OkDialog()), RunUI(foo.CancelDialog) etc
                 true, // Pattern is a regular expression
-                @"use OkDialog() instead of RunUI() to close dialogs in a test - this waits for the dialog to actually close, which avoids race conditions e.g. ""OkDialog(colDlg, colDlg.CancelDialog)"" instead of ""RunUI(() => colDlg.CancelDialog())"". If this really is a legitimate use (to test error handling etc) add this comment to the offending line: '" + runDlgOkDlgExemptionComment + @"'", // Explanation for prohibition, appears in report
+                @"use OkDialog() or CancelDialog() instead of RunUI() to close dialogs in a test - this waits for the dialog to actually close, which avoids race conditions e.g. ""OkDialog(colDlg, colDlg.CancelDialog)"" instead of ""RunUI(() => colDlg.CancelDialog())"". If this really is a legitimate use (to test error handling etc) add this comment to the offending line: '" + runDlgOkDlgExemptionComment + @"'", // Explanation for prohibition, appears in report
                 runDlgOkDlgExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
 
             // Looking for uses of MessageBox where we should really be using MessageDlg
@@ -92,6 +99,26 @@ namespace pwiz.SkylineTest
                 @"^\s*PauseTest(UI)?\(", // Forbidden pattern (uncommented PauseTest or PauseTestUI)
                 true, // Pattern is a regular expression
                 @"This appears to be temporary debugging code that should not be checked in. Or perhaps you meant to use PauseForManualTutorialStep()?"); // Explanation for prohibition, appears in report
+
+            // Looking for forgotten SourceLevel.Information use that writes debug messages to console/ImmediateWindow
+            AddTextInspection(@"TraceWarningListener.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"SourceLevels.Information", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"This appears to be temporary debugging code that should not be checked in. Normally we don't want users to see this level of Trace messages."); // Explanation for prohibition, appears in report
+
+            // Looking for bare use of Trace calls that should be UserMessage or DebugMessage calls
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonSkylineDirectories().Append(@"Messages.cs").ToArray(), // Only these files should contain this
+                string.Empty, // No file content required for inspection
+                @"Trace.Trace", // Forbidden pattern
+                false, // Pattern is not a regular expression
+                @"Trace should not be used directly. The Messages class is the proper way to produce non-blocking user-facing messages, and permanent dev-facing messages."); // Explanation for prohibition, appears in report
 
             // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
             AddTextInspection(@"*.cs", // Examine files with this mask
@@ -151,16 +178,27 @@ namespace pwiz.SkylineTest
                     Level.Error, // Any failure is treated as an error, and overall test fails
                     null, // There are no parts of the codebase that should skip this check
                     cue, // If the file contains this, then check for forbidden pattern
-                    @"using.*(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms)", 
+                    @"using.*(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms|pwiz\.Common\.GUI)",
                     true, // Pattern is a regular expression
                     why, // Explanation for prohibition, appears in report
                     null, // No explicit exceptions to this rule
+                    // 0); // Use this line to make all occurrences errors - for clickable file and line numbers in report
                     numberToleratedAsWarnings); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+
+                // Also look for fully-qualified references to UI namespaces (no using directive present)
+                AddTextInspection(fileMask, // Examine files with this mask
+                    Inspection.Forbidden,
+                    Level.Error,
+                    null,
+                    cue,
+                    @"^(?!\s*///).*?\b(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms|pwiz\.Common\.GUI)\.",
+                    true,
+                    why);
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 38);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 2);
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
-            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 2);
+            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 1);
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
 
             // Check for using DataGridView.
@@ -168,10 +206,35 @@ namespace pwiz.SkylineTest
                 "new System.Windows.Forms.DataGridView()", false,
                 "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
-            AddTextInspection("*.cs", Inspection.Forbidden, Level.Error,
-                new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs"}, 
-                null, "Clipboard(Ex)?\\.SetText", true, 
+            // CONSIDER: remove CommonAlertDlg from the exclusion list, possibly by implementing exception handling in CommonAlertDlg.CopyMessage()
+            AddTextInspection("*.cs", 
+                Inspection.Forbidden, 
+                Level.Error,
+                new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs", "CommonAlertDlg.cs"}, 
+                null,
+                "Clipboard(Ex)?\\.SetText", 
+                true, 
                 "Use ClipboardHelper.SetClipboardText instead since it handles exceptions");
+
+            // Looking for non-accepted uses of P/Invoke by searching for the [DllImport] attribute
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                DllImportAllowedUsageFilesAndDirectories(), // Skip this check for specific files where DllImport use is explicitly allowed
+                "DllImport", // Only files containing this string get inspected for this
+                @"DllImport", // Forbidden pattern - match [DllImport
+                false, // Pattern is not a regular expression
+                @"Use of P/Invoke is not allowed. Instead, use the interop library in pwiz.Common.SystemUtil.PInvoke."); // Explanation for prohibition, appears in report
+
+            // Looking for uses of Encoding.UTF8 in file writing operations that will create BOM
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"(new XmlTextWriter|File\.WriteAllText|File\.WriteAllLines|\.SaveAsXml|new StreamWriter)\(.*Encoding\.UTF8[^E]", // Forbidden pattern - catches file writing with Encoding.UTF8 (but not UTF8Encoding)
+                true, // Pattern is a regular expression
+                @"Encoding.UTF8 includes a BOM by default. Use 'new UTF8Encoding(false)' for UTF-8 without BOM, or 'new UTF8Encoding(true)' if you explicitly need a BOM."); // Explanation for prohibition, appears in report
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -374,6 +437,455 @@ namespace pwiz.SkylineTest
             }
         }
 
+        /// <summary>
+        ///  Look for conflicts between settings.settings and app.config
+        /// </summary>
+        void InspectInconsistentSetting(string root, List<string> errors) 
+        {
+            var EMPTY_STRING_ARRAY = "</ArrayOfString>";
+
+            // Extract key-value pairs from settings.settings
+            var settingsValues = ExtractSettingsSettings();
+
+            // Extract key-value pairs from app.config
+            var configValues = ExtractAppConfigSettings();
+
+            // Find keys that exist in both but have different values
+            foreach (var key in settingsValues.Keys.Intersect(configValues.Keys).Where(k => (settingsValues[k] != configValues[k])))
+            {
+                var settingsValue = settingsValues[key];
+                var configValue = configValues[key];
+                // An empty string array in settings.settings is just empty text in app.config
+                if (!(settingsValue.Equals(EMPTY_STRING_ARRAY) && string.IsNullOrEmpty(configValue)))
+                {
+                    NoteMismatch(key, settingsValue, configValue);
+                }
+            }
+
+
+            // Find settings that exist only in one of the files
+            foreach (var key in settingsValues.Keys.Except(configValues.Keys))
+            {
+                var settingsValue = settingsValues[key];
+                // IDE seems to be OK with missing value in app.config if the setting is an empty string array
+                if (!settingsValue.Equals(EMPTY_STRING_ARRAY))
+                {
+                    NoteMismatch(key, settingsValue, null);
+                }
+            }
+            foreach (var key in configValues.Keys.Except(settingsValues.Keys))
+            {
+                NoteMismatch(key, null, configValues[key]);
+            }
+
+            return;
+
+
+            void NoteMismatch(string name, string settingsValue, string configValue)
+            {
+                errors.Add($"Settings mismatch for \"{name}\": {FormatValue(settingsValue)} in Settings.settings, {FormatValue(configValue)} in app.config.");
+                return;
+                string FormatValue(string s) => s == null ? "not found" : $"\"{s}\"";
+            }
+
+            string CheckStringArray(string value)
+            {
+                if (value.Contains("<ArrayOfString"))
+                {
+                    var result = string.Empty;
+                    foreach (var part in value.Split(new[] { "<string>" }, StringSplitOptions.None))
+                    {
+                        if (part.Contains("</string>"))
+                        {
+                            var val = part.Trim().Split(new[] { "</string>" }, StringSplitOptions.None).FirstOrDefault();
+                            if (!string.IsNullOrEmpty(val))
+                            {
+                                result += val.Trim();
+                            }
+                        }
+                    }
+                    return result;
+                }
+                else if (string.IsNullOrEmpty(value))
+                {
+                    // Special case - settings designer won't update app.config if the value is empty (that is, not even an empty description in XML - just blank text)
+                    value = EMPTY_STRING_ARRAY;
+                }
+
+                return value;
+            }
+
+            Dictionary<string, string> ExtractSettingsSettings()
+            {
+                var settingsPath = Path.Combine(root, @"Properties\Settings.settings");
+                var doc = XDocument.Load(settingsPath);
+                var settings = new Dictionary<string, string>();
+                XNamespace settingsNamespace = "http://schemas.microsoft.com/VisualStudio/2004/01/settings";
+                var settingsElements = doc.Descendants(settingsNamespace + "Settings")
+                    .Descendants(settingsNamespace + "Setting")
+                    .ToArray();
+                AssertEx.AreNotEqual(settingsElements.Length, 0, "trouble reading settings.settings");
+                foreach (var setting in settingsElements)
+                {
+                    var key = setting.Attribute("Name")?.Value;
+                    if (key != null)
+                    {
+                        var value = CheckStringArray(setting.Value);
+                        settings[key] = value;
+                    }
+                }
+                return settings;
+            }
+
+            Dictionary<string, string> ExtractAppConfigSettings()
+            {
+                var configPath = Path.Combine(root, @"app.config");
+                var doc = XDocument.Load(configPath);
+                var settings = new Dictionary<string, string>();
+                var appSettingsElements = doc.Descendants(@"setting").ToArray();
+                AssertEx.AreNotEqual(appSettingsElements.Length, 0, "trouble reading app.config");
+                foreach (var setting in appSettingsElements)
+                {
+                    var key = setting.Attribute("name")?.Value;
+                    if (key != null)
+                    {
+                        var value = setting.Value;
+                        settings[key] = value;
+                    }
+                }
+                return settings;
+            }
+        }
+
+        /// <summary>
+        /// Inspect the P/Invoke API. This looks at classes inside the .PInvoke
+        /// namespace to monitor for changes to which Win32 APIs are referenced,
+        /// looking at both DLLs and methods. It also enforces naming conventions.
+        ///
+        /// See PInvokeCommon for more info.
+        /// </summary>
+        private static void InspectPInvokeApi(string root, List<string> errors)
+        {
+            var expectedPInvokeApi = new Dictionary<Type, int>
+            {
+                // {type, expected # of methods with DllImport attribute}
+                { typeof(Advapi32), 3 },
+                { typeof(Gdi32), 4 },
+                { typeof(Kernel32), 7 },
+                { typeof(Shell32), 1 },
+                { typeof(Shlwapi), 1 },
+                { typeof(User32), 33 },
+
+                { typeof(DwmapiTest), 4 },
+                { typeof(Gdi32Test), 1 },
+                { typeof(Kernel32Test), 5 },
+                { typeof(Ole32Test), 1 },
+                { typeof(Shell32Test), 1 },
+                { typeof(User32Test), 9 }
+            };
+
+            // add types from production code
+            var types = typeof(User32).Assembly.GetTypes()
+                .Where(type => type.Namespace is "pwiz.Common.SystemUtil.PInvoke" && type.IsClass).ToList();
+
+            // add types from test code
+            types.AddRange(typeof(User32Test).Assembly.GetTypes()
+                .Where(type => type.Namespace is "TestRunnerLib.PInvoke" && type.IsClass).ToList());
+
+            foreach(var type in types)
+            {
+                var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                    .Where(method => method.GetCustomAttributes(typeof(DllImportAttribute), false).Length > 0).ToList();
+
+                if (methods.Count == 0)
+                {
+                    continue;
+                }
+
+                // unexpected class using [DllImport] attributes
+                if (!expectedPInvokeApi.ContainsKey(type))
+                {
+                    errors.Add($"P/Invoke error in {type.Name}. This class is not allowed to use [DllImport]. See the wiki or PInvokeCommon for more information.");
+                }
+                else
+                {
+                    // too many functions in this class marked with [DllImport] attribute
+                    if (methods.Count > expectedPInvokeApi[type])
+                    {
+                        errors.Add(
+                            $"P/Invoke error in {type.Name}. {type.FullName} has more methods marked with [DllImport] than expected. See the wiki or PInvokeCommon for more information.");
+                    }
+                    // too few methods in this class marked with [DllImport] attribute
+                    else if (methods.Count < expectedPInvokeApi[type])
+                    {
+                        errors.Add(
+                            $"P/Invoke error in {type.Name}. {type.FullName} has fewer methods marked with [DllImport] than expected. See the wiki or PInvokeCommon for more information.");
+                    }
+                }
+
+                var expectedDllName = type.Name.EndsWith("Test") ? type.Name.Substring(0, type.Name.Length - 4) : type.Name;
+
+                foreach (var method in methods)
+                {
+                    var dllImportAttribute =
+                        method.GetCustomAttribute(typeof(DllImportAttribute), false) as DllImportAttribute;
+                    // ReSharper disable once PossibleNullReferenceException
+                    var dllName = dllImportAttribute.Value;
+                    
+                    if (dllName.Any(char.IsUpper))
+                    {
+                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must be all lower case");
+                    }
+
+                    if (!dllName.EndsWith(".dll"))
+                    {
+                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must end in '.dll'.");
+                    }
+                    else
+                    {
+                        var actualDllName = dllName.Substring(0, dllName.Length - ".dll".Length);
+                        if (!actualDllName.Equals(expectedDllName, StringComparison.OrdinalIgnoreCase)) 
+                        {
+                            errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter '{dllName}' must match the class name and be either {expectedDllName} or {expectedDllName}Test.");
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Inspect source files for UTF-8 BOM (Byte Order Mark).
+        /// Modern best practice is UTF-8 without BOM for source code.
+        /// BOM causes issues with Unix/Linux tools, Git diffs, and cross-platform compatibility.
+        ///
+        /// This inspection automatically removes BOMs from files when found, similar to how
+        /// SchemaDocumentsTest automatically creates missing schema files.
+        /// </summary>
+        private static void InspectUtf8Bom(string root, List<string> errors)
+        {
+            var utf8Bom = new byte[] { 0xEF, 0xBB, 0xBF };
+
+            // Auto-generated files that are allowed to have BOM (regenerated by Visual Studio from COM type libraries)
+            var allowedBomExtensions = new[] { ".tli", ".tlh" };
+
+            // Directories to skip (build outputs, test results, Git submodules, etc.)
+            var skipDirectories = new[] { "\\bin\\", "\\obj\\", "\\TestResults\\", "\\SkylineTester Results\\", "\\Executables\\BullseyeSharp\\", "\\Executables\\Hardklor\\", "\\Executables\\DevTools\\DocumentConverter\\" };
+
+            // Search paths: Skyline and Shared directories
+            var searchPaths = new List<string> { root };
+            var sharedCommon = Path.Combine(root, "..", "Shared", "Common");
+            var sharedCommonUtil = Path.Combine(root, "..", "Shared", "CommonUtil");
+            if (Directory.Exists(sharedCommon))
+                searchPaths.Add(sharedCommon);
+            if (Directory.Exists(sharedCommonUtil))
+                searchPaths.Add(sharedCommonUtil);
+
+            // File types to check
+            var fileMasks = new[] { "*.cs", "*.cpp", "*.h", "*.resx", "*.xml", "*.config", "*.csproj", "*.sln", "*.xsd" };
+
+            // ReSharper disable once CollectionNeverQueried.Local
+            var filesWithBom = new List<string>();
+            var filesFixed = new List<string>();
+
+            foreach (var searchPath in searchPaths)
+            {
+                foreach (var mask in fileMasks)
+                {
+                    foreach (var file in Directory.GetFiles(searchPath, mask, SearchOption.AllDirectories))
+                    {
+                        // Skip build output directories and Git submodules
+                        if (skipDirectories.Any(dir => file.Contains(dir)))
+                            continue;
+
+                        // Skip auto-generated COM type library files
+                        var extension = Path.GetExtension(file);
+                        if (allowedBomExtensions.Contains(extension))
+                            continue;
+
+                        try
+                        {
+                            var bytes = File.ReadAllBytes(file);
+                            if (bytes.Length >= 3 &&
+                                bytes[0] == utf8Bom[0] &&
+                                bytes[1] == utf8Bom[1] &&
+                                bytes[2] == utf8Bom[2])
+                            {
+                                filesWithBom.Add(file);
+
+                                // Automatically remove BOM
+                                var creationTime = File.GetCreationTime(file);
+                                var lastWriteTime = File.GetLastWriteTime(file);
+                                var lastAccessTime = File.GetLastAccessTime(file);
+
+                                // Remove BOM (skip first 3 bytes)
+                                var newBytes = new byte[bytes.Length - 3];
+                                Array.Copy(bytes, 3, newBytes, 0, newBytes.Length);
+
+                                // Write file without BOM
+                                File.WriteAllBytes(file, newBytes);
+
+                                // Restore timestamps
+                                File.SetCreationTime(file, creationTime);
+                                File.SetLastWriteTime(file, lastWriteTime);
+                                File.SetLastAccessTime(file, lastAccessTime);
+
+                                filesFixed.Add(file);
+                            }
+                        }
+                        catch
+                        {
+                            // Skip files that can't be read or written
+                        }
+                    }
+                }
+            }
+
+            if (filesFixed.Any())
+            {
+                errors.Add(string.Empty);
+                errors.Add($"ERROR: Found and automatically removed UTF-8 BOM from {filesFixed.Count} file(s):");
+                foreach (var file in filesFixed)
+                {
+                    var relativePath = file.Replace(root, string.Empty).TrimStart('\\', '/');
+                    errors.Add($"  - {relativePath}");
+                }
+                errors.Add(string.Empty);
+                errors.Add("The BOM has been automatically removed from these files.");
+                errors.Add("Please review the changes with 'git diff' and commit them.");
+                errors.Add(string.Empty);
+                errors.Add("Modern best practice is UTF-8 without BOM for all source files.");
+                errors.Add("BOM causes issues with Unix/Linux tools, Git diffs, and cross-platform compatibility.");
+                errors.Add("See STYLEGUIDE.md for encoding guidelines.");
+                errors.Add(string.Empty);
+                errors.Add("DO NOT ignore this error - the fixed files must be committed to prevent this error");
+                errors.Add("from appearing on TeamCity and in nightly test runs.");
+            }
+        }
+
+        /// <summary>
+        /// Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
+        /// </summary>
+        void InspectMisplacedResources(string root, List<string> errors) 
+        {
+            // Look for any .csproj in the immediate subfolder of the main project
+            // Strings which are referenced by these other .csproj files will not get moved
+            var otherProjectPaths = new List<string>();
+            // ReSharper disable once AssignNullToNotNullAttribute
+            foreach (var subfolder in Directory.GetDirectories(root))
+            {
+                var otherProjectPath = Path.Combine(subfolder, Path.GetFileNameWithoutExtension(subfolder) + ".csproj");
+                if (File.Exists(otherProjectPath))
+                {
+                    otherProjectPaths.Add(otherProjectPath);
+                }
+            }
+
+            var resourceFilePath = Path.Combine(root, "Properties\\Resources.resx");
+            var csProjPath = Path.Combine(root, "Skyline.csproj");
+            var resourceAssorter = new ResourceAssorter(csProjPath, resourceFilePath, true, otherProjectPaths.ToArray());
+            var initialErrors = errors.Count;
+            resourceAssorter.DoWork(errors);
+            if (errors.Count > initialErrors)
+            {
+                // Attempt self-healing by running AssortResources.exe to move non-shared resources automatically
+                // Search for AssortResources.exe in several possible locations
+                var assemblyDir = Path.GetDirectoryName(typeof(FormEx).Assembly.Location) ?? string.Empty;
+                var searchPaths = new List<string>
+                {
+                    // Same directory as running assembly (e.g., bin\x64\Debug)
+                    assemblyDir,
+                    // Release build location (typically where it's built by Boost Build)
+                    Path.Combine(root, "bin", "x64", "Release"),
+                    // Debug build location
+                    Path.Combine(root, "bin", "x64", "Debug"),
+                    // Any platform (fallback)
+                    Path.Combine(root, "bin", "Release"),
+                    Path.Combine(root, "bin", "Debug")
+                };
+
+                string exePath = null;
+                foreach (var searchPath in searchPaths)
+                {
+                    var candidate = Path.Combine(searchPath, "AssortResources.exe");
+                    if (File.Exists(candidate))
+                    {
+                        exePath = candidate;
+                        break;
+                    }
+                }
+
+                bool fixSucceeded = false;
+                if (exePath != null)
+                {
+                    try
+                    {
+                        var args = $"--resourcefile \"{resourceFilePath}\" --projectfile \"{csProjPath}\"";
+                        var psi = new ProcessStartInfo(exePath, args)
+                        {
+                            WorkingDirectory = root,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+
+                        var processRunner = new ProcessRunner();
+                        var writer = new StringWriter();
+                        IProgressStatus status = new ProgressStatus(string.Empty);
+                        processRunner.Run(psi, null, null, ref status, writer);
+
+                        // Re-run inspection to verify the fix
+                        var verifyErrors = new List<string>();
+                        var verifier = new ResourceAssorter(csProjPath, resourceFilePath, true, otherProjectPaths.ToArray());
+                        verifier.DoWork(verifyErrors);
+                        fixSucceeded = verifyErrors.Count <= initialErrors;
+                        if (fixSucceeded)
+                        {
+                            // Replace the previously-added errors with a single actionable summary
+                            errors.Add(string.Empty);
+                            errors.Add($"Auto-fixed misplaced resources by running AssortResources.exe (found at {exePath}).");
+                            errors.Add("Please review and commit the changes, then re-run the test.");
+                        }
+                        else
+                        {
+                            errors.Add(string.Empty);
+                            errors.Add($"AssortResources.exe (found at {exePath}) was invoked but did not fully resolve the issues.");
+                            errors.Add("You may need to run it manually or investigate the root cause.");
+                        }
+                    }
+                    catch (IOException ioEx)
+                    {
+                        // ProcessRunner throws IOException on failure; capture the message
+                        errors.Add(string.Empty);
+                        errors.Add($"AssortResources.exe (found at {exePath}) was invoked automatically but encountered an error:");
+                        errors.Add(ioEx.Message);
+                    }
+                }
+                else
+                {
+                    // Could not find the tool
+                    errors.Add(string.Empty);
+                    errors.Add("AssortResources.exe was not found in any of the following locations:");
+                    foreach (var searchPath in searchPaths)
+                    {
+                        errors.Add($"  - {Path.Combine(searchPath, "AssortResources.exe")}");
+                    }
+                    errors.Add(string.Empty);
+                    errors.Add("AssortResources.exe is typically built by the Boost Build from the pwiz root.");
+                    errors.Add("Run a full build (e.g., quickbuild.bat) to create it, or run the command manually once built:");
+                }
+
+                if (!fixSucceeded)
+                {
+                    // Always provide the manual instruction if auto-fix didn't succeed
+                    var suggestedPath = exePath ?? Path.Combine(assemblyDir, "AssortResources.exe");
+                    errors.Add(string.Empty);
+                    errors.Add($"This can be done with command:");
+                    errors.Add($"\"{suggestedPath}\" --resourcefile \"{resourceFilePath}\" --projectfile \"{csProjPath}\"");
+                    errors.Add("Before running this command, save all your changes in the IDE.");
+                }
+            }
+        }
+
+
         // Looking for uses of Form where we should really be using FormEx
         private static void FindIllegalForms(List<string> results) // Looks for uses of Form rather than FormEx
         {
@@ -495,7 +1007,7 @@ namespace pwiz.SkylineTest
 
         private string GetCodeBaseRoot(out string thisFile)
         {
-            thisFile = new System.Diagnostics.StackTrace(true).GetFrame(0).GetFileName();
+            thisFile = new StackTrace(true).GetFrame(0).GetFileName();
             if (string.IsNullOrEmpty(thisFile))
             {
                 AssertEx.Fail("Could not get Skyline directory name for code inspection");
@@ -520,10 +1032,12 @@ namespace pwiz.SkylineTest
                     }
                     else
                     {
-                        counts[patternDetails] = counts[patternDetails] + 1;
+                        counts[patternDetails]++;
                     }
 
-                    if (counts[patternDetails] <= patternDetails.NumberOfToleratedIncidents)
+                    int count = counts[patternDetails];
+                    int expected = patternDetails.NumberOfToleratedIncidents;
+                    if (count <= expected)
                     {
                         result = warnings;
                         tolerated = @"This is an error, but is tolerated for the moment.";
@@ -531,7 +1045,8 @@ namespace pwiz.SkylineTest
                     else
                     {
                         tolerated =
-                            @"A certain number of existing cases of this are tolerated for the moment, there appears to be a new one which must be corrected.";
+                            TextUtil.LineSeparate(string.Format($@"Expected {expected} existing cases of this issue but found {count}."),
+                                "Please fix any newly introduced cases to get back to the expected level.");
                     }
                 }
 
@@ -554,12 +1069,23 @@ namespace pwiz.SkylineTest
 
             InspectTutorialAuditLogs(root, results);
 
+            InspectMisplacedResources(root, results); // Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
+
+            InspectInconsistentSetting(root, results); // Look for conflicts between settings.settings and app.config
+
+            InspectPInvokeApi(root, results);
+
+            InspectUtf8Bom(root, results); // Check for UTF-8 BOM and automatically remove it
+
+            InspectRedundantCsprojResourcesFromSolution(root, results); // Look for images in .csproj files that are redundant with the RESX entries
+
             var errorCounts = new Dictionary<PatternDetails, int>();
 
             foreach (var fileMask in allFileMasks)
             {
                 var filenames = Directory.GetFiles(root, fileMask, SearchOption.AllDirectories).ToList();
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"Common"), fileMask, SearchOption.AllDirectories));
+                filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonUtil"), fileMask, SearchOption.AllDirectories));
 
                 foreach (var filename in filenames)
                 {
@@ -596,9 +1122,12 @@ namespace pwiz.SkylineTest
 
                     var errors = new List<string>();
                     var warnings = new List<string>();
+                    // Track already reported issues for this file to avoid duplicate reports
+                    var reportedMatches = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    // Per-file tracking for inconsistent line endings and multiline pattern faults
+                    var crlfCount =0;
                     var multiLinePatternFaults = new Dictionary<Pattern, string>();
                     var multiLinePatternFaultLocations = new Dictionary<Pattern, int>();
-                    var crlfCount = 0; // Look for inconsistent line endings
 
                     foreach (var line in lines)
                     {
@@ -627,11 +1156,16 @@ namespace pwiz.SkylineTest
                                 {
                                     var patternDetails = forbiddenPatternsByFileMask[fileMask][pattern];
                                     var why = patternDetails.Reason;
+                                    // Avoid reporting the same reason at the same file:line more than once
+                                    var matchKey = filename + ":" + lineNum + ":" + why;
+                                    if (reportedMatches.Contains(matchKey))
+                                        continue;
+                                    reportedMatches.Add(matchKey);
                                     var result = CheckForToleratedError(patternDetails, errors, warnings, errorCounts, out var tolerated);
-                                    result.Add(@"Found prohibited use of");
-                                    result.Add(@"""" + pattern.PatternString.Replace("\n", "\\n") + @"""");
-                                    result.Add("(" + why + ") at");
-                                    result.Add(filename + "(" + lineNum + @")");
+                                    result.Add("Found prohibited use of");
+                                    result.Add("\"" + pattern.PatternString.Replace("\n", "\\n") + "\"");
+                                    result.Add("(" + why + ")");
+                                    result.Add($" at {Path.GetFileName(filename)} in {filename}:line {lineNum}");
                                     result.Add(line);
                                     if (tolerated != null)
                                     {
@@ -681,8 +1215,8 @@ namespace pwiz.SkylineTest
                             var why = string.Format(patternDetails.Reason, fault ?? String.Empty);
                             var result = CheckForToleratedError(patternDetails, errors, warnings, errorCounts, out var tolerated);
 
-                            result.Add(@"Did not find required use of");
-                            result.Add(@"""" + pattern.PatternString.Replace("\n","\\n") + @"""");
+                            result.Add("Did not find required use of");
+                            result.Add("\"" + pattern.PatternString.Replace("\n","\\n") + "\"");
                             if (multiLinePatternFaultLocations.TryGetValue(pattern, out var lineNumber))
                             {
                                 result.Add("(" + why + ") at");
@@ -749,7 +1283,14 @@ namespace pwiz.SkylineTest
 
             if (results.Any())
             {
-                var resultsCount = results.Count;
+                var commentCues = new[] // Things that may appear in error list that are not themselves errors
+                {
+                    "non-shared resource(s) should be moved from", 
+                    "This can be done with command", 
+                    "AssortResources.exe"
+                };
+
+                var resultsCount = results.Count(r => !string.IsNullOrEmpty(r) && !commentCues.Any(r.Contains));
                 results.Insert(0, string.Empty);
                 results.Insert(0, string.Format("{0} code inspection failures found:", resultsCount));
                 results.Add(string.Empty);
@@ -822,6 +1363,37 @@ namespace pwiz.SkylineTest
         {
             return new[] {@"TestRunner", @"SkylineTester", @"SkylineNightly", "Executables", "CommonTest" };
         }
+        
+        // Return a list of files and directories allowed to use PInvoke
+        private string[] DllImportAllowedUsageFilesAndDirectories()
+        {
+            // Paths start in pwiz_tools\Skyline, pwiz_tools\Skyline\..\Shared\Common, or pwiz_tools\Skyline\..\Shared\CommonUtil
+            return new[] {
+                // PInvoke API and associated check are allowed to use [DllImport]
+                @"SystemUtil\PInvoke",
+                @"TestRunnerLib\PInvoke",
+                @"Test\CodeInspectionTest.cs",
+                
+                // Classes allowed limited use of the [DllImport] attribute outside the PInvoke API.
+                // To be added to this list, a class must:
+                //   (1) Use methods marked with [DllImport] not already implemented in PInvoke
+                //   (2) Be the only use of those methods
+                //   (3) Have circumstances where adding new functions to PInvoke (even if only used once)
+                //       is difficult for one or more reasons including:
+                //        * Includes > 20 LOC modeling Win32 types
+                //        * Uses unsafe methods
+                @"Util\MemoryInfo.cs", 
+                @"Util\UtilIO.cs",
+                @"TestRunner\UnusedPortFinder.cs",
+                @"TestRunnerLib\RunTests.cs",
+                @"TestRunnerLib\MiniDump.cs",
+                @"SystemUtil\FileLockingProcessFinder.cs",
+
+                // Ignore 3rd party libraries
+                @"Executables"
+                // ZedGraph would also be excluded, but it lives in a directory not covered by static analysis
+            };
+        }
 
         // Prepare a list of files that we never need to deal with for L10N
         // Uses the information found in our KeepResx L10N development tool,
@@ -874,6 +1446,7 @@ namespace pwiz.SkylineTest
             result.Add("Executables\\Tools\\SProCoP");
             result.Add("Executables\\Tools\\TestArgCollector");
             result.Add("Executables\\Tools\\ExampleInteractiveTool");
+            result.Add("Executables\\DevTools");
             return result.ToArray();
         }
 
@@ -917,6 +1490,99 @@ namespace pwiz.SkylineTest
             if (numberToleratedAsWarnings > 0)
             {
                 patternsWithToleranceCounts.Add(patternDetails); // Track these so we know when more are tolerated than necessary
+            }
+        }
+
+        private void InspectRedundantCsprojResourcesFromSolution(string root, List<string> errors)
+        {
+            var redundancyExceptions = new Dictionary<string, HashSet<string>>
+            {
+                // The Skyline document icons need to be Content to be registered with the system
+                {"Skyline.csproj", new HashSet<string>{"Skyline_Daily.ico", "Skyline.ico", "SkylineData.ico", "SkylineDoc.ico"}}
+            };
+
+            string slnPath = Path.Combine(root, "Skyline.sln");
+            if (!File.Exists(slnPath))
+            {
+                errors.Add("Could not find Skyline.sln to inspect project resource redundancy.");
+                return;
+            }
+
+            var csprojPaths = File.ReadAllLines(slnPath)
+                .Where(line => line.Trim().StartsWith("Project(") && line.Contains(".csproj"))
+                .Select(line =>
+                {
+                    var parts = line.Split('"');
+                    return parts.Length >= 6 ? GetFullPath(root, parts[5].Replace('\\', Path.DirectorySeparatorChar)) : null;
+                })
+                .Where(File.Exists)
+                .ToList();
+
+            foreach (var csprojPath in csprojPaths)
+            {
+                var csprojName = Path.GetFileName(csprojPath);
+                var projectDir = Path.GetDirectoryName(csprojPath);
+                if (projectDir == null)
+                    continue;
+
+                var resxPath = Path.Combine(projectDir, "Properties", "Resources.resx");
+                if (!File.Exists(resxPath))
+                    continue;
+
+                var resxDoc = XDocument.Load(resxPath);
+                var resxDir = Path.GetDirectoryName(resxPath) ?? string.Empty;
+                var resxFiles = resxDoc.Descendants("data")
+                    .Where(d =>
+                        d.Attribute("type")?.Value.StartsWith("System.Resources.ResXFileRef") == true &&
+                        d.Element("value") != null)
+                    .Select(d =>
+                    {
+                        var relativePath = d.Element("value")!.Value.Split(';')[0].Trim();
+                        var absolutePath = GetFullPath(resxDir, relativePath);
+                        return absolutePath;
+                    })
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                var csprojDoc = XDocument.Load(csprojPath);
+                var includedFiles = csprojDoc.Descendants()
+                    .Where(e =>
+                        // e.Name.LocalName == "None" ||    // Okay as a way to increase visibility in project files
+                        e.Name.LocalName == "Content" ||
+                        e.Name.LocalName == "EmbeddedResource")
+                    .Select(e => e.Attribute("Include")?.Value)
+                    .Where(path => !string.IsNullOrEmpty(path) && !path.Contains("*")) // Avoid wildcard paths like *.xsd
+                    .ToList();
+
+                var redundantItems = includedFiles
+                    .Select(path => new
+                    {
+                        Original = path,
+                        Absolute = GetFullPath(projectDir, path)
+                    })
+                    .Where(p => resxFiles.Contains(p.Absolute))
+                    .Select(p => p.Original)
+                    .ToList();
+
+                foreach (var item in redundantItems)
+                {
+                    if (redundancyExceptions.TryGetValue(csprojName, out var fileExceptions) && fileExceptions.Contains(item))
+                        continue;
+
+                    errors.Add($"Redundant resource declaration in {csprojName}: \"{item}\" is already embedded via Resources.resx.");
+                }
+            }
+        }
+
+        private string GetFullPath(string rootDir, string relativePath)
+        {
+            try
+            {
+                return Path.GetFullPath(Path.Combine(rootDir, relativePath));
+            }
+            catch (Exception e)
+            {
+                Assert.Fail($"Unexpected error creating full path from '{rootDir}' and relative path '{relativePath}'", e);
+                return null;
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Rita Chupalov <ritach .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ContentAlignment = System.Drawing.ContentAlignment;
 
@@ -201,7 +200,7 @@ namespace pwiz.Skyline.Controls
             int colNumber = 0;
             var rowLabel = new Label()
             {
-                Text = Resources.IonTypeSelector_NTermLabel,
+                Text = ControlsResources.IonTypeSelector_NTermLabel,
                 AutoSize = true,
                 TextAlign = ContentAlignment.MiddleLeft
             };
@@ -221,7 +220,7 @@ namespace pwiz.Skyline.Controls
             colNumber = 0;
             rowLabel = new Label()
             {
-                Text = Resources.IonTypeSelector_CTermLabel,
+                Text = ControlsResources.IonTypeSelector_CTermLabel,
                 AutoSize = true,
                 TextAlign = ContentAlignment.MiddleLeft
             };
@@ -305,7 +304,7 @@ namespace pwiz.Skyline.Controls
             var modLosses = peptideSet.Modifications.StaticModsDeduped;
 
             //remove the buttons for losses
-            foreach (var cb in Controls.OfType<CheckBox>().ToList().FindAll(cb => cb.Tag is FragmentLoss).ToList())
+            foreach (var cb in Controls.OfType<CheckBox>().ToList().FindAll(cb => cb.Tag is FragmentLoss))
             {
                 Controls.Remove(cb);
                 cb.CheckedChanged -= LossButton_CheckedChanged;
@@ -321,7 +320,7 @@ namespace pwiz.Skyline.Controls
                     LayoutSettings.RowCount = 2 + modRowNumber;
                     _allLossesButton = new IonSelectorButton(null)
                     {
-                        Text = Resources.IonTypeSelector_LossesLabel,
+                        Text = ControlsResources.IonTypeSelector_LossesLabel,
                         TextAlign = ContentAlignment.MiddleLeft
                     };
                     Controls.Add(_allLossesButton);
@@ -340,10 +339,13 @@ namespace pwiz.Skyline.Controls
                     //Add the buttons that are not there yet
                     if (!Controls.OfType<CheckBox>().Any(cb => loss.Equals(cb.Tag)))
                     {
+                        string lossText = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass);
+                        if (loss.Charge > 0)
+                            lossText += Transition.GetChargeIndicator(loss.Charge);
                         var cb = new IonSelectorButton(loss)
                         {
-                            Text = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass),
-                            Checked = lossButtonStates.Contains(loss.FormulaNoNull)
+                            Text = lossText,
+                            Checked = lossButtonStates.Contains(loss.PersistentName)
                         };
                         cb.CheckedChanged += LossButton_CheckedChanged;
                         cb.MouseHover += LossButton_MouseHover;
@@ -414,7 +416,7 @@ namespace pwiz.Skyline.Controls
             {
                 //get the list of formulas for the selected losses
                 var losses = Controls.OfType<CheckBox>().ToList().FindAll(cbox => cbox.Tag is FragmentLoss && cbox.Checked)
-                    .Select(cbox => ((FragmentLoss) cbox.Tag).Formula).ToArray();
+                    .Select(cbox => ((FragmentLoss) cbox.Tag).PersistentName).ToArray();
 
                 SetAllLossesButtonState();
                 LossChanged?.Invoke(losses);
@@ -427,11 +429,11 @@ namespace pwiz.Skyline.Controls
             {
                 if(cb.Tag is FragmentLoss loss)
                     _panelToolTip.Show(
-                        string.Format(Resources.IonTypeSelector_LossesTooltip, loss.FormulaNoNull), cb);
+                        string.Format(ControlsResources.IonTypeSelector_LossesTooltip, loss.PersistentName), cb);
                 else if (ReferenceEquals(sender, _allLossesButton))
                 {
-                    var msg = _allLossesButton.Checked ? Resources.IonTypeSelector_DeselectAllLossesTooltip
-                        : Resources.IonTypeSelector_SelectAllLossesTooltip;
+                    var msg = _allLossesButton.Checked ? ControlsResources.IonTypeSelector_DeselectAllLossesTooltip
+                        : ControlsResources.IonTypeSelector_SelectAllLossesTooltip;
                     _panelToolTip.Show(msg, cb);
                 }
             }
@@ -454,7 +456,7 @@ namespace pwiz.Skyline.Controls
                 checkBox.Checked = state;
                 checkBox.CheckedChanged += LossButton_CheckedChanged;
                 if (state)
-                    res.Add((checkBox.Tag as FragmentLoss)?.FormulaNoNull);
+                    res.Add((checkBox.Tag as FragmentLoss)?.PersistentName);
             }
             return res.ToArray();
         }

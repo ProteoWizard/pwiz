@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,13 +23,14 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using pwiz.Common;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -71,20 +72,61 @@ namespace pwiz.Skyline
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
-        public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static bool FunctionalTest
+        {
+            get { return CommonApplicationSettings.FunctionalTest;}
+            set
+            {
+                CommonApplicationSettings.FunctionalTest = value;
+            }
+        }
+
+        // TODO(nicksh): Remove this once intermittent failures in these tests are fixed
+        public static bool IsVerboseLogging(string name)
+        {
+            return FunctionalTest && new[]
+            {
+                @"ShareDocumentTest", @"InternationalFilenamesTest"
+            }.Any(folder => name.IndexOf(folder, StringComparison.Ordinal) >= 0);
+        }
         public static string TestName { get; set; }                 // Set during unit and functional tests
+        public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
-        public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
+        public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == "PauseAndContinueForm");
+
+        public static bool SkylineOffscreen
+        {
+            get
+            {
+                return CommonApplicationSettings.Offscreen;
+            }
+            set
+            {
+                CommonApplicationSettings.Offscreen = value;
+            }
+        } // Set true to move Skyline windows offscreen.
+
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
         public static bool UseOriginalURLs { get; set; }            // Set true to use original URLs for downloading tools instead of our S3 copies
         public static bool IsPassZero { get { return NoVendorReaders; } }   // Currently the only time NoVendorReaders gets set is pass0
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.
-        public static bool ShowMatchingPages { get; set; }          // Set true to show tutorial pages automatically when pausing for moust click
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
-        public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
-        public static int PauseStartingPage { get; set; }           // First page to pause at during pause for screenshots
+
+        public static int PauseSeconds
+        {
+            get
+            {
+                return CommonApplicationSettings.PauseSeconds;
+            }
+            set
+            {
+                CommonApplicationSettings.PauseSeconds = value;
+            }
+        } // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
+
+        public static int PauseStartingScreenshot { get; set; }     // First screenshot to pause at during pause for screenshots
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
         public static string ExtraRawFileSearchFolder { get; set; } // Perf test support for avoiding extra copying of large raw files
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
@@ -113,19 +155,17 @@ namespace pwiz.Skyline
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
                 string installUrl = Install.Url32;
-                string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(Resources.Program_Main_Install_32_bit__0__, Name);
+                string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(SkylineResources.Program_Main_Install_32_bit__0__, Name);
                 AlertLinkDlg.Show(null,
-                    string.Format(Resources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
+                    string.Format(SkylineResources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
                     installLabel,
                     installUrl);
                 return 1;
             }
 
+            CommonApplicationSettings.ProgramName = Name;
+            CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
-
-            CommonFormEx.TestMode = FunctionalTest;
-            CommonFormEx.Offscreen = SkylineOffscreen;
-            CommonFormEx.ShowFormNames = FormEx.ShowFormNames = ShowFormNames;
 
             // For testing and debugging Skyline command-line interface
             bool openDoc = args != null && args.Length > 0 && args[0] == OPEN_DOCUMENT_ARG;
@@ -140,7 +180,7 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        AttachConsole(-1);
+                        Common.SystemUtil.PInvoke.Kernel32.AttachConsoleToParentProcess();
                         textWriter = Console.Out;
                     }
                     var writer = new CommandStatusWriter(textWriter);
@@ -235,7 +275,7 @@ namespace pwiz.Skyline
                         using (var longWaitDlg = new LongWaitDlg())
                         {
                             longWaitDlg.Text = Name;
-                            longWaitDlg.Message = Resources.Program_Main_Copying_external_tools_from_a_previous_installation;
+                            longWaitDlg.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
                             longWaitDlg.ProgressValue = 0;
                             longWaitDlg.PerformWork(null, 1000*3, broker => CopyOldTools(toolsDirectory, broker));
                         }
@@ -322,12 +362,21 @@ namespace pwiz.Skyline
         {
             foreach (Form form in FormUtil.OpenForms)
             {
-                Rectangle rcForm = form.Bounds;
-                var screen = Screen.FromControl(form);
-                if (!rcForm.IntersectsWith(screen.WorkingArea))
-                {
-                    FormEx.ForceOnScreen(form);
-                }
+                // Just in case a form has been created on a different thread
+                if (form.InvokeRequired)
+                    form.Invoke((Action)(() => ForceFormOnScreen(form)));
+                else
+                    ForceFormOnScreen(form);
+            }
+        }
+
+        private static void ForceFormOnScreen(Form form)
+        {
+            var rcForm = form.Bounds;
+            var screen = Screen.FromControl(form);
+            if (!rcForm.IntersectsWith(screen.WorkingArea))
+            {
+                FormEx.ForceOnScreen(form);
             }
         }
 
@@ -346,7 +395,7 @@ namespace pwiz.Skyline
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceWarning(@"Exception sending analytics hit {0}", ex);
+                        Messages.WriteAsyncDebugMessage(@"Exception sending analytics hit {0}", ex);
                     }
                 });
             }
@@ -480,19 +529,27 @@ namespace pwiz.Skyline
                 DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
                 // Not sure this is necessay, but just to be safe
                 if (Directory.Exists(tempOuterToolsFolderPath))
-                    throw new Exception(Resources.Program_CopyOldTools_Error_copying_external_tools_from_previous_installation);
+                    throw new Exception(SkylineResources.Program_CopyOldTools_Error_copying_external_tools_from_previous_installation);
             }
-
+            
             // Must create the tools directory to avoid ending up here again next time
             Directory.CreateDirectory(tempOuterToolsFolderPath);
 
-            ToolList toolList = Settings.Default.ToolList;
-            int numTools = toolList.Count;
+            int numTools = Settings.Default.ToolList.Count + Settings.Default.SearchToolList.Count;
             const int endValue = 100;
             int progressValue = 0;
             // ReSharper disable once UselessBinaryOperation (in case we decide to start at progress>0 for display purposes)
-            int increment = (endValue - progressValue)/(numTools +1);
-
+            int increment = (endValue - progressValue) / (numTools + 1);
+            
+            CopyOldExternalTools(outerToolsFolderPath, tempOuterToolsFolderPath, broker, increment);
+            CopyOldSearchTools(outerToolsFolderPath, tempOuterToolsFolderPath, broker, increment);
+            
+            Directory.Move(tempOuterToolsFolderPath, outerToolsFolderPath);
+        }
+        
+        private static void CopyOldExternalTools(string outerToolsFolderPath, string tempOuterToolsFolderPath, ILongWaitBroker broker, int increment)
+        {
+            ToolList toolList = Settings.Default.ToolList;
             foreach (var tool in toolList)
             {
                 string toolDirPath = tool.ToolDirPath;
@@ -513,11 +570,38 @@ namespace pwiz.Skyline
                     return;
                 }
 
-                progressValue += increment;
-                broker.ProgressValue = progressValue;                
+                broker.ProgressValue += increment;
             }
-            Directory.Move(tempOuterToolsFolderPath, outerToolsFolderPath);
             Settings.Default.ToolList = ToolList.CopyTools(toolList);
+        }
+        
+        private static void CopyOldSearchTools(string outerToolsFolderPath, string tempOuterToolsFolderPath, ILongWaitBroker broker, int increment)
+        {
+            var toolList = Settings.Default.SearchToolList;
+            foreach (var tool in toolList)
+            {
+                string toolDirPath = tool.InstallPath; // old path like: C:\path\to\old\Skyline\Tools\searchTool
+                // if tool was AutoInstalled, copy it to new path like C:\path\to\new\Skyline\Tools\
+                if (!string.IsNullOrEmpty(toolDirPath) && tool.AutoInstalled && Directory.Exists(toolDirPath))
+                {
+                    string foldername = Path.GetFileName(toolDirPath);
+                    string newDir = Path.Combine(outerToolsFolderPath, foldername);
+                    string tempNewDir = Path.Combine(tempOuterToolsFolderPath, foldername);
+                    if (!Directory.Exists(tempNewDir))
+                        DirectoryEx.DirectoryCopy(toolDirPath, tempNewDir, true);
+                    tool.InstallPath = newDir; // Update the tool to point to its new directory.
+                    tool.Path = tool.Path.Replace(toolDirPath, newDir);
+                }
+                if (broker.IsCanceled)
+                {
+                    // Don't leave around a corrupted directory
+                    DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
+                    return;
+                }
+
+                broker.ProgressValue += increment;
+            }
+            Settings.Default.SearchToolList = SearchToolList.CopyTools(toolList);
         }
 
         public static void Init()
@@ -587,7 +671,6 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError(@"Unhandled exception: {0}", exception);
             var stackTrace = new StackTrace(1, true);
             var mainWindow = MainWindow;
             try
@@ -599,7 +682,7 @@ namespace pwiz.Skyline
             }
             catch (Exception exception2)
             {
-                Trace.TraceError(@"Exception in ReportException: {0}", exception2);
+                Messages.WriteAsyncDebugMessage(@"Exception in ReportException: {0}", exception2);
             }
         }
 
@@ -611,7 +694,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            Trace.TraceError(@"Unhandled exception on UI thread: {0}", e.Exception);
+            Messages.WriteAsyncDebugMessage(@"Unhandled exception on UI thread: {0}", e.Exception);
             var stackTrace = new StackTrace(1, true);
             ReportExceptionUI(e.Exception, stackTrace);
         }
@@ -724,9 +807,6 @@ namespace pwiz.Skyline
                 Trace.WriteLine(value);
             }
         }
-
-        [DllImport("kernel32", SetLastError = true)]
-        private static extern bool AttachConsole(int dwProcessId);
     }
 
     public class CommandLineRunner

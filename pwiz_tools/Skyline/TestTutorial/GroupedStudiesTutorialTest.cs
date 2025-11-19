@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <bendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -42,7 +42,8 @@ namespace pwiz.SkylineTestTutorial
             get { return !ForceMzml && ExtensionTestContext.CanImportAbWiff; }
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestGroupedStudiesTutorialDraft()
         {
             // Set true to look at tutorial screenshots.
@@ -51,8 +52,8 @@ namespace pwiz.SkylineTestTutorial
             TestFilesZipPaths = new[]
                 {
                     UseRawFiles
-                               ? @"https://skyline.gs.washington.edu/tutorials/GroupedStudies.zip"
-                               : @"https://skyline.gs.washington.edu/tutorials/GroupedStudiesMzmlV2.zip", // V2 has updated WIFF->mzML including machine serial #
+                               ? @"https://skyline.ms/tutorials/GroupedStudies.zip"
+                               : @"https://skyline.ms/tutorials/GroupedStudiesMzmlV2.zip", // V2 has updated WIFF->mzML including machine serial #
                     @"TestTutorial\GroupedStudiesViews.zip"
                 };
             RunFunctionalTest();

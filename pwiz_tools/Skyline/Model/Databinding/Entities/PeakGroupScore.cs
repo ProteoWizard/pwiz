@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
     }
 
-    public struct FeatureKey : IComparable<FeatureKey>
+    public struct FeatureKey : IComparable<FeatureKey>, IEquatable<FeatureKey>
     {
         private string _calculatorName;
         public static FeatureKey FromCalculator(IPeakFeatureCalculator calculator)
@@ -179,6 +179,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public int CompareTo(FeatureKey other)
         {
             return StringComparer.OrdinalIgnoreCase.Compare(ToString(), other.ToString());
+        }
+
+        public bool Equals(FeatureKey other)
+        {
+            return _calculatorName == other._calculatorName;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is FeatureKey other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_calculatorName != null ? _calculatorName.GetHashCode() : 0);
         }
     }
 }

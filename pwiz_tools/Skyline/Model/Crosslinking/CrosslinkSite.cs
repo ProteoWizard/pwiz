@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Crosslinking
     /// Crosslink sites are identified by a 0-based peptide index and a 0-based amino
     /// acid index.
     /// </summary>
-    public struct CrosslinkSite : IComparable<CrosslinkSite>
+    public struct CrosslinkSite : IComparable<CrosslinkSite>, IEquatable<CrosslinkSite>
     {
         public CrosslinkSite(int peptideIndex, int aaIndex) : this()
         {
@@ -65,9 +65,27 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             return result;
         }
+
+        public bool Equals(CrosslinkSite other)
+        {
+            return PeptideIndex == other.PeptideIndex && AaIndex == other.AaIndex;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CrosslinkSite other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (PeptideIndex * 397) ^ AaIndex;
+            }
+        }
     }
 
-    public struct CrosslinkSites : IEnumerable<CrosslinkSite>
+    public struct CrosslinkSites : IEnumerable<CrosslinkSite>, IEquatable<CrosslinkSites>
     {
         private ImmutableList<CrosslinkSite> _sites;
 
@@ -145,6 +163,21 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return stringBuilder.ToString();
+        }
+
+        public bool Equals(CrosslinkSites other)
+        {
+            return Equals(_sites, other._sites);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CrosslinkSites other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_sites != null ? _sites.GetHashCode() : 0);
         }
     }
 }

@@ -35,12 +35,12 @@ namespace CommonTest.DataBinding
             var viewSpec = new ViewSpec().SetColumns(new[] {new ColumnSpec(PropertyPath.Parse("AminoAcidsDict!*.Value")),})
                 .SetSublistId(PropertyPath.Parse("AminoAcidsDict!*"));
             var viewSpecWithFilter = viewSpec.SetFilters(new[]
-                {
-                    new FilterSpec(PropertyPath.Parse("AminoAcidsDict!*.Value"), FilterPredicate.IS_NOT_BLANK),
-                });
+            {
+                new FilterSpec(PropertyPath.Parse("AminoAcidsDict!*.Value"), FilterPredicate.IS_NOT_BLANK),
+            });
             var bindingListSource = new BindingListSource();
             var bindingListSourceWithFilter = new BindingListSource();
-            bindingListSource.SetView(new ViewInfo(dataSchema, typeof(Peptide), viewSpec), null);
+            bindingListSource.SetView(new ViewInfo(dataSchema, typeof(Peptide), viewSpec), StaticRowSource.EMPTY);
             bindingListSourceWithFilter.SetView(new ViewInfo(dataSchema, typeof(Peptide), viewSpecWithFilter), 
                 new StaticRowSource(new[]{new Peptide("")}));
             Assert.AreEqual(0, bindingListSourceWithFilter.Count);

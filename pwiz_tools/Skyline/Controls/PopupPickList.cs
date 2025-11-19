@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -201,11 +201,11 @@ namespace pwiz.Skyline.Controls
             tbbAutoManageChildren.Image = (_autoManageChildren ? Resources.Wand : Resources.WandProhibit);
             string[] words = cbItems.Text.Split(TextUtil.SEPARATOR_SPACE);
             tbbAutoManageChildren.ToolTipText =
-                string.Format(Resources.PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_,
+                string.Format(ControlsResources.PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_,
                               words[words.Length - 1].ToLower());
             if (!_autoManageChildren)
                 tbbAutoManageChildren.ToolTipText += String.Format(@" ({0})",
-                                                                   Resources.PopupPickList_UpdateAutoManageUI_off);
+                                                                   ControlsResources.PopupPickList_UpdateAutoManageUI_off);
         }
 
         public void SetChoices(IEnumerable<DocNode> choices, IList<DocNode> chosen)
@@ -490,9 +490,11 @@ namespace pwiz.Skyline.Controls
             SetItemChecked(iChange, !GetItemChecked(iChange));
         }
 
-        public void SetItemChecked(int i, bool checkItem)
+        public void SetItemChecked(int i, bool checkItem, bool select = false)
         {
             SetItemCheckedInternal(i, checkItem);
+            if (select)
+                pickListMulti.SelectedIndex = i;
             pickListMulti.Invalidate(pickListMulti.GetItemRectangle(i));
 
             UpdateSelectAll();

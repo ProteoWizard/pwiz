@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -50,10 +51,13 @@ namespace pwiz.Skyline.Controls.Databinding
 #else
             viewEditor.ShowSourceTab = false;
 #endif
+            if (CommonApplicationSettings.PauseSeconds != 0)
+                viewEditor.ShowSourceTab = false; // not when taking screenshots
+
             if (EnablePreview)
             {
                 viewEditor.PreviewButtonVisible = true;
-                viewEditor.Text = Resources.DocumentGridViewContext_CreateViewEditor_Edit_Report;
+                viewEditor.Text = DatabindingResources.DocumentGridViewContext_CreateViewEditor_Edit_Report;
             }
             return viewEditor;
         }
@@ -63,11 +67,11 @@ namespace pwiz.Skyline.Controls.Databinding
             string title;
             if (string.IsNullOrEmpty(viewInfo.Name))
             {
-                title = Resources.DocumentGridViewContext_Preview_Preview_New_Report;
+                title = DatabindingResources.DocumentGridViewContext_Preview_Preview_New_Report;
             }
             else
             {
-                title = string.Format(Resources.DocumentGridViewContext_Preview_Preview___0_, viewInfo.Name);
+                title = string.Format(DatabindingResources.DocumentGridViewContext_Preview_Preview___0_, viewInfo.Name);
             }
             var dialog = new DocumentGridForm(this)
             {

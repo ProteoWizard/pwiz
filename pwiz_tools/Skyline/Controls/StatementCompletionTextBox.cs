@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -44,18 +44,24 @@ namespace pwiz.Skyline.Controls
         private ProteinMatchQuery _proteinMatcher;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly IDocumentUIContainer _documentUiContainer;
-        private readonly ImageList _imageList = new ImageList() {TransparentColor = Color.Magenta};
+        private readonly ImageList _imageList = new ImageList
+        {
+            TransparentColor = Color.Magenta,
+            ColorDepth = ColorDepth.Depth16Bit
+        };
         private ProteomeDb _proteomeDb;
+        private bool _hideOnLoseFocus;
 
         // Don't let the name take more than half the space for item display
         private const int MAX_NAME_LENGTH = 40;
 
-        public StatementCompletionTextBox(IDocumentUIContainer documentUiContainer)
+        public StatementCompletionTextBox(IDocumentUIContainer documentUiContainer, bool hideOnLoseFocus = true)
         {
             MatchTypes = ProteinMatchTypes.ALL;
             _documentUiContainer = documentUiContainer;
-            _imageList.Images.Add(Resources.Protein);
-            _imageList.Images.Add(Resources.Peptide);
+            _imageList.Images.Add(Resources.Protein);   // 16bpp
+            _imageList.Images.Add(Resources.Peptide);   // 4bpp
+            _hideOnLoseFocus = hideOnLoseFocus;
         }
 
         public void Attach(TextBox textBox)
@@ -69,7 +75,8 @@ namespace pwiz.Skyline.Controls
             TextBox.KeyDown += TextBox_KeyDown;
             TextBox.TextChanged += TextBox_TextChanged;
             TextBox.GotFocus += TextBox_GotFocus;
-            TextBox.LostFocus += TextBox_LostFocus;
+            if (_hideOnLoseFocus)
+                TextBox.LostFocus += TextBox_LostFocus;
             TextBox.LocationChanged += TextBox_LocationChanged;
         }
 
@@ -94,7 +101,8 @@ namespace pwiz.Skyline.Controls
             TextBox.KeyDown -= TextBox_KeyDown;
             TextBox.TextChanged -= TextBox_TextChanged;
             TextBox.GotFocus -= TextBox_GotFocus;
-            TextBox.LostFocus -= TextBox_LostFocus;
+            if (_hideOnLoseFocus)
+                TextBox.LostFocus -= TextBox_LostFocus;
             TextBox.LocationChanged -= TextBox_LocationChanged;
             TextBox = null;
         }
@@ -297,7 +305,11 @@ namespace pwiz.Skyline.Controls
             StatementCompletionForm.SetListItems(items);
             StatementCompletionForm.ResizeToIdealSize(ScreenRect);
             if (show)
+            {
                 StatementCompletionForm.Show(TextBox);
+                // Resize again in case the form was resized while being shown
+                StatementCompletionForm.ResizeToIdealSize(ScreenRect);
+            }
         }
 
         public void ListView_MouseDown(object sender, MouseEventArgs e)
@@ -418,7 +430,7 @@ namespace pwiz.Skyline.Controls
                 _cancellationTokenSource = null;
             }
         }
-        public static readonly ImageList IMAGE_LIST = new ImageList();
+        // public static readonly ImageList IMAGE_LIST = new ImageList();
         private enum ImageId
         {
             protein,
@@ -479,7 +491,7 @@ namespace pwiz.Skyline.Controls
                         setUsedMatches.Add(match.Protein.Name);
                         listItem.ImageIndex = (int) ImageId.peptide;
                         var tooltip = new StringBuilder();
-                        tooltip.AppendLine(Resources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
+                        tooltip.AppendLine(ControlsResources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
                                .Append(match.Protein.ProteinMetadata.TextForMatchTypes(matchTypes));
                         foreach (var name in match.Protein.AlternativeNames)
                         {
@@ -549,7 +561,7 @@ namespace pwiz.Skyline.Controls
                         setUsedMatches.Add(match.Protein.Name);
                         listItem.ImageIndex = (int) ImageId.protein;
                         var tooltip = new StringBuilder();
-                        tooltip.AppendLine(Resources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
+                        tooltip.AppendLine(ControlsResources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
                             .Append(match.Protein.ProteinMetadata.TextForMatchTypes(displayMatchTypes));
                         foreach (var altName in match.Protein.AlternativeNames)
                         {
@@ -604,7 +616,7 @@ namespace pwiz.Skyline.Controls
                     if (match.Protein.AlternativeNames.Count > 0)
                     {
                         alternativeNames.AddRange(match.Protein.AlternativeNames);
-                        StringBuilder tooltip = new StringBuilder(Resources.StatementCompletionTextBox_CreateListViewItems_Alternative_Names);
+                        StringBuilder tooltip = new StringBuilder(ControlsResources.StatementCompletionTextBox_CreateListViewItems_Alternative_Names);
                         foreach (var altName in alternativeNames)
                         {
                             if (altName.Name == mainName.Name)
@@ -685,6 +697,12 @@ namespace pwiz.Skyline.Controls
             {
                 SelectionMade.Invoke(statementCompletionItem);
             }
+        }
+
+        public void SelectWithoutChoosing(int index)
+        {
+            StatementCompletionForm.ListView.FocusedItem =
+                StatementCompletionForm.ListView.Items[index];
         }
 
         public event Action<StatementCompletionItem> SelectionMade;

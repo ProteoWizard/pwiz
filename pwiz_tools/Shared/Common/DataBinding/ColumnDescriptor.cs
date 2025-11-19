@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -195,6 +195,21 @@ namespace pwiz.Common.DataBinding
                 hashCode = (hashCode*397) ^ (PropertyPath != null ? PropertyPath.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        /// <summary>
+        /// Replace ancestor with a <see cref="Grouped"/> which gets its values 
+        /// </summary>
+        public ColumnDescriptor SetValueIndex(PropertyPath ancestorPropertyPath, int valueIndex)
+        {
+            if (Equals(ancestorPropertyPath, PropertyPath))
+            {
+                return new Grouped(this, valueIndex);
+            }
+
+            ColumnDescriptor clone = (ColumnDescriptor)MemberwiseClone();
+            clone.Parent = Parent.SetValueIndex(ancestorPropertyPath, valueIndex);
+            return clone;
         }
         #endregion
 
@@ -397,6 +412,31 @@ namespace pwiz.Common.DataBinding
                 {
                     return (base.GetHashCode()*397) ^ _collectionInfo.GetHashCode();
                 }
+            }
+        }
+
+        /// <summary>
+        /// ColumnDescriptor which gets its value from a particular array element in the RowItem.
+        /// This is used in pivoted reports.
+        /// </summary>
+        private class Grouped : ColumnDescriptor
+        {
+            private ColumnDescriptor _originalColumnDescriptor;
+            private int _valueIndex;
+            public Grouped(ColumnDescriptor originalColumnDescriptor, int valueIndex) : base(originalColumnDescriptor.Parent, originalColumnDescriptor.PropertyPath)
+            {
+                PropertyPath = originalColumnDescriptor.PropertyPath;
+                _originalColumnDescriptor = originalColumnDescriptor;
+                _valueIndex = valueIndex;
+            }
+
+            public override Type PropertyType
+            {
+                get { return _originalColumnDescriptor.PropertyType; }
+            }
+            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
+            {
+                return (rowItem?.Value as IList<object>)?.ElementAtOrDefault(_valueIndex);
             }
         }
     }

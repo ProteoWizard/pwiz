@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using SharedBatch;
@@ -86,7 +86,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException ex)
             {
-                AlertDlg.ShowError(this, Program.AppName(), ex.Message);
+                AlertDlg.ShowError(this, ex.Message);
                 return;
             }
             DialogResult = DialogResult.OK;

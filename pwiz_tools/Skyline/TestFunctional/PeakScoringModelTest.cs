@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -46,14 +46,12 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\PeakScoringModelTest.zip";
             RunFunctionalTest();
-
-            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
 
         /// <summary>
         /// Change to true to write coefficient arrays
         /// </summary>
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         private readonly string[] SCORES_AND_WEIGHTS =
         {
@@ -190,7 +188,6 @@ namespace pwiz.SkylineTestFunctional
         protected void TestModelChangesAndSave()
         {
             LegacyScoringModel peakScoringModelBase = null;
-            
             // Test legacy model
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
@@ -461,7 +458,7 @@ namespace pwiz.SkylineTestFunctional
                 for (int col = 0; col < 4; col++)
                 {
                     if(col != 1)
-                        expectedValue = expectedFields[fieldNum++];
+                        expectedValue = expectedFields.ElementAtOrDefault(fieldNum++);
 
                     // Verify cell value.
                     var actualValue = editDlg.PeakCalculatorsGrid.GetCellValue(col, row);

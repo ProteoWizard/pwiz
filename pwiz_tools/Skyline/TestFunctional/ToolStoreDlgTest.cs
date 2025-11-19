@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,21 +19,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ToolStoreDlgTest : AbstractFunctionalTest 
+    public class ToolStoreDlgTest : AbstractFunctionalTestEx 
     {
         /// <summary>
         /// Functional test for the Tool Store Dlg
@@ -66,18 +70,20 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestServerConnectionFailure()
         {
-            const string errorMessage = "error message";    // Not L10N
-           
-            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            ToolStoreUtil.ToolStoreClient = new TestToolStoreClient(Path.GetTempPath())
-                {
-                    FailToConnect = true,
-                    FailToConnectMessage = errorMessage
-                };
-            var messageDlg = ShowDialog<MessageDlg>(configureToolsDlg.AddFromWeb);
-            Assert.AreEqual(string.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, errorMessage), messageDlg.Message);
-            OkDialog(messageDlg, messageDlg.OkDialog);
-            OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+            // No cancellation test here, because GetToolsJson() uses SilentProgressMonitor
+            // which does not allow user cancellation, and this is the call that is failing.
+
+            TestHttpClientWithNoNetwork(SkylineWindow.ShowToolStoreDlg, Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_);
+
+            using (var helper = HttpClientTestHelper.SimulateConnectionLoss())
+            {
+                var expectedMessage = TextUtil.LineSeparate(
+                    Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_,
+                    helper.GetExpectedMessage());
+                var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                TestMessageDlgShown(configureToolsDlg.AddFromWeb, expectedMessage);
+                OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+            }
         }
 
         private void TestProperPopulation()
@@ -89,10 +95,21 @@ namespace pwiz.SkylineTestFunctional
             TestImageLoad();
         }
 
+        private TestToolStoreClient CreateToolStoreClient()
+        {
+            return CreateToolStoreClient("TestBasicPopulation");
+        }
+
+        private TestToolStoreClient CreateToolStoreClient(string toolsDir)
+        {
+            return new TestToolStoreClient(TestFilesDir.GetTestPath(toolsDir));
+        }
+
         // tool is not installed
         private void TestToolNotInstalled()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), false)); // Not L10N
+            using var client = CreateToolStoreClient();
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -105,7 +122,8 @@ namespace pwiz.SkylineTestFunctional
         private void TestToolOldVersion()
         {
             Settings.Default.ToolList.Add(GetSampleToolDescription(true));
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), false)); // Not L10N
+            using var client = CreateToolStoreClient();
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -119,7 +137,8 @@ namespace pwiz.SkylineTestFunctional
         private void TestToolFullyUpdated()
         {
             Settings.Default.ToolList.Add(GetSampleToolDescription(false));
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), false)); // Not L10N
+            using var client = CreateToolStoreClient();
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -132,7 +151,8 @@ namespace pwiz.SkylineTestFunctional
         // adding multiple tools to the store
         private void TestMultipleTools()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestMultipleTools"), false)); // Not L10N
+            using var client = CreateToolStoreClient("TestMultipleTools");
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
             Assert.AreEqual(2, toolStoreDlg.ToolCount);
             var toolStoreItem1 = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem1);
@@ -149,7 +169,8 @@ namespace pwiz.SkylineTestFunctional
         // alternate sample tool has a properly formatted png image to use; this is merely testing that both are loaded properly
         private void TestImageLoad()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestImageLoad"), false)); // Not L10N
+            using var client = CreateToolStoreClient("TestImageLoad");
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
             Assert.AreEqual(2, toolStoreDlg.ToolCount);
             OkDialog(toolStoreDlg, toolStoreDlg.CancelButton.PerformClick);
         }
@@ -163,20 +184,34 @@ namespace pwiz.SkylineTestFunctional
         // download failure
         private void TestDownloadFailure()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), false)); // Not L10N
-            Assert.AreEqual(1, toolStoreDlg.ToolCount);
-            var toolStoreItem = toolStoreDlg.GetTools().First();
-            AssertToolItemEquality(GetSampleTool(), toolStoreItem);
-            var errorDlg = ShowDialog<MessageDlg>(toolStoreDlg.DownloadSelectedTool);
-            Assert.AreEqual(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool, errorDlg.Message);
-            OkDialog(errorDlg, errorDlg.OkDialog);
-            OkDialog(toolStoreDlg, toolStoreDlg.CancelButton.PerformClick);
+            ToolStoreDlg toolStoreDlg;
+            // Use the TestToolStoreClient to populate the form
+            using (var client = CreateToolStoreClient())
+            {
+                toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
+                Assert.AreEqual(1, toolStoreDlg.ToolCount);
+                var toolStoreItem = toolStoreDlg.GetTools().First();
+                AssertToolItemEquality(GetSampleTool(), toolStoreItem);
+            }
+
+            // Set ToolStoreClient on the form back to WebToolStoreClient for failure testing
+            toolStoreDlg.ToolStoreClient = ToolStoreUtil.ToolStoreClient;
+            
+            TestHttpClientCancellation(toolStoreDlg.DownloadSelectedTool);
+
+            using (var helper = HttpClientTestHelper.SimulateNoNetworkInterface())
+            {
+                TestMessageDlgShown(toolStoreDlg.DownloadSelectedTool, helper.GetExpectedMessage());
+            }
+
+            OkDialog(toolStoreDlg, toolStoreDlg.CancelDialog);
         }
 
         // download success
         private void TestDownloadSuccess()
         {
-            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(TestFilesDir.GetTestPath("TestBasicPopulation"), true)); // Not L10N
+            using var client = CreateToolStoreClient();
+            var toolStoreDlg = ShowDialog<ToolStoreDlg>(() => ShowToolStore(client));
             Assert.AreEqual(1, toolStoreDlg.ToolCount);
             var toolStoreItem = toolStoreDlg.GetTools().First();
             AssertToolItemEquality(GetSampleTool(), toolStoreItem);
@@ -186,10 +221,10 @@ namespace pwiz.SkylineTestFunctional
         // tool installation via the configure tools dlg
         private void TestInstallation() 
         {
+            using var client = CreateToolStoreClient();
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
                 {
-                    ToolStoreUtil.ToolStoreClient = new TestToolStoreClient(TestFilesDir.GetTestPath("TestBasicPopulation"));
                     configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.SaveTools();
                 });
@@ -211,10 +246,7 @@ namespace pwiz.SkylineTestFunctional
             // change the output to immediate window flag to true
             Settings.Default.ToolList.Add(new ToolDescription(GetSampleToolDescription(false)) {OutputToImmediateWindow = true});
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            RunUI(() =>
-                {
-                    ToolStoreUtil.ToolStoreClient = new TestToolStoreClient(TestFilesDir.GetTestPath("TestBasicPopulation"));
-                });
+            using var client = CreateToolStoreClient();
             var toolStoreDlg = ShowDialog<ToolStoreDlg>(configureToolsDlg.AddFromWeb);
             var reinstallDlg = ShowDialog<MultiButtonMsgDlg>(toolStoreDlg.DownloadSelectedTool);
             OkDialog(reinstallDlg, reinstallDlg.Btn0Click);
@@ -234,10 +266,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(tool1.Version, tool2.Version);
         }
 
-        private static void ShowToolStore(string testDirectory, bool downloadSuccess)
+        private static void ShowToolStore(IToolStoreClient client)
         {
-            var client = new TestToolStoreClient(testDirectory) {FailDownload = !downloadSuccess};
-            using (var dlg = new ToolStoreDlg(client, client.GetToolStoreItems()))
+            // Dummy install delegate for testing - actual installation tested separately
+            ToolInstallUI.InstallProgram installProgram = (ppc, packages, script) => null;
+
+            using (var dlg = new ToolStoreDlg(client, client.GetToolStoreItems(), installProgram))
             {
                 dlg.ShowDialog(SkylineWindow);
             }
@@ -280,4 +314,134 @@ namespace pwiz.SkylineTestFunctional
 
     }
 
+    public class TestToolStoreClient : IToolStoreClient, IDisposable
+    {
+        private readonly IToolStoreClient _originalClient;
+        private readonly DirectoryInfo _toolDir;
+
+        public TestToolStoreClient(string toolDirPath)
+        {
+            _toolDir = new DirectoryInfo(toolDirPath);
+            _originalClient = ToolStoreUtil.ToolStoreClient;
+            ToolStoreUtil.ToolStoreClient = this;
+        }
+
+        private IList<ToolStoreItem> ToolStoreItems { get; set; }
+        private static readonly string[] IMAGE_EXTENSIONS = { @".jpg", @".png", @".bmp" };
+
+        public IList<ToolStoreItem> GetToolStoreItems()
+        {
+            if (ToolStoreItems != null)
+                return ToolStoreItems;
+
+            var tools = new List<ToolStoreItem>();
+            if (_toolDir == null)
+                return tools;
+            foreach (var toolDir in _toolDir.GetFiles())
+            {
+                if (toolDir == null || string.IsNullOrEmpty(toolDir.DirectoryName))
+                    continue;
+
+                string fileName = Path.GetFileNameWithoutExtension(toolDir.Name);
+                string path = Path.Combine(toolDir.DirectoryName, fileName);
+                using (new TemporaryDirectory(path))
+                {
+                    using (var zipFile = new ZipFile(toolDir.FullName))
+                    {
+                        // extract files
+                        zipFile.ExtractAll(path, ExtractExistingFileAction.OverwriteSilently);
+
+                        var toolInf = new DirectoryInfo(Path.Combine(path, ToolInstaller.TOOL_INF));
+                        if (!Directory.Exists(toolInf.FullName))
+                            continue;
+
+                        if (!toolInf.GetFiles(ToolInstaller.INFO_PROPERTIES).Any())
+                            continue;
+
+                        var pictures = toolInf.GetFiles().Where(info => IMAGE_EXTENSIONS.Contains(info.Extension)).ToList();
+                        var toolImage = ToolStoreUtil.DefaultImage;
+                        if (pictures.Count != 0)
+                        {
+                            // try and read in the image
+                            try
+                            {
+                                using (var stream = new FileStream(pictures.First().FullName, FileMode.Open, FileAccess.Read))
+                                {
+                                    toolImage = Image.FromStream(stream);
+                                }
+                            }
+                            // ReSharper disable EmptyGeneralCatchClause
+                            catch (Exception)
+                            // ReSharper restore EmptyGeneralCatchClause
+                            {
+                                // if anything goes wrong -- just use the default image :)
+                            }
+                        }
+
+                        ExternalToolProperties readin;
+                        try
+                        {
+                            readin = new ExternalToolProperties(Path.Combine(toolInf.FullName, ToolInstaller.INFO_PROPERTIES));
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
+
+                        tools.Add(new ToolStoreItem(readin.Name, readin.Author, readin.Provider, readin.Version,
+                                                    readin.Description, readin.Identifier, toolImage, toolDir.FullName));
+                    }
+                }
+            }
+            // sort toollist by name
+            tools.Sort(((item, storeItem) => String.Compare(item.Name, storeItem.Name, StringComparison.Ordinal)));
+            return tools;
+        }
+
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
+        {
+            // Find the tool zip file path for this identifier
+            var toolZipPath = GetToolZipPath(packageIdentifier);
+            if (toolZipPath == null)
+                throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
+
+            // Use HttpClientTestHelper to mock the download and call the real production code
+            var uri = new UriBuilder(WebToolStoreClient.TOOL_STORE_URI)
+            {
+                Path = "/skyts/home/downloadTool.view",
+                Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
+            };
+
+            using var helper = HttpClientTestHelper.WithMockResponseFile(uri.Uri, toolZipPath);
+            WebToolStoreClient.GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, fileSaver);
+        }
+
+        private string GetToolZipPath(string packageIdentifier)
+        {
+            foreach (var item in ToolStoreItems ?? GetToolStoreItems())
+            {
+                if (item.Identifier.Equals(packageIdentifier))
+                {
+                    Assert.IsNotNull(item.FilePath);
+                    return item.FilePath;
+                }
+            }
+
+            return null;
+        }
+
+        public bool IsToolUpdateAvailable(string identifier, Version version)
+        {
+            if (ToolStoreItems == null)
+                ToolStoreItems = GetToolStoreItems();
+
+            var tool = ToolStoreItems.FirstOrDefault(item => item.Identifier.Equals(identifier));
+            return tool != null && version < new Version(tool.Version);
+        }
+
+        public void Dispose()
+        {
+            ToolStoreUtil.ToolStoreClient = _originalClient;
+        }
+    }
 }

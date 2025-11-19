@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
 
             VerifyUserSets(document, matchedUserSetGroups, matchedUserSetTrans);
 
-            VerifyMatchingPeakBoundaries(document, true);   // CONSIDER: Strange that these peak times match exactly
+            VerifyMatchingPeakBoundaries(document, false);
 
             // Test limited scoring model
             {

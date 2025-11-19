@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -177,6 +177,11 @@ namespace SkylineTester
             if (Directory.Exists(Path.GetDirectoryName(SummaryFile)) && !File.Exists(SummaryFile))
             {
                 RegenerateSummaryFile();
+            }
+
+            if (!File.Exists(SummaryFile))
+            {
+                return;
             }
 
             XElement summary;

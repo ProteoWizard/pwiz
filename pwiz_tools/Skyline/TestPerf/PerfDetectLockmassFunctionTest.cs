@@ -18,7 +18,9 @@
  */
 
 
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.SkylineTestUtil;
 
@@ -65,11 +67,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             AssertEx.IsDocumentState(doc0, null, 24, 24, 24, 24);
 
             ImportResults(GetTestPath(TestFilesPersistent[0]),
-                new LockMassParameters(lockmassPositive, lockmassNegative, lockmassToler));
+                LockMassParameters.Create(lockmassPositive, lockmassNegative, lockmassToler));
 
             var document = WaitForDocumentLoaded(400000);
 
             // If we get here, problem is solved
+
+            // delete lockmass file
+            var lmgtFile = Path.Combine(GetTestPath(TestFilesPersistent[0]), "lmgt.inf");
+            FileEx.SafeDelete(lmgtFile);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 
-using System.ComponentModel;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using System.ComponentModel;
 
 namespace pwiz.Skyline.Controls.Lists
 {
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Controls.Lists
 
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
         {
-            string title = Resources.ListGridForm_BindingListSourceOnListChanged_List__ + ListName;
+            string title = ListsResources.ListGridForm_BindingListSourceOnListChanged_List__ + ListName;
             ViewInfo view = BindingListSource.ViewInfo;
             if (null != view && view.Name != AbstractViewContext.DefaultViewName)
             {
@@ -67,6 +67,19 @@ namespace pwiz.Skyline.Controls.Lists
             {
                 return new DataGridId(DataGridType.LIST, ListName);
             }
+        }
+
+        protected override string GetPersistentString()
+        {
+            return PersistentString.FromParts(base.GetPersistentString()).Append(ListName).ToString();
+        }
+
+        public static string GetListName(string persistentString)
+        {
+            var persisted = PersistentString.Parse(persistentString);
+            if (persisted.Parts.Count > 1)
+                return persisted.Parts[1];
+            return null;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -71,17 +71,14 @@ namespace pwiz.SkylineTestFunctional
 
             string outputFile = TestContext.GetTestResultsPath("file.csv");
             OkDialog(exportLiveReportDlg, () => exportLiveReportDlg.OkDialog(outputFile, TextUtil.CsvSeparator));
-            using (var textReader = new StreamReader(outputFile))
-            {
-                var csvReader = new DsvFileReader(textReader, TextUtil.CsvSeparator);
-                CollectionAssert.Contains(csvReader.FieldNames, ColumnCaptions.CalibrationCurve);
-                Assert.IsNotNull(csvReader.ReadLine());
-                string actualCalibrationCurve = csvReader.GetFieldByName(ColumnCaptions.CalibrationCurve);
-                string expectedCalibrationCurve = string.Format(
-                    QuantificationStrings.CalibrationCurve_ToString_Slope___0_,
-                    1.0.ToString(Formats.CalibrationCurve));
-                Assert.AreEqual(expectedCalibrationCurve, actualCalibrationCurve);
-            }
+            using var csvReader = new DsvFileReader(new StreamReader(outputFile), TextUtil.CsvSeparator);
+            CollectionAssert.Contains(csvReader.FieldNames, ColumnCaptions.CalibrationCurve);
+            Assert.IsNotNull(csvReader.ReadLine());
+            string actualCalibrationCurve = csvReader.GetFieldByName(ColumnCaptions.CalibrationCurve);
+            string expectedCalibrationCurve = string.Format(
+                QuantificationStrings.CalibrationCurve_ToString_Slope___0_,
+                1.0.ToString(Formats.CalibrationCurve));
+            Assert.AreEqual(expectedCalibrationCurve, actualCalibrationCurve);
         }
     }
 }

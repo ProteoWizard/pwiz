@@ -1,47 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="HDMRM_Short_noLM" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.108" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.182" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
     <fileContent>
+      <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
     </fileContent>
     <sourceFileList count="9">
-      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="59d48d40b31a8ad871f112a5500207c9751d1d82"/>
       </sourceFile>
-      <sourceFile id="ch.fdc" name="ch.fdc" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="ch.fdc" name="ch.fdc" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="06bd9f0248ed2c70249dfba1e44f424aff0a62c3"/>
       </sourceFile>
-      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="7fde65625bb429f36c89687b1de8af2482412f06"/>
       </sourceFile>
-      <sourceFile id="_func001.cdt" name="_func001.cdt" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="_func001.cdt" name="_func001.cdt" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="f485234fcd99c38faa1b7504109743181010e018"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="6f9348e9982eb0d52a5feebf3bb3d512b7f1c91b"/>
       </sourceFile>
-      <sourceFile id="_func001.ind" name="_func001.ind" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="_func001.ind" name="_func001.ind" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9763c9a8cdf49796a7c37a3e6376327a52f1dd4c"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="fecc9726a3f1c1ab3805acf9856a0a61a241c5b8"/>
       </sourceFile>
-      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e86d5cea613cc85c6b6e15fab93df89e8d68bb87"/>
       </sourceFile>
-      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
+      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\dev\pwiz-mbi\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\HDMRM_Short_noLM.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a5d3acfe75df1f8197ecd850c9adf2d64e70190c"/>
       </sourceFile>
@@ -51,7 +52,7 @@
     <software id="MassLynx" version="4.1">
       <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
     </software>
-    <software id="pwiz_Reader_Waters" version="3.0.22326">
+    <software id="pwiz_Reader_Waters" version="3.0.24295">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -123,7 +124,7 @@
           <binaryDataArray arrayLength="5888" encodedLength="568">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value=""/>
+            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value="" unitCvRef="UO" unitAccession="UO:0000028" unitName="millisecond"/>
             <binary>eJztw08oQ3EAB3A1l7VoHETSDkprDWlcdkAcZNY4kCQXouYlxWVCLcnfMWlJRpKSaY0lLf/mgNDyJ+1iUk5oiZsoEyenX3nz3vb+fT/1MTnvSkyEdssD8WXdK7FS906reiShlMunb4lxb26VC6I8mCTIrrJUUTR403g1rMqU1LFJFUZZE8lGhgOUGiWeCmkxzhWVBchBt68IBdCYo0cef3YUI4ttsnL8x9yuCvzH8/sqjOGO6hrkaLK/FgXWo22QXJOzCSXyRd6MyHq7pQ2Rs/mP7YisvKzrRInvPOpGZKVSZ0EB31jqQ+Rt9YgVBdJyMIAievo2iMjKjLxhjFNz6yhyeHt+HPG3PDiBKMkNiilERFF2lU0jIiLy7kePAxEREf9o8M4gImIMzz3NIopuWOVEEdbXL+DPsclF3gwdL3FSE1lmbW/hSkwGqFVOZi6vMU6F3KzcTVmPSUWll/FG6yatbt8WKz9ffMTGnB1a55v2GH92+IltskNa7/THUc3tOiHud51F/fw+QJyVfkHcUX1FvD90TWuyP0js0d4Qf7XcEn8DkA5bNg==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
@@ -182,7 +183,7 @@
           <binaryDataArray arrayLength="6090" encodedLength="580">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value=""/>
+            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value="" unitCvRef="UO" unitAccession="UO:0000028" unitName="millisecond"/>
             <binary>eJztw01Ik2EAwHFBL2Mk00MUIjsIMmQasbwMyY8OfiTaIQkJL4WBDRH0MlFBRPz+IkaEM0KEaCHa6CB9WYckxcoQPTQRvSkiehMDlaRDEDzC0/a8r+/e9/+Dn8Pjz3cILlXtCzs8h9JdPQkFovMHSVLram1SbSsXTDlUlBpXy8IXeXrHmUbF+4ac1GHWcQYVXPS5yDP7Im6auL30Kg18ciaX/K/lmV5S2d3AdSo+kHiDMc5uLKYGv23epMXWV96ixpNnb5PCU+5qxtmKYA0NcM92jxY/7H9Ak7yy9ZAWuVTVQBNv+NxE/u3w+ElNvxpvJf909bSTcdP/sYMWPH/QSQO9nNNNi6yr7aWO34z1k/+0rQySNOlq+whJxjRU9IgkqeCv5gBJkjxdFn5MkmRUR7efkNTgjjNIKu2989QQ+4ae6TIyN67LrOMJJVuuPVdy0ffCkNMmXp5LX2RSl+9SpoXtpeGo3m1/reujvZmolme+lTpW817qbmBWybyvn4TXvXOazG78IrUttBDT9Evfhesrfwh/6FqWOuX+KfXk/prUiuC61I3pbeHVwZJC0d8t8mQ5</binary>
           </binaryDataArray>
         </binaryDataArrayList>
@@ -241,7 +242,7 @@
           <binaryDataArray arrayLength="5987" encodedLength="588">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value=""/>
+            <cvParam cvRef="MS" accession="MS:1003007" name="raw ion mobility array" value="" unitCvRef="UO" unitAccession="UO:0000028" unitName="millisecond"/>
             <binary>eJztw01Ik2EAwHFBL2Mk5iEIDzsEMoYfhHUZkUsPoYl6SELES6JgQwS7TCqQEF1+IyOiaTEG4WRkQ2RYZkFJEw1DPC3ETjZE9DYUUvQUgY/j2darz979f/ALRbtLQ4LV7nXhYcem1JW6XeGckj1hszPDlshQNEtqa7NBk4a1C+faV5ar/MrAJca4ZcrjGe0bMpE2y8EVUnjJbqaO28MFZEo3VlylDvuD18m/q/KtVOi26yY1PpBZTsmFHbd5zr//usPjbTW1lJg9f5cafFtQz1NWuxupkzuG+1T8sKOFFC7+/YApcqWunTyT7V8fkracEgfT+DvPY1KTZmcXmXDHp6ekckPRbur85aJeHm9tfkbGPDvWT+q+YW2QZBLrjSMkKdVXNkqSTPP7nS6SJJVaGXhOkmn7ZeQFyRi3TG4q1npvnP/sG3qt/PCCR6mWA+9/+ejam5S4ZJ/QZJ53Uon2sF/4w8UpqcaKgHBD13TS/cGZuP/ZCUqtyn8vPNY4J7ztmk/6jeXPJw5kfkn6unUhroUd36Q+8S0Kt9X8kPqxZ/XEw6afUl+tbghvTEWEzc6MW6JHCa739g==</binary>
           </binaryDataArray>
         </binaryDataArrayList>

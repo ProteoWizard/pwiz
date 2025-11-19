@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -278,7 +277,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         protected override string GetPersistentString()
         {
-            return PersistentString.FromParts(GetType().ToString())
+            return PersistentString.FromParts(base.GetPersistentString())
                 .Concat(OwnerGridForm?.DataGridId?.ToPersistedString()).ToString();
         }
 
@@ -300,7 +299,7 @@ namespace pwiz.Skyline.Controls.Clustering
             {
                 if (GraphControl != null)
                 {
-                    GraphControl.GraphPane.Title.Text = Resources.DataboundGraph_AttachToOwner_Disconnected;
+                    GraphControl.GraphPane.Title.Text = ClusteringResources.DataboundGraph_AttachToOwner_Disconnected;
                 }
                 Close();
                 return;
@@ -308,7 +307,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
             if (GraphControl != null)
             {
-                GraphControl.GraphPane.Title.Text = Resources.DataboundGraph_AttachToOwner_Waiting_for_data;
+                GraphControl.GraphPane.Title.Text = ClusteringResources.DataboundGraph_AttachToOwner_Waiting_for_data;
             }
 
             OwnerGridForm = ownerForm;

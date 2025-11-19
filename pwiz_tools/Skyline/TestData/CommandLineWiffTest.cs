@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,8 +23,8 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -159,12 +159,6 @@ namespace pwiz.SkylineTestData
                     Assert.AreEqual(rawPaths[j - 1], msDataFilePath.FilePath);
                 }
             }
-        }
-
-        private static void CheckRunCommandOutputContains(string expectedMessage, string actualMessage)
-        {
-            Assert.IsTrue(actualMessage.Contains(expectedMessage),
-                string.Format("Expected RunCommand result message that contains \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
         }
     }
 }

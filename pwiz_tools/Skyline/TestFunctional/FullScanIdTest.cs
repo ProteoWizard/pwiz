@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
             // Set up necessary modifications
             var peptideSettingsUI = ShowPeptideSettings();
             const string oxidationMName = "Oxidation (M)";
-            AddStaticMod(oxidationMName, true, peptideSettingsUI);
+            AddStaticMod(oxidationMName, peptideSettingsUI);
             RunUI(() =>
                       {
                           peptideSettingsUI.PickedStaticMods = new[] {oxidationMName};

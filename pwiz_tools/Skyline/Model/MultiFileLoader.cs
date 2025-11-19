@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,13 +22,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class MultiFileLoader
+    public class MultiFileLoader : IDisposable
     {
         public const int MAX_PARALLEL_LOAD_FILES = 12;
         public const int MAX_PARALLEL_LOAD_FILES_USER_GC = 3; // On some systems we find that parallel performance suffers when not using ServerGC, as during SkylineTester runs
@@ -49,6 +50,11 @@ namespace pwiz.Skyline.Model
             _synchronousMode = synchronousMode;
             _statusLock = new object();
             ResetStatus();
+        }
+
+        public void Dispose()
+        {
+            _worker?.Dispose();
         }
 
         public MultiProgressStatus Status { get { return _status; } }

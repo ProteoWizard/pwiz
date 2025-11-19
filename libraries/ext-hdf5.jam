@@ -75,6 +75,7 @@ rule init ( version ? : location : options * )
         actions copy_libsettings { cp -f "$(>)" "$(<)" }
         make libhdf5.settings : $(location)/src/posix/libhdf5.settings : @copy_libsettings : <dependency>H5make_libsettings ;
         make libhdf5.settings : $(location)/src/darwin/libhdf5.settings : @copy_libsettings : <toolset>darwin <dependency>H5make_libsettings ;
+        alias libhdf5.settings : : <toolset>msvc <dependency>H5make_libsettings ;
 
         exe H5make_libsettings : $(location)/src/H5make_libsettings.c : $(.requirements) ;
         actions make_libsettings
@@ -82,7 +83,7 @@ rule init ( version ? : location : options * )
             cd $(>[1]:P)
             "$(>[1]:P)/H5make_libsettings" > "$(<)"
         }
-        make H5lib_settings.c : H5make_libsettings : @make_libsettings ;
+        make H5lib_settings.c : H5make_libsettings : @make_libsettings : <dependency>libhdf5.settings/<extension>hdf5 ;
 
         make init_once_workaround.cpp : : @init_once_workaround_cpp ;
 

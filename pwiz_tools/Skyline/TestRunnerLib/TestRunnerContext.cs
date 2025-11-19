@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -72,6 +72,23 @@ namespace TestRunnerLib
         public override DbConnection DataConnection
         {
             get { throw new NotImplementedException(); }
+        }
+    }
+
+    /// <summary>
+    /// Test method attribute which specifies a test will be skipped until the given date.
+    /// Note that the constructor expects a string explaining why the test is skipped.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class SkipTestUntilAttribute : Attribute
+    {
+        public DateTime SkipTestUntil { get; private set; }
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for parallel use
+
+        public SkipTestUntilAttribute(int year, int month, int day, string reason)
+        {
+            SkipTestUntil = new DateTime(year, month, day);
+            Reason = reason; // Usually one of the strings in TestExclusionReason
         }
     }
 

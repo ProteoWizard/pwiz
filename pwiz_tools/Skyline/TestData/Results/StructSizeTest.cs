@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -47,6 +47,17 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(32, ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
             Assert.AreEqual(36, ChromPeak.GetStructSize(CacheFormatVersion.Twelve));
             Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+        }
+
+        [TestMethod]
+        public void TestCurrentStructSizes()
+        {
+            Assert.AreEqual(Marshal.SizeOf<ChromGroupHeaderInfo>(), ChromGroupHeaderInfo.SizeOf);
+            Assert.AreEqual(Marshal.SizeOf<ChromGroupHeaderInfo>(), ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.SizeOf);
+            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(Marshal.SizeOf<ChromTransition>(), ChromTransition.SizeOf);
+            Assert.AreEqual(Marshal.SizeOf<ChromTransition>(), ChromTransition.GetStructSize(CacheFormatVersion.CURRENT));
         }
     }
 }

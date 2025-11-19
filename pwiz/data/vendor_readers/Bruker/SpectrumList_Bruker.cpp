@@ -270,10 +270,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         }
 
         double oneOverK0 = spectrum->oneOverK0();
+        int windowGroup = msLevel > 1 ? spectrum->getWindowGroup() : 0; // If > 0, this is diaPASEF MS2
         if (oneOverK0 > 0)
         {
-            scan.set(MS_inverse_reduced_ion_mobility, oneOverK0, MS_Vs_cm_2);
-            int windowGroup = spectrum->getWindowGroup();
+            if (!config_.combineIonMobilitySpectra)
+                scan.set(MS_inverse_reduced_ion_mobility, oneOverK0, MS_Vs_cm_2);
             if (windowGroup > 0)
                 scan.userParams.push_back(UserParam("windowGroup", lexical_cast<string>(windowGroup))); // diaPASEF data
         }
@@ -281,10 +282,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         if (detailLevel == DetailLevel_InstantMetadata)
             return result;
 
+        Precursor precursor;
+        auto isPassEntireDiaPasefFrame = windowGroup > 0 && compassDataPtr_->isPassEntireDiaPasefFrame();
         if (msLevel > 1)
         {
-            Precursor precursor;
-
             vector<double> fragMZs;
             vector<FragmentationMode> fragModes;
             vector<IsolationInfo> isolationInfo;
@@ -305,50 +306,65 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                         if (charge > 0)
                             selectedIon.set(MS_charge_state, charge);
 
+                        if (isolationInfo[i].intensity > 0)
+                            selectedIon.set(MS_peak_intensity, isolationInfo[i].intensity, MS_number_of_detector_counts);
+
+                        if (oneOverK0 > 0 && charge > 0 && canConvertIonMobilityAndCCS())
+                            selectedIon.set(MS_collisional_cross_sectional_area, ionMobilityToCCS(oneOverK0, fragMZs[i], charge), UO_square_angstrom);
+
                         switch (fragModes[i])
                         {
-                            case FragmentationMode_CID:
-                                precursor.activation.set(MS_CID);
-                                break;
-                            case FragmentationMode_ETD:
-                                precursor.activation.set(MS_ETD);
-                                break;
-                            case FragmentationMode_CIDETD_CID:
-                                precursor.activation.set(MS_CID);
-                                precursor.activation.set(MS_ETD);
-                                break;
-                            case FragmentationMode_CIDETD_ETD:
-                                precursor.activation.set(MS_CID);
-                                precursor.activation.set(MS_ETD);
-                                break;
-                            case FragmentationMode_ISCID:
-                                precursor.activation.set(MS_in_source_collision_induced_dissociation);
-                                break;
-                            case FragmentationMode_ECD:
-                                precursor.activation.set(MS_ECD);
-                                break;
-                            case FragmentationMode_IRMPD:
-                                precursor.activation.set(MS_IRMPD);
-                                break;
-                            case FragmentationMode_PTR:
-                                break;
+                        case FragmentationMode_CID:
+                            precursor.activation.set(MS_CID);
+                            break;
+                        case FragmentationMode_ETD:
+                            precursor.activation.set(MS_ETD);
+                            break;
+                        case FragmentationMode_CIDETD_CID:
+                            precursor.activation.set(MS_CID);
+                            precursor.activation.set(MS_ETD);
+                            break;
+                        case FragmentationMode_CIDETD_ETD:
+                            precursor.activation.set(MS_CID);
+                            precursor.activation.set(MS_ETD);
+                            break;
+                        case FragmentationMode_ISCID:
+                            precursor.activation.set(MS_in_source_collision_induced_dissociation);
+                            break;
+                        case FragmentationMode_ECD:
+                            precursor.activation.set(MS_ECD);
+                            break;
+                        case FragmentationMode_IRMPD:
+                            precursor.activation.set(MS_IRMPD);
+                            break;
+                        case FragmentationMode_PTR:
+                            break;
                         }
-
-                        precursor.selectedIons.push_back(selectedIon);
+                        if (!isPassEntireDiaPasefFrame)
+                            precursor.selectedIons.push_back(selectedIon); // Isolation window is reported in arrays for diaPASEF
                     }
 
                     if (isolationInfo[i].isolationMz > 0)
                     {
+                        double isolationWidth = spectrum->getIsolationWidth();
+                        if (isPassEntireDiaPasefFrame)
+                        {
+                            // Isolation window varies within the frame, so declare an overall window
+                            double isolationMzLow = compassDataPtr_->getIsolationMzRangeLowByWindowGroup(windowGroup);
+                            isolationWidth = compassDataPtr_->getIsolationMzRangeHighByWindowGroup(windowGroup) -
+                                isolationMzLow;
+                            isolationInfo[i].isolationMz = isolationMzLow + isolationWidth / 2;
+                        }
                         precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationInfo[i].isolationMz, MS_m_z);
 
-                        double isolationWidth = spectrum->getIsolationWidth();
                         if (isolationWidth > 0)
                         {
                             precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth / 2, MS_m_z);
                             precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth / 2, MS_m_z);
                         }
 
-                        if (fabs(isolationInfo[i].collisionEnergy) > 0)
+                        if (fabs(isolationInfo[i].collisionEnergy) > 0 &&
+                                !isPassEntireDiaPasefFrame) // CE varies within the frame, can't be declared in a combined representation header
                             precursor.activation.set(MS_collision_energy, fabs(isolationInfo[i].collisionEnergy));
                     }
                 }
@@ -423,7 +439,41 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 arrayType.units = MS_Vs_cm_2;
                 mobility->cvParams.emplace_back(arrayType);
 
-                spectrum->getCombinedSpectrumData(mz, intensity, mobility->data, config_.sortAndJitter);
+                if (isPassEntireDiaPasefFrame && config_.includeIsolationArrays)
+                {
+                    // Each point has [m/z, intensity, IM, isoLow, isoHigh]
+                    BinaryDataArrayPtr isolationMzStart(new BinaryDataArray);
+                    result->binaryDataArrayPtrs.push_back(isolationMzStart);
+                    arrayType = MS_scanning_quadrupole_position_lower_bound_m_z_array;
+                    arrayType.units = MS_m_z;
+                    isolationMzStart->cvParams.emplace_back(arrayType);
+
+                    BinaryDataArrayPtr isolationMzEnd(new BinaryDataArray);
+                    result->binaryDataArrayPtrs.push_back(isolationMzEnd);
+                    arrayType = MS_scanning_quadrupole_position_upper_bound_m_z_array;
+                    arrayType.units = MS_m_z;
+                    isolationMzEnd->cvParams.emplace_back(arrayType);
+
+                    spectrum->getCombinedSpectrumData(mz, intensity, mobility->data, true, isolationMzStart->data, isolationMzEnd->data, config_.sortAndJitter);
+
+                    // Note the isolation range
+                    double isoLower = isolationMzStart->data[isolationMzStart->data.size() - 1];
+                    double isoUpper = isolationMzEnd->data[0];
+                    double isolationWindowHalfWidth = (isoUpper - isoLower)/2;
+
+                    precursor.isolationWindow.set(MS_isolation_window_target_m_z, isoLower + isolationWindowHalfWidth, MS_m_z);
+                    if (isolationWindowHalfWidth > 0)
+                    {
+                        precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWindowHalfWidth, MS_m_z);
+                        precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWindowHalfWidth, MS_m_z);
+                    }
+                }
+                else
+                {
+                    // Each point has [m/z, intensity, IM]
+                    BinaryData<double> isolationMzStart, isolationMzEnd;
+                    spectrum->getCombinedSpectrumData(mz, intensity, mobility->data, false, isolationMzStart, isolationMzEnd, config_.sortAndJitter);
+                }
             }
             else
             {
@@ -468,7 +518,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             else
             {
                 // N.B.: just getting the data size from the Bruker API is quite expensive.
-                if (msLevelsToCentroid.contains(msLevel) || (result->defaultArrayLength = spectrum->getProfileDataSize())==0)
+                bool getLineData = msLevelsToCentroid.contains(msLevel);
+                if (!getLineData)
+                    result->defaultArrayLength = spectrum->getProfileDataSize();
+
+                if (getLineData || result->defaultArrayLength == 0)
                 {
                     result->defaultArrayLength = spectrum->getLineDataSize();
                     result->set(MS_centroid_spectrum);
@@ -502,8 +556,8 @@ void recursivelyEnumerateFIDs(vector<bfs::path>& fidPaths, const bfs::path& root
 {
     const static bfs::directory_iterator endItr = bfs::directory_iterator();
 
-    if (rootpath.leaf() == "fid")
-        fidPaths.push_back(rootpath.branch_path());
+    if (rootpath.filename() == "fid")
+        fidPaths.push_back(rootpath.parent_path());
     else if (bfs::is_directory(rootpath))
     {
         for (bfs::directory_iterator itr(rootpath); itr != endItr; ++itr)
@@ -515,14 +569,14 @@ void addSource(MSData& msd, const bfs::path& sourcePath, const bfs::path& rootPa
 {
     SourceFilePtr sourceFile(new SourceFile);
     sourceFile->id = sourcePath.string();
-    sourceFile->name = BFS_STRING(sourcePath.leaf());
+    sourceFile->name = BFS_STRING(sourcePath.filename());
 
     // sourcePath: <source>\Analysis.yep|<source>\Analysis.baf|<source>\fid
     // rootPath: c:\path\to\<source>[\Analysis.yep|Analysis.baf|fid]
-    bfs::path location = rootPath.has_branch_path() ?
-                         BFS_COMPLETE(rootPath.branch_path() / sourcePath) :
+    bfs::path location = rootPath.has_parent_path() ?
+                         BFS_COMPLETE(rootPath.parent_path() / sourcePath) :
                          BFS_COMPLETE(sourcePath); // uses initial path
-    sourceFile->location = "file://" + location.branch_path().string();
+    sourceFile->location = "file://" + location.parent_path().string();
 
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 }
@@ -549,8 +603,8 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
             {
                 // in "/foo/bar/1/1SRef/fid", replace "/foo/bar/" with "" so relativePath is "1/1SRef/fid"
                 bfs::path relativePath = sourcePaths_[i] / "fid";
-                if (rootpath_.has_branch_path())
-                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
+                if (rootpath_.has_parent_path())
+                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.parent_path().string() + NATIVE_PATH_SLASH, "");
                 relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_FID_nativeID_format);
@@ -644,8 +698,8 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 sourcePaths_.push_back(bfs::change_extension(rootpath_, ".u2"));
                 // in "/foo/bar.d/bar.u2", replace "/foo/" with "" so relativePath is "bar.d/bar.u2"
                 bfs::path relativePath = sourcePaths_.back();
-                if (rootpath_.has_branch_path())
-                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
+                if (rootpath_.has_parent_path())
+                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.parent_path().string() + NATIVE_PATH_SLASH, "");
                 relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
@@ -658,8 +712,8 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
                 sourcePaths_.push_back(bfs::change_extension(rootpath_, ".u2"));
                 // in "/foo/bar.d/bar.u2", replace "/foo/" with "" so relativePath is "bar.d/bar.u2"
                 bfs::path relativePath = sourcePaths_.back();
-                if (rootpath_.has_branch_path())
-                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.branch_path().string() + NATIVE_PATH_SLASH, "");
+                if (rootpath_.has_parent_path())
+                    relativePath = bal::replace_first_copy(relativePath.string(), rootpath_.parent_path().string() + NATIVE_PATH_SLASH, "");
                 relativePath = bal::replace_all_copy(relativePath.string(), NATIVE_PATH_SLASH, "/");
                 addSource(msd_, relativePath, rootpath_);
                 msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_U2_nativeID_format);
@@ -785,6 +839,11 @@ PWIZ_API_DECL bool SpectrumList_Bruker::hasPASEF() const
     return compassDataPtr_->hasPASEFData();
 }
 
+//PWIZ_API_DECL bool SpectrumList_Bruker::isPassEntireDiaPasefFrame()  const
+//{
+//    return compassDataPtr_->isPassEntireDiaPasefFrame(); // When true, pass entire MS2 frame as a single chunk as in DiagonalPASEF
+//}
+
 PWIZ_API_DECL bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const
 {
     return format_ == Reader_Bruker_Format_TDF;
@@ -833,6 +892,7 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, cons
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 bool SpectrumList_Bruker::hasIonMobility() const { return false; }
 bool SpectrumList_Bruker::hasCombinedIonMobility() const { return false; }
+//bool SpectrumList_Bruker::isPassEntireDiaPasefFrame() const { return false; };
 bool SpectrumList_Bruker::hasPASEF() const { return false; }
 bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const { return false; }
 double SpectrumList_Bruker::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}

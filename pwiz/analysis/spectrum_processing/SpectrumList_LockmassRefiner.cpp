@@ -41,31 +41,30 @@ PWIZ_API_DECL
 SpectrumList_LockmassRefiner::SpectrumList_LockmassRefiner(const msdata::SpectrumListPtr& inner, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance)
 : SpectrumListWrapper(inner), mzPositiveScans_(lockmassMzPosScans), mzNegativeScans_(lockmassMzNegScans), tolerance_(lockmassTolerance)
 {
-
-    // add processing methods to the copy of the inner SpectrumList's data processing
-    ProcessingMethod method;
-    method.order = dp_->processingMethods.size();
-    method.set(MS_m_z_calibration);
-    
-    if (!dp_->processingMethods.empty())
-        method.softwarePtr = dp_->processingMethods[0].softwarePtr;
-
-    SpectrumList_PeakPicker* peakPicker = dynamic_cast<SpectrumList_PeakPicker*>(&*inner);
+    SpectrumList_PeakPicker* peakPicker = dynamic_cast<SpectrumList_PeakPicker*>(&*inner); // If there's a peak picker, it will be outermost
     detail::SpectrumList_Waters* waters = dynamic_cast<detail::SpectrumList_Waters*>(peakPicker ? &*peakPicker->inner() : &*inner);
     if (waters)
     {
+        // add processing methods to the copy of the inner SpectrumList's data processing
+        ProcessingMethod method;
+        method.order = dp_->processingMethods.size();
+        method.set(MS_m_z_calibration);
+
+        if (!dp_->processingMethods.empty())
+            method.softwarePtr = dp_->processingMethods[0].softwarePtr;
         method.userParams.push_back(UserParam("Waters lockmass correction"));
+        dp_->processingMethods.push_back(method);
     }
     else
     {
-        cerr << "Warning: lockmass refinement was requested, but is unavailable";
+        cerr << "Warning: lockmass refinement for spectrum data was requested, but is unavailable";
 #ifdef WIN32
         cerr << " for non-Waters input data. ";
 #else
         cerr << " as it depends on Windows DLLs.  ";
 #endif
+        cerr << endl;
     }
-    dp_->processingMethods.push_back(method);
 }
 
 

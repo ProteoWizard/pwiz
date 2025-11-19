@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
@@ -138,5 +140,106 @@ namespace pwiz.SkylineTest
             // Check that the resulting document persists correctly by passing the SrmDocument to AssertEx.IsSerializable().
             AssertEx.Serializable(decoysDoc);
         }
+
+        /// <summary>
+        /// Tests that creating decoys works even when the precursor resolution is high
+        /// </summary>
+        [TestMethod]
+        public void TestHighResGenerateDecoys()
+        {
+            var originalDocument = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(strHighResDoc));
+            var refinementSettings = new RefinementSettings
+            {
+                DecoysMethod = DecoyGeneration.SHUFFLE_SEQUENCE,
+                NumberOfDecoys = 1
+            };
+            var docWithDecoys = refinementSettings.GenerateDecoys(originalDocument);
+            var targetPeptide = docWithDecoys.Peptides.ElementAt(0);
+            Assert.IsFalse(targetPeptide.IsDecoy);
+            var decoyPeptide = docWithDecoys.Peptides.ElementAt(1);
+            Assert.IsTrue(decoyPeptide.IsDecoy);
+            Assert.AreEqual(targetPeptide.TransitionGroupCount, decoyPeptide.TransitionGroupCount);
+            for (int iTransitionGroup = 0; iTransitionGroup < targetPeptide.TransitionGroupCount; iTransitionGroup++)
+            {
+                var targetTransitionGroup = targetPeptide.TransitionGroups.ElementAt(iTransitionGroup);
+                var decoyTransitionGroup = decoyPeptide.TransitionGroups.ElementAt(iTransitionGroup);
+                Assert.AreEqual(targetTransitionGroup.TransitionCount, decoyTransitionGroup.TransitionCount);
+                for (int iTransition = 0; iTransition < targetTransitionGroup.TransitionCount; iTransition++)
+                {
+                    var targetTransition = targetTransitionGroup.Transitions.ElementAt(iTransition);
+                    var decoyTransition = decoyTransitionGroup.Transitions.ElementAt(iTransition);
+                    // Verify that the isotope distribution proportion for the decoy and target transitions are similar
+                    Assert.AreEqual(targetTransition.IsotopeDistInfo.Proportion, decoyTransition.IsotopeDistInfo.Proportion, .001);
+                }
+            }
+        }
+
+        const string strHighResDoc = @"<srm_settings>
+  <settings_summary name=""Default"">
+    <peptide_settings>
+      <peptide_modifications max_variable_mods=""3"" max_neutral_losses=""1"">
+        <static_modifications>
+          <static_modification name=""Carbamidomethyl (C)"" aminoacid=""C"" formula=""H3C2NO"" unimod_id=""4"" short_name=""CAM"" />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name=""Label:13C(6)15N(2) (K)"" aminoacid=""K"" label_13C=""true"" label_15N=""true"" unimod_id=""259"" short_name=""+08"" />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type=""Monoisotopic"" fragment_mass_type=""Monoisotopic"" optimize_by=""None"" />
+      <transition_filter precursor_charges=""2,3"" product_charges=""1"" precursor_adducts=""[M+H]"" product_adducts=""[M+]"" fragment_types=""y,b,p"" small_molecule_fragment_types=""f,p"" fragment_range_first=""m/z &gt; precursor"" fragment_range_last=""last ion"" precursor_mz_window=""0"" auto_select=""true"">
+        <measured_ion name=""N-terminal to Proline"" cut=""P"" sense=""N"" min_length=""3"" />
+      </transition_filter>
+      <transition_instrument min_mz=""50"" max_mz=""2000"" mz_match_tolerance=""0.055"" />
+      <transition_full_scan acquisition_method=""DDA"" product_mass_analyzer=""orbitrap"" product_res=""30000"" product_res_mz=""400"" precursor_isotopes=""Count"" precursor_isotope_filter=""3"" precursor_mass_analyzer=""orbitrap"" precursor_res=""120000"" precursor_res_mz=""400"" selective_extraction=""true"" retention_time_filter_type=""scheduling_windows"" retention_time_filter_length=""5""/>
+    </transition_settings>
+  </settings_summary>
+  <peptide_list label_name=""CXL14_HUMAN"" auto_manage_children=""false"">
+    <peptide auto_manage_children=""false"" sequence=""MVIITTK"" modified_sequence=""MVIITTK"" calc_neutral_pep_mass=""804.477911"" num_missed_cleavages=""0"">
+      <implicit_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa=""6"" modification_name=""Label:13C(6)15N(2) (K)"" mass_diff=""+8"" />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge=""3"" calc_neutral_mass=""804.477911"" precursor_mz=""269.16658"" auto_manage_children=""false"" collision_energy=""0"" modified_sequence=""MVIITTK"">
+        <bibliospec_spectrum_info library_name=""Spikemix"" count_measured=""1"" />
+        <transition fragment_type=""precursor"" isotope_dist_rank=""1"" isotope_dist_proportion=""0.6024983"">
+          <precursor_mz>269.16658</precursor_mz>
+          <product_mz>269.16658</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+        <transition fragment_type=""precursor"" mass_index=""1"" isotope_dist_rank=""2"" isotope_dist_proportion=""0.239984557"">
+          <precursor_mz>269.16658</precursor_mz>
+          <product_mz>269.500893</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+        <transition fragment_type=""precursor"" mass_index=""2"" isotope_dist_rank=""3"" isotope_dist_proportion=""0.021506371"">
+          <precursor_mz>269.16658</precursor_mz>
+          <product_mz>269.834213</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge=""3"" isotope_label=""heavy"" calc_neutral_mass=""812.49211"" precursor_mz=""271.837979"" auto_manage_children=""false"" collision_energy=""0"" modified_sequence=""MVIITTK[+8.0]"">
+        <bibliospec_spectrum_info library_name=""Spikemix"" count_measured=""1"" />
+        <transition fragment_type=""precursor"" isotope_dist_rank=""1"" isotope_dist_proportion=""0.628923059"">
+          <precursor_mz>271.837979</precursor_mz>
+          <product_mz>271.837979</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+        <transition fragment_type=""precursor"" mass_index=""1"" isotope_dist_rank=""2"" isotope_dist_proportion=""0.20846796"">
+          <precursor_mz>271.837979</precursor_mz>
+          <product_mz>272.172296</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+        <transition fragment_type=""precursor"" mass_index=""2"" isotope_dist_rank=""3"" isotope_dist_proportion=""0.0193446446"">
+          <precursor_mz>271.837979</precursor_mz>
+          <product_mz>272.505404</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>";
     }
 }

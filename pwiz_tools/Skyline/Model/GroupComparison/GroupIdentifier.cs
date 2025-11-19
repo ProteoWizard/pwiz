@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,23 +21,29 @@ using System;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
-    public struct GroupIdentifier : IComparable
+    public readonly struct GroupIdentifier : IComparable, IEquatable<GroupIdentifier>
     {
+        public static readonly GroupIdentifier EMPTY = default;
+        public bool Equals(GroupIdentifier other)
+        {
+            return Equals(_value, other._value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is GroupIdentifier other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_value != null ? _value.GetHashCode() : 0);
+        }
+
         private readonly object _value;
 
-        public GroupIdentifier(bool boolValue)
+        public GroupIdentifier(object value)
         {
-            _value = boolValue;
-        }
-
-        public GroupIdentifier(double doubleValue)
-        {
-            _value = doubleValue;
-        }
-
-        public GroupIdentifier(string stringValue)
-        {
-            _value = stringValue;
+            _value = value;
         }
 
         public double? Number
@@ -53,6 +59,14 @@ namespace pwiz.Skyline.Model.GroupComparison
                     return (bool) _value ? 1 : 0;
                 }
                 return null;
+            }
+        }
+
+        public object Value
+        {
+            get
+            {
+                return _value;
             }
         }
 
@@ -89,19 +103,11 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static GroupIdentifier MakeGroupIdentifier(object value)
         {
-            if (value == null)
+            if (value is string stringValue && string.IsNullOrEmpty(stringValue))
             {
-                return default(GroupIdentifier);
+                value = null;
             }
-            if (value is bool)
-            {
-                return new GroupIdentifier((bool) value);
-            }
-            if (value is double)
-            {
-                return new GroupIdentifier((double) value);
-            }
-            return new GroupIdentifier(value as string ?? value.ToString());
+            return new GroupIdentifier(value);
         }
     }
 }

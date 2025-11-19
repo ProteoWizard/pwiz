@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -10,12 +11,14 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
 {
+    [XmlRoot("irt_standard")]
     public class IrtStandard : XmlNamedElement
     {
-        public static IrtStandard AUTO => new IrtStandard(Resources.IrtStandard_AUTO_Automatic, null, null, Array.Empty<DbIrtPeptide>());
+        public static IrtStandard AUTO => new IrtStandard(IrtResources.IrtStandard_AUTO_Automatic, null, null, Array.Empty<DbIrtPeptide>());
         public static IrtStandard EMPTY => new IrtStandard(AuditLogStrings.None, null, null, Array.Empty<DbIrtPeptide>());
 
         public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky", null,
@@ -191,7 +194,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"DSTLIMQLLR",                 101.79),
             });
 
-        public static readonly IrtStandard CIRT = new IrtStandard(@"CiRT", null, null,
+        public static readonly IrtStandard CIRT = new IrtStandard(@"CiRT", @"CiRT_all.sky", null,
             new[] {
                 MakePeptide(@"ADTLDPALLRPGR",               35.99),
                 MakePeptide(@"AFEEAEK",                    -21.36),
@@ -341,7 +344,7 @@ namespace pwiz.Skyline.Model.Irt
             DocXml = docXml;
         }
 
-        private readonly string _resourceSkyFile;
+        private string _resourceSkyFile;
         public string DocXml { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
 
@@ -522,7 +525,7 @@ namespace pwiz.Skyline.Model.Irt
         public static IrtStandard WhichStandard(IEnumerable<Target> peptides)
         {
             var list = peptides.Select(p => new DbIrtPeptide(p, 0, true, TimeSource.peak)).ToList();
-            return ALL.FirstOrDefault(s => s.ContainsAll(list, null)) ?? EMPTY;
+            return ALL.Append(CIRT).FirstOrDefault(s => s.ContainsAll(list, null)) ?? EMPTY;
         }
 
         public IrtStandard ChangePeptides(IEnumerable<DbIrtPeptide> peptides)
@@ -533,11 +536,6 @@ namespace pwiz.Skyline.Model.Irt
         public IrtStandard ChangeDocXml(string docXml)
         {
             return ChangeProp(ImClone(this), im => im.DocXml = docXml);
-        }
-
-        public override string ToString()
-        {
-            return Name;
         }
 
         public static List<IrtStandard> BestMatch(IEnumerable<Target> targets)
@@ -586,5 +584,127 @@ namespace pwiz.Skyline.Model.Irt
 
             return matches;
         }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private IrtStandard()
+        {
+        }
+
+        private enum ATTR
+        {
+            resource_sky_file,
+            sequence,
+            value
+        }
+
+        private enum EL
+        {
+            irt_peptide,
+            doc_xml
+        }
+
+        public static IrtStandard Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new IrtStandard());
+        }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            // Read tag attributes
+            base.ReadXml(reader);
+
+            _resourceSkyFile = reader.GetAttribute(ATTR.resource_sky_file);
+
+            bool empty = reader.IsEmptyElement;
+            // Consume tag
+            reader.Read();
+
+            var listPeptides = new List<DbIrtPeptide>();
+            if (!empty)
+            {
+                while (reader.IsStartElement(EL.irt_peptide))
+                {
+                    string sequence = reader.GetAttribute(ATTR.sequence);
+                    double? value = reader.GetNullableDoubleAttribute(ATTR.value);
+                    if (string.IsNullOrEmpty(sequence) || !value.HasValue)
+                        throw new InvalidDataException(IrtResources.IrtStandard_ReadXml_Standard_peptides_must_specify_a_sequence_and_score_);
+                    listPeptides.Add(MakePeptide(sequence, value.Value));
+                    reader.Read();
+                }
+
+                if (reader.IsStartElement(EL.doc_xml))
+                {
+                    reader.ReadElementContentAsString();
+                }
+                reader.ReadEndElement();
+            }
+
+            Peptides = ImmutableList<DbIrtPeptide>.ValueOf(listPeptides);
+        }
+
+        public override void WriteXml(XmlWriter writer)
+        {
+            // Write tag attributes
+            base.WriteXml(writer);
+
+            writer.WriteAttributeIfString(ATTR.resource_sky_file, _resourceSkyFile);
+            foreach (var dbIrtPeptide in Peptides)
+            {
+                writer.WriteStartElement(EL.irt_peptide);
+                writer.WriteAttributeString(ATTR.sequence, dbIrtPeptide.Target.Sequence);
+                writer.WriteAttribute(ATTR.value, dbIrtPeptide.Irt);
+                writer.WriteEndElement();
+            }
+
+            if (!string.IsNullOrEmpty(DocXml))
+            {
+                writer.WriteStartElement(EL.doc_xml);
+                writer.WriteString(DocXml);
+                writer.WriteEndElement();
+            }
+        }
+
+        #endregion
+
+        #region object overrides
+
+        protected bool Equals(IrtStandard other)
+        {
+            return base.Equals(other) &&
+                   _resourceSkyFile == other._resourceSkyFile &&
+                   DocXml == other.DocXml &&
+                   Equals(Peptides, other.Peptides);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((IrtStandard)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ (_resourceSkyFile != null ? _resourceSkyFile.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (DocXml != null ? DocXml.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Peptides != null ? Peptides.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        #endregion
     }
 }

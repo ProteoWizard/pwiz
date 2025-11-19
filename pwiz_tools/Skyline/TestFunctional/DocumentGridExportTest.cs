@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -74,18 +74,23 @@ namespace pwiz.SkylineTestFunctional
             });
             
             var clipboardText = ClipboardEx.GetText();
-            var tsvReader = new DsvFileReader(new StringReader(clipboardText), '\t');
-            Assert.IsNotNull(tsvReader.ReadLine());
-            var firstPrecursor = SkylineWindow.Document.Molecules.First().TransitionGroups.First();
-            Assert.AreEqual(firstPrecursor.PrecursorCharge.ToString(chargeFormat, CultureInfo.CurrentCulture), tsvReader.GetFieldByName(ColumnCaptions.PrecursorCharge));
-            Assert.AreEqual(firstPrecursor.PrecursorMz.ToString(precursorMzFormat, CultureInfo.CurrentCulture), tsvReader.GetFieldByName(ColumnCaptions.PrecursorMz));
+            TransitionGroupDocNode firstPrecursor;
+            using (var tsvReader = new DsvFileReader(new StringReader(clipboardText), TextUtil.SEPARATOR_TSV))
+            {
+                Assert.IsNotNull(tsvReader.ReadLine());
+                firstPrecursor = SkylineWindow.Document.Molecules.First().TransitionGroups.First();
+                Assert.AreEqual(firstPrecursor.PrecursorCharge.ToString(chargeFormat, CultureInfo.CurrentCulture), tsvReader.GetFieldByName(ColumnCaptions.PrecursorCharge));
+                Assert.AreEqual(firstPrecursor.PrecursorMz.ToString(precursorMzFormat, CultureInfo.CurrentCulture), tsvReader.GetFieldByName(ColumnCaptions.PrecursorMz));
+            }
+
             var csvFilePath = TestContext.GetTestResultsPath("DocumentGridExportTest.csv");
-            RunUI(()=>documentGrid.NavBar.ViewContext.ExportToFile(documentGrid.NavBar, documentGrid.BindingListSource, csvFilePath, TextUtil.CsvSeparator));
-            var csvReader = new CsvFileReader(csvFilePath);
-            Assert.IsNotNull(csvReader.ReadLine());
-            Assert.AreEqual(firstPrecursor.PrecursorCharge.ToString(chargeFormat, CultureInfo.CurrentCulture), csvReader.GetFieldByName(ColumnCaptions.PrecursorCharge));
-            Assert.AreEqual(firstPrecursor.PrecursorMz.ToString(precursorMzFormat, CultureInfo.CurrentCulture), csvReader.GetFieldByName(ColumnCaptions.PrecursorMz));
-            csvReader.Dispose();
+            RunUI(() => documentGrid.NavBar.ViewContext.ExportToFile(documentGrid.NavBar, documentGrid.BindingListSource, csvFilePath, TextUtil.CsvSeparator));
+            using (var csvReader = new CsvFileReader(csvFilePath))
+            {
+                Assert.IsNotNull(csvReader.ReadLine());
+                Assert.AreEqual(firstPrecursor.PrecursorCharge.ToString(chargeFormat, CultureInfo.CurrentCulture), csvReader.GetFieldByName(ColumnCaptions.PrecursorCharge));
+                Assert.AreEqual(firstPrecursor.PrecursorMz.ToString(precursorMzFormat, CultureInfo.CurrentCulture), csvReader.GetFieldByName(ColumnCaptions.PrecursorMz));
+            }
 
             const string reportName = "My Report";
             RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
@@ -122,26 +127,28 @@ namespace pwiz.SkylineTestFunctional
                 exportReportDlg.OkDialog(csvFilePath, TextUtil.CsvSeparator);
             });
             var firstTransition = firstPrecursor.Transitions.First();
-            csvReader = new CsvFileReader(csvFilePath);
-            Assert.IsNotNull(csvReader.ReadLine());
-            Assert.AreEqual(SequenceMassCalc.PersistentMZ(firstTransition.Mz).ToString(productMzFormat, CultureInfo.CurrentCulture), csvReader.GetFieldByName(ColumnCaptions.ProductMz));
-            Assert.AreEqual(firstTransition.GetMoleculePersistentNeutralMass().ToString(productNeutralMassFormat, CultureInfo.CurrentCulture), csvReader.GetFieldByName(ColumnCaptions.ProductNeutralMass));
-            csvReader.Dispose();
+            using (var csvReader = new CsvFileReader(csvFilePath))
+            {
+                Assert.IsNotNull(csvReader.ReadLine());
+                Assert.AreEqual(SequenceMassCalc.PersistentMZ(firstTransition.Mz).ToString(productMzFormat, CultureInfo.CurrentCulture), csvReader.GetFieldByName(ColumnCaptions.ProductMz));
+                Assert.AreEqual(firstTransition.GetMoleculePersistentNeutralMass().ToString(productNeutralMassFormat, CultureInfo.CurrentCulture), csvReader.GetFieldByName(ColumnCaptions.ProductNeutralMass));
+            }
             RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg =>
             {
                 exportReportDlg.SetUseInvariantLanguage(true);
                 exportReportDlg.ReportName = reportName;
                 exportReportDlg.OkDialog(csvFilePath, TextUtil.CsvSeparator);
             });
-            csvReader = new CsvFileReader(csvFilePath);
-            Assert.IsNotNull(csvReader.ReadLine());
+            using (var csvReader = new CsvFileReader(csvFilePath))
+            {
+                Assert.IsNotNull(csvReader.ReadLine());
 
-            // When outputting as the "Invariant" format, numbers are always formatted using "Round Trip" format.
-            AssertEx.AreEqual(SequenceMassCalc.PersistentMZ(firstTransition.Mz).ToString(Formats.RoundTrip, CultureInfo.InvariantCulture), 
-                csvReader.GetFieldByName(nameof(Transition.ProductMz)));
-            AssertEx.AreEqual(firstTransition.GetMoleculePersistentNeutralMass().ToString(Formats.RoundTrip, CultureInfo.InvariantCulture), 
-                csvReader.GetFieldByName(nameof(Transition.ProductNeutralMass)));
-            csvReader.Dispose();
+                // When outputting as the "Invariant" format, numbers are always formatted using "Round Trip" format.
+                AssertEx.AreEqual(SequenceMassCalc.PersistentMZ(firstTransition.Mz).ToString(Formats.RoundTrip, CultureInfo.InvariantCulture),
+                    csvReader.GetFieldByName(nameof(Transition.ProductMz)));
+                AssertEx.AreEqual(firstTransition.GetMoleculePersistentNeutralMass().ToString(Formats.RoundTrip, CultureInfo.InvariantCulture),
+                    csvReader.GetFieldByName(nameof(Transition.ProductNeutralMass)));
+            }
         }
 
         private void SetFormat(DataboundGridForm gridForm, PropertyPath propertyPath, string format)

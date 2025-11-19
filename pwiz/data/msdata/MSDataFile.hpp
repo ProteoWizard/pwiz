@@ -57,7 +57,7 @@ struct PWIZ_API_DECL MSDataFile : public MSData
 		bool gzipped; // if true, file is written as .gz
         bool useWorkerThreads;
 
-        int mzMLb_compression_level = 0;
+        int mzMLb_compression_level = 4;
         int mzMLb_chunk_size = 1048576;
 
         /// when true, if an error is seen when enumerating a spectrum or chromatogram, it will be skipped and enumeration will continue;

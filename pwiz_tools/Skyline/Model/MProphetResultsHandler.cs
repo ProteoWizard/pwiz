@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. standard.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford
  *
@@ -22,11 +22,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Properties;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -169,12 +170,12 @@ namespace pwiz.Skyline.Model
         public SrmDocument ChangePeaks(IProgressMonitor progressMonitor = null)
         {
             var settingsChangeMonitor = progressMonitor != null
-                ? new SrmSettingsChangeMonitor(progressMonitor, Resources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries)
+                ? new SrmSettingsChangeMonitor(progressMonitor, ModelResources.MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries)
                 : null;
             using (settingsChangeMonitor)
             {
                 var settingsNew = Document.Settings.ChangePeptideIntegration(integration =>
-                    integration.ChangeResultsHandler(this));
+                    integration.ChangeResultsHandler(new ReintegrateResultsHandler(this, new PeakBoundaryImputer(Document, this))));
                 // Only update the document if anything has changed
                 var docNew = Document.ChangeSettings(settingsNew, settingsChangeMonitor);
                 if (!Equals(docNew.Settings.PeptideSettings.Integration, Document.Settings.PeptideSettings.Integration) ||
@@ -335,6 +336,12 @@ namespace pwiz.Skyline.Model
         {
             return float.IsNaN(f) ? TextUtil.EXCEL_NA : Convert.ToString(f, cultureInfo);
         }
+
+        public ReintegrateDlgSettings GetReintegrateDlgSettings()
+        {
+            return new ReintegrateDlgSettings(ScoringModel, QValueCutoff == double.MaxValue,
+                QValueCutoff != double.MaxValue, QValueCutoff, OverrideManual);
+        }
     }
 
     public class PeakFeatureStatistics
@@ -346,16 +353,20 @@ namespace pwiz.Skyline.Model
             PValues = pvalues;
             BestPeakIndex = features.PeakGroupFeatures[bestScoreIndex].OriginalPeakIndex;
             BestScoreIndex = bestScoreIndex;
-            BestScore = bestScore;
             QValue = qValue;
-            BestFeatureScores = features.PeakGroupFeatures[bestScoreIndex].FeatureScores;
+            var bestPeakGroupFeatures = features.PeakGroupFeatures[bestScoreIndex];
+            BestScoredPeak = new ScoredPeakBounds(bestPeakGroupFeatures.RetentionTime, bestPeakGroupFeatures.StartTime, bestPeakGroupFeatures.EndTime, bestScore);
+            BestFeatureScores = bestPeakGroupFeatures.FeatureScores;
         }
 
         public IList<float> MprophetScores { get; private set; }
         public IList<float> PValues { get; private set; }
         public int BestPeakIndex { get; private set; }
         public int BestScoreIndex { get; private set; }
-        public float BestScore { get; private set; }
+        public ScoredPeakBounds BestScoredPeak { get; }
+
+        public float BestScore { get { return BestScoredPeak.Score; } }
+
         public float? QValue { get; internal set; }
         public FeatureScores BestFeatureScores { get; }
     }

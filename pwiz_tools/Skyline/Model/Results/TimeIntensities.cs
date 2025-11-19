@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -439,7 +438,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // The element before the passed in value of "index" is not allowed to be greater than "time".
                 // If that happens, then it means that the times for which this function was called were not in order.
-                Assume.IsTrue(Times[index - 1] < time);
+                Assume.IsTrue(Times[index - 1] <= time);
             }
             if (Times.Count == 0)
             {

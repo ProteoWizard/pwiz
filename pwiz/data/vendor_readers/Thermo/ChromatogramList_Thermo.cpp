@@ -26,6 +26,8 @@
 
 #include "ChromatogramList_Thermo.hpp"
 
+#include <boost/range/algorithm/find.hpp>
+
 
 #ifdef PWIZ_READER_THERMO
 #include "Reader_Thermo_Detail.hpp"
@@ -193,10 +195,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
                 string q1 = (format("%.10g", std::locale::classic()) % ci.q1).str();
                 string q3Range = (format("%.10g-%.10g", std::locale::classic())
-                                  % (ci.q3 - ci.q3Offset)
-                                  % (ci.q3 + ci.q3Offset)
+                                  % (ci.filterQ3 - ci.filterOffset) // offset must match filter
+                                  % (ci.filterQ3 + ci.filterOffset)
                                  ).str();
-
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_MassRange,
                     polarity + "SRM ms2 " + q1 + " [" + q3Range + "]", ci.q3 - ci.q3Offset, ci.q3 + ci.q3Offset, 0,
                     rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
@@ -330,9 +331,45 @@ PWIZ_API_DECL ChromatogramList_Thermo::IndexEntry& ChromatogramList_Thermo::addC
     return ci;
 }
 
+template<typename MapT>
+typename MapT::const_iterator find_nearest(MapT const& m, typename MapT::key_type const& query, typename MapT::key_type const& tolerance)
+{
+    typename MapT::const_iterator cur, min, max, best;
+
+    min = m.lower_bound(query - tolerance);
+    max = m.lower_bound(query + tolerance);
+
+    if (min == m.end() || fabs(query - min->first) > tolerance)
+        return m.end();
+    else if (min == max)
+        return min;
+    else
+        best = min;
+
+    double minDiff = fabs(query - best->first);
+    for (cur = min; cur != max; ++cur)
+    {
+        double curDiff = fabs(query - cur->first);
+        if (curDiff < minDiff)
+        {
+            minDiff = curDiff;
+            best = cur;
+        }
+    }
+    return best;
+}
 
 PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 {
+    /*MassListTable massListTable;
+    for(const auto& method : rawfile_->getInstrumentMethods())
+    {
+        massListTable = parseMassListTables(method);
+        if (!massListTable.empty())
+            break;
+    }*/
+
+
     for (int controllerType = Controller_MS;
          controllerType < Controller_Count;
          ++controllerType)
@@ -390,22 +427,53 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                 ci.q1 = filterParser.precursorMZs_[0];
                                 idMap_[ci.id] = ci.index;*/
 
+                                double q1 = scanInfo->precursorMZ(0);
+
                                 for (size_t j=0, jc=scanInfo->scanRangeCount(); j < jc; ++j)
                                 {
-                                    double q1 = scanInfo->precursorMZ(0);
-                                    double q3 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
+                                    double scanRange = scanInfo->scanRange(j).second - scanInfo->scanRange(j).first;
+                                    double filterQ3 = (scanInfo->scanRange(j).first + scanInfo->scanRange(j).second) / 2.0;
                                     auto polarityType = translate(scanInfo->polarityType());
                                     string polarity = polarityStringForFilter(polarityType);
+
+                                    // if there's a mass list table entry for this q1/q3, use it instead of the scan range
+                                    /*auto findPrecursorItr = find_nearest(massListTable, q1, 0.001);
+                                    if (findPrecursorItr != massListTable.end())
+                                    {
+                                        auto findProductStartItr = findPrecursorItr->second.lower_bound(scanInfo->scanRange(j).first);
+                                        auto findProductEndItr = findPrecursorItr->second.lower_bound(scanInfo->scanRange(j).second);
+                                        for(const auto& itr : boost::iterator_range<MassListTable::mapped_type::const_iterator>(findProductStartItr, findProductEndItr))
+                                        {
+                                            double q3 = itr.second.product_mz;
+                                            string id = (format("%sSRM SIC %s,%.10g", std::locale::classic())
+                                                % polarity
+                                                % precursorMZ
+                                                % q3
+                                                ).str();
+                                            IndexEntry& ci = addChromatogram(id, (ControllerType)controllerType, n, MS_SRM_chromatogram, filterString);
+                                            ci.q1 = q1;
+                                            ci.q3 = q3;
+                                            ci.polarityType = polarityType;
+                                            ci.q3Offset = 0.35;
+                                            ci.filterQ3 = filterQ3;
+                                            ci.filterOffset = scanRange / 2.0;
+                                        }
+                                        continue;
+                                    }*/
+
+                                    if (scanRange > MAX_SRM_SCAN_RANGE)
+                                        continue; // skip this one, it's too wide
+
                                     string id = (format("%sSRM SIC %s,%.10g", std::locale::classic())
                                              % polarity
                                              % precursorMZ
-                                             % q3
+                                             % filterQ3
                                             ).str();
                                     IndexEntry& ci = addChromatogram(id, (ControllerType)controllerType, n, MS_SRM_chromatogram, filterString);
                                     ci.q1 = q1;
-                                    ci.q3 = q3;
+                                    ci.q3 = ci.filterQ3 = filterQ3;
                                     ci.polarityType = polarityType;
-                                    ci.q3Offset = (scanInfo->scanRange(j).second - scanInfo->scanRange(j).first) / 2.0;
+                                    ci.filterOffset = ci.q3Offset = scanRange / 2.0;
                                 }
                             }
                             break; // case ScanType_SRM
@@ -485,7 +553,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
     }
 
     /*ostringstream imStream;
-    std::auto_ptr<LabelValueArray> imArray = rawfile_->getInstrumentMethods();
+    std::unique_ptr<LabelValueArray> imArray = rawfile_->getInstrumentMethods();
     for(size_t i=0, end=imArray->size(); i < end; ++i)
         imStream << imArray->label(i) << imArray->value(i) << endl;
     string im = imStream.str();

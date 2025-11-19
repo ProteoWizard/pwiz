@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding

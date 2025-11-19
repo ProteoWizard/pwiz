@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Serialization
@@ -82,6 +83,8 @@ namespace pwiz.Skyline.Model.Serialization
             public const string crosslinks = "crosslinks";
             public const string crosslink = "crosslink";
             public const string site = "site";
+            public const string original_peak = "original_peak";
+            public const string reintegrated_peak = "reintegrated_peak";
             // ReSharper restore LocalizableElement
         }
 
@@ -179,6 +182,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string attribute_group_id = "attribute_group_id";
             public const string peptide_index = "peptide_index";
             public const string chromatogram_target = "chromatogram_target";
+            public const string surrogate_calibration_curve = "surrogate_calibration_curve";
 
             // Results
             public const string replicate = "replicate";
@@ -210,6 +214,8 @@ namespace pwiz.Skyline.Model.Serialization
             public const string skewness = "skewness";
             public const string kurtosis = "kurtosis";
             public const string shape_correlation = "shape_correlation";
+            public const string original_score = "original_score";
+            public const string score = "score";
             // ReSharper restore LocalizableElement
         }
     }

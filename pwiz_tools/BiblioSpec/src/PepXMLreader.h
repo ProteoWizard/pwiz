@@ -85,11 +85,13 @@ class PepXMLreader : public BuildParser{
   int massType; //1 is mono, 0 is avg
   ANALYSIS analysisType_;  ///< e.g. Peptide Prophet
   ANALYSIS parentAnalysisType_; ///< e.g. MSFragger run through Peptide Prophet
+  WORKFLOW_TYPE workflowType_;
   PSM_SCORE_TYPE scoreType_;
   int lastFilePosition_;
   map<PSM*, double> precursorMap_;
   string fileroot_;
   bool isScoreLookup_;
+  bool isMGF_;
 
   //for each spectrum
   

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Distributions;
@@ -1300,11 +1300,11 @@ namespace pwiz.Skyline.Util
                 int j = (int)pos;
                 if (j >= list.Length)
                     return double.NaN;
-                double value = QNthItem(list, j);
+                double value = list.QNthItem(j);
                 double g = pos - j;
                 if (g == 0)
                     return value;
-                double value2 = QNthItem(list, j + 1);
+                double value2 = list.QNthItem(j + 1);
                 if (j + 1 >= list.Length)
                     return double.NaN;
                 return (1 - g) * value + g * value2;
@@ -1317,49 +1317,7 @@ namespace pwiz.Skyline.Util
 
         public double QNthItem(int elementIndex)
         {
-            return QNthItem(CopyList(), elementIndex);
-        }
-
-        /// <summary>
-        /// Linear time function for finding the n-th item in a list. This function changes the order of the elements in the list.
-        /// </summary>
-        public static double QNthItem(IList<double> list, int elementIndex)
-        {
-            int left = 0;
-            int right = list.Count - 1;
-            while (left < right)
-            {
-                double value = list[elementIndex];
-                int splitLeft = left, splitRight = right;
-                Split(list, value, ref splitLeft, ref splitRight);
-                if (splitRight < elementIndex)
-                    left = splitLeft;
-                if (elementIndex < splitLeft)
-                    right = splitRight;
-            }
-            return list[elementIndex];
-        }
-
-        private static void Split(IList<double> list, double value, ref int left, ref int right)
-        {
-            // Left and right scan until the pointers cross
-            do
-            {
-                while (list[left] < value)
-                    left++;
-                while (value < list[right])
-                    right--;
-
-                if (left <= right)
-                {
-                    double temp = list[left];
-                    list[left] = list[right];
-                    list[right] = temp;
-
-                    left++;
-                    right--;
-                }
-            } while (left <= right);
+            return CopyList().QNthItem(elementIndex);
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -184,19 +185,19 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                var results = DocumentUIContainer.Document.MeasuredResults ?? MeasuredResults.EMPTY;
+                var chromatograms = DocumentUIContainer.Document.MeasuredResults?.Chromatograms ?? Array.Empty<ChromatogramSet>();
                 var remainingReplicates = listResults.Items.Cast<ManageResultsAction>().Select(a => a.Chromatograms);
 
                 // only keep renames where there's still a replicate with the new name
                 var renamed = _renamedReplicates.Where(r => remainingReplicates.Any(rep => rep.Name == r.Value))
                     .Select(r => new RenamedReplicate(r.Key, r.Value)).ToList();
 
-                var removed = results.Chromatograms.Except(remainingReplicates)
+                var removed = chromatograms.Except(remainingReplicates)
                     .Where(chrom => renamed.All(r => r.OldName != chrom.Name))
                     .Select(c => c.Name).ToList();
 
                 return new ManageResultsSettings(renamed, removed,
-                    LibraryRunsRemovedList, removed.Count == results.Chromatograms.Count,
+                    LibraryRunsRemovedList, removed.Count == chromatograms.Count,
                     IsRemoveAllLibraryRuns,
                     IsRemoveCorrespondingReplicates, IsRemoveCorrespondingLibraries);
             }
@@ -543,7 +544,7 @@ namespace pwiz.Skyline.FileUI
             CheckDisposed();
             if (!DocumentUIContainer.DocumentUI.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.ManageResultsDlg_ReimportResults_All_results_must_be_completely_imported_before_any_can_be_re_imported);
+                MessageDlg.Show(this, FileUIResources.ManageResultsDlg_ReimportResults_All_results_must_be_completely_imported_before_any_can_be_re_imported);
                 return;
             }
 
@@ -551,7 +552,7 @@ namespace pwiz.Skyline.FileUI
             if (missingFiles.Length > 0)
             {
                 var sb = new StringBuilder();
-                sb.AppendLine(Resources.ManageResultsDlg_ReimportResults_Unable_to_find_the_following_files_either_in_their_original_locations_or_in_the_folder_of_the_current_document)
+                sb.AppendLine(FileUIResources.ManageResultsDlg_ReimportResults_Unable_to_find_the_following_files_either_in_their_original_locations_or_in_the_folder_of_the_current_document)
                     .AppendLine()
                     .Append(TextUtil.LineSeparate(missingFiles));
                 MessageDlg.Show(this, sb.ToString());

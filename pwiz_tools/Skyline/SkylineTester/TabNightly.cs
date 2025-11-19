@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -377,8 +377,17 @@ namespace SkylineTester
                 int stressTestLoopCount;
                 if (!int.TryParse(MainWindow.NightlyRepeat.Text, out stressTestLoopCount))
                     stressTestLoopCount = 0;
+
+                // Skip the special first pass if we're here to do stress tests or perftests
+                var pass0 = (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked)
+                    ? "pass0=off " : "pass0=on ";
+
+                // Skip the leak test passes if we're here to do stress tests.
+                // Note that perftest runs perform leak testing, but only on the tests that regular nightlies do not.
+                var pass1 = (stressTestLoopCount > 1) ? "pass1=off " : "pass1=on ";
+
                 MainWindow.AddTestRunner("offscreen=on quality=on loop=-1 " +
-                                         (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked ? "pass0=off pass1=off " : "pass0=on pass1=on ") + // Skip the special passes if we're here to do stresstests or perftests
+                                         pass0 + pass1 +
                                          (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
                                          " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules
                                          " retrydatadownloads=on" + // In case of test failure, re-download test data in case staleness was the issue

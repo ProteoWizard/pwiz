@@ -32,8 +32,6 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public enum PlotTypeRT { correlation, residuals }
 
-    public enum PointsTypeRT { targets, targets_fdr, standards, decoys }
-
     interface IUpdateGraphPaneController
     {
         bool UpdateUIOnIndexChanged();
@@ -247,7 +245,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string Text
         {
-            get { return Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times; }
+            get { return GraphsResources.SkylineWindow_CreateGraphRetentionTime_Retention_Times; }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,7 +22,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.BiblioSpec;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
@@ -46,7 +48,12 @@ namespace pwiz.Skyline.Model
             UserDefinedTypedMods = new HashSet<StaticMod>();
         }
 
-        public string[] SearchFilenames { get; set; }
+        public enum eFeatureDetectionPhase
+        {
+            none, fullscan_settings, hardklor_settings
+        }
+
+        public string[] SearchFilenames { get;  set; }
         public double CutoffScore { get; set; }
         public Library DocLib { get; private set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
@@ -56,14 +63,67 @@ namespace pwiz.Skyline.Model
         public bool HasDocLib { get { return DocLib != null; } }
         public IrtStandard IrtStandard { get; set; }
         public bool IsDDASearch { get; set; }
+        public bool IsDIASearch { get; set; }
+        public bool IsGpfData { get; set; }
+        public bool IsFeatureDetection { get; set; }
+        public int RemainingStepsInSearch { get; set; } // In the case of Hardklor+Bullseye there may be several steps
+        public HardklorSettings SettingsHardklor { get; set; }
         private readonly LibKeyModificationMatcher _matcher;
         private IsotopeLabelType DefaultHeavyLabelType { get; set; }
         public HashSet<StaticMod> UserDefinedTypedMods { get; private set; }
         public PeptideModifications MatcherPepMods { get { return _matcher.MatcherPepMods; } }
         public IList<StaticMod> MatcherHeavyMods { get { return MatcherPepMods.GetModifications(DefaultHeavyLabelType); } }
 
-        public BiblioSpecLiteBuilder GetLibBuilder(SrmDocument doc, string docFilePath, bool includeAmbiguousMatches)
+
+        public class HardklorSettings
         {
+            public HardklorSettings(FullScanMassAnalyzerType instrument, double resolution,
+                double idotpMin, double signalToNoise, IEnumerable<int> charges, double intensityCutoffPPM, double rtTolerance)
+            {
+                Instrument = instrument;
+                Resolution = resolution;
+                // We think in terms of "normalized contrast angle", Hardklor thinks about "cosine angle" -  we convert when we write the Hardklor config file.
+                MinIdotP = idotpMin; 
+                SignalToNoise = signalToNoise;
+                Charges = charges.ToList();
+                MinIntensityPPM = intensityCutoffPPM;
+                RetentionTimeTolerance = rtTolerance;
+            }
+
+            [Track]
+            public double MinIdotP { get; private set; } // We think in terms of "normalized contrast angle", Hardklor thinks about "cosine angle" -  we convert when we write the Hardklor config file.
+            [Track]
+            public double SignalToNoise { get; private set; }
+            [Track]
+            public FullScanMassAnalyzerType Instrument { get; private set; }
+            [Track]
+            public double Resolution { get; private set; }
+            [Track]
+            public List<int> Charges { get; set; } // A list of desired charges for BlibBuild
+            [Track]
+            public double MinIntensityPPM { get; set; } // Ignore any features whose intensity is less than xxx PPM of the total of all features in a replicate
+
+            public double RetentionTimeTolerance { get; private set; } // For aligning Bullseye output
+
+            // We think in terms of "normalized contrast angle" (NCA), Hardklor thinks about "cosine angle" (CA).
+            // NCA = 1.0 - (acos(CA) * 2 / PI);
+            // so
+            // CA = PI/2 * cos(1-NCA)
+            public static double CosineAngleFromNormalizedContrastAngle(double normalizedContrastAngle) => Statistics.NormalizedContrastAngleToAngle(Math.Min(1.0, normalizedContrastAngle));
+            public static double NormalizedContrastAngleFromCosineAngle(double cosineAngle) => Statistics.AngleToNormalizedContrastAngle(Math.Min(1.0, cosineAngle));
+
+        }
+
+
+        public BiblioSpecLiteBuilder GetLibBuilder(SrmDocument doc, string docFilePath, bool includeAmbiguousMatches, bool isFeatureDetection = false)
+        {
+            if (isFeatureDetection)
+            {
+                // Avoid confusion with any document library
+                // Change filename hint from "foo\bar\baz.sky" to "foo\bar\baz detected features.sky" so we get library name "baz detected features.blib"
+                var docfile_ext = Path.GetExtension(docFilePath);
+                docFilePath = docFilePath.Substring(0, docFilePath.Length-docfile_ext.Length) + @" " + ModelResources.ImportPeptideSearch_GetLibBuilder_detected_features + docfile_ext; 
+            }
             string outputPath = BiblioSpecLiteSpec.GetLibraryFileName(docFilePath);
 
             // Check to see if the library is already there, and if it is, 
@@ -72,7 +132,7 @@ namespace pwiz.Skyline.Model
             var libraryBuildAction = LibraryBuildAction.Create;
             if (libraryExists)
             {
-                if (doc.Settings.HasDocumentLibrary)
+                if (doc.Settings.HasDocumentLibrary && !isFeatureDetection)
                 {
                     libraryBuildAction = LibraryBuildAction.Append;
                 }
@@ -86,12 +146,13 @@ namespace pwiz.Skyline.Model
             }
 
             string name = Path.GetFileNameWithoutExtension(docFilePath);
-            return new BiblioSpecLiteBuilder(name, outputPath, SearchFilenames)
+            return new BiblioSpecLiteBuilder(name, outputPath, SearchFilenames, null, !isFeatureDetection)
             {
                 Action = libraryBuildAction,
                 KeepRedundant = true,
                 CutOffScore = CutoffScore,
                 Id = Helpers.MakeId(name),
+                Charges = IsFeatureDetection ? SettingsHardklor.Charges : null, // Optional list of charges, if non-empty BlibBuild will ignore any not listed here
                 IncludeAmbiguousMatches = includeAmbiguousMatches
             };
         }
@@ -291,7 +352,19 @@ namespace pwiz.Skyline.Model
             {
                 // Search the directories of the search files
                 foreach (var searchFilename in SearchFilenames)
-                    yield return Path.GetDirectoryName(searchFilename);
+                {
+                    string searchFileDirectory = Path.GetDirectoryName(searchFilename);
+                    yield return searchFileDirectory;
+
+                    if (searchFileDirectory == null)
+                        continue;
+
+                    DirectoryInfo parentDir = Directory.GetParent(searchFileDirectory);
+                    if (parentDir != null)
+                    {
+                        yield return parentDir.ToString();
+                    }
+                }
             }
         }
 
@@ -375,15 +448,23 @@ namespace pwiz.Skyline.Model
         public IEnumerable<FoundResultsFile> GetFoundResultsFiles(bool excludeSpectrumSourceFiles = false)
         {
             return !excludeSpectrumSourceFiles
-                ? SpectrumSourceFiles.Values.Where(s => s.HasMatch).Select(s => new FoundResultsFile(s.Name, s.ExactMatch ?? s.AlternateMatch)).ToList()
-                : SpectrumSourceFiles.Values.Where(s => s.HasAlternateMatch).Select(s => new FoundResultsFile(s.Name, s.AlternateMatch)).ToList();
+                ? SpectrumSourceFiles.Values.Where(s => s.HasMatch)
+                    .Select(s => new FoundResultsFile(s.Name, s.ExactMatch ?? s.AlternateMatch))
+                    .OrderBy(fr => fr.Name, new NaturalFilenameComparer()).ToList()
+                : SpectrumSourceFiles.Values.Where(s => s.HasAlternateMatch)
+                    .Select(s => new FoundResultsFile(s.Name, s.AlternateMatch))
+                    .OrderBy(fr => fr.Name, new NaturalFilenameComparer()).ToList();
         }
 
         public IEnumerable<string> GetMissingResultsFiles(bool excludeSpectrumSourceFiles = false)
         {
             return !excludeSpectrumSourceFiles
-                ? SpectrumSourceFiles.Where(s => !s.Value.HasMatch).Select(s => s.Key)
-                : SpectrumSourceFiles.Where(s => !s.Value.HasAlternateMatch).Select(s => s.Key);
+                ? SpectrumSourceFiles.Where(s => !s.Value.HasMatch)
+                    .Select(s => s.Key)
+                    .OrderBy(s => s, new NaturalFilenameComparer())
+                : SpectrumSourceFiles.Where(s => !s.Value.HasAlternateMatch)
+                    .Select(s => s.Key)
+                    .OrderBy(s => s, new NaturalFilenameComparer());
         }
 
         public bool InitializeModifications(SrmDocument document)
@@ -420,7 +501,7 @@ namespace pwiz.Skyline.Model
         public void UpdateModificationMatches(SrmDocument document)
         {
             _matcher.ClearMatches();
-            _matcher.CreateMatches(document.Settings, DocLib.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            _matcher.CreateMatches(document.Settings, DocLib.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList, DocLib.Name);
         }
 
         public IEnumerable<StaticMod> GetMatchedMods()
@@ -520,7 +601,7 @@ namespace pwiz.Skyline.Model
             modMatcher.CreateMatches(doc.Settings, standard.Peptides.Select(pep => pep.ModifiedTarget.ToString()),
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             var settingsWithNoMinIon = doc.Settings.ChangeTransitionSettings(t => t.ChangeLibraries(t.Libraries.ChangeMinIonCount(0)));
-            var group = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
+            var group = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, ModelResources.ImportFastaControl_ImportFasta_iRT_standards, null,
                 standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(settingsWithNoMinIon, SrmSettingsDiff.ALL).ChangeStandardType(StandardType.IRT)
                 ).ToArray(), false);
             //var transitions = group.Peptides.SelectMany(p => p.TransitionGroups.SelectMany(t => t.Transitions.Select(t2 => t2.Id)));

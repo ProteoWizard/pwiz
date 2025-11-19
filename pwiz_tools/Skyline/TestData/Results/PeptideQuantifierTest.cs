@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -43,9 +43,8 @@ namespace pwiz.SkylineTestData.Results
                     for (int replicateIndex = 0; replicateIndex < doc.Settings.MeasuredResults.Chromatograms.Count; replicateIndex++)
                     {
                         var expected = peptide.Results[replicateIndex].First().LabelRatios.First().Ratio.Ratio;
-                        var actual = PeptideQuantifier.SumQuantities(
-                            peptideQuantifier.GetTransitionIntensities(doc.Settings, replicateIndex, false).Values, 
-                            peptideQuantifier.NormalizationMethod, peptideQuantifier.QuantificationSettings.SimpleRatios).Value;
+                        var actual = peptideQuantifier.SumQuantities(
+                            peptideQuantifier.GetTransitionIntensities(doc.Settings, replicateIndex, false).Values).Value;
                         Assert.AreEqual(expected, actual, .0001, "Error on replicate {0}", replicateIndex);
                     }
                 }

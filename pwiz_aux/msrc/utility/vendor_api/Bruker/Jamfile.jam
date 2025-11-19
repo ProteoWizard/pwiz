@@ -233,4 +233,6 @@ explicit install_pwiz_vendor_api_bruker ;
 install install_pwiz_vendor_api_bruker_stub
     : [ path.glob $(API_PATH) : *.manifest ]
     ;
+    
+explicit install_pwiz_vendor_api_bruker_stub ;
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -44,6 +44,8 @@ namespace pwiz.Skyline.Menus
             SkylineWindow = skylineWindow;
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Helpers.ModeUIExtender ModeUiHandler
         {
             get { return modeUIHandler; }
@@ -55,12 +57,18 @@ namespace pwiz.Skyline.Menus
             modeUIHandler = new Helpers.ModeUIExtender(_components);
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; private set; }
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument DocumentUI
         {
             get { return SkylineWindow?.DocumentUI; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document
         {
             get { return SkylineWindow?.Document; }
@@ -71,22 +79,30 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.ModifyDocument(description, null, act, null, null, logFunc);
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IdentityPath SelectedPath
         {
             get { return SkylineWindow?.SelectedPath; }
             set { SkylineWindow.SelectedPath = value; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SequenceTree SequenceTree
         {
             get { return SkylineWindow.SequenceTree; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TreeNodeMS SelectedNode
         {
             get { return SkylineWindow.SelectedNode; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedResultsIndex
         {
             get

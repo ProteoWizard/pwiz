@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -239,6 +239,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static QuantificationSettings Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new QuantificationSettings());
+        }
+
+        public IFiguresOfMeritCalculator GetFiguresOfMeritCalculator()
+        {
+            return new SimpleFiguresOfMeritCalculator(LodCalculation, MaxLoqCv / 100, MaxLoqBias / 100);
         }
         #endregion
     }

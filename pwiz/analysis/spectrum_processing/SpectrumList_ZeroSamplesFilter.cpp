@@ -85,9 +85,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ZeroSamplesFilter::spectrum(size_t index,
         BinaryData<double>& intensities = s->getIntensityArray()->data;
         vector<double> FilteredMZs, FilteredIntensities;
         if (Mode_AddMissingZeros == mode_)
-            ZeroSampleFiller().fill(mzs, intensities, FilteredMZs, FilteredIntensities, flankingZeroCount_);
+            ZeroSampleFiller::fill(mzs, intensities, FilteredMZs, FilteredIntensities, flankingZeroCount_);
         else
-            ExtraZeroSamplesFilter().remove_zeros(mzs, intensities, FilteredMZs, FilteredIntensities,
+            ExtraZeroSamplesFilter::remove_zeros(mzs, intensities, FilteredMZs, FilteredIntensities,
               !s->hasCVParam(MS_centroid_spectrum)); // preserve flanking zeros if not centroided
         mzs.swap(FilteredMZs);
         intensities.swap(FilteredIntensities);

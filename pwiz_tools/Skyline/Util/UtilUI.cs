@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,7 +30,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Util
@@ -91,11 +90,6 @@ namespace pwiz.Skyline.Util
         bool IsDocumentChanged(SrmDocument docOrig);
 
         /// <summary>
-        /// Shows a dialog box on the right thread, parented to the progress form
-        /// </summary>
-        DialogResult ShowDialog(Func<IWin32Window, DialogResult> show);
-
-        /// <summary>
         /// Convenience function which calculates progress percentage and throws
         /// an OperationCanceledOperation if the user has canceled.
         /// </summary>
@@ -105,10 +99,11 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// Exposes <see cref="IProgressMonitor"/> for an action that requires the interface,
+    /// Exposes <see cref="IProgressMonitorWithCancellationToken"/> for an action that requires the
+    /// <see cref="IProgressMonitor" /> interface but may benefit from having access to a CancellationToken,
     /// given a <see cref="ILongWaitBroker"/>.
     /// </summary>
-    public sealed class ProgressWaitBroker : IProgressMonitor
+    public sealed class ProgressWaitBroker : IProgressMonitorWithCancellationToken
     {
         private readonly Action<IProgressMonitor> _performWork;
         private ILongWaitBroker _broker;
@@ -130,6 +125,11 @@ namespace pwiz.Skyline.Util
         public bool IsCanceled
         {
             get { return _broker.IsCanceled; }
+        }
+
+        public CancellationToken CancellationToken
+        {
+            get { return _broker.CancellationToken;  }
         }
 
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
@@ -167,6 +167,15 @@ namespace pwiz.Skyline.Util
         /// event to avoid blocking the UI thread.
         /// </summary>
         void UpdateUI(bool selectionChanged = true);
+    }
+
+    /// <summary>
+    /// Implement if you need a graph to persist some information
+    /// into the .view file
+    /// </summary>
+    public interface ILayoutPersistable
+    {
+        string GetPersistentString();
     }
 
     public sealed class MoveThreshold
@@ -270,7 +279,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception)
             {
-                throw new WebToolException(Resources.Could_not_open_web_Browser_to_show_link_, link);
+                throw new WebToolException(UtilResources.Could_not_open_web_Browser_to_show_link_, link);
             }
         }
                 
@@ -323,7 +332,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static void ShowLinkFailure(IWin32Window parent, string link)
         {
-            AlertLinkDlg.Show(parent, Resources.Could_not_open_web_Browser_to_show_link_, link, link, false);
+            AlertLinkDlg.Show(parent, UtilResources.Could_not_open_web_Browser_to_show_link_, link, link, false);
         }
 
         
@@ -367,7 +376,7 @@ window.onload = submitForm;
             }
             catch (Exception)
             {                                
-                throw new IOException(Resources.WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_);                
+                throw new IOException(UtilResources.WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_);                
             }
 
             try
@@ -378,7 +387,7 @@ window.onload = submitForm;
             }
             catch(Exception)
             {
-                throw new WebToolException(Resources.Could_not_open_web_Browser_to_show_link_, link);
+                throw new WebToolException(UtilResources.Could_not_open_web_Browser_to_show_link_, link);
             }
 
             DeleteTempHelper d = new DeleteTempHelper(filePath);

@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -43,14 +45,14 @@ namespace pwiz.Skyline.Model.Results
         {
             ScanProvider = new BackgroundScanProvider(successAction, failureAction, ignoreZeroIntensityPoints);
             SourceNames = new string[Helpers.CountEnumValues<ChromSource>()];
-            SourceNames[(int) ChromSource.ms1] = Resources.GraphFullScan_GraphFullScan_MS1;
-            SourceNames[(int) ChromSource.fragment] = Resources.GraphFullScan_GraphFullScan_MS_MS;
-            SourceNames[(int) ChromSource.sim] = Resources.GraphFullScan_GraphFullScan_SIM;
+            SourceNames[(int) ChromSource.ms1] = ResultsResources.GraphFullScan_GraphFullScan_MS1;
+            SourceNames[(int) ChromSource.fragment] = ResultsResources.GraphFullScan_GraphFullScan_MS_MS;
+            SourceNames[(int) ChromSource.sim] = ResultsResources.GraphFullScan_GraphFullScan_SIM;
 
             PeakTypeNames = new string[Helpers.CountEnumValues<PeakType>()];
-            PeakTypeNames[(int) PeakType.chromDefault] = Resources.GraphFullScan_PeakType_ChromDefault;
-            PeakTypeNames[(int)PeakType.centroided] = Resources.GraphFullScan_PeakType_Centroided;
-            PeakTypeNames[(int)PeakType.profile] = Resources.GraphFullScan_PeakType_Profile;
+            PeakTypeNames[(int) PeakType.chromDefault] = ResultsResources.GraphFullScan_PeakType_ChromDefault;
+            PeakTypeNames[(int)PeakType.centroided] = ResultsResources.GraphFullScan_PeakType_Centroided;
+            PeakTypeNames[(int)PeakType.profile] = ResultsResources.GraphFullScan_PeakType_Profile;
         }
 
         public BackgroundScanProvider ScanProvider { get; private set; }
@@ -240,6 +242,15 @@ namespace pwiz.Skyline.Model.Results
             return ScanProvider.CCSFromIonMobility(ionMobility, mz, charge);
         }
 
+        public double? CCSFromIonMobility(double ionMobility, double mz, int charge)
+        {
+            if (ScanProvider == null)
+            {
+                return null;
+            }
+            return ScanProvider.CCSFromIonMobility(ionMobility, mz, charge);
+        }
+
         public bool IsWatersSonarData { get {  return ScanProvider?. IsWatersSonarData ?? false; } } // For SONAR the drift dimension is actually precursor m/z filter dimension
 
         public bool ProvidesCollisionalCrossSectionConverter
@@ -376,6 +387,15 @@ namespace pwiz.Skyline.Model.Results
             /// Return a collisional cross section for this ion mobility at this mz, if reader supports this
             /// </summary>
             public double? CCSFromIonMobility(IonMobilityValue ionMobility, double mz, int charge)
+            {
+                if (_scanProvider == null)
+                {
+                    return null;
+                }
+                return _scanProvider.CCSFromIonMobility(ionMobility, mz, charge);
+            }
+
+            public double? CCSFromIonMobility(double ionMobility, double mz, int charge)
             {
                 if (_scanProvider == null)
                 {

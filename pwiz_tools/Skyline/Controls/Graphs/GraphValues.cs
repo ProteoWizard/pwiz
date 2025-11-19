@@ -17,13 +17,11 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using pwiz.CommonMsData;
 using ZedGraph;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -42,25 +40,9 @@ namespace pwiz.Skyline.Controls.Graphs
         [Localizable(true)]
         public static string AnnotateLogAxisTitle(string title)
         {
-            return string.Format(Resources.GraphValues_Log_AxisTitle, title);
+            return string.Format(GraphsResources.GraphValues_Log_AxisTitle, title);
         }
         
-        [Localizable(true)]
-        public static string ToLocalizedString(RTPeptideValue rtPeptideValue)
-        {
-            switch (rtPeptideValue)
-            {
-                case RTPeptideValue.All:
-                case RTPeptideValue.Retention:
-                    return Resources.RtGraphValue_Retention_Time;
-                case RTPeptideValue.FWB:
-                    return Resources.RtGraphValue_FWB_Time;
-                case RTPeptideValue.FWHM:
-                    return Resources.RtGraphValue_FWHM_Time;
-            }
-            throw new ArgumentException(rtPeptideValue.ToString());
-        }
-
         /// <summary>
         /// Operations for combining values from multiple replicates that are displayed 
         /// at a single point on a graph.
@@ -109,11 +91,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (CvDecimal)
                     {
-                        title = string.Format(Resources.AggregateOp_AxisTitleCv, title);
+                        title = string.Format(GraphsResources.AggregateOp_AxisTitleCv, title);
                     }
                     else
                     {
-                        title = string.Format(Resources.AggregateOp_AxisTitleCvPercent, title);
+                        title = string.Format(GraphsResources.AggregateOp_AxisTitleCvPercent, title);
                     }
                 }
                 return title;
@@ -139,130 +121,50 @@ namespace pwiz.Skyline.Controls.Graphs
             /// If successful, then this method returns true, and the regressionFunction is set 
             /// appropriately.
             /// </summary>
-            bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out RegressionLine regressionFunction);
+            bool TryGetRegressionFunction(MsDataFileUri filePath, out AlignmentFunction regressionFunction);
+
         }
 
-        public class RegressionUnconversion : IRetentionTimeTransformOp
+        public class RetentionTimeAlignmentTransformOp : IRetentionTimeTransformOp
         {
-            private readonly RetentionTimeRegression _retentionTimeRegression;
-            public RegressionUnconversion(RetentionTimeRegression retentionTimeRegression)
+            public RetentionTimeAlignmentTransformOp(SrmSettings settings)
             {
-                _retentionTimeRegression = retentionTimeRegression;
+                SrmSettings = settings;
+                settings.TryGetAlignmentTarget(out var target);
+                AlignmentTarget = target;
             }
+
+            public RetentionTimeAlignmentTransformOp(SrmSettings settings, AlignmentTarget alignmentTarget)
+            {
+                SrmSettings = settings;
+                AlignmentTarget = alignmentTarget;
+            }
+
+            public static IRetentionTimeTransformOp FromSettings(SrmSettings settings)
+            {
+                AlignmentTarget.TryGetAlignmentTarget(settings, out var target);
+                return target == null ? null : new RetentionTimeAlignmentTransformOp(settings, target);
+            }
+
+            public SrmSettings SrmSettings { get; }
+
+            public AlignmentTarget AlignmentTarget { get; }
 
             public string GetAxisTitle(RTPeptideValue rtPeptideValue)
             {
-                string calculatorName = _retentionTimeRegression.Calculator.Name;
-                if (rtPeptideValue == RTPeptideValue.Retention || rtPeptideValue == RTPeptideValue.All)
+                if (AlignmentTarget == null)
                 {
-                    return string.Format(Resources.RegressionUnconversion_CalculatorScoreFormat, calculatorName);
+                    return rtPeptideValue.ToLocalizedString();
                 }
-                return string.Format(Resources.RegressionUnconversion_CalculatorScoreValueFormat, calculatorName, ToLocalizedString(rtPeptideValue));
+
+                return AlignmentTarget.GetAxisTitle(rtPeptideValue);
             }
 
-            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out RegressionLine regressionFunction)
+            public bool TryGetRegressionFunction(MsDataFileUri filePath, out AlignmentFunction regressionFunction)
             {
-                regressionFunction = _retentionTimeRegression.GetUnconversion(chromFileInfoId);
+                regressionFunction = SrmSettings.DocumentRetentionTimes.GetRunToRunAlignmentFunction(SrmSettings.PeptideSettings.Libraries, filePath,
+                    false);
                 return regressionFunction != null;
-            }
-        }
-        
-        /// <summary>
-        /// Holds information about how to align retention times before displaying them in a graph.
-        /// </summary>
-        public class AlignToFileOp : IRetentionTimeTransformOp
-        {
-            public static AlignToFileOp GetAlignmentToFile(ChromFileInfoId chromFileInfoId, SrmSettings settings)
-            {
-                if (!settings.HasResults)
-                {
-                    return null;
-                }
-                var chromSetInfos = GetChromSetInfos(settings.MeasuredResults);
-                Tuple<ChromatogramSet, ChromFileInfo> chromSetInfo;
-                if (!chromSetInfos.TryGetValue(chromFileInfoId, out chromSetInfo))
-                {
-                    return null;
-                }
-                var fileRetentionTimeAlignments = settings.DocumentRetentionTimes.FileAlignments.Find(chromSetInfo.Item2);
-                if (null == fileRetentionTimeAlignments)
-                {
-                    return null;
-                }
-                return new AlignToFileOp(chromSetInfo.Item1, chromSetInfo.Item2, fileRetentionTimeAlignments, chromSetInfos);
-            }
-
-            private static IDictionary<ChromFileInfoId, Tuple<ChromatogramSet, ChromFileInfo>> GetChromSetInfos(
-                MeasuredResults measuredResults)
-            {
-                var dict =
-                    new Dictionary<ChromFileInfoId, Tuple<ChromatogramSet, ChromFileInfo>>(
-                        new ChromFileIdEqualityComparer());
-                foreach (var chromatogramSet in measuredResults.Chromatograms)
-                {
-                    foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
-                    {
-                        dict.Add(chromFileInfo.FileId, new Tuple<ChromatogramSet, ChromFileInfo>(chromatogramSet, chromFileInfo));
-                    }
-                }
-                return dict;
-            }
-
-            private readonly IDictionary<ChromFileInfoId, Tuple<ChromatogramSet, ChromFileInfo>> _chromSetInfos;
-            private AlignToFileOp(ChromatogramSet chromatogramSet, ChromFileInfo chromFileInfo, 
-                FileRetentionTimeAlignments fileRetentionTimeAlignments, IDictionary<ChromFileInfoId, Tuple<ChromatogramSet, ChromFileInfo>> chromSetInfos)
-            {
-                ChromatogramSet = chromatogramSet;
-                ChromFileInfo = chromFileInfo;
-                FileRetentionTimeAlignments = fileRetentionTimeAlignments;
-                _chromSetInfos = chromSetInfos;
-            }
-
-            public ChromatogramSet ChromatogramSet { get; private set; }
-            public ChromFileInfo ChromFileInfo { get; private set; }
-            public FileRetentionTimeAlignments FileRetentionTimeAlignments { get; private set; }
-            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out RegressionLine regressionFunction)
-            {
-                if (ReferenceEquals(chromFileInfoId, ChromFileInfo.Id))
-                {
-                    regressionFunction = null;
-                    return true;
-                }
-                Tuple<ChromatogramSet, ChromFileInfo> chromSetInfo;
-                if (_chromSetInfos.TryGetValue(chromFileInfoId, out chromSetInfo))
-                {
-                    var retentionTimeAlignment =
-                        FileRetentionTimeAlignments.RetentionTimeAlignments.Find(chromSetInfo.Item2);
-                    if (null != retentionTimeAlignment)
-                    {
-                        regressionFunction = retentionTimeAlignment.RegressionLine;
-                        return true;
-                    }
-                }
-                regressionFunction = null;
-                return false;
-            }
-
-            /// <summary>
-            /// If retention time alignment is being performed, append "aligned to {ReplicateName}" to the title.
-            /// </summary>
-            [Localizable(true)]
-            public string GetAxisTitle(RTPeptideValue rtPeptideValue)
-            {
-                return string.Format(Resources.RtAlignment_AxisTitleAlignedTo, ToLocalizedString(rtPeptideValue), ChromatogramSet.Name);
-            }
-
-            private class ChromFileIdEqualityComparer : IEqualityComparer<ChromFileInfoId>
-            {
-                public bool Equals(ChromFileInfoId x, ChromFileInfoId y)
-                {
-                    return ReferenceEquals(x, y);
-                }
-
-                public int GetHashCode(ChromFileInfoId obj)
-                {
-                    return RuntimeHelpers.GetHashCode(obj);
-                }
             }
         }
 
@@ -289,7 +191,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    title = ToLocalizedString(RtPeptideValue);
+                    title = RtPeptideValue.ToLocalizedString();
                 }
                 title = AggregateOp.AnnotateTitle(title);
                 return title;

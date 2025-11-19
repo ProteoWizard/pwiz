@@ -509,7 +509,7 @@ namespace pwiz.SkylineTest
         private static void CreateAgilentExporter(SrmDocument actual, ExportMethodType methodType, ExportStrategy strategy,
                                                   out AbstractMassListExporter exporterActual)
         {
-            exporterActual = new AgilentMassListExporter(actual)
+            exporterActual = new AgilentMassListExporter.AgilentMH10MassListExporter(actual)
                 {
                     MethodType = methodType,
                     Strategy = strategy,

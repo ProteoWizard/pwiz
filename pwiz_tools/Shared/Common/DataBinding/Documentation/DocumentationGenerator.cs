@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -48,6 +48,7 @@ namespace pwiz.Common.DataBinding.Documentation
         {
             StringWriter writer = new StringWriter();
             writer.WriteLine("<html><head>");
+            writer.WriteLine("<meta charset=\"utf-8\">");
             if (null != StyleSheetHtml)
             {
                 writer.WriteLine(StyleSheetHtml);

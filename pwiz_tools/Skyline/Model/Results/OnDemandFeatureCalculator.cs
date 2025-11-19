@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,10 +21,10 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model.Results
             double minStartTime = double.MaxValue;
             double maxEndTime = double.MinValue;
             double apexTime = double.MinValue;
-            double apexHeight = 0;
+            double? apexHeight = null;
             for (int iTransition = 0; iTransition < transitionChromInfos.Count; iTransition++)
             {
                 var transitionChromInfo = transitionChromInfos[iTransition];
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.Results
 
                     minStartTime = Math.Min(minStartTime, chromPeak.StartTime);
                     maxEndTime = Math.Max(maxEndTime, chromPeak.EndTime);
-                    if (chromPeak.Height > apexHeight)
+                    if (!apexHeight.HasValue || chromPeak.Height > apexHeight)
                     {
                         apexHeight = chromPeak.Height;
                         apexTime = chromPeak.RetentionTime;

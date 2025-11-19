@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -123,8 +123,5 @@
   </data>
   <data name="Units_ppm" xml:space="preserve">
     <value>ppm</value>
-  </data>
-  <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
-      <value>Failed reading {0} bytes. Source may be corrupted.</value>
   </data>
 </root>

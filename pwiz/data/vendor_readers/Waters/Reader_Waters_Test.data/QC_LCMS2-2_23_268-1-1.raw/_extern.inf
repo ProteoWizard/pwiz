@@ -1,0 +1,94 @@
+
+Parameters for E:\Masslynx Projects\OA_UPLC_2-2.PRO\ACQUDB\OA_1_5min_30V.EXP
+
+Data Processing:
+SIR / MRM Chromatogram Spike Removal	ON
+SIR / MRM Smoothing		OFF
+Smoothing window size (scans)	3
+Number of smooths		2
+
+
+Prescan Statistics:
+Initial Average Intensity	19.3636
+Initial Average Std Dev		2.5366
+Bunch Zero Level		0.0872
+Bunch Std Dev			0.0577
+Bunch Threshold			0.4619
+Spike Removal Std Dev		2.3439
+
+
+Method Events:
+Initial Stop Flow:	No Change
+Initial Switch 2:	No Change
+Initial Switch 3:	No Change
+Initial Switch 4:	No Change
+Initial Infusion:	No Change
+Initial Flow State:	LC
+Initial Flow Rate:	5
+Initial Reservoir:	No Action
+API Probe Delay Temp:	20
+Initial Refill:		No Action
+Timed Events Enabled
+Event	Time	Name		Action
+1	1	Flow State		LC
+
+
+Instrument Parameters - Function 1:
+Parameter File - E:\Masslynx Projects\OA_UPLC_2-2.PRO\ACQUDB\OA.ipr
+Polarity	ES-
+Calibration	Dynamic 1
+Capillary (kV)	3.00	3.00
+Cone (V)	30.00	-10.01
+Extractor (V)	3.00	-2.20
+RF (V)	0.00
+Source Temperature (°C)	150	148
+Desolvation Temperature (°C)	350	350
+Cone Gas Flow (L/Hr)	50	120
+Desolvation Gas Flow (L/Hr)	650	645
+LM 1 Resolution	15.00
+HM 1 Resolution	15.00
+Ion Energy 1	1.00
+Gain	1.00
+Multiplier	-503.71
+Active Reservoir	B
+
+Instrument Parameters - Function 2:
+Parameter File - E:\Masslynx Projects\OA_UPLC_2-2.PRO\ACQUDB\OA.ipr
+Polarity	ES+
+Calibration	Dynamic 1
+Capillary (kV)	3.00	3.00
+Cone (V)	30.00	-10.01
+Extractor (V)	3.00	-2.20
+RF (V)	0.00
+Source Temperature (°C)	150	148
+Desolvation Temperature (°C)	350	350
+Cone Gas Flow (L/Hr)	50	120
+Desolvation Gas Flow (L/Hr)	650	645
+LM 1 Resolution	15.00
+HM 1 Resolution	15.00
+Ion Energy 1	0.50
+Gain	1.00
+Multiplier	-503.71
+Active Reservoir	B
+
+
+Engineers Settings:
+Low Mass Position       	519
+High Mass Position      	380
+Low Mass Resolution     	513
+High Mass Resolution    	897
+Resolution Linearity    	850
+High Mass DC Balance    	0
+DC Polarity             	Positive
+HM RF Lens Correction + 	0
+HM RF Lens Correction - 	0
+
+
+Inter-scan delays:
+Automatic Mode
+MS Delay Table
+         R     delay
+<=   3.000     0.005
+<=   5.000     0.006
+<=  10.000     0.007
+>   10.000     0.008

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -53,12 +53,13 @@ namespace pwiz.Common.DataBinding.Internal
         public DataSchema DataSchema { get; private set; }
         public IEnumerable<RowItem> GroupAndTotal(IEnumerable<RowItem> rows, IList<DataPropertyDescriptor> propertyDescriptors)
         {
+            propertyDescriptors.AddRange(GetRowHeaderPropertyDescriptors(out var independentRowHeaders));
             var rowsByRowHeader = rows.ToLookup(row =>
             {
                 CancellationToken.ThrowIfCancellationRequested();
-                return ImmutableList.ValueOf(RowHeaders.Select(tuple=> tuple.Item1.GetValue(row)));
+                return ImmutableList.ValueOf(independentRowHeaders.Select(pd=>pd.GetValue(row)));
             });
-            propertyDescriptors.AddRange(RowHeaders.Select((tuple, index)=>new IndexedPropertyDescriptor(DataSchema, index, tuple.Item1, tuple.Item2)));
+            int indexedPropertyDescriptorCount = independentRowHeaders.Count;
             var columnHeaders = new Dictionary<ImmutableList<object>, int>();
             var resultRows = new List<RowItem>();
             List<List<object>> aggregateValues = new List<List<object>>();
@@ -79,7 +80,7 @@ namespace pwiz.Common.DataBinding.Internal
                         columnHeaders.Add(columnHeader, columnHeaderIndex);
                         foreach (var aggregateColumn in AggregateColumns)
                         {
-                            propertyDescriptors.Add(MakePropertyDescriptor(propertyDescriptors.Count, columnHeader,
+                            propertyDescriptors.Add(MakePropertyDescriptor(indexedPropertyDescriptorCount++, columnHeader,
                                 aggregateColumn.Item1, aggregateColumn.Item2, aggregateColumn.Item3));
                             aggregateValues.Add(new List<object>());
                         }
@@ -150,6 +151,72 @@ namespace pwiz.Common.DataBinding.Internal
             var newProperties = new List<DataPropertyDescriptor>();
             var newRows = ImmutableList.ValueOf(groupAndTotaller.GroupAndTotal(input.RowItems, newProperties));
             return new ReportResults(newRows, newProperties);
+        }
+
+        private IEnumerable<DataPropertyDescriptor> GetRowHeaderPropertyDescriptors(out IList<PropertyDescriptor> independentPropertyDescriptors)
+        {
+            var propertyPathPivotKeys = new Dictionary<Tuple<PropertyPath, PivotKey>, int>();
+            
+            for (int i = 0; i < RowHeaders.Count; i++)
+            {
+                if (RowHeaders[i].Item1 is ColumnPropertyDescriptor columnPropertyDescriptor)
+                {
+                    propertyPathPivotKeys[
+                        Tuple.Create(columnPropertyDescriptor.PropertyPath, columnPropertyDescriptor.PivotKey)] = i;
+                }
+            }
+
+            var parentColumnIndexes = new Tuple<int, PropertyDescriptor>[RowHeaders.Count];
+            foreach (var entry in propertyPathPivotKeys.OrderBy(kvp => kvp.Key.Item1.Length))
+            {
+                var columnPropertyDescriptor = (ColumnPropertyDescriptor) RowHeaders[entry.Value].Item1;
+                var columnDescriptor = columnPropertyDescriptor.DisplayColumn.ColumnDescriptor;
+                var pivotKey = entry.Key.Item2;
+                PropertyDescriptor childPropertyDescriptor = null;
+                while (columnDescriptor?.ReflectedPropertyDescriptor != null)
+                {
+                    var parent = columnDescriptor.Parent;
+                    var key = Tuple.Create(parent.PropertyPath, pivotKey);
+                    childPropertyDescriptor = childPropertyDescriptor == null
+                        ? columnDescriptor.ReflectedPropertyDescriptor
+                        : new ChainedPropertyDescriptor(columnDescriptor.Name,
+                            columnDescriptor.ReflectedPropertyDescriptor, childPropertyDescriptor);
+                    if (propertyPathPivotKeys.TryGetValue(key, out var parentColumnIndex))
+                    {
+
+                        parentColumnIndexes[entry.Value] = Tuple.Create(parentColumnIndex, childPropertyDescriptor);
+                        break;
+                    }
+
+                    columnDescriptor = parent;
+                }
+            }
+
+            independentPropertyDescriptors = new List<PropertyDescriptor>();
+            var allPropertyDescriptors = new DataPropertyDescriptor[RowHeaders.Count];
+            for (int i = 0; i < allPropertyDescriptors.Length; i++)
+            {
+                if (parentColumnIndexes[i] == null)
+                {
+                    allPropertyDescriptors[i] = new IndexedPropertyDescriptor(DataSchema, independentPropertyDescriptors.Count,
+                        RowHeaders[i].Item1, RowHeaders[i].Item2);
+                    independentPropertyDescriptors.Add(RowHeaders[i].Item1);
+                }
+            }
+
+            for (int i = 0; i < allPropertyDescriptors.Length; i++)
+            {
+
+                if (parentColumnIndexes[i] != null)
+                {
+                    var parentColumnIndex = parentColumnIndexes[i].Item1;
+                    var childPropertyDescriptor = parentColumnIndexes[i].Item2;
+                    var ancestor = allPropertyDescriptors[parentColumnIndex];
+                    allPropertyDescriptors[i] = new WrappedDataPropertyDescriptor(DataSchema, ancestor.Name + @"_" + i, RowHeaders[i].Item2, new ChainedPropertyDescriptor(childPropertyDescriptor.Name, ancestor, childPropertyDescriptor));
+                }
+            }
+
+            return allPropertyDescriptors;
         }
     }
 }

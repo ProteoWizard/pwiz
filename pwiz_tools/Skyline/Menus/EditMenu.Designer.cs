@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Menus
+namespace pwiz.Skyline.Menus
 {
     partial class EditMenu
     {
@@ -79,6 +79,7 @@
             this.editSpectrumFilterMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator30 = new System.Windows.Forms.ToolStripSeparator();
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.imputePeakBoundariesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -214,6 +215,7 @@
             this.applyPeakGroupToolStripMenuItem,
             this.groupApplyToByToolStripMenuItem,
             this.removePeakToolStripMenuItem,
+            this.imputePeakBoundariesMenuItem,
             this.toolStripSeparator1,
             this.synchronizedIntegrationToolStripMenuItem});
             this.integrationToolStripMenuItem.Name = "integrationToolStripMenuItem";
@@ -433,6 +435,12 @@
             resources.ApplyResources(this.manageResultsMenuItem, "manageResultsMenuItem");
             this.manageResultsMenuItem.Click += new System.EventHandler(this.manageResultsMenuItem_Click);
             // 
+            // imputePeakBoundariesMenuItem
+            // 
+            this.imputePeakBoundariesMenuItem.Name = "imputePeakBoundariesMenuItem";
+            resources.ApplyResources(this.imputePeakBoundariesMenuItem, "imputePeakBoundariesMenuItem");
+            this.imputePeakBoundariesMenuItem.Click += new System.EventHandler(this.imputePeakBoundariesMenuItem_Click);
+            // 
             // EditMenu
             // 
             resources.ApplyResources(this, "$this");
@@ -498,5 +506,6 @@
         private System.Windows.Forms.ToolStripMenuItem synchronizedIntegrationToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem editSpectrumFilterMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem imputePeakBoundariesMenuItem;
     }
 }

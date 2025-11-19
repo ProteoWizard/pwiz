@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -69,8 +70,9 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(nodeCysOxi.HasExplicitMods);
             Assert.IsFalse(nodeCysOxi.ExplicitMods.HasHeavyModifications);
             // Modifications should match by name.
-            Assert.IsTrue(MATCHER.GetModifiedNode(STR_MOD_BY_NAME).ExplicitMods.StaticModifications.Contains(mod => 
-                Equals(mod.Modification.Name,  "Phospho (ST)")));
+            var pepModNode = MATCHER.GetModifiedNode(STR_MOD_BY_NAME);
+            Assert.IsTrue(pepModNode.ExplicitMods.StaticModifications.Contains(mod => 
+                mod.Modification.EquivalentAll(UniMod.GetModification("Phospho (ST)", true).ChangeExplicit(true))));
             // Test can find terminal modification
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_TERM_ONLY).ExplicitMods.HeavyModifications.Contains(mod => 
                 mod.Modification.EquivalentAll(UniMod.GetModification("Label:13C(6) (C-term R)", false))));
@@ -78,8 +80,9 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_MOD_BY_NAME).ExplicitMods.StaticModifications.Contains(mod =>
                 mod.Modification.Terminus == null));
             // Test matching negative masses
-            Assert.IsTrue(MATCHER.GetModifiedNode(STR_AMMONIA_LOSS).ExplicitMods.StaticModifications.Contains(mod =>
-                mod.Modification.EquivalentAll(UniMod.GetModification("Ammonia-loss (N-term C)", true))));
+            var pepAmmoniaModNode = MATCHER.GetModifiedNode(STR_AMMONIA_LOSS);
+            Assert.IsTrue(pepAmmoniaModNode.ExplicitMods.StaticModifications.Contains(mod =>
+                mod.Modification.EquivalentAll(UniMod.GetModification("Ammonia-loss (N-term C)", true).ChangeExplicit(true))));
 
             // General and specific
             // If all AAs modified, try for most general modification.
@@ -245,7 +248,7 @@ namespace pwiz.SkylineTest
                 int yeastLibIndex = docLibraries.IndexOf(library => Equals(library.Name, yeastLibSpec.Name));
 
                 libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
-                    docLibraries[anlLibIndex].Keys, defSetSetLight, defSetHeavy);
+                    docLibraries[anlLibIndex].Keys, defSetSetLight, defSetHeavy, anlLibSpec.Name);
 
                 // Test can match 15N
                 Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
@@ -264,7 +267,7 @@ namespace pwiz.SkylineTest
 
                 // Test can match Cysteine (Implicit) and Met Ox (variable)
                 libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
-                    docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy);
+                    docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy, yeastLibSpec.Name);
                 Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>
                     mod.ParsedMolecule.Equals(UniMod.GetModification(StaticModList.DEFAULT_NAME, true).ParsedMolecule) && !mod.IsVariable));
                 Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>

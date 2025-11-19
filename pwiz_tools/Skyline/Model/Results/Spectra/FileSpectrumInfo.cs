@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,9 +24,9 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.Spectra;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public override string ToString()
         {
-            return string.Format(Resources.FileSpectrumInfo_ToString__0__Spectra, SpectrumCount);
+            return string.Format(SpectraResources.FileSpectrumInfo_ToString__0__Spectra, SpectrumCount);
         }
 
         public ImmutableList<SpectrumMetadata> GetSpectra()

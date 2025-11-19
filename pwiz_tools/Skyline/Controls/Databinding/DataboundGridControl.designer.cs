@@ -1,4 +1,7 @@
-﻿namespace pwiz.Skyline.Controls.Databinding
+using System.Windows.Forms;
+using pwiz.Common.DataBinding;
+
+namespace pwiz.Skyline.Controls.Databinding
 {
     partial class DataboundGridControl
     {
@@ -33,6 +36,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.sortAscendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortDescendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -48,7 +52,11 @@
             this.splitContainerVertical = new System.Windows.Forms.SplitContainer();
             this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
+            this.columnDendrogramClipPanel = new System.Windows.Forms.Panel();
             this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
+            this.dataGridSplitContainer = new System.Windows.Forms.SplitContainer();
+            this.replicatePivotDataGridView = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.colReplicateProperty = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
@@ -61,6 +69,12 @@
             this.splitContainerHorizontal.Panel1.SuspendLayout();
             this.splitContainerHorizontal.Panel2.SuspendLayout();
             this.splitContainerHorizontal.SuspendLayout();
+            this.columnDendrogramClipPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridSplitContainer)).BeginInit();
+            this.dataGridSplitContainer.Panel1.SuspendLayout();
+            this.dataGridSplitContainer.Panel2.SuspendLayout();
+            this.dataGridSplitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.replicatePivotDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
             this.SuspendLayout();
@@ -175,56 +189,99 @@
             // 
             // splitContainerHorizontal.Panel1
             // 
-            this.splitContainerHorizontal.Panel1.Controls.Add(this.columnDendrogram);
+            this.splitContainerHorizontal.Panel1.Controls.Add(this.columnDendrogramClipPanel);
             // 
             // splitContainerHorizontal.Panel2
             // 
-            this.splitContainerHorizontal.Panel2.Controls.Add(this.boundDataGridView);
+            this.splitContainerHorizontal.Panel2.Controls.Add(this.dataGridSplitContainer);
+            // 
+            // columnDendrogramClipPanel
+            // 
+            resources.ApplyResources(this.columnDendrogramClipPanel, "columnDendrogramClipPanel");
+            this.columnDendrogramClipPanel.Controls.Add(this.columnDendrogram);
+            this.columnDendrogramClipPanel.Name = "columnDendrogramClipPanel";
             // 
             // columnDendrogram
             // 
-            this.columnDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Top;
             resources.ApplyResources(this.columnDendrogram, "columnDendrogram");
+            this.columnDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Top;
             this.columnDendrogram.Name = "columnDendrogram";
             this.columnDendrogram.RectilinearLines = true;
+            // 
+            // dataGridSplitContainer
+            // 
+            resources.ApplyResources(this.dataGridSplitContainer, "dataGridSplitContainer");
+            this.dataGridSplitContainer.Name = "dataGridSplitContainer";
+            // 
+            // dataGridSplitContainer.Panel1
+            // 
+            this.dataGridSplitContainer.Panel1.Controls.Add(this.replicatePivotDataGridView);
+            this.dataGridSplitContainer.Panel1Collapsed = true;
+            // 
+            // dataGridSplitContainer.Panel2
+            // 
+            this.dataGridSplitContainer.Panel2.Controls.Add(this.boundDataGridView);
+            // 
+            // replicatePivotDataGridView
+            // 
+            this.replicatePivotDataGridView.AllowUserToAddRows = false;
+            this.replicatePivotDataGridView.AllowUserToDeleteRows = false;
+            this.replicatePivotDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.replicatePivotDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.replicatePivotDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colReplicateProperty});
+            resources.ApplyResources(this.replicatePivotDataGridView, "replicatePivotDataGridView");
+            this.replicatePivotDataGridView.Name = "replicatePivotDataGridView";
+            this.replicatePivotDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.replicatePivotDataGridView_ColumnWidthChanged);
+            this.replicatePivotDataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.replicatePivotDataGridView_OnCellContentClick);
+            // 
+            // colReplicateProperty
+            // 
+            dataGridViewCellStyle1.BackColor = AbstractViewContext.DefaultReadOnlyCellColor;
+            this.colReplicateProperty.DefaultCellStyle = dataGridViewCellStyle1;
+            resources.ApplyResources(this.colReplicateProperty, "colReplicateProperty");
+            this.colReplicateProperty.Name = "colReplicateProperty";
+            this.colReplicateProperty.ReadOnly = true;
             // 
             // boundDataGridView
             // 
             this.boundDataGridView.AutoGenerateColumns = false;
             this.boundDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.boundDataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.boundDataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.boundDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.boundDataGridView.ContextMenuStrip = this.contextMenuStrip;
             this.boundDataGridView.DataSource = this.bindingListSource;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.boundDataGridView.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.boundDataGridView.DefaultCellStyle = dataGridViewCellStyle3;
             resources.ApplyResources(this.boundDataGridView, "boundDataGridView");
             this.boundDataGridView.MaximumColumnCount = 2000;
             this.boundDataGridView.Name = "boundDataGridView";
             this.boundDataGridView.ReportColorScheme = null;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.boundDataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.boundDataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.boundDataGridView.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.boundDataGridView_CellContextMenuStripNeeded);
             this.boundDataGridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.boundDataGridView_ColumnHeaderMouseClick);
+            this.boundDataGridView.ColumnStateChanged += new System.Windows.Forms.DataGridViewColumnStateChangedEventHandler(this.boundDataGridView_ColumnStateChanged);
+            this.boundDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.boundDataGridView_ColumnWidthChanged);
             this.boundDataGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.boundDataGridView_DataBindingComplete);
             this.boundDataGridView.Scroll += new System.Windows.Forms.ScrollEventHandler(this.boundDataGridView_Scroll);
             this.boundDataGridView.Resize += new System.EventHandler(this.boundDataGridView_Resize);
@@ -259,6 +316,12 @@
             this.splitContainerHorizontal.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).EndInit();
             this.splitContainerHorizontal.ResumeLayout(false);
+            this.columnDendrogramClipPanel.ResumeLayout(false);
+            this.dataGridSplitContainer.Panel1.ResumeLayout(false);
+            this.dataGridSplitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridSplitContainer)).EndInit();
+            this.dataGridSplitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.replicatePivotDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
             this.ResumeLayout(false);
@@ -287,5 +350,9 @@
         private Common.Controls.Clustering.DendrogramControl rowDendrogram;
         private System.Windows.Forms.SplitContainer splitContainerHorizontal;
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
+        private DataGridViewEx replicatePivotDataGridView;
+        private System.Windows.Forms.SplitContainer dataGridSplitContainer;
+        private Panel columnDendrogramClipPanel;
+        private DataGridViewTextBoxColumn colReplicateProperty;
     }
 }

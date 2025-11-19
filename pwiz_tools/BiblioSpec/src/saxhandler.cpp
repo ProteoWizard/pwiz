@@ -136,7 +136,7 @@ bool SAXHandler::parse()
     if (!success) {
         string error = generateError(message.empty() ? getParserError() : message);
         Verbosity::debug(error.c_str());
-        throw BlibException(true, error.c_str());
+        throw BlibException(true, error);
     }
     
     return true;

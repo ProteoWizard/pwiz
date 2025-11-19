@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -23,9 +23,10 @@ namespace pwiz.SkylineTest.MSstats.WithRunQuantification
         public void TestRunQuantification()
         {
             var cache = new QrFactorizationCache();
-            var csvReader = new DsvFileReader(GetTextReader("quant.csv"), ',');
+            using var csvReader = new DsvFileReader(GetTextReader("quant.csv"), TextUtil.SEPARATOR_CSV);
             var dataRowsByProtein = ToDataRows(ReadCsvFile(csvReader));
-            var expectedResultsByProtein =  ReadCsvFile(new DsvFileReader(GetTextReader("runquantdata.csv"), ',')).ToLookup(row => row["Protein"]);
+            using var csvResultsReader = new DsvFileReader(GetTextReader("runquantdata.csv"), TextUtil.SEPARATOR_CSV);
+            var expectedResultsByProtein =  ReadCsvFile(csvResultsReader).ToLookup(row => row["Protein"]);
             foreach (var entry in dataRowsByProtein)
             {
                 var expectedResultsByRun = expectedResultsByProtein[entry.Key].ToLookup(row => row["RUN"]);
@@ -48,9 +49,10 @@ namespace pwiz.SkylineTest.MSstats.WithRunQuantification
         [TestMethod]
         public void TestGroupComparisonWithRunQuantification()
         {
-            var csvReader = new DsvFileReader(GetTextReader("quant.csv"), ',');
+            using var csvReader = new DsvFileReader(GetTextReader("quant.csv"), TextUtil.SEPARATOR_CSV);
             var dataRowsByProtein = ToDataRows(ReadCsvFile(csvReader));
-            var expectedResultsByProtein = ReadCsvFile(new DsvFileReader(GetTextReader("result_newtesting_v2.csv"), ','))
+            using var csvResultsReader = new DsvFileReader(GetTextReader("result_newtesting_v2.csv"), TextUtil.SEPARATOR_CSV);
+            var expectedResultsByProtein = ReadCsvFile(csvResultsReader)
                 .ToDictionary(row => row["Protein"]);
             var cache = new QrFactorizationCache();
             foreach (var entry in dataRowsByProtein)

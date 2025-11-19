@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -57,19 +57,16 @@ namespace pwiz.SkylineTest.MSstats
         public static IDictionary<string, LinearFitResult> ReadExpectedResults(Type type, string resourceName)
         {
             var result = new Dictionary<string, LinearFitResult>();
-            using (var reader = GetTextReaderForManifestResource(type, resourceName))
+            using var csvReader = new DsvFileReader(GetTextReaderForManifestResource(type, resourceName), TextUtil.SEPARATOR_CSV);
+            while (null != csvReader.ReadLine())
             {
-                var csvReader = new DsvFileReader(reader, ',');
-                while (null != csvReader.ReadLine())
-                {
-                    string protein = csvReader.GetFieldByName("Protein");
-                    var linearFitResult = new LinearFitResult(Convert.ToDouble(csvReader.GetFieldByName("log2FC"), CultureInfo.InvariantCulture))
-                        .SetStandardError(Convert.ToDouble(csvReader.GetFieldByName("SE"), CultureInfo.InvariantCulture))
-                        .SetTValue(Convert.ToDouble(csvReader.GetFieldByName("Tvalue"), CultureInfo.InvariantCulture))
-                        .SetDegreesOfFreedom(Convert.ToInt32(csvReader.GetFieldByName("DF"), CultureInfo.InvariantCulture))
-                        .SetPValue(Convert.ToDouble(csvReader.GetFieldByName("pvalue"), CultureInfo.InvariantCulture));
-                    result.Add(protein, linearFitResult);
-                }
+                string protein = csvReader.GetFieldByName("Protein");
+                var linearFitResult = new LinearFitResult(Convert.ToDouble(csvReader.GetFieldByName("log2FC"), CultureInfo.InvariantCulture))
+                    .SetStandardError(Convert.ToDouble(csvReader.GetFieldByName("SE"), CultureInfo.InvariantCulture))
+                    .SetTValue(Convert.ToDouble(csvReader.GetFieldByName("Tvalue"), CultureInfo.InvariantCulture))
+                    .SetDegreesOfFreedom(Convert.ToInt32(csvReader.GetFieldByName("DF"), CultureInfo.InvariantCulture))
+                    .SetPValue(Convert.ToDouble(csvReader.GetFieldByName("pvalue"), CultureInfo.InvariantCulture));
+                result.Add(protein, linearFitResult);
             }
             return result;
         }

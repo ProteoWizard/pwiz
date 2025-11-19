@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,13 +18,12 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.Skyline.Properties;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -48,7 +47,7 @@ namespace pwiz.Skyline.Alerts
             }
             finally
             {
-                Helpers.TryTwice(() => File.Delete(exceptionFile));
+                TryHelper.TryTwice(() => File.Delete(exceptionFile));
             }
 
             string exceptionType = lines.ElementAtOrDefault(0) ?? string.Empty;
@@ -57,9 +56,9 @@ namespace pwiz.Skyline.Alerts
 
             // Change the title and intro text of the dialog.
             SetTitleAndIntroText(
-                Resources.ReportShutdownDlg_ReportShutdownDlg_Unexpected_Shutdown,
-                Resources.ReportShutdownDlg_ReportShutdownDlg_Skyline_had_an_unexpected_error_the_last_time_you_ran_it_,
-                Resources.ReportShutdownDlg_ReportShutdownDlg_Report_the_error_to_help_improve_Skyline_);
+                AlertsResources.ReportShutdownDlg_ReportShutdownDlg_Unexpected_Shutdown,
+                AlertsResources.ReportShutdownDlg_ReportShutdownDlg_Skyline_had_an_unexpected_error_the_last_time_you_ran_it_,
+                AlertsResources.ReportShutdownDlg_ReportShutdownDlg_Report_the_error_to_help_improve_Skyline_);
             StartPosition = FormStartPosition.CenterScreen;
             // This dialog should be shown in the taskbar because it does not have a parent
             ShowInTaskbar = true;
@@ -76,7 +75,7 @@ namespace pwiz.Skyline.Alerts
 
             if (!forced)
             {
-                Trace.TraceError(exceptionInfo);
+                Messages.WriteAsyncDebugMessage(exceptionInfo);
                 Console.WriteLine(exceptionInfo);
             }
 
@@ -105,7 +104,7 @@ namespace pwiz.Skyline.Alerts
                     if (fileInfo.LastWriteTime < DateTime.Now + TimeSpan.FromDays(1))
                         return true;
                 }
-                Helpers.TryTwice(() => File.Delete(exceptionFile));
+                TryHelper.TryTwice(() => File.Delete(exceptionFile));
             }
             return false;
         }

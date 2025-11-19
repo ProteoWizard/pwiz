@@ -85,7 +85,9 @@ int main(int argc, char* argv[])
         #endif
 
         bool requireUnicodeSupport = true;
-        pwiz::msdata::Reader_ABI reader;
+        ReaderList reader;
+        reader.emplace_back(boost::make_shared<Reader_ABI>());
+        reader.emplace_back(boost::make_shared<Reader_ABI_WIFF2>());
         pwiz::util::ReaderTestConfig config;
         pwiz::util::TestResult result;
 
@@ -117,6 +119,12 @@ int main(int argc, char* argv[])
             subsetConfig.peakPicking = true;
             subsetConfig.indexRange = make_pair(0, 200);
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("swath.api.wiff2"), subsetConfig);
+        }
+
+        {
+            auto subsetConfig = config;
+            subsetConfig.indexRange = make_pair(0, 20);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("7600ZenoTOFMSMS_EAD_TestData.wiff2"), subsetConfig);
         }
 
         result.check();

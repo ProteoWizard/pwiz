@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,6 +20,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Spectra;
 using pwiz.Skyline.FileUI;
@@ -66,6 +67,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.AreEqual(2, spectrumGrid.DataGridView.RowCount);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.PresetScanConfiguration, CheckState.Unchecked);
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.Ms2Precursors, CheckState.Unchecked);
+                spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.IsolationWindowWidth, CheckState.Unchecked);
             });
             WaitForConditionUI(() => spectrumGrid.IsComplete());
             RunUI(()=>spectrumGrid.DataGridView.SelectAll());
@@ -114,7 +116,11 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(spectrumGrid, spectrumGrid.Close);
 
             // Make sure that the document can be reopened
-            RunUI(()=>SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
+            RunUI(()=>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
+            });
             WaitForDocumentLoaded();
         }
 

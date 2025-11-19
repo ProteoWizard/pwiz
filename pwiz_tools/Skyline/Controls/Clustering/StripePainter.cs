@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,7 +18,7 @@
  */
 using System;
 using System.Drawing;
-using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Controls.Clustering
 {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -42,7 +42,7 @@ namespace pwiz.Common.Collections
 
         public override bool Equals(object obj)
         {
-            return obj is ReferenceValue<T> other && Equals(other);
+            return obj is ReferenceValue<T> other && ReferenceEquals(Value, other.Value);
         }
 
         public override int GetHashCode()

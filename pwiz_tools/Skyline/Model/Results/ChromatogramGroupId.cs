@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results
         private ChromatogramGroupId(Target target, string qcTraceName, SpectrumClassFilter spectrumClassFilter)
         {
             Target = target;
-            QcTraceName = qcTraceName;
+            QcTraceName = string.IsNullOrEmpty(qcTraceName) ? null : qcTraceName;
             SpectrumClassFilter = spectrumClassFilter;
         }
 

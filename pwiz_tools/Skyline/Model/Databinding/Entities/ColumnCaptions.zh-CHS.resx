@@ -144,6 +144,33 @@
   <data name="Analyzer">
     <value>分析器</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>Apex 分析物离子计数</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>Apex 分析物离子计数片段</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>Apex 分析物离子计数 MS1</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>Apex 谱图 ID</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>Apex 谱图 ID 片段</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>Apex 谱图 ID MS1</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>Apex 总离子计数</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>Apex 总离子计数片段</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>Apex 总离子计数 MS1</value>
+  </data>
   <data name="Area">
     <value>面积</value>
   </data>
@@ -218,6 +245,15 @@
   </data>
   <data name="CalculatedConcentration">
     <value>计算的浓度</value>
+  </data>
+  <data name="CalculatedConcentrationMessage">
+    <value>计算的浓度消息</value>
+  </data>
+  <data name="CalculatedConcentrationRaw">
+    <value>计算的浓度原始值</value>
+  </data>
+  <data name="CalculatedConcentrationStrict">
+    <value>计算的浓度精确值</value>
   </data>
   <data name="CalibrationCurve">
     <value>校准曲线</value>
@@ -540,6 +576,9 @@
   <data name="IsDecoy">
     <value>是诱饵</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>隔离窗口宽度</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>同位素分布指数</value>
   </data>
@@ -566,6 +605,39 @@
   </data>
   <data name="LastPosition">
     <value>最后一个位置</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>液相色谱峰分析物离子计数</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>液相色谱峰分析物离子计数片段</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>液相色谱峰分析物离子计数 MS1</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>液相色谱峰离子指标片段</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>液相色谱峰离子指标 MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>液相色谱峰总离子计数</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>液相色谱峰总离子计数片段</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>液相色谱峰总离子计数 MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>液相色谱峰总离子流面积</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>液相色谱峰总离子流面积片段</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>液相色谱峰总离子流面积 MS1</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>库碰撞横截面</value>
@@ -708,6 +780,9 @@
   <data name="MedianPeakArea">
     <value>中位数峰面积</value>
   </data>
+  <data name="Message">
+    <value>消息</value>
+  </data>
   <data name="Min">
     <value>最小</value>
   </data>
@@ -767,6 +842,18 @@
   </data>
   <data name="MoleculeListAbundance">
     <value>分子列表丰度</value>
+  </data>
+  <data name="MoleculeListAbundanceMessage">
+    <value>分子列表丰度消息</value>
+  </data>
+  <data name="MoleculeListAbundanceStrict">
+    <value>分子列表丰度精确值</value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionAveraged">
+    <value>分子列表丰度离子对平均值 </value>
+  </data>
+  <data name="MoleculeListAbundanceTransitionSummed">
+    <value>分子列表丰度离子对总和</value>
   </data>
   <data name="MoleculeListLocator">
     <value>分子列表定位器</value>
@@ -837,6 +924,15 @@
   <data name="NormalizedArea">
     <value>校准后面积</value>
   </data>
+  <data name="NormalizedAreaMessage">
+    <value>归一化面积消息</value>
+  </data>
+  <data name="NormalizedAreaRaw">
+    <value>归一化面积原始值</value>
+  </data>
+  <data name="NormalizedAreaStrict">
+    <value>归一化面积精确值</value>
+  </data>
   <data name="NumberOfPoints">
     <value>点数</value>
   </data>
@@ -851,6 +947,9 @@
   </data>
   <data name="OptStep">
     <value>最优步骤</value>
+  </data>
+  <data name="OriginalPeak">
+    <value>初始峰</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>峰组结束时间</value>
@@ -933,6 +1032,9 @@
   <data name="PeptideSequenceLength">
     <value>肽段序列长度</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>肽段谱图匹配计数</value>
+  </data>
   <data name="PointCount">
     <value>计数点</value>
   </data>
@@ -950,6 +1052,15 @@
   </data>
   <data name="PrecursorCalculatedConcentration">
     <value>母离子计算的浓度</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationMessage">
+    <value>由母离子计算的浓度消息</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationRaw">
+    <value>由母离子计算的浓度原始值</value>
+  </data>
+  <data name="PrecursorCalculatedConcentrationStrict">
+    <value>母离子计算的浓度精确值</value>
   </data>
   <data name="PrecursorCharge">
     <value>母离子电荷</value>
@@ -980,6 +1091,15 @@
   </data>
   <data name="PrecursorNormalizedArea">
     <value>母离子校准后面积</value>
+  </data>
+  <data name="PrecursorNormalizedAreaMessage">
+    <value>母离子归一化面积消息</value>
+  </data>
+  <data name="PrecursorNormalizedAreaRaw">
+    <value>母离子归一化面积原始值</value>
+  </data>
+  <data name="PrecursorNormalizedAreaStrict">
+    <value>母离子归一化面积精确值</value>
   </data>
   <data name="PrecursorNote">
     <value>母离子注释</value>
@@ -1041,11 +1161,26 @@
   <data name="ProductNeutralMass">
     <value>子离子中性质量</value>
   </data>
+  <data name="ProportionTruncated">
+    <value>截断比例</value>
+  </data>
   <data name="Protein">
     <value>蛋白质</value>
   </data>
   <data name="ProteinAbundance">
     <value>蛋白质丰度</value>
+  </data>
+  <data name="ProteinAbundanceMessage">
+    <value>蛋白质丰度消息</value>
+  </data>
+  <data name="ProteinAbundanceStrict">
+    <value>蛋白质丰度精确值</value>
+  </data>
+  <data name="ProteinAbundanceTransitionAveraged">
+    <value>蛋白质丰度离子对平均值 </value>
+  </data>
+  <data name="ProteinAbundanceTransitionSummed">
+    <value>蛋白质丰度离子对总和</value>
   </data>
   <data name="ProteinAccession">
     <value>蛋白质检索号</value>
@@ -1118,6 +1253,9 @@
   </data>
   <data name="RatioToStandard">
     <value>相对于标准品比率</value>
+  </data>
+  <data name="Raw">
+    <value>原始</value>
   </data>
   <data name="RawData">
     <value>原始数据</value>
@@ -1299,8 +1437,14 @@
   <data name="StdevTotalAreaRatio">
     <value>总面积比标准偏差</value>
   </data>
+  <data name="Strict">
+    <value>精确</value>
+  </data>
   <data name="SummaryMessage">
     <value>总结消息</value>
+  </data>
+  <data name="SurrogateExternalStandard">
+    <value>替代外部标准</value>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>目标定性离子比</value>

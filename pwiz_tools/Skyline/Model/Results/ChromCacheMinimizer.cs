@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
@@ -246,6 +247,7 @@ namespace pwiz.Skyline.Model.Results
             public Settings Settings { get; private set; }
             public ChromatogramGroupInfo ChromGroupInfo { get; private set; }
             public IList<TransitionGroupDocNode> TransitionGroupDocNodes { get; private set; }
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             private ProgressCallback ProgressCallback { get; set; }
             private MinStatisticsCollector StatisticsCollector { get; set; }
 
@@ -684,6 +686,7 @@ namespace pwiz.Skyline.Model.Results
 
                 int numPeaks = minimizedChromGroup.NumPeaks;
                 int maxPeakIndex = minimizedChromGroup.MaxPeakIndex;
+                float? maxPeakScore = maxPeakIndex >= 0 ? originalChromGroup.Header.MaxPeakScore : null;
 
                 _cacheFormat.ChromPeakSerializer().WriteItems(_outputStreamPeaks, minimizedChromGroup.MinimizedPeaks);
 
@@ -699,7 +702,8 @@ namespace pwiz.Skyline.Model.Results
                     numPeaks,
                     startPeakIndex,
                     startScoreIndex,
-                    maxPeakIndex,
+                    maxPeakIndex, 
+                    maxPeakScore,
                     timeIntensitiesGroup.NumInterpolatedPoints,
                     lenCompressed,
                     lenUncompressed,

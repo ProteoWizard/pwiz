@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -143,6 +143,9 @@
   </data>
   <data name="eIonMobilityUnits_waters_sonar" xml:space="preserve">
     <value>Waters SONAR</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_EI" xml:space="preserve">
+    <value>EI</value>
   </data>
   <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
     <value>DDA</value>
@@ -372,6 +375,9 @@
   <data name="Workflow_prm" xml:space="preserve">
     <value>PRM</value>
   </data>
+  <data name="Workflow_feature_detection" xml:space="preserve">
+    <value>Feature Detection</value>
+  </data>
   <data name="TransitionLibraryPick_none" xml:space="preserve">
     <value>None</value>
   </data>
@@ -435,11 +441,14 @@
   <data name="ListSortDirection_Descending" xml:space="preserve">
     <value>Descending</value>
   </data>
+  <data name="CountDistinctImpl_CountDistinct" xml:space="preserve">
+    <value>Count Distinct</value>
+  </data>
   <data name="CountImpl_Count" xml:space="preserve">
     <value>Count</value>
   </data>
   <data name="NumericAggregate_Cv" xml:space="preserve">
-    <value>Coefficent Of Variation</value>
+    <value>Coefficient Of Variation</value>
   </data>
   <data name="NumericAggregate_Mean" xml:space="preserve">
     <value>Mean</value>
@@ -449,6 +458,9 @@
   </data>
   <data name="NumericAggregate_Sum" xml:space="preserve">
     <value>Sum</value>
+  </data>
+  <data name="NumericAggregate_Median" xml:space="preserve">
+    <value>Median</value>
   </data>
   <data name="SelectOne_Max" xml:space="preserve">
     <value>Max</value>
@@ -595,7 +607,7 @@
     <value>DDA raw (search and build library)</value>
   </data>
   <data name="InputFile_dia_raw" xml:space="preserve">
-    <value>DIA raw (deconvolute, search, and build library)</value>
+    <value>DIA raw (search and build library)</value>
   </data>
   <data name="InputFile_search_result" xml:space="preserve">
     <value>Search results (build library directly)</value>
@@ -632,6 +644,9 @@
   </data>
   <data name="SearchEngine_MSGFPlus" xml:space="preserve">
     <value>MS-GF+</value>
+  </data>
+  <data name="SearchEngine_Hardklor" xml:space="preserve">
+    <value>Hardklör</value>
   </data>
   <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
     <value>Assigned to the protein with the most peptides</value>
@@ -713,5 +728,29 @@
   </data>
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>Ratio to Light</value>
+  </data>
+  <data name="LodCalculation_turning_point_stderr" xml:space="preserve">
+    <value>Bilinear turning point standard error</value>
+  </data>
+  <data name="BilinearRegressionFit_bilinear" xml:space="preserve">
+    <value>Bilinear</value>
+  </data>
+  <data name="SharedPeptidesGene_AssignedToBestProtein" xml:space="preserve">
+    <value>Assigned to the gene with the most peptides</value>
+  </data>
+  <data name="SharedPeptidesGene_AssignedToFirstProtein" xml:space="preserve">
+    <value>Assigned to the first gene</value>
+  </data>
+  <data name="SharedPeptidesGene_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>Duplicated between genes</value>
+  </data>
+  <data name="SharedPeptidesGene_Removed" xml:space="preserve">
+    <value>Removed (peptides must be unique to a single gene)</value>
+  </data>
+  <data name="SearchEngine_Comet" xml:space="preserve">
+    <value>Comet</value>
+  </data>
+  <data name="SearchEngine_Tide" xml:space="preserve">
+    <value>Tide-Search</value>
   </data>
 </root>

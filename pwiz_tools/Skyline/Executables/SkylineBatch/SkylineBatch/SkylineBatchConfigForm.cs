@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -603,7 +603,7 @@ namespace SkylineBatch
             }
             catch (ArgumentException e)
             {
-                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+                AlertDlg.ShowError(this, e.Message);
                 return;
             }
 

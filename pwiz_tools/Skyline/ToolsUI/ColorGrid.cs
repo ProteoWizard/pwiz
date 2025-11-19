@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,6 @@ using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.ToolsUI
@@ -154,7 +153,7 @@ namespace pwiz.Skyline.ToolsUI
                     var color = RgbHexColor.ParseHtmlColor(line) ?? RgbHexColor.ParseRgb(line);
                     if (color == null)
                     {
-                        MessageDlg.Show(this, string.Format(Resources.EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_, line));
+                        MessageDlg.Show(this, string.Format(ToolsUIResources.EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_, line));
                         return;
                     }
                     var colorRow = new T { Color = color.Value };
@@ -186,7 +185,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (e.Exception is FormatException)
             {
-                MessageDlg.Show(this, Resources.EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_);
+                MessageDlg.Show(this, ToolsUIResources.EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_);
             }
         }
 
@@ -252,7 +251,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void dataGridViewColors_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
+            if (ClipboardHelper.IsPaste(e.KeyData))
             {
                 DoPaste();
                 e.Handled = true;

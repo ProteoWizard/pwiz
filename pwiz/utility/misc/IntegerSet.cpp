@@ -134,11 +134,16 @@ PWIZ_API_DECL void IntegerSet::insert(Interval interval)
     Intervals::iterator eraseEnd = lower_bound(intervals_.begin(), intervals_.end(), 
                                                interval.end, endBefore);
 
+    // early exit if interval is already contained in one of the neighboring intervals
+    if (eraseBegin != intervals_.end() && eraseBegin->begin <= interval.begin && eraseBegin->end >= interval.end ||
+        eraseEnd != intervals_.end() && eraseEnd->begin <= interval.begin && eraseEnd->end >= interval.end)
+        return;
+
     Intervals::iterator insertionPoint = intervals_.erase(eraseBegin, eraseEnd);
 
     // eat our left neighbor if it's next to us 
 
-    if (insertionPoint != intervals_.begin())
+    if (!intervals_.empty() && insertionPoint != intervals_.begin())
     {
         --insertionPoint;
         const Interval& left = *insertionPoint;
@@ -155,7 +160,7 @@ PWIZ_API_DECL void IntegerSet::insert(Interval interval)
 
     // eat our right neighbor if it's next to us 
 
-    if (insertionPoint != intervals_.end())
+    if (!intervals_.empty() && insertionPoint != intervals_.end())
     {
         const Interval& right = *insertionPoint;
         if (right.begin <= interval.end + 1)

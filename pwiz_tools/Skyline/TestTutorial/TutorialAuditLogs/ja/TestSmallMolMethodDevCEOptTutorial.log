@@ -3,6 +3,7 @@ Summary   : クリップボードからトランジションリストがイン�
 All Info  :
 クリップボードからトランジションリストがインポートされました
 Extra Info: 36個のトランジションが追加されました
+'分子リスト名','分子名','標識タイプ','プリカーサーm/z','プリカーサー電荷','プロダクトm/z','プロダクト電荷','コーン電圧','明示的衝突エネルギー','明示的保持時間'と特定されている列
 Molecule List Name,Precursor Name,Label Type,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Cone Voltage,Explicit Collision Energy,Explicit Retention Time
 Central Metabolism,Acetyl-CoA,light,808,-1,408,-1,25,37,
 Central Metabolism,Acetyl-CoA,heavy,831,-1,418,-1,25,37,
@@ -40,6 +41,7 @@ Nucleotide metabolism,Orotate,light,155,-1,111,-1,25,9,
 Nucleotide metabolism,Orotate,heavy,160,-1,115,-1,25,9,
 Nucleotide metabolism,UDP,light,403,-1,79,-1,25,69,
 Nucleotide metabolism,UDP,heavy,412,-1,79,-1,25,69,
+
 
 Undo Redo : トランジションの設定が変更されました
 Summary   : 設定>トランジションの設定が変更されました

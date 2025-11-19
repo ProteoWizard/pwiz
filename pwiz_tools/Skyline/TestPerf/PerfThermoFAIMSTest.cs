@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. protein.ms>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
@@ -120,7 +121,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // Add all peptides
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(viewLibUI.AddAllPeptides);
             var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            using (new CheckDocumentState(1, 8433, 10882, 43484))
+            using (new CheckDocumentState(1, 8591, 11057, 44174))
             {
                 RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
                 {
@@ -146,9 +147,11 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsEarlyFinishButtonEnabled);
+            RunUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.SetScoreThreshold(0.05));
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton()));
             WaitForClosedForm(importPeptideSearchDlg);
 

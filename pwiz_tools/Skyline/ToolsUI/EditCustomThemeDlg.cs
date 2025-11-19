@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (_existing.Any(s => s.Name == name))
                 {
-                    messageBoxHelper.ShowTextBoxError(textBoxName, Resources.EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_, name);
+                    messageBoxHelper.ShowTextBoxError(textBoxName, ToolsUIResources.EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_, name);
                     return;
                 }
             }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,8 +25,19 @@ namespace pwiz.Common.Spectra
 {
     public class SpectrumMetadata : Immutable
     {
+        [Flags]
+        private enum Flags
+        {
+            HasCompensationVoltage = 1,
+            HasScanWindow = 2,
+            HasTotalIonCurrent = 4,
+            HasInjectionTime = 8,
+            HasConstantNeutralLoss = 16,
+        }
         private ImmutableList<ImmutableList<SpectrumPrecursor>> _precursorsByMsLevel =
             ImmutableList<ImmutableList<SpectrumPrecursor>>.EMPTY;
+
+        private Flags _flags;
 
         public SpectrumMetadata(string id, double retentionTime)
         {
@@ -85,22 +96,47 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.ScanDescription = scanDescription);
         }
 
-        public double? CompensationVoltage { get; private set; }
+        private double _compensationVoltage;
+        public double? CompensationVoltage
+        {
+            get
+            {
+                return GetFlag(Flags.HasCompensationVoltage) ? _compensationVoltage : (double?) null;
+            }
+            private set
+            {
+                SetFlag(Flags.HasCompensationVoltage, value.HasValue);
+                _compensationVoltage = value.GetValueOrDefault();
+            }
+        }
 
         public SpectrumMetadata ChangeCompensationVoltage(double? compensationVoltage)
         {
             return ChangeProp(ImClone(this), im => im.CompensationVoltage = compensationVoltage);
         }
 
-        public double? ScanWindowLowerLimit { get; private set; }
-        public double? ScanWindowUpperLimit { get; private set; }
+        private double _scanWindowLowerLimit;
+        private double _scanWindowUpperLimit;
+        public double? ScanWindowLowerLimit
+        {
+            get { return GetFlag(Flags.HasScanWindow) ? _scanWindowLowerLimit : (double?)null; }
+        }
+
+        public double? ScanWindowUpperLimit
+        {
+            get
+            {
+                return GetFlag(Flags.HasScanWindow) ? _scanWindowUpperLimit : (double?)null;
+            }
+        }
 
         public SpectrumMetadata ChangeScanWindow(double lowerLimit, double upperLimit)
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.ScanWindowLowerLimit = ScanWindowLowerLimit;
-                im.ScanWindowUpperLimit = ScanWindowUpperLimit;
+                im.SetFlag(Flags.HasScanWindow, true);
+                im._scanWindowLowerLimit = lowerLimit;
+                im._scanWindowUpperLimit = upperLimit;
             });
         }
 
@@ -109,6 +145,67 @@ namespace pwiz.Common.Spectra
         public SpectrumMetadata ChangeAnalyzer(string value)
         {
             return ChangeProp(ImClone(this), im => im.Analyzer = value);
+        }
+
+        private double _totalIonCurrent;
+
+        public double? TotalIonCurrent
+        {
+            get
+            {
+                return GetFlag(Flags.HasTotalIonCurrent) ? _totalIonCurrent : (double?)null;
+            }
+            private set
+            {
+                SetFlag(Flags.HasTotalIonCurrent, value.HasValue);
+                _totalIonCurrent = value.GetValueOrDefault();
+            }
+        }
+
+        private double _constantNeutralLoss;
+
+        public double? ConstantNeutralLoss // As found in Constant Neutral Loss scans, where Q1 peaks are only reported if there's a Q3 peak with this mz offset. Positive value implies loss, negative value implies gain
+        {
+            get
+            {
+                return GetFlag(Flags.HasConstantNeutralLoss) ? _constantNeutralLoss : (double?)null;
+            }
+            private set
+            {
+                _constantNeutralLoss = value.GetValueOrDefault();
+                SetFlag(Flags.HasConstantNeutralLoss, _constantNeutralLoss != 0);
+            }
+        }
+        
+        public SpectrumMetadata ChangeConstantNeutralLoss(double? value)
+        {
+            return ChangeProp(ImClone(this), im => im.ConstantNeutralLoss = value);
+        }
+
+
+        public SpectrumMetadata ChangeTotalIonCurrent(double? value)
+        {
+            return ChangeProp(ImClone(this), im => im.TotalIonCurrent = value);
+        }
+
+        private double _injectionTime;
+
+        public double? InjectionTime
+        {
+            get
+            {
+                return GetFlag(Flags.HasInjectionTime) ? _injectionTime : (double?)null;
+            }
+            set
+            {
+                SetFlag(Flags.HasInjectionTime, value.HasValue);
+                _injectionTime = value.GetValueOrDefault();
+            }
+        }
+
+        public SpectrumMetadata ChangeInjectionTime(double? value)
+        {
+            return ChangeProp(ImClone(this), im => im.InjectionTime = value);
         }
 
         protected bool Equals(SpectrumMetadata other)
@@ -120,6 +217,8 @@ namespace pwiz.Common.Spectra
                    Nullable.Equals(ScanWindowUpperLimit, other.ScanWindowUpperLimit) &&
                    Nullable.Equals(CompensationVoltage, other.CompensationVoltage) &&
                    Equals(PresetScanConfiguration, other.PresetScanConfiguration) &&
+                   Nullable.Equals(TotalIonCurrent, other.TotalIonCurrent) &&
+                   Nullable.Equals(InjectionTime, other.InjectionTime) &&
                    Equals(Analyzer, other.Analyzer);
         }
 
@@ -143,7 +242,26 @@ namespace pwiz.Common.Spectra
                 hashCode = (hashCode * 397) ^ ScanWindowLowerLimit.GetHashCode();
                 hashCode = (hashCode * 397) ^ ScanWindowUpperLimit.GetHashCode();
                 hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
+                hashCode = (hashCode * 397) ^ TotalIonCurrent.GetHashCode();
+                hashCode = (hashCode * 397) ^ InjectionTime.GetHashCode();
                 return hashCode;
+            }
+        }
+
+        private bool GetFlag(Flags flag)
+        {
+            return 0 != (_flags & flag);
+        }
+
+        private void SetFlag(Flags flag, bool value)
+        {
+            if (value)
+            {
+                _flags |= flag;
+            }
+            else
+            {
+                _flags &= ~flag;
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -194,6 +194,15 @@ namespace pwiz.Common.SystemUtil
         public static void RemoveTabPage(TabPage tabPage, ToolTip toolTipControl)
         {
             RemoveTabPage(tabPage, ImmutableList.Singleton(toolTipControl));
+        }
+
+        public static Control GetFocus(this Control control)
+        {
+            if (control.Focused)
+                return control;
+            return (
+                from Control childControl in control.Controls
+                select GetFocus(childControl)).FirstOrDefault(focus => focus != null);
         }
     }
 }

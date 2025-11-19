@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using AutoQC;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.PanoramaClient;
 using SharedBatch;
 using SharedBatch.Properties;
 using SharedBatchTest;
@@ -27,7 +29,44 @@ using SharedBatchTest;
 namespace AutoQCTest
 {
     public class TestUtils
-    {
+    { 
+        public const string PANORAMAWEB = "https://panoramaweb.org";
+        // public const string PANORAMAWEB = "http://localhost:8080";
+        
+        // Default test account (shared admin account for automated testing)
+        private const string DEFAULT_PANORAMAWEB_USER = "skyline_tester_admin@proteinms.net";
+        public const string PANORAMAWEB_TEST_FOLDER = "SkylineTest/AutoQcTest";
+
+        /// <summary>
+        /// Environment variables for Panorama test credentials.
+        /// Set these to use your own credentials instead of the shared test account.
+        /// This is safer than editing code, which can be accidentally committed.
+        /// 
+        /// RECOMMENDED: Set persistent User-level environment variables (PowerShell - no admin needed):
+        ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_USERNAME", "your.name@yourdomain.edu", "User")
+        ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_PASSWORD", "your_password", "User")
+        ///   Then restart Visual Studio to pick up the new environment variables.
+        /// 
+        /// ALTERNATIVE: Use Windows GUI (no PowerShell needed):
+        ///   Windows Search > "Environment Variables" > "Edit environment variables for your account"
+        ///   Add both variables under "User variables" (NOT System variables)
+        ///   Restart Visual Studio
+        /// 
+        /// To clear when done (PowerShell - no admin needed):
+        ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_USERNAME", $null, "User")
+        ///   [Environment]::SetEnvironmentVariable("PANORAMAWEB_PASSWORD", $null, "User")
+        ///   Then restart Visual Studio
+        /// 
+        /// IMPORTANT: Use "User" level, NOT "Machine" level. User-level variables:
+        ///   - Don't require admin privileges
+        ///   - Only affect your user account
+        ///   - Persist across PowerShell sessions after restart
+        /// 
+        /// If not set, falls back to DEFAULT_PANORAMAWEB_USER and PASSWORD must be set.
+        /// </summary>
+        private const string USERNAME_ENVT_VAR = "PANORAMAWEB_USERNAME";
+        private const string PASSWORD_ENVT_VAR = "PANORAMAWEB_PASSWORD";
+
         public static string GetTestFilePath(string fileName)
         {
             return Path.Combine(GetTestDataPath(), fileName);
@@ -42,6 +81,39 @@ namespace AutoQCTest
         {
             // ExtensionTestContext looks for paths relative to Skyline.sln.
             return ExtensionTestContext.GetProjectDirectory(@"Executables\AutoQC");
+        }
+
+        public static string GetSkylineBinDirectory()
+        {
+            var skylineProjectDir = ExtensionTestContext.GetProjectDirectory("")
+                                    ?? throw new InvalidOperationException("Unable to find Skyline project directory");
+
+            var debugPath = Path.Combine(skylineProjectDir, "bin", "x64", "Debug");
+            var releasePath = Path.Combine(skylineProjectDir, "bin", "x64", "Release");
+
+            var debugExists = Directory.Exists(debugPath);
+            var releaseExists = Directory.Exists(releasePath);
+
+            if (!debugExists && !releaseExists)
+                throw new DirectoryNotFoundException(
+                    $"Neither Debug nor Release bin directory found at {debugPath} or {releasePath}");
+
+            // If only one exists, return it
+            if (!debugExists) return releasePath;
+            if (!releaseExists) return debugPath;
+
+            // Both exist - compare SkylineCmd.exe modification times
+            var debugCmd = Path.Combine(debugPath, SkylineInstallations.SkylineCmdExe);
+            var releaseCmd = Path.Combine(releasePath, SkylineInstallations.SkylineCmdExe);
+
+            var debugCmdExists = File.Exists(debugCmd);
+            var releaseCmdExists = File.Exists(releaseCmd);
+
+            if (debugCmdExists && releaseCmdExists)
+                return File.GetLastWriteTime(debugCmd) > File.GetLastWriteTime(releaseCmd)
+                    ? debugPath : releasePath;
+
+            return debugCmdExists ? debugPath : releasePath;
         }
 
         public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty, string.Empty);
@@ -66,10 +138,10 @@ namespace AutoQCTest
 
         public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
         {
-            var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
-            var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
-            var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
-            var panoramaProject = publishToPanorama ? "/SkylineTest" : "";
+            var panoramaServerUrl = publishToPanorama ? PANORAMAWEB : "";
+            var panoramaUserEmail = publishToPanorama ? GetPanoramaWebUsername() : "";
+            var panoramaPassword = publishToPanorama ? GetPanoramaWebPassword() : "";
+            var panoramaProject = publishToPanorama ? PANORAMAWEB_TEST_FOLDER : "";
 
             return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaProject);
         }
@@ -134,8 +206,8 @@ namespace AutoQCTest
             }
 
             foreach (var config in configs)
-                testConfigManager.SetState(testConfigManager.State,
-                    testConfigManager.State.UserAddConfig(config, null));
+                testConfigManager.SetState(testConfigManager.AutoQcState,
+                    testConfigManager.AutoQcState.UserAddConfig(config, null));
             
             return testConfigManager;
         }
@@ -156,8 +228,82 @@ namespace AutoQCTest
             ConfigList.Importer = AutoQcConfig.ReadXml;
             ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
         }
+
+        public static void AssertTextsInThisOrder(string source, params string[] textsInOrder)
+        {
+            var previousIndex = -1;
+            string previousString = null;
+
+            Assert.IsFalse(string.IsNullOrWhiteSpace(source), "Source string cannot be blank");
+            Assert.IsNotNull(textsInOrder, "No texts to compare");
+            foreach (var part in textsInOrder)
+            {
+                var index = source.IndexOf(part, previousIndex == -1 ? 0 : previousIndex, StringComparison.Ordinal);
+
+                if (index == -1)
+                    Assert.Fail("Text '{0}' not found{1} in '{2}'.", part,
+                        previousString == null ? string.Empty : $" after '{previousString}'",
+                        source);
+
+                previousIndex = index;
+                previousString = part;
+            }
+        }
+
+        /// <summary>
+        /// Gets the Panorama username for testing.
+        /// First checks PANORAMAWEB_USERNAME environment variable.
+        /// Falls back to DEFAULT_PANORAMAWEB_USER if not set.
+        /// </summary>
+        public static string GetPanoramaWebUsername()
+        {
+            var username = Environment.GetEnvironmentVariable(USERNAME_ENVT_VAR);
+            return string.IsNullOrWhiteSpace(username) ? DEFAULT_PANORAMAWEB_USER : username;
+        }
+
+        /// <summary>
+        /// Gets the Panorama password for testing.
+        /// Requires PANORAMAWEB_PASSWORD environment variable to be set.
+        /// </summary>
+        public static string GetPanoramaWebPassword()
+        {
+            var panoramaWebPassword = Environment.GetEnvironmentVariable(PASSWORD_ENVT_VAR);
+            if (string.IsNullOrWhiteSpace(panoramaWebPassword))
+            {
+                var username = GetPanoramaWebUsername();
+                Assert.Fail(
+                    $"Environment variable ({PASSWORD_ENVT_VAR}) with the PanoramaWeb password for {username} is not set. Cannot run test.\n\n" +
+                    $"To set credentials, run these PowerShell commands (no admin needed):\n" +
+                    $"  [Environment]::SetEnvironmentVariable(\"PANORAMAWEB_USERNAME\", \"your.name@yourdomain.edu\", \"User\")\n" +
+                    $"  [Environment]::SetEnvironmentVariable(\"PANORAMAWEB_PASSWORD\", \"your_password\", \"User\")\n\n" +
+                    $"Then RESTART Visual Studio or your IDE to pick up the new environment variables.\n\n" +
+                    $"For more details, see TestUtils.cs (lines 40-66) or pwiz_tools/Skyline/Executables/AutoQC/ai/README.md");
+            }
+
+            return panoramaWebPassword;
+        }
+
+        public static string CreatePanoramaWebTestFolder(WebPanoramaClient panoramaClient, string parentFolder, string folderName)
+        {
+            // Create a PanoramaWeb folder for the test
+            var random = new Random();
+            string uniqueFolderName;
+            do
+            {
+                uniqueFolderName = folderName + random.Next(1000, 9999);
+            }
+            while (panoramaClient.FolderExists(parentFolder + @"/" + uniqueFolderName));
+
+            AssertEx.NoExceptionThrown<Exception>(() => panoramaClient.CreateTargetedMsFolder(parentFolder, uniqueFolderName));
+            return $"{parentFolder}/{uniqueFolderName}";
+        }
+
+        public static void DeletePanoramaWebTestFolder(WebPanoramaClient panoramaClient, string folderPath)
+        {
+            AssertEx.NoExceptionThrown<Exception>(() => panoramaClient?.DeleteFolderIfExists(folderPath));
+        }
     }
-    
+
     class TestImportContext : ImportContext
     {
         public DateTime OldestFileDate;

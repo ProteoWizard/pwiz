@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alex MacLean <alexmaclean2000 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string Text
         {
-            get { return Resources.SkylineWindow_CreateGraphMassError_Mass_Errors; }
+            get { return GraphsResources.SkylineWindow_CreateGraphMassError_Mass_Errors; }
         }
     }
 }

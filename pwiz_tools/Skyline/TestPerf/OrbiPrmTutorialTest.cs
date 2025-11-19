@@ -29,6 +29,8 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -47,8 +49,10 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -62,27 +66,46 @@ namespace TestPerf
     [TestClass]
     public class OrbiPrmTutorialTest : AbstractFunctionalTestEx
     {
-        private const string EXT_ZIP = ".zip";
-        private const string ROOT_DIR = "PRM-Orbi";
-        private static string LIBRARY_DIR = Path.Combine(ROOT_DIR, "Heavy Library");
-        private static string DATA_DIR = Path.Combine(ROOT_DIR, "PRM data");
-        private static string SAMPLES_DIR = Path.Combine(DATA_DIR, "Samples");
-        private static string STANDARDS_DIR = Path.Combine(DATA_DIR, "Standards");
+        private string ROOT_DIR;
+        private string LIBRARY_DIR;
+        private string DATA_DIR;
+        private string SAMPLES_DIR;
+        private string STANDARDS_DIR;
+
+        private static string[] SAMPLE_NAMES = { "G1_rep1", "G1_rep2", "G1_rep3", "G2M_rep1", "G2M_rep2", "G2M_rep3", "S_rep1", "S_rep2", "S_rep3" };
+
+        private void InitPaths()
+        {
+            ROOT_DIR ??= UseRawFiles ? "PRM-OrbiRaw" : "PRM-OrbiMzxml";
+            LIBRARY_DIR = Path.Combine(ROOT_DIR, "Heavy Library");
+            DATA_DIR = Path.Combine(ROOT_DIR, "PRM data");
+            SAMPLES_DIR = Path.Combine(DATA_DIR, "Samples");
+            STANDARDS_DIR = Path.Combine(DATA_DIR, "Standards");
+        }
+
+        private bool IncludePrbbMethodReports => !IsPauseForScreenShots;
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOrbiPrmTutorial()
         {
-//            IsPauseForScreenShots = true;
-//            RunPerfTests = true;
-//            IsCoverShotMode = true;
-//            IsRecordMode = true;
-            CoverShotName = "PRM-Orbitrap";
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
 
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-Orbitrap-21_2.pdf";
+            InitPaths();
+
+            //            IsPauseForScreenShots = true;
+            //            RunPerfTests = true;
+            //            IsCoverShotMode = true;
+            CoverShotName = "PRMOrbitrap";
+
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRMOrbitrap-22_2.pdf";
 
             TestFilesZipPaths = new[]
             {
-                @"http://skyline.ms/tutorials/PRM-Orbi.zip",
+                UseRawFiles
+                    ? @"http://skyline.ms/tutorials/PRM-OrbiRaw.zip"
+                    : @"http://skyline.ms/tutorials/PRM-OrbiMzxml.zip",
                 @"TestPerf\OrbiPrmViews.zip",
             };
 
@@ -92,19 +115,49 @@ namespace TestPerf
                 Path.Combine(LIBRARY_DIR, "heavy-01.pep.xml"),
                 Path.Combine(LIBRARY_DIR, "heavy-02.mzXML"),
                 Path.Combine(LIBRARY_DIR, "heavy-02.pep.xml"),
-                Path.Combine(SAMPLES_DIR, "G1_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G1_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G1_rep3.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep3.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep3.mzXML"),
-                Path.Combine(STANDARDS_DIR, "heavy-PRM.mzXML"),
+                Path.Combine(STANDARDS_DIR, "heavy-PRM.raw"),
+            }.Union(SAMPLE_NAMES.Select(s => Path.Combine(SAMPLES_DIR, s + ".raw"))).ToArray();
+
+            RunFunctionalTest();
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        public void TestOrbiPrmArdia()
+        {
+            if (!ArdiaTestUtil.EnableArdiaTests)
+            {
+                Console.Error.WriteLine($"NOTE: skipping {TestContext.TestName} because username/password for Ardia is not configured in environment variables");
+                return;
+            }
+
+            IsArdiaTest = true;
+
+            //            IsPauseForScreenShots = true;
+            //            RunPerfTests = true;
+            //            IsCoverShotMode = true;
+            //            IsRecordMode = true;
+
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRMOrbitrap-22_2.pdf";
+
+            ROOT_DIR = "PRM-OrbiRaw";
+
+            InitPaths();
+
+            TestFilesZipPaths = new[]
+            {
+                @"http://skyline.ms/tutorials/PRM-OrbiRaw.zip",
+                @"TestPerf\OrbiPrmViews.zip",
             };
 
-            RunFunctionalTest();            
+            TestFilesPersistent = new[]
+            {
+                Path.Combine(LIBRARY_DIR, "heavy-01.mzXML"),
+                Path.Combine(LIBRARY_DIR, "heavy-01.pep.xml"),
+                Path.Combine(LIBRARY_DIR, "heavy-02.mzXML"),
+                Path.Combine(LIBRARY_DIR, "heavy-02.pep.xml"),
+            };
+
+            RunFunctionalTest();
         }
 
         private string DataPath => TestFilesDirs.Last().PersistentFilesDir;
@@ -128,12 +181,20 @@ namespace TestPerf
         private const string REPORT_QUANT = "PRM-Quant";
         private const string INSTRUMENT_METHOD = "PRM_mass_list";
 
+        private bool IsArdiaTest;
+
         protected override void DoTest()
         {
             PrepareTargets();
-            ExportMethodReport();
+            ExportIsolationList();
+            if (IncludePrbbMethodReports)
+                ExportMethodReport();
+
             ExportScheduledMethodReport();
+
             ImportReplicates();
+            if (IsCoverShotMode)
+                return; // Done
             RefineTransitions();
             InternalSinglePointCalibration();
             AnnotateReplicates();
@@ -146,13 +207,13 @@ namespace TestPerf
             // Have to open the start page from within Skyline to ensure audit logging starts up correctly
             var startPage = ShowDialog<StartPage>(SkylineWindow.OpenStartPage);
 
-            PauseForScreenShot<StartPage>("Import Peptide List icon", 1);
+            // PauseForScreenShot<StartPage>("Import Peptide List icon");   // Named shared image
 
             var startPageSettings = ShowDialog<StartPageSettingsUI>(() =>
                 startPage.ClickWizardAction(Resources.SkylineStartup_SkylineStartup_Import_Peptide_List));
 
             RunUI(() => startPageSettings.IsIntegrateAll = true);
-            PauseForScreenShot<StartPageSettingsUI>("Settings form", 2);
+            PauseForScreenShot<StartPageSettingsUI>("Settings form");
 
             RunDlg<MessageDlg>(startPageSettings.ResetDefaults, dlg => dlg.OkDialog());
 
@@ -179,7 +240,7 @@ namespace TestPerf
             var messageRepeats =
                 ShowDialog<MessageDlg>(() => proteomeDlg.AddFastaFile(GetTestPath("uniprot-mouse.fasta")));
 
-            PauseForScreenShot("Repeats message", 3);
+            PauseForScreenShot<MessageDlg>("Repeats message");
 
             OkDialog(messageRepeats, messageRepeats.OkDialog);
 
@@ -188,7 +249,7 @@ namespace TestPerf
 
             OkDialog(proteomeDlg, proteomeDlg.OkDialog);
 
-            PauseForScreenShot<PeptideSettingsUI.DigestionTab>("Peptide Settings - Digestion tab", 4);
+            PauseForScreenShot<PeptideSettingsUI.DigestionTab>("Peptide Settings - Digestion tab");
 
             RunUI(() =>
             {
@@ -196,7 +257,7 @@ namespace TestPerf
                 peptideSettingsUI.TimeWindow = 5;
             });
 
-            PauseForScreenShot<PeptideSettingsUI.PredictionTab>("Peptide Settings - Prediction tab", 5);
+            PauseForScreenShot<PeptideSettingsUI.PredictionTab>("Peptide Settings - Prediction tab");
 
             RunUI(() =>
             {
@@ -206,7 +267,7 @@ namespace TestPerf
                 peptideSettingsUI.TextExcludeAAs = 0;
             });
 
-            PauseForScreenShot<PeptideSettingsUI.FilterTab>("Peptide Settings - Filter tab", 7);
+            PauseForScreenShot<PeptideSettingsUI.FilterTab>("Peptide Settings - Filter tab");
 
             RunUI(() =>
             {
@@ -231,6 +292,7 @@ namespace TestPerf
                 buildLibraryDlg.Grid.SetScoreThreshold(0.1);
                 buildLibraryDlg.OkWizardPage();
             });
+            WaitForConditionUI(() => peptideSettingsUI.PickedLibraries.Contains(HEAVY_LIBRARY));
 
             var editListUI =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
@@ -246,7 +308,7 @@ namespace TestPerf
                 peptideSettingsUI.PickedLibraries = new[] { SHOTGUN_LIBRARY, HEAVY_LIBRARY };
             });
 
-            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 8);
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab");
 
             RunUI(() =>
             {
@@ -255,13 +317,13 @@ namespace TestPerf
 
             var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
                 RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyK, peptideSettingsUI, "Edit Isotope Modification form", 9);
+            AddHeavyMod(modHeavyK, peptideSettingsUI/*, "Edit Isotope Modification form" */);
             var modHeavyR = new StaticMod(HEAVY_R, "R", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
                 RelativeRT.Matching, null, null, null);
-            AddHeavyMod(modHeavyR, peptideSettingsUI, "Edit Isotope Modification form", 9);
+            AddHeavyMod(modHeavyR, peptideSettingsUI/*, "Edit Isotope Modification form" */);
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
 
-            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Modifications tab", 10);
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Modifications tab");
 
 
             RunUI(() =>
@@ -272,7 +334,7 @@ namespace TestPerf
                 peptideSettingsUI.QuantUnits = QUANT_UNITS;
             });
 
-            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Quantification tab", 10);
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Quantification tab");
 
             using (new WaitDocumentChange(null, true))
             {
@@ -286,7 +348,7 @@ namespace TestPerf
                 transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Prediction;
             });
 
-            PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 11);
+            PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab");
 
             RunUI(() =>
             {
@@ -300,7 +362,7 @@ namespace TestPerf
                 transitionSettingsUI.ExclusionWindow = 5;
             });
 
-            PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 12);
+            PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab");
 
             RunUI(() =>
             {
@@ -311,7 +373,7 @@ namespace TestPerf
                 transitionSettingsUI.Filtered = true;
             });
 
-            PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab", 13);
+            PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab");
 
             RunUI(() =>
             {
@@ -320,7 +382,7 @@ namespace TestPerf
                 transitionSettingsUI.MaxMz = 1200;
             });
 
-            PauseForScreenShot<TransitionSettingsUI.InstrumentTab>("Transition Settings - Instrument tab", 14);
+            PauseForScreenShot<TransitionSettingsUI.InstrumentTab>("Transition Settings - Instrument tab");
 
             RunUI(() =>
             {
@@ -331,7 +393,7 @@ namespace TestPerf
                 transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.none;
             });
 
-            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan tab", 15);
+            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan tab");
 
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
@@ -343,7 +405,7 @@ namespace TestPerf
                     SetClipboardText(GetPeptideList());
                     pasteDlg.PastePeptides();
                 });
-                PauseForScreenShot<PasteDlg.ProteinListTab>("Insert Peptide List", 16); // Not L10N
+                PauseForScreenShot<PasteDlg.ProteinListTab>("Insert Peptide List"); // Not L10N
                 OkDialog(pasteDlg, pasteDlg.OkDialog);
             }
 
@@ -352,7 +414,7 @@ namespace TestPerf
 
             RestoreViewOnScreen(17);
             RunUI(() => SkylineWindow.Size = new Size(1100, 657));
-            PauseForScreenShot<SkylineWindow>("Main window with peptide selected and Library Match view", 17);
+            PauseForScreenShot<SkylineWindow>("Main window with peptide selected and Library Match view");
 
             SaveBackup("PRM_Proteome");
         }
@@ -372,6 +434,19 @@ namespace TestPerf
             return sb.ToString();
         }
 
+        private void ExportIsolationList()
+        {
+            var exportIsolationDlg = ShowDialog<ExportMethodDlg>(() =>
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
+            RunUI(() => exportIsolationDlg.SetInstrument(ExportInstrumentType.THERMO_FUSION));
+            PauseForScreenShot<ExportMethodDlg>("Export Isolation List form");
+            string methodFilePath = GetTestPath(REPORT_METHOD + TextUtil.EXT_CSV);
+            OkDialog(exportIsolationDlg, () => exportIsolationDlg.OkDialog(methodFilePath));
+            WaitForCondition(() => File.Exists(methodFilePath));
+            Assert.AreEqual(SkylineWindow.Document.PeptideTransitionGroupCount + 1, File.ReadAllLines(methodFilePath).Length);
+            File.Delete(methodFilePath);    // Avoid leaving this where it will get overwritten
+        }
+
         private void ExportMethodReport()
         {
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
@@ -388,7 +463,7 @@ namespace TestPerf
                 Assert.AreEqual(3, viewEditor.ChooseColumnsTab.ColumnCount);
                 // viewEditor.ChooseColumnsTab.ScrollTreeToTop();
             });
-            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 18);
+            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form");
 
             var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
             WaitForConditionUI(() => previewReportDlg.IsComplete);
@@ -421,15 +496,40 @@ namespace TestPerf
             }
         }
 
+        private void OpenFile(OpenDataSourceDialog openDataSourceDialog, params string[] names)
+        {
+            WaitForConditionUI(() => names.All(n => openDataSourceDialog.ListItemNames.Contains(n)));
+            RunUI(() =>
+            {
+                foreach (string name in names)
+                    openDataSourceDialog.SelectFile(name);
+                openDataSourceDialog.Open();
+            });
+        }
+
         private void ExportScheduledMethodReport()
         {
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-            PauseForScreenShot<ImportResultsDlg>("Import Results form", 19);
+            PauseForScreenShot<ImportResultsDlg>("Import Results form");
 
             using (new WaitDocumentChange(null, true))
             {
-                RunUI(() => SetNamedPathSets(importResultsDlg, STANDARDS_DIR));
-                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+                if (IsArdiaTest)
+                {
+                    var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
+                    var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
+                    RunUI(() => editAccountDlg.SetRemoteAccount(ArdiaTestUtil.GetTestAccount()));
+                    OkDialog(editAccountDlg, editAccountDlg.OkDialog);
+                    OpenFile(openDataSourceDialog, "Skyline");
+                    OpenFile(openDataSourceDialog, "PRM data");
+                    OpenFile(openDataSourceDialog, "Standards");
+                    OpenFile(openDataSourceDialog, "heavy-PRM");
+                }
+                else
+                {
+                    RunUI(() => SetNamedPathSets(importResultsDlg, STANDARDS_DIR));
+                    OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+                }
             }
             RunUI(SkylineWindow.RemoveMissingResults);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 19, 31, 62, 518);
@@ -467,7 +567,7 @@ namespace TestPerf
                 }
             });
 
-            PauseForScreenShot<SkylineWindow>("Skyline main window", 20);
+            PauseForScreenShot<SkylineWindow>("Skyline main window");
             RunUI(SkylineWindow.CollapsePeptides);
 
             SaveBackup("PRM_Scheduled");
@@ -482,8 +582,56 @@ namespace TestPerf
             OkDialog(schedulingProps, schedulingProps.OkDialog);
             WaitForGraphs();
             RestoreViewOnScreen(21);
-            PauseForScreenShot<GraphSummary>("Schedule graph metafile", 21);
+            // RunUI(() => SkylineWindow.ShowGraphRetentionTime(true, GraphTypeSummary.schedule));
+            PauseForGraphScreenShot("Schedule graph metafile", SkylineWindow.GraphRetentionTime);
 
+            ExportScheduledIsolationList();
+            if (IncludePrbbMethodReports)
+                ExportScheduledMethodPrbbReport();
+
+            RunUI(() => SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.schedule));
+            RunUI(() => SkylineWindow.SaveDocument());
+            // Digression to show removing light precursors
+            RunUI(() => Assert.AreEqual(62, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
+            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>
+            {
+                dlg.RefineLabelType = IsotopeLabelType.light;
+                dlg.OkDialog();
+            });
+            RunUI(() => Assert.AreEqual(31, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
+            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>
+            {
+                dlg.RefineLabelType = IsotopeLabelType.light;
+                dlg.AddLabelType = true;
+                dlg.OkDialog();
+            });
+            RunUI(() => Assert.AreEqual(62, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
+            // Revert with Unto to remove the audit log entries
+            RunUI(SkylineWindow.Undo);
+            RunUI(() => Assert.AreEqual(31, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
+            RunUI(SkylineWindow.Undo);
+            RunUI(() => Assert.AreEqual(62, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
+        }
+
+        private void ExportScheduledIsolationList()
+        {
+            var exportIsolationDlg = ShowDialog<ExportMethodDlg>(() =>
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
+            RunUI(() =>
+            {
+                exportIsolationDlg.SetInstrument(ExportInstrumentType.THERMO_FUSION);
+                exportIsolationDlg.MethodType = ExportMethodType.Scheduled;
+            });
+            PauseForScreenShot<ExportMethodDlg>("Export Isolation List form scheduled");
+            string methodFilePath = GetTestPath(REPORT_SCHEDULED_METHOD + TextUtil.EXT_CSV);
+            OkDialog(exportIsolationDlg, () => exportIsolationDlg.OkDialog(methodFilePath));
+            WaitForCondition(() => File.Exists(methodFilePath));
+            Assert.AreEqual(SkylineWindow.Document.PeptideTransitionGroupCount + 1, File.ReadAllLines(methodFilePath).Length); // 62 precursors and header
+            File.Delete(methodFilePath);    // Avoid leaving this where it will get overwritten
+        }
+
+        private void ExportScheduledMethodPrbbReport()
+        {
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
             RunUI(() => editReportListDlg.SelectView(REPORT_METHOD));
@@ -528,29 +676,6 @@ namespace TestPerf
                 linesMethod.Add(string.Format("{0},,,{1},{2},{3},{4}", parts[0], parts[1], parts[2], time - 2.5, time + 2.5));
             }
             File.WriteAllLines(GetTestPath(INSTRUMENT_METHOD + TextUtil.EXT_CSV), linesMethod);
-
-            RunUI(() => SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.schedule));
-            RunUI(() => SkylineWindow.SaveDocument());
-            // Digression to show removing light precursors
-            RunUI(() => Assert.AreEqual(62, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
-            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>
-            {
-                dlg.RefineLabelType = IsotopeLabelType.light;
-                dlg.OkDialog();
-            });
-            RunUI(() => Assert.AreEqual(31, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
-            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>
-            {
-                dlg.RefineLabelType = IsotopeLabelType.light;
-                dlg.AddLabelType = true;
-                dlg.OkDialog();
-            });
-            RunUI(() => Assert.AreEqual(62, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
-            // Revert with Unto to remove the audit log entries
-            RunUI(SkylineWindow.Undo);
-            RunUI(() => Assert.AreEqual(31, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
-            RunUI(SkylineWindow.Undo);
-            RunUI(() => Assert.AreEqual(62, SkylineWindow.DocumentUI.PeptideTransitionGroupCount));
         }
 
         private void ImportReplicates()
@@ -564,11 +689,23 @@ namespace TestPerf
                 });
             }
             Assert.IsNull(SkylineWindow.Document.MeasuredResults);
-
+            RunUI(()=>SkylineWindow.SaveDocument());
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             using (new WaitDocumentChange(null, true))
             {
-                RunUI(() => SetNamedPathSets(importResultsDlg, SAMPLES_DIR));
+                if (IsArdiaTest)
+                {
+                    var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
+                    RunUI(() => openDataSourceDialog.CurrentDirectory = ArdiaTestUtil.GetTestAccount().GetRootUrl());
+                    OpenFile(openDataSourceDialog, "Skyline");
+                    OpenFile(openDataSourceDialog, "PRM data");
+                    OpenFile(openDataSourceDialog, "Samples");
+                    OpenFile(openDataSourceDialog, SAMPLE_NAMES);
+                }
+                else
+                {
+                    RunUI(() => SetNamedPathSets(importResultsDlg, SAMPLES_DIR));
+                }
                 OkDialog(importResultsDlg, importResultsDlg.OkDialog);
             }
             Assert.IsNotNull(SkylineWindow.Document.MeasuredResults);
@@ -588,7 +725,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.Size = new Size(1276, 840));
             RestoreViewOnScreen(24);
             RunUI(SkylineWindow.SequenceTree.ScrollLeft);
-            PauseForScreenShot<SkylineWindow>("Skyline main window", 24);
+            PauseForScreenShot<SkylineWindow>("Skyline main window");
 
             RunUI(() =>
             {
@@ -598,7 +735,12 @@ namespace TestPerf
                 SkylineWindow.AutoZoomBestPeak();
             });
 
-            PauseForScreenShot<SkylineWindow>("Skyline main window - split graph", 25);
+            PauseForScreenShot<SkylineWindow>("Skyline main window - split graph");
+            if (IsCoverShotMode)
+            {
+                TakeCoverShot();
+                return;
+            }
 
             RunUI(() =>
             {
@@ -609,7 +751,7 @@ namespace TestPerf
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
             RunUI(SkylineWindow.SequenceTree.ScrollLeft);
 
-            PauseForScreenShot<SkylineWindow>("Skyline main window - normalized", 26);
+            PauseForScreenShot<SkylineWindow>("Skyline main window - normalized");
         }
 
         private void SetNamedPathSets(ImportResultsDlg importResultsDlg, string folderName)
@@ -633,7 +775,7 @@ namespace TestPerf
                 pickList.SetItemChecked(7, false);
                 pickList.AutoManageChildren = false; // TODO: Because calling SetItemChecked does not do this
             });
-            PauseForScreenShot<PopupPickList>("Transitions picklist", 27);
+            PauseForScreenShot<PopupPickList>("Transitions picklist");
             RunUI(pickList.OnOk);
             expectedTransitionCount -= 6;
             RunUI(() => Assert.AreEqual(expectedTransitionCount, SkylineWindow.DocumentUI.MoleculeTransitionCount));
@@ -651,11 +793,20 @@ namespace TestPerf
             SaveBackup("PRM_Picked");
 
             FindNode("EAGNINQSLLTLGR");
+            var tranIdentityPath = IdentityPath.ROOT;
             RunUI(() =>
             {
                 var selectedNode = SkylineWindow.SequenceTree.SelectedNode;
                 selectedNode.Nodes[0].Expand();
-                SkylineWindow.SequenceTree.SelectedPath = ((SrmTreeNode)selectedNode.Nodes[0].Nodes[6]).Path;
+                tranIdentityPath = ((SrmTreeNode)selectedNode.Nodes[0].Nodes[6]).Path;
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy));
+            });
+            RestoreViewOnScreen(25);
+            PauseForGraphScreenShot("Peak Areas - Replicate Comparison graph showing interference", SkylineWindow.GraphPeakArea);
+            RunUI(() =>
+            {
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
+                SkylineWindow.SequenceTree.SelectedPath = tranIdentityPath;
             });
             RunUI(SkylineWindow.EditDelete);
             expectedTransitionCount -= 2;
@@ -688,7 +839,7 @@ namespace TestPerf
                 foreach (DataGridViewRow row in documentGridForm.DataGridView.Rows)
                     AssertEx.Contains(row.Cells[quantColumn.Index].Value.ToString(), expectedPrefix);
             });
-            PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results view", 29);
+            PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results view");
 
             RunUI(() => documentGridForm.ChooseView(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification));
             WaitForConditionUI(() => documentGridForm.IsComplete && documentGridForm.DataGridView.RowCount == 31 && documentGridForm.DataGridView.ColumnCount == 9);
@@ -711,7 +862,7 @@ namespace TestPerf
                     Assert.AreEqual(appendixConcentrations[iRow], (double)documentGridForm.DataGridView.Rows[iRow].Cells[concentrationColumn.Index].Value);
             });
 
-            PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Quantification view - filled", 30);
+            PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Quantification view - filled");
 
             RunUI(() => documentGridForm.ChooseView(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results));
             WaitForConditionUI(() => documentGridForm.IsComplete && documentGridForm.DataGridView.RowCount == 279 && documentGridForm.DataGridView.ColumnCount == 7);
@@ -725,7 +876,7 @@ namespace TestPerf
                 documentGridForm.DataGridView.CurrentCell = documentGridForm.DataGridView.Rows[0].Cells[0];
             });
 
-            PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results view - calculated", 30);
+            PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results view - calculated");
             OkDialog(documentGridForm, () => SkylineWindow.ShowDocumentGrid(false));
         }
 
@@ -736,10 +887,10 @@ namespace TestPerf
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
 
             AddReplicateAnnotation(documentSettingsDlg, "Condition", AnnotationDef.AnnotationType.value_list,
-                conditionNames, 31);
+                conditionNames, true);
 
             AddReplicateAnnotation(documentSettingsDlg, "BioReplicate", AnnotationDef.AnnotationType.number,
-                null, 32);
+                null, true);
 
             RunUI(() =>
             {
@@ -747,7 +898,7 @@ namespace TestPerf
                 documentSettingsDlg.AnnotationsCheckedListBox.SetItemChecked(1, true);
             });
 
-            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form with MSstats annotations", 33);
+            PauseForScreenShot<DocumentSettingsDlg>("Annotation Settings form with MSstats annotations");
 
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
 
@@ -782,7 +933,7 @@ namespace TestPerf
             RunUI(() => documentGridForm.DataGridView.CurrentCell =
                 documentGridForm.DataGridView.Rows[rowCount - 1].Cells[cellCount - 1]);
 
-            PauseForScreenShot<DocumentGridForm>("Document Grid with replicate annotations", 34);
+            PauseForScreenShot<DocumentGridForm>("Document Grid with replicate annotations");
             OkDialog(documentGridForm, () => SkylineWindow.ShowDocumentGrid(false));
 
             RunUI(() =>
@@ -792,27 +943,35 @@ namespace TestPerf
             });
             SelectNode(SrmDocument.Level.Molecules, 0);
 
-            PauseForScreenShot("Peak Areas and RT Replicate Comparison graph metafiles", 35);
+            RestoreViewOnScreen(24);
+            var skylineSize = Size.Empty;
+            RunUIForScreenShot(() =>
+            {
+                skylineSize = SkylineWindow.Size;
+                SkylineWindow.Size = new Size(1399, 883);
+                SkylineWindow.ForceOnScreen();
+            });
+            PauseForGraphScreenShot("Peak Areas grouped", SkylineWindow.GraphPeakArea);
+            PauseForGraphScreenShot("Retention Times grouped", SkylineWindow.GraphRetentionTime);
+            RunUIForScreenShot(() => SkylineWindow.Size = skylineSize);
 
             SaveBackup("PRM_Annotated");
         }
 
-        private bool IsRecordMode { get; set; }
+        protected override bool IsRecordMode => false;
 
-        private double[] _g2mVsG1ExpectedValues =
+        private float[] _g2mVsG1ExpectedValues =
         {
-            1.5286469630745583, 4.8741132982321638, 5.1286240708373816, 222.57571290469059, 15.126911528599191,
-            9.9395636452638971, 6.7226217812200444, 3.1161290456155295, 1.8189607341782479, 2.0644594385791533,
-            3.7649084396237988, double.NaN, 6.4036330881755932, 4.2893196515692162, 1.6064068091869139, 
-            1.6279242168512782, 6.9216032397063252, 3.0280590759043315, double.NaN
+            1.39317822f, 4.608368f, 4.943386f, 22.3320484f, 15.2787361f, 9.21476f, 6.45845842f, 2.899078f, 1.79695535f,
+            2.031291f, 3.80708241f, 6.77203751f, 6.023097f, 4.32763624f, 1.62340987f, 1.63163662f, 6.36888456f,
+            2.99105954f, 2.07597923f
         };
 
-        private double[] _sVsG1ExpectedValues =
+        private float[] _sVsG1ExpectedValues =
         {
-            1.1419407670991968, 1.6314748321839396, 2.3479516230598838, 73.797435137111023, 4.8909495278818422,
-            3.481615683066742, 2.5340983622413926, 1.5713835038262798, 1.017217922772327, 1.4498342648347344,
-            1.6399900918403256, double.NaN, 2.9069057246796444, 1.5243589451007142, 0.71120569210287388, 
-            0.97698625825824836, 2.0368203476787818, 1.7926980750326083, 1.0616604140485391
+            1.0682888f, 1.59095418f, 2.26486182f, 8.523212f, 4.90076971f, 3.23356247f, 2.37735367f, 1.53841f,
+            1.01328349f, 1.41797793f, 1.648648f, 2.85256171f, 2.864974f, 1.62072313f, 0.7086786f, 0.9771881f,
+            1.9611131f, 1.810476f, 1.18064868f
         };
 
         private void GroupComparison()
@@ -825,12 +984,12 @@ namespace TestPerf
             const string identityAnnotation = "BioReplicate";
             const string comparisonName1 = "G2M-vs-G1";
             const string caseValue1 = "G2M";
-            AddGroupComparison(documentSettingsDlg, comparisonName1, controlAnnotation, controlValue, caseValue1, identityAnnotation, 35);
+            AddGroupComparison(documentSettingsDlg, comparisonName1, controlAnnotation, controlValue, caseValue1, identityAnnotation);
             const string comparisonName2 = "S-vs-G1";
             const string caseValue2 = "S";
-            AddGroupComparison(documentSettingsDlg, comparisonName2, controlAnnotation, controlValue, caseValue2, identityAnnotation, 36);
+            AddGroupComparison(documentSettingsDlg, comparisonName2, controlAnnotation, controlValue, caseValue2, identityAnnotation);
             RunUI(() => documentSettingsDlg.Height = 310);
-            PauseForScreenShot<DocumentSettingsDlg>("Document Settings", 37);
+            PauseForScreenShot<DocumentSettingsDlg>("Document Settings");
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             var docAfterComparison = WaitForDocumentChange(docBeforeComparison);
             var groupComparisonDefs = docAfterComparison.Settings.DataSettings.GroupComparisonDefs;
@@ -842,14 +1001,14 @@ namespace TestPerf
             WaitForConditionUI(() => 19 == foldChangeGrid1.DataboundGridControl.RowCount);
             VerifyFoldChangeValues(foldChangeGrid1, _g2mVsG1ExpectedValues, nameof(_g2mVsG1ExpectedValues));
             RunUI(() => foldChangeGrid1.Parent.Parent.Width = 383);
-            PauseForScreenShot<FoldChangeGrid>(comparisonName1 + ":Grid", 37);
+            PauseForScreenShot<FoldChangeGrid>(comparisonName1 + ":Grid");
             OkDialog(foldChangeGrid1, () => foldChangeGrid1.Close());
 
             var foldChangeGrid2 = ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName2));
             WaitForConditionUI(() => 19 == foldChangeGrid2.DataboundGridControl.RowCount);
             VerifyFoldChangeValues(foldChangeGrid2, _sVsG1ExpectedValues, nameof(_sVsG1ExpectedValues));
             RunUI(() => foldChangeGrid2.Parent.Parent.Width = 383);
-            PauseForScreenShot<FoldChangeGrid>(comparisonName2 + ":Grid", 37);
+            PauseForScreenShot<FoldChangeGrid>(comparisonName2 + ":Grid");
             OkDialog(foldChangeGrid2, () => foldChangeGrid2.Close());
 
             var foldChangeGridWithGraph = ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName1));
@@ -863,17 +1022,20 @@ namespace TestPerf
                 Assert.AreEqual(foldChangeGridWithGraph.DataboundGridControl.RowCount,
                     foldChangeGraph.ZedGraphControl.GraphPane.CurveList.First().Points.Count);
             });
-            PauseForScreenShot<FoldChangeBarGraph>(comparisonName1 + ":Graph metafile", 38);
+            PauseForGraphScreenShot<FoldChangeBarGraph>(comparisonName1 + ":Graph metafile");
 
+            RestoreViewOnScreen(39);
+            foldChangeGraph = WaitForOpenForm<FoldChangeBarGraph>();
             foldChangeGridWithGraph = WaitForOpenForm<FoldChangeGrid>();
+            WaitForConditionUI(() => foldChangeGridWithGraph.IsComplete);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
                     foldChangeGridWithGraph.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                Assert.IsNotNull(foldChangeResultColumn, "Could not find FoldChangeResultColumn");
                 foldChangeGridWithGraph.DataboundGridControl.DataGridView.Sort(foldChangeResultColumn, ListSortDirection.Ascending);
             });
-            RestoreViewOnScreen(39);
-            PauseForScreenShot<FoldChangeBarGraph>(comparisonName1 + ":Grid and Graph window", 39);
+            PauseForScreenShot(foldChangeGridWithGraph.Parent.Parent, comparisonName1 + ":Grid and Graph window");
 
             OkDialog(foldChangeGridWithGraph, () => foldChangeGridWithGraph.Close());
             OkDialog(foldChangeGraph, () => foldChangeGraph.Close());
@@ -892,31 +1054,30 @@ namespace TestPerf
         }
 
         private void AddGroupComparison(DocumentSettingsDlg documentSettingsDlg, string comparisonName,
-            string controlAnnotation, string controlValue, string caseValue, string identityAnnotation, int pageNum)
+            string controlAnnotation, string controlValue, string caseValue, string identityAnnotation)
         {
             var editGroupComparisonDlg = ShowDialog<EditGroupComparisonDlg>(documentSettingsDlg.AddGroupComparison);
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                Assert.IsTrue(editGroupComparisonDlg.ComboControlAnnotation.Items.Contains(controlAnnotation));
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = controlAnnotation;
+                editGroupComparisonDlg.ControlAnnotation = controlAnnotation;
             });
-            WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.Items.Contains(controlValue));
+            WaitForConditionUI(2000, () => editGroupComparisonDlg.ControlValueOptions.Contains(controlValue));
             RunUI(() =>
             {
-                editGroupComparisonDlg.ComboControlValue.SelectedItem = controlValue;
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = caseValue;
-                Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
-                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
-                Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
+                editGroupComparisonDlg.ControlValue = controlValue;
+                editGroupComparisonDlg.CaseValue= caseValue;
+                editGroupComparisonDlg.IdentityAnnotation = identityAnnotation;
                 editGroupComparisonDlg.NormalizeOption =
                     NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName("heavy"));
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 95.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
-                editGroupComparisonDlg.ShowAdvanced(true);
-                editGroupComparisonDlg.ComboSummaryMethod.SelectedItem = SummarizationMethod.MEDIANPOLISH;
+                // Original tutorial had this, but didn't explain it well, and it seemed to add
+                // unnecessary complexity.
+                // editGroupComparisonDlg.ShowAdvanced(true);
+                // editGroupComparisonDlg.ComboSummaryMethod.SelectedItem = SummarizationMethod.MEDIANPOLISH;
             });
-            PauseForScreenShot<EditGroupComparisonDlg>("Edit Group Comparison", pageNum);
+            PauseForScreenShot<EditGroupComparisonDlg>("Edit Group Comparison");
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
         }
 
@@ -940,7 +1101,7 @@ namespace TestPerf
                 viewEditor.ViewEditorWidgets.OfType<PivotReplicateAndIsotopeLabelWidget>().First().SetPivotReplicate(true);
                 // viewEditor.ChooseColumnsTab.ScrollTreeToTop();
             });
-            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form", 40);
+            PauseForScreenShot<ViewEditor.ChooseColumnsView>("Edit Report form");
 
             var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
             WaitForConditionUI(() => previewReportDlg.IsComplete);
@@ -975,17 +1136,17 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
-        private void VerifyFoldChangeValues(FoldChangeGrid foldChangeGrid, double[] expectedValues, string variableName)
+        private void VerifyFoldChangeValues(FoldChangeGrid foldChangeGrid, float[] expectedValues, string variableName)
         {
             RunUI(() =>
             {
                 var foldChangeRows = foldChangeGrid.FoldChangeBindingSource.GetBindingListSource().Cast<RowItem>()
-                    .Select(rowItem => (FoldChangeBindingSource.FoldChangeRow)rowItem.Value).ToList();
-                double[] actualValues = foldChangeRows.Select(foldChangeResult => foldChangeResult.FoldChangeResult.FoldChange).ToArray();
+                    .Select(rowItem => (FoldChangeRow)rowItem.Value).ToList();
+                float[] actualValues = foldChangeRows.Select(foldChangeResult => (float) foldChangeResult.FoldChangeResult.FoldChange).ToArray();
                 if (IsRecordMode)
                 {
-                    var commaSeparatedValues = string.Join(",", actualValues.Select(DoubleToString));
-                    Console.Out.WriteLine("private double[] {0} = {{ {1} }};", variableName, commaSeparatedValues);
+                    var commaSeparatedValues = string.Join(",", actualValues.Select(FloatToString));
+                    Console.Out.WriteLine("private float[] {0} = {{ {1} }};", variableName, commaSeparatedValues);
                 }
                 else
                 {
@@ -994,24 +1155,24 @@ namespace TestPerf
             });
         }
 
-        private static string DoubleToString(double value)
+        private static string FloatToString(float value)
         {
-            if (Equals(value, double.NaN))
+            if (Equals(value, float.NaN))
             {
-                return "double.NaN";
+                return "float.NaN";
             }
 
-            if (Equals(value, double.PositiveInfinity))
+            if (Equals(value, float.PositiveInfinity))
             {
-                return "double.PositiveInfinity";
+                return "float.PositiveInfinity";
             }
 
-            if (Equals(value, double.NegativeInfinity))
+            if (Equals(value, float.NegativeInfinity))
             {
-                return "double.NegativeInfinity";
+                return "float.NegativeInfinity";
             }
 
-            return value.ToString("R", CultureInfo.InvariantCulture);
+            return value.ToString("R", CultureInfo.InvariantCulture) + 'f';
         }
     }
 }

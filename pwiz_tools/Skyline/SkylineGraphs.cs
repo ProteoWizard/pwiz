@@ -16,6 +16,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using DigitalRune.Windows.Docking;
+using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
+using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.CommonMsData;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Controls.Clustering;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.Graphs.Calibration;
+using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
+using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,36 +53,14 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
-using pwiz.Common.Collections;
-using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.AuditLog;
-using pwiz.Skyline.Controls.Clustering;
-using pwiz.Skyline.Controls.Graphs.Calibration;
-using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
-using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.RetentionTimes;
-using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
+using System.Xml;
+using pwiz.Skyline.Controls.Lists;
+using pwiz.Skyline.Model.Lib;
 using ZedGraph;
-using pwiz.Skyline.Util.Extensions;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
+using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
 
 namespace pwiz.Skyline
 {
@@ -78,7 +86,6 @@ namespace pwiz.Skyline
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
-        private ChromFileInfoId _alignToFile;
         private bool _alignToPrediction;
 
         public RTGraphController RTGraphController
@@ -311,9 +318,9 @@ namespace pwiz.Skyline
                     }
                     catch (Exception x)
                     {
-                        var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, layoutFile),
-                                                                            Resources.SkylineWindow_UpdateGraphUI_Rename_or_delete_this_file_to_restore_the_default_layout, 
-                                                                            Resources.SkylineWindow_UpdateGraphUI_Skyline_may_also_need_to_be_restarted);
+                        var message = TextUtil.LineSeparate(string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, layoutFile),
+                                                                            SkylineResources.SkylineWindow_UpdateGraphUI_Rename_or_delete_this_file_to_restore_the_default_layout, 
+                                                                            SkylineResources.SkylineWindow_UpdateGraphUI_Skyline_may_also_need_to_be_restarted);
                         throw new IOException(message, x);
                     }
                 }
@@ -469,7 +476,6 @@ namespace pwiz.Skyline
 
         private void RemoveGraphChromFromList(GraphChromatogram graphChrom)
         {
-            _listGraphChrom.Remove(graphChrom);
             DestroyGraphChrom(graphChrom);
         }
 
@@ -478,6 +484,10 @@ namespace pwiz.Skyline
         {
             using (new DockPanelLayoutLock(dockPanel, true))
             {
+                if (Program.SkylineOffscreen)
+                {
+                    layoutStream = MoveLayoutOffScreen(layoutStream);
+                }
                 LoadLayoutLocked(layoutStream);
             }
         }
@@ -516,17 +526,53 @@ namespace pwiz.Skyline
 
             DestroyImmediateWindow();
             HideFindResults(true);
-            foreach (GraphChromatogram graphChrom in _listGraphChrom)
+            foreach (var graphChrom in _listGraphChrom.ToArray())
                 DestroyGraphChrom(graphChrom);
-            _listGraphChrom.Clear();
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
             // SequenceTree resizes often prior to display, so we must restore its scrolling after
             // all resizing has occurred
             if (SequenceTree != null)
+            {
                 SequenceTree.UpdateTopNode();
+                SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
+            }
 
             EnsureFloatingWindowsVisible();
+        }
+
+        /// <summary>
+        /// Change the "Bounds" attribute of the "FloatingWindow" elements in the .sky.view file
+        /// to a point offscreen.
+        /// </summary>
+        private static MemoryStream MoveLayoutOffScreen(Stream layoutStream)
+        {
+            const string attrBounds = @"Bounds";
+            var xd = new XmlDocument();
+            xd.Load(layoutStream);
+            var rectangleConverter = new RectangleConverter();
+            foreach (XmlElement el in xd.SelectNodes(@"//FloatingWindow")!)
+            {
+                var strBounds = el.GetAttribute(attrBounds);
+                if (!string.IsNullOrEmpty(strBounds))
+                {
+                    if (rectangleConverter.ConvertFromInvariantString(el.GetAttribute(attrBounds)) 
+                        is Rectangle rectBounds)
+                    {
+                        var newBounds = new Rectangle(GetOffscreenPoint(), rectBounds.Size);
+                        el.SetAttribute(attrBounds, rectangleConverter.ConvertToInvariantString(newBounds));
+                    }
+                }
+            }
+
+            var memoryStream = new MemoryStream();
+            var xmlTextWriter = new XmlTextWriter(memoryStream, new UTF8Encoding(false)) // UTF-8 without BOM
+            {
+                Formatting = Formatting.Indented
+            };
+            xd.Save(xmlTextWriter);
+            memoryStream.Position = 0;
+            return memoryStream;
         }
 
         public void DestroyAllChromatogramsGraph()
@@ -622,20 +668,22 @@ namespace pwiz.Skyline
                 return _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
             }
 
-            if (splitLength == 3 && graphSummaryTypeName == typeof(GraphSummary).ToString())
+            if (splitLength >= 3 && graphSummaryTypeName == typeof(GraphSummary).ToString())
             {
                 var type = Helpers.ParseEnum(graphTypeName, GraphTypeSummary.invalid);
 
+                GraphSummary graphSummary = null;
                 if (controllerTypeName == typeof(RTGraphController).Name)
-                    return _listGraphRetentionTime.FirstOrDefault(g => g.Type == type) ?? CreateGraphRetentionTime(type);
+                    graphSummary = _listGraphRetentionTime.FirstOrDefault(g => g.Type == type) ?? CreateGraphRetentionTime(type);
                 else if (controllerTypeName == typeof(AreaGraphController).Name)
-                    return _listGraphPeakArea.FirstOrDefault(g => g.Type == type) ?? CreateGraphPeakArea(type);
+                    graphSummary = _listGraphPeakArea.FirstOrDefault(g => g.Type == type) ?? CreateGraphPeakArea(type);
                 else if (controllerTypeName == typeof(MassErrorGraphController).Name)
-                    return _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
+                    graphSummary = _listGraphMassError.FirstOrDefault(g => g.Type == type) ?? CreateGraphMassError(type);
                 else if (controllerTypeName == typeof(DetectionsGraphController).Name)
-                    return _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
-                else
-                    return null;
+                    graphSummary = _listGraphDetections.FirstOrDefault(g => g.Type == type) ?? CreateGraphDetections(type);
+                if (graphSummary != null && splitLength > 3)
+                    graphSummary.LabelLayoutString = Uri.UnescapeDataString(split[3]);
+                return graphSummary;
             }
 
             if (Equals(persistentString, typeof(ResultsGridForm).ToString()) || Equals(persistentString, typeof (LiveResultsGrid).ToString()))
@@ -657,6 +705,10 @@ namespace pwiz.Skyline
             if (Equals(persistentString, typeof(AuditLogForm).ToString()))
             {
                 return _auditLogForm ?? CreateAuditLogForm();
+            }
+            if (persistentString.StartsWith(typeof(ListGridForm).ToString()))
+            {
+                return CreateListForm(ListGridForm.GetListName(persistentString));
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {
@@ -721,6 +773,8 @@ namespace pwiz.Skyline
                 listUpdateGraphs.Add(_calibrationForm);
 
             UpdateGraphPanes(listUpdateGraphs);
+            // make sure the Volcano Plot is updated as well
+            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(form => form.QueueUpdateGraph());
         }
 
         private void UpdateGraphPanes(ICollection<IUpdatable> graphPanes)
@@ -784,29 +838,15 @@ namespace pwiz.Skyline
                 if (InvokeRequired)
                 {
                     throw new InvalidOperationException(
-                        Resources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
+                        SkylineResources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
-                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending);
-            }
-        }
-
-        public ChromFileInfoId AlignToFile
-        {
-            get { return _alignToFile; }
-            set 
-            { 
-                if (ReferenceEquals(value, AlignToFile))
-                {
-                    return;
-                }
-                _alignToFile = value;
-                UpdateGraphPanes();
+                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending) || ProductionFacility.DEFAULT.IsWaiting();
             }
         }
 
         public bool AlignToRtPrediction
         {
-            get { return null == AlignToFile && _alignToPrediction; }
+            get { return _alignToPrediction; }
             set
             {
                 if (value == AlignToRtPrediction)
@@ -814,30 +854,15 @@ namespace pwiz.Skyline
                     return;
                 }
                 _alignToPrediction = value;
-                if (_alignToPrediction)
-                {
-                    _alignToFile = null;
-                }
                 UpdateGraphPanes();
             }
         }
 
         public GraphValues.IRetentionTimeTransformOp GetRetentionTimeTransformOperation()
         {
-            if (null != AlignToFile)
-            {
-                return GraphValues.AlignToFileOp.GetAlignmentToFile(AlignToFile, Document.Settings);
-            }
             if (AlignToRtPrediction)
             {
-                // Only align to regressions that are auto-calculated.  Otherwise,
-                // conversion will be the same for all replicates, making this just
-                // a linear unit conversion
-                var predictRT = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
-                if (predictRT != null && predictRT.IsAutoCalculated)
-                {
-                    return new GraphValues.RegressionUnconversion(predictRT);
-                }
+                return new GraphValues.RetentionTimeAlignmentTransformOp(Document.Settings);
             }
             return null;
         }
@@ -1190,8 +1215,8 @@ namespace pwiz.Skyline
             // Need to test small mol
             if (isProteomic && control?.ControlType == SpectrumControlType.LibraryMatch)
             {
-                prositLibMatchItem.Checked = Settings.Default.Prosit;
-                menuStrip.Items.Insert(iInsert++, prositLibMatchItem);
+                koinaLibMatchItem.Checked = Settings.Default.Koina;
+                menuStrip.Items.Insert(iInsert++, koinaLibMatchItem);
                 mirrorMenuItem.Checked = Settings.Default.LibMatchMirror;
                 menuStrip.Items.Insert(iInsert++, mirrorMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
@@ -1574,6 +1599,10 @@ namespace pwiz.Skyline
             ChromatogramContextMenu.BuildChromatogramMenu(zedGraphControl, paneKey, menuStrip, chromFileInfoId);
         }
 
+        private void AddRelativeAbundanceFormattingForm(ToolStrip menuStrip, int iInsert)
+        {
+            ChromatogramContextMenu.AddRelativeAbundanceFormattingMenu(menuStrip, iInsert);
+        }
         private void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
             ChromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
@@ -1600,6 +1629,12 @@ namespace pwiz.Skyline
         public void ShowOriginalPeak(bool show)
         {
             Settings.Default.ShowOriginalPeak = show;
+            UpdateChromGraphs();
+        }
+
+        public void ShowExemplaryPeak(bool show)
+        {
+            Settings.Default.ShowExemplaryPeakBounds = show;
             UpdateChromGraphs();
         }
 
@@ -1713,6 +1748,17 @@ namespace pwiz.Skyline
             SetDisplayTypeChrom(DisplayTypeChrom.products);
         }
 
+        public void ShowRelativeAbundanceFormatting()
+        {
+            var summary = _listGraphPeakArea.FirstOrDefault(graph => graph.Type == GraphTypeSummary.abundance);
+            if (summary != null)
+            {
+                if (summary.TryGetGraphPane<SummaryRelativeAbundanceGraphPane>(out var graphPane))
+                {
+                    graphPane.ShowFormattingDialog();
+                }
+            }
+        }
         public void ShowAllTransitions()
         {
             SetDisplayTypeChrom(DisplayTypeChrom.all);
@@ -1928,6 +1974,8 @@ namespace pwiz.Skyline
 
         private void DestroyGraphChrom(GraphChromatogram graphChrom)
         {
+            _listGraphChrom.Remove(graphChrom);
+
             // Detach event handlers and dispose
             graphChrom.FormClosed -= graphChromatogram_FormClosed;
             graphChrom.PickedPeak -= graphChromatogram_PickedPeak;
@@ -2012,7 +2060,7 @@ namespace pwiz.Skyline
                 graphChrom.LockZoom();
             try
             {
-                ModifyDocument(string.Format(Resources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime), 
+                ModifyDocument(string.Format(SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime), 
                     doc => PickPeak(doc, e), docPair =>
                     {
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
@@ -2046,7 +2094,7 @@ namespace pwiz.Skyline
                 if (e.ScanIndex == -1)
                 {
                     MessageDlg.Show(this, 
-                        string.Format(Resources.SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_, dataFile));
+                        string.Format(SkylineResources.SkylineWindow_graphChromatogram_ClickedChromatogram_The_raw_file_must_be_re_imported_in_order_to_show_full_scans___0_, dataFile));
                     return;
                 }
             }
@@ -2136,17 +2184,17 @@ namespace pwiz.Skyline
                 {
                     ChangedPeakBoundsEventArgs e = eMulti.Changes[0];
                     if (Equals(e.StartTime, e.EndTime))
-                        message = Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak;
+                        message = SkylineResources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak;
                     else if (e.ChangeType == PeakBoundsChangeType.both)
-                        message = string.Format(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_, e.StartTime, e.EndTime); 
+                        message = string.Format(SkylineResources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_, e.StartTime, e.EndTime); 
                     else if (e.ChangeType == PeakBoundsChangeType.start)
-                        message = string.Format(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_, e.StartTime); 
+                        message = string.Format(SkylineResources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_, e.StartTime); 
                     else
-                        message = string.Format(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_, e.EndTime); 
+                        message = string.Format(SkylineResources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_, e.EndTime); 
                 }
                 else
                 {
-                    message = Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks;
+                    message = SkylineResources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks;
                 }
                 ModifyDocument(message,
                     doc => ChangePeakBounds(doc, eMulti.Changes.SelectMany(change => GetSynchronizedPeakBoundChanges(doc, change, true))),
@@ -2346,7 +2394,7 @@ namespace pwiz.Skyline
             var thisEnd = change.EndTime.MeasuredTime;
             if (transformOp != null)
             {
-                transformOp.TryGetRegressionFunction(thisFile, out var regressionThis);
+                transformOp.TryGetRegressionFunction(change.FilePath, out var regressionThis);
                 if (regressionThis != null)
                 {
                     thisStart = regressionThis.GetY(thisStart);
@@ -2377,9 +2425,9 @@ namespace pwiz.Skyline
                     var start = thisStart;
                     var end = thisEnd;
 
-                    if (transformOp != null && !ReferenceEquals(AlignToFile, info.FileId))
+                    if (transformOp != null)
                     {
-                        transformOp.TryGetRegressionFunction(info.FileId, out var regression);
+                        transformOp.TryGetRegressionFunction(info.FilePath, out var regression);
                         if (regression != null)
                         {
                             start = regression.GetX(thisStart);
@@ -2820,6 +2868,7 @@ namespace pwiz.Skyline
                     {
                         linearRegressionContextMenuItem,
                         kernelDensityEstimationContextMenuItem,
+                        logRegressionContextMenuItem,
                         loessContextMenuItem
                     });
                 }
@@ -2951,7 +3000,7 @@ namespace pwiz.Skyline
                     AddScopeContextMenu(menuStrip, iInsert++);
                     InsertAlignmentMenuItems(menuStrip.Items, null, iInsert);
                 }
-                if (graphType == GraphTypeSummary.peptide || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
+                if (graphType == GraphTypeSummary.peptide ||  graphType == GraphTypeSummary.abundance || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
                 {
                     menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                     peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
@@ -3025,6 +3074,33 @@ namespace pwiz.Skyline
                 });
             }
         }
+
+        private void AddTargetsContextMenu(ToolStrip menuStrip, int iInsert)
+        {
+            abundanceTargetsMenuItem.DropDownItems.Clear();
+            abundanceTargetsMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+            {
+                abundanceTargetsPeptidesMenuItem,
+                abundanceTargetsProteinsMenuItem
+            });
+            abundanceTargetsPeptidesMenuItem.Checked = !Settings.Default.AreaProteinTargets;
+            abundanceTargetsProteinsMenuItem.Checked = Settings.Default.AreaProteinTargets;
+            menuStrip.Items.Insert(iInsert, abundanceTargetsMenuItem);
+        }
+
+        private void AddExcludeTargetsContextMenu(ToolStrip menuStrip, int iInsert)
+        {
+            excludeTargetsStandardsMenuItem.Checked = Settings.Default.ExcludeStandardsFromAbundanceGraph;
+            excludeTargetsPeptideListMenuItem.Checked = Settings.Default.ExcludePeptideListsFromAbundanceGraph;
+            excludeTargetsMenuItem.DropDownItems.Clear();
+            excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsStandardsMenuItem);
+            if (!IsSmallMoleculeOrMixedUI)
+            {
+                excludeTargetsMenuItem.DropDownItems.Add(excludeTargetsPeptideListMenuItem);
+            }
+            menuStrip.Items.Insert(iInsert, excludeTargetsMenuItem);
+        }
+
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var types = Settings.Default.RTGraphTypes;
@@ -3105,7 +3181,7 @@ namespace pwiz.Skyline
                 RTGraphController.GraphType == GraphTypeSummary.score_to_run_regression)
             {
                 using (var dlg = new MultiButtonMsgDlg(
-                    Resources.SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_,
+                    SkylineResources.SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_,
                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                 {
                     if (dlg.ShowDialog(this) != DialogResult.Yes)
@@ -3298,7 +3374,7 @@ namespace pwiz.Skyline
                     regression = dlg.Regression;
                     listRegression.Add(regression);
 
-                    ModifyDocument(string.Format(Resources.SkylineWindow_CreateRegression_Set_regression__0__, regression!.Name),
+                    ModifyDocument(string.Format(SkylineResources.SkylineWindow_CreateRegression_Set_regression__0__, regression!.Name),
                                    doc =>
                                    doc.ChangeSettings(
                                        doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))), AuditLogEntry.SettingsLogFunction);
@@ -3317,28 +3393,35 @@ namespace pwiz.Skyline
                 chooseCalculatorContextMenuItem.DropDownItems.RemoveAt(0);
 
             //If no calculator has been picked for use in the graph, get the best one.
-            var autoItem = new ToolStripMenuItem(Resources.SkylineWindow_SetupCalculatorChooser_Auto, null, delegate { ChooseCalculator(string.Empty); })
-                               {
-                                   Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
-                               };
+            var autoItem = new ToolStripMenuItem(SkylineResources.SkylineWindow_SetupCalculatorChooser_Auto, null,
+                delegate { ChooseCalculator(string.Empty); })
+            {
+                Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
+            };
             chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
 
             int i = 0;
-            foreach (var calculator in Settings.Default.RTScoreCalculatorList)
+            var document = DocumentUI;
+            foreach (var optionVariable in RtCalculatorOption.GetOptions(document))
             {
-                string calculatorName = calculator.Name;
-                var menuItem = new ToolStripMenuItem(calculatorName, null, delegate { ChooseCalculator(calculatorName);})
+                var option = optionVariable;
+                var menuItem = new ToolStripMenuItem(option.DisplayName, null, delegate { ChooseCalculator(option); })
                 {
-                    Checked = Equals(calculatorName, Settings.Default.RTCalculatorName)
+                    Checked = Equals(option, Settings.Default.RtCalculatorOption)
                 };
                 chooseCalculatorContextMenuItem.DropDownItems.Insert(i++, menuItem);
             }
         }
 
-        public void ChooseCalculator(string calculatorName)
+        public void ChooseCalculator(RtCalculatorOption option)
         {
-            Settings.Default.RTCalculatorName = calculatorName;
+            Settings.Default.RtCalculatorOption = option;
             UpdateRetentionTimeGraph();
+        }
+
+        public void ChooseCalculator(string irtCalc)
+        {
+            ChooseCalculator(new RtCalculatorOption.Irt(irtCalc));
         }
 
         private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)
@@ -3370,7 +3453,7 @@ namespace pwiz.Skyline
                     if (regressionRTDoc != null && Equals(calcOld.Name, regressionRTDoc.Calculator.Name) &&
                         !Equals(calcNew, regressionRTDoc.Calculator))
                     {
-                        ModifyDocument(string.Format(Resources.SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator, calcNew.Name), doc =>
+                        ModifyDocument(string.Format(SkylineResources.SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator, calcNew.Name), doc =>
                             doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
                                 predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))), AuditLogEntry.SettingsLogFunction);
                     }
@@ -3390,7 +3473,7 @@ namespace pwiz.Skyline
             foreach (var outlier in outliers)
                 outlierIds.Add(outlier.Id.GlobalIndex);
 
-            ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
+            ModifyDocument(SkylineResources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
                 doc => (SrmDocument) doc.RemoveAll(outlierIds),
                 docPair => AuditLogEntry.CreateCountChangeEntry(MessageType.removed_rt_outlier,
                     MessageType.removed_rt_outliers, docPair.OldDocumentType, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
@@ -3420,42 +3503,15 @@ namespace pwiz.Skyline
             var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
             if (predictRT != null && predictRT.IsAutoCalculated)
             {
-                var menuItem = new ToolStripMenuItem(string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null, 
-                    (sender, eventArgs)=>AlignToRtPrediction=!AlignToRtPrediction)
-                    {
-                        Checked = AlignToRtPrediction,
-                    };
+                var menuItem = new ToolStripMenuItem(
+                    string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null,
+                    (sender, eventArgs) => AlignToRtPrediction = !AlignToRtPrediction)
+                {
+                    Checked = AlignToRtPrediction,
+                };
                 items.Insert(iInsert++, menuItem);
             }
-            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
-                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
-            {
-                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
-                {
-                    var chromFileInfo = chromatogramSet.MSDataFileInfos
-                                                       .FirstOrDefault(
-                                                           chromFileInfoMatch =>
-                                                           ReferenceEquals(chromFileInfoMatch.FileId, chromFileInfoId));
-                    if (null == chromFileInfo)
-                    {
-                        continue;
-                    }
-                    string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
-                    var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
-                    var alignToFileItem = new ToolStripMenuItem(menuItemText);
-                    if (ReferenceEquals(chromFileInfoId, AlignToFile))
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => AlignToFile = null;
-                        alignToFileItem.Checked = true;
-                    }
-                    else
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => AlignToFile = chromFileInfoId;
-                        alignToFileItem.Checked = false;
-                    }
-                    items.Insert(iInsert++, alignToFileItem);
-                }
-            }
+
             return iInsert;
         }
 
@@ -3672,6 +3728,7 @@ namespace pwiz.Skyline
                 {
                     areaReplicateComparisonContextMenuItem,
                     areaPeptideComparisonContextMenuItem,
+                    areaRelativeAbundanceContextMenuItem,
                     areaCVHistogramContextMenuItem,
                     areaCVHistogram2DContextMenuItem
                 });
@@ -3696,10 +3753,24 @@ namespace pwiz.Skyline
             var isHistogram = graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d;
 
             if (isHistogram)
+            {
                 EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
-            else
+            }
+            else if(graphType != GraphTypeSummary.abundance)
+            {
                 AddTransitionContextMenu(menuStrip, iInsert++);
-
+            }
+            else
+            {
+                // Protein level comparisons are likely not meaningful for small molecule documents,
+                // so only offer peptide level comparison.
+                // CONSIDER support protein level in mixed cases?
+                if (!IsSmallMoleculeOrMixedUI)
+                {
+                    AddTargetsContextMenu(menuStrip, iInsert++);
+                }
+                AddExcludeTargetsContextMenu(menuStrip, iInsert++);
+            }
             if (graphType == GraphTypeSummary.replicate)
             {
                 iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
@@ -3736,8 +3807,8 @@ namespace pwiz.Skyline
                     {
                         showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
                         showLibraryPeakAreaContextMenuItem.Text = expectedVisible == AreaExpectedValue.library
-                                                                      ? Resources.SkylineWindow_BuildAreaGraphMenu_Show_Library
-                                                                      : Resources.SkylineWindow_BuildAreaGraphMenu_Show_Expected;
+                                                                      ? SkylineResources.SkylineWindow_BuildAreaGraphMenu_Show_Library
+                                                                      : SkylineResources.SkylineWindow_BuildAreaGraphMenu_Show_Expected;
                         menuStrip.Items.Insert(iInsert++, showLibraryPeakAreaContextMenuItem);
                     }
 
@@ -3757,8 +3828,11 @@ namespace pwiz.Skyline
             else if (graphType == GraphTypeSummary.peptide)
             {
                 AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
                 AddScopeContextMenu(menuStrip, iInsert++);
+            }
+            if (graphType == GraphTypeSummary.abundance || graphType == GraphTypeSummary.peptide)
+            {
+                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
             }
 
             if (isHistogram)
@@ -3851,26 +3925,54 @@ namespace pwiz.Skyline
             }
             else
             {
-                if (graphType == GraphTypeSummary.peptide || !string.IsNullOrEmpty(Settings.Default.GroupByReplicateAnnotation))
+                if (graphType == GraphTypeSummary.peptide || graphType == GraphTypeSummary.abundance || !string.IsNullOrEmpty(Settings.Default.GroupByReplicateAnnotation))
                 {
                     menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                     peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
                 }
 
-                menuStrip.Items.Insert(iInsert++, peptideLogScaleContextMenuItem);
-                peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
+                if (graphType != GraphTypeSummary.abundance)
+                {
+                    menuStrip.Items.Insert(iInsert++, peptideLogScaleContextMenuItem);
+                    peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
+                }
+                else
+                {
+                    menuStrip.Items.Insert(iInsert++, relativeAbundanceLogScaleContextMenuItem);
+                    relativeAbundanceLogScaleContextMenuItem.Checked = set.RelativeAbundanceLogScale;
+                }
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-
-                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
+                if (graphType == GraphTypeSummary.abundance)
+                {
+                    menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels, null, OnLabelOverlapClick)
+                    {
+                        Checked = Settings.Default.GroupComparisonAvoidLabelOverlap
+                    });
+                    if (Settings.Default.GroupComparisonAvoidLabelOverlap && 
+                        graphSummary.GraphPaneFromPoint(mousePt) is SummaryRelativeAbundanceGraphPane abundancePane)
+                    {
+                        var suspendResumeText = Settings.Default.GroupComparisonSuspendLabelLayout
+                            ? GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout
+                            : GraphsResources.FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout;
+                        menuStrip.Items.Insert(iInsert++, new ToolStripMenuItem(suspendResumeText, null, abundancePane.OnSuspendLayout));
+                    }
+                }
+                else
+                {
+                    synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+                    menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
+                }
             }
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
-            menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
+            if(graphType != GraphTypeSummary.abundance)
+                menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
+            else
+                AddRelativeAbundanceFormattingForm(menuStrip, iInsert++);
             menuStrip.Items.Insert(iInsert, toolStripSeparator28);
 
-            if (!isHistogram)
+            if (!isHistogram && graphType != GraphTypeSummary.abundance)
             {
                 var isotopeLabelType = graphSummary.GraphPaneFromPoint(mousePt) != null
                     ? graphSummary.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
@@ -3885,6 +3987,11 @@ namespace pwiz.Skyline
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
+        }
+
+        private void OnLabelOverlapClick(object o, EventArgs eventArgs)
+        {
+            Settings.Default.GroupComparisonAvoidLabelOverlap = !Settings.Default.GroupComparisonAvoidLabelOverlap;
         }
 
         private ToolStripItem MakeNormalizeToMenuItem(NormalizeOption normalizeOption, bool isChecked)
@@ -4099,32 +4206,26 @@ namespace pwiz.Skyline
         {
             ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
-            if (groupByValues.Length == 0)
-                currentGroupBy = null;
 
-            // If not grouped by an annotation, show the order-by menuitem
-            if (currentGroupBy == null)
+            var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
+                value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
+            menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
+            replicateOrderContextMenuItem.DropDownItems.Clear();
+            replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
-                    value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
-                menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-                replicateOrderContextMenuItem.DropDownItems.Clear();
-                replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        replicateOrderDocumentContextMenuItem,
-                        replicateOrderAcqTimeContextMenuItem
-                    });
-                replicateOrderDocumentContextMenuItem.Checked
-                    = null == orderByReplicateAnnotationDef &&
-                      SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
-                replicateOrderAcqTimeContextMenuItem.Checked
-                    = null == orderByReplicateAnnotationDef &&
-                      SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
-                foreach (var replicateValue in groupByValues)
-                {
-                    replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
-                        replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
-                }
+                replicateOrderDocumentContextMenuItem,
+                replicateOrderAcqTimeContextMenuItem
+            });
+            replicateOrderDocumentContextMenuItem.Checked
+                = null == orderByReplicateAnnotationDef &&
+                  SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
+            replicateOrderAcqTimeContextMenuItem.Checked
+                = null == orderByReplicateAnnotationDef &&
+                  SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
+            foreach (var replicateValue in groupByValues)
+            {
+                replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
+                    replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
             }
             
             if (groupByValues.Length > 0)
@@ -4194,7 +4295,7 @@ namespace pwiz.Skyline
 
             var nodeCount = 0;
             // Remove everything not in the set
-            ModifyDocument(Resources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc =>
+            ModifyDocument(SkylineResources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc =>
             {
                 var setRemove = AreaCVRefinementData.IndicesToRemove(doc, ids);
                 nodeCount = setRemove.Count;
@@ -4247,7 +4348,7 @@ namespace pwiz.Skyline
             }
 
             areaCVtargetsToolStripMenuItem.Checked = pointsType == PointsTypePeakArea.targets;
-            areaCVtargetsToolStripMenuItem.Text = shouldUseQValues ? string.Format(Resources.SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR, Settings.Default.AreaCVQValueCutoff * 100.0) : Resources.SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets;
+            areaCVtargetsToolStripMenuItem.Text = shouldUseQValues ? string.Format(SkylineResources.SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR, Settings.Default.AreaCVQValueCutoff * 100.0) : SkylineResources.SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets;
             areaCVdecoysToolStripMenuItem.Visible = decoys;
             areaCVdecoysToolStripMenuItem.Checked = pointsType == PointsTypePeakArea.decoys;
         }
@@ -4257,6 +4358,7 @@ namespace pwiz.Skyline
             var list = _listGraphPeakArea;
             areaReplicateComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.replicate);
             areaPeptideComparisonContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.peptide);
+            areaRelativeAbundanceContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.abundance);
             areaCVHistogramContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DContextMenuItem.Checked = GraphChecked(list, types, GraphTypeSummary.histogram2d);
         }
@@ -4333,6 +4435,11 @@ namespace pwiz.Skyline
             ShowPeakAreaPeptideGraph();
         }
 
+        private void areaRelativeAbundanceMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPeakAreaRelativeAbundanceGraph();
+        }
+
         private void areaCVLogScaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
             EnableAreaCVLogScale(!Settings.Default.AreaCVLogScale);
@@ -4348,16 +4455,6 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaNormalizeOption = normalizeOption;
             SequenceTree.NormalizeOption = normalizeOption;
-            if (AreaNormalizeOption == NormalizeOption.TOTAL ||
-                AreaNormalizeOption == NormalizeOption.MAXIMUM ||
-                AreaNormalizeOption == NormalizeOption.GLOBAL_STANDARDS ||
-                AreaNormalizeOption.IsRatioToLabel)
-            {
-                // Do not let the user combine Log with Ratios because
-                // the log scale does not work well with numbers that are less than 1.
-                // (this should be fixed)
-                Settings.Default.AreaLogScale = false;
-            }
             UpdatePeakAreaGraph();
         }
 
@@ -4391,6 +4488,13 @@ namespace pwiz.Skyline
             ShowGraphPeakArea(true, GraphTypeSummary.peptide);
             UpdatePeakAreaGraph();
             SynchronizeSummaryZooming();
+        }
+
+        public void ShowPeakAreaRelativeAbundanceGraph()
+        {
+            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance);
+            ShowGraphPeakArea(true, GraphTypeSummary.abundance);
+            UpdatePeakAreaGraph();
         }
 
         private void areaCVHistogramToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -4531,14 +4635,59 @@ namespace pwiz.Skyline
         public void ShowPeptideLogScale(bool isChecked)
         {
             Settings.Default.AreaLogScale = isChecked ;
-            if (isChecked)
+            if (isChecked && !AreaNormalizeOption.AllowLogScale)
+            {
                 AreaNormalizeOption = NormalizeOption.NONE;
+            }
             UpdateSummaryGraphs();
+        }
+
+        private void relativeAbundanceLogScaleContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRelativeAbundanceLogScale(relativeAbundanceLogScaleContextMenuItem.Checked);
+        }
+
+        public void ShowRelativeAbundanceLogScale(bool isChecked)
+        {
+            Settings.Default.RelativeAbundanceLogScale = isChecked ;
+            UpdateRelativeAbundanceGraphs();
         }
 
         private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowCVValues(peptideCvsContextMenuItem.Checked);
+        }
+
+        private void abundanceTargetsProteinsMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaProteinTargets(true);
+        }
+
+        private void abundanceTargetsPeptidesMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaProteinTargets(false);
+        }
+
+        public void SetAreaProteinTargets(bool areaProteinTargets)
+        {
+            Settings.Default.AreaProteinTargets = areaProteinTargets;
+            UpdateSummaryGraphs();
+        }
+        private void excludeTargetsPeptideListMenuItem_Click(object sender, EventArgs e)
+        {
+            SetExcludePeptideListsFromAbundanceGraph(!Settings.Default.ExcludePeptideListsFromAbundanceGraph);
+        }
+
+        public void SetExcludePeptideListsFromAbundanceGraph(bool excludePeptideLists)
+        {
+            Settings.Default.ExcludePeptideListsFromAbundanceGraph = excludePeptideLists;
+            UpdateSummaryGraphs();
+        }
+
+        private void excludeTargetsStandardsMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ExcludeStandardsFromAbundanceGraph = !Settings.Default.ExcludeStandardsFromAbundanceGraph;
+            UpdateSummaryGraphs();
         }
 
         public void ShowCVValues(bool isChecked)
@@ -4557,6 +4706,7 @@ namespace pwiz.Skyline
         {
             switch (ContextMenuGraphSummary.Type)
             {
+                case GraphTypeSummary.abundance:
                 case GraphTypeSummary.replicate:
                 case GraphTypeSummary.peptide:
                     ShowAreaPropertyDlg();
@@ -4631,6 +4781,10 @@ namespace pwiz.Skyline
             _listGraphPeakArea.ForEach(g => g.UpdateUI());
         }
 
+        public void UpdateRelativeAbundanceGraphs()
+        {
+            _listGraphPeakArea.FindAll(g => g.Type == GraphTypeSummary.abundance).ForEach(g => g.UpdateUI());
+        }
         private void UpdateSummaryGraphs()
         {
             UpdateRetentionTimeGraph();

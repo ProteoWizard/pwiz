@@ -283,7 +283,7 @@
     <value>1</value>
   </data>
   <data name="flowLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -373,7 +373,7 @@
     <value>btnShare</value>
   </data>
   <data name="openViewEditorContextMenuItem.Text" xml:space="preserve">
-    <value>打开报告编辑器...</value>
+    <value>打开报告编辑器…</value>
   </data>
   <data name="&gt;&gt;btnShare.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -433,7 +433,7 @@
     <value>3</value>
   </data>
   <data name="chooseViewsControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="btnCopy.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -472,7 +472,7 @@
     <value>flowLayoutPanel1</value>
   </data>
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 48</value>

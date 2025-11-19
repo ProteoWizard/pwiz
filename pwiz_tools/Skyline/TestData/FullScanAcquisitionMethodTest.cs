@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestData
         public void TestTargetedAcquisitionMethod()
         {
             var doc = GetTestDocument(FullScanAcquisitionMethod.Targeted, null);
-            var spectrumFilter = new SpectrumFilter(doc, MsDataFilePath.EMPTY, null);
+            var spectrumFilter = new SpectrumFilter(doc);
             VerifyFilterPairs(spectrumFilter, 280.66, "ELVIS", "LIVES");
             VerifyFilterPairs(spectrumFilter, 280.18, "QLVIS");
             VerifyFilterPairs(spectrumFilter, 280.19, "KLVIS");
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestData
                 {FullScanAcquisitionMethod.PRM, FullScanAcquisitionMethod.SureQuant})
             {
                 var doc = GetTestDocument(acquisitionMethod, null);
-                var spectrumFilter = new SpectrumFilter(doc, MsDataFilePath.EMPTY, null);
+                var spectrumFilter = new SpectrumFilter(doc);
                 VerifyFilterPairs(spectrumFilter, 280.66, "ELVIS", "LIVES");
                 VerifyFilterPairs(spectrumFilter, 280.18, "QLVIS", "KLVIS");
                 VerifyFilterPairs(spectrumFilter, 280.19, "QLVIS", "KLVIS");

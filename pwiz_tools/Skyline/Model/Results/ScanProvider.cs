@@ -22,10 +22,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Chemistry;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -66,6 +67,7 @@ namespace pwiz.Skyline.Model.Results
         bool IsWatersSonarData { get; } // Returns true if data presents as ion mobility but is actually filtered on precursor m/z
         Tuple<int, int> SonarMzToBinRange(double mz, double tolerance); // Maps an mz value into the Waters SONAR bin space
         double? SonarBinToPrecursorMz(int bin); // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
+        double? CCSFromIonMobility(double ionMobility, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
         eIonMobilityUnits IonMobilityUnits { get; } 
         bool Adopt(IScanProvider scanProvider);
@@ -81,6 +83,7 @@ namespace pwiz.Skyline.Model.Results
         private MeasuredResults _measuredResults;
         // And afterward only a weak reference to ensure we are caching values for the same results
         private WeakReference<MeasuredResults> _measuredResultsReference;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
             IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults) :
@@ -108,6 +111,13 @@ namespace pwiz.Skyline.Model.Results
 
         public Tuple<int,int> SonarMzToBinRange(double mz, double tolerance) {  return _dataFile?.SonarMzToBinRange(mz, tolerance); }
         public double? SonarBinToPrecursorMz(int bin) { return _dataFile?.SonarBinToPrecursorMz(bin); } // Maps a Waters SONAR bin into precursor mz space - returns average of the m/z range for the bin
+
+        public double? CCSFromIonMobility(double ionMobilityValue, double mz, int charge)
+        {
+            if (_dataFile == null)
+                return null;
+            return _dataFile.CCSFromIonMobility(ionMobilityValue, mz, charge);
+        }
 
         public double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge)
         {
@@ -205,9 +215,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 var scanIdText = _msDataFileScanIds.GetMsDataFileSpectrumId(internalScanIndex);
                 dataFileSpectrumStartIndex = GetDataFile(ignoreZeroIntensityPoints).GetSpectrumIndex(scanIdText);
-                // TODO(brendanx): Improve this error message post-UI freeze
-//                if (dataFileSpectrumStartIndex == -1)
-//                    throw new ArgumentException(string.Format("The stored scan ID {0} was not found in the file {1}.", scanIdText, DataFilePath));
+                if (dataFileSpectrumStartIndex == -1)
+                    throw new ArgumentException(string.Format(ResultsResources.ScanProvider_GetMsDataFileSpectraWithCommonRetentionTime_The_scan_ID___0___could_not_be_found_in_the_file___1___, scanIdText, DataFilePath.RemoveLegacyParameters()));
             }
 
             MsDataSpectrum currentSpectrum;
@@ -266,7 +275,7 @@ namespace pwiz.Skyline.Model.Results
                     var lockMassParameters = DataFilePath.GetLockMassParameters();
                     if (dataFilePath == null)
                         throw new FileNotFoundException(string.Format(
-                            Resources
+                            ResultsResources
                                 .ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_,
                             DataFilePath));
                     int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
@@ -279,13 +288,24 @@ namespace pwiz.Skyline.Model.Results
                         combineIonMobilitySpectra: _cachedFile?.HasCombinedIonMobility ?? false,
                         requireVendorCentroidedMS1: centroidedMs1 ?? _cachedFile?.UsedMs1Centroids ?? false,
                         requireVendorCentroidedMS2: centroidedMs2 ?? _cachedFile?.UsedMs2Centroids ?? false,
+                        passEntireDiaPasefFrame: _cachedFile?.PassEntireDiaPasefFrame ?? false,
                         ignoreZeroIntensityPoints: ignoreZeroIntensityPoints);
                 }
                 else
                 {
-                    dataFile = DataFilePath.OpenMsDataFile(simAsSpectra, preferOnlyMs1,
-                        centroidedMs1 ?? _cachedFile?.UsedMs1Centroids ?? false, 
-                        centroidedMs2 ?? _cachedFile?.UsedMs2Centroids ?? false, ignoreZeroIntensityPoints);
+                    string docDir = Path.GetDirectoryName(DocFilePath) ?? Directory.GetCurrentDirectory();
+                    var openMsDataFileParams =
+                        new OpenMsDataFileParams(_cancellationTokenSource.Token)
+                        {
+                            SimAsSpectra = simAsSpectra,
+                            PreferOnlyMs1 = preferOnlyMs1,
+                            CentroidMs1 = _cachedFile?.UsedMs1Centroids ?? false,
+                            CentroidMs2 = _cachedFile?.UsedMs2Centroids ?? false,
+                            PassEntireDiaPasefFrame = _cachedFile?.PassEntireDiaPasefFrame ?? false,
+                            IgnoreZeroIntensityPoints = ignoreZeroIntensityPoints,
+                            DownloadPath = docDir
+                        };
+                    dataFile = DataFilePath.OpenMsDataFile(openMsDataFileParams);
                 }
                 if (centroidedMs1 == null && centroidedMs2 == null)
                     _dataFile = dataFile;
@@ -335,6 +355,7 @@ namespace pwiz.Skyline.Model.Results
                     _dataFileCentroidedMap[key]?.Dispose();
                 _dataFile = null;
                 _dataFileCentroidedMap.Clear();
+                _cancellationTokenSource.Cancel();
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -359,8 +359,8 @@
     <comment>Example: TIC Normalized Peak Area</comment>
   </data>
   <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
-	  <value>Median Normalized {0}</value>
-      <comment>Example: Median Normalized Peak Area</comment>
+    <value>Median Normalized {0}</value>
+    <comment>Example: Median Normalized Peak Area</comment>
   </data>
   <data name="EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve" xml:space="preserve">
     <value>Batch Calibration Curve</value>

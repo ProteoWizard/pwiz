@@ -1,4 +1,4 @@
-﻿ /*
+ /*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -232,7 +232,7 @@ using SharedBatch.Properties;
                         {
                             var line = streamReader.ReadLine();
                             if (line == null) continue;
-                            if (startBlockRegex.IsMatch(line)) // add check for 0 len
+                            if (startBlockRegex.IsMatch(line) || _uiBuffer.Count == 0) // add check for 0 len
                                 _uiBuffer.Add(line);
                             else
                                 _uiBuffer[_uiBuffer.Count - 1] += Environment.NewLine + line;
@@ -353,7 +353,7 @@ using SharedBatch.Properties;
                     using (var fileStream = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.Read))
                     {
                         using (var streamWriter =
-                            new StreamWriter(fileStream, Encoding.UTF8, StreamDefaultBufferSize, true))
+                            new StreamWriter(fileStream, new UTF8Encoding(false), StreamDefaultBufferSize, true)) // UTF-8 without BOM
                         {
                             if (_logBuffer != null && _logBuffer.Length > 0)
                             {

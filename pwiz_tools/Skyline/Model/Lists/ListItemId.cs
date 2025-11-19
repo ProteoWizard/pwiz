@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,7 +23,7 @@ namespace pwiz.Skyline.Model.Lists
     /// <summary>
     /// Identifies a row in a <see cref="ListData"/>, and enables following the row when other rows are added and removed.
     /// </summary>
-    public struct ListItemId : IComparable<ListItemId>, IComparable
+    public struct ListItemId : IComparable<ListItemId>, IComparable, IEquatable<ListItemId>
     {
         public ListItemId(int intValue) : this()
         {
@@ -47,6 +47,21 @@ namespace pwiz.Skyline.Model.Lists
         public override string ToString()
         {
             return @"#Row " + IntValue + @"#";
+        }
+
+        public bool Equals(ListItemId other)
+        {
+            return IntValue == other.IntValue;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ListItemId other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return IntValue;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinmet>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,10 +22,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
 
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.FileUI
             else if (!helper.ValidateDecimalTextBox(textLockmassTolerance, LockMassParameters.LOCKMASS_TOLERANCE_MIN, LockMassParameters.LOCKMASS_TOLERANCE_MAX, out lockmassTolerance))
                 return;
 
-            Settings.Default.LockmassParameters = LockMassParameters = new LockMassParameters(lockmassPositive, lockmassNegative, lockmassTolerance);
+            Settings.Default.LockmassParameters = LockMassParameters = LockMassParameters.Create(lockmassPositive, lockmassNegative, lockmassTolerance);
             DialogResult = DialogResult.OK;
         }
 

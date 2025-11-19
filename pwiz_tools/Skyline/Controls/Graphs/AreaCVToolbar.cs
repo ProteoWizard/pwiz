@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -143,11 +143,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var document = _graphSummary.DocumentUIContainer.DocumentUI;
             var normalizeOption = AreaGraphController.AreaCVNormalizeOption;
-            return info.Cache.IsValidFor(document, new AreaCVGraphData.AreaCVGraphSettings(document.Settings, _graphSummary.Type)) &&
-                info.Cache.Get(ReplicateValue.FromPersistedString(document.Settings, AreaGraphController.GroupByGroup),
-                    AreaGraphController.GroupByAnnotation,
-                    AreaGraphController.MinimumDetections,
-                    normalizeOption) != null;
+            var currentData = info.CurrentData;
+            if (currentData == null || !currentData.IsValid)
+            {
+                return false;
+            }
+
+            var settings = new AreaCVGraphData.AreaCVGraphSettings(document.Settings, _graphSummary.Type);
+            return ReferenceEquals(currentData.Document, document) && Equals(settings, currentData.GraphSettings);
         }
 
         private void toolStripProperties_Click(object sender, EventArgs e)

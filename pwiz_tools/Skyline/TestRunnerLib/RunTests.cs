@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -33,6 +33,7 @@ using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using TestRunnerLib.PInvoke;
 using Exception = System.Exception;
 
 namespace TestRunnerLib
@@ -50,8 +51,10 @@ namespace TestRunnerLib
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
+        public bool DoNotLeakTest; // If true, test is too lengthy to run multiple iterations for leak checks (we invert this in perftest runs)
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
         public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
+        public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -73,6 +76,12 @@ namespace TestRunnerLib
 
             var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
             DoNotRunInNightly = noNightlyTestAttr != null;
+
+            var noNightlyLeakTestAttr = RunTests.GetAttribute(testMethod, "NoLeakTestingAttribute");
+            DoNotLeakTest = noNightlyLeakTestAttr != null; // Running this multiple times would take too long
+
+            var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
+            SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;
 
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
@@ -168,7 +177,7 @@ namespace TestRunnerLib
             bool retrydatadownloads,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
-            int pauseStartingPage = 1,
+            int pauseStartingScreenshot = 1,
             bool useVendorReaders = true,
             int timeoutMultiplier = 1,
             string results = null,
@@ -217,7 +226,7 @@ namespace TestRunnerLib
             Skyline.Set("NoSaveSettings", true);
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
             Skyline.Set("PauseSeconds", pauseSeconds);
-            Skyline.Set("PauseStartingPage", pauseStartingPage);
+            Skyline.Set("PauseStartingScreenshot", pauseStartingScreenshot);
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
             Skyline.Set("Log", (Action<string>)(s => Log(s)));
             Skyline.Run("Init");
@@ -269,7 +278,7 @@ namespace TestRunnerLib
 
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
-            TeamCityStartTest(test);
+            TeamCityStartTest(test, pass);
 
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
@@ -345,6 +354,7 @@ namespace TestRunnerLib
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+                TestContext.Properties["TestPass"] = pass.ToString();
                 if (IsParallelClient)
                 {
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
@@ -371,27 +381,37 @@ namespace TestRunnerLib
                     CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
                 }
 
-                // Run the test and time it.
-                if (test.TestInitialize != null)
-                    test.TestInitialize.Invoke(testObject, null);
-
-                if (CheckCrtLeaks > 0)
+                if (test.SkipTestUntil == null || DateTime.UtcNow >= test.SkipTestUntil)
                 {
-                    // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
-                    // If we ever want to enable this functionality again, we need to find another .dll
-                    // to put this in.
-                    //CrtDebugHeap.Checkpoint();
-                }
-                test.TestMethod.Invoke(testObject, null);
-                if (CheckCrtLeaks > 0)
-                {
-                    //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
-                }
+                    if (test.SkipTestUntil != null)
+                        Log("Note: SkipTestUntil attribute is present, but the skip date has been reached so the test will run.");
 
-                // Need to set the test outcome to passed or it won't get set which impacts cleanup
-                TestContext.HasPassed = true;
-                if (test.TestCleanup != null)
-                    test.TestCleanup.Invoke(testObject, null);
+                    // Run the test and time it.
+                    if (test.TestInitialize != null)
+                        test.TestInitialize.Invoke(testObject, null);
+
+                    if (CheckCrtLeaks > 0)
+                    {
+                        // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
+                        // If we ever want to enable this functionality again, we need to find another .dll
+                        // to put this in.
+                        //CrtDebugHeap.Checkpoint();
+                    }
+                    test.TestMethod.Invoke(testObject, null);
+                    if (CheckCrtLeaks > 0)
+                    {
+                        //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
+                    }
+
+                    // Need to set the test outcome to passed or it won't get set which impacts cleanup
+                    TestContext.HasPassed = true;
+                    if (test.TestCleanup != null)
+                        test.TestCleanup.Invoke(testObject, null);
+                }
+                else if (test.SkipTestUntil != null)
+                {
+                    Log("Skipping due to SkipTestUntil attribute (until {0})", test.SkipTestUntil.Value.ToShortDateString());
+                }
 
                 // Check for any left over files
                 var allEntries = CleanUpTestDir(tmpTestDir, true);
@@ -415,12 +435,12 @@ namespace TestRunnerLib
                 {
                     if (Directory.Exists(tmpTestDir))
                     {
-                        Directory.Delete(tmpTestDir, true);
+                        FileLockingProcessFinder.DeleteDirectoryWithFileLockingDetails(tmpTestDir);
                     }
                 }
-                catch (Exception)
+                catch (Exception deleteException)
                 {
-                    throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"");
+                    throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"", deleteException);
                 }
                 // Get rid of the parent directory we created as testdir/"~&TMP ^"
                 try
@@ -457,9 +477,9 @@ namespace TestRunnerLib
             CommittedMemoryBytes = committedBytes;
             var previousPrivateBytes = TotalMemoryBytes;
             TotalMemoryBytes = _process.PrivateMemorySize64;
-            LastTotalHandleCount = GetHandleCount(HandleType.total);
-            LastUserHandleCount = GetHandleCount(HandleType.user);
-            LastGdiHandleCount = GetHandleCount(HandleType.gdi);
+            LastTotalHandleCount = GetHandleCount(User32Test.HandleType.total);
+            LastUserHandleCount = GetHandleCount(User32Test.HandleType.user);
+            LastGdiHandleCount = GetHandleCount(User32Test.HandleType.gdi);
 
             if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
@@ -536,7 +556,7 @@ namespace TestRunnerLib
                     Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
                 }
 
-                TeamCityFinishTest(test);
+                TeamCityFinishTest(test, pass);
 
                 return true;
             }
@@ -559,7 +579,7 @@ namespace TestRunnerLib
             else
                 ErrorCounts[failureInfo] = 1;
 
-            TeamCityFinishTest(test, message + '\n' + stackTrace);
+            TeamCityFinishTest(test, pass, message + '\n' + stackTrace);
 
             Log(ReportSystemHeaps
                     ? "{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n"
@@ -622,7 +642,7 @@ namespace TestRunnerLib
             // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
             // But our test system wants a clean finish
             // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
-            var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), @"~SK_MSAmanda" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
+            var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), "~SK" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
             try
             {
                 if (Directory.Exists(msAmandaTmpDir))
@@ -980,17 +1000,12 @@ namespace TestRunnerLib
             }
         }
 
-        [DllImport("User32")]
-        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
-
-        private enum HandleType { total = -1, gdi = 0, user = 1 }
-
-        private int GetHandleCount(HandleType handleType)
+        private int GetHandleCount(User32Test.HandleType handleType)
         {
-            if (handleType == HandleType.total)
+            if (handleType == User32Test.HandleType.total)
                 return _process.HandleCount;
 
-            return GetGuiResources(_process.Handle, (int)handleType);
+            return _process.GetGuiResources(handleType);
         }
 
         private static void Try<TEx>(Action action, int loopCount, bool throwOnFailure = true, int milliseconds = 500) 
@@ -1029,22 +1044,45 @@ namespace TestRunnerLib
         {
             lock (_logLock)
             {
-                Console.Write(info, args);
-                Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
-                if (_log != null)
-                {
-                    _log.Write(info, args);
-                    _log.Flush();
-                }
+                Log(_log, info, args);
             }
         }
 
-        public void TeamCityStartTest(TestInfo test)
+        [StringFormatMethod("info")]
+
+        // N.B. not thread safe, use the non-static version (which calls this) from any RunTests object
+        public static void Log(StreamWriter log, string info, params object[] args) 
+        {
+            Console.Write(info, args);
+            Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
+            if (log != null)
+            {
+                log.Write(info, args);
+                log.Flush();
+            }
+        }
+
+        public string TeamCityPassName(int pass)
+        {
+            return pass switch
+            {
+                0 => "Pass0_french_mzML_no_internet",
+                1 => "Pass1_leak_detection",
+                _ => "Pass2_general"
+            };
+        }
+
+        public string TeamCityTestName(TestInfo test, int pass)
+        {
+            return $@"{Path.GetFileNameWithoutExtension(test.TestMethod.Module.Name)}.{TeamCityPassName(pass)}.{test.TestMethod.Name}-{Language.TwoLetterISOLanguageName}";
+        }
+
+        public void TeamCityStartTest(TestInfo test, int pass)
         {
             if (!TeamCityTestDecoration)
                 return;
 
-            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", TeamCityTestName(test, pass));
             Console.WriteLine(msg);
             Console.Out.Flush();
             if (IsParallelClient)
@@ -1054,7 +1092,7 @@ namespace TestRunnerLib
             }
         }
 
-        public void TeamCityFinishTest(TestInfo test, string errorMessage = null)
+        public void TeamCityFinishTest(TestInfo test, int pass, string errorMessage = null)
         {
             if (!TeamCityTestDecoration)
                 return;
@@ -1069,14 +1107,14 @@ namespace TestRunnerLib
                 tcMessage.Replace("\r", "|r");
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
-                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", TeamCityTestName(test, pass), tcMessage);
                 Console.WriteLine(failMsg);
                 if (IsParallelClient)
                     _log.WriteLine(failMsg);
                 // ReSharper restore LocalizableElement
             }
 
-            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
+            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", TeamCityTestName(test, pass), LastTestDuration);
             Console.WriteLine(msg);
             Console.Out.Flush();
             if (IsParallelClient)
@@ -1192,16 +1230,26 @@ namespace TestRunnerLib
                 yield return dockerWorkerName;
         }
 
-        public static void SendDockerKill(string workerNames = null)
+        public static void KillParallelWorkers(int hostWorkerPid, string workerNames = null)
         {
             workerNames ??= string.Join(" ", GetDockerWorkerNames());
+
+            try
+            {
+                if (hostWorkerPid > 0)
+                    Process.GetProcessById(hostWorkerPid).Kill();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(@"Failed to kill host worker process: " + ex.Message);
+            }
 
             Console.WriteLine(@"Sending docker kill command to all workers.");
             Console.WriteLine(@$"docker kill {workerNames}");
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
-            Process.Start(psi);
+            Process.Start(psi)?.WaitForExit();
         }
     }
 }

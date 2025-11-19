@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
 using SkylineNightly.Properties;
 
@@ -29,6 +30,9 @@ namespace SkylineNightly
 {
     public partial class SkylineNightly : Form
     {
+        private const string REG_FILESYSTEM_KEY = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
+        private const string REG_LONGPATHS_ENABLED = @"LongPathsEnabled";
+
         public static readonly Nightly.RunMode[] RunModes = 
             { Nightly.RunMode.trunk, Nightly.RunMode.perf, Nightly.RunMode.release, Nightly.RunMode.stress, Nightly.RunMode.integration, Nightly.RunMode.release_perf, Nightly.RunMode.integration_perf };
 
@@ -133,6 +137,9 @@ namespace SkylineNightly
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
+
+                    // Registry setting LongPathsEnabled here for python to install pip and configure packages required to run AlphaPeptDeep
+                    Registry.SetValue(REG_FILESYSTEM_KEY, REG_LONGPATHS_ENABLED, 1);
                 }
             }
             }

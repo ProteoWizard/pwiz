@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -31,9 +30,9 @@ using NHibernate.Exceptions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.ChromLib.Data;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -47,6 +46,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public const string EXT_CACHE = ".clc";
 
         private ChromatogramLibrarySourceInfo[] _librarySourceFiles;
+        private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private ChromatogramLibraryIrt[] _libraryIrts;
 
         public ChromatogramLibrary(ChromatogramLibrarySpec chromatogramLibrarySpec) : base(chromatogramLibrarySpec)
@@ -248,16 +248,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override LibraryFiles LibraryFiles
         {
-            get
-            {
-                return new LibraryFiles
-                {
-                    FilePaths = from sourceFile in _librarySourceFiles
-                                let fileName = sourceFile.FilePath
-                                where fileName != null
-                                select fileName
-                };
-            }
+            get { return _libraryFiles;}
         }
 
         public override int? FileCount
@@ -267,34 +258,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         private int FindSource(MsDataFileUri filePath)
         {
-            if (filePath == null)
-            {
-                return -1;
-            }
-            string filePathToString = filePath.ToString();
-            // First look for an exact path match
-            int i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.FilePath));
-            // filePath.ToString may include decorators e.g. "C:\\data\\mydata.raw?centroid_ms1=true", try unadorned name ("mydata.raw")
-            if (i == -1)
-                i = _librarySourceFiles.IndexOf(info => Equals(filePath.GetFileName(), info.FilePath));
-            // Or a straight basename match, which we sometimes use internally
-            if (i == -1)
-                i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.BaseName));
-            // NOTE: We don't expect multi-part wiff files to appear in a library
-            if (i == -1 && null == filePath.GetSampleName())
-            {
-                try
-                {
-                    // Failing an exact path match, look for a basename match
-                    string baseName = filePath.GetFileNameWithoutExtension();
-                    i = _librarySourceFiles.IndexOf(info => MeasuredResults.IsBaseNameMatch(baseName, info.BaseName));
-                }
-                catch (ArgumentException)
-                {
-                    // Handle: Illegal characters in path
-                }
-            }
-            return i;
+            return _libraryFiles.FindIndexOf(filePath);
         }
         
         public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
@@ -424,7 +388,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         private bool Load(ILoadMonitor loader)
         {
-            ProgressStatus status = new ProgressStatus(string.Format(Resources.ChromatogramLibrary_Load_Loading__0_, Name));
+            ProgressStatus status = new ProgressStatus(string.Format(ChromLibResources.ChromatogramLibrary_Load_Loading__0_, Name));
             loader.UpdateProgress(status);
             if (LoadFromCache(loader, status))
             {
@@ -599,14 +563,14 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                                                                           instrumentAnalyzer, instrumentDetector));
                     }
                     _librarySourceFiles = sampleFiles.ToArray();
-
+                    _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
                     loader.UpdateProgress(status.Complete());
                     return true;
                 }
             }
             catch (Exception e)
             {
-                Trace.TraceWarning(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
+                Messages.WriteAsyncUserMessage(ChromLibResources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
                 return false;
             }
         }
@@ -614,7 +578,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
         {
             int i = FindEntry(key);
-            int j = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
+            int j = FindSource(filePath);
             if (i != -1 && j != -1)
             {
                 retentionTimes = _libraryEntries[i].RetentionTimesByFileId.GetTimes(_librarySourceFiles[j].Id);
@@ -626,7 +590,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
-            int j = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
+            int j = FindSource(filePath);
             if (j != -1)
             {
                 var source = _librarySourceFiles[j];
@@ -655,6 +619,21 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
         {
             return TryGetRetentionTimes(MsDataFileUri.Parse(_librarySourceFiles[fileIndex].FilePath), out retentionTimes);
+        }
+
+        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? fileIndex)
+        {
+            int iFile = FindSource(MsDataFileUri.Parse(filePath));
+            if (iFile < 0)
+            {
+                return Array.Empty<double>();
+            }
+            var times = new List<double[]>();
+            foreach (var item in LibraryEntriesWithSequences(peptideSequences))
+            {
+                times.Add(item.RetentionTimesByFileId.GetTimes(_librarySourceFiles[iFile].Id));
+            }
+            return times.SelectMany(array => array);
         }
 
         public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
@@ -727,7 +706,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning(Resources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
+                Messages.WriteAsyncUserMessage(ChromLibResources.ChromatogramLibrary_LoadFromCache_Exception_reading_cache__0_, exception);
                 return false;
             }
         }
@@ -1008,7 +987,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 int version = PrimitiveArrays.ReadOneValue<int>(_stream);
                 if (version > CURRENT_VERSION || version < MIN_READABLE_VERSION)
                 {
-                    throw new InvalidDataException(string.Format(Resources.Serializer_ReadHeader_Unsupported_file_version__0_, version));
+                    throw new InvalidDataException(string.Format(ChromLibResources.Serializer_ReadHeader_Unsupported_file_version__0_, version));
                 }
                 _locationEntries = PrimitiveArrays.ReadOneValue<long>(_stream);
                 _library.PanoramaServer = ReadString(_stream);
@@ -1021,6 +1000,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     sampleFiles.Add(ChromatogramLibrarySourceInfo.Read(_stream));
                 }
                 _library._librarySourceFiles = sampleFiles.ToArray();
+                _library._libraryFiles = new LibraryFiles(sampleFiles.Select(file => file.FilePath));
                 _locationEntries = PrimitiveArrays.ReadOneValue<long>(_stream);
             }
 

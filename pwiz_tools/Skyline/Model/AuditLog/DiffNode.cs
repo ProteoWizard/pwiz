@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -390,19 +390,19 @@ namespace pwiz.Skyline.Model.AuditLog
 
     public class DiffTree
     {
-        public DiffTree(DiffNode root, DateTime? timeStamp = null)
+        public DiffTree(DiffNode root)
         {
             Root = root;
-            TimeStamp = timeStamp ?? DateTime.UtcNow;
+            TimeStamp = AuditLogEntry.Now;
         }
 
-        public static DiffTree FromEnumerator(IEnumerator<DiffNode> treeEnumerator, DateTime? timeStamp = null)
+        public static DiffTree FromEnumerator(IEnumerator<DiffNode> treeEnumerator)
         {
             DiffNode current = null;
             while (treeEnumerator.MoveNext())
                 current = treeEnumerator.Current;
 
-            return new DiffTree(current, timeStamp ?? DateTime.UtcNow);
+            return new DiffTree(current);
         }
 
         public DiffNode Root { get; private set; }

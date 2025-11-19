@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,6 +24,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -37,7 +39,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// A window that progressively displays chromatogram data during file import.
     /// </summary>
-    public partial class AllChromatogramsGraph : FormEx
+    public partial class AllChromatogramsGraph : FormEx, FileProgressControl.IStateProvider
     {
         private readonly Stopwatch _stopwatch;
         private int _selected = -1;
@@ -159,6 +161,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ElapsedTimer_Tick(object sender, EventArgs e)
         {
+            if (IsProgressFrozen())
+                return;
+
             // Update timer and overall progress bar.
             // ReSharper disable LocalizableElement
             lblDuration.Text = _stopwatch.Elapsed.ToString(@"hh\:mm\:ss");
@@ -351,7 +356,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             progressBarTotal.Visible = false;
             btnCancel.Visible = false;
-            btnHide.Text = Resources.AllChromatogramsGraph_Finish_Close;
+            btnHide.Text = GraphsResources.AllChromatogramsGraph_Finish_Close;
         }
 
         public bool HasErrors
@@ -376,8 +381,34 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Display chromatogram data. 
         /// </summary>
-        /// <param name="status"></param>
+        /// <param name="status">The <see cref="MultiProgressStatus"/> to update the UI to.</param>
         public void UpdateStatus(MultiProgressStatus status)
+        {
+            lock (_missedProgressStatusList)
+            {
+                // If a freeze percent is set, freeze once all status is 
+                if (IsProgressFrozen(status))
+                {
+                    // Play this back later when progress is unfrozen
+                    _missedProgressStatusList.Add(status);
+                    lblDuration.Text = _elapsedTimeAtFreeze;
+                    return;
+                }
+                if (_missedProgressStatusList.Count > 0)
+                {
+                    // Play the missed progress before the current status
+                    foreach (var multiProgressStatus in _missedProgressStatusList)
+                    {
+                        UpdateStatusInternal(multiProgressStatus);
+                    }
+                    _missedProgressStatusList.Clear();
+                }
+            }
+
+            UpdateStatusInternal(status);
+        }
+
+        private void UpdateStatusInternal(MultiProgressStatus status)
         {
             // Update overall progress bar.
             if (_partialProgressList.Count == 0)
@@ -463,7 +494,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Finished)
             {
                 btnCancel.Visible = true;
-                btnHide.Text = Resources.AllChromatogramsGraph_UpdateStatus_Hide;
+                btnHide.Text = GraphsResources.AllChromatogramsGraph_UpdateStatus_Hide;
                 progressBarTotal.Visible = true;
                 _stopwatch.Start();
                 elapsedTimer.Start();
@@ -499,7 +530,7 @@ namespace pwiz.Skyline.Controls.Graphs
             bool first = true;
             var width = flowFileStatus.Width - 2 - // Avoid clipping the cancel/retry button when we need a vertical scrollbar
                         (flowFileStatus.VerticalScroll.Visible || 
-                         status.ProgressList.Count > (panelFileList.Height / (new FileProgressControl()).Height)  // If scrollbar isn't visible already, it's about to be
+                         status.ProgressList.Count > (panelFileList.Height / new FileProgressControl(this).Height)  // If scrollbar isn't visible already, it's about to be
                             ? SystemInformation.VerticalScrollBarWidth
                             : 0);
             List<FileProgressControl> controlsToAdd = new List<FileProgressControl>();
@@ -511,7 +542,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 // Create a progress control for new file.
-                progressControl = new FileProgressControl
+                progressControl = new FileProgressControl(this)
                 {
                     Number = flowFileStatus.Controls.Count + controlsToAdd.Count + 1,
                     Width = width,
@@ -578,7 +609,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Add this file back into the chromatogram set for each of its replicates.
-            ModifyDocument(Resources.AllChromatogramsGraph_Retry_Retry_import_results, monitor =>
+            ModifyDocument(GraphsResources.AllChromatogramsGraph_Retry_Retry_import_results, monitor =>
             {
                 Program.MainWindow.ModifyDocumentNoUndo(doc =>
                     {
@@ -592,25 +623,28 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ModifyDocument(string message, Action<SrmSettingsChangeMonitor> modifyAction)
         {
-            using (var longWaitDlg = new LongWaitDlg(Program.MainWindow))
+            try
             {
+                using var longWaitDlg = new LongWaitDlg(Program.MainWindow);
                 longWaitDlg.Text = Text; // Same as dialog box
                 longWaitDlg.Message = message;
                 longWaitDlg.ProgressValue = 0;
-                try
+                longWaitDlg.PerformWork(this, 800, progressMonitor =>
                 {
-                    longWaitDlg.PerformWork(this, 800, progressMonitor =>
+                    using (var settingsChangeMonitor =
+                           new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
                     {
-                        using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, message, Program.MainWindow))
-                        {
-                            modifyAction(settingsChangeMonitor);
-                        }
-                    });
-                }
-                catch (OperationCanceledException)
-                {
-                    // SrmSettingsChangeMonitor can throw OperationCancelledException without LongWaitDlg knowing about it.
-                }
+                        modifyAction(settingsChangeMonitor);
+                    }
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                // SrmSettingsChangeMonitor can throw OperationCancelledException without LongWaitDlg knowing about it.
+            }
+            catch (Exception exception)
+            {
+                ExceptionUtil.DisplayOrReportException(Program.MainWindow, exception);
             }
         }
 
@@ -618,7 +652,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Remove this file from document.
             var canceledPath = status.FilePath;
-            ModifyDocument(Resources.AllChromatogramsGraph_Cancel_Cancel_file_import,
+            ModifyDocument(GraphsResources.AllChromatogramsGraph_Cancel_Cancel_file_import,
                 monitor => Program.MainWindow.ModifyDocumentNoUndo(
                     doc => FilterFiles(doc, info => !info.FilePath.Equals(canceledPath))));
         }
@@ -627,7 +661,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Remove this file from document.
             var canceledPath = status.FilePath;
-            ModifyDocument(Resources.AllChromatogramsGraph_RemoveFailedFile_Remove_failed_file,
+            ModifyDocument(GraphsResources.AllChromatogramsGraph_RemoveFailedFile_Remove_failed_file,
                 monitor => Program.MainWindow.ModifyDocumentNoUndo(
                     doc => FilterFiles(doc, info => !info.FilePath.Equals(canceledPath))));
         }
@@ -679,7 +713,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ClickCancel()
         {
             graphChromatograms.IsCanceled = IsUserCanceled = true;
-            Program.MainWindow.ModifyDocument(Resources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
+            Program.MainWindow.ModifyDocument(GraphsResources.AllChromatogramsGraph_btnCancel_Click_Cancel_import,
                 doc => FilterFiles(doc, info => IsCachedFile(doc, info)),
                 docPair => AuditLogEntry.CreateSimpleEntry(MessageType.canceled_import, docPair.OldDocumentType));
         }
@@ -748,6 +782,59 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         #region Testing Support
+
+        private int? _freezeProgressPercent;
+        private string _elapsedTimeAtFreeze;
+        private DateTime? _timeAtFreeze;
+        private Tuple<string, string> _replacementText;
+        private List<MultiProgressStatus> _missedProgressStatusList = new List<MultiProgressStatus>();
+
+        /// <summary>
+        /// Provide enough information for a consistent screenshot. Set values to null to resume.
+        /// </summary>
+        /// <param name="percent">Percent to freeze at when all processing threads match this percent or greater</param>
+        /// <param name="elapsedTime">Text for an elapsed time during the freeze</param>
+        public void SetFreezeProgressPercent(int? percent, string elapsedTime)
+        {
+            lock (_missedProgressStatusList)
+            {
+                _freezeProgressPercent = percent;
+                _elapsedTimeAtFreeze = elapsedTime;
+            }
+        }
+
+        public void SetFreezeTimeForError(DateTime time)
+        {
+            _timeAtFreeze = time;
+        }
+
+        DateTime FileProgressControl.IStateProvider.Time => _timeAtFreeze ?? DateTime.Now;
+
+        public void SetReplacementForError(string oldValue, string newValue)
+        {
+            _replacementText = new Tuple<string, string>(oldValue, newValue);
+        }
+
+        string FileProgressControl.IStateProvider.PrepareErrorText(string errorText)
+        {
+            return _replacementText == null ? errorText
+                : errorText.Replace(_replacementText.Item1, _replacementText.Item2);
+        }
+
+        public bool IsProgressFrozen(MultiProgressStatus status = null)
+        {
+            lock (_missedProgressStatusList)
+            {
+                if (!_freezeProgressPercent.HasValue)
+                    return false;
+
+                if (status == null)
+                    return _missedProgressStatusList.Count > 0;
+
+                // Stop when anything goes over the limit
+                return status.ProgressList.Any(loadingStatus => loadingStatus.PercentComplete > _freezeProgressPercent);
+            }
+        }
 
         public int ProgressTotalPercent
         {

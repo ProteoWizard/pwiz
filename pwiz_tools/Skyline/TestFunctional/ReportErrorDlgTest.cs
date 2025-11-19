@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -28,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using TestRunnerLib.PInvoke;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -84,9 +84,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(reportErrorDlg2);
 
             // Add 50,000 peptides to the document so that its size will exceed ReportErrorDlg.MAX_ATTACHMENT_SIZE
+            var peptideSequences = RescoreInPlaceTest.PermuteString("ELVISLIVES").Distinct().Take(50_000);
             RunUI(() =>
             {
-                SkylineWindow.Paste(TextUtil.LineSeparate(Enumerable.Repeat("ELVISLIVES", 50000)));
+                SkylineWindow.Paste(TextUtil.LineSeparate(peptideSequences));
             });
 
             // Verify that the "Report Error" menu item on the Help menu is hidden unless the user holds down the shift key
@@ -168,15 +169,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(reportErrorDlg3);
         }
 
-        [DllImport("user32.dll")]
-        static extern bool SetKeyboardState(byte[] lpKeyState);
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetKeyboardState(byte[] lpKeyState);
         private void SetShiftKeyState(bool shiftPressed, bool ctrlPressed)
         {
             var keyStates = new byte[256];
-            Assert.IsTrue(GetKeyboardState(keyStates));
+            Assert.IsTrue(User32Test.GetKeyboardState(keyStates));
             var shiftKeyState = keyStates[(int)Keys.ShiftKey];
             if (shiftPressed)
             {
@@ -198,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             keyStates[(int)Keys.ControlKey] = ctrlKeyState;
-            Assert.IsTrue(SetKeyboardState(keyStates));
+            Assert.IsTrue(User32Test.SetKeyboardState(keyStates));
             Assert.AreEqual(shiftPressed, 0 != (Control.ModifierKeys & Keys.Shift));
             Assert.AreEqual(ctrlPressed, 0 != (Control.ModifierKeys & Keys.Control));
         }

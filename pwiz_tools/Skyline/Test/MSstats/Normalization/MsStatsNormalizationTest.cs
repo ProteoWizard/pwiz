@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -322,7 +322,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
 
         Dictionary<DataProcessedRowKey, double?> ReadDataProcessedRows(TextReader reader)
         {
-            DsvFileReader csvReader = new DsvFileReader(reader, TextUtil.SEPARATOR_CSV);
+            using var csvReader = new DsvFileReader(reader, TextUtil.SEPARATOR_CSV);
             var rows = new Dictionary<DataProcessedRowKey, double?>();
             while (null != csvReader.ReadLine())
             {
@@ -335,7 +335,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                     Run = int.Parse(csvReader.GetFieldByName("RUN"), CultureInfo.InvariantCulture),
                 };
 
-                String strAbundance = csvReader.GetFieldByName("ABUNDANCE");
+                string strAbundance = csvReader.GetFieldByName("ABUNDANCE");
                 double? abundance = "NA" == strAbundance
                     ? default(double?)
                     : double.Parse(strAbundance, CultureInfo.InvariantCulture);
@@ -344,12 +344,34 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             return rows;
         }
 
-        struct DataProcessedRowKey
+        struct DataProcessedRowKey : IEquatable<DataProcessedRowKey>
         {
             public String Protein { get; set; }
             public String Peptide { get; set; }
             public String Transition { get; set; }
             public int Run { get; set; }
+
+            public bool Equals(DataProcessedRowKey other)
+            {
+                return Protein == other.Protein && Peptide == other.Peptide && Transition == other.Transition && Run == other.Run;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is DataProcessedRowKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (Protein != null ? Protein.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Peptide != null ? Peptide.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Transition != null ? Transition.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ Run;
+                    return hashCode;
+                }
+            }
         }
     }
 }

@@ -38,12 +38,9 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 4.1.117
-//   date: 17:03:2023 11:30
-//   saved-by: Matt Chambers
-//   auto-generated-by: OBO-Edit 2.3.1
-//   import: http://purl.obolibrary.org/obo/pato.obo
-//   import: http://purl.obolibrary.org/obo/stato.owl
+//   data-version: 4.1.197
+//   date: 17:07:2025 21:31
+//   saved-by: David Cox
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   namespace-id-rule: * PEFF:$sequence(7,0,9999999)$
@@ -61,10 +58,12 @@
 //   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
 //   remark: creator: Joshua Klein <jaklein <-at-> bu.edu>
 //   remark: creator: Chris Bielow <chris.bielow <-at-> fu-berlin.de>
-//   remark: creator: Wout Bittremieux <wbittremieux <-at-> health.ucsd.edu>
+//   remark: creator: Wout Bittremieux <wout.bittremieux <-at-> uantwerpen.be>
 //   remark: creator: Nils Hoffmann < nils.hoffmann <-at-> cebitec.uni-bielefeld.de>
 //   remark: creator: Julian Uszkoreit <julian.uszkoreit <-at-> ruhr-uni-bochum.de>
 //   remark: creator: Mathias Walzer <walzer <-at-> ebi.ac.uk>
+//   remark: creator: Nithu Sara John <nithu <-at-> ebi.ac.uk>
+//   remark: creator: David Cox <david.cox <-at-> sciex.com>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
@@ -75,7 +74,7 @@
 //
 // ["unimod.obo"]
 //   format-version: 1.4
-//   date: 20:10:2022 14:06
+//   date: 17:06:2025 11:31
 //
 // ["unit.obo"]
 //   format-version: 1.2
@@ -303,6 +302,9 @@ public enum class CVID
     /// <summary>Duration: The period of time during which something continues.</summary>
     NCIT_Duration = 100325330,
 
+    /// <summary>Number: A numeral or string of numerals expressing value, quantity, or identification.</summary>
+    NCIT_Number = 100325337,
+
     /// <summary>Action: A thing done.</summary>
     NCIT_Action = 100325404,
 
@@ -426,7 +428,7 @@ public enum class CVID
     /// <summary>customization: Free text description of a single customization made to the instrument; for several modifications, use several entries.</summary>
     MS_customization = 1000032,
 
-    /// <summary>deisotoping: The removal of isotope peaks to represent the fragment ion as one data point and is commonly done to reduce complexity. It is done in conjunction with the charge state deconvolution.</summary>
+    /// <summary>deisotoping: The removal of isotope peaks to represent the ion as one data point and is commonly done to reduce complexity. It is done in conjunction with the charge state deconvolution.</summary>
     MS_deisotoping = 1000033,
 
     /// <summary>charge deconvolution: The determination of the mass of an ion based on the mass spectral peaks that represent multiple-charge ions.</summary>
@@ -765,7 +767,7 @@ public enum class CVID
     /// <summary>transient recorder: A detector acquisition mode used for detecting transient signals.</summary>
     MS_transient_recorder = 1000120,
 
-    /// <summary>SCIEX instrument model: The brand of instruments from the joint venture between Applied Biosystems and MDS Analytical Technologies (formerly MDS SCIEX). Previously branded as \"Applied Biosystems|MDS SCIEX\".</summary>
+    /// <summary>SCIEX instrument model: SCIEX instrument model.</summary>
     MS_SCIEX_instrument_model = 1000121,
 
     /// <summary>Bruker Daltonics instrument model: Bruker Daltonics' instrument model.</summary>
@@ -1641,7 +1643,7 @@ public enum class CVID
     /// <summary>MS/MS in Space: A tandem mass spectrometry method in which product ion spectra are recorded in m/z analyzers separated in space. Specific m/z separation functions are designed such that in one section of the instrument ions are selected, dissociated in an intermediate region, and the product ions are then transmitted to another analyser for m/z separation and data acquisition.</summary>
     MS_MS_MS_in_Space_OBSOLETE = 1000335,
 
-    /// <summary>neutral loss: The loss of an uncharged species during a rearrangement process. The value slot holds the molecular formula in Hill notation of the neutral loss molecule, see PMID: 21182243. This term must be used in conjunction with a child of the term MS:1002307 (fragmentation ion type).</summary>
+    /// <summary>neutral loss: The loss of an uncharged species during a rearrangement process. The value slot holds the molecular formula in Hill notation of the neutral loss molecule, see PMID:21182243. This term must be used in conjunction with a child of the term MS:1002307 (fragmentation ion type).</summary>
     MS_neutral_loss = 1000336,
 
     /// <summary>nth generation product ion: Serial product ions from dissociation of selected precursor ions where n refers to the number of stages of dissociation. The term granddaughter ion is deprecated.</summary>
@@ -1817,6 +1819,9 @@ public enum class CVID
 
     /// <summary>laser desorption ionization: The formation of gas-phase ions by the interaction of a pulsed laser with a solid or liquid material.</summary>
     MS_laser_desorption_ionization = 1000393,
+
+    /// <summary>no sequence database: No reference sequence database was used in the search process to determine the identified peptide sequence, for example as with de novo sequencing.</summary>
+    MS_no_sequence_database = 1000394,
 
     /// <summary>liquid secondary ionization: The ionization of any species by the interaction of a focused beam of ions with a sample that is dissolved in a solvent matrix. See also fast atom bombardment and secondary ionization.</summary>
     MS_liquid_secondary_ionization = 1000395,
@@ -2169,10 +2174,10 @@ public enum class CVID
     /// <summary>spectrum attribute: Nonphysical characteristic attributed to a spectrum.</summary>
     MS_spectrum_attribute = 1000499,
 
-    /// <summary>scan window upper limit: The lower m/z bound of a mass spectrometer scan window.</summary>
+    /// <summary>scan window upper limit: The upper m/z bound of a mass spectrometer scan window.</summary>
     MS_scan_window_upper_limit = 1000500,
 
-    /// <summary>scan window lower limit: The upper m/z bound of a mass spectrometer scan window.</summary>
+    /// <summary>scan window lower limit: The lower m/z bound of a mass spectrometer scan window.</summary>
     MS_scan_window_lower_limit = 1000501,
 
     /// <summary>dwell time: The time spent gathering data across a peak.</summary>
@@ -2715,6 +2720,9 @@ public enum class CVID
     /// <summary>4000 Series Explorer Software: SCIEX or Applied Biosystems software for data acquisition and analysis.</summary>
     MS_4000_Series_Explorer_Software = 1000659,
 
+    /// <summary>Xevo MRT MS: Waters Corporation Xevo MRT Mass Spectrometer.</summary>
+    MS_Xevo_MRT_MS = 1000660,
+
     /// <summary>GPS Explorer: SCIEX or Applied Biosystems software for data acquisition and analysis.</summary>
     MS_GPS_Explorer = 1000661,
 
@@ -3252,6 +3260,9 @@ public enum class CVID
     /// <summary>isolation window upper offset: The extent of the isolation window in m/z above the isolation window target m/z. The lower and upper offsets may be asymmetric about the target m/z.</summary>
     MS_isolation_window_upper_offset = 1000829,
 
+    /// <summary>precision: Precision is the degree of how close repeated measurements are to each other. This can, for example, be expressed using the standard deviation.</summary>
+    MS_precision = 1000830,
+
     /// <summary>sample preparation: Properties of the preparation steps which took place before the measurement was performed.</summary>
     MS_sample_preparation = 1000831,
 
@@ -3369,8 +3380,8 @@ public enum class CVID
     /// <summary>structural formula: A chemical formula showing the number of atoms of each element in a molecule, their spatial arrangement, and their linkage to each other.</summary>
     MS_structural_formula = 1000867,
 
-    /// <summary>SMILES formula: The simplified molecular input line entry specification or SMILES is a specification for unambiguously describing the structure of a chemical compound using a short ASCII string.</summary>
-    MS_SMILES_formula = 1000868,
+    /// <summary>SMILES string: The simplified molecular input line entry specification or SMILES is a specification for unambiguously describing the structure of a chemical compound using a short ASCII string.</summary>
+    MS_SMILES_string = 1000868,
 
     /// <summary>collision gas pressure: The gas pressure of the collision gas used for collisional excitation.</summary>
     MS_collision_gas_pressure = 1000869,
@@ -3882,8 +3893,11 @@ public enum class CVID
     /// <summary>single protein identification statistic: Results specific for one protein as part of a protein ambiguity group (a result not valid for all the other proteins in the protein ambiguity group).</summary>
     MS_single_protein_identification_statistic = 1001116,
 
+    /// <summary>theoretical neutral mass: The theoretical neutral mass of the molecule (e.g. the peptide sequence and its modifications) not including its charge carrier.</summary>
+    MS_theoretical_neutral_mass = 1001117,
+
     /// <summary>theoretical mass: The theoretical neutral mass of the molecule (e.g. the peptide sequence and its modifications) not including its charge carrier.</summary>
-    MS_theoretical_mass = 1001117,
+    MS_theoretical_mass = MS_theoretical_neutral_mass,
 
     /// <summary>param: b ion: Parameter information, type of product: b ion with charge on the N-terminal side.</summary>
     MS_param__b_ion = 1001118,
@@ -4073,6 +4087,12 @@ public enum class CVID
 
     /// <summary>search statistics: The details of the actual run of the search.</summary>
     MS_search_statistics = 1001184,
+
+    /// <summary>Mobilion MBI format: Mobilion MBI file format.</summary>
+    MS_Mobilion_MBI_format = 1001185,
+
+    /// <summary>Mobilion MBI nativeID format: Native format defined by frame=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
+    MS_Mobilion_MBI_nativeID_format = 1001186,
 
     /// <summary>modification specificity peptide N-term: As parameter for search engine: apply the modification only at the N-terminus of a peptide.</summary>
     MS_modification_specificity_peptide_N_term = 1001189,
@@ -7554,8 +7574,11 @@ public enum class CVID
     /// <summary>second-pass peptide identification: A putative identified peptide found in a second-pass search of protein sequences selected from a first-pass search.</summary>
     MS_second_pass_peptide_identification = 1002341,
 
+    /// <summary>mzmine: A framework for differential analysis of mass spectrometry data.</summary>
+    MS_mzmine = 1002342,
+
     /// <summary>MZmine: A framework for differential analysis of mass spectrometry data.</summary>
-    MS_MZmine = 1002342,
+    MS_MZmine = MS_mzmine,
 
     /// <summary>ion stability type: Stability type of the ion.</summary>
     MS_ion_stability_type_OBSOLETE = 1002343,
@@ -8709,6 +8732,15 @@ public enum class CVID
     /// <summary>FLASHDeconv: Ultrafast, High-Quality Feature Deconvolution for Top-Down Proteomics.</summary>
     MS_FLASHDeconv = 1002714,
 
+    /// <summary>temperature chromatogram: Representation of temperature versus time.</summary>
+    MS_temperature_chromatogram = 1002715,
+
+    /// <summary>measured element: The component or dimension of an object being measured, for example the temperature of an instrument component over time.</summary>
+    MS_measured_element = 1002716,
+
+    /// <summary>Waters DATA Convert: Software for processing and exporting Waters MassLynx and waters_connect data.</summary>
+    MS_Waters_DATA_Convert = 1002717,
+
     /// <summary>Pegasus BT: LECO bench-top GC time-of-flight mass spectrometer.</summary>
     MS_Pegasus_BT = 1002719,
 
@@ -9531,6 +9563,12 @@ public enum class CVID
     /// <summary>python-psims: python-psims, a library for generating mzML and mzIdentML.</summary>
     MS_python_psims = 1002991,
 
+    /// <summary>Orbitrap Exploris GC-MS: Thermo Scientific Orbitrap Exploris GC-MS.</summary>
+    MS_Orbitrap_Exploris_GC_MS = 1002992,
+
+    /// <summary>Q Exactive Focus: Q Exactive Focus Hybrid Quadrupole-Orbitrap Mass Spectrometer.</summary>
+    MS_Q_Exactive_Focus = 1002993,
+
     /// <summary>Andromeda:PEP: Posterior error probability of the best identified peptide of the Andromeda search engine.</summary>
     MS_Andromeda_PEP = 1002995,
 
@@ -9864,8 +9902,11 @@ public enum class CVID
     /// <summary>ion annotation format: Annotation format used for annotating individual spectrum ion peaks.</summary>
     MS_ion_annotation_format = 1003103,
 
+    /// <summary>mzPAF peptide ion annotation format: Annotation format designed primarily for peptides, with allowances for generic chemical formulas and other miscellaneous named ions.</summary>
+    MS_mzPAF_peptide_ion_annotation_format = 1003104,
+
     /// <summary>peptide ion annotation format: Annotation format designed primarily for peptides, with allowances for generic chemical formulas and other miscellaneous named ions.</summary>
-    MS_peptide_ion_annotation_format = 1003104,
+    MS_peptide_ion_annotation_format = MS_mzPAF_peptide_ion_annotation_format,
 
     /// <summary>crosslinked peptide ion annotation format: Annotation format designed specifically for crosslinked peptide ion peaks.</summary>
     MS_crosslinked_peptide_ion_annotation_format = 1003105,
@@ -10572,8 +10613,11 @@ public enum class CVID
     /// <summary>number of identified proteoforms: The number of proteoforms that pass the threshold to be considered identified with sufficient confidence.</summary>
     MS_number_of_identified_proteoforms = 1003328,
 
-    /// <summary>loop-link spectrum identification item: Identification of an internally linked peptide (a peptide that contains both ends of a crosslink), also known as a loop-link.</summary>
-    MS_loop_link_spectrum_identification_item = 1003329,
+    /// <summary>looplink spectrum identification item: Identification of an internally linked peptide (a peptide that contains both ends of a crosslink), also known as a looplink.</summary>
+    MS_looplink_spectrum_identification_item = 1003329,
+
+    /// <summary>loop-link spectrum identification item: Identification of an internally linked peptide (a peptide that contains both ends of a crosslink), also known as a looplink.</summary>
+    MS_loop_link_spectrum_identification_item = MS_looplink_spectrum_identification_item,
 
     /// <summary>noncovalently associated peptides search: Noncovalently associated peptides search performed. Noncovalently associated peptides are two different peptides which were not crosslinked but stayed associated with each other throughout the workflow, due to noncovalent interactions.</summary>
     MS_noncovalently_associated_peptides_search = 1003330,
@@ -10584,7 +10628,7 @@ public enum class CVID
     /// <summary>identification based on multiple spectra: Provides an identifier to encode identifications based on multiple spectra.</summary>
     MS_identification_based_on_multiple_spectra = 1003332,
 
-    /// <summary>regular expression for encoding identifications based on multiple spectra.: ^(?<MULTIPLE_SPECTRA_IDENTIFIER>[0-9]+)(?::(?<PARENT_OR_CHILD>P|C))$</summary>
+    /// <summary>regular expression for encoding identifications based on multiple spectra.: ^(?<MULTIPLE_SPECTRA_IDENTIFIER>[0-9]+)(?::(?<PARENT_OR_CHILD>P|C))?$</summary>
     MS_regular_expression_for_encoding_identifications_based_on_multiple_spectra_ = 1003333,
 
     /// <summary>parent term for PSM-level scores for identifications based on multiple spectra: Parent term for PSM-level scores for identifications based on multiple spectra.</summary>
@@ -10655,6 +10699,297 @@ public enum class CVID
 
     /// <summary>Orbitrap Ascend: Thermo Scientific Orbitrap Ascend mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers.</summary>
     MS_Orbitrap_Ascend = 1003356,
+
+    /// <summary>ANN-SoLo: ANN-SoLo (Approximate Nearest Neighbor Spectral Library) is a spectral library search engine for fast and accurate open modification searching. ANN-SoLo uses approximate nearest neighbor indexing to speed up open modification searching by selecting only a limited number of the most relevant library spectra to compare to an unknown query spectrum. This is combined with a cascade search strategy to maximize the number of identified unmodified and modified spectra while strictly controlling the false discovery rate and the shifted dot product score to sensitively match modified spectra to their unmodified counterpart.</summary>
+    MS_ANN_SoLo = 1003357,
+
+    /// <summary>XCorr rank: The rank of this PSM relative to all other PSMs involving this spectrum, when sorting by the XCorr score.</summary>
+    MS_XCorr_rank = 1003358,
+
+    /// <summary>exact p-value: A p-value for the XCorr score, calculated using dynamic programming.</summary>
+    MS_exact_p_value = 1003359,
+
+    /// <summary>refactored XCorr: A modified version of the XCorr score that is made amenable to dynamic programming calculation of p-values by changing a max operation to a sum.</summary>
+    MS_refactored_XCorr = 1003360,
+
+    /// <summary>res-ev score: The residue-evidence (res-ev) score measures the quality of a match between a peptide and observed spectrum using a method similar to XCorr, but considering all pairs of observed peaks.</summary>
+    MS_res_ev_score = 1003361,
+
+    /// <summary>res-ev rank: The rank of this PSM relative to all other PSMs involving this spectrum, when sorting by the res-ev score.</summary>
+    MS_res_ev_rank = 1003362,
+
+    /// <summary>res-ev p-value: The residue-evidence p-value is computed from the residue-evidence score using a dynamic programming procedure.</summary>
+    MS_res_ev_p_value = 1003363,
+
+    /// <summary>combined p-value: A p-value that is computed by taking the product of the exact p-value and the res-ev p-value and then adjusting for dependencies between them.</summary>
+    MS_combined_p_value = 1003364,
+
+    /// <summary>combined p-value rank: The rank of this PSM relative to all other PSMs involving this spectrum, when sorting by the combined p-value.</summary>
+    MS_combined_p_value_rank = 1003365,
+
+    /// <summary>tailor score: A calibrated version of the XCorr score, computed by dividing the XCorr by the 99th percentile of the distribution of all scores for a particular spectrum.</summary>
+    MS_tailor_score = 1003366,
+
+    /// <summary>monoisotopic mass deisotoping: The removal of isotope peaks to represent each ion as one data point corresponding to the ion's monoisotopic mass. It is done in conjunction with the charge state deconvolution.</summary>
+    MS_monoisotopic_mass_deisotoping = 1003367,
+
+    /// <summary>most abundant mass deisotoping: The removal of isotope peaks to represent each ion as one data point corresponding to the ion's most abundant isotopic mass. It is done in conjunction with the charge state deconvolution.</summary>
+    MS_most_abundant_mass_deisotoping = 1003368,
+
+    /// <summary>average mass deisotoping: The removal of isotope peaks to represent each ion as one data point corresponding to the ion's average mass. It is done in conjunction with the charge state deconvolution.</summary>
+    MS_average_mass_deisotoping = 1003369,
+
+    /// <summary>reduction to summed singly charged peak list: The summing of peaks corresponding to the same mass at multiple charge states and presented as singly charged m/z.</summary>
+    MS_reduction_to_summed_singly_charged_peak_list = 1003370,
+
+    /// <summary>SelexION compensation voltage: The voltage applied in the SelexION device to allow certain ions to transmit through to the mass spectrometer.</summary>
+    MS_SelexION_compensation_voltage = 1003371,
+
+    /// <summary>specification document extension version: The versioning of a an extension to a specification document that the current file requires to be read correctly. The version should encode the name of the extension, and some ordinal expression of its revision, preferably in semantic versioning notation. Signals that readers that do not know this extension should return an appropriately informative error if they do not think they can or should try to interpret the file.</summary>
+    MS_specification_document_extension_version = 1003372,
+
+    /// <summary>mzIdentML extension version: The versioning of an mzIdentML extension document.</summary>
+    MS_mzIdentML_extension_version = 1003373,
+
+    /// <summary>Open Chromatography Binary OCB format: ChemClipse/OpenChrom file format.</summary>
+    MS_Open_Chromatography_Binary_OCB_format = 1003374,
+
+    /// <summary>Conversion to OCB: Conversion of a file format to Open Chromatography Binary OCB file format.</summary>
+    MS_Conversion_to_OCB = 1003375,
+
+    /// <summary>ChemClipse: ChemClipse is part of the Eclipse Science project. Primarily developed by Lablicate GmbH.</summary>
+    MS_ChemClipse = 1003376,
+
+    /// <summary>chemclipse: ChemClipse is part of the Eclipse Science project. Primarily developed by Lablicate GmbH.</summary>
+    MS_chemclipse = MS_ChemClipse,
+
+    /// <summary>OpenChrom: OpenChrom is an Open Source software for data processing and analysis. Based upon Eclipse ChemClipse.</summary>
+    MS_OpenChrom = 1003377,
+
+    /// <summary>openchrom: OpenChrom is an Open Source software for data processing and analysis. Based upon Eclipse ChemClipse.</summary>
+    MS_openchrom = MS_OpenChrom,
+
+    /// <summary>Orbitrap Astral: Thermo Scientific Orbitrap Astral mass spectrometer contains three mass analyzers: a quadrupole analyzer, an Orbitrap analyzer, and the Astral analyzer.</summary>
+    MS_Orbitrap_Astral = 1003378,
+
+    /// <summary>asymmetric track lossless time-of-flight analyzer: A TOF-like mass analyzer with asymmetric ion mirrors to direct ions into transversal asymmetric oscillations and ion foil shapes and maintains ion packet for transmission and resolution.</summary>
+    MS_asymmetric_track_lossless_time_of_flight_analyzer = 1003379,
+
+    /// <summary>Astral: A TOF-like mass analyzer with asymmetric ion mirrors to direct ions into transversal asymmetric oscillations and ion foil shapes and maintains ion packet for transmission and resolution.</summary>
+    MS_Astral = MS_asymmetric_track_lossless_time_of_flight_analyzer,
+
+    /// <summary>Xevo G3 QTof: Waters Corporation Xevo G3 QTof quadrupole time-of-flight mass spectrometer.</summary>
+    MS_Xevo_G3_QTof = 1003380,
+
+    /// <summary>ACQUITY RDa Detector: Waters Corporation RDa time-of-flight mass detector.</summary>
+    MS_ACQUITY_RDa_Detector = 1003381,
+
+    /// <summary>waters_connect: Waters Corporation waters_connect software for liquid chromatography and mass spectrometry acquisition and processing.</summary>
+    MS_waters_connect = 1003382,
+
+    /// <summary>timsTOF Ultra: Bruker Daltonics' timsTOF Ultra.</summary>
+    MS_timsTOF_Ultra = 1003383,
+
+    /// <summary>semantic version regexp: v?(\d+)\.(\d+)\.(\d+)(?:-(\S+))?</summary>
+    MS_semantic_version_regexp = 1003384,
+
+    /// <summary>mzIdentML crosslinking extension document version: The versioning of the crosslinking mzIdentML extension document.</summary>
+    MS_mzIdentML_crosslinking_extension_document_version = 1003385,
+
+    /// <summary>Spectra: Bioconductor package Spectra for mass spectrometry data representation and processing.</summary>
+    MS_Spectra = 1003386,
+
+    /// <summary>MetaboAnnotation: Bioconductor package MetaboAnnotation for annotation of untargeted metabolomics data.</summary>
+    MS_MetaboAnnotation = 1003387,
+
+    /// <summary>CompoundDb: Bioconductor package CompoundDb for creation, usage and maintenance of public or library-specific annotation databases and spectra libraries.</summary>
+    MS_CompoundDb = 1003388,
+
+    /// <summary>mzTab-M: Expanded tabular result format for metabolomics experiments reporting quantitative summary data, MS features and identification evidence.</summary>
+    MS_mzTab_M = 1003389,
+
+    /// <summary>crosslinker cleavage characteristics: Signifies that the crosslinker is cleavable and on cleavage can leave a given stub. The pattern specifies three slots <name>:<mass>:<pairs with>.</summary>
+    MS_crosslinker_cleavage_characteristics = 1003390,
+
+    /// <summary>crosslinker cleavage regular expression: ^(?<NAME>[A-Za-z]):(?<MASS>[+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+(\.[0-9]+)?)?):(?<PAIRS_WITH>[A-Za-z]+)$</summary>
+    MS_crosslinker_cleavage_regular_expression = 1003391,
+
+    /// <summary>search modification id: A unique identifier within an in mzIdentML document denoting a search modification rule. The same modification may be present multiple times with different id values to reflect different specificities or neutral losses.</summary>
+    MS_search_modification_id = 1003392,
+
+    /// <summary>search modification id ref: A reference to a `search modification id` in the current mzIdentML document that defines the properties of this modification instance.</summary>
+    MS_search_modification_id_ref = 1003393,
+
+    /// <summary>SelexION separation voltage: RF voltage applied in the SelexION device to separate ions in trajectory based on the difference in their mobility between the high field and low field portions of the applied RF.</summary>
+    MS_SelexION_separation_voltage = 1003394,
+
+    /// <summary>Q Exactive GC Orbitrap: Q Exactive GC Orbitrap GC-MS/MS hybrid quadrupole Orbitrap mass spectrometer.</summary>
+    MS_Q_Exactive_GC_Orbitrap = 1003395,
+
+    /// <summary>8890 GC/MS: Agilent 8890 Gas Chromatograph System.</summary>
+    MS_8890_GC_MS = 1003396,
+
+    /// <summary>timsTOF fleX MALDI-2: Bruker Daltonics' timsTOF fleX MALDI-2.</summary>
+    MS_timsTOF_fleX_MALDI_2 = 1003397,
+
+    /// <summary>deconvoluted data: The data contained in this file have been processed to remove, collapse, or label one or more dimensions of the original dataset, such as charge deconvolution or ion mobility deconvolution. To determine the type of deconvolution done, the reader should consult the appropriate section of the file, such as the data processing methods in an mzML file.</summary>
+    MS_deconvoluted_data = 1003398,
+
+    /// <summary>quality control software: Software that creates or manipulates QC-related data.</summary>
+    MS_quality_control_software = 1003399,
+
+    /// <summary>rmzqc: An R package for reading, validating, and writing mzQC files.</summary>
+    MS_rmzqc = 1003400,
+
+    /// <summary>jmzqc: A Java package for reading, validating, and writing mzQC files.</summary>
+    MS_jmzqc = 1003401,
+
+    /// <summary>pymzqc: A Python package for reading, validating, and writing mzQC files.</summary>
+    MS_pymzqc = 1003402,
+
+    /// <summary>InChI: IUPAC International Chemical Identifier.</summary>
+    MS_InChI = 1003403,
+
+    /// <summary>timsTOF HT: Bruker Daltonics' timsTOF HT.</summary>
+    MS_timsTOF_HT = 1003404,
+
+    /// <summary>mzRecal: MS1 recalibration using identified peptides as internal calibrants.</summary>
+    MS_mzRecal = 1003405,
+
+    /// <summary>spectrum clustering software: Software designed to group multiple mass spectra by high similarity, generally with the goal of grouping replicate spectra derived from the same analyte.</summary>
+    MS_spectrum_clustering_software = 1003406,
+
+    /// <summary>Scout: Identifying crosslinked peptides in complex protein mixtures</summary>
+    MS_Scout = 1003407,
+
+    /// <summary>Scout score: Scout identification search engine score</summary>
+    MS_Scout_score = 1003408,
+
+    /// <summary>Stellar: Thermo Scientific Stellar mass spectrometer contains a quadrupole mass filter, a collision cell, and a quadrupole linear ion trap mass analyzer.</summary>
+    MS_Stellar = 1003409,
+
+    /// <summary>electron beam energy: The kinetic energy of the electron beam used in dissociation methods induced by a free electron beam, such as electron-capture dissociation (ECD), electron-detachment dissociation (EDD), and electron-activated dissociation (EAD).</summary>
+    MS_electron_beam_energy = 1003410,
+
+    /// <summary>Orbitrap IQ-X: Thermo Scientific Orbitrap IQ-X mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers.</summary>
+    MS_Orbitrap_IQ_X = 1003411,
+
+    /// <summary>timsTOF Ultra 2: Bruker Daltonics timsTOF Ultra 2.</summary>
+    MS_timsTOF_Ultra_2 = 1003412,
+
+    /// <summary>Kojak: Kojak open-source crosslinked peptide sequence search engine developed at the Institute for Systems Biology.</summary>
+    MS_Kojak = 1003413,
+
+    /// <summary>Kojak:score: The Kojak score for an individual peptide sequence, similar to Comet:xcorr.</summary>
+    MS_Kojak_score = 1003414,
+
+    /// <summary>Kojak:expectation value: The Kojak expectation value for an individual peptide sequence.</summary>
+    MS_Kojak_expectation_value = 1003415,
+
+    /// <summary>Kojak:matched ions: The number of matched ions for an individual peptide sequence in a Kojak result.</summary>
+    MS_Kojak_matched_ions = 1003416,
+
+    /// <summary>Kojak:consecutive matched ions: The highest run of consecutive matched ions for an individual peptide sequence in a Kojak result.</summary>
+    MS_Kojak_consecutive_matched_ions = 1003417,
+
+    /// <summary>Kojak:delta score: The difference between the top Kojak score and the next best Kojak score for a PSM.</summary>
+    MS_Kojak_delta_score = 1003418,
+
+    /// <summary>Kojak:rank: The rank of an individual peptide from the first pass of the Kojak scoring algorithm. Applies only to sequences in a crosslinked result.</summary>
+    MS_Kojak_rank = 1003419,
+
+    /// <summary>Kojak:score xlink: The Kojak score for a crosslinked pair of peptide sequences, similar to Comet:xcorr.</summary>
+    MS_Kojak_score_xlink = 1003420,
+
+    /// <summary>Kojak:expectation value xlink: The Kojak expectation value for a crosslinked pair of peptide sequences.</summary>
+    MS_Kojak_expectation_value_xlink = 1003421,
+
+    /// <summary>Kojak:matched ions xlink: The number of matched ions for a crosslinked pair of peptide sequences in a Kojak result.</summary>
+    MS_Kojak_matched_ions_xlink = 1003422,
+
+    /// <summary>Orbitrap Exploris GC 240: Orbitrap Exploris GC 240 Mass Spectrometer.</summary>
+    MS_Orbitrap_Exploris_GC_240 = 1003423,
+
+    /// <summary>selected fragment theoretical m/z observed intensity spectrum: Spectrum for which the peaks are limited to a subset of known product ions that are important for subsequent identification, whose m/z values are corrected to theoretical values, and intensity values are experimentally derived.</summary>
+    MS_selected_fragment_theoretical_m_z_observed_intensity_spectrum = 1003424,
+
+    /// <summary>quantms: Cloud-based pipeline for quantitative proteomics that enables the reanalysis of public proteomics data.</summary>
+    MS_quantms = 1003425,
+
+    /// <summary>xQuest/xProphet: A software to identify cross-linked peptides from LC-MS/MS spectra.</summary>
+    MS_xQuest_xProphet = 1003426,
+
+    /// <summary>PeakView: A software for spectral analysis and data interrogation in qualitative review of LC-MS and MS/MS data.</summary>
+    MS_PeakView = 1003427,
+
+    /// <summary>Perseus: A software for interpreting protein quantification, interaction and post-translational modification data.</summary>
+    MS_Perseus = 1003428,
+
+    /// <summary>FragPipe: A computational platform for analyzing mass spectrometry-based proteomics data.</summary>
+    MS_FragPipe = 1003429,
+
+    /// <summary>OpenMS: A software for LC-MS data management and analysis.</summary>
+    MS_OpenMS = 1003430,
+
+    /// <summary>pLink: A tool for the analysis of chemically cross-linked proteins using mass spectrometry.</summary>
+    MS_pLink = 1003431,
+
+    /// <summary>pLink2: Upgraded version of pLink tool, provides a graphical user interface and faster with newly designed index structure.</summary>
+    MS_pLink2 = 1003432,
+
+    /// <summary>Andromeda:delta score: Score difference to the second best identified peptide with a different amino acid sequence.</summary>
+    MS_Andromeda_delta_score = 1003433,
+
+    /// <summary>AlphaLP: A serine protease that hydrolyzes peptide bonds at the C-terminus of threonine, alanine, serine, and valine. (EC:3.4.21.12)</summary>
+    MS_AlphaLP = 1003434,
+
+    /// <summary>alpha-lytic endopeptidase: A serine protease that hydrolyzes peptide bonds at the C-terminus of threonine, alanine, serine, and valine. (EC:3.4.21.12)</summary>
+    MS_alpha_lytic_endopeptidase = MS_AlphaLP,
+
+    /// <summary>alpha-lytic protease: A serine protease that hydrolyzes peptide bonds at the C-terminus of threonine, alanine, serine, and valine. (EC:3.4.21.12)</summary>
+    MS_alpha_lytic_protease = MS_AlphaLP,
+
+    /// <summary>(?<=[TSAV]): Regular expression for alphaLP.</summary>
+    MS______TSAV__ = 1003435,
+
+    /// <summary>lowest observed ion mobility: Lowest ion mobility value observed in the ion mobility measurement array.</summary>
+    MS_lowest_observed_ion_mobility = 1003437,
+
+    /// <summary>highest observed ion mobility: Highest ion mobility value observed in the ion mobility measurement array.</summary>
+    MS_highest_observed_ion_mobility = 1003438,
+
+    /// <summary>ion mobility frame representation: Representation of one or more spectra acquired across an ion mobility dimension.</summary>
+    MS_ion_mobility_frame_representation = 1003439,
+
+    /// <summary>ion mobility profile frame: An ion mobility frame where the ion mobility dimension is continuous.</summary>
+    MS_ion_mobility_profile_frame = 1003440,
+
+    /// <summary>ion mobility centroid frame: An ion mobility frame where the ion mobility dimension is processed into discrete peaks of zero width.</summary>
+    MS_ion_mobility_centroid_frame = 1003441,
+
+    /// <summary>Orbitrap Astral Zoom: Thermo Scientific Orbitrap Astral Zoom mass spectrometer contains three mass analyzers: a quadrupole analyzer, an Orbitrap analyzer, and an Astral analyzer.</summary>
+    MS_Orbitrap_Astral_Zoom = 1003442,
+
+    /// <summary>ZenoTOF 8600: SCIEX ZenoTOF 8600 system.</summary>
+    MS_ZenoTOF_8600 = 1003443,
+
+    /// <summary>ZenoTOF 7600+: SCIEX ZenoTOF 7600+ system.</summary>
+    MS_ZenoTOF_7600_ = 1003444,
+
+    /// <summary>SCIEX 7500+: SCIEX 7500+ system.</summary>
+    MS_SCIEX_7500_ = 1003445,
+
+    /// <summary>SCIEX OS: SCIEX OS software.</summary>
+    MS_SCIEX_OS = 1003446,
+
+    /// <summary>SCIEX MS Data Converter: A software for converting SCIEX wiff or wiff2 format to mzML.</summary>
+    MS_SCIEX_MS_Data_Converter = 1003447,
+
+    /// <summary>SCIEX WIFF2 format: SCIEX WIFF2 file format.</summary>
+    MS_SCIEX_WIFF2_format = 1003448,
+
+    /// <summary>Number of Occurrences: The number of times something happened.</summary>
+    NCIT_Number_of_Occurrences = 103150827,
 
     /// <summary>PSI-MS CV Quality Control Vocabulary: PSI Quality Control controlled vocabulary term.</summary>
     MS_PSI_MS_CV_Quality_Control_Vocabulary = 4000000,
@@ -10728,6 +11063,30 @@ public enum class CVID
     /// <summary>environment metric: QC metric related to measurements of the ambient environment, such as the laboratory.</summary>
     MS_environment_metric = 4000024,
 
+    /// <summary>precursor ion current chromatogram: Representation of the ion current assigned to detected precursors in the series of all MS1 spectra versus time.</summary>
+    MS_precursor_ion_current_chromatogram = 4000025,
+
+    /// <summary>precursor ion chromatogram: Representation of the ion current assigned to detected precursors in the series of all MS1 spectra versus time.</summary>
+    MS_precursor_ion_chromatogram = MS_precursor_ion_current_chromatogram,
+
+    /// <summary>fragment ppm deviation median: The median of the distribution of observed fragment mass accuracies (MS:4000072) [in ppm] of identified MS2 spectra after user-defined acceptance criteria (FDR) are applied.</summary>
+    MS_fragment_ppm_deviation_median = 4000026,
+
+    /// <summary>fragment ppm deviation mean: The mean of the distribution of observed fragment mass accuracies (MS:4000072) [in ppm] of identified MS2 spectra after user-defined acceptance criteria (FDR) are applied</summary>
+    MS_fragment_ppm_deviation_mean = 4000027,
+
+    /// <summary>fragment ppm deviation sigma: The standard deviation of the distribution of observed fragment mass accuracies (MS:4000072) [in ppm] of identified MS2 spectra after user-defined acceptance criteria (FDR) are applied</summary>
+    MS_fragment_ppm_deviation_sigma = 4000028,
+
+    /// <summary>area under TIC in MS1: The area under the total ion current chromatogram (MS:1000235) of all MS1 spectra.</summary>
+    MS_area_under_TIC_in_MS1 = 4000029,
+
+    /// <summary>area under TIC in MS2: The area under the total ion current chromatogram (MS:1000235) of all MS2 spectra.</summary>
+    MS_area_under_TIC_in_MS2 = 4000030,
+
+    /// <summary>peak area of MS1 vs MS2 signal ratio: The ratio of the area under TIC of MS1 (MS:4000029) divided by the area under the TIC of MS2 (MS:4000030).</summary>
+    MS_peak_area_of_MS1_vs_MS2_signal_ratio = 4000031,
+
     /// <summary>XIC50 fraction: The number of XIC that account for the top half of all XIC-FWHM divided by the number of all XIC.</summary>
     MS_XIC50_fraction = 4000050,
 
@@ -10737,26 +11096,26 @@ public enum class CVID
     /// <summary>XIC-FWHM quantiles: The first to n-th quantile of peak widths for XICs. A metric's value triplet represents the related QuaMeter metrics of XIC-FWHM-Q1,Q2,Q3.</summary>
     MS_XIC_FWHM_quantiles = 4000051,
 
-    /// <summary>XIC-Height quartile ratios: The log ratio of successive XIC height quartiles. The metric's value triplet represents the log ratios of XIC-height-Q2 to XIC-height-Q1, XIC-height-Q3 to XIC-height-Q2, XIC-height max to XIC-height-Q3.</summary>
-    MS_XIC_Height_quartile_ratios = 4000052,
+    /// <summary>obsolete XIC-Height quartile ratios: OBSOLETE. The log ratio of successive XIC height quartiles. The metric's value triplet represents the log ratios of XIC-height-Q2 to XIC-height-Q1, XIC-height-Q3 to XIC-height-Q2, XIC-height max to XIC-height-Q3.</summary>
+    MS_obsolete_XIC_Height_quartile_ratios_OBSOLETE = 4000052,
 
     /// <summary>chromatography duration: The retention time duration of the chromatography in seconds.</summary>
     MS_chromatography_duration = 4000053,
 
-    /// <summary>TIC quarters RT fraction: The interval when the respective quarter of the TIC accumulates divided by retention time duration.</summary>
-    MS_TIC_quarters_RT_fraction = 4000054,
+    /// <summary>obsolete TIC quarters RT fraction: OBSOLETE. The interval when the respective quarter of the TIC accumulates divided by retention time duration.</summary>
+    MS_obsolete_TIC_quarters_RT_fraction_OBSOLETE = 4000054,
 
-    /// <summary>MS1 quarter RT fraction: The interval used for acquisition of the first, second, third, and fourth quarter of all MS1 events divided by retention time duration.</summary>
-    MS_MS1_quarter_RT_fraction = 4000055,
+    /// <summary>obsolete MS1 quarter RT fraction: OBSOLETE. The interval used for acquisition of the first, second, third, and fourth quarter of all MS1 events divided by retention time duration.</summary>
+    MS_obsolete_MS1_quarter_RT_fraction_OBSOLETE = 4000055,
 
-    /// <summary>MS2 quarter RT fraction: The interval used for acquisition of the first, second, third, and fourth quarter of all MS2 events divided by retention time duration.</summary>
-    MS_MS2_quarter_RT_fraction = 4000056,
+    /// <summary>obsolete MS2 quarter RT fraction: OBSOLETE. The interval used for acquisition of the first, second, third, and fourth quarter of all MS2 events divided by retention time duration.</summary>
+    MS_obsolete_MS2_quarter_RT_fraction_OBSOLETE = 4000056,
 
-    /// <summary>MS1 TIC-change quartile ratios: The log ratios of successive TIC-change quartiles. The TIC changes are the list of MS1 total ion current (TIC) value changes from one to the next scan, produced when each MS1 TIC is subtracted from the preceding MS1 TIC. The metric's value triplet represents the log ratio of the TIC-change Q2 to Q1, Q3 to Q2, TIC-change-max to Q3</summary>
-    MS_MS1_TIC_change_quartile_ratios = 4000057,
+    /// <summary>obsolete MS1 TIC-change quartile ratios: OBSOLETE. The log ratios of successive TIC-change quartiles. The TIC changes are the list of MS1 total ion current (TIC) value changes from one to the next scan, produced when each MS1 TIC is subtracted from the preceding MS1 TIC. The metric's value triplet represents the log ratio of the TIC-change Q2 to Q1, Q3 to Q2, TIC-change-max to Q3</summary>
+    MS_obsolete_MS1_TIC_change_quartile_ratios_OBSOLETE = 4000057,
 
-    /// <summary>MS1 TIC quartile ratios: The log ratios of successive TIC quartiles. The metric's value triplet represents the log ratios of TIC-Q2 to TIC-Q1, TIC-Q3 to TIC-Q2, TIC-max to TIC-Q3.</summary>
-    MS_MS1_TIC_quartile_ratios = 4000058,
+    /// <summary>obsolete MS1 TIC quartile ratios: OBSOLETE. The log ratios of successive TIC quartiles. The metric's value triplet represents the log ratios of TIC-Q2 to TIC-Q1, TIC-Q3 to TIC-Q2, TIC-max to TIC-Q3.</summary>
+    MS_obsolete_MS1_TIC_quartile_ratios_OBSOLETE = 4000058,
 
     /// <summary>number of MS1 spectra: The number of MS1 events in the run.</summary>
     MS_number_of_MS1_spectra = 4000059,
@@ -10905,10 +11264,10 @@ public enum class CVID
     /// <summary>slowest frequency for MS level 2 collection: The slowest acquisition speed with which product MS scans were collected. Scan acquisition frequency can be used to gauge the suitability of used instrument settings for the sample content used.</summary>
     MS_slowest_frequency_for_MS_level_2_collection = 4000096,
 
-    /// <summary>MS1 signal jump (10x) count: The number of times where MS1 TIC increased more than 10-fold between adjacent MS1 scans. An unusual high count of signal jumps or falls can indicate ESI stability issues.</summary>
+    /// <summary>MS1 signal jump (10x) count: The number of times where MS1 TIC increased more than 10-fold between adjacent MS1 scans.</summary>
     MS_MS1_signal_jump__10x__count = 4000097,
 
-    /// <summary>MS1 signal fall (10x) count: The number of times where MS1 TIC decreased more than 10-fold between adjacent MS1 scans. An unusual high count of signal jumps or falls can indicate ESI stability issues.</summary>
+    /// <summary>MS1 signal fall (10x) count: The number of times where MS1 TIC decreased more than 10-fold between adjacent MS1 scans.</summary>
     MS_MS1_signal_fall__10x__count = 4000098,
 
     /// <summary>number of empty MS1 scans: Number of MS1 scans where the scans' peaks intensity sums to 0 (i.e. no peaks or only 0-intensity peaks).</summary>
@@ -10962,20 +11321,20 @@ public enum class CVID
     /// <summary>MS2 peak density distribution high outliers: From the distribution of peak densities in MS2, the list of outliers above a in-file defined threshold</summary>
     MS_MS2_peak_density_distribution_high_outliers = 4000115,
 
-    /// <summary>precursor intensity distribution quantiles: From the distribution of precursor intensities, the quantiles. I.e. a value triplet represents the quartiles Q1, Q2, Q3</summary>
-    MS_precursor_intensity_distribution_quantiles = 4000116,
+    /// <summary>MS2 precursor intensity distribution: From the distribution of MS2 precursor intensities, the quantiles. E.g. a value triplet represents the quartiles Q1, Q2, Q3.</summary>
+    MS_MS2_precursor_intensity_distribution = 4000116,
 
-    /// <summary>precursor intensity distribution mean: From the distribution of precursor intensities, the mean</summary>
-    MS_precursor_intensity_distribution_mean = 4000117,
+    /// <summary>MS2 precursor intensity distribution mean: From the distribution of MS2 precursor intensities, the mean</summary>
+    MS_MS2_precursor_intensity_distribution_mean = 4000117,
 
-    /// <summary>precursor intensity distribution sigma: From the distribution of precursor intensities, the sigma value</summary>
-    MS_precursor_intensity_distribution_sigma = 4000118,
+    /// <summary>MS2 precursor intensity distribution sigma: From the distribution of MS2 precursor intensities, the sigma value</summary>
+    MS_MS2_precursor_intensity_distribution_sigma = 4000118,
 
-    /// <summary>precursor intensity distribution low outliers: From the distribution of precursor intensities, the list of outliers below a in-file defined threshold</summary>
-    MS_precursor_intensity_distribution_low_outliers = 4000119,
+    /// <summary>MS2 precursor intensity distribution low outliers: From the distribution of precursor intensities, the list of outliers below a in-file defined threshold</summary>
+    MS_MS2_precursor_intensity_distribution_low_outliers = 4000119,
 
-    /// <summary>precursor intensity distribution high outliers: From the distribution of precursor intensities, the list of outliers above a in-file defined threshold</summary>
-    MS_precursor_intensity_distribution_high_outliers = 4000120,
+    /// <summary>MS2 precursor intensity distribution high outliers: From the distribution of precursor intensities, the list of outliers above a in-file defined threshold</summary>
+    MS_MS2_precursor_intensity_distribution_high_outliers = 4000120,
 
     /// <summary>MS1 signal-to-noise ratio quantiles: From the distribution of signal-to-noise ratio in MS1, the quantiles. I.e. a value triplet represents the quartiles Q1, Q2, Q3</summary>
     MS_MS1_signal_to_noise_ratio_quantiles = 4000121,
@@ -11040,26 +11399,146 @@ public enum class CVID
     /// <summary>outlier threshold criterion: The definition of the outlier criteria applied.</summary>
     MS_outlier_threshold_criterion = 4000141,
 
-    /// <summary>Tukey's fence: Defines outliers with Tukey's fence as <(Q1-x*IQR) for low outliers and >(Q3+x*IQR) for high outliers, where x is defined by the term's value. The default is x=1.5</summary>
+    /// <summary>Tukey's fence: Defines outliers with Tukey's fence as <(Q1-x*IQR) for low outliers and >(Q3+x*IQR) for high outliers, where x is defined by the term's value. The default is x=1.5.</summary>
     MS_Tukey_s_fence = 4000142,
 
-    /// <summary>Tukey's fence high outliers: Defines high outliers with Tukey's fence as >(Q3+x*IQR) for high outliers, where x is defined by the term's value. The default is x=1.5</summary>
+    /// <summary>Tukey's fence high outliers: Defines high outliers with Tukey's fence as >(Q3+x*IQR) for high outliers, where x is defined by the term's value. The default is x=1.5.</summary>
     MS_Tukey_s_fence_high_outliers = 4000143,
 
-    /// <summary>Tukey's fence low outliers: Defines low outliers with Tukey's fence as <(Q1-x*IQR) for low outliers, where x is defined by the term's value. The default is x=1.5</summary>
+    /// <summary>Tukey's fence low outliers: Defines low outliers with Tukey's fence as <(Q1-x*IQR) for low outliers, where x is defined by the term's value. The default is x=1.5.</summary>
     MS_Tukey_s_fence_low_outliers = 4000144,
 
-    /// <summary>Z-score threshold: Defines outliers with a Z-score threshold as <(-x) for low outliers and >(+x) for high outliers, where x is defined by the term's value. The default is x=3</summary>
+    /// <summary>Z-score threshold: Defines outliers with a Z-score threshold as <(-x) for low outliers and >(+x) for high outliers, where x is defined by the term's value. The default is x=3.</summary>
     MS_Z_score_threshold = 4000145,
 
-    /// <summary>Z-score threshold high outliers: Defines outliers with a Z-score threshold as <(-x) for low outliers and >(+x) for high outliers, where x is defined by the term's value. The default is x=3</summary>
+    /// <summary>Z-score threshold high outliers: Defines outliers with a Z-score threshold as <(-x) for low outliers and >(+x) for high outliers, where x is defined by the term's value. The default is x=3.</summary>
     MS_Z_score_threshold_high_outliers = 4000146,
 
-    /// <summary>Z-score threshold low outliers: Defines outliers with a Z-score threshold as <(-x) for low outliers and >(+x) for high outliers, where x is defined by the term's value. The default is x=3</summary>
+    /// <summary>Z-score threshold low outliers: Defines outliers with a Z-score threshold as <(-x) for low outliers and >(+x) for high outliers, where x is defined by the term's value. The default is x=3.</summary>
     MS_Z_score_threshold_low_outliers = 4000147,
 
-    /// <summary>algorithmical threshold: Defines outliers algorithmically, where a single value threshold might not be applicable or p.r.n. multivariate decision making is applied. The value of the term should name the algorithmical method used</summary>
+    /// <summary>algorithmical threshold: Defines outliers algorithmically, where a single value threshold might not be applicable or p.r.n. multivariate decision making is applied. The value of the term should name the algorithmical method used.</summary>
     MS_algorithmical_threshold = 4000148,
+
+    /// <summary>iRT calibration formula: A polynomial formula to calibrate retention time based on iRT reference peptides. The order of the values corresponds to polynomial terms. I.e. a linear equation is represented by a two-tuple consisting of (slope, intercept). More general, the position in the n_tuple indicates the power of `x`: position `n → x^0`, position `n - 1 → x^1`, position `n - 2 → x^2`, etc.</summary>
+    MS_iRT_calibration_formula = 4000149,
+
+    /// <summary>iRT calibration adjusted r-squared: The goodness of fit statistic between observed retention times and iRT calibrated retention times.</summary>
+    MS_iRT_calibration_adjusted_r_squared = 4000150,
+
+    /// <summary>MsQuality: MsQuality – an interoperable open-source package for the calculation of standardized quality metrics of mass spectrometry data.</summary>
+    MS_MsQuality = 4000151,
+
+    /// <summary>MS2 precursor median m/z of identified quantification data points: Median m/z value for MS2 precursors of all quantification data points after user-defined acceptance criteria are applied. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_MS2_precursor_median_m_z_of_identified_quantification_data_points = 4000152,
+
+    /// <summary>interquartile RT period for identified quantification data points: The interquartile retention time period, in seconds, for all quantification data points after user-defined acceptance criteria are applied over the complete run. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_interquartile_RT_period_for_identified_quantification_data_points = 4000153,
+
+    /// <summary>rate of the interquartile RT period for identified quantification data points: The rate of identified quantification data points for the interquartile retention time period, in identified quantification data points per second. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_rate_of_the_interquartile_RT_period_for_identified_quantification_data_points = 4000154,
+
+    /// <summary>area under TIC: The area under the total ion chromatogram.</summary>
+    MS_area_under_TIC = 4000155,
+
+    /// <summary>area under TIC RT quantiles: The area under the total ion chromatogram of the retention time quantiles. Number of quantiles are given by the n-tuple.</summary>
+    MS_area_under_TIC_RT_quantiles = 4000156,
+
+    /// <summary>extent of identified MS2 precursor intensity: Ratio of 95th over 5th percentile of MS2 precursor intensity for all quantification data points after user-defined acceptance criteria are applied. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_extent_of_identified_MS2_precursor_intensity = 4000157,
+
+    /// <summary>median of TIC values in the RT range in which the middle half of quantification data points are identified: Median of TIC values in the RT range in which half of quantification data points are identified (RT values of Q1 to Q3 of identifications). These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_median_of_TIC_values_in_the_RT_range_in_which_the_middle_half_of_quantification_data_points_are_identified = 4000158,
+
+    /// <summary>median of TIC values in the shortest RT range in which half of the quantification data points are identified: Median of TIC values in the shortest RT range in which half of the quantification data points are identified. These data points may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_median_of_TIC_values_in_the_shortest_RT_range_in_which_half_of_the_quantification_data_points_are_identified = 4000159,
+
+    /// <summary>MS2 precursor intensity range: Minimum and maximum MS2 precursor intensity recorded.</summary>
+    MS_MS2_precursor_intensity_range = 4000160,
+
+    /// <summary>identified MS2 precursor intensity distribution: From the distribution of identified MS2 precursor intensities, the quantiles. E.g. a value triplet represents the quartiles Q1, Q2, Q3. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_identified_MS2_precursor_intensity_distribution = 4000161,
+
+    /// <summary>unidentified MS2 precursor intensity distribution: From the distribution of unidentified MS2 precursor intensities, the quantiles. E.g. a value triplet represents the quartiles Q1, Q2, Q3. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_unidentified_MS2_precursor_intensity_distribution = 4000162,
+
+    /// <summary>identified MS2 precursor intensity distribution mean: From the distribution of identified MS2 precursor intensities, the mean. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_identified_MS2_precursor_intensity_distribution_mean = 4000163,
+
+    /// <summary>unidentified MS2 precursor intensity distribution mean: From the distribution of unidentified MS2 precursor intensities, the mean. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_unidentified_MS2_precursor_intensity_distribution_mean = 4000164,
+
+    /// <summary>identified MS2 precursor intensity distribution sigma: From the distribution of identified MS2 precursor intensities, the sigma value. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_identified_MS2_precursor_intensity_distribution_sigma = 4000165,
+
+    /// <summary>unidentified MS2 precursor intensity distribution sigma: From the distribution of unidentified MS2 precursor intensities, the sigma value. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_unidentified_MS2_precursor_intensity_distribution_sigma = 4000166,
+
+    /// <summary>ratio of 1+ over 2+ of all MS2 known precursor charges: The ratio of 1+ over 2+ MS2 precursor charge count of all spectra.</summary>
+    MS_ratio_of_1__over_2__of_all_MS2_known_precursor_charges = 4000167,
+
+    /// <summary>ratio of 1+ over 2+ of identified MS2 known precursor charges: The ratio of 1+ over 2+ MS2 precursor charge count of identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_ratio_of_1__over_2__of_identified_MS2_known_precursor_charges = 4000168,
+
+    /// <summary>ratio of 3+ over 2+ of all MS2 known precursor charges: The ratio of 3+ over 2+ MS2 precursor charge count of all spectra.</summary>
+    MS_ratio_of_3__over_2__of_all_MS2_known_precursor_charges = 4000169,
+
+    /// <summary>ratio of 3+ over 2+ of identified MS2 known precursor charges: The ratio of 3+ over 2+ MS2 precursor charge count of identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_ratio_of_3__over_2__of_identified_MS2_known_precursor_charges = 4000170,
+
+    /// <summary>ratio of 4+ over 2+ of all MS2 known precursor charges: The ratio of 4+ over 2+ MS2 precursor charge count of all spectra.</summary>
+    MS_ratio_of_4__over_2__of_all_MS2_known_precursor_charges = 4000171,
+
+    /// <summary>ratio of 4+ over 2+ of identified MS2 known precursor charges: The ratio of 4+ over 2+ MS2 precursor charge count of identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_ratio_of_4__over_2__of_identified_MS2_known_precursor_charges = 4000172,
+
+    /// <summary>mean MS2 precursor charge in all spectra: Mean MS2 precursor charge in all spectra</summary>
+    MS_mean_MS2_precursor_charge_in_all_spectra = 4000173,
+
+    /// <summary>mean MS2 precursor charge in identified spectra: Mean MS2 precursor charge in identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_mean_MS2_precursor_charge_in_identified_spectra = 4000174,
+
+    /// <summary>median MS2 precursor charge in all spectra: Median MS2 precursor charge in all spectra</summary>
+    MS_median_MS2_precursor_charge_in_all_spectra = 4000175,
+
+    /// <summary>median MS2 precursor charge in identified spectra: Median MS2 precursor charge in identified spectra. The used type of identification should be noted in the metadata or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_median_MS2_precursor_charge_in_identified_spectra = 4000176,
+
+    /// <summary>contaminant protein abundance fraction: The fraction of total protein abundance in a mass spectrometry run or a group of runs which can be attributed to a user-defined list of contaminant proteins (e.g. using the cRAP contaminant database).</summary>
+    MS_contaminant_protein_abundance_fraction = 4000177,
+
+    /// <summary>precursor ppm deviation mean: The mean of the distribution of observed precursor mass accuracies (MS:4000072) [in ppm] of identified MS2 spectra after user-defined acceptance criteria (FDR) are applied</summary>
+    MS_precursor_ppm_deviation_mean = 4000178,
+
+    /// <summary>precursor ppm deviation sigma: The standard deviation of the distribution of observed precursor mass accuracies (MS:4000072) [in ppm] of identified MS2 spectra after user-defined acceptance criteria (FDR) are applied</summary>
+    MS_precursor_ppm_deviation_sigma = 4000179,
+
+    /// <summary>table of missed cleavage counts: The number of identified peptides with corresponding number of missed cleavages after user-defined acceptance criteria are applied. The number of missed cleavages per peptide is given in the 'number of missed cleavages' column, the respective count of such peptides identified in the 'Number of Occurrences' column. The highest 'missed cleavages' row is to be interpreted as that number of missed cleavages or higher.</summary>
+    MS_table_of_missed_cleavage_counts = 4000180,
+
+    /// <summary>obsolete identified MS2 quarter RT fraction: OBSOLETE. The interval used for acquisition of the first, second, third, and fourth quarter of all identified MS2 events divided by retention time duration.</summary>
+    MS_obsolete_identified_MS2_quarter_RT_fraction_OBSOLETE = 4000181,
+
+    /// <summary>XIC-Height quantile ratios: The log ratio of successive XIC height quantiles. A value triplet represents the original QuaMeter metrics, the log ratios of XIC-Height-Q2 to XIC-Height-Q1, XIC-Height-Q3 to XIC-Height-Q2, XIC-Height max to XIC-Height-Q3. The number of values in the tuple implies the quantile mode.</summary>
+    MS_XIC_Height_quantile_ratios = 4000182,
+
+    /// <summary>TIC quantile RT fraction: The interval when the respective quantile of the TIC accumulates divided by retention time duration. The number of values in the tuple implies the quantile mode.</summary>
+    MS_TIC_quantile_RT_fraction = 4000183,
+
+    /// <summary>MS1 quantile RT fraction: The interval used for acquisition of quantiles of all MS1 events divided by retention time duration. The number of values in the tuple implies the quantile mode.</summary>
+    MS_MS1_quantile_RT_fraction = 4000184,
+
+    /// <summary>MS2 quantile RT fraction: The interval used for acquisition of quantiles of all MS2 events divided by retention time duration. The number of values in the tuple implies the quantile mode.</summary>
+    MS_MS2_quantile_RT_fraction = 4000185,
+
+    /// <summary>MS1 TIC-change quantile ratios: The log ratios of successive TIC-change quantiles. The TIC changes are the list of MS1 total ion current (TIC) value changes from one to the next scan, produced when each MS1 TIC is subtracted from the preceding MS1 TIC. A value triplet represents the original QuaMeter metrics, the log ratio of the TIC-change Q2 to Q1, Q3 to Q2, TIC-change-max to Q3. The number of values in the tuple implies the quantile mode.</summary>
+    MS_MS1_TIC_change_quantile_ratios = 4000186,
+
+    /// <summary>MS1 TIC quantile ratios: The log ratios of successive TIC quantiles. A value triplet represents the original QuaMeter metrics, the log ratios of TIC-Q2 to TIC-Q1, TIC-Q3 to TIC-Q2, TIC-max to TIC-Q3. The number of values in the tuple implies the quantile mode.</summary>
+    MS_MS1_TIC_quantile_ratios = 4000187,
+
+    /// <summary>identified MS2 quantile RT fraction: The interval used for acquisition of quantiles of all identified MS2 events, after user-defined acceptance criteria are applied, divided by retention time duration. The number of values in the tuple implies the quantile mode. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_identified_MS2_quantile_RT_fraction = 4000188,
 
     /// <summary>unimod root node: The root node of the unimod modifications ontology.</summary>
     UNIMOD_unimod_root_node = 300000000,
@@ -15588,20 +16067,134 @@ public enum class CVID
     /// <summary>DBIA: Desthiobiotinylation of cysteine with DBIA probe.</summary>
     UNIMOD_DBIA = 300002062,
 
-    /// <summary>Mono_Nγ-propargyl-L-Gln_desthiobiotin: Monomodification of Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
-    UNIMOD_Mono_N___propargyl_L_Gln_desthiobiotin = 300002067,
+    /// <summary>Mono_Ngamma-propargyl-L-Gln_desthiobiotin: Monomodification of Ngamma-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
+    UNIMOD_Mono_Ngamma_propargyl_L_Gln_desthiobiotin = 300002067,
 
-    /// <summary>Di_L-Glu_Nγ-propargyl-L-Gln_desthiobiotin: Dimodification of L-Glu and Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
-    UNIMOD_Di_L_Glu_N___propargyl_L_Gln_desthiobiotin = 300002068,
+    /// <summary>Di_L-Glu_Ngamma-propargyl-L-Gln_desthiobiotin: Dimodification of L-Glu and Ngamma-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
+    UNIMOD_Di_L_Glu_Ngamma_propargyl_L_Gln_desthiobiotin = 300002068,
 
-    /// <summary>Di_L-Gln_Nγ-propargyl-L-Gln_desthiobiotin: Dimodification of L-Gln and Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
-    UNIMOD_Di_L_Gln_N___propargyl_L_Gln_desthiobiotin = 300002069,
+    /// <summary>Di_L-Gln_Ngamma-propargyl-L-Gln_desthiobiotin: Dimodification of L-Gln and Ngamma-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
+    UNIMOD_Di_L_Gln_Ngamma_propargyl_L_Gln_desthiobiotin = 300002069,
 
     /// <summary>L-Gln: Monomodification with glutamine.</summary>
     UNIMOD_L_Gln = 300002070,
 
     /// <summary>Glyceroyl: Glyceroylation.</summary>
     UNIMOD_Glyceroyl = 300002072,
+
+    /// <summary>N6pAMP: Plain N6-Propargyl-AMP modified proteins without any clicked enrichment tag.</summary>
+    UNIMOD_N6pAMP = 300002073,
+
+    /// <summary>DABCYL-C2-maleimide: DABCYL-C2-maleimide Thiol-reactive dye for fluorescence labelling of proteins.</summary>
+    UNIMOD_DABCYL_C2_maleimide = 300002074,
+
+    /// <summary>NBF: Thiol blocking reagent.</summary>
+    UNIMOD_NBF = 300002079,
+
+    /// <summary>DCP: Dimedone-Based Chemical Probes.</summary>
+    UNIMOD_DCP = 300002080,
+
+    /// <summary>Ethynyl: Ethynlation of cysteine residues.</summary>
+    UNIMOD_Ethynyl = 300002081,
+
+    /// <summary>QQTGG: SUMOylation leaving QQTGG.</summary>
+    UNIMOD_QQTGG = 300002082,
+
+    /// <summary>Pyro-QQTGG: SUMOylation leaving Pyro-QQTGG.</summary>
+    UNIMOD_Pyro_QQTGG = 300002083,
+
+    /// <summary>NQTGG: SUMOylation leaving NQTGG.</summary>
+    UNIMOD_NQTGG = 300002084,
+
+    /// <summary>DVFQQQTGG: SUMOylation by Endogenous SUMO2/3 following Lys C and Asp-N serial digestion.</summary>
+    UNIMOD_DVFQQQTGG = 300002085,
+
+    /// <summary>iST-NHS specific cysteine modification: Preomics iST-NHS Kit specific cysteine modification.</summary>
+    UNIMOD_iST_NHS_specific_cysteine_modification = 300002086,
+
+    /// <summary>Label:13C(2)15N(1): 13C(2) 15N(1) Silac label.</summary>
+    UNIMOD_Label_13C_2_15N_1_ = 300002088,
+
+    /// <summary>DPIA: Desthiobiotinylation of cysteine with DPIA (Desthiobiotin polyethyleneoxide iodoacetamide) probe.</summary>
+    UNIMOD_DPIA = 300002106,
+
+    /// <summary>Acetoacetyl: Acetoacetylation.</summary>
+    UNIMOD_Acetoacetyl = 300002107,
+
+    /// <summary>Isovaleryl: Isovalerylation.</summary>
+    UNIMOD_Isovaleryl = 300002108,
+
+    /// <summary>2-methylbutyryl: 2-methylbutyrylation.</summary>
+    UNIMOD_2_methylbutyryl = 300002109,
+
+    /// <summary>Tiglyl: Tiglylation.</summary>
+    UNIMOD_Tiglyl = 300002110,
+
+    /// <summary>3-methylglutaryl: 3-methylglutarylation.</summary>
+    UNIMOD_3_methylglutaryl = 300002111,
+
+    /// <summary>3-methylglutaconyl: 3-methylglutaconylation.</summary>
+    UNIMOD_3_methylglutaconyl = 300002112,
+
+    /// <summary>3-hydroxy-3-methylglutaryl: 3-hydroxy-3-methylglutarylation.</summary>
+    UNIMOD_3_hydroxy_3_methylglutaryl = 300002113,
+
+    /// <summary>Lactylation: Lactylation(Lac).</summary>
+    UNIMOD_Lactylation = 300002114,
+
+    /// <summary>Pyruvoyl: Pyruvoylation.</summary>
+    UNIMOD_Pyruvoyl = 300002115,
+
+    /// <summary>Glyoxylyl: Glyoxylylation.</summary>
+    UNIMOD_Glyoxylyl = 300002116,
+
+    /// <summary>Itaconatyl: Itaconatylation.</summary>
+    UNIMOD_Itaconatyl = 300002117,
+
+    /// <summary>Itaconyl: Itaconylation.</summary>
+    UNIMOD_Itaconyl = 300002118,
+
+    /// <summary>ValGly: UFMylation residue.</summary>
+    UNIMOD_ValGly = 300002119,
+
+    /// <summary>Pentanoyl: Pentanoylation.</summary>
+    UNIMOD_Pentanoyl = 300002120,
+
+    /// <summary>Hexanoyl: Hexanoylation.</summary>
+    UNIMOD_Hexanoyl = 300002121,
+
+    /// <summary>Label:13C(6)15N(2)+TMT6plex: Sixplex Tandem Mass Tag 13C(6) 15N(2) Silac label.</summary>
+    UNIMOD_Label_13C_6_15N_2__TMT6plex = 300002122,
+
+    /// <summary>Label:13C(6)15N(2)+TMTpro: TMTpro Tandem Mass Tag 13C(6) 15N(2) Silac label.</summary>
+    UNIMOD_Label_13C_6_15N_2__TMTpro = 300002123,
+
+    /// <summary>2PCA-triazole-ethanethiol: Cleaved 2PCA clicked to biotin-SS-azide.</summary>
+    UNIMOD_2PCA_triazole_ethanethiol = 300002126,
+
+    /// <summary>Desthiobiotin-Phenol: Desthiobiotin-Phenol.</summary>
+    UNIMOD_Desthiobiotin_Phenol = 300002127,
+
+    /// <summary>Cys-vinyl sulfone amine probe addition: Michael addition of a vinyl sulfone amine desthiobiotin probe to cysteine.</summary>
+    UNIMOD_Cys_vinyl_sulfone_amine_probe_addition = 300002128,
+
+    /// <summary>Cys->fGly-diol: Formylglycinediol, activated in sulfatases.</summary>
+    UNIMOD_Cys__fGly_diol = 300002129,
+
+    /// <summary>Cys->sulfo-fGly-dio: Sulphated formylglycinediol, activated in sulfatases.</summary>
+    UNIMOD_Cys__sulfo_fGly_dio = 300002130,
+
+    /// <summary>Cys->Ser-O-sulfate: Serine O-sulfate.</summary>
+    UNIMOD_Cys__Ser_O_sulfate = 300002131,
+
+    /// <summary>b-type-ion: Dehydration of C-terminus as reaction inside the mass spectrometer.</summary>
+    UNIMOD_b_type_ion = 300002132,
+
+    /// <summary>PnTAG: 6-Phosphonohexanoylation.</summary>
+    UNIMOD_PnTAG = 300002135,
+
+    /// <summary>DMA-PEG3: DimethylaminoPEG3ylation.</summary>
+    UNIMOD_DMA_PEG3 = 300002136,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 400000000,
@@ -16840,17 +17433,17 @@ public ref class CVTermInfo
     /// <summary>
     /// returns a list of terms which this term has an IS_A relationship with
     /// </summary>
-    property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA, gcnew System::Object());} }
+    property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA, gcnew Object());} }
 
     /// <summary>
     /// returns a list of terms which this term has a PART_OF relationship with
     /// </summary>
-    property CVIDList^ parentsPartOf { CVIDList^ get() {return gcnew CVIDList(&base_->parentsPartOf, gcnew System::Object());} }
+    property CVIDList^ parentsPartOf { CVIDList^ get() {return gcnew CVIDList(&base_->parentsPartOf, gcnew Object());} }
 
     /// <summary>
     /// returns a list of term names synonymous with this term
     /// </summary>
-    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms, gcnew System::Object());} }
+    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms, gcnew Object());} }
 
     CVTermInfo() : base_(new pwiz::cv::CVTermInfo()) {}
 

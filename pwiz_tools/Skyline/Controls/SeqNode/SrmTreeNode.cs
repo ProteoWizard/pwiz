@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,8 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -285,7 +283,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 var annotations = Model.Annotations;
                 if (!String.IsNullOrEmpty(annotations.Note))
                 {
-                    lastMultiLine = table.AddDetailRowLineWrap(g, Resources.SrmTreeNode_RenderTip_Note, annotations.Note, rt); 
+                    lastMultiLine = table.AddDetailRowLineWrap(g, SeqNodeResources.SrmTreeNode_RenderTip_Note, annotations.Note, rt); 
                     // L10N: I'm not completely sure if the user will see this, but in AddDetailRowLineWrap it seems like
                         // the function displays the values.
                 }
@@ -301,15 +299,15 @@ namespace pwiz.Skyline.Controls.SeqNode
                         // exception, just guess that anything where the annotation name and value are equal
                         // is a True/False type set to True, and display everything else as usual.
                         if (Equals(annotationName, annotationValue))
-                            annotationValue = Resources.SrmTreeNode_RenderTip_True;
+                            annotationValue = SeqNodeResources.SrmTreeNode_RenderTip_True;
                         // L10N: I'm not completely sure if the user will see this, but in AddDetailRowLineWrap it seems like
                         // the function displays the values.
                     }
                     else if (def.Type == AnnotationDef.AnnotationType.true_false)
                     {
                         annotationValue = annotationValue != null
-                                              ? Resources.SrmTreeNode_RenderTip_True
-                                              : Resources.SrmTreeNode_RenderTip_False;
+                                              ? SeqNodeResources.SrmTreeNode_RenderTip_True
+                                              : SeqNodeResources.SrmTreeNode_RenderTip_False;
                         // L10N: I'm not completely sure if the user will see this, but in AddDetailRowLineWrap it seems like
                         // the function displays the values.
                     }
@@ -456,7 +454,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             if (exception != null)
             {
-                MessageDlg.Show(Program.MainWindow, TextUtil.LineSeparate(Resources.SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_, exception.Message));                
+                MessageDlg.Show(Program.MainWindow, TextUtil.LineSeparate(SeqNodeResources.SrmTreeNodeParent_ShowPickList_An_error_occurred_creating_options_, exception.Message));                
             }
         }
 
@@ -1109,7 +1107,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             catch (Exception exception)
             {
-                ExceptionUtil.DisplayOrReportException(this, exception, Resources.NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_);
+                ExceptionUtil.DisplayOrReportException(this, exception, SeqNodeResources.NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_);
             }
         }
 
@@ -1199,15 +1197,20 @@ namespace pwiz.Skyline.Controls.SeqNode
         public const int COL_SPACING = 2;
         public const int TABLE_SPACING = 6;
 
-        public void AddDetailRow(string name, string value, RenderTools rt)
+        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign)
         {
             var row = new RowDesc
                 {
                     new CellDesc(name, rt) { Font = rt.FontBold },
-                    new CellDesc(value, rt)
+                    new CellDesc(value, rt) { Align = dataAlign }
                 };
             row.ColumnSpacing = COL_SPACING;
             Add(row);
+        }
+
+        public void AddDetailRow(string name, string value, RenderTools rt)
+        {
+            AddDetailRow(name, value, rt, StringAlignment.Near);
         }
 
         private const string X80 =
@@ -1355,50 +1358,5 @@ namespace pwiz.Skyline.Controls.SeqNode
             get { return _sizeF.Height; }
             set { _sizeF.Height = value; }
         }
-    }
-
-    public class DisplaySettings
-    {
-        internal readonly bool _showBestReplicate;
-        internal readonly int _resultsIndex;
-
-        public DisplaySettings(NormalizedValueCalculator normalizedValueCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, NormalizeOption normalizeOption)
-        {
-            NormalizedValueCalculator = normalizedValueCalculator;
-            _showBestReplicate = showBestReplicate;
-            _resultsIndex = resultsIndex;
-            NormalizeOption = normalizeOption;
-            NodePep = nodePep;
-        }
-         
-        public DisplaySettings(DisplaySettings settings, PeptideDocNode nodePep) 
-        {
-            _showBestReplicate = settings._showBestReplicate;
-            _resultsIndex = settings._resultsIndex;
-            NormalizeOption = settings.NormalizeOption;
-            NodePep = nodePep;
-        }
-
-        public PeptideDocNode NodePep { get; private set; }
-
-        public int ResultsIndex
-        {
-            get
-            {
-                return _showBestReplicate && NodePep != null && NodePep.BestResult != -1 ? NodePep.BestResult : _resultsIndex;
-            }
-        }
-
-        public NormalizeOption NormalizeOption { get; private set; }
-
-        public NormalizationMethod NormalizationMethod
-        {
-            get
-            {
-                return NormalizedValueCalculator.NormalizationMethodForMolecule(NodePep, NormalizeOption);
-            }
-        }
-
-        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
     }
 }

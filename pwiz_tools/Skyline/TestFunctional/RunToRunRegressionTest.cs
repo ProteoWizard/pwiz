@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -43,59 +43,61 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Change to true to write annotation value arrays to console
         /// </summary>
-        private bool IsRecordMode
-        {
-            get { return false; }
-        }
+        protected override bool IsRecordMode => false;
 
-        // BEGIN GENERATED CODE: Use IsRecordeMode = true to regenerat
+        // BEGIN GENERATED CODE: Use IsRecordMode = true to regenerate
         private static readonly int[,] TARGET_PEPTIDE_COUNTS =
         {
-            {0, 22, 22, 22, 22},
-            {22, 0, 22, 22, 22},
-            {22, 22, 0, 22, 22},
-            {22, 22, 22, 0, 22},
-            {22, 22, 22, 22, 0}
+            { 0, 22, 22, 22, 22 },
+            { 22, 0, 22, 22, 22 },
+            { 22, 22, 0, 22, 22 },
+            { 22, 22, 22, 0, 22 },
+            { 22, 22, 22, 22, 0 }
         };
+
         private static readonly int[,] ORIGINAL_PEPTIDE_COUNTS =
         {
-            {0, 22, 22, 22, 22},
-            {22, 0, 22, 22, 22},
-            {22, 22, 0, 22, 22},
-            {22, 22, 22, 0, 22},
-            {22, 22, 22, 22, 0}
+            { 0, 22, 22, 22, 22 },
+            { 22, 0, 22, 22, 22 },
+            { 22, 22, 0, 22, 22 },
+            { 22, 22, 22, 0, 22 },
+            { 22, 22, 22, 22, 0 }
         };
+
         private static readonly double[,] R_VALUES =
         {
-            {0, 0.999993931908946, 0.999843506239357, 0.999839232254387, 0.999834925925893},
-            {0.999993931908947, 0, 0.999843746240661, 0.999850167871986, 0.999845222422893},
-            {0.999843506239357, 0.99984374624066, 0, 0.999994147903928, 0.999995277589245},
-            {0.999839232254387, 0.999850167871986, 0.999994147903929, 0, 0.999998880406438},
-            {0.999834925925894, 0.999845222422893, 0.999995277589245, 0.999998880406438, 0}
+            { 0, 0.999992944457394, 0.999817770399884, 0.999812502870249, 0.999807353633302 },
+            { 0.999992944457394, 0, 0.999817830781769, 0.999825129251812, 0.999819275656542 },
+            { 0.999817770399884, 0.99981783078177, 0, 0.999993207021838, 0.999994582592321 },
+            { 0.99981250287025, 0.999825129251812, 0.999993207021838, 0, 0.999998704916427 },
+            { 0.999807353633302, 0.999819275656543, 0.999994582592321, 0.999998704916427, 0 }
         };
+
         private static readonly double[,] SLOPES =
         {
-            {0, 0.999707475441337, 1.00017889353965, 1.0006184891116, 1.00154337723693},
-            {1.00028047045787, 0, 1.00046572523814, 1.00091615389789, 1.00184067681074},
-            {0.999508231403589, 0.999222153920973, 0, 1.00043793880301, 1.00136810418741},
-            {0.999060582263086, 0.998785317132195, 0.999550553868999, 0, 1.00092750683297},
-            {0.998129388922859, 0.997853742557447, 0.998624333069067, 0.999071115527851, 0}
+            { 0, 0.999607891519822, 0.999756712491327, 1.0003022798358, 1.00128575356905 },
+            { 1.00037814571889, 0, 1.00014188315679, 1.00070023768746, 1.00168339707711 },
+            { 0.999878832037415, 0.999493883401799, 0, 1.00054417477809, 1.00153442212351 },
+            { 0.999322965713689, 0.998950786095061, 0.999442542665955, 0, 1.00098703546797 },
+            { 0.998331136557306, 0.997958623344754, 0.998457110534213, 0.999011350198982, 0 }
         };
+
         private static readonly double[,] INTERCEPTS =
         {
-            {0, 0.0133084134167909, 0.056519079598754, 0.0422773381099439, 0.034396123070028},
-            {-0.0130393823593842, 0, 0.0433540454886234, 0.0288681051767803, 0.0209988978057503},
-            {-0.0494741792022388, -0.0363139773301882, 0, -0.0142038029294511, -0.0222056158333466},
-            {-0.0350274788274447, -0.0221133023480569, 0.014459895361707, 0, -0.00794784994821995},
-            {-0.0269327618715351, -0.0140162875262924, 0.0223867551509969, 0.00799065432053325, 0}
+            { 0, 0.0162532566394056, 0.0689843384404689, 0.0516126437507367, 0.0419961785381027 },
+            { -0.0159278368819393, 0, 0.052915761685842, 0.0352425033092878, 0.02563874595862 },
+            { -0.0604335876103832, -0.0443494182710644, 0, -0.0173401603146601, -0.0271120964763334 },
+            { -0.0427866868055879, -0.0270064632764146, 0.0176490191016505, 0, -0.00970398101961933 },
+            { -0.0328988464366269, -0.0171177668713902, 0.0273241444284622, 0.00975507951111254, 0 }
         };
+
         private static readonly double[,] WINDOWS =
         {
-            {0, 0.5, 0.913480355580205, 0.925869324756884, 0.938186549030894},
-            {0.5, 0, 0.913041225784304, 0.894083995681225, 0.908718421411426},
-            {0.913174040667638, 0.912473597676775, 0, 0.5, 0.5},
-            {0.925148280694587, 0.893131787005536, 0.5, 0, 0.5},
-            {0.936586172975179, 0.906908446828345, 0.5, 0.5, 0}
+            { 0, 0.5, 0.933386997257438, 0.94677989146463, 0.959691317575048 },
+            { 0.5, 0, 0.9335918441867, 0.914700525039467, 0.929882418592967 },
+            { 0.933444001783852, 0.933289354450495, 0, 0.5, 0.5 },
+            { 0.946316320610471, 0.913900623015458, 0.5, 0, 0.5 },
+            { 0.958274331887216, 0.928151917977531, 0.5, 0.5, 0 }
         };
         // END GENERATED CODE
 
@@ -131,7 +133,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(targetIndex, summary.StateProvider.SelectedResultsIndex);
                     });
                     WaitForGraphs();
-                    WaitForConditionUI(() => regressionPane._progressBar == null);
+                    WaitForConditionUI(() => RegressionPaneReady(regressionPane, SLOPES[i, j], INTERCEPTS[i, j]));
                     var window = TestRegressionStatistics(regressionPane, i, j);
 
                     RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
@@ -159,7 +161,7 @@ namespace pwiz.SkylineTestFunctional
                     // Go back to correlation graph and make sure everything is still right
                     RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.correlation));
                     WaitForGraphs();
-                    WaitForConditionUI(() => regressionPane._progressBar == null);
+                    WaitForConditionUI(() => RegressionPaneReady(regressionPane, SLOPES[i,j], INTERCEPTS[i,j]));
                     TestRegressionStatistics(regressionPane, i, j);
                 }
             }
@@ -179,7 +181,7 @@ namespace pwiz.SkylineTestFunctional
                     RunToRunOriginalReplicate(summary).SelectedIndex = selfIndex;
                 });
                 WaitForGraphs();
-                WaitForConditionUI(() => regressionPane._progressBar == null);
+                WaitForConditionUI(() => RegressionPaneReady(regressionPane, 1.0, 0.0, 10e-3));
                 RunUI(() =>
                 {
                     var regression = regressionPane.RegressionRefined;
@@ -215,14 +217,15 @@ namespace pwiz.SkylineTestFunctional
             if (!graphSummary.TryGetGraphPane(out regressionPaneScore))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
             WaitForCondition(() => regressionPaneScore.IsRefined);
-            WaitForConditionUI(() => regressionPaneScore._progressBar == null);
+            double expectedSlope = 1.01, expectedIntercept = 0.32;
+            WaitForConditionUI(() => RegressionPaneReady(regressionPaneScore, expectedSlope, expectedIntercept, 10e-3));
 
             Assert.IsFalse(regressionPaneScore.HasToolbar);
             var regressionScoreToRun = regressionPaneScore.RegressionRefined;
             var statisticsScoreToRun = regressionPaneScore.StatisticsRefined;
             var regressionScoreToRunLine = (RegressionLineElement) regressionScoreToRun.Conversion;
-            Assert.AreEqual(1.01, regressionScoreToRunLine.Slope, 10e-3);
-            Assert.AreEqual(0.32, regressionScoreToRunLine.Intercept, 10e-3);
+            Assert.AreEqual(expectedSlope, regressionScoreToRunLine.Slope, 10e-3);
+            Assert.AreEqual(expectedIntercept, regressionScoreToRunLine.Intercept, 10e-3);
             Assert.AreEqual(15.2, regressionScoreToRun.TimeWindow, 10e-2);
             Assert.AreEqual(0.9483, statisticsScoreToRun.R, 10e-3);
 
@@ -232,6 +235,22 @@ namespace pwiz.SkylineTestFunctional
             if (!graphSummary.TryGetGraphPane(out regressionPane))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
             Assert.IsTrue(regressionPane.HasToolbar);
+        }
+
+        private bool RegressionPaneReady(RTLinearRegressionGraphPane regressionPane, double slope, double intercept, double tolerance = 10e-5)
+        {
+            if (regressionPane.IsCalculating)
+                return false;
+            if (regressionPane._progressBar != null)
+                return false;
+            var regressionLine = regressionPane.RegressionRefined?.Conversion;
+            if (regressionLine == null)
+                return false;
+            if (IsRecordMode)
+                return true;
+            return Math.Abs(slope - regressionLine.Slope) < tolerance &&
+                   Math.Abs(intercept - regressionLine.Intercept) < tolerance;
+
         }
 
         public RunToRunRegressionToolbar RegressionToolbar(GraphSummary graphSummary)
@@ -265,15 +284,15 @@ namespace pwiz.SkylineTestFunctional
             if (!IsRecordMode)
             {
                 //RValue is the same in both directions
-                Assert.AreEqual(rValue, R_VALUES[j, i], 0.00001);
-                Assert.AreEqual(rValue, R_VALUES[i, j], 0.00001);
+                Assert.AreEqual(rValue, R_VALUES[j, i], 10e-5);
+                Assert.AreEqual(rValue, R_VALUES[i, j], 10e-5);
                 Assert.AreEqual(originalPeptideCount, TARGET_PEPTIDE_COUNTS[j, i]);
                 Assert.AreEqual(targetPeptideCount, ORIGINAL_PEPTIDE_COUNTS[j, i]);
                 Assert.AreEqual(originalPeptideCount, ORIGINAL_PEPTIDE_COUNTS[i, j]);
                 Assert.AreEqual(targetPeptideCount, TARGET_PEPTIDE_COUNTS[i, j]);
-                Assert.AreEqual(slope, SLOPES[i, j], 0.00001);
-                Assert.AreEqual(intercept, INTERCEPTS[i, j], 0.00001);
-                Assert.AreEqual(window, WINDOWS[i, j], 0.00001);
+                Assert.AreEqual(slope, SLOPES[i, j], 10e-5);
+                Assert.AreEqual(intercept, INTERCEPTS[i, j], 10e-5);
+                Assert.AreEqual(window, WINDOWS[i, j], 10e-5);
             }
             else
             {

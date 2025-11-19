@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                var normalizationData = DataSchema.NormalizedValueCalculator.GetNormalizationData();
+                var normalizationData = DataSchema.LazyNormalizationData.Value;
                 var log2Median = normalizationData.GetLog2Median(Replicate.ReplicateIndex, ChromFileInfoId);
                 if (log2Median.HasValue)
                 {

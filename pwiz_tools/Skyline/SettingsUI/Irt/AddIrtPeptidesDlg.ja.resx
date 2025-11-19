@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>497, 14</value>
+    <value>595, 14</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>497, 44</value>
+    <value>595, 44</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -199,7 +199,7 @@
     <value>ポイント数</value>
   </data>
   <data name="Points.MinimumWidth" type="System.Int32, mscorlib">
-    <value>32</value>
+    <value>80</value>
   </data>
   <metadata name="Equation.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -208,7 +208,7 @@
     <value>式</value>
   </data>
   <data name="Equation.MinimumWidth" type="System.Int32, mscorlib">
-    <value>38</value>
+    <value>100</value>
   </data>
   <metadata name="R.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -217,7 +217,7 @@
     <value>R</value>
   </data>
   <data name="R.MinimumWidth" type="System.Int32, mscorlib">
-    <value>25</value>
+    <value>30</value>
   </data>
   <metadata name="Result.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -232,7 +232,7 @@
     <value>5, 73</value>
   </data>
   <data name="dataGridView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 106</value>
+    <value>579, 106</value>
   </data>
   <data name="dataGridView.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -280,7 +280,7 @@
     <value>5, 306</value>
   </data>
   <data name="panelKeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 121</value>
+    <value>579, 121</value>
   </data>
   <data name="panelKeep.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -316,18 +316,6 @@
     <value>クロマトグラムピークから計算された{0}ペプチドiRT値は保持され、
 MS/MSスキャンから計算されたより新しいiRT値は無視されます:</value>
   </data>
-  <data name="&gt;&gt;labelKeep.Name" xml:space="preserve">
-    <value>labelKeep</value>
-  </data>
-  <data name="&gt;&gt;labelKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelKeep.Parent" xml:space="preserve">
-    <value>panelKeep</value>
-  </data>
-  <data name="&gt;&gt;labelKeep.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="listKeep.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -335,21 +323,9 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
     <value>7, 32</value>
   </data>
   <data name="listKeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 69</value>
+    <value>535, 69</value>
   </data>
   <data name="listKeep.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;listKeep.Name" xml:space="preserve">
-    <value>listKeep</value>
-  </data>
-  <data name="&gt;&gt;listKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listKeep.Parent" xml:space="preserve">
-    <value>panelKeep</value>
-  </data>
-  <data name="&gt;&gt;listKeep.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelRunsFailed.AutoSize" type="System.Boolean, mscorlib">
@@ -473,7 +449,7 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
     <value>5, 185</value>
   </data>
   <data name="panelOverwrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 121</value>
+    <value>579, 121</value>
   </data>
   <data name="panelOverwrite.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -509,18 +485,6 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
     <value>MS/MSスキャンから計算された{0}ペプチドiRT値は、
 クロマトグラムピークから計算されたiRT値に置き換えられます。</value>
   </data>
-  <data name="&gt;&gt;labelOverwrite.Name" xml:space="preserve">
-    <value>labelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.Parent" xml:space="preserve">
-    <value>panelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="listOverwrite.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -528,21 +492,9 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
     <value>7, 32</value>
   </data>
   <data name="listOverwrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 69</value>
+    <value>535, 69</value>
   </data>
   <data name="listOverwrite.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Name" xml:space="preserve">
-    <value>listOverwrite</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Parent" xml:space="preserve">
-    <value>panelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelExisting.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -624,7 +576,7 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
     <value>5, 427</value>
   </data>
   <data name="panelExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 180</value>
+    <value>579, 180</value>
   </data>
   <data name="panelExisting.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -662,18 +614,6 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
   <data name="radioAverage.Text" xml:space="preserve">
     <value>新しい値と既存の値の平均をとる</value>
   </data>
-  <data name="&gt;&gt;radioAverage.Name" xml:space="preserve">
-    <value>radioAverage</value>
-  </data>
-  <data name="&gt;&gt;radioAverage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioAverage.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioAverage.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="radioReplace.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -694,18 +634,6 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
   </data>
   <data name="radioReplace.Text" xml:space="preserve">
     <value>既存の値を置き換え</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Name" xml:space="preserve">
-    <value>radioReplace</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="radioSkip.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -728,18 +656,6 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
   <data name="radioSkip.Text" xml:space="preserve">
     <value>既存の値を残す</value>
   </data>
-  <data name="&gt;&gt;radioSkip.Name" xml:space="preserve">
-    <value>radioSkip</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="labelChoice.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -761,18 +677,6 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
   <data name="labelChoice.Text" xml:space="preserve">
     <value>これらのペプチドの処理を選択してください。</value>
   </data>
-  <data name="&gt;&gt;labelChoice.Name" xml:space="preserve">
-    <value>labelChoice</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="labelExisting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -791,18 +695,6 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
   <data name="labelExisting.Text" xml:space="preserve">
     <value>{0}個のペプチドについて、既にライブラリ内に値が存在します：</value>
   </data>
-  <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
-    <value>labelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="listExisting.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -810,22 +702,10 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
     <value>7, 19</value>
   </data>
   <data name="listExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 56</value>
+    <value>535, 56</value>
   </data>
   <data name="listExisting.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="&gt;&gt;listExisting.Name" xml:space="preserve">
-    <value>listExisting</value>
-  </data>
-  <data name="&gt;&gt;listExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listExisting.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;listExisting.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -834,7 +714,7 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>584, 613</value>
+    <value>682, 613</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

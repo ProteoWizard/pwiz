@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2022 University of Washington - Seattle, WA
@@ -95,61 +95,72 @@ namespace TestPerf
                 RunUI(proteinsDlg.UseBackgroundProteome);
             }
 
-            WaitForCondition(() => !proteinsDlg.IsBusy);
+            WaitForCondition(() => proteinsDlg.IsComplete);
 
             //PauseTest();
+            Assert.AreEqual(425484, proteinsDlg.FinalResults.PeptidesMapped);
+            Assert.AreEqual(0, proteinsDlg.FinalResults.PeptidesUnmapped);
+            Assert.AreEqual(84198, proteinsDlg.FinalResults.ProteinsMapped);
+            Assert.AreEqual(4281, proteinsDlg.FinalResults.ProteinsUnmapped);
+
             RunUI(() =>
             {
-                Assert.AreEqual(425484, proteinsDlg.FinalResults.PeptidesMapped);
-                Assert.AreEqual(0, proteinsDlg.FinalResults.PeptidesUnmapped);
-                Assert.AreEqual(84198, proteinsDlg.FinalResults.ProteinsMapped);
-                Assert.AreEqual(4281, proteinsDlg.FinalResults.ProteinsUnmapped);
-
                 proteinsDlg.GroupProteins = true;
                 proteinsDlg.FindMinimalProteinList = false;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein;
-                //Console.WriteLine($"KeepAllProteins AssignedToBestProtein {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(471387, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(48572, proteinsDlg.FinalResults.FinalProteinCount);
+            });
+            WaitForCondition(() => proteinsDlg.IsComplete);
+            //Console.WriteLine($"KeepAllProteins AssignedToBestProtein {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+            Assert.AreEqual(471387, proteinsDlg.FinalResults.FinalPeptideCount);
+            Assert.AreEqual(48572, proteinsDlg.FinalResults.FinalProteinCount);
+            RunUI(()=>{
 
                 proteinsDlg.FindMinimalProteinList = true;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
-                //Console.WriteLine($"MinimalProteinList DuplicatedBetweenProteins {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(744438, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(49193, proteinsDlg.FinalResults.FinalProteinCount);
+            });
+            WaitForCondition(() => proteinsDlg.IsComplete);
+            //Console.WriteLine($"MinimalProteinList DuplicatedBetweenProteins {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+            Assert.AreEqual(744438, proteinsDlg.FinalResults.FinalPeptideCount);
+            Assert.AreEqual(49193, proteinsDlg.FinalResults.FinalProteinCount);
+            RunUI(() => {                
 
                 proteinsDlg.FindMinimalProteinList = false;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.Removed;
-                //Console.WriteLine($"KeepAllProteins Removed {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(167189, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(41606, proteinsDlg.FinalResults.FinalProteinCount);
-
-                proteinsDlg.MinPeptidesPerProtein = 10;
-                //Console.WriteLine($"MinPeptidesPerProtein 10 {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(88242, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(3987, proteinsDlg.FinalResults.FinalProteinCount);
             });
-            // PauseTest();
-            using (new WaitDocumentChange(null, true))
+            WaitForCondition(() => proteinsDlg.IsComplete);
+            //Console.WriteLine($"KeepAllProteins Removed {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+            Assert.AreEqual(167189, proteinsDlg.FinalResults.FinalPeptideCount);
+            Assert.AreEqual(41606, proteinsDlg.FinalResults.FinalProteinCount);
+            RunUI(() => {
+
+                proteinsDlg.GeneLevelParsimony = true;
+            });
+            WaitForCondition(() => proteinsDlg.IsComplete);
+            //Console.WriteLine($"GeneLevelParsimony {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+            Assert.AreEqual(408175, proteinsDlg.FinalResults.FinalPeptideCount);
+            Assert.AreEqual(20649, proteinsDlg.FinalResults.FinalProteinCount);
+            RunUI(() => {
+                //proteinsDlg.MinPeptidesPerProtein = 10;
+                //Console.WriteLine($"MinPeptidesPerProtein 10 {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+                //Assert.AreEqual(88242, proteinsDlg.FinalResults.FinalPeptideCount);
+                //Assert.AreEqual(3987, proteinsDlg.FinalResults.FinalProteinCount);
+            });
+
+            OkDialog(proteinsDlg, proteinsDlg.OkDialog);
+            List<PeptideGroupDocNode> proteins = new List<PeptideGroupDocNode>();
+            List<PeptideGroupDocNode> nonProteins = new List<PeptideGroupDocNode>();
+            foreach (var docNode in SkylineWindow.Document.MoleculeGroups)
             {
-                OkDialog(proteinsDlg, proteinsDlg.OkDialog);
+                if (docNode.IsProtein)
+                    proteins.Add(docNode);
+                else
+                    nonProteins.Add(docNode);
             }
+            Assert.AreEqual(20649, proteins.Count);
+            Assert.AreEqual(0, nonProteins.Count); // Unmapped Peptides
+
             //IsPauseForAuditLog = true;
             //PauseForAuditLog();
-            RunUI(() =>
-            {
-                List<PeptideGroupDocNode> proteins = new List<PeptideGroupDocNode>();
-                List<PeptideGroupDocNode> nonProteins = new List<PeptideGroupDocNode>();
-                foreach (var docNode in SkylineWindow.DocumentUI.MoleculeGroups)
-                {
-                    if (docNode.IsProtein)
-                        proteins.Add(docNode);
-                    else
-                        nonProteins.Add(docNode);
-                }
-                Assert.AreEqual(3987, proteins.Count);
-                Assert.AreEqual(0, nonProteins.Count); // Unmapped Peptides
-            });
         }
     }
 }

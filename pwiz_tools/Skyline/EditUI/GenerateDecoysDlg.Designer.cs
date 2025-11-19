@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.EditUI
+namespace pwiz.Skyline.EditUI
 {
     partial class GenerateDecoysDlg
     {
@@ -35,6 +35,7 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.comboDecoysGenerationMethod = new System.Windows.Forms.ComboBox();
+            this.cbxPreservePrecursorMass = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -72,6 +73,13 @@
             this.comboDecoysGenerationMethod.FormattingEnabled = true;
             resources.ApplyResources(this.comboDecoysGenerationMethod, "comboDecoysGenerationMethod");
             this.comboDecoysGenerationMethod.Name = "comboDecoysGenerationMethod";
+            this.comboDecoysGenerationMethod.SelectedIndexChanged += new System.EventHandler(this.comboDecoysGenerationMethod_SelectedIndexChanged);
+            // 
+            // cbxPreservePrecursorMass
+            // 
+            resources.ApplyResources(this.cbxPreservePrecursorMass, "cbxPreservePrecursorMass");
+            this.cbxPreservePrecursorMass.Name = "cbxPreservePrecursorMass";
+            this.cbxPreservePrecursorMass.UseVisualStyleBackColor = true;
             // 
             // GenerateDecoysDlg
             // 
@@ -79,6 +87,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbxPreservePrecursorMass);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.comboDecoysGenerationMethod);
             this.Controls.Add(this.btnCancel);
@@ -103,5 +112,6 @@
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox comboDecoysGenerationMethod;
+        private System.Windows.Forms.CheckBox cbxPreservePrecursorMass;
     }
 }

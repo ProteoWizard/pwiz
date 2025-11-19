@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -100,6 +100,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyNormalizationMethodDisplayed(NormalizationMethod normalizationMethod)
         {
+            WaitForGraphs();
             Assert.AreEqual(normalizationMethod, SkylineWindow.SequenceTree.NormalizeOption?.NormalizationMethod);
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
             int transitionGroupCount = 0;
@@ -157,7 +158,7 @@ namespace pwiz.SkylineTestFunctional
                             else
                             {
                                 StringAssert.Contains(transitionGroupNodeText, strTotalRatio);
-                                string ratioText = TransitionGroupTreeNode.FormatRatioValue(expectedRatio);
+                                string ratioText = TransitionGroupDocNode.FormatRatioValue(expectedRatio);
                                 StringAssert.Contains(transitionGroupNodeText, ratioText);
                             }
 

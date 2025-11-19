@@ -235,7 +235,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    std::vector<std::string> exactSynonyms;\n"
           "    std::multimap<std::string, std::string> propertyValues;\n"
           "\n"
-          "    CVTermInfo() : cvid((CVID)-1) {}\n"
+          "    CVTermInfo() : cvid((CVID)-1), isObsolete(false) {}\n"
           "    const std::string& shortName() const;\n"
           "    std::string prefix() const;\n"
           "};\n\n\n";
@@ -613,7 +613,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        bfs::path exeDir(bfs::path(argv[0]).branch_path());
+        bfs::path exeDir(bfs::path(argv[0]).parent_path());
 
         vector<OBO> obos;
         map<string, int> enumMultiplierByPrefix;

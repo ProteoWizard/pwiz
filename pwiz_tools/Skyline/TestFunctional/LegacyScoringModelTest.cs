@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(weightsWithoutLibraryDotProduct[indexLibraryDotProduct]);
             Assert.AreEqual(1.0, NormalizedDotProduct(LegacyScoringModel.DEFAULT_WEIGHTS, weightsWithoutLibraryDotProduct), 1e-6);
 
-            editPeakScoringDlg.PeakScoringModelName = "MyScoringModel";
+            RunUI(() => editPeakScoringDlg.PeakScoringModelName = "MyScoringModel");
 
             OkDialog(editPeakScoringDlg, editPeakScoringDlg.OkDialog);
 

@@ -140,7 +140,7 @@ namespace pwiz.SkylineTest
             VerifyExportRoundTrip(new ThermoMassListExporter(docMulti), docFasta);
             // Add Oxidation (M) as a static modification to challenge new mass list importing flexibility
             VerifyExportRoundTrip(new AbiMassListExporter(AddOxidationM(docMulti)), AddOxidationM(docFasta));
-            VerifyExportRoundTrip(new AgilentMassListExporter(docMulti), docFasta);
+            VerifyExportRoundTrip(new AgilentMassListExporter.AgilentMH10MassListExporter(docMulti), docFasta);
             VerifyExportRoundTrip(new WatersMassListExporter(docMulti), docFasta);
         }
 

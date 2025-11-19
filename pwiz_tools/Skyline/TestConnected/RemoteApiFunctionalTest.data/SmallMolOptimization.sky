@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="24.11" software_version="Skyline (64-bit : developer build) 24.1.1.275 (c6ce6df23)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2" />
+      <peptide_filter start="25" min_length="8" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl (C)" aminoacid="C" formula="H3C2NO" unimod_id="4" short_name="CAM" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None" />
+      <transition_filter precursor_charges="2" product_charges="1" precursor_adducts="[M+H]" product_adducts="[M+]" fragment_types="y" small_molecule_fragment_types="f" fragment_range_first="m/z &gt; precursor" fragment_range_last="3 ions" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="3" pick_from="all" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+    </transition_settings>
+    <data_settings document_guid="f2eaaf00-2ae6-4f81-b1fb-82ed80b33e09" audit_logging="true" />
+  </settings_summary>
+  <peptide_list label_name="Central Metabolism" label_description="" websearch_status="X" auto_manage_children="false">
+    <molecule auto_manage_children="false" neutral_mass_average="807.99945142009051" neutral_mass_monoisotopic="807.99945142009051" custom_ion_name="Acetyl-CoA">
+      <precursor charge="-1" precursor_mz="808" explicit_collision_energy="37" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="807.99945142009051" neutral_mass_monoisotopic="807.99945142009051" custom_ion_name="Acetyl-CoA">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="407.99945142009057" neutral_mass_monoisotopic="407.99945142009057" product_charge="-1">
+          <precursor_mz>808</precursor_mz>
+          <product_mz>408</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="831" explicit_collision_energy="37" auto_manage_children="false" collision_energy="0" ion_formula="[M23.0-]" neutral_mass_average="807.99945142009051" neutral_mass_monoisotopic="807.99945142009051" custom_ion_name="Acetyl-CoA">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="417.99945142009057" neutral_mass_monoisotopic="417.99945142009057" product_charge="-1">
+          <precursor_mz>831</precursor_mz>
+          <product_mz>418</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="144.99945142009054" neutral_mass_monoisotopic="144.99945142009054" custom_ion_name="a-Ketoglutaric acid">
+      <precursor charge="-1" precursor_mz="145" explicit_collision_energy="5" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="144.99945142009054" neutral_mass_monoisotopic="144.99945142009054" custom_ion_name="a-Ketoglutaric acid">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="100.99945142009054" neutral_mass_monoisotopic="100.99945142009054" product_charge="-1">
+          <precursor_mz>145</precursor_mz>
+          <product_mz>101</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="150" explicit_collision_energy="5" auto_manage_children="false" collision_energy="0" ion_formula="[M5.0-]" neutral_mass_average="144.99945142009054" neutral_mass_monoisotopic="144.99945142009054" custom_ion_name="a-Ketoglutaric acid">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="104.99945142009054" neutral_mass_monoisotopic="104.99945142009054" product_charge="-1">
+          <precursor_mz>150</precursor_mz>
+          <product_mz>105</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="168.99945142009054" neutral_mass_monoisotopic="168.99945142009054" custom_ion_name="Dihydroxyacetone-P">
+      <precursor charge="-1" precursor_mz="169" explicit_collision_energy="29" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="168.99945142009054" neutral_mass_monoisotopic="168.99945142009054" custom_ion_name="Dihydroxyacetone-P">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>169</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="172" explicit_collision_energy="29" auto_manage_children="false" collision_energy="0" ion_formula="[M3.0-]" neutral_mass_average="168.99945142009054" neutral_mass_monoisotopic="168.99945142009054" custom_ion_name="Dihydroxyacetone-P">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>172</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="338.99945142009057" neutral_mass_monoisotopic="338.99945142009057" custom_ion_name="Fructose-1,6-Bisphosphate">
+      <precursor charge="-1" precursor_mz="339" explicit_collision_energy="16" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="338.99945142009057" neutral_mass_monoisotopic="338.99945142009057" custom_ion_name="Fructose-1,6-Bisphosphate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="240.99945142009054" neutral_mass_monoisotopic="240.99945142009054" product_charge="-1">
+          <precursor_mz>339</precursor_mz>
+          <product_mz>241</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="345" explicit_collision_energy="16" auto_manage_children="false" collision_energy="0" ion_formula="[M6.0-]" neutral_mass_average="338.99945142009057" neutral_mass_monoisotopic="338.99945142009057" custom_ion_name="Fructose-1,6-Bisphosphate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="246.99945142009054" neutral_mass_monoisotopic="246.99945142009054" product_charge="-1">
+          <precursor_mz>345</precursor_mz>
+          <product_mz>247</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="258.99945142009057" neutral_mass_monoisotopic="258.99945142009057" custom_ion_name="Hexose-P">
+      <precursor charge="-1" precursor_mz="259" explicit_collision_energy="53" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="258.99945142009057" neutral_mass_monoisotopic="258.99945142009057" custom_ion_name="Hexose-P">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>259</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="265" explicit_collision_energy="53" auto_manage_children="false" collision_energy="0" ion_formula="[M6.0-]" neutral_mass_average="258.99945142009057" neutral_mass_monoisotopic="258.99945142009057" custom_ion_name="Hexose-P">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>265</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="132.99945142009054" neutral_mass_monoisotopic="132.99945142009054" custom_ion_name="Malate">
+      <precursor charge="-1" precursor_mz="133" explicit_collision_energy="9" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="132.99945142009054" neutral_mass_monoisotopic="132.99945142009054" custom_ion_name="Malate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="114.99945142009054" neutral_mass_monoisotopic="114.99945142009054" product_charge="-1">
+          <precursor_mz>133</precursor_mz>
+          <product_mz>115</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="137" explicit_collision_energy="9" auto_manage_children="false" collision_energy="0" ion_formula="[M4.0-]" neutral_mass_average="132.99945142009054" neutral_mass_monoisotopic="132.99945142009054" custom_ion_name="Malate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="118.99945142009054" neutral_mass_monoisotopic="118.99945142009054" product_charge="-1">
+          <precursor_mz>137</precursor_mz>
+          <product_mz>119</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="228.99945142009054" neutral_mass_monoisotopic="228.99945142009054" custom_ion_name="Pentose-P">
+      <precursor charge="-1" precursor_mz="229" explicit_collision_energy="45" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="228.99945142009054" neutral_mass_monoisotopic="228.99945142009054" custom_ion_name="Pentose-P">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>229</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="234" explicit_collision_energy="45" auto_manage_children="false" collision_energy="0" ion_formula="[M5.0-]" neutral_mass_average="228.99945142009054" neutral_mass_monoisotopic="228.99945142009054" custom_ion_name="Pentose-P">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>234</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="166.99945142009054" neutral_mass_monoisotopic="166.99945142009054" custom_ion_name="Phosphoenolpyruvate">
+      <precursor charge="-1" precursor_mz="167" explicit_collision_energy="29" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="166.99945142009054" neutral_mass_monoisotopic="166.99945142009054" custom_ion_name="Phosphoenolpyruvate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>167</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="170" explicit_collision_energy="29" auto_manage_children="false" collision_energy="0" ion_formula="[M3.0-]" neutral_mass_average="166.99945142009054" neutral_mass_monoisotopic="166.99945142009054" custom_ion_name="Phosphoenolpyruvate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>170</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="288.99945142009057" neutral_mass_monoisotopic="288.99945142009057" custom_ion_name="Seduheptulose 7-P">
+      <precursor charge="-1" precursor_mz="289" explicit_collision_energy="17" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="288.99945142009057" neutral_mass_monoisotopic="288.99945142009057" custom_ion_name="Seduheptulose 7-P">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="96.999451420090537" neutral_mass_monoisotopic="96.999451420090537" product_charge="-1">
+          <precursor_mz>289</precursor_mz>
+          <product_mz>97</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="296" explicit_collision_energy="17" auto_manage_children="false" collision_energy="0" ion_formula="[M7.0-]" neutral_mass_average="288.99945142009057" neutral_mass_monoisotopic="288.99945142009057" custom_ion_name="Seduheptulose 7-P">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="96.999451420090537" neutral_mass_monoisotopic="96.999451420090537" product_charge="-1">
+          <precursor_mz>296</precursor_mz>
+          <product_mz>97</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="116.99945142009054" neutral_mass_monoisotopic="116.99945142009054" custom_ion_name="Succinate">
+      <precursor charge="-1" precursor_mz="117" explicit_collision_energy="13" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="116.99945142009054" neutral_mass_monoisotopic="116.99945142009054" custom_ion_name="Succinate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="72.999451420090537" neutral_mass_monoisotopic="72.999451420090537" product_charge="-1">
+          <precursor_mz>117</precursor_mz>
+          <product_mz>73</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="121" explicit_collision_energy="13" auto_manage_children="false" collision_energy="0" ion_formula="[M4.0-]" neutral_mass_average="116.99945142009054" neutral_mass_monoisotopic="116.99945142009054" custom_ion_name="Succinate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="75.999451420090537" neutral_mass_monoisotopic="75.999451420090537" product_charge="-1">
+          <precursor_mz>121</precursor_mz>
+          <product_mz>76</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="605.99945142009051" neutral_mass_monoisotopic="605.99945142009051" custom_ion_name="UDP-N-acetyl-D-Glucosamine">
+      <precursor charge="-1" precursor_mz="606" explicit_collision_energy="29" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="605.99945142009051" neutral_mass_monoisotopic="605.99945142009051" custom_ion_name="UDP-N-acetyl-D-Glucosamine">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="384.99945142009057" neutral_mass_monoisotopic="384.99945142009057" product_charge="-1">
+          <precursor_mz>606</precursor_mz>
+          <product_mz>385</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="623" explicit_collision_energy="29" auto_manage_children="false" collision_energy="0" ion_formula="[M17.0-]" neutral_mass_average="605.99945142009051" neutral_mass_monoisotopic="605.99945142009051" custom_ion_name="UDP-N-acetyl-D-Glucosamine">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="393.99945142009057" neutral_mass_monoisotopic="393.99945142009057" product_charge="-1">
+          <precursor_mz>623</precursor_mz>
+          <product_mz>394</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+  <peptide_list label_name="Cofactor metabolism" label_description="" websearch_status="X" auto_manage_children="false">
+    <molecule auto_manage_children="false" neutral_mass_average="661.99945142009051" neutral_mass_monoisotopic="661.99945142009051" custom_ion_name="NAD">
+      <precursor charge="-1" precursor_mz="662" explicit_collision_energy="20" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="661.99945142009051" neutral_mass_monoisotopic="661.99945142009051" custom_ion_name="NAD">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="539.99945142009051" neutral_mass_monoisotopic="539.99945142009051" product_charge="-1">
+          <precursor_mz>662</precursor_mz>
+          <product_mz>540</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="683" explicit_collision_energy="20" auto_manage_children="false" collision_energy="0" ion_formula="[M21.0-]" neutral_mass_average="661.99945142009051" neutral_mass_monoisotopic="661.99945142009051" custom_ion_name="NAD">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="554.99945142009051" neutral_mass_monoisotopic="554.99945142009051" product_charge="-1">
+          <precursor_mz>683</precursor_mz>
+          <product_mz>555</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="663.99945142009051" neutral_mass_monoisotopic="663.99945142009051" custom_ion_name="NADH">
+      <precursor charge="-1" precursor_mz="664" explicit_collision_energy="31" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="663.99945142009051" neutral_mass_monoisotopic="663.99945142009051" custom_ion_name="NADH">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="407.99945142009057" neutral_mass_monoisotopic="407.99945142009057" product_charge="-1">
+          <precursor_mz>664</precursor_mz>
+          <product_mz>408</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="685" explicit_collision_energy="31" auto_manage_children="false" collision_energy="0" ion_formula="[M21.0-]" neutral_mass_average="663.99945142009051" neutral_mass_monoisotopic="663.99945142009051" custom_ion_name="NADH">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="417.99945142009057" neutral_mass_monoisotopic="417.99945142009057" product_charge="-1">
+          <precursor_mz>685</precursor_mz>
+          <product_mz>418</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="741.99945142009051" neutral_mass_monoisotopic="741.99945142009051" custom_ion_name="NADP">
+      <precursor charge="-1" precursor_mz="742" explicit_collision_energy="20" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="741.99945142009051" neutral_mass_monoisotopic="741.99945142009051" custom_ion_name="NADP">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="619.99945142009051" neutral_mass_monoisotopic="619.99945142009051" product_charge="-1">
+          <precursor_mz>742</precursor_mz>
+          <product_mz>620</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="763" explicit_collision_energy="20" auto_manage_children="false" collision_energy="0" ion_formula="[M21.0-]" neutral_mass_average="741.99945142009051" neutral_mass_monoisotopic="741.99945142009051" custom_ion_name="NADP">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="634.99945142009051" neutral_mass_monoisotopic="634.99945142009051" product_charge="-1">
+          <precursor_mz>763</precursor_mz>
+          <product_mz>635</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="743.99945142009051" neutral_mass_monoisotopic="743.99945142009051" custom_ion_name="NADPH">
+      <precursor charge="-1" precursor_mz="744" explicit_collision_energy="30" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="743.99945142009051" neutral_mass_monoisotopic="743.99945142009051" custom_ion_name="NADPH">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="407.99945142009057" neutral_mass_monoisotopic="407.99945142009057" product_charge="-1">
+          <precursor_mz>744</precursor_mz>
+          <product_mz>408</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="765" explicit_collision_energy="30" auto_manage_children="false" collision_energy="0" ion_formula="[M21.0-]" neutral_mass_average="743.99945142009051" neutral_mass_monoisotopic="743.99945142009051" custom_ion_name="NADPH">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="417.99945142009057" neutral_mass_monoisotopic="417.99945142009057" product_charge="-1">
+          <precursor_mz>765</precursor_mz>
+          <product_mz>418</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+  <peptide_list label_name="Nucleotide metabolism" label_description="" websearch_status="X" auto_manage_children="false">
+    <molecule auto_manage_children="false" neutral_mass_average="156.99945142009054" neutral_mass_monoisotopic="156.99945142009054" custom_ion_name="Dihydroorotate">
+      <precursor charge="-1" precursor_mz="157" explicit_collision_energy="5" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="156.99945142009054" neutral_mass_monoisotopic="156.99945142009054" custom_ion_name="Dihydroorotate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="112.99945142009054" neutral_mass_monoisotopic="112.99945142009054" product_charge="-1">
+          <precursor_mz>157</precursor_mz>
+          <product_mz>113</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="162" explicit_collision_energy="5" auto_manage_children="false" collision_energy="0" ion_formula="[M5.0-]" neutral_mass_average="156.99945142009054" neutral_mass_monoisotopic="156.99945142009054" custom_ion_name="Dihydroorotate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="116.99945142009054" neutral_mass_monoisotopic="116.99945142009054" product_charge="-1">
+          <precursor_mz>162</precursor_mz>
+          <product_mz>117</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="154.99945142009054" neutral_mass_monoisotopic="154.99945142009054" custom_ion_name="Orotate">
+      <precursor charge="-1" precursor_mz="155" explicit_collision_energy="9" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="154.99945142009054" neutral_mass_monoisotopic="154.99945142009054" custom_ion_name="Orotate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="110.99945142009054" neutral_mass_monoisotopic="110.99945142009054" product_charge="-1">
+          <precursor_mz>155</precursor_mz>
+          <product_mz>111</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="160" explicit_collision_energy="9" auto_manage_children="false" collision_energy="0" ion_formula="[M5.0-]" neutral_mass_average="154.99945142009054" neutral_mass_monoisotopic="154.99945142009054" custom_ion_name="Orotate">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="114.99945142009054" neutral_mass_monoisotopic="114.99945142009054" product_charge="-1">
+          <precursor_mz>160</precursor_mz>
+          <product_mz>115</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" neutral_mass_average="402.99945142009057" neutral_mass_monoisotopic="402.99945142009057" custom_ion_name="UDP">
+      <precursor charge="-1" precursor_mz="403" explicit_collision_energy="69" auto_manage_children="false" collision_energy="0" ion_formula="[M-]" neutral_mass_average="402.99945142009057" neutral_mass_monoisotopic="402.99945142009057" custom_ion_name="UDP">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>403</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="412" explicit_collision_energy="69" auto_manage_children="false" collision_energy="0" ion_formula="[M9.0-]" neutral_mass_average="402.99945142009057" neutral_mass_monoisotopic="402.99945142009057" custom_ion_name="UDP">
+        <transition fragment_type="custom" explicit_cone_voltage="25" ion_formula="[M-]" neutral_mass_average="78.999451420090537" neutral_mass_monoisotopic="78.999451420090537" product_charge="-1">
+          <precursor_mz>412</precursor_mz>
+          <product_mz>79</product_mz>
+          <collision_energy>0</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+</srm_settings>

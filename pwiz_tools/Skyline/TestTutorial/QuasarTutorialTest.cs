@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -39,18 +38,13 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class QuasarTutorialTest : AbstractFunctionalTest
     {
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
-        const int WM_KEYDOWN    = 0x100;
-        private const int WM_KEYUP = 0x101;
-
         [TestMethod, NoLocalization]
         public void TestQuasarTutorialLegacy()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            TestFilesZip = @"http://skyline.gs.washington.edu/tutorials/QuaSARTutorial.zip";
+            TestFilesZip = @"http://skyline.ms/tutorials/QuaSARTutorial.zip";
             RunFunctionalTest();
         }
 

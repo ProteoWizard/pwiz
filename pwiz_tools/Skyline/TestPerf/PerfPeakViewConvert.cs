@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -149,7 +149,7 @@ namespace TestPerf
         {
             var peakDatas = new List<PeakData>();
             var msFileNames = new List<string>();
-            var fileReader = new DsvFileReader(peakViewReader, TextUtil.SEPARATOR_TSV);
+            using var fileReader = new DsvFileReader(peakViewReader, TextUtil.SEPARATOR_TSV);
             Assert.AreEqual(fileReader.GetFieldIndex(PROTEIN), 0);
             Assert.AreEqual(fileReader.GetFieldIndex(PEPTIDE), 1);
             Assert.AreEqual(fileReader.GetFieldIndex(LABEL), 2);

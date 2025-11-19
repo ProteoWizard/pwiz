@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -595,90 +595,90 @@
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
-    <value>prositPage</value>
+    <value>koinaPage</value>
   </data>
   <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="lblPrositPrediction.Font" type="System.Drawing.Font, System.Drawing">
+  <data name="lblKoinaPrediction.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 12pt</value>
   </data>
-  <data name="lblPrositPrediction.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="lblKoinaPrediction.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="lblPrositPrediction.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblKoinaPrediction.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
-  <data name="lblPrositPrediction.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblKoinaPrediction.Size" type="System.Drawing.Size, System.Drawing">
     <value>350, 18</value>
   </data>
-  <data name="lblPrositPrediction.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblKoinaPrediction.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="lblPrositPrediction.Text" xml:space="preserve">
-    <value>Prosit Settings</value>
+  <data name="lblKoinaPrediction.Text" xml:space="preserve">
+    <value>Koina Settings</value>
   </data>
-  <data name="&gt;&gt;lblPrositPrediction.Name" xml:space="preserve">
-    <value>lblPrositPrediction</value>
+  <data name="&gt;&gt;lblKoinaPrediction.Name" xml:space="preserve">
+    <value>lblKoinaPrediction</value>
   </data>
-  <data name="&gt;&gt;lblPrositPrediction.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblKoinaPrediction.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lblPrositPrediction.Parent" xml:space="preserve">
-    <value>prositPanel</value>
+  <data name="&gt;&gt;lblKoinaPrediction.Parent" xml:space="preserve">
+    <value>koinaPanel</value>
   </data>
-  <data name="&gt;&gt;lblPrositPrediction.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblKoinaPrediction.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="prositPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="koinaPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <data name="prositPanel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
-  <data name="prositPanel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>597, 43</value>
   </data>
-  <data name="prositPanel.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaPanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
-  <data name="&gt;&gt;prositPanel.Name" xml:space="preserve">
-    <value>prositPanel</value>
+  <data name="&gt;&gt;koinaPanel.Name" xml:space="preserve">
+    <value>koinaPanel</value>
   </data>
-  <data name="&gt;&gt;prositPanel.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositPanel.Parent" xml:space="preserve">
-    <value>prositPage</value>
+  <data name="&gt;&gt;koinaPanel.Parent" xml:space="preserve">
+    <value>koinaPage</value>
   </data>
-  <data name="&gt;&gt;prositPanel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="prositPage.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="koinaPage.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="prositPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="koinaPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="prositPage.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="koinaPage.Size" type="System.Drawing.Size, System.Drawing">
     <value>603, 413</value>
   </data>
-  <data name="prositPage.TabIndex" type="System.Int32, mscorlib">
+  <data name="koinaPage.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="prositPage.Text" xml:space="preserve">
-    <value>Prosit Prediction</value>
+  <data name="koinaPage.Text" xml:space="preserve">
+    <value>Koina Prediction</value>
   </data>
-  <data name="&gt;&gt;prositPage.Name" xml:space="preserve">
-    <value>prositPage</value>
+  <data name="&gt;&gt;koinaPage.Name" xml:space="preserve">
+    <value>koinaPage</value>
   </data>
-  <data name="&gt;&gt;prositPage.Type" xml:space="preserve">
+  <data name="&gt;&gt;koinaPage.Type" xml:space="preserve">
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;prositPage.Parent" xml:space="preserve">
+  <data name="&gt;&gt;koinaPage.Parent" xml:space="preserve">
     <value>wizardPages</value>
   </data>
-  <data name="&gt;&gt;prositPage.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;koinaPage.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="lblNarrowWindowFiles.Font" type="System.Drawing.Font, System.Drawing">

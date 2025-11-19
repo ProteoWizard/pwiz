@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,10 +20,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
+using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Database
@@ -72,12 +74,11 @@ namespace pwiz.Common.Database
 
         public static IEnumerable<string> DumpTable(string dbFilepath, string tableName, string columnSeparator = "\t", string[] sortColumns = null, string[] excludeColumns = null)
         {
-            using var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = dbFilepath }.ConnectionString);
-            connection.Open();
+            using var connection = OpenConnection(dbFilepath);
             foreach(string s in DumpTable(connection, tableName, columnSeparator, sortColumns, excludeColumns))
                 yield return s;
         }
-        private static List<string> GetColumnNamesFromTable(IDbConnection connection, string tableName)
+        public static List<string> GetColumnNamesFromTable(IDbConnection connection, string tableName)
         {
             using var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT * FROM " + tableName + " LIMIT 0";
@@ -101,7 +102,6 @@ namespace pwiz.Common.Database
                 cmd.CommandText += @" ORDER BY " + string.Join(@",", sortColumns);
             using var reader = cmd.ExecuteReader();
             using var sha1 = SHA1.Create();
-            excludeColumns ??= Array.Empty<string>();
             yield return string.Join(columnSeparator,
                 Enumerable.Range(0, reader.FieldCount).Select(i => reader.GetName(i)));
             object[] row = new object[reader.FieldCount];
@@ -115,6 +115,22 @@ namespace pwiz.Common.Database
                 yield return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture,
                     () => string.Join(columnSeparator, row));
             }
+        }
+
+        public static SQLiteConnection OpenConnection(string path)
+        {
+            DbProviderFactory fact = new SQLiteFactory();
+            SQLiteConnection conn = (SQLiteConnection)fact.CreateConnection();
+            if (conn != null)
+            {
+                var connectionStringBuilder =
+                    SessionFactoryFactory.SQLiteConnectionStringBuilderFromFilePath(path);
+                connectionStringBuilder.Version = 3;
+
+                conn.ConnectionString = connectionStringBuilder.ToString();
+                conn.Open();
+            }
+            return conn;
         }
     }
 }

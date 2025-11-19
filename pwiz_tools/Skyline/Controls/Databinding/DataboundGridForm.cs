@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Controls.Databinding
             return databoundGridControl.FindColumn(propertyPath);
         }
 
-        public bool IsComplete
+        public virtual bool IsComplete
         {
             get
             {

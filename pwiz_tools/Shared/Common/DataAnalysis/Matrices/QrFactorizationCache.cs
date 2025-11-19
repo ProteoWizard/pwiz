@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 
@@ -42,7 +43,7 @@ namespace pwiz.Common.DataAnalysis.Matrices
 
 
 
-        public struct Key
+        public struct Key : IEquatable<Key>
         {
             public Key(Matrix<double> matrix, double tolerance) : this()
             {
@@ -52,6 +53,24 @@ namespace pwiz.Common.DataAnalysis.Matrices
 
             public ImmutableMatrix Matrix { get; private set; }
             public double Tolerance { get; private set; }
+
+            public bool Equals(Key other)
+            {
+                return Equals(Matrix, other.Matrix) && Tolerance.Equals(other.Tolerance);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is Key other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Matrix != null ? Matrix.GetHashCode() : 0) * 397) ^ Tolerance.GetHashCode();
+                }
+            }
         }
 
         public class CacheEntry

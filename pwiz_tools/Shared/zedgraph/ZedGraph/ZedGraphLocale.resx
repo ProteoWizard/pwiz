@@ -159,4 +159,8 @@
   <data name="print" xml:space="preserve">
     <value>Print...</value>
   </data>
+  <data name="move_label" xml:space="preserve">
+    <value>To move: click-and-drag or
+Alt+click-and-drag the label</value>
+  </data>
 </root>

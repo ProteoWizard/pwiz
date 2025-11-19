@@ -289,7 +289,7 @@
     <value>8</value>
   </data>
   <data name="radioFile.Text" xml:space="preserve">
-    <value>iRTデータベースファイル(&amp;D):</value>
+    <value>iRTデータベースファイル(&amp;D)：</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -328,7 +328,7 @@
     <value>iRTデータベースを追加</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>カルキュレータ名(&amp;C):</value>
+    <value>カルキュレータ名(&amp;C)：</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>

@@ -1,9 +1,27 @@
-﻿using System;
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2013 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 
@@ -72,9 +90,9 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 propertyPaths = ImmutableList.ValueOf(propertyPaths.Select(path => MapPropertyPath(mapping, path)));
             }
-            if (Equals(viewSpec.SublistId, SkylineViewContext.GetReplicateSublist(viewInfo.ParentColumn.PropertyType)))
+            if (Equals(viewSpec.SublistId, SublistPaths.GetReplicateSublist(viewInfo.ParentColumn.PropertyType)))
             {
-                viewSpec = viewSpec.SetSublistId(SkylineViewContext.GetReplicateSublist(typeof(SkylineDocument)));
+                viewSpec = viewSpec.SetSublistId(SublistPaths.GetReplicateSublist(typeof(SkylineDocument)));
             }
             return new ViewInfo(viewInfo.DataSchema, typeof(SkylineDocument), viewSpec);
         }
@@ -152,9 +170,9 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 propertyPaths = propertyPaths.Select(path => MapPropertyPath(mapping, path));
             }
-            if (Equals(viewSpec.SublistId, SkylineViewContext.GetReplicateSublist(typeof(SkylineDocument))))
+            if (Equals(viewSpec.SublistId, SublistPaths.GetReplicateSublist(typeof(SkylineDocument))))
             {
-                viewSpec = viewSpec.SetSublistId(SkylineViewContext.GetReplicateSublist(newType));
+                viewSpec = viewSpec.SetSublistId(SublistPaths.GetReplicateSublist(newType));
             }
             return new ViewInfo(viewInfo.DataSchema, newType, viewSpec);
         }
@@ -303,6 +321,16 @@ namespace pwiz.Skyline.Model.Databinding
         private static KeyValuePair<T1, T2> Kvp<T1,T2>(T1 key, T2 value)
         {
             return new KeyValuePair<T1, T2>(key, value);
+        }
+
+        public static PropertyPath GetReplicatePropertyPath(Type rowType)
+        {
+            return GetMappingForRowType(rowType)?.FirstOrDefault(kvp => Replicates.Equals(kvp.Value)).Key;
+        }
+
+        public static PropertyPath GetResultFilePropertyPath(Type rowType)
+        {
+            return GetMappingForRowType(rowType)?.FirstOrDefault(kvp => ResultFiles.Equals(kvp.Value)).Key;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,11 +21,11 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -130,6 +130,12 @@ namespace pwiz.SkylineTestFunctional
                     libraryIonMobilityInfo, null, 0);
                 AssertEx.AreEqual(eIonMobilityUnits.drift_time_msec, imsFilter.IonMobilityUnits);
                 AssertEx.AreEqual(26.4669, imsFilter.IonMobility.Mobility, 0.001);
+                var libraryIonMobilityInfoNoReplicate = doc.Settings.GetIonMobilities(new[] { libKey }, null); // Formerly this would return nothing if no file was given
+                var imsFilterNoReplicate = doc.Settings.GetIonMobilityFilter(peptideDocNode, precursorDocNode, transitionDocNode,
+                    libraryIonMobilityInfoNoReplicate, null, 0);
+                AssertEx.AreEqual(eIonMobilityUnits.drift_time_msec, imsFilterNoReplicate.IonMobilityUnits);
+                AssertEx.AreEqual(26.4669, imsFilterNoReplicate.IonMobility.Mobility, 0.001);
+
                 if (pass == 1)
                 {
                     break;

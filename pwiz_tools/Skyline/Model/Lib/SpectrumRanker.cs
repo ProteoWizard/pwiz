@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -173,11 +173,19 @@ namespace pwiz.Skyline.Model.Lib
                     var ionMasses =
                         new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), IonTable<TypedMass>.EMPTY)
                             .ChangeKnownFragments(knownFragments);
-                    moleculeMasses =
-                        new MoleculeMasses(
-                            SequenceMassCalc.GetMZ(
-                                calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct,
-                                    out _), PrecursorAdduct), ionMasses);
+                    try
+                    {
+                        moleculeMasses =
+                            new MoleculeMasses(
+                                SequenceMassCalc.GetMZ(
+                                    calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct,
+                                        out _), PrecursorAdduct), ionMasses);
+                    }
+                    catch (InvalidChemicalModificationException)
+                    {
+                        moleculeMasses =
+                            new MoleculeMasses(double.NaN, ionMasses); // Precursor m/z can't be calculated
+                    }
                 }
                 else
                 {
@@ -207,8 +215,8 @@ namespace pwiz.Skyline.Model.Lib
             TransitionSettings = settings.TransitionSettings;
 
             // Get potential losses to all fragments in this peptide
-            PotentialLosses = TransitionGroup.CalcPotentialLosses(Sequence, settings.PeptideSettings.Modifications,
-                lookupMods, MassType);
+            TransitionLossMap =
+                TransitionLossMap.ForTarget(Sequence, settings.PeptideSettings.Modifications, lookupMods, MassType);
         }
 
         public TargetInfo TargetInfoObj { get; private set; }
@@ -267,7 +275,7 @@ namespace pwiz.Skyline.Model.Lib
             get { return FragmentFilterObj.UseFilter; }
         }
 
-        public IList<IList<ExplicitLoss>> PotentialLosses { get; }
+        public TransitionLossMap TransitionLossMap { get; }
 
         public LibraryRankedSpectrumInfo RankSpectrum(SpectrumPeaksInfo info, int minPeaks, double? score)
         {
@@ -609,7 +617,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public bool HasLosses
         {
-            get { return PotentialLosses != null && PotentialLosses.Count > 0; }
+            get { return TransitionLossMap.PotentialLosses.Count > 0; }
         }
 
         private class RankingState
@@ -699,10 +707,19 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (Transition.IsPrecursor(type))
                 {
-                    foreach (var losses in TransitionGroup.CalcTransitionLosses(type, 0, MassType, PotentialLosses))
+                    foreach (var losses in TransitionLossMap.CalcTransitionLosses(type, 0))
                     {
+                        var productAdduct = PrecursorAdduct;
+                        if (losses != null)
+                        {
+                            productAdduct = losses.GetProductAdduct(PrecursorAdduct);
+                            if (productAdduct == null)
+                            {
+                                continue;
+                            }
+                        }
                         var matchedFragmentIon =
-                            MakeMatchedFragmentIon(type, 0, PrecursorAdduct, losses, out double matchMz);
+                            MakeMatchedFragmentIon(type, 0, productAdduct, losses, out double matchMz);
                         if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, len, len, 0, ref rankedMI))
                         {
                             // If matched return.  Otherwise look for other ion types.
@@ -746,8 +763,12 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         for (int i = len - 1; i >= 0; i--)
                         {
-                            foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, MassType, PotentialLosses))
+                            foreach (var losses in TransitionLossMap.CalcTransitionLosses(type, i))
                             {
+                                if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
+                                {
+                                    continue;
+                                }
                                 var matchedFragmentIon =
                                     MakeMatchedFragmentIon(type, i, adduct, losses, out double matchMz);
                                 if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, end, start, startMz, ref rankedMI))
@@ -767,7 +788,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         for (int i = 0; i < len; i++)
                         {
-                            foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, MassType, PotentialLosses))
+                            foreach (var losses in TransitionLossMap.CalcTransitionLosses(type, i))
                             {
                                 var matchedFragmentIon =
                                     MakeMatchedFragmentIon(type, i, adduct, losses, out double matchMz);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford
  *
@@ -121,6 +121,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ModifyDocument(null,
                     doc => doc.ChangePeak(groupPath, nameSet, filePath,
                         null, startNew, endNew, UserSet.TRUE, null, false)));
+            
             var reintegrateDlgManual = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             RunUI(() =>
             {

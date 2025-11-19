@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private BindingListSource _bindingListSource;
         private readonly AxisLabelScaler _axisLabelScaler;
         private CurveItem _barGraph;
-        private FoldChangeBindingSource.FoldChangeRow[] _rows;
+        private FoldChangeRow[] _rows;
         private SkylineWindow _skylineWindow;
         private bool _updatePending;
         public FoldChangeBarGraph()
@@ -148,10 +148,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var groupComparisonModel = FoldChangeBindingSource.GroupComparisonModel;
             var groupComparisonDef = groupComparisonModel.GroupComparisonDef;
             var document = groupComparisonModel.Document;
-            var sequences = new List<Tuple<string, bool>>();
+            var sequences = new List<UniquePrefixGenerator.TargetLabel>();
 
             foreach (var nodePep in document.Molecules)
-                sequences.Add(new Tuple<string, bool>(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
+                sequences.Add(new UniquePrefixGenerator.TargetLabel(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
             var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
             var textLabels = new List<string>();
             var rows = GetFoldChangeRows(_bindingListSource).ToArray();
@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return true;
         }
 
-        private FoldChangeBindingSource.FoldChangeRow FoldChangeRowFromPoint(PointF pt)
+        private FoldChangeRow FoldChangeRowFromPoint(PointF pt)
         {
             if (null == _barGraph || null == _rows)
             {
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return _rows[iNearest];
         }
 
-        private bool IsSelected(FoldChangeBindingSource.FoldChangeRow row)
+        private bool IsSelected(FoldChangeRow row)
         {
             if (null == _skylineWindow)
             {
@@ -334,6 +334,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     _skylineWindow.FocusDocument();
                     e.Handled = true;
                     break;
+            }
+        }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return !IsUpdatePending && base.IsComplete;
             }
         }
     }
