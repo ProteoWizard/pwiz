@@ -132,7 +132,7 @@ namespace TestPerf
             return bmp;
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES)]
         public void TestDiaTtofDiaUmpireTutorial()
         {
             // Not yet translated
@@ -151,6 +151,7 @@ namespace TestPerf
 
         [TestMethod, 
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)]
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
@@ -195,7 +196,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDiaQeDiaUmpireTutorialExtra()
         {
             ReadExpectedValues("TestDiaQeDiaUmpireTutorialExtra");
@@ -212,6 +213,7 @@ namespace TestPerf
 
         [TestMethod, 
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // do not run full filesets for nightly tests
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {

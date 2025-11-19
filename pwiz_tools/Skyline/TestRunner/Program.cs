@@ -461,7 +461,7 @@ namespace TestRunner
             }
 
             // delete per-process tools directory
-            if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != ToolDescriptionHelpers.GetToolsDirectoryBasis())
+            if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != "Tools")
                 DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
 
             return allTestsPassed ? 0 : 1;

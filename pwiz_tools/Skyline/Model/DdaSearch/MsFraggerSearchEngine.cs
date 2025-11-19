@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     var paramsFileText = new StringBuilder(defaultClosedConfig);
                     
                     SetMsFraggerParam(paramsFileText, @"num_threads", 0);
-                    SetMsFraggerParam(paramsFileText, @"database_name", PathEx.GetNonUnicodePath(_fastaFilepath));
+                    SetMsFraggerParam(paramsFileText, @"database_name", _fastaFilepath);
                     SetMsFraggerParam(paramsFileText, @"decoy_prefix", _decoyPrefix);
                     SetMsFraggerParam(paramsFileText, @"precursor_mass_lower", (-_precursorMzTolerance.Value).ToString(CultureInfo.InvariantCulture));
                     SetMsFraggerParam(paramsFileText, @"precursor_mass_upper", _precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     // Run MSFragger
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
-                            $@"{JavaDownloadInfo.JavaExtraArgs} -jar """ + MsFraggerBinary + $@""" {MsFraggerArgs} ""{PathEx.GetNonUnicodePath(paramsFile)}""")// ""{spectrumFilename}""")
+                            $@"{JavaDownloadInfo.JavaExtraArgs} -jar """ + MsFraggerBinary + $@""" {MsFraggerArgs} ""{paramsFile}""")// ""{spectrumFilename}""")
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     string cruxOutputDir = Path.Combine(defaultOutputDirectory, "crux-output");
                     _intermediateFiles.Add(cruxOutputDir);
                     psi.FileName = CruxBinary;
-                    psi.Arguments = $@"percolator {PercolatorArgs} --only-psms T --output-dir ""{PathEx.GetNonUnicodePath(cruxOutputDir)}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{PathEx.GetNonUnicodePath(cruxParamsFile)}""";
+                    psi.Arguments = $@"percolator {PercolatorArgs} --only-psms T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
 
                     foreach (var settingName in PERCOLATOR_SETTINGS)
                         psi.Arguments += $@" --{AdditionalSettings[settingName].ToString(false, CultureInfo.InvariantCulture)}";
@@ -326,7 +326,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         _intermediateFiles.Add(cruxInputFilepath);
                         _intermediateFiles.Add(cruxFixedInputFilepath);
                         FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, this);
-                        psi.Arguments += $@" ""{PathEx.GetNonUnicodePath(cruxFixedInputFilepath)}""";
+                        psi.Arguments += $@" ""{cruxFixedInputFilepath}""";
 
                         if (spectrumFilename.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_THERMO_RAW)
                         {

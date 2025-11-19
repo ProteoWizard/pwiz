@@ -125,7 +125,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
         public void TestDdaSearchMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -147,7 +148,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.COMET_UNICODE_ISSUES)]
         public void TestDdaSearchComet()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -169,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.COMET_UNICODE_ISSUES)]
         public void TestDdaSearchCometAutoTolerance()
         {
             // Check that the error from having not enough spectra to do auto-tolerance calculation is report properly.
@@ -203,7 +204,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
             Assert.IsFalse(IsRecordMode);
         }
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.TIDE_UNICODE_ISSUES)]
         public void TestDdaSearchTide()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -225,7 +226,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDdaSearchMsFragger()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -252,7 +253,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDdaSearchMsFraggerBadFasta()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -311,7 +312,7 @@ namespace pwiz.SkylineTestFunctional
                 downloadedZip);
         }
 
-        [TestMethod]
+        [TestMethod, NoUnicodeTesting(TestExclusionReason.COMET_UNICODE_ISSUES)]
         public void TestDdaSearchDependencyErrors()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -789,7 +790,7 @@ namespace pwiz.SkylineTestFunctional
             searchSucceeded = null;
             editToolDlg = ShowDialog<EditSearchToolDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => editToolDlg.ToolPath = editToolDlg.ToolPath.Replace(".42.exe", ""));
-            RunUI(editToolDlg.OkDialog); // Purposely using RunUI instead of OkDialog here (we don't need to wait for window closure, wait for searchSucceeded instead)
+            editToolDlg.OkDialog();
 
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
             Assert.IsTrue(searchSucceeded.Value);

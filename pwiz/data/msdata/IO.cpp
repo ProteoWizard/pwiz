@@ -1809,10 +1809,7 @@ void writeMzMLbExtra<BinaryDataArray>(stream<Connection_mzMLb>* mzMLb_os, string
             dataset += "_double";
             offset = (*mzMLb_os)->seek(dataset, 0, std::ios_base::cur);
             encoded_size = double_data.size() * sizeof(double);
-            if (encoded_size > 0)
-            {
-                (*mzMLb_os)->write(dataset, &double_data[0], double_data.size());
-            }
+            (*mzMLb_os)->write(dataset, &double_data[0], double_data.size());
         }
     }
 }
@@ -2445,12 +2442,10 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             if (config.numpress != BinaryDataEncoder::Numpress_None)
             {
                 vector<char> buf(encodedLength_);
-                if (encodedLength_ > 0)
-                    (*mzMLb_is)->read_opaque(external_dataset_, &buf[0], encodedLength_);
+                (*mzMLb_is)->read_opaque(external_dataset_, &buf[0], encodedLength_);
                 config.format = BinaryDataEncoder::Format_MzMLb;
                 BinaryDataEncoder encoder(config);
-                if (encodedLength_ > 0)
-                    encoder.decode(&buf[0], buf.size(), binaryDataArray->data);
+                encoder.decode(&buf[0], buf.size(), binaryDataArray->data);
             }
             else
             {

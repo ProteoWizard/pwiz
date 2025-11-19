@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             try
             {
                 _intermediateFiles = new List<string>();
-                _fastaFilepath = PathEx.GetNonUnicodePath(FastaFileNames[0]);
+                _fastaFilepath = FastaFileNames[0];
 
                 var paramsFileText = new StringBuilder();
 
@@ -382,8 +382,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                         break;
                 }
 
-                string defaultOutputDirectory = PathEx.GetNonUnicodePath(Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, @"crux-output"));
-                
+                string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, "crux-output");
+
                 string paramsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"tide.params") : Path.GetTempFileName();
                 _intermediateFiles.Add(paramsFile);
                 File.WriteAllText(paramsFile, paramsFileText.ToString());
@@ -396,9 +396,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                     UseShellExecute = false
                 };
                 foreach (var filename in SpectrumFileNames)
-                    psi.Arguments += $@" ""{PathEx.GetNonUnicodePath(filename.ToString())}""";
+                    psi.Arguments += $@" ""{filename}""";
                 psi.Arguments += $@" ""{_fastaFilepath}""";
-                pr.ChangeTmpDirEnvironmentVariableToNonUnicodePath(psi); // Set process TMP and TEMP environment settings to 8.3 format equivalents as needed
                 pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
 
                 string cruxOutputDir = defaultOutputDirectory;

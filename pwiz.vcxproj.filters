@@ -322,7 +322,6 @@
     <ClCompile Include="pwiz\utility\bindings\CLI\common\SharedCLITest.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\common\Unimod.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\common\UnimodTest.cpp" />
-    <ClCompile Include="pwiz\utility\bindings\CLI\common\util.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\Diff.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\DiffTest.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\MSData.cpp" />
@@ -1042,7 +1041,6 @@
     <ClInclude Include="pwiz\analysis\dia_umpire\PeakCurve.hpp" />
     <ClInclude Include="pwiz\analysis\dia_umpire\ScanData.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpire.hpp" />
-    <ClInclude Include="pwiz\utility\bindings\CLI\common\util.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\prmscheduler.h" />
     <ClInclude Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmScheduler.hpp" />
     <ClInclude Include="pwiz\utility\misc\sort_together.hpp" />

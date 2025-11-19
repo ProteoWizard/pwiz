@@ -223,18 +223,15 @@ namespace pwiz.Common.SystemUtil
                 if (match.Success)
                 {
                     string lockedFileName = match.Captures[0].Value.Trim('\'');
-                    var isDirectory = Directory.Exists(lockedFileName);
-                    string[] lockedFilePaths = isDirectory ? 
-                        Array.Empty<string>() : // It's a locked directory, not a locked file
-                        Directory.GetFiles(dirPath, lockedFileName, SearchOption.AllDirectories);
-                    if (lockedFilePaths.Length == 0 && !isDirectory)
+                    string[] lockedFilePaths = Directory.GetFiles(dirPath, lockedFileName, SearchOption.AllDirectories);
+                    if (lockedFilePaths.Length == 0)
                     {
                         return new IOException(
                             string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__, lockedFileName, dirPath), x);
                     }
                     else
                     {
-                        string lockedFilePath = isDirectory ? lockedFileName : lockedFilePaths[0];
+                        string lockedFilePath = lockedFilePaths[0];
                         int currentProcessId = Process.GetCurrentProcess().Id;
                         Func<int, string> pidOrThisProcess = pid =>
                             pid == currentProcessId ? MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process : $@"PID: {pid}";
