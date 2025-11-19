@@ -955,13 +955,13 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"distribution_area	=	1	#Report sum of distribution peaks instead of highest peak only. 0=off, 1=on",
                 $@"xml					=	0	#Output results as XML. 0=off, 1=on #MAY NEED UI IN FUTURE",
                 $@"",
-                $@"isotope_data	=	""{isotopesFilename}""	# Using Skyline's isotope abundance values",
+                $@"isotope_data	=	""{PathEx.GetNonUnicodePath(isotopesFilename)}""	# Using Skyline's isotope abundance values",
                 $@"",
                 $@"# Below this point is where files to be analyzed should go. They should be listed contain ",
                 $@"# both the input file name, and the output file name. Each file to be analyzed should begin ",
                 $@"# on a new line. By convention Hardklor output should have this extension: .hk",
                 $@"",
-                $@"""{input}""	""{outputHardklorFile}"""
+                $@"""{PathEx.GetNonUnicodePath(input.GetFilePath())}""	""{PathEx.GetNonUnicodePath(outputHardklorFile)}"""
             );
             var hardklorConfigFile = GetHardklorConfigurationFilename(outputHardklorFile);
             File.WriteAllText(hardklorConfigFile, conf);
