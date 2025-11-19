@@ -500,7 +500,6 @@ namespace pwiz.SkylineTest
                             var val = part.Trim().Split(new[] { "</string>" }, StringSplitOptions.None).FirstOrDefault();
                             if (!string.IsNullOrEmpty(val))
                             {
-                                // ReSharper disable once PossibleNullReferenceException
                                 result += val.Trim();
                             }
                         }
@@ -572,7 +571,7 @@ namespace pwiz.SkylineTest
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
                 { typeof(Gdi32), 4 },
-                { typeof(Kernel32), 8 },
+                { typeof(Kernel32), 7 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
                 { typeof(User32), 33 },
@@ -1551,7 +1550,6 @@ namespace pwiz.SkylineTest
                         e.Name.LocalName == "Content" ||
                         e.Name.LocalName == "EmbeddedResource")
                     .Select(e => e.Attribute("Include")?.Value)
-                    // ReSharper disable once PossibleNullReferenceException
                     .Where(path => !string.IsNullOrEmpty(path) && !path.Contains("*")) // Avoid wildcard paths like *.xsd
                     .ToList();
 

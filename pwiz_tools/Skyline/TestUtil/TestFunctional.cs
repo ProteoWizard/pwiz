@@ -91,11 +91,7 @@ namespace pwiz.SkylineTestUtil
 
     /// <summary>
     /// Test method attribute which specifies a test is not suitable for use with Unicode paths
-    /// N.B. it's usually better to fix the test than to exclude it from Unicode testing
-    /// The problem is that some external tool or library doesn't handle Unicode properly. We deal with
-    /// that by passing windows 8.3 short paths in arguments to such tools where Skyline invokes them.
-    /// 
-    /// Note that the constructor expects a string explaining why a test is unsuitable for use with Unicode 
+    /// Note that the constructor expects a string explaining why a test is unsuitable for use with Unicde 
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class NoUnicodeTestingAttribute : Attribute
@@ -104,7 +100,23 @@ namespace pwiz.SkylineTestUtil
 
         public NoUnicodeTestingAttribute(string reason)
         {
-            Reason = reason; // e.g. "Invokes external tool that doesn't handle unicode"
+            Reason = reason; // e.g. "calls MSFragger", "uses mz5" etc
+        }
+
+    }
+
+    /// <summary>
+    /// Test method attribute which specifies a test is not suitable for use with odd characters in the TMP path (e.g. ^ and &amp;)
+    /// Note that the constructor expects a string explaining why a test is unsuitable for use with odd TMP paths
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoOddTmpPathTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for unicode
+
+        public NoOddTmpPathTestingAttribute(string reason)
+        {
+            Reason = reason; // e.g. "uses Java"[
         }
 
     }
@@ -138,6 +150,13 @@ namespace pwiz.SkylineTestUtil
         public const string EXCESSIVE_TIME = "Requires more time than can be justified in nightly tests";
         public const string VENDOR_FILE_LOCKING = "Vendor readers require exclusive read access";
         public const string SHARED_DIRECTORY_WRITE = "Requires write access to directory shared by all workers";
+        public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
+        public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
+        public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
+        public const string COMET_UNICODE_ISSUES = "Comet doesn't handle unicode paths";
+        public const string TIDE_UNICODE_ISSUES = "Tide doesn't handle unicode paths";
+        public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
+        public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
         public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
         public const string WEB_BROWSER_USE = "WebBrowser class throws UnauthorizedAccessException on Wine";

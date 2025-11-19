@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.IO;
 using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.SystemUtil
@@ -29,29 +28,5 @@ namespace pwiz.Common.SystemUtil
         /// Returns true iff the process is running under Wine (the "wine_get_version" function is exported by ntdll.dll)
         /// </summary>
         public static bool IsRunningOnWine => Kernel32.GetProcAddress(Kernel32.GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
-
-        /// <summary>
-        /// Returns true iff the process is running under an OS and on a volume that supports windows 8.3 format conversion
-        /// </summary>
-        private static bool? _canConvertUnicodePaths;
-        public static bool CanConvertUnicodePaths()
-        {
-            if (!_canConvertUnicodePaths.HasValue)
-            {
-                if (IsRunningOnWine)
-                {
-                    _canConvertUnicodePaths = false;
-                }
-                else
-                {
-                    var fileName = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + @".test试验.txt");
-                    File.WriteAllText(fileName,@"test data");
-                    var converted = PathEx.GetNonUnicodePath(fileName);
-                    File.Delete(fileName);
-                    _canConvertUnicodePaths = !Equals(converted, fileName);
-                }
-            }
-            return _canConvertUnicodePaths.Value;
-        }
     }
 }

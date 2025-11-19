@@ -122,17 +122,6 @@ PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
 /// - if "ec" is NULL, a boost::filesystem_error is thrown
 PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bool recursive = true, boost::system::error_code* ec = 0);
 
-/// <summary>
-/// We often encounter tools that can't deal with Unicode characters in file paths, this method
-/// will try to convert such paths to a non-Unicode version using the 8.3 format short path name.
-/// Converts only the segments that need it, to avoid trashing filename extensions.
-/// e.g. "C:\Program Files\Common Files\my files with ünicode\foo.mzml" (note the umlaut U) => ""C:\Program Files\Common Files\MYFILE~1\foo.mzml"
-///
-/// Only works on NTFS volumes, with 8.3 support enabled. So, for example, not on Docker instances.
-/// </summary>
-/// <param name="utf8Path">Path to an existing file</param>
-/// <returns>Path with unicode segments changed to 8.3 representation, if possible</returns>    
-PWIZ_API_DECL string get_non_unicode_path(const string& utf8Path);
 
 /// wrapper for std::filesystem::canonical because boost::filesystem::canonical has an issue on Wine
 PWIZ_API_DECL bfs::path canonical(const bfs::path from);

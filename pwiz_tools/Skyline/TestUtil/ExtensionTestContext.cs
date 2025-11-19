@@ -67,15 +67,7 @@ namespace pwiz.SkylineTestUtil
         {
             // when run with VSTest/MSTest (when .runsettings file is used), use the CustomTestResultsDirectory property if available
             // because there's no other way to override the TestDir
-            var dir = testContext.Properties["CustomTestResultsDirectory"]?.ToString() ?? testContext.TestDir;
-            var decoration = testContext.Properties[@"UnicodeDecoration"]?.ToString(); // Helps check unicode handling N.B. "UnicodeDecoration" must agree with RunTests.cs
-            if (string.IsNullOrEmpty(decoration))
-            {
-                return dir;
-            }
-
-            // ReSharper disable once AssignNullToNotNullAttribute
-            return Path.Combine(dir, decoration);
+            return testContext.Properties["CustomTestResultsDirectory"]?.ToString() ?? testContext.TestDir;
         }
 
         public static string GetTestPath(this TestContext testContext, string relativePath)

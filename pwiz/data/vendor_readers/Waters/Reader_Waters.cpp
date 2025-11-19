@@ -186,7 +186,7 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
 } // namespace
 
 PWIZ_API_DECL
-void Reader_Waters::read(const string& filenameIn,
+void Reader_Waters::read(const string& filename,
                          const string& head,
                          MSData& result,
                          int runIndex,
@@ -194,7 +194,6 @@ void Reader_Waters::read(const string& filenameIn,
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_Waters::read] multiple runs not supported");
-    string filename = get_non_unicode_path(filenameIn); // Try to convert to Windows 8.3 short path if necessary - Waters DLL doesn't like Unicode in filenames
 
     string::const_iterator unicodeCharItr = std::find_if(filename.begin(), filename.end(), [](char ch) { return !isprint(ch) || static_cast<int>(ch) < 0; });
     if (unicodeCharItr != filename.end())
