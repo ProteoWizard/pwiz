@@ -348,7 +348,20 @@ namespace pwiz.ProteowizardWrapper
                        isoMzLow <= IsoMzHigh && IsoMzHigh >= isoMzLow;
             }
         }
-        
+
+        /// <summary>
+        /// Attempt to get a non-unicode path for use with launched processes that have trouble with Unicode paths
+        ///
+        /// N.B should give same result as PathEx.GetNonUnicodePath, primary use of this method is to test that. Prefer PathEx.GetNonUnicodePath when possible.
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>path with Unicode-containing segments replaced with Windows 8.3 equivalent, if possible</returns>
+        public static string GetNonUnicodePath(string path)
+        {
+            return CLI.util.FileSystem.GetNonUnicodePath(path);
+        }
+
         private class InstrumentConfigurationCacheValues
         {
             public InstrumentConfigurationCacheValues(string ionSource, string analyzer, string detector, Dictionary<int, List<DiaFrameMsMsWindowItem>> diaFrameMsMsWindowInfo)
