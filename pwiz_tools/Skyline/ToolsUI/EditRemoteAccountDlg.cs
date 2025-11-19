@@ -379,13 +379,18 @@ namespace pwiz.Skyline.ToolsUI
                 return false;
             }
             var account = GetRemoteAccount();
-            return account switch
+            var res = account switch
             {
                 UnifiAccount unifiAccount => TestUnifiAccount(unifiAccount),
                 ArdiaAccount ardiaAccount => TestArdiaAccount(ardiaAccount),
                 WatersConnectAccount wcAccount => TestWatersConnectAccount(wcAccount),
                 _ => throw new InvalidOperationException(@"remote account type not handled in TestSettings")
             };
+            if (!res)
+            {
+                btnOK.Enabled = false;
+            }
+            return res;
         }
 
         private bool TestWatersConnectAccount(WatersConnectAccount wcAccount)
@@ -750,6 +755,10 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        public void text_TextChanged(object sender, EventArgs e)
+        {
+            btnOK.Enabled = true;
+        }
         // Test helper
         public bool IsVisibleAccountType(RemoteAccountType accountType)
         {

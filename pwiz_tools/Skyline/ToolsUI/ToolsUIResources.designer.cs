@@ -494,7 +494,9 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to invalid client id or secret.
+        ///   Looks up a localized string similar to Could not connect to a waters_connect instance.
+        ///Exporting and importing to waters_connect is disabled.
+        ///Ensure waters_connect V4.2 or later, TQ Skyline Adapter V1.0 or later and relevant MS drivers V2.0 or later are installed..
         /// </summary>
         public static string EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret {
             get {

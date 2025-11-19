@@ -91,12 +91,14 @@
             // 
             resources.ApplyResources(this.textServerURL, "textServerURL");
             this.textServerURL.Name = "textServerURL";
+            this.textServerURL.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // textPassword
             // 
             resources.ApplyResources(this.textPassword, "textPassword");
             this.textPassword.Name = "textPassword";
             this.textPassword.UseSystemPasswordChar = true;
+            this.textPassword.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblPassword
             // 
@@ -112,6 +114,7 @@
             // 
             resources.ApplyResources(this.textUsername, "textUsername");
             this.textUsername.Name = "textUsername";
+            this.textUsername.TextChanged += new System.EventHandler(this.text_TextChanged);
 
             // 
             // textAlias
@@ -165,6 +168,7 @@
             // 
             resources.ApplyResources(this.tbxClientId, "tbxClientId");
             this.tbxClientId.Name = "tbxClientId";
+            this.tbxClientId.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblClientId
             // 
@@ -176,6 +180,7 @@
             resources.ApplyResources(this.tbxClientSecret, "tbxClientSecret");
             this.tbxClientSecret.Name = "tbxClientSecret";
             this.tbxClientSecret.UseSystemPasswordChar = true;
+            this.tbxClientSecret.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblClientSecret
             // 
@@ -186,6 +191,7 @@
             // 
             resources.ApplyResources(this.tbxClientScope, "tbxClientScope");
             this.tbxClientScope.Name = "tbxClientScope";
+            this.tbxClientScope.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblClientScope
             // 
@@ -196,6 +202,7 @@
             // 
             resources.ApplyResources(this.tbxIdentityServer, "tbxIdentityServer");
             this.tbxIdentityServer.Name = "tbxIdentityServer";
+            this.tbxIdentityServer.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblIdentityServer
             // 
@@ -255,6 +262,7 @@
             // 
             resources.ApplyResources(this.textArdiaAlias_Username, "textArdiaAlias_Username");
             this.textArdiaAlias_Username.Name = "textArdiaAlias_Username";
+            this.textArdiaAlias_Username.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // label2
             // 
@@ -270,6 +278,7 @@
             // 
             resources.ApplyResources(this.textArdiaServerURL, "textArdiaServerURL");
             this.textArdiaServerURL.Name = "textArdiaServerURL";
+            this.textArdiaServerURL.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // EditRemoteAccountDlg
             // 
