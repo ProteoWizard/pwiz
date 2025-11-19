@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
         private bool AsSmallMolecules { get; set; }
 
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.WEB_BROWSER_USE)]
         public void TestStandardType()
         {
             RunTestStandardType(false);
@@ -255,11 +255,15 @@ namespace pwiz.SkylineTestFunctional
             var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
 
             // don't launch browser when running as a service under AlwaysUp
-            if (System.IO.Directory.GetCurrentDirectory().Equals(System.Environment.SystemDirectory, System.StringComparison.CurrentCultureIgnoreCase))
+            using (var docViewerHelper = new DocumentationViewerHelper(TestContext, () => viewEditor.ShowColumnDocumentation(true)))
             {
-                var documentationViewer = ShowDialog<DocumentationViewer>(() => viewEditor.ShowColumnDocumentation(true));
-                Assert.IsNotNull(documentationViewer);
-                OkDialog(documentationViewer, documentationViewer.Close);
+                RunUI(() =>
+                {
+                    var html = docViewerHelper.DocViewer.GetWebView2HtmlContent();
+                    AssertEx.Contains(html, "<table");
+                    AssertEx.Contains(html, "</table>");
+                    // TODO(nicksh): Something more interesting to confirm the expected documentation is present
+                });
             }
 
             var columnsToAdd = new[]

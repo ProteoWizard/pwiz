@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -237,7 +237,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             var tokenResponse = Authenticate();
             var httpClient = _httpClientFactory.CreateClient("customClient");
-            
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");

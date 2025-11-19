@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -33,6 +33,7 @@ using pwiz.Common.SystemUtil.Caching;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model;
@@ -794,12 +795,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_dontSyncSelectedFile)
                 return;
 
-            var panes = FormUtil.OpenForms.OfType<GraphSummary>().SelectMany(g => g.GraphPanes).OfType<SummaryReplicateGraphPane>();
-
-            foreach (var pane in panes)
+            var openForms = FormUtil.OpenForms;
+            foreach (var pane in openForms.OfType<GraphSummary>().SelectMany(g => g.GraphPanes).OfType<SummaryReplicateGraphPane>())
             {  
                 var item = comboFiles.SelectedItem.ToString();
                 pane.SetSelectedFile(item);
+            }
+
+            foreach (var candidatePeakForm in FormUtil.OpenForms.OfType<CandidatePeakForm>())
+            {
+                candidatePeakForm.QueueUpdateRowSource();
             }
         }
 

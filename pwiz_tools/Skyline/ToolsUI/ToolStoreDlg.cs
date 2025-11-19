@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,37 +18,43 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Reflection;
 using System.Windows.Forms;
-using Ionic.Zip;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
-using pwiz.Skyline.Alerts;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
     public partial class ToolStoreDlg : FormEx
     {
-        private readonly IToolStoreClient _toolStoreClient;
+        private IToolStoreClient _toolStoreClient;
+
         private readonly IList<ToolStoreItem> _tools;
+        private readonly ToolInstallUI.InstallProgram _installProgram;
         
-        public ToolStoreDlg(IToolStoreClient toolStoreClient, IList<ToolStoreItem> tools)
+        public ToolStoreDlg(IToolStoreClient toolStoreClient, IList<ToolStoreItem> tools, ToolInstallUI.InstallProgram installProgram)
         {
             _toolStoreClient = toolStoreClient;
             _tools = tools;
+            _installProgram = installProgram;
 
             InitializeComponent();
 
             Icon = Resources.Skyline;
+        }
+        
+        public IToolStoreClient ToolStoreClient
+        {
+            set => _toolStoreClient = value;
         }
 
         private void ToolStore_Load(object sender, EventArgs e)
@@ -146,38 +152,60 @@ namespace pwiz.Skyline.ToolsUI
 
         private void buttonInstallUpdate_Click(object sender, EventArgs e)
         {
-            DownloadSelectedTool();
+            DownloadAndInstallSelectedTool();
         }
-
-        public string DownloadPath { get; private set; }
 
         public void DownloadTool(int index)
         {
             listBoxTools.SelectedIndex = index;
-            DownloadSelectedTool();
+            DownloadAndInstallSelectedTool();
         }
 
         public void DownloadSelectedTool()
         {
-            try
+            // For backward compatibility with tests - delegates to new method
+            DownloadAndInstallSelectedTool();
+        }
+
+        private void DownloadAndInstallSelectedTool()
+        {
+            string identifier = _tools[listBoxTools.SelectedIndex].Identifier;
+            string toolName = _tools[listBoxTools.SelectedIndex].Name;
+            string toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
+            
+            // Use FileSaver pattern: download to ~SK*.tmp, extract/install, never commit (auto-cleanup)
+            // Logical destination is toolName.zip in tools directory (for error messages)
+            string zipDestination = Path.Combine(toolsDirectory, toolName + ToolDescription.EXT_INSTALL);
+            using (var fileSaver = new FileSaver(zipDestination))
             {
-                string identifier = _tools[listBoxTools.SelectedIndex].Identifier;
-                using (var dlg = new LongWaitDlg())
+                try
                 {
-                    dlg.ProgressValue = 0;
-                    dlg.Message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
-                    dlg.PerformWork(this, 500, progressMonitor => DownloadPath = _toolStoreClient.GetToolZipFile(progressMonitor, identifier, Path.GetTempPath()));
-                    if (!dlg.IsCanceled)
-                        DialogResult = DialogResult.OK;
+                    // Download to FileSaver temp file (~SK*.tmp in tools directory)
+                    var downloadMessage = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, toolName);
+                    var progressStatus = new ProgressStatus(downloadMessage);
+                    IProgressStatus downloadStatus;
+                    using (var dlg = new LongWaitDlg())
+                    {
+                        downloadStatus = dlg.PerformWork(this, 500, progressMonitor =>
+                        {
+                            _toolStoreClient.GetToolZipFile(progressMonitor, progressStatus, identifier, fileSaver);
+                        });
+                    }
+                    
+                    if (downloadStatus.IsCanceled)
+                        return; // FileSaver.Dispose() will auto-delete ~SK*.tmp
+                    
+                    // Extract and install the tool from the temp file
+                    ToolInstallUI.InstallZipTool(this, fileSaver.SafeName, _installProgram);
+                    
+                    // Success - set DialogResult to dismiss form
+                    // FileSaver.Dispose() will auto-delete ~SK*.tmp (never committed)
+                    DialogResult = DialogResult.OK;
                 }
-            }
-            catch (TargetInvocationException ex)
-            {
-                if (ex.InnerException is ToolExecutionException || ex.InnerException is WebException)
-                    MessageDlg.ShowException(this, ex);
-                else
+                catch (Exception ex)
                 {
-                    throw;
+                    // FileSaver.Dispose() will auto-delete ~SK*.tmp
+                    ExceptionUtil.DisplayOrReportException(this, ex);
                 }
             }
         }
@@ -220,143 +248,23 @@ namespace pwiz.Skyline.ToolsUI
         IList<ToolStoreItem> GetToolStoreItems();
 
         /// <summary>
-        /// Downloads the tool zip file associated with the given packageIdentifer. In particular,
-        /// the function is required to support the ILongWaitBroker by making the download process asynchronous, and
-        /// listening for the waitBroker's cancellation. If the waitBroker is cancelled, this method must return
-        /// promptly.
+        /// Downloads the tool zip file associated with the given packageIdentifer to the FileSaver's temp location.
+        /// The downloaded file is written to fileSaver.SafeName (~SK*.tmp in the destination directory).
+        /// Caller controls cleanup by committing or disposing the FileSaver.
+        /// Uses IProgressMonitor for progress reporting and cancellation support.
+        /// If the monitor is cancelled, this method must return promptly.
         /// </summary>
-        /// <returns>The path to the downloaded zip tool, contained in the specified directory.</returns>
-        string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory);
+        /// <param name="progressMonitor">Progress monitor for reporting download progress and handling cancellation</param>
+        /// <param name="progressStatus">Initial progress status with message to display during download</param>
+        /// <param name="packageIdentifier">Unique identifier for the tool package to download</param>
+        /// <param name="fileSaver">FileSaver managing the destination zip file (downloads to fileSaver.SafeName)</param>
+        void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver);
         
         /// <summary>
         /// Returns true if the given package (identified by its version), has an update available. The
         /// version is the string representation of the version installed
         /// </summary>
         bool IsToolUpdateAvailable(string identifier, Version version);
-    }
-
-    public class TestToolStoreClient : IToolStoreClient
-    {
-        private readonly DirectoryInfo _toolDir;
-        
-        public TestToolStoreClient(string toolDirPath)
-        {
-            _toolDir = new DirectoryInfo(toolDirPath);
-        }
-
-        private IList<ToolStoreItem> ToolStoreItems { get; set; }
-        private static readonly string[] IMAGE_EXTENSIONS = {@".jpg", @".png", @".bmp"};
-
-        public IList<ToolStoreItem> GetToolStoreItems()
-        {
-            if (FailToConnect)
-                throw new ToolExecutionException(FailToConnectMessage);
-            
-            if (ToolStoreItems != null)
-                return ToolStoreItems;
-            
-            var tools = new List<ToolStoreItem>();
-            if (_toolDir == null)
-                return tools;
-            foreach (var toolDir in _toolDir.GetFiles())
-            {                
-                if (toolDir == null || string.IsNullOrEmpty(toolDir.DirectoryName))
-                    continue;
-
-                string fileName = Path.GetFileNameWithoutExtension(toolDir.Name);
-                string path = Path.Combine(toolDir.DirectoryName, fileName);
-                using (new TemporaryDirectory(path))
-                {
-                    using (var zipFile = new ZipFile(toolDir.FullName))
-                    {
-                        // extract files
-                        zipFile.ExtractAll(path, ExtractExistingFileAction.OverwriteSilently);
-                        
-                        var toolInf = new DirectoryInfo(Path.Combine(path, ToolInstaller.TOOL_INF));
-                        if (!Directory.Exists(toolInf.FullName))
-                            continue;
-
-                        if (!toolInf.GetFiles(ToolInstaller.INFO_PROPERTIES).Any())
-                            continue;
-
-                        var pictures = toolInf.GetFiles().Where(info => IMAGE_EXTENSIONS.Contains(info.Extension)).ToList();
-                        Image toolImage = ToolStoreUtil.DefaultImage;
-                        if (pictures.Count != 0)
-                        {
-                            // try and read in the image
-                            try
-                            {
-                                using (var stream = new FileStream(pictures.First().FullName, FileMode.Open, FileAccess.Read))
-                                {
-                                    toolImage = Image.FromStream(stream);
-                                }
-                            }
-// ReSharper disable EmptyGeneralCatchClause
-                            catch (Exception)
-// ReSharper restore EmptyGeneralCatchClause
-                            {
-                                // if anything goes wrong -- just use the default image :)
-                            }
-                        }
-
-                        ExternalToolProperties readin;
-                        try
-                        {
-                            readin = new ExternalToolProperties(Path.Combine(toolInf.FullName, ToolInstaller.INFO_PROPERTIES));
-                        }
-                        catch (Exception)
-                        {
-                            continue;
-                        }
-
-                        tools.Add(new ToolStoreItem(readin.Name, readin.Author, readin.Provider, readin.Version,
-                                                    readin.Description, readin.Identifier, toolImage, toolDir.FullName));
-                    }
-                } 
-            }
-            // sort toollist by name
-            tools.Sort(((item, storeItem) => String.Compare(item.Name, storeItem.Name, StringComparison.Ordinal)));
-            return tools;
-        }
-
-        public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
-        {
-            if (FailDownload)
-                throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
-
-            if (TestDownloadPath != null)
-                return TestDownloadPath;
-
-            foreach (var item in ToolStoreItems ?? GetToolStoreItems())
-            {
-                if (item.Identifier.Equals(packageIdentifier))
-                {
-                    string fileName = Path.GetFileName(item.FilePath);
-                    if (fileName == null)
-                        throw new ToolExecutionException(Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool);
-                    
-                    string path = Path.Combine(directory, fileName);
-                    File.Copy(item.FilePath, path, true);
-                    return path;
-                }
-            }
-
-            throw new ToolExecutionException(ToolsUIResources.TestToolStoreClient_GetToolZipFile_Cannot_find_a_file_with_that_identifier_);
-        }
-
-        public bool IsToolUpdateAvailable(string identifier, Version version)
-        {
-            if (ToolStoreItems == null)
-                ToolStoreItems = GetToolStoreItems();
-
-            var tool = ToolStoreItems.FirstOrDefault(item => item.Identifier.Equals(identifier));
-            return tool != null && version < new Version(tool.Version);
-        }
-
-        public bool FailToConnect { get; set; }
-        public string FailToConnectMessage { get; set; }
-        public bool FailDownload { get; set; }
-        public string TestDownloadPath { get; set; }
     }
 
     public class WebToolStoreClient : IToolStoreClient
@@ -380,41 +288,25 @@ namespace pwiz.Skyline.ToolsUI
             return JsonConvert.DeserializeObject<ToolStoreItem[]>(GetToolsJson());
         }
 
-        public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier,
+            FileSaver fileSaver)
         {
-            var webClient = new WebClient();
+            GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, fileSaver);
+        }
+
+        public static void GetToolZipFileWithProgress(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
+        {
+            using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
             var uri = new UriBuilder(TOOL_STORE_URI)
             {
                 Path = DOWNLOAD_TOOL_URL,
                 Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
             };
-            byte[] toolZip = webClient.DownloadData(uri.Uri.AbsoluteUri);
-            string contentDispositionString = webClient.ResponseHeaders.Get(@"Content-Disposition");
-            string downloadedFile = null;
-            ContentDispositionHeaderValue.TryParse(contentDispositionString, out var contentDispositionHeaderValue);
-            try
-            {
-                if (contentDispositionHeaderValue?.FileNameStar != null)
-                {
-                    downloadedFile = Path.Combine(directory, contentDispositionHeaderValue.FileNameStar);
-                }
-                else if (contentDispositionHeaderValue?.FileName != null)
-                {
-                    downloadedFile = Path.Combine(directory, contentDispositionHeaderValue.FileName);
-                }
-            }
-            catch (Exception)
-            {
-                // ignore
-            }
-
-            if (downloadedFile == null)
-            {
-                // Something went wrong trying to decide the filename. Fall back to using a temp file name.
-                downloadedFile = FileStreamManager.Default.GetTempFileName(directory, @"Sky");
-            }
-            File.WriteAllBytes(downloadedFile, toolZip);
-            return downloadedFile;
+            
+            // Download the tool zip file directly to FileSaver's temp location (~SK*.tmp)
+            // Progress reporting and cancellation handled by HttpClientWithProgress
+            // FileSaver provides automatic cleanup if not committed
+            httpClient.DownloadFile(uri.Uri, fileSaver.SafeName);
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)
@@ -432,8 +324,8 @@ namespace pwiz.Skyline.ToolsUI
 
         protected string GetToolsJson()
         {
-            WebClient webClient = new WebClient();
-            return webClient.DownloadString(TOOL_STORE_URI + GET_TOOLS_URL);
+            using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+            return httpClient.DownloadString(TOOL_STORE_URI + GET_TOOLS_URL);
         }
     }
 
@@ -519,9 +411,30 @@ namespace pwiz.Skyline.ToolsUI
             {
                 IconDownloading = true;
                 var iconUri = new Uri(WebToolStoreClient.TOOL_STORE_URI + iconUrl);
-                var webClient = new WebClient();
-                webClient.DownloadDataCompleted += DownloadIconDone;
-                webClient.DownloadDataAsync(iconUri);
+                
+                // Download icon asynchronously on background thread
+                ActionUtil.RunAsync(() =>
+                {
+                    try
+                    {
+                        using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                        byte[] iconData = httpClient.DownloadData(iconUri.AbsoluteUri);
+                        
+                        using (MemoryStream ms = new MemoryStream(iconData))
+                        {
+                            ToolImage = Image.FromStream(ms);
+                        }
+                        IconDownloading = false;
+                        if (IconLoadComplete != null)
+                            IconLoadComplete();
+                    }
+                    catch (Exception exception)
+                    {
+                        IconDownloading = false;
+                        // Ignore but log to debug console in debug builds
+                        Debug.WriteLine($@"Failed to download tool icon: {exception.Message}");
+                    }
+                });
             }
             Installed = ToolStoreUtil.IsInstalled(identifier);
             IsMostRecentVersion = ToolStoreUtil.IsMostRecentVersion(identifier, version);
@@ -531,28 +444,6 @@ namespace pwiz.Skyline.ToolsUI
                     Query = @"name=" + Uri.EscapeDataString(name)
                 };
             FilePath = uri.Uri.AbsoluteUri;
-        }
-
-        protected void DownloadIconDone(object sender, DownloadDataCompletedEventArgs downloadDataCompletedEventArgs)
-        {
-            try
-            {
-                if (downloadDataCompletedEventArgs.Error != null || downloadDataCompletedEventArgs.Cancelled)
-                {
-                    return;
-                }
-                using (MemoryStream ms = new MemoryStream(downloadDataCompletedEventArgs.Result))
-                {
-                    ToolImage = Image.FromStream(ms);
-                }
-                IconDownloading = false;
-                if (IconLoadComplete != null)
-                    IconLoadComplete();
-            }
-            catch (Exception exception)
-            {
-                Program.ReportException(exception);
-            }
         }
     }
 

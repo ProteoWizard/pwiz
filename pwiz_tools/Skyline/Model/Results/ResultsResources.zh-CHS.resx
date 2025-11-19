@@ -331,10 +331,6 @@
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
     <value>需要提供离子对设置、离子迁移过滤、窗口类型值</value>
-    <comment>Needs Review:English text changed
-Old English:need a value for  Transition Settings  Ion mobility filtering  Window type
-Current English:need a value for Transition Settings, Ion mobility filtering, Window type
-Old Localized:需要提供离子对设置离子迁移过滤窗口类型值</comment>
   </data>
   <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
     <value>不支持混合离子迁移类型</value>
@@ -347,5 +343,14 @@ Old Localized:需要提供离子对设置离子迁移过滤窗口类型值</comm
   </data>
   <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
     <value>丢弃其空色谱图: {0}</value>
+  </data>
+  <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
+    <value>加载中{0}</value>
+  </data>
+  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
+    <value>注解：</value>
+  </data>
+  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
+    <value>属性：</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Mimi Fung <mfung03 .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

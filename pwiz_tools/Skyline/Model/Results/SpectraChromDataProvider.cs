@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -951,7 +951,7 @@ namespace pwiz.Skyline.Model.Results
                         _currentInfo = _pendingInfoList.Take();
                         _currentInfo.SortEvent?.WaitOne();   // Until sorted
                         if (_exception != null)
-                            Helpers.WrapAndThrowException(_exception);
+                            ExceptionUtil.WrapAndThrowException(_exception);
                     }
                     else
                     {
@@ -1343,7 +1343,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Propagate exception from provider thread.
-                Helpers.WrapAndThrowException(_exception);
+                ExceptionUtil.WrapAndThrowException(_exception);
                 throw _exception;   // Unreachable code, but keeps compiler happy
             }
 

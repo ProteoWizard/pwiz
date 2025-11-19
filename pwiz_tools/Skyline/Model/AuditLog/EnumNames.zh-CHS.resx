@@ -453,6 +453,9 @@
   <data name="NumericAggregate_Sum" xml:space="preserve">
     <value>总和</value>
   </data>
+  <data name="NumericAggregate_Median" xml:space="preserve">
+    <value>中位数</value>
+  </data>
   <data name="SelectOne_Max" xml:space="preserve">
     <value>最大</value>
   </data>
@@ -599,10 +602,6 @@
   </data>
   <data name="InputFile_dia_raw" xml:space="preserve">
     <value>DIA 原始文件（搜索并建库）</value>
-    <comment>Needs Review:English text changed
-Old English:DIA raw (deconvolute, search, and build library)
-Current English:DIA raw (search and build library)
-Old Localized:DIA 原始（去卷积、搜索和构建库）</comment>
   </data>
   <data name="InputFile_search_result" xml:space="preserve">
     <value>搜索结果（直接构建库）</value>

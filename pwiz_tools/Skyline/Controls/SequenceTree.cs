@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1519,7 +1519,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private Type[] treeNodeTypes = new Type[] {typeof(SrmTreeNodeParent), typeof(PeptideGroupTreeNode), typeof(PeptideTreeNode), typeof(TransitionGroupTreeNode), typeof(TransitionTreeNode)};
+        private Type[] treeNodeTypes = new[] {typeof(SrmTreeNodeParent), typeof(PeptideGroupTreeNode), typeof(PeptideTreeNode), typeof(TransitionGroupTreeNode), typeof(TransitionTreeNode)};
 
         public int GetNodeLevel(TreeNodeMS node)
         {

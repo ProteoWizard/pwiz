@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -868,9 +868,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return 0;
         }
 
-        public override string ToString() // For debug convenience
+        public override string ToString()
         {
-            return string.Format(@"ccs{0}/{1}/he{2}/{3}", CollisionalCrossSectionSqA, IonMobility, HighEnergyIonMobilityValueOffset, Units);
+            return IonMobilityFilter.GetIonMobilityFilter(this, null).ToString(); // Slightly elaborate, but gives consistent user-facing formatting
         }
     }
 
@@ -1246,9 +1246,32 @@ namespace pwiz.Skyline.Model.DocSettings
             return Nullable.Compare(IonMobilityExtractionWindowWidth, other.IonMobilityExtractionWindowWidth);
         }
 
-        public override string ToString() // For debugging convenience, not user-facing
+        public override string ToString()
         {
-            return string.Format(@"{0}/w{1:F06}", IonMobilityAndCCS, IonMobilityExtractionWindowWidth );
+            // Construct a string like "CCS=452.225 IM=1.118+/-0.0373 msec High Energy Offset=.002" or "CCS=452.225 IM=1.118 Vs/cm^2" etc
+            var result = string.Empty;
+            if (IonMobilityAndCCS.HasCollisionalCrossSection)
+            {
+                result = string.Format(ResultsResources.IonMobilityAndCCS_DisplayString_CCS_, CollisionalCrossSectionSqA);
+                if (HasIonMobilityValue)
+                {
+                    result += @" "; // Put a space between CCS and IM parts
+                }
+            }
+
+            if (HasIonMobilityValue)
+            {
+                // Write mobility value, and optional tolerance (as half window width)
+                result += string.Format(ResultsResources.IonMobilityAndCCS_DisplayString_IM_And_Tolerance_, IonMobility.Mobility, (IonMobilityExtractionWindowWidth.HasValue ? $@"+/-{(IonMobilityExtractionWindowWidth/2):F04}" : string.Empty), IonMobility.UnitsString);
+            }
+
+            if ((IonMobilityAndCCS.HighEnergyIonMobilityValueOffset??0) != 0)
+            {
+                result += @" "; // Put a space between mobility and high energy offset parts
+                result += string.Format(ResultsResources.IonMobilityAndCCS_DisplayString_HighEnergyOffset_, IonMobilityAndCCS.HighEnergyIonMobilityValueOffset);
+            }
+
+            return result;
         }
 
     }

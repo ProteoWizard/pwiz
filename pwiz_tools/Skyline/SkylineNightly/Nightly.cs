@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,6 +32,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 using System.Xml.Linq;
 using Ionic.Zip;
 using Microsoft.Win32.TaskScheduler;
@@ -996,7 +997,7 @@ namespace SkylineNightly
                 {
                     try
                     {
-                        doc.Root.Add(new XElement("Log", log));
+                        doc.Root.Add(new XElement("Log", ReplaceInvalidXmlChars(log)));
                         xml = doc.ToString();
                     }
                     catch (Exception e)
@@ -1373,6 +1374,42 @@ namespace SkylineNightly
         {
             [OperationContract]
             void SetEndTime(DateTime endTime);
+        }
+        /// <summary>
+        /// Replace all invalid characters in the string with a backslash followed by 'u' and the hexadecimal code of the character.
+        /// Invalid characters are most of the control characters as well as surrogate characters which are not a high surrogate
+        /// followed by a low surrogate.
+        /// </summary>
+        public static string ReplaceInvalidXmlChars(string s)
+        {
+            StringBuilder stringBuilder = null;
+            for (int i = 0; i < s.Length; i++)
+            {
+                var ch = s[i];
+                if (XmlConvert.IsXmlChar(ch) && !char.IsSurrogate(ch))
+                {
+                    stringBuilder?.Append(ch);
+                    continue;
+                }
+                if (char.IsHighSurrogate(ch) && i < s.Length - 1)
+                {
+                    var chLow = s[i + 1];
+                    if (XmlConvert.IsXmlSurrogatePair(chLow, ch))
+                    {
+                        stringBuilder?.Append(ch);
+                        stringBuilder?.Append(chLow);
+                        i++;
+                        continue;
+                    }
+                }
+                if (stringBuilder == null)
+                {
+                    stringBuilder = new StringBuilder(s.Length);
+                    stringBuilder.Append(s.Substring(0, i));
+                }
+                stringBuilder.Append("\\u" + ((int)ch).ToString("X4"));
+            }
+            return stringBuilder?.ToString() ?? s;
         }
     }
 

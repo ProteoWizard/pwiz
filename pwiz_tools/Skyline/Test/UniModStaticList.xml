@@ -1,4 +1,4 @@
-﻿<StaticModList>
+<StaticModList>
   <static_modification name="6C-CysPAT (C)" aminoacid="C" variable="true" formula="H16C8NO4P" unimod_id="2057" />
   <static_modification name="6C-CysPAT (N-term)" terminus="N" variable="true" formula="H16C8NO4P" unimod_id="2057" />
   <static_modification name="Acetyl (K)" aminoacid="K" variable="true" formula="C2H2O" unimod_id="1" short_name="1Ac" />

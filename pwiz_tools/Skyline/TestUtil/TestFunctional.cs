@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -2049,11 +2049,10 @@ namespace pwiz.SkylineTestUtil
             {
                 //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
                 const string errorSeparator = "------------------------------------------------------";
-                Assert.Fail("{0}{1}{2}{3}",
-                    Environment.NewLine + Environment.NewLine,
-                    errorSeparator + Environment.NewLine,
-                    Program.TestExceptions[0],
-                    Environment.NewLine + errorSeparator + Environment.NewLine);
+                Assert.Fail(new StringBuilder().AppendLine().AppendLine()
+                    .AppendLine(errorSeparator)
+                    .AppendLine(Program.TestExceptions[0].ToString())
+                    .AppendLine(errorSeparator).ToString());
             }
 
             if (!_testCompleted)
@@ -2527,7 +2526,7 @@ namespace pwiz.SkylineTestUtil
 
             DoTest();
 
-            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
+            CheckRecordMode();
 
             if (null != SkylineWindow)
             {
@@ -2567,17 +2566,8 @@ namespace pwiz.SkylineTestUtil
                 // Release all resources by setting the document to something that
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
-                bool verboseLogging = Program.IsVerboseLogging(GetType().FullName);
-                if (verboseLogging)
-                {
-                    Console.Out.WriteLine("Before switch to blank document");
-                }
                 // Try twice, because this operation can fail due to active background processing
                 RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
-                if (verboseLogging)
-                {
-                    Console.Out.WriteLine("After switch to blank document");
-                }
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)

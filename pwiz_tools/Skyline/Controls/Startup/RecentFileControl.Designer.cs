@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Startup
+namespace pwiz.Skyline.Controls.Startup
 {
     partial class RecentFileControl
     {

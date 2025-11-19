@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -2882,7 +2882,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // If the integration strategy has changed, then force a full update of all results
             if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll
                 || !Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation)
-                || !Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
+                || !settingsNew.DocumentRetentionTimes.Equivalent(settingsOld.DocumentRetentionTimes))
             {
                 DiffResults = DiffResultsAll = true;
             }

@@ -345,9 +345,24 @@ It is recommended that you delete this file so that Skyline can create a new fil
     <value>Discarding empty chromatograms for {0}</value>
   </data>
   <data name="SpectrumFilter_No_Isolation_Window_Found_For_Precursor_" xml:space="preserve">
-      <value>No isolation window found in {0} for precursor {1} (m/z={2} im={3})</value>
+    <value>No isolation window found in {0} for precursor {1} (m/z={2:F04} {3})</value>
   </data>
   <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
-	  <value>Loading {0}</value>
+    <value>Loading {0}</value>
+  </data>
+  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
+    <value>Annotation: </value>
+  </data>
+  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
+    <value>Property: </value>
+  </data>
+  <data name="IonMobilityAndCCS_DisplayString_HighEnergyOffset_" xml:space="preserve">
+      <value>High Energy Offset={0:F03}</value>
+  </data>
+  <data name="IonMobilityAndCCS_DisplayString_CCS_" xml:space="preserve">
+      <value>CCS={0:F03}</value>
+  </data>
+  <data name="IonMobilityAndCCS_DisplayString_IM_And_Tolerance_" xml:space="preserve">
+      <value>IM={0:F03}{1} {2}</value>
   </data>
 </root>

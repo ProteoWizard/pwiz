@@ -1,4 +1,4 @@
-﻿namespace ExampleInteractiveTool
+namespace ExampleInteractiveTool
 {
     partial class MainForm
     {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,9 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
@@ -201,11 +203,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default;
                 }
 
-                if (defaultOption == null)
-                {
-                    return RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default__None_;
-                }
-                return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetLabel_Default___0__, defaultOption.DisplayName);
+                var defaultSpec = defaultOption?.ToAlignmentTargetSpec() ?? None;
+                return TextUtil.SpaceSeparate(defaultSpec.GetLabel(peptideSettings), RetentionTimesResources.AlignmentTargetSpec_GetLabel__default_);
             }
 
             if (Type == Library.Type)
@@ -230,6 +229,76 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             return RetentionTimesResources.AlignmentTargetSpec_GetLabel___Invalid__;
+        }
+
+        public string GetTooltip(PeptideSettings peptideSettings, SrmDocument.DOCUMENT_TYPE documentType)
+        {
+            if (Type == None.Type)
+            {
+                return RetentionTimesResources.AlignmentTargetSpec_GetTooltip_Retention_time_values_will_be_unchanged_when_mapping_between_runs;
+            }
+
+            if (Type == Default.Type)
+            {
+                if (!RtCalculatorOption.TryGetDefault(peptideSettings, out var defaultOption))
+                {
+                    return RetentionTimesResources.AlignmentTargetSpec_GetTooltip_Use_the_retention_time_calculator_if_there_is_one_or_the_first_library;
+                }
+
+                var defaultSpec = defaultOption?.ToAlignmentTargetSpec() ?? None;
+                return defaultSpec.GetTooltip(peptideSettings, documentType);
+            }
+
+            if (Type == Calculator.Type)
+            {
+                var calculator = peptideSettings.Prediction.RetentionTime?.Calculator;
+                if (calculator == null)
+                {
+                    return RetentionTimesResources.AlignmentTargetSpec_GetTooltip_Invalid;
+                }
+
+                if (calculator is RCalcIrt rCalcIrt)
+                {
+                    int standardCount = rCalcIrt.GetStandardPeptides().Count();
+                    if (standardCount != 0)
+                    {
+                        if (documentType == SrmDocument.DOCUMENT_TYPE.proteomic)
+                        {
+                            return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against__1__standard_peptides_in_calculator__2_,
+                                rCalcIrt.RegressionType, standardCount, rCalcIrt.Name);
+                        }
+                        else
+                        {
+                            return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against__1__standard_molecules_in_calculator__2_,
+                                rCalcIrt.RegressionType, standardCount, rCalcIrt.Name);
+                        }
+                    }
+
+                    if (documentType == SrmDocument.DOCUMENT_TYPE.proteomic)
+                    {
+                        return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against_all_peptides_in_calculator__1_,
+                            rCalcIrt.RegressionType, rCalcIrt.Name);
+                    }
+
+                    return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against_all_molecules_in_calculator__1_,
+                        rCalcIrt.RegressionType, rCalcIrt.Name);
+                }
+            }
+
+            if (Type == Library.Type)
+            {
+                return string.Format(RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against_median_retention_times_from_library__1_,
+                    IrtRegressionType.LOWESS, Name);
+            }
+
+            if (Type == ChromatogramPeaks.Type)
+            {
+                return string.Format(
+                    RetentionTimesResources.AlignmentTargetSpec_GetTooltip__0__regression_against_median_chromatogram_peak_apex_times_across_replicate_in_this_document,
+                    IrtRegressionType.LOWESS);
+            }
+
+            return null;
         }
 
         public bool TryGetAlignmentTarget(SrmSettings settings, out AlignmentTarget alignmentTarget)
@@ -294,5 +363,30 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         public bool IsChromatogramPeaks => Type == ChromatogramPeaks.Type;
+
+        public bool IsSameAsDefault(PeptideSettings peptideSettings)
+        {
+            if (!RtCalculatorOption.TryGetDefault(peptideSettings, out var defaultOption))
+            {
+                return false;
+            }
+
+            if (Type == None.Type)
+            {
+                return defaultOption == null;
+            }
+
+            if (Type == Calculator.Type)
+            {
+                return defaultOption is RtCalculatorOption.Irt;
+            }
+
+            if (Type == Library.Type)
+            {
+                return defaultOption is RtCalculatorOption.Library libraryOption && libraryOption.LibraryName == Name;
+            }
+
+            return false;
+        }
     }
 }

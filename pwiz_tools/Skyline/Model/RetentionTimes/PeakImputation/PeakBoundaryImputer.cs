@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         private ImputedPeak GetImputedPeakFromLibraryPeak(CancellationToken cancellationToken, LibraryInfo libraryInfo, SourcedPeak exemplaryPeak,
             MsDataFileUri filePath)
         {
-            if (AlignmentTarget == null)
+            if (AlignmentTarget == null || filePath == null)
             {
                 return new ImputedPeak(exemplaryPeak.Peak.PeakBounds, exemplaryPeak);
             }
