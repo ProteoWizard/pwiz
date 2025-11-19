@@ -275,4 +275,13 @@
   <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores" xml:space="preserve">
     <value>Calculating peak group scores</value>
   </data>
+  <data name="MissingScoreBehavior_FAIL_Fail" xml:space="preserve">
+    <value>Fail</value>
+  </data>
+  <data name="MissingScoreBehavior_REPLACE_Replace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="MissingScoreBehavior_SKIP_Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
 </root>

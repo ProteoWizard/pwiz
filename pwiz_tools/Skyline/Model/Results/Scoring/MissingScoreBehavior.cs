@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,15 +19,14 @@
 using System;
 using System.Linq;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
     public class MissingScoreBehavior
     {
-        public static MissingScoreBehavior FAIL = new MissingScoreBehavior(@"fail", () => Resources.MissingScoreBehavior_FAIL_Fail);
-        public static MissingScoreBehavior REPLACE = new MissingScoreBehavior(@"replace", () => Resources.MissingScoreBehavior_REPLACE_Replace);
-        public static MissingScoreBehavior SKIP = new MissingScoreBehavior(@"skip", () => Resources.MissingScoreBehavior_SKIP_Skip);
+        public static MissingScoreBehavior FAIL = new MissingScoreBehavior(@"fail", () => ScoringResources.MissingScoreBehavior_FAIL_Fail);
+        public static MissingScoreBehavior REPLACE = new MissingScoreBehavior(@"replace", () => ScoringResources.MissingScoreBehavior_REPLACE_Replace);
+        public static MissingScoreBehavior SKIP = new MissingScoreBehavior(@"skip", () => ScoringResources.MissingScoreBehavior_SKIP_Skip);
 
         private MissingScoreBehavior(string name, Func<string> getLabelFunc)
         {

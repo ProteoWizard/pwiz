@@ -3873,15 +3873,6 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="CommandArgs_ParseAnnotationTypes_Error__Attempting_to_exclude_an_unknown_annotation_type__0___Try_one_of_the_following_" xml:space="preserve">
     <value>Error: Attempting to exclude an unknown annotation type '{0}'. Try one of the following:</value>
   </data>
-  <data name="MissingScoreBehavior_FAIL_Fail" xml:space="preserve">
-    <value>Fail</value>
-  </data>
-  <data name="MissingScoreBehavior_REPLACE_Replace" xml:space="preserve">
-    <value>Replace</value>
-  </data>
-  <data name="MissingScoreBehavior_SKIP_Skip" xml:space="preserve">
-    <value>Skip</value>
-  </data>
   <data name="CommandLine_AddAnnotations_Annotations_successfully_defined_from_file__0__" xml:space="preserve">
     <value>Annotations successfully defined from file {0}.</value>
   </data>
