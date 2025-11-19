@@ -556,7 +556,7 @@ public class WebDavBrowser : PanoramaFolderBrowser
             Uri query = null;
             try
             {
-                query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, "?method=json"));
+                query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, @"?method=json"));
                 using var requestHelper = new HttpPanoramaRequestHelper(folderInfo.Server);
                 JToken json = requestHelper.Get(query);
                 if ((int)json[@"fileCount"] != 0)
@@ -569,7 +569,7 @@ public class WebDavBrowser : PanoramaFolderBrowser
                         if (!isFile)
                         {
                             var canRead = (bool)file[@"canRead"];
-                            if (!canRead || fileName!.Equals("assaydata"))
+                            if (!canRead || fileName!.Equals(@"assaydata"))
                             {
                                 continue;
                             }

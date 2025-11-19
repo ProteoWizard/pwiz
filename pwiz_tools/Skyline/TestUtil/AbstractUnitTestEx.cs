@@ -134,6 +134,11 @@ namespace pwiz.SkylineTestUtil
             get { return false; }
         }
 
+        protected void CheckRecordMode()
+        {
+            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
+        }
+
         /// <summary>
         /// Returns true if Skyline was compiled with a Koina config file that enables connecting to a real server.
         /// </summary>
