@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,6 +25,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -83,9 +84,9 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Tests for the message dialog that appears if you click the install button with no tools selected
         /// </summary>
-        private static void TestDeselectAll()
+        private void TestDeselectAll()
         {
-            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL });
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL }, CreateToolStoreClient(TestFilesDir.FullPath));
             var toolUpdatesDlg = context.ShowToolUpdatesDlg(itemsSelected: false);
 
             TestMessageDlgShown(toolUpdatesDlg.OkDialog, 
@@ -94,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(toolUpdatesDlg, toolUpdatesDlg.CancelDialog);
         }
 
-        private static void TestDownload()
+        private void TestDownload()
         {
             TestDownloadFailure();
             TestDownloadCancel();
@@ -130,9 +131,9 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Tests for successfully downloading an update for a tool.
         /// </summary>
-        private static void TestDownloadSuccess()
+        private void TestDownloadSuccess()
         {
-            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL });
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL }, CreateToolStoreClient(TestFilesDir.FullPath));
             var toolUpdatesDlg = context.ShowToolUpdatesDlg(testingDownloadOnly: true);
             OkDialog(toolUpdatesDlg, toolUpdatesDlg.OkDialog);
         }
@@ -155,13 +156,13 @@ namespace pwiz.SkylineTestFunctional
                     helper.GetExpectedMessage()));
         }
 
-        private static void TestUpdate()
+        private void TestUpdate()
         {
             TestUpdateFailure();
             TestUpdateSuccess();
         }
 
-        private static void TestUpdateFailure()
+        private void TestUpdateFailure()
         {
             TestUpdateFailureIOException();
             TestUpdateFailureMessageException();
@@ -173,10 +174,10 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Test for failing to update a tool due to an IOException during installation.
         /// </summary>
-        private static void TestUpdateFailureIOException()
+        private void TestUpdateFailureIOException()
         {
             var expectedErrorMessage = TextUtil.LineSeparate(
-                string.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, string.Empty), 
+                Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool, 
                 EXCEPTION_MESSAGE);
             
             TestSingleToolInstall(
@@ -188,7 +189,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Test for failing to update a tool due to a ToolExecutionException during installation.
         /// </summary>
-        private static void TestUpdateFailureMessageException()
+        private void TestUpdateFailureMessageException()
         {
             TestSingleToolInstall(
                 CreateTestInstallFunction(new ToolExecutionException(EXCEPTION_MESSAGE), false),
@@ -199,7 +200,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Tests for failing to update a tool due to the user cancelling.
         /// </summary>
-        private static void TestUpdateFailureUserCancel()
+        private void TestUpdateFailureUserCancel()
         {
             TestSingleToolInstall(
                 CreateTestInstallFunction(null, true),
@@ -210,7 +211,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Tests for successfully updating a tool.
         /// </summary>
-        private static void TestUpdateSuccess()
+        private void TestUpdateSuccess()
         {
             TestSingleToolInstall(
                 CreateTestInstallFunction(null, false),
@@ -225,12 +226,12 @@ namespace pwiz.SkylineTestFunctional
         /// <param name="unpackZipTool">Function to control install behavior (success, failure, cancellation)</param>
         /// <param name="expectedMessageContent">Expected content in the final message (tool name for success, formatted error for failure)</param>
         /// <param name="isSuccess">True for success message, false for failure message</param>
-        private static void TestSingleToolInstall(
+        private void TestSingleToolInstall(
             Func<string, IUnpackZipToolSupport, ToolInstaller.UnzipToolReturnAccumulator> unpackZipTool,
             string expectedMessageContent,
             bool isSuccess)
         {
-            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL }, unpackZipTool: unpackZipTool);
+            using var context = new ToolUpdateTestContext(new[] { SAMPLE_TOOL }, CreateToolStoreClient(TestFilesDir.FullPath), unpackZipTool: unpackZipTool);
             var toolUpdatesDlg = context.ShowToolUpdatesDlg();
             
             var expectedMessage = isSuccess
@@ -251,7 +252,7 @@ namespace pwiz.SkylineTestFunctional
             
             public ToolUpdateTestContext(
                 ToolDescription[] toolsToAdd,
-                IToolStoreClient toolStoreClient = null,
+                IToolStoreClient toolStoreClient,
                 Func<string, IUnpackZipToolSupport, ToolInstaller.UnzipToolReturnAccumulator> unpackZipTool = null)
             {
                 // Clear tool list BEFORE test (prevents cascading failures from previous test failures)
@@ -261,10 +262,8 @@ namespace pwiz.SkylineTestFunctional
                 if (toolsToAdd != null && toolsToAdd.Length > 0)
                     Settings.Default.ToolList.AddRange(toolsToAdd);
                 
-                // Create update helper
-                _updateHelper = CreateUpdateHelper(
-                    toolStoreClient ?? CreateToolStoreClient(), 
-                    unpackZipTool);
+                // Create update helper - toolStoreClient is now required (not optional)
+                _updateHelper = CreateUpdateHelper(toolStoreClient, unpackZipTool);
             }
             
             /// <summary>
@@ -469,14 +468,10 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Creates a <see cref="TestToolStoreClient"/> for use in testing.
         /// </summary>
-        /// <param name="filePath">When using a folder on the local machine as the source for package updates, set this value to the path to that folder. If this value is null,
-        /// when the tool calls the GetToolZipFile function of the test client, it will an empty string.</param>
+        /// <param name="filePath">Path to the folder containing test tool zip files.</param>
         private static TestToolStoreClient CreateToolStoreClient(string filePath = null)
         {
-            return new TestToolStoreClient(filePath ?? Path.GetTempPath())
-            {
-                TestDownloadPath = filePath == null ? string.Empty : null
-            };
+            return new TestToolStoreClient(filePath ?? Path.GetTempPath());
         }
 
         /// <summary>
@@ -561,9 +556,9 @@ namespace pwiz.SkylineTestFunctional
             return _unpackZipTool.Invoke(pathToZip, unpackSupport);
         }
 
-        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
         {
-            return _client.GetToolZipFile(progressMonitor, progressStatus, packageIdentifier, directory);
+            _client.GetToolZipFile(progressMonitor, progressStatus, packageIdentifier, fileSaver);
         }
 
         public void Dispose()

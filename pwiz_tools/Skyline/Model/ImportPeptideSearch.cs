@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -501,7 +501,7 @@ namespace pwiz.Skyline.Model
         public void UpdateModificationMatches(SrmDocument document)
         {
             _matcher.ClearMatches();
-            _matcher.CreateMatches(document.Settings, DocLib.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            _matcher.CreateMatches(document.Settings, DocLib.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList, DocLib.Name);
         }
 
         public IEnumerable<StaticMod> GetMatchedMods()

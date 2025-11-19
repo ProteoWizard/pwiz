@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Max Horowitz-Gelb <maxhg .at. washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

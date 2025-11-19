@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <bendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1448,17 +1448,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                Assert.IsTrue(editGroupComparisonDlg.ComboControlAnnotation.Items.Contains(controlAnnotation));
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = controlAnnotation;
+                editGroupComparisonDlg.ControlAnnotation = controlAnnotation;
             });
-            WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.Items.Contains(controlValue));
+            WaitForConditionUI(2000, () => editGroupComparisonDlg.ControlValueOptions.Contains(controlValue));
             RunUI(() =>
             {
-                editGroupComparisonDlg.ComboControlValue.SelectedItem = controlValue;
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = caseValue;
-                Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
-                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
-                Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
+                editGroupComparisonDlg.ControlValue = controlValue;
+                editGroupComparisonDlg.CaseValue = caseValue;
+                editGroupComparisonDlg.IdentityAnnotation = identityAnnotation;
                 editGroupComparisonDlg.NormalizeOption = NormalizeOption.GLOBAL_STANDARDS;
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
@@ -1580,9 +1577,9 @@ namespace pwiz.SkylineTestTutorial
 
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             var settingsForm = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
-            RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedIndex = 0);
+            RunUI(() => settingsForm.IdentityAnnotation = "");
             WaitForConditionUI(() => 37 == foldChangeGrid.DataboundGridControl.RowCount);
-            RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedItem = "SubjectId");
+            RunUI(() => settingsForm.IdentityAnnotation = "SubjectId");
             RunUI(() =>
             {
                 string folderName = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);

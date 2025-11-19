@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
@@ -133,10 +133,11 @@ namespace SkylineBatchTest
         public void TestEnableConfigs(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var validConfigFile = Path.Combine(TEST_FOLDER, "SevenConfigurations.bcfg");
+            var validConfigFileOrig = Path.Combine(TEST_FOLDER, "SevenConfigurations.bcfg");
+            using var fileSaver = TestUtils.CreateBcfgWithCurrentRVersion(validConfigFileOrig);
             RunUI(() =>
             {
-                mainForm.DoImport(validConfigFile);
+                mainForm.DoImport(fileSaver.SafeName);
                 FunctionalTestUtil.CheckConfigs(7, 0, mainForm);
             });
             var checkState = new[] {false, false, false, false, false, false, false};

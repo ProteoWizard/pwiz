@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -57,6 +57,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using pwiz.Skyline.Controls.Lists;
+using pwiz.Skyline.Model.Lib;
 using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
@@ -565,7 +566,7 @@ namespace pwiz.Skyline
             }
 
             var memoryStream = new MemoryStream();
-            var xmlTextWriter = new XmlTextWriter(memoryStream, Encoding.UTF8)
+            var xmlTextWriter = new XmlTextWriter(memoryStream, new UTF8Encoding(false)) // UTF-8 without BOM
             {
                 Formatting = Formatting.Indented
             };
@@ -4205,32 +4206,26 @@ namespace pwiz.Skyline
         {
             ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
-            if (groupByValues.Length == 0)
-                currentGroupBy = null;
 
-            // If not grouped by an annotation, show the order-by menuitem
-            if (currentGroupBy == null)
+            var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
+                value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
+            menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
+            replicateOrderContextMenuItem.DropDownItems.Clear();
+            replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
-                    value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
-                menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-                replicateOrderContextMenuItem.DropDownItems.Clear();
-                replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        replicateOrderDocumentContextMenuItem,
-                        replicateOrderAcqTimeContextMenuItem
-                    });
-                replicateOrderDocumentContextMenuItem.Checked
-                    = null == orderByReplicateAnnotationDef &&
-                      SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
-                replicateOrderAcqTimeContextMenuItem.Checked
-                    = null == orderByReplicateAnnotationDef &&
-                      SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
-                foreach (var replicateValue in groupByValues)
-                {
-                    replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
-                        replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
-                }
+                replicateOrderDocumentContextMenuItem,
+                replicateOrderAcqTimeContextMenuItem
+            });
+            replicateOrderDocumentContextMenuItem.Checked
+                = null == orderByReplicateAnnotationDef &&
+                  SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
+            replicateOrderAcqTimeContextMenuItem.Checked
+                = null == orderByReplicateAnnotationDef &&
+                  SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
+            foreach (var replicateValue in groupByValues)
+            {
+                replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
+                    replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
             }
             
             if (groupByValues.Length > 0)

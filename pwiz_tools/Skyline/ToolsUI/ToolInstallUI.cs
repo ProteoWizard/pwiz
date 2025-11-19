@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
@@ -70,10 +69,10 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     MessageDlg.Show(parent, ToolsUIResources.ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store);
                 }
-                using (var dlg = new ToolStoreDlg(ToolStoreUtil.ToolStoreClient, toolStoreItems))
+                using (var dlg = new ToolStoreDlg(ToolStoreUtil.ToolStoreClient, toolStoreItems, install))
                 {
-                    if (dlg.ShowDialog(parent) == DialogResult.OK)
-                        InstallZipTool(parent, dlg.DownloadPath, install);
+                    // Dialog handles download > extract > install > cleanup as atomic operation
+                    dlg.ShowDialog(parent);
                 }
             }
             catch (Exception x)
@@ -154,7 +153,8 @@ namespace pwiz.Skyline.ToolsUI
             }
             if (xFailure != null)
             {
-                MessageDlg.ShowWithException(parent, TextUtil.LineSeparate(String.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), xFailure.Message), xFailure);                
+                // Don't show temp filename (~SK*.tmp) in error message - use complete message
+                MessageDlg.ShowWithException(parent, TextUtil.LineSeparate(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool, xFailure.Message), xFailure);                
             }
 
             if (result != null)

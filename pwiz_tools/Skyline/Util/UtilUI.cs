@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -88,11 +88,6 @@ namespace pwiz.Skyline.Util
         /// document for this operation.
         /// </summary>
         bool IsDocumentChanged(SrmDocument docOrig);
-
-        /// <summary>
-        /// Shows a dialog box on the right thread, parented to the progress form
-        /// </summary>
-        DialogResult ShowDialog(Func<IWin32Window, DialogResult> show);
 
         /// <summary>
         /// Convenience function which calculates progress percentage and throws

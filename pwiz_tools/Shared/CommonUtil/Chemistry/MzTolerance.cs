@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
@@ -90,9 +91,10 @@ namespace pwiz.Common.Chemistry
 
         public override string ToString()
         {
-            return $"{Value} {UnitText}";
+            return $@"{Value} {UnitText}";
         }
 
+        [Localizable(false)]
         public string AuditLogText => $"\"{Value}\" {UnitText}";
         public bool IsName => false;
 

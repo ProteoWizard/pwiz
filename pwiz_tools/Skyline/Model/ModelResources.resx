@@ -899,4 +899,35 @@ Would you like to continue?
   <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
     <value>Detailed Info</value>
   </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_" xml:space="preserve">
+      <value>In "{0}": {1}</value>
+  </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_" xml:space="preserve">
+      <value>In entry "{0}" of "{1}": {2}</value>
+  </data>
+  <data name="TransitionDocNode_GetLabel__0__1__" xml:space="preserve">
+    <value>{0} [{1}]</value>
+  </data>
+  <data name="TransitionDocNode_GetLabel_irank__0__" xml:space="preserve">
+    <value>irank {0}</value>
+    <comment>Isotope rank "irank" for transition node</comment>
+  </data>
+  <data name="TransitionDocNode_GetLabel_rank__0__" xml:space="preserve">
+    <value>rank {0}</value>
+  </data>
+  <data name="PeptideDocNode_Title" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="PeptideDocNode_Title_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="TransitionGroupDocNode_Title" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="TransitionDocNode_Title" xml:space="preserve">
+    <value>Transition</value>
+  </data>
+  <data name="TransitionDocNode_Titles" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
 </root>

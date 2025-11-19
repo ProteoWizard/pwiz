@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -39,11 +39,13 @@ namespace pwiz.Skyline.ToolsUI
         private IToolStoreClient _toolStoreClient;
 
         private readonly IList<ToolStoreItem> _tools;
+        private readonly ToolInstallUI.InstallProgram _installProgram;
         
-        public ToolStoreDlg(IToolStoreClient toolStoreClient, IList<ToolStoreItem> tools)
+        public ToolStoreDlg(IToolStoreClient toolStoreClient, IList<ToolStoreItem> tools, ToolInstallUI.InstallProgram installProgram)
         {
             _toolStoreClient = toolStoreClient;
             _tools = tools;
+            _installProgram = installProgram;
 
             InitializeComponent();
 
@@ -150,38 +152,61 @@ namespace pwiz.Skyline.ToolsUI
 
         private void buttonInstallUpdate_Click(object sender, EventArgs e)
         {
-            DownloadSelectedTool();
+            DownloadAndInstallSelectedTool();
         }
-
-        public string DownloadPath { get; private set; }
 
         public void DownloadTool(int index)
         {
             listBoxTools.SelectedIndex = index;
-            DownloadSelectedTool();
+            DownloadAndInstallSelectedTool();
         }
 
         public void DownloadSelectedTool()
         {
-            try
+            // For backward compatibility with tests - delegates to new method
+            DownloadAndInstallSelectedTool();
+        }
+
+        private void DownloadAndInstallSelectedTool()
+        {
+            string identifier = _tools[listBoxTools.SelectedIndex].Identifier;
+            string toolName = _tools[listBoxTools.SelectedIndex].Name;
+            string toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
+            
+            // Use FileSaver pattern: download to ~SK*.tmp, extract/install, never commit (auto-cleanup)
+            // Logical destination is toolName.zip in tools directory (for error messages)
+            string zipDestination = Path.Combine(toolsDirectory, toolName + ToolDescription.EXT_INSTALL);
+            using (var fileSaver = new FileSaver(zipDestination))
             {
-                string identifier = _tools[listBoxTools.SelectedIndex].Identifier;
-                var message = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, _tools[listBoxTools.SelectedIndex].Name);
-                var progressStatus = new ProgressStatus(message);
-                IProgressStatus status;
-                using (var dlg = new LongWaitDlg())
+                try
                 {
-                    status = dlg.PerformWork(this, 500, progressMonitor =>
+                    // Download to FileSaver temp file (~SK*.tmp in tools directory)
+                    var downloadMessage = string.Format(ToolsUIResources.ToolStoreDlg_DownloadSelectedTool_Downloading__0_, toolName);
+                    var progressStatus = new ProgressStatus(downloadMessage);
+                    IProgressStatus downloadStatus;
+                    using (var dlg = new LongWaitDlg())
                     {
-                        DownloadPath = _toolStoreClient.GetToolZipFile(progressMonitor, progressStatus, identifier, Path.GetTempPath());
-                    });
-                }
-                if (!status.IsCanceled)
+                        downloadStatus = dlg.PerformWork(this, 500, progressMonitor =>
+                        {
+                            _toolStoreClient.GetToolZipFile(progressMonitor, progressStatus, identifier, fileSaver);
+                        });
+                    }
+                    
+                    if (downloadStatus.IsCanceled)
+                        return; // FileSaver.Dispose() will auto-delete ~SK*.tmp
+                    
+                    // Extract and install the tool from the temp file
+                    ToolInstallUI.InstallZipTool(this, fileSaver.SafeName, _installProgram);
+                    
+                    // Success - set DialogResult to dismiss form
+                    // FileSaver.Dispose() will auto-delete ~SK*.tmp (never committed)
                     DialogResult = DialogResult.OK;
-            }
-            catch (Exception ex)
-            {
-                ExceptionUtil.DisplayOrReportException(this, ex);
+                }
+                catch (Exception ex)
+                {
+                    // FileSaver.Dispose() will auto-delete ~SK*.tmp
+                    ExceptionUtil.DisplayOrReportException(this, ex);
+                }
             }
         }
 
@@ -223,16 +248,17 @@ namespace pwiz.Skyline.ToolsUI
         IList<ToolStoreItem> GetToolStoreItems();
 
         /// <summary>
-        /// Downloads the tool zip file associated with the given packageIdentifer.
+        /// Downloads the tool zip file associated with the given packageIdentifer to the FileSaver's temp location.
+        /// The downloaded file is written to fileSaver.SafeName (~SK*.tmp in the destination directory).
+        /// Caller controls cleanup by committing or disposing the FileSaver.
         /// Uses IProgressMonitor for progress reporting and cancellation support.
         /// If the monitor is cancelled, this method must return promptly.
         /// </summary>
         /// <param name="progressMonitor">Progress monitor for reporting download progress and handling cancellation</param>
         /// <param name="progressStatus">Initial progress status with message to display during download</param>
         /// <param name="packageIdentifier">Unique identifier for the tool package to download</param>
-        /// <param name="directory">Directory path where the downloaded zip file should be saved</param>
-        /// <returns>The path to the downloaded zip tool, contained in the specified directory.</returns>
-        string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory);
+        /// <param name="fileSaver">FileSaver managing the destination zip file (downloads to fileSaver.SafeName)</param>
+        void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver);
         
         /// <summary>
         /// Returns true if the given package (identified by its version), has an update available. The
@@ -262,7 +288,13 @@ namespace pwiz.Skyline.ToolsUI
             return JsonConvert.DeserializeObject<ToolStoreItem[]>(GetToolsJson());
         }
 
-        public string GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, string directory)
+        public void GetToolZipFile(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier,
+            FileSaver fileSaver)
+        {
+            GetToolZipFileWithProgress(progressMonitor, progressStatus, packageIdentifier, fileSaver);
+        }
+
+        public static void GetToolZipFileWithProgress(IProgressMonitor progressMonitor, IProgressStatus progressStatus, string packageIdentifier, FileSaver fileSaver)
         {
             using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
             var uri = new UriBuilder(TOOL_STORE_URI)
@@ -271,14 +303,10 @@ namespace pwiz.Skyline.ToolsUI
                 Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
             };
             
-            // Download the tool zip file with progress reporting and cancellation support
-            byte[] toolZip = httpClient.DownloadData(uri.Uri);
-            
-            // Use a temp filename since we can't get Content-Disposition without direct HttpClient access
-            // This is acceptable since the tool installation code extracts the zip and doesn't rely on the original filename
-            string downloadedFile = FileStreamManager.Default.GetTempFileName(directory, @"Sky");
-            File.WriteAllBytes(downloadedFile, toolZip);
-            return downloadedFile;
+            // Download the tool zip file directly to FileSaver's temp location (~SK*.tmp)
+            // Progress reporting and cancellation handled by HttpClientWithProgress
+            // FileSaver provides automatic cleanup if not committed
+            httpClient.DownloadFile(uri.Uri, fileSaver.SafeName);
         }
 
         public bool IsToolUpdateAvailable(string identifier, Version version)

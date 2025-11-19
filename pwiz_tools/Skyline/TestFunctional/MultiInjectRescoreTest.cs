@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -82,7 +82,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(fileStatuses[0].Error);
                 Assert.IsNull(fileStatuses[1].Error);
             });
-            OkDialog(allChromatogramsGraph, allChromatogramsGraph.Close);
             RunDlg<MultiButtonMsgDlg>(()=>SkylineWindow.NewDocument(), messageDlg=>messageDlg.ClickNo());
         }
     }

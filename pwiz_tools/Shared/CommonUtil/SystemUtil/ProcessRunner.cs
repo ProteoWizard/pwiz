@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -100,7 +100,7 @@ namespace pwiz.Common.SystemUtil
             outputAndExitCodeAreGoodFunc ??= GoodIfExitCodeIsZero;
 
             _messageLog.Clear();
-            var cmd = $"{psi.FileName} {psi.Arguments}";
+            var cmd = $@"{psi.FileName} {psi.Arguments}";
 
             // Optionally create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
             _tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
@@ -250,9 +250,9 @@ namespace pwiz.Common.SystemUtil
                         : psi.FileName;
                     // ReSharper disable LocalizableElement
                     sbError.AppendFormat("\r\nCommand-line: {0} {1}\r\nWorking directory: {2}{3}\r\nExit code: {4}", processPath,
-                        // ReSharper restore LocalizableElement
-                        string.Join(" ", proc.StartInfo.Arguments), psi.WorkingDirectory,
-                        stdin != null ? "\r\nStandard input:\r\n" + stdin : "", exit);
+                        CommonTextUtil.SpaceSeparate(proc.StartInfo.Arguments), psi.WorkingDirectory,
+                        stdin != null ? "\r\nStandard input:\r\n" + stdin : string.Empty, exit);
+                    // ReSharper restore LocalizableElement
                     throw new IOException(sbError.ToString());
                 }
 
@@ -289,7 +289,7 @@ namespace pwiz.Common.SystemUtil
             var sbText = new StringBuilder();
             sbText.AppendLine(exception.Message)
                 .AppendLine()
-                .AppendLine("Output:")
+                .AppendLine(@"Output:")
                 .AppendLine(output);
             throw new IOException(exception.Message, new IOException(sbText.ToString(), exception));
         }

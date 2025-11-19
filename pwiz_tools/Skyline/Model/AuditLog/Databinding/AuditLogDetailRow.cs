@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -50,7 +50,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         [InvariantDisplayName("AuditLogDetailRowId")]
         public AuditLogRow.AuditLogRowId Id { get; private set; }
 
-        [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
         public AuditLogRow.AuditLogRowText AllInfoMessage
         {

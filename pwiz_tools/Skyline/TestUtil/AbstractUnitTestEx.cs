@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -132,6 +132,11 @@ namespace pwiz.SkylineTestUtil
         protected virtual bool IsRecordMode
         {
             get { return false; }
+        }
+
+        protected void CheckRecordMode()
+        {
+            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
         }
 
         /// <summary>

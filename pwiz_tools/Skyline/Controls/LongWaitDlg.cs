@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Controls
         {
             if (IsCanceled)
                 throw new OperationCanceledException();
-            ProgressValue = 100 * step / totalSteps;
+            ProgressValue = (int)(step * 100.0 / totalSteps);
         }
 
         public void PerformWork(Control parent, int delayMillis, Action performWork)

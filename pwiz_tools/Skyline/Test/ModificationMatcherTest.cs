@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -248,7 +248,7 @@ namespace pwiz.SkylineTest
                 int yeastLibIndex = docLibraries.IndexOf(library => Equals(library.Name, yeastLibSpec.Name));
 
                 libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
-                    docLibraries[anlLibIndex].Keys, defSetSetLight, defSetHeavy);
+                    docLibraries[anlLibIndex].Keys, defSetSetLight, defSetHeavy, anlLibSpec.Name);
 
                 // Test can match 15N
                 Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
@@ -267,7 +267,7 @@ namespace pwiz.SkylineTest
 
                 // Test can match Cysteine (Implicit) and Met Ox (variable)
                 libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
-                    docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy);
+                    docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy, yeastLibSpec.Name);
                 Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>
                     mod.ParsedMolecule.Equals(UniMod.GetModification(StaticModList.DEFAULT_NAME, true).ParsedMolecule) && !mod.IsVariable));
                 Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>

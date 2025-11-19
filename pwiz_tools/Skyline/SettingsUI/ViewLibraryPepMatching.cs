@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.SettingsUI
         public void SetBackgroundProteome(BackgroundProteome backgroundProteome)
         {
             _backgroundProteome = backgroundProteome;
-       }
+        }
 
         /// <summary>
         /// Matches library peptides to the current document settings and adds them to the document.
@@ -94,7 +94,12 @@ namespace pwiz.Skyline.SettingsUI
             if (MatchedPeptideCount == 0)
                 return;
 
-            if (broker.ShowDialog(wnd => EnsureDuplicateProteinFilter(wnd, entryCreators)) == DialogResult.Cancel)
+            // LEGACY: This is a one-off case where we need to show a dialog during long-wait processing.
+            // We cast to LongWaitDlg directly rather than keeping ShowDialog on ILongWaitBroker, since
+            // non-UI implementations (CommandProgressMonitor, AssociateProteinResults.ProgressImpl) cannot support this pattern.
+            // This allows us to remove UI dependencies from ILongWaitBroker while preserving existing behavior.
+            var brokerUI = broker as LongWaitDlg;
+            if (brokerUI != null && brokerUI.ShowDialog(wnd => EnsureDuplicateProteinFilter(wnd, entryCreators)) == DialogResult.Cancel)
                 return;
 
             IdentityPath selectedPath;
