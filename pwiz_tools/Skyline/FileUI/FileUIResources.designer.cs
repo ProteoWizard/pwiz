@@ -257,11 +257,49 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///and {0} other {1}. Click More Info to see them..
+        /// </summary>
+        public static string ExportDlgProperties_PerformLongExport_and_0_other_Click_More_Info {
+            get {
+                return ResourceManager.GetString("ExportDlgProperties_PerformLongExport_and_0_other_Click_More_Info", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exporting Methods.
         /// </summary>
         public static string ExportDlgProperties_PerformLongExport_Exporting_Methods {
             get {
                 return ResourceManager.GetString("ExportDlgProperties_PerformLongExport_Exporting_Methods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to message.
+        /// </summary>
+        public static string ExportDlgProperties_PerformLongExport_message {
+            get {
+                return ResourceManager.GetString("ExportDlgProperties_PerformLongExport_message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to messages.
+        /// </summary>
+        public static string ExportDlgProperties_PerformLongExport_messages {
+            get {
+                return ResourceManager.GetString("ExportDlgProperties_PerformLongExport_messages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///The server returns the following error message&quot;{0}&quot;.
+        /// </summary>
+        public static string ExportDlgProperties_PerformLongExport_The_server_returns_the_following_message {
+            get {
+                return ResourceManager.GetString("ExportDlgProperties_PerformLongExport_The_server_returns_the_following_message", resourceCulture);
             }
         }
         

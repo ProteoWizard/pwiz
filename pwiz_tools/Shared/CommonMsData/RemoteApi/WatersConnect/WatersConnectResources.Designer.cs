@@ -69,5 +69,14 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
                         "1__", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to waters_connect server returns an error code: {0}..
+        /// </summary>
+        public static string WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__", resourceCulture);
+            }
+        }
     }
 }

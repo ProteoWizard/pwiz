@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 
@@ -126,12 +125,14 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             if (response.StatusCode >= HttpStatusCode.BadRequest)
             {
-                var messageBuilder = new StringBuilder(string.Format("waters_connect server returns an error code: {0}.", response.StatusCode));
+                var message = string.Format(WatersConnectResources.WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__, response.StatusCode);
                 if (response.Content != null)
                 {
-                    messageBuilder.Append(string.Format("\n {0}", response.Content.ReadAsStringAsync().Result));
+                    throw new RemoteServerException(message,
+                        response.Content.ReadAsStringAsync().Result);
                 }
-                throw new RemoteServerException(messageBuilder.ToString());
+
+                throw new RemoteServerException(message);
             }
         }
         protected ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
