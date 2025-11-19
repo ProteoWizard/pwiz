@@ -36,5 +36,18 @@ namespace pwiz.CommonMsData.RemoteApi
         protected RemoteServerException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
+
+        public RemoteServerException(string message, string serverData) : this(message)
+        {
+            this.ServerData = serverData;
+        }
+
+        public RemoteServerException(string message, Exception innerException, string serverData) : this(message,
+            innerException)
+        {
+            this.ServerData = serverData;
+        }
+
+        public string ServerData { get; private set; }
     }
 }

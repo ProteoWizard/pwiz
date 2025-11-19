@@ -496,6 +496,9 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
+    <Compile Include="FileUI\WatersConnectSelectMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\OpenFileDialogNE.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -528,6 +531,12 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\WatersConnectSaveMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\WatersConnectMethodFileDialog.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="FileUI\PublishDocumentDlgArdia.cs">
       <SubType>Form</SubType>
@@ -601,6 +610,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\WatersConnect\MethodModel.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
@@ -934,6 +944,7 @@
     </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
+    <Compile Include="Util\DsvStreamReader.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>

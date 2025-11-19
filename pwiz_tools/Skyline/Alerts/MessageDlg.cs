@@ -29,10 +29,20 @@ namespace pwiz.Skyline.Alerts
             new MessageDlg(message, ignoreModeUI).ShowAndDispose(parent);
         }
 
+        public static void Show(IWin32Window parent, string message, bool ignoreModeUI, MessageIcon messageIcon)
+        {
+            new MessageDlg(message, ignoreModeUI, messageIcon: messageIcon).ShowAndDispose(parent);
+        }
+
         // For displaying a MessageDlg with a specific set of buttons
         public static DialogResult Show(IWin32Window parent, string message, bool IgnoreModeUI, MessageBoxButtons buttons)
         {
             return new MessageDlg(message, IgnoreModeUI, buttons).ShowAndDispose(parent);
+        }
+
+        public static DialogResult Show(IWin32Window parent, string message, bool IgnoreModeUI, MessageBoxButtons buttons, MessageIcon messageIcon)
+        {
+            return new MessageDlg(message, IgnoreModeUI, buttons, messageIcon).ShowAndDispose(parent);
         }
 
         public static void ShowException(IWin32Window parent, Exception exception, bool ignoreModeUI = false)
@@ -42,7 +52,12 @@ namespace pwiz.Skyline.Alerts
 
         public static void ShowWithException(IWin32Window parent, string message, Exception exception, bool ignoreModeUI = false)
         {
-            new MessageDlg(message, ignoreModeUI) { Exception = exception }.ShowAndDispose(parent);
+            new MessageDlg(message, ignoreModeUI, messageIcon: MessageIcon.Error) { Exception = exception }.ShowAndDispose(parent);
+        }
+
+        public static void ShowWithDetails(IWin32Window parent, string message, string detailMessage, MessageIcon messageIcon, bool ignoreModeUI = false)
+        {
+            new MessageDlg(message, ignoreModeUI, messageIcon: messageIcon) { DetailMessage = detailMessage}.ShowAndDispose(parent);
         }
 
         // Display a MessageDlg and add additional, caller-provided information about a network failure to the More Info section
@@ -61,7 +76,12 @@ namespace pwiz.Skyline.Alerts
             dlg.ShowAndDispose(parent);
         }
 
-        private MessageDlg(string message, bool ignoreModeUI, MessageBoxButtons buttons = MessageBoxButtons.OK) : base(message, buttons)
+        public static void ShowError(IWin32Window parent, string message, bool ignoreModeUI = false)
+        {
+            new MessageDlg(message, ignoreModeUI, messageIcon: MessageIcon.Error).ShowAndDispose(parent);
+        }
+
+        private MessageDlg(string message, bool ignoreModeUI, MessageBoxButtons buttons = MessageBoxButtons.OK, MessageIcon messageIcon = MessageIcon.None) : base(message, buttons, messageIcon)
         {
             GetModeUIHelper().IgnoreModeUI = ignoreModeUI; // May not want any "peptide"->"molecule" translation
         }

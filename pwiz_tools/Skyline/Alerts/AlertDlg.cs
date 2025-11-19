@@ -27,12 +27,12 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
         }
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : base(message, messageBoxButtons)
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, MessageIcon messageIcon = MessageIcon.None) : base(message, messageBoxButtons, messageIcon)
         {
             InitializeComponent();
         }
 
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton) : base(message, messageBoxButtons, defaultButton)
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton, MessageIcon messageIcon = MessageIcon.None) : base(message, messageBoxButtons, defaultButton, messageIcon)
         {
             InitializeComponent();
         }

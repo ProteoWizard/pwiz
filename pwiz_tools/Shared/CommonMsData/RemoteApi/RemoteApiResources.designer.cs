@@ -70,11 +70,29 @@ namespace pwiz.CommonMsData.RemoteApi {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Advanced Unifi settings.
+        /// </summary>
+        public static string Unifi_GroupBox_Label {
+            get {
+                return ResourceManager.GetString("Unifi_GroupBox_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to UNIFI.
         /// </summary>
         public static string Unifi_Label_Unifi {
             get {
                 return ResourceManager.GetString("Unifi_Label_Unifi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Advanced waters_connect settings.
+        /// </summary>
+        public static string Waters_Connect_GroupBox_Label {
+            get {
+                return ResourceManager.GetString("Waters_Connect_GroupBox_Label", resourceCulture);
             }
         }
         
