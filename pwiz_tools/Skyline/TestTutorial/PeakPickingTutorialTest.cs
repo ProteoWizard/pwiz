@@ -230,14 +230,11 @@ namespace pwiz.SkylineTestTutorial
                 {
                     Assert.IsFalse(editDlg.IsActiveCell(i, 0));
                 }
-                editDlg.IsFindButtonVisible = true;
                 editDlg.FindMissingValues(2);   // Retention time
                 editDlg.PeakScoringModelName = "test1";
             });
-            RunUIForScreenShot(() => editDlg.ShowFindButton(true));
             PauseForScreenShot(editDlg.GraphsControl, "Edit Peak Scoring Model form find missing scores", null, bmp =>
                 DrawLArrowCursorOnBitmap(bmp, 0.88, 0.7));
-            RunUIForScreenShot(() => editDlg.ShowFindButton(false));
 
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
@@ -516,7 +513,6 @@ namespace pwiz.SkylineTestTutorial
                 {
                     editDlgDia.SelectedGraphTab = 1;
                     editDlgDia.PeakCalculatorsGrid.SelectRow(2);
-                    editDlgDia.IsFindButtonVisible = true;
                     editDlgDia.FindMissingValues(2);    // Retention times
                     editDlgDia.PeakScoringModelName = "testDIA";
                 });

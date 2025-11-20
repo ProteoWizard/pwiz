@@ -279,7 +279,6 @@ namespace pwiz.Skyline.SettingsUI
             this.zedGraphSelectedCalculator.ScrollMinY = 0D;
             this.zedGraphSelectedCalculator.ScrollMinY2 = 0D;
             this.zedGraphSelectedCalculator.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraph_ContextMenuBuilder);
-            this.zedGraphSelectedCalculator.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphSelectedCalculator_MouseMoveEvent);
             // 
             // tabPage4
             // 

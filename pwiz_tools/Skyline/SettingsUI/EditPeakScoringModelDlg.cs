@@ -257,7 +257,7 @@ namespace pwiz.Skyline.SettingsUI
             // But then set to NaN the weights that were suppressed by the user or have unknown values for this dataset
             for (int i = 0; i < initialWeights.Length; ++i)
             {
-                if (!_targetDecoyGenerator.EligibleScores[i] || weightSuppressors[i])
+                if (!_targetDecoyGenerator.EligibleScores[i].Eligible || weightSuppressors[i])
                     initialWeights[i] = double.NaN;
             }
             var initialParams = new LinearModelParams(initialWeights);
@@ -683,6 +683,7 @@ namespace pwiz.Skyline.SettingsUI
             var secondBestPoints = modelHistograms.BinGroups[2];
             _hasUnknownScores = modelHistograms.HasUnknownScores;
             _allUnknownScores = modelHistograms.AllUnknownScores;
+            toolStripFind.Visible = _hasUnknownScores && !_allUnknownScores;
             if (decoyCheckBox.Checked)
                 graphPane.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
@@ -991,7 +992,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
                 // Show row in disabled style if the score is not eligible
-                if (!_targetDecoyGenerator.EligibleScores[unsortedIndex])
+                if (!_targetDecoyGenerator.EligibleScores[unsortedIndex].Eligible)
                 {
                     for (int i = 0; i < 4; i++)
                     {
@@ -1119,17 +1120,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             FindMissingValues(_selectedCalculator);
         }
-
-        private bool zedGraphSelectedCalculator_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
-        {
-            // Find button is visible on the right side of graph, if some scores are unknown, but not if all scores are unknown
-            bool isMouseOverUnknown = _hasUnknownScores && !_allUnknownScores && e.X > sender.Width - 100;
-            // It is also unconditionally visible if calculator is ineligible but without unknown scores, if the unknown scores aren't for the best peak
-            bool isEligibleCalculator = _selectedCalculator == -1 || _targetDecoyGenerator.EligibleScores[_selectedCalculator];
-            bool overrideVisible = !isEligibleCalculator && !_hasUnknownScores;
-            toolStripFind.Visible = isMouseOverUnknown || overrideVisible;
-            return true;
-        }
         #endregion
 
         #region Functional test support
@@ -1189,11 +1179,6 @@ namespace pwiz.Skyline.SettingsUI
 
         public Control GraphsControl => tabControl1;
         public Control SelectedGraphControl => tabControl1.TabPages[tabControl1.SelectedIndex];
-
-        public void ShowFindButton(bool show)
-        {
-            findPeptidesButton.Visible = show;
-        }
 
         #endregion
 
