@@ -112,7 +112,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     RunUI(() => SkylineWindow.NewDocument(true));
             }
             Assert.AreNotEqual(corrected, uncorrected2);  // Corrected pass should differ
-            var comparison = SrmDocument.EqualsVerbose(uncorrected2, uncorrected1); // Returns null if identical
+            var comparison = DocumentComparer.CompareDocuments(uncorrected2, uncorrected1); // Returns null if identical
             Assert.IsNull(comparison, comparison);  // Both uncorrected passes should agree
             Assert.IsNotNull(corrected);
             Assert.IsNotNull(uncorrected2);
