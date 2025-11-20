@@ -324,6 +324,9 @@
   <data name="ConfidenceLevel">
     <value>Confidence Level</value>
   </data>
+  <data name="ConstantNeutralLoss">
+    <value>Constant Neutral Loss</value>
+  </data>
   <data name="CountTruncated">
     <value>Count Truncated</value>
   </data>

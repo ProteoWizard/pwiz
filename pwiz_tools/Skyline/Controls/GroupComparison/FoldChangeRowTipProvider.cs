@@ -30,9 +30,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public class FoldChangeRowTipProvider : ITipProvider
     {
-        private readonly FoldChangeBindingSource.FoldChangeRow _row;
+        private readonly FoldChangeRow _row;
 
-        public FoldChangeRowTipProvider(FoldChangeBindingSource.FoldChangeRow row)
+        public FoldChangeRowTipProvider(FoldChangeRow row)
         {
             _row = row;
         }

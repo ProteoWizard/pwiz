@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -49,8 +49,6 @@ using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
@@ -3487,9 +3485,9 @@ namespace pwiz.Skyline.Properties
             return (ReportSpec) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.ReportSpecList_Title_Edit_Reports; } }
+        public override string Title { get { return PropertiesResources.ReportSpecList_Title_Edit_Reports; } }
 
-        public override string Label { get { return Resources.ReportSpecList_Label_Report; } }
+        public override string Label { get { return PropertiesResources.ReportSpecList_Label_Report; } }
 
         public override Type SerialType { get { return typeof(ReportSpecList); } }
 

@@ -1,4 +1,4 @@
-﻿using ImageConverter;
+using ImageConverter;
 using System.CommandLine;
 using System.Threading.Tasks;
 

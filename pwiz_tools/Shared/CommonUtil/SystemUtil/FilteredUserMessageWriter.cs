@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Author: David Shteynberg <dshteyn .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -41,7 +41,7 @@ namespace pwiz.Common.SystemUtil
         private static (string Pattern, string Replacement) GetReplacement(string s)
         {
             string replacementTrimmed = s.Substring(REPLACEMENT_START.Length);
-            if (replacementTrimmed.EndsWith("/"))
+            if (replacementTrimmed.EndsWith(@"/"))
                 replacementTrimmed = replacementTrimmed.Substring(0, replacementTrimmed.Length - 1);
             
             var parts = SplitReplacement(replacementTrimmed);

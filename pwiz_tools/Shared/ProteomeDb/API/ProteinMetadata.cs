@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -447,16 +447,33 @@ namespace pwiz.ProteomeDatabase.API
 
         public bool MatchesPendingSearchTerm(string val)
         {
-            var searchterm = GetPendingSearchTerm().ToUpperInvariant();
-            if (String.IsNullOrEmpty(searchterm) || String.IsNullOrEmpty(val))
+            if (!_history.Any())
                 return false;
-            var valUpper = val.ToUpperInvariant();
+            var valUpper = val?.ToUpperInvariant();
             if (String.IsNullOrEmpty(valUpper))
                 return false;
-            if (searchterm.StartsWith(valUpper) || valUpper.StartsWith(searchterm))
+            if (MatchesSearchTerm(_history[0], valUpper))
                 return true;
-            if ((_history[0].Service==WebEnabledFastaImporter.GENINFO_TAG) &&
-                Equals(valUpper,@"GI|"+searchterm))
+            for (int i = 1; i < _history.Count; i++)
+            {
+                var term = _history[i];
+                if (term.Service != _history[0].Service)
+                    continue;
+                if (MatchesSearchTerm(term, valUpper))
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool MatchesSearchTerm(WebSearchTerm term, string valUpper)
+        {
+            var termQuery = term.Query?.ToUpperInvariant();
+            if (String.IsNullOrEmpty(termQuery) || String.IsNullOrEmpty(valUpper))
+                return false;
+            if (termQuery.StartsWith(valUpper) || valUpper.StartsWith(termQuery))
+                return true;
+            if (term.Service == WebEnabledFastaImporter.GENINFO_TAG &&
+                Equals(valUpper, @"GI|" + termQuery))
                 return true; // of form gi|nnnnnnnnn
             return false;
         }

@@ -1,4 +1,4 @@
-﻿namespace seems.Misc
+namespace seems.Misc
 {
     public partial class SpectrumDataSet
     {

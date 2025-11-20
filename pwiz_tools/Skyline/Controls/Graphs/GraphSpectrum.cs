@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -1931,74 +1930,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
     }
 
-    public sealed class SpectrumDisplayInfo : IComparable<SpectrumDisplayInfo>
-    {
-        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, TransitionGroupDocNode precursor, double? retentionTime = null)
-        {
-            SpectrumInfo = spectrumInfo;
-            Precursor = precursor;
-            IsBest = true;
-            RetentionTime = retentionTime;
-        }
-
-        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, TransitionGroupDocNode precursor, string replicateName,
-            MsDataFileUri filePath, int fileOrder, double? retentionTime, bool isBest)
-        {
-            SpectrumInfo = spectrumInfo;
-            Precursor = precursor;
-            ReplicateName = replicateName;
-            FilePath = filePath;
-            FileOrder = fileOrder;
-            RetentionTime = retentionTime;
-            IsBest = isBest;
-        }
-
-        public SpectrumInfo SpectrumInfo { get; }
-        public TransitionGroupDocNode Precursor { get; private set; }
-        public string Name { get { return SpectrumInfo.Name; } }
-        public IsotopeLabelType LabelType { get { return SpectrumInfo.LabelType; } }
-        public string ReplicateName { get; private set; }
-        public bool IsReplicateUnique { get; set; }
-        public MsDataFileUri FilePath { get; private set; }
-        public string FileName { get { return FilePath.GetFileName(); } }
-        public int FileOrder { get; private set; }
-        public double? RetentionTime { get; private set; }
-        public bool IsBest { get; private set; }
-
-        public string Identity { get { return ToString(); } }
-
-        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return SpectrumInfo.SpectrumPeaksInfo; } }
-        public LibraryChromGroup LoadChromatogramData() { return SpectrumInfo.ChromatogramData; }
-
-        public int CompareTo(SpectrumDisplayInfo other)
-        {
-            if (other == null) return 1;
-            int i = Comparer.Default.Compare(FileOrder, other.FileOrder);
-            if (i == 0)
-            {
-                if (RetentionTime.HasValue && other.RetentionTime.HasValue)
-                    i = Comparer.Default.Compare(RetentionTime.Value, other.RetentionTime);
-                // No retention time is less than having a retention time
-                else if (RetentionTime.HasValue)
-                    i = 1;
-                else if (other.RetentionTime.HasValue)
-                    i = -1;
-                else
-                    i = 0;
-            }
-
-            return i;
-        }
-
-        public override string ToString()
-        {
-            if (IsBest)
-                return ReferenceEquals(LabelType, IsotopeLabelType.light) ? Name : String.Format(@"{0} ({1})", Name, LabelType);
-            if (IsReplicateUnique)
-                return string.Format(@"{0} ({1:F02} min)", ReplicateName, RetentionTime);
-            return string.Format(@"{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime);
-        }
-    }
+    // SpectrumDisplayInfo moved to pwiz.Skyline.Model.Lib.SpectrumDisplayInfo
 
     public sealed class SpectrumIdentifier
     {

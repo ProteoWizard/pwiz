@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private readonly ImmutableList<double?> _compensationVoltages;
         private readonly ImmutableList<bool> _negativeCharges;
         private readonly ImmutableList<int> _msLevels;
+        private readonly ImmutableList<double?> _constantNeutralLosses;
 
         public SpectrumMetadatas(IEnumerable<SpectrumMetadata> enumerable)
         {
@@ -65,6 +66,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _compensationVoltages = collection.Select(m => m.CompensationVoltage).ToFactor().MaybeConstant();
             _negativeCharges = collection.Select(m => m.NegativeCharge).ToFactor().MaybeConstant();
             _msLevels = collection.Select(m => m.MsLevel).ToFactor().MaybeConstant();
+            _constantNeutralLosses = collection.Select(m => m.ConstantNeutralLoss).Nullables().MaybeConstant();
         }
 
         public SpectrumMetadatas(ResultFileMetaDataProto proto)
@@ -118,6 +120,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
             _spectrumPrecursors = spectrumPrecursorsList.ToFactor().MaybeConstant();
             _msLevels = IntegerList.FromIntegers(msLevels);
+            _constantNeutralLosses = proto.Spectra.Select(s => s.ConstantNeutralLoss).Nullables().MaybeConstant();
         }
 
         public override SpectrumMetadata this[int index]
@@ -132,6 +135,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     .ChangePresetScanConfiguration(_presetScanConfigurations[index])
                     .ChangeScanDescription(_scanDescriptions[index])
                     .ChangeTotalIonCurrent(_totalIonCurrents[index])
+                    .ChangeConstantNeutralLoss(_constantNeutralLosses[index])
                     .ChangeNegativeCharge(_negativeCharges[index]);
                 var precursorsByLevelLookup = _spectrumPrecursors[index].ToLookup(t=>t.MsLevel, t=>t.Precursor);
                 var precursors = Enumerable.Range(1, _msLevels[index] - 1)

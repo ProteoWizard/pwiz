@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -29,11 +29,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public static string GetProperty(JObject jobject, string propertyName)
         {
             var property = jobject.Property(propertyName);
-            if (property == null || property.Value == null)
-            {
-                return null;
-            }
-            return property.Value.ToString();
+            return property?.Value.ToString();
         }
 
         public static DateTime? GetDateProperty(JObject jobject, string propertyName)

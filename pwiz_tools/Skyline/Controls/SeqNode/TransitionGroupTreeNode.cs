@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,16 +22,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -42,14 +39,6 @@ namespace pwiz.Skyline.Controls.SeqNode
 {
     public class TransitionGroupTreeNode : SrmTreeNodeParent
     {
-        /// <summary>
-        /// Precursor
-        /// </summary>
-        public static string TITLE
-        {
-            get { return SeqNodeResources.TransitionGroupTreeNode_Title; }
-        }
-
         public static TransitionGroupTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
             Debug.Assert(nodeDoc is TransitionGroupDocNode);
@@ -75,15 +64,9 @@ namespace pwiz.Skyline.Controls.SeqNode
         public PeptideDocNode PepNode => ((PeptideTreeNode)Parent)?.DocNode;
         public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent?.Parent)?.DocNode;
 
-        public override string Heading
-        {
-            get { return SeqNodeResources.TransitionGroupTreeNode_Title; }
-        }
+        public override string Heading => TransitionGroupDocNode.TITLE;
 
-        public override string ChildHeading
-        {
-            get { return TransitionTreeNode.TITLES; }
-        }
+        public override string ChildHeading => TransitionDocNode.TITLES;
 
         public override string ChildUndoHeading
         {
@@ -173,75 +156,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         
         public static string DisplayText(TransitionGroupDocNode nodeGroup, DisplaySettings settings)
         {
-            string displayText = GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
-                GetResultsText(settings, nodeGroup));
-            if (!nodeGroup.SpectrumClassFilter.IsEmpty)
-            {
-                displayText = TextUtil.SpaceSeparate(displayText, nodeGroup.SpectrumClassFilter.GetAbbreviatedText());
-            }
-
-            return displayText;
+            // Delegate to Model to avoid duplication
+            return nodeGroup.GetDisplayText(settings);
         }
 
-        private const string DOTP_FORMAT = "0.##";
-        private const string CS_SEPARATOR = ", ";
-
-        public static string GetResultsText(DisplaySettings displaySettings, TransitionGroupDocNode nodeGroup)
-        {
-            float? libraryProduct = nodeGroup.GetLibraryDotProduct(displaySettings.ResultsIndex);
-            float? isotopeProduct = nodeGroup.GetIsotopeDotProduct(displaySettings.ResultsIndex);
-            RatioValue ratio = null;
-            if (displaySettings.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
-            {
-                ratio = displaySettings.NormalizedValueCalculator.GetTransitionGroupRatioValue(ratioToLabel,
-                    displaySettings.NodePep, nodeGroup, nodeGroup.GetChromInfoEntry(displaySettings.ResultsIndex));
-            }
-            else if (NormalizationMethod.GLOBAL_STANDARDS.Equals(displaySettings.NormalizationMethod))
-            {
-                var ratioToGlobalStandards = displaySettings.NormalizedValueCalculator.GetTransitionGroupValue(
-                    displaySettings.NormalizationMethod, displaySettings.NodePep, nodeGroup,
-                    displaySettings.ResultsIndex,
-                    nodeGroup.GetChromInfoEntry(displaySettings.ResultsIndex));
-                if (ratioToGlobalStandards.HasValue)
-                {
-                    ratio = new RatioValue(ratioToGlobalStandards.Value);
-                }
-            }
-            if (null == ratio && !isotopeProduct.HasValue && !libraryProduct.HasValue)
-                return string.Empty;
-            StringBuilder sb = new StringBuilder(@" (");
-            int len = sb.Length;
-            if (isotopeProduct.HasValue)
-                sb.Append(string.Format(@"idotp {0}", isotopeProduct.Value.ToString(DOTP_FORMAT)));
-            if (libraryProduct.HasValue)
-            {
-                if (sb.Length > len)
-                    sb.Append(CS_SEPARATOR);
-                sb.Append(string.Format(@"dotp {0}", libraryProduct.Value.ToString(DOTP_FORMAT)));
-            }
-            if (ratio != null)
-            {
-                if (sb.Length > len)
-                    sb.Append(CS_SEPARATOR);
-                sb.Append(FormatRatioValue(ratio));
-            }
-            sb.Append(@")");
-            return sb.ToString();
-        }
-
-        public static string FormatRatioValue(RatioValue ratio)
-        {
-            StringBuilder sb = new StringBuilder();
-            if (ratio.HasDotProduct)
-            {
-                sb.Append(string.Format(@"rdotp {0}", ratio.DotProduct.ToString(DOTP_FORMAT)));
-                sb.Append(CS_SEPARATOR);
-            }
-
-            sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__,
-                MathEx.RoundAboveZero(ratio.Ratio, 2, 4)));
-            return sb.ToString();
-        }
+        // Results text and ratio formatting now live in Model (TransitionGroupDocNode)
 
         protected override void UpdateChildren(bool materialize)
         {
@@ -249,12 +168,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                                             materialize, TransitionTreeNode.CreateInstance);
         }
 
+        /// <summary>
+        /// Wrapper for UI code that delegates to Model layer for label generation.
+        /// </summary>
         public static string GetLabel(TransitionGroup tranGroup, double precursorMz,
             string resultsText)
         {
-            return string.Format(@"{0}{1}{2}{3}", GetMzLabel(tranGroup, precursorMz),
-                                 Transition.GetChargeIndicator(tranGroup.PrecursorAdduct),
-                                 tranGroup.LabelTypeText, resultsText);
+            return TransitionGroupDocNode.GetLabel(tranGroup, precursorMz, resultsText);
         }
 
         private static string GetMzLabel(TransitionGroup tranGroup, double precursorMz)

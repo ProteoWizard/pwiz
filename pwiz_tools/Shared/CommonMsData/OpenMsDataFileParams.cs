@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;

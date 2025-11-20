@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -45,7 +45,7 @@ using System.Text.RegularExpressions;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class DdaSearchTest : AbstractFunctionalTest
+    public class DdaSearchTest : AbstractFunctionalTestEx
     {
         public class ExpectedResults
         {
@@ -131,12 +131,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            if (RedownloadTools)
-                foreach (var requiredFile in MsgfPlusSearchEngine.FilesToDownload)
-                    if (requiredFile.Unzip)
-                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
-                    else
-                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            CleanupDownloadedFiles(MsgfPlusSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -158,12 +153,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            if (RedownloadTools)
-                foreach (var requiredFile in CometSearchEngine.FilesToDownload)
-                    if (requiredFile.Unzip)
-                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
-                    else
-                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            CleanupDownloadedFiles(CometSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -187,12 +177,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            if (RedownloadTools)
-                foreach (var requiredFile in CometSearchEngine.FilesToDownload)
-                    if (requiredFile.Unzip)
-                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
-                    else
-                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            CleanupDownloadedFiles(CometSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -224,12 +209,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            if (RedownloadTools)
-                foreach (var requiredFile in CometSearchEngine.FilesToDownload)
-                    if (requiredFile.Unzip)
-                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
-                    else
-                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            CleanupDownloadedFiles(TideSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -251,12 +231,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            if (RedownloadTools)
-                foreach (var requiredFile in MsFraggerSearchEngine.FilesToDownload)
-                    if (requiredFile.Unzip)
-                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
-                    else
-                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            CleanupDownloadedFiles(MsFraggerSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -283,12 +258,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
 
-            if (RedownloadTools)
-                foreach (var requiredFile in MsFraggerSearchEngine.FilesToDownload)
-                    if (requiredFile.Unzip)
-                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
-                    else
-                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            CleanupDownloadedFiles(MsFraggerSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -316,10 +286,38 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
+        private void CleanupDownloadedFiles(IList<FileDownloadInfo> requiredFiles)
+        {
+            if (!RedownloadTools)
+                return;
+
+            foreach (var requiredFile in requiredFiles)
+            {
+                if (!requiredFile.Unzip)
+                    FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+                else
+                {
+                    FileEx.SafeDelete(GetCachedZipPath(requiredFile));
+                    DirectoryEx.SafeDelete(requiredFile.InstallPath);
+                }
+            }
+        }
+
+        private static string GetCachedZipPath(FileDownloadInfo requiredFile)
+        {
+            var downloadedZip = requiredFile.DownloadUrl != null
+                ? Path.GetFileName(requiredFile.DownloadUrl.LocalPath)
+                : requiredFile.Filename + ".zip";
+            return Path.Combine(SimpleFileDownloader.GetCachedDownloadsDirectory(),
+                downloadedZip);
+        }
+
         [TestMethod, NoUnicodeTesting(TestExclusionReason.COMET_UNICODE_ISSUES)]
         public void TestDdaSearchDependencyErrors()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            CleanupDownloadedFiles(CometSearchEngine.FilesToDownload);
 
             TestSettings = new DdaTestSettings
             {
@@ -523,6 +521,14 @@ namespace pwiz.SkylineTestFunctional
                         RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@gmail.com", "UW"));
                         //PauseTest(); // uncomment to test bad email handling (e.g. non-institutional email)
                         RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
+
+                        if (RedownloadTools)
+                        {
+                            // Expect MsFraggerDownloadDlg to stay open when HttpClient is canceled or fails
+                            TestHttpClientCancellation(msfraggerDownloaderDlg.ClickAccept);
+                            TestHttpClientWithNoNetwork(msfraggerDownloaderDlg.ClickAccept);
+                        }
+
                         OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                     }
                 }
@@ -532,6 +538,15 @@ namespace pwiz.SkylineTestFunctional
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
                     {
+                        if (RedownloadTools)
+                        {
+                            // Expect download form to stay open when HttpClient is canceled or fails
+                            TestHttpClientCancellation(downloaderDlg.ClickYes);
+                            downloaderDlg = WaitForOpenForm<MultiButtonMsgDlg>(2000);   // New form will be shown
+                            TestHttpClientWithNoNetwork(downloaderDlg.ClickYes);
+                            downloaderDlg = WaitForOpenForm<MultiButtonMsgDlg>(2000);   // New form will be shown
+                        }
+
                         OkDialog(downloaderDlg, downloaderDlg.ClickYes);
                         var waitDlg = WaitForOpenForm<LongWaitDlg>();
                         WaitForClosedForm(waitDlg);
@@ -721,7 +736,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
             
             // Cancel search (but don't close wizard)
-            RunUI(importPeptideSearchDlg.SearchControl.Cancel);
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.SearchControl.CanCancel);  // Avoid a long wait on a cancel that does nothing
+                importPeptideSearchDlg.SearchControl.Cancel();
+            });
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickBackButton()));

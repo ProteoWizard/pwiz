@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Win32;
 using SkylineBatch.Properties;
 
@@ -28,34 +29,87 @@ namespace SkylineBatch
     public class RInstallations
     {
         // Finds and saves information about the computer's R installation locations
-        private const string RegistryLocationR = @"SOFTWARE\R-core\R\";
+        private const string RegistryLocationR = @"SOFTWARE\R-core\R";
+
+        /// <summary>
+        /// Test seam: Set mock R versions for testing without requiring actual R installation.
+        /// Set to non-null dictionary to bypass system R detection.
+        /// </summary>
+        public static Dictionary<string, string> TestRVersions { get; set; }
 
         public static bool FindRDirectory()
         {
+            // Test seam: Use mock R versions if set (bypasses system R detection for testing)
+            if (TestRVersions != null)
+            {
+                Settings.Default.RVersions = TestRVersions;
+                return TestRVersions.Count > 0;
+            }
+
             if (Settings.Default.RDirs == null) Settings.Default.RDirs = new List<string>();
             if (Settings.Default.RDirs.Count == 0)
             {
-                RegistryKey rKey = null;
-                try
-                {
-                    rKey = Registry.LocalMachine.OpenSubKey(RegistryLocationR);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
+                // Try 64-bit registry first (most common for R installations)
+                FindRInstallationsInRegistry(RegistryView.Registry64);
+                
+                // Also check 32-bit registry
+                FindRInstallationsInRegistry(RegistryView.Registry32);
 
-                if (rKey != null)
-                {
-                    var latestRPath = rKey.GetValue(@"InstallPath") as string;
-                    Settings.Default.RDirs.Add(Path.GetDirectoryName(latestRPath));
-                }
+                // Always add the Documents\R folder as a potential location
                 string documentsRPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "R");
-                Settings.Default.RDirs.Add(documentsRPath);
+                if (!Settings.Default.RDirs.Contains(documentsRPath))
+                {
+                    Settings.Default.RDirs.Add(documentsRPath);
+                }
             }
 
             Settings.Default.RVersions = GetRInstallationDict(Settings.Default.RDirs);
             return Settings.Default.RVersions.Count > 0;
+        }
+
+        private static void FindRInstallationsInRegistry(RegistryView view)
+        {
+            try
+            {
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view))
+                using (var rCoreKey = baseKey.OpenSubKey(RegistryLocationR))
+                {
+                    if (rCoreKey == null)
+                        return;
+
+                    // Enumerate version-specific subkeys (e.g., "4.5.1", "R64")
+                    foreach (var versionKeyName in rCoreKey.GetSubKeyNames())
+                    {
+                        try
+                        {
+                            using (var versionKey = rCoreKey.OpenSubKey(versionKeyName))
+                            {
+                                if (versionKey == null)
+                                    continue;
+
+                                var installPath = versionKey.GetValue(@"InstallPath") as string;
+                                if (!string.IsNullOrEmpty(installPath) && Directory.Exists(installPath))
+                                {
+                                    // Add the parent directory (e.g., C:\Program Files\R for C:\Program Files\R\R-4.5.1)
+                                    var parentDir = Path.GetDirectoryName(installPath);
+                                    if (!string.IsNullOrEmpty(parentDir) && !Settings.Default.RDirs.Contains(parentDir))
+                                    {
+                                        Settings.Default.RDirs.Add(parentDir);
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // Ignore errors reading individual version keys
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Ignore errors accessing registry
+            }
         }
 
         public static void AddRDirectory(string newRDir)
@@ -121,6 +175,49 @@ namespace SkylineBatch
                 }
             }
             return rPaths;
+        }
+
+        /// <summary>
+        /// Gets the most recent installed R version.
+        /// Ensures R directories are discovered first.
+        /// </summary>
+        /// <returns>The version string of the most recent R installation</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no R installation is found</exception>
+        public static string GetMostRecentInstalledRVersion()
+        {
+            // Ensure R directories are discovered
+            if (!FindRDirectory())
+            {
+                throw new InvalidOperationException(
+                    "No R installation found. Please install R or add an R installation directory in SkylineBatch settings.");
+            }
+
+            var rVersions = Settings.Default.RVersions;
+            if (rVersions == null || rVersions.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "No R versions found. Please install R or add an R installation directory in SkylineBatch settings.");
+            }
+
+            // Get all version strings and sort them as Version objects to find the most recent
+            var sortedVersions = rVersions.Keys
+                .Select(versionString =>
+                {
+                    if (Version.TryParse(versionString, out var version))
+                        return new { VersionString = versionString, Version = version };
+                    return null;
+                })
+                .Where(v => v != null)
+                .OrderByDescending(v => v.Version)
+                .ToList();
+
+            if (sortedVersions.Count == 0)
+            {
+                // Fallback to first available if version parsing fails
+                return rVersions.Keys.First();
+            }
+
+            return sortedVersions.First().VersionString;
         }
     }
 }

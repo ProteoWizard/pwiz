@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 using System;
+using System.Diagnostics;
 using Microsoft.Web.WebView2.Core;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
@@ -155,15 +156,15 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     }
                     catch (Exception ex)
                     {
-                        // Log cleanup errors for debugging but don't throw
-                        System.Diagnostics.Debug.WriteLine($@"Failed to get WebView2 outerHtml: {ex}");
+                        // Ignore but log to debug console in debug builds
+                        Debug.WriteLine($@"Failed to get WebView2 outerHtml: {ex}");
                     }
                 });
             }
             catch (Exception ex)
             {
-                // Log cleanup errors for debugging but don't throw
-                System.Diagnostics.Debug.WriteLine($@"Failed to execute script on WebView2: {ex}");
+                // Ignore but log to debug console in debug builds
+                Debug.WriteLine($@"Failed to execute script on WebView2: {ex}");
             }
             return string.Empty;
         }

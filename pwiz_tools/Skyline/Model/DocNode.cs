@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,8 +21,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -1252,7 +1252,7 @@ namespace pwiz.Skyline.Model
         /// Override to change properties to update properties dependent on the
         /// children of this node, when a clone is being created with a new set of children.
         /// </summary>
-        /// <param name="clone">A copy of this instance created with <see cref="object.MemberwiseClone"/>
+        /// <param name="clone">A copy of this instance created with <see cref="Immutable.ImmutableClone" />
         /// with its new children assigned</param>
         /// <param name="indexReplaced">Index to a single replaced node, if that is why the children are changing</param>
         protected virtual IList<DocNode> OnChangingChildren(DocNodeParent clone, int indexReplaced)
@@ -1457,5 +1457,46 @@ namespace pwiz.Skyline.Model
 
             return null;
         }
+    }
+
+    /// <summary>
+    /// Used when getting display text for a <see cref="DocNode"/> for use in
+    /// a targets tree, find results, audit log, etc.
+    /// </summary>
+    public class DisplaySettings
+    {
+        internal readonly bool _showBestReplicate;
+        internal readonly int _resultsIndex;
+
+        public DisplaySettings(NormalizedValueCalculator normalizedValueCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, NormalizeOption normalizeOption)
+        {
+            NormalizedValueCalculator = normalizedValueCalculator;
+            _showBestReplicate = showBestReplicate;
+            _resultsIndex = resultsIndex;
+            NormalizeOption = normalizeOption;
+            NodePep = nodePep;
+        }
+
+        public PeptideDocNode NodePep { get; private set; }
+
+        public int ResultsIndex
+        {
+            get
+            {
+                return _showBestReplicate && NodePep != null && NodePep.BestResult != -1 ? NodePep.BestResult : _resultsIndex;
+            }
+        }
+
+        public NormalizeOption NormalizeOption { get; private set; }
+
+        public NormalizationMethod NormalizationMethod
+        {
+            get
+            {
+                return NormalizedValueCalculator.NormalizationMethodForMolecule(NodePep, NormalizeOption);
+            }
+        }
+
+        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
     }
 }

@@ -319,6 +319,9 @@ specific default collision energy equation within Skyline</value>
   <data name="ConfidenceLevel">
     <value>Confidence level which was used to determine the confidence interval around the fold change.</value>
   </data>
+  <data name="ConstantNeutralLoss">
+    <value>Analyzer offset value for constant neutral loss scan - use a negative value for neutral gain.</value>
+  </data>
   <data name="CountTruncated">
     <value>The number of transitions for a precursor that integrate a peak with a
 boundary at either end of the acquisition time range, where intensity at the end is

@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include <boost/range/algorithm/find_if.hpp>
+#include "pwiz/utility/misc/unit.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -583,6 +584,126 @@ PWIZ_API_DECL void setActivationType(ActivationType activationType, ActivationTy
         activation.set(MS_multiphoton_dissociation);
     // ActivationType_Unknown:
 }
+
+
+MassListTable parseMassListTables(const std::string& instrumentMethod)
+{
+    MassListTable entries;
+    const std::string startToken = ">>>>>>>>>>>>> Mass List Table <<<<<<<<<<<<<<";
+    const std::string endToken = ">>>>>>>>>>>>> End Mass List Table <<<<<<<<<<<<<<";
+    size_t pos = 0;
+
+    while ((pos = instrumentMethod.find(startToken, pos)) != std::string::npos)
+    {
+        size_t tableStart = pos + startToken.size();
+        size_t tableEnd = instrumentMethod.find(endToken, tableStart);
+        if (tableEnd == std::string::npos) break;
+
+        std::istringstream iss(instrumentMethod.substr(tableStart, tableEnd - tableStart));
+        std::string line;
+        std::vector<std::string> headers;
+        std::vector<size_t> colIdx(5, std::string::npos);
+
+        // Find header line
+        while (std::getline(iss, line))
+        {
+            bal::trim(line);
+            if (line.empty()) continue;
+            if (line.find('|') != std::string::npos)
+            {
+                std::istringstream headerStream(line);
+                std::string header;
+                size_t idx = 0;
+                while (std::getline(headerStream, header, '|'))
+                {
+                    bal::trim(header);
+                    headers.push_back(header);
+                    if (header == "Compound") colIdx[0] = idx;
+                    else if (header == "Precursor (m/z)") colIdx[1] = idx;
+                    else if (header == "Product (m/z)") colIdx[2] = idx;
+                    else if (header == "Collision Energies (V)") colIdx[3] = idx;
+                    else if (header == "Polarity") colIdx[4] = idx;
+                    ++idx;
+                }
+                break;
+            }
+        }
+
+        // Only parse tables with all required columns
+        if (std::all_of(colIdx.begin(), colIdx.end(), [](size_t i) { return i != std::string::npos; }))
+        {
+            // Parse rows
+            while (std::getline(iss, line))
+            {
+                bal::trim(line);
+                if (line.empty() || line.find('|') == std::string::npos) continue;
+
+                std::istringstream rowStream(line);
+                std::string cell;
+                std::vector<std::string> cells;
+                while (std::getline(rowStream, cell, '|'))
+                    cells.push_back(bal::trim_copy(cell));
+
+                if (cells.size() < headers.size()) continue;
+
+                MassListTableEntry entry;
+                entry.compound = cells[colIdx[0]];
+                entry.precursor_mz = lexical_cast<double>(cells[colIdx[1]]);
+                entry.product_mz = lexical_cast<double>(cells[colIdx[2]]);
+                entry.collision_energy = lexical_cast<double>(cells[colIdx[3]]);
+                entry.polarity = cells[colIdx[4]];
+                entries[entry.precursor_mz][entry.product_mz] = entry;
+            }
+        }
+        pos = tableEnd + endToken.size();
+    }
+    return entries;
+}
+
+namespace {
+
+TEST_CASE("parseMassListTables()") {
+    MassListTable result = parseMassListTables(
+        R"(Stellar Method Summary	
+  	
+Creator: THERMO-RJM0O65J\Thermo Scientific          Last Modified: 09/11/2025 11:26:26 by THERMO-RJM0O65J\Thermo Scientific	
+  	
+Global Settings	
+	Use Ion Source Settings from Tune = Not Checked	
+	Method Duration (min) = 15	
+			Use Chromatographic Filter = False	
+>>>>>>>>>>>>> Mass List Table <<<<<<<<<<<<<<	
+                Center Mass (m/z)|           Isolation Window (m/z)|	
+                              125|                               50|	
+                              175|                               50|	
+                              225|                               50|	
+                              275|                               50|	
+                              325|                               50|	
+                              375|                               50|	
+>>>>>>>>>>>>> End Mass List Table <<<<<<<<<<<<<<	
+Experiment 2	
+>>>>>>>>>>>>> Mass List Table <<<<<<<<<<<<<<	
+Compound|  Formula|  Adduct|  Precursor (m/z)|  Precursor z|  Product (m/z)|  Retention Time (min)|  RT Window (min)|  Collision Energies (V)|  Polarity|	
+AcylCarnitine 14:2|  |  (no adduct)|  368.3|  1|  85.1|  1.4|  0.4|  27|  Positive|	
+AcylCarnitine 12:0|  |  (no adduct) | 344.3 | 1 | 84.1 | 1.5 | 0.4 | 24 | Negative |
+>>>>>>>>>>>>> End Mass List Table <<<<<<<<<<<<<<
+)");
+
+    CHECK(result.size() == 2);
+    CHECK(result[368.3][85.1].compound == "AcylCarnitine 14:2");
+    CHECK(result[368.3][85.1].precursor_mz == 368.3);
+    CHECK(result[368.3][85.1].product_mz == 85.1);
+    CHECK(result[368.3][85.1].collision_energy == 27);
+    CHECK(result[368.3][85.1].polarity == "Positive");
+
+    CHECK(result[344.3][84.1].compound == "AcylCarnitine 12:0");
+    CHECK(result[344.3][84.1].precursor_mz == 344.3);
+    CHECK(result[344.3][84.1].product_mz == 84.1);
+    CHECK(result[344.3][84.1].collision_energy == 24);
+    CHECK(result[344.3][84.1].polarity == "Negative");
+}
+
+} // namespace
 
 } // Thermo
 } // detail

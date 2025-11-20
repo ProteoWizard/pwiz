@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using MathNet.Numerics.LinearAlgebra.Storage;
 
 namespace pwiz.Common.DataAnalysis.Matrices

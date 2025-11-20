@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Web;
 using Newtonsoft.Json;
 using pwiz.PanoramaClient;
 using SharedBatch;
+using pwiz.Common.SystemUtil;
 
 namespace SkylineBatch
 {
@@ -110,14 +110,14 @@ namespace SkylineBatch
 
                 var tmpFile = Path.GetTempFileName();
 
-                using (var wc = new UTF8WebClient())
+                using (var httpClient = new HttpClientWithProgress())
                 {
                     if (!string.IsNullOrEmpty(server.FileSource.Username) && !string.IsNullOrEmpty(server.FileSource.Password))
                     {
-                        wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(server.FileSource.Username, server.FileSource.Password));
+                        httpClient.AddAuthorizationHeader(Server.GetBasicAuthHeader(server.FileSource.Username, server.FileSource.Password));
                     }
 
-                    wc.DownloadFile(downloadSkypUri, tmpFile);
+                    httpClient.DownloadFile(downloadSkypUri, tmpFile);
                 }
 
                 using (var fileStream = new FileStream(tmpFile, FileMode.Open, FileAccess.Read))

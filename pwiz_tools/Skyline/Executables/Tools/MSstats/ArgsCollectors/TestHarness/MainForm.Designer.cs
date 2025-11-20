@@ -1,4 +1,4 @@
-﻿namespace TestHarness
+namespace TestHarness
 {
     partial class MainForm
     {

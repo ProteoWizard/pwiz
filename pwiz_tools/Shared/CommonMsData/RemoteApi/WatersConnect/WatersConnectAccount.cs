@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -161,7 +161,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var tokenResponse = Authenticate();
 
             var services = new ServiceCollection();
-            var builder = services.AddHttpClient("customClient");
+            var builder = services.AddHttpClient(@"customClient");
             builder.ConfigurePrimaryHttpMessageHandler(() =>
             {
                 var handler = new WebRequestHandler();

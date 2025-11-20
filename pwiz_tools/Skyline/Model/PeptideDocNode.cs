@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
@@ -36,6 +35,9 @@ namespace pwiz.Skyline.Model
 {
     public class PeptideDocNode : DocNodeParent
     {
+        public static string TITLE => ModelResources.PeptideDocNode_Title;
+        public static string TITLE_MOLECULE => ModelResources.PeptideDocNode_Title_Molecule;
+
         public static readonly StandardType STANDARD_TYPE_IRT = StandardType.IRT;
         public static readonly StandardType STANDARD_TYPE_QC = StandardType.QC;
         public static readonly StandardType STANDARD_TYPE_GLOBAL = StandardType.GLOBAL_STANDARD;
@@ -105,7 +107,8 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                var label = PeptideTreeNode.GetLabel(this, string.Empty);
+                // Match legacy SequenceTree label semantics exactly
+                var label = GetSequenceTreeLabel(string.Empty);
                 return (CustomMolecule != null && !CustomMolecule.ParsedMolecule.IsMassOnly) ? string.Format(@"{0} ({1})", label, CustomMolecule.ParsedMolecule) : label;
             }
         }
@@ -1344,7 +1347,24 @@ namespace pwiz.Skyline.Model
 
         public override string GetDisplayText(DisplaySettings settings)
         {
-            return PeptideTreeNode.DisplayText(this, settings);
+            // Match legacy SequenceTree.DisplayText semantics
+            return GetLabel(this, string.Empty);
+        }
+
+        /// <summary>
+        /// Provides the exact same label semantics previously supplied by
+        /// PeptideTreeNode.GetLabel(nodePep, resultsText), but owned by the model.
+        /// </summary>
+        public static string GetLabel(PeptideDocNode nodePep, string resultsText)
+        {
+            // UI previously returned nodePep.ToString() + resultsText
+            return nodePep.ToString() + resultsText;
+        }
+
+        // Back-compat instance helper used in Model; prefer static GetLabel from callers
+        public string GetSequenceTreeLabel(string resultsText)
+        {
+            return GetLabel(this, resultsText);
         }
 
         public bool IsExcludeFromCalibration(int replicateIndex)

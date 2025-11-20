@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -38,7 +38,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 Id = GetProperty(jobject, "id");
                 Path = GetProperty(jobject, "path");
-                HasSampleSets = jobject["accessType"]["read"].Value<bool>();
+                HasSampleSets = jobject["accessType"]!["read"]!.Value<bool>();
             }
             // ReSharper restore LocalizableElement
             ParentId = parentId;

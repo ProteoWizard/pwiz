@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -386,7 +386,7 @@ namespace pwiz.SkylineTestFunctional
             var dictionary = new Dictionary<IdentityPath, double>();
             foreach (RowItem rowItem in foldChangeGrid.DataboundGridControl.BindingListSource)
             {
-                var foldChangeRow = (FoldChangeBindingSource.FoldChangeRow) rowItem.Value;
+                var foldChangeRow = (FoldChangeRow) rowItem.Value;
                 if (foldChangeRow.MsLevel == 2)
                 {
                     var identityPath = foldChangeRow.Peptide?.IdentityPath ?? foldChangeRow.Protein.IdentityPath;

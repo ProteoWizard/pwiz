@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,18 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lists
@@ -194,50 +191,5 @@ namespace pwiz.Skyline.Model.Lists
         {
             return reader.Deserialize(new ListDef());
         }
-    }
-
-    public class ListDefList : SettingsList<ListData>, IListSerializer<ListData>
-    {
-        public override ListData CopyItem(ListData item)
-        {
-            return new ListData((ListDef) item.ListDef.ChangeName(String.Empty), item.Columns);
-        }
-
-        public override ListData EditItem(Control owner, ListData item, IEnumerable<ListData> existing, object tag)
-        {
-            using (var dlg = new ListDesigner(item, existing))
-            {
-                if (dlg.ShowDialog(owner) == DialogResult.OK)
-                {
-                    return dlg.GetListDef();
-                }
-            }
-            return null;
-        }
-
-        public override IEnumerable<ListData> GetDefaults(int revisionIndex)
-        {
-            return new ListData[0];
-        }
-
-        public override string Label
-        {
-            get { return ListsResources.ListDefList_Label_Lists; }
-        }
-
-        public override string Title
-        {
-            get { return ListsResources.ListDefList_Title_Define_Lists; }
-        }
-
-        public ICollection<ListData> CreateEmptyList()
-        {
-            return new ListDefList();
-        }
-
-        public Type DeserialType { get { return SerialType; } }
-        public Type SerialType { get { return typeof(ListDef); } }
-
-
     }
 }
