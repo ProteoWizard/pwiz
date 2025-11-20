@@ -7,9 +7,11 @@
 4. [Dependency Injection Patterns for Testing](#dependency-injection-patterns-for-testing)
 5. [Assertion Best Practices](#assertion-best-practices)
 6. [HttpClient Testing with HttpClientTestHelper](#httpclient-testing-with-httpclienttesthelper)
-7. [Translation-Proof Testing](#translation-proof-testing)
-8. [Test Performance Considerations](#test-performance-considerations)
-9. [Code Coverage Validation](#code-coverage-validation)
+7. [Recording Test Data with IsRecordMode](#recording-test-data-with-isrecordmode)
+8. [HTTP Recording/Playback Pattern](#http-recordingplayback-pattern)
+9. [Translation-Proof Testing](#translation-proof-testing)
+10. [Test Performance Considerations](#test-performance-considerations)
+11. [Code Coverage Validation](#code-coverage-validation)
 
 ---
 
@@ -586,6 +588,542 @@ HttpClientTestHelper.SimulateCancellation()
 - ❌ Don't make test interface return error codes or exceptions
 - ❌ Don't create `TestClientError401`, `TestClientError403`, etc.
 - ❌ Don't parse exception messages in tests - use `GetExpectedMessage()`
+
+---
+
+## Recording Test Data with IsRecordMode
+
+### Overview
+
+Many tests need to capture expected data during one run and validate against that data in subsequent runs. This pattern is used for:
+- **HTTP interactions** - Recording live web service responses for offline playback
+- **Graph labels and formatting** - Capturing expected chart axis labels, legends, tooltips
+- **Model weights and calculations** - Recording expected values from complex algorithms
+- **Localized strings** - Capturing expected UI text in different locales
+- **File format outputs** - Recording expected file contents for format validation
+
+The `IsRecordMode` pattern provides a standardized way to toggle between recording and validation modes in tests.
+
+### Base Class Support
+
+**`AbstractUnitTestEx`** provides the recording infrastructure:
+
+```csharp
+public abstract class AbstractUnitTestEx : AbstractUnitTest
+{
+    /// <summary>
+    /// Override this property to enable recording mode.
+    /// When true, the test writes expected data instead of validating it.
+    /// </summary>
+    protected virtual bool IsRecordMode
+    {
+        get { return false; }
+    }
+
+    /// <summary>
+    /// Call this at the end of test methods to prevent committing code with IsRecordMode = true.
+    /// Functional tests automatically call this in RunTest().
+    /// </summary>
+    protected void CheckRecordMode()
+    {
+        Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");
+    }
+}
+```
+
+**`AbstractFunctionalTestEx`** automatically calls `CheckRecordMode()` in `RunTest()`, so functional tests don't need to add it manually.
+
+### Implementing Recording in Tests
+
+**Step 1: Override `IsRecordMode` property**
+
+```csharp
+[TestClass]
+public class MyTest : AbstractUnitTestEx
+{
+    protected override bool IsRecordMode => false;  // Always default to false
+}
+```
+
+**Step 2: Add conditional logic for recording vs. validation**
+
+```csharp
+[TestMethod]
+public void TestMyFeature()
+{
+    if (IsRecordMode)
+    {
+        // Record expected data
+        var expectedData = RunFeatureAndCaptureResults();
+        SaveExpectedData(expectedData);
+        return;  // Exit early - don't validate
+    }
+    
+    // Validation mode - load and compare
+    var expectedData = LoadExpectedData();
+    var actualData = RunFeatureAndCaptureResults();
+    ValidateResults(expectedData, actualData);
+    
+    // Guard against committing with record mode enabled
+    CheckRecordMode();
+}
+```
+
+**Step 3: Use JSON files for recorded data (preferred)**
+
+The modern pattern is to write recorded data to JSON files with the same name prefix as the test:
+
+```csharp
+private const string EXPECTED_DATA_JSON = @"CommonTest\MyTestExpectedData.json";
+
+private void SaveExpectedData(MyExpectedData data)
+{
+    var jsonPath = TestContext.GetProjectDirectory(EXPECTED_DATA_JSON);
+    var json = JsonConvert.SerializeObject(data, Formatting.Indented);
+    File.WriteAllText(jsonPath, json, new UTF8Encoding(false));
+    Console.Out.WriteLine(@"Recorded expected data to: " + jsonPath);
+}
+
+private MyExpectedData LoadExpectedData()
+{
+    var jsonPath = TestContext.GetProjectDirectory(EXPECTED_DATA_JSON);
+    if (!File.Exists(jsonPath))
+        return new MyExpectedData();  // Return empty/default if not recorded yet
+    
+    var json = File.ReadAllText(jsonPath, Encoding.UTF8);
+    return JsonConvert.DeserializeObject<MyExpectedData>(json) ?? new MyExpectedData();
+}
+```
+
+**Legacy pattern (still exists in codebase):** Some older tests output C# code to the console for developers to copy-paste into test source. This pattern is being phased out in favor of JSON files.
+
+### Recording HTTP Interactions
+
+For tests that record HTTP traffic, use `HttpClientTestHelper.HttpInteractionRecorder`:
+
+```csharp
+[TestMethod]
+public void WebTestFastaImport()
+{
+    HttpClientTestHelper.HttpInteractionRecorder recorder = null;
+    if (IsRecordMode && AllowInternetAccess)
+    {
+        recorder = new HttpClientTestHelper.HttpInteractionRecorder();
+    }
+
+    using (recorder != null ? HttpClientTestHelper.BeginRecording(recorder) : null)
+    {
+        // Run test that makes HTTP requests
+        var results = RunFastaImportWithWebLookups();
+        
+        if (IsRecordMode)
+        {
+            // Save both protein metadata and HTTP interactions
+            RecordExpectedData(results, recorder?.Interactions?.ToList());
+            return;
+        }
+        
+        // Validation mode - load and compare
+        var expectedData = LoadExpectedData();
+        ValidateResults(expectedData, results);
+    }
+    
+    CheckRecordMode();
+}
+```
+
+The recorded HTTP interactions are serialized to JSON and can be played back offline using `HttpClientTestHelper.PlaybackFromInteractions()`.
+
+### Workflow: Recording New Test Data
+
+> ⚠️ **After changing `IsRecordMode`, rebuild before running the test.** Without a build the test harness will execute the previous assembly and nothing will be recorded.
+
+**1. Enable recording mode**
+
+```csharp
+protected override bool IsRecordMode => true;  // Temporarily set to true
+```
+
+**2. Run the test with required resources**
+
+- For HTTP tests: Run with `-EnableInternet` flag
+- For UI tests: Run in appropriate locale if testing localization
+- For algorithm tests: Run with representative input data
+
+**3. Verify the recorded data**
+
+- Check that the JSON file was created/updated
+- Inspect the file contents to ensure they look correct
+- Verify file is in the expected location (usually `CommonTest/` or `TestData/`)
+
+**4. Disable recording mode and validate**
+
+```csharp
+protected override bool IsRecordMode => false;  // Set back to false
+```
+
+> ⚠️ **Rebuild again after restoring `IsRecordMode => false`** to ensure validation uses the updated code.
+
+**5. Run the test again (offline if applicable)**
+
+- Test should now load recorded data and validate against it
+- All assertions should pass
+- Test should run without network access (for HTTP tests)
+
+**6. Commit the changes**
+
+- Include the new/updated JSON file in the commit
+- Ensure `IsRecordMode => false` is committed
+- The `CheckRecordMode()` assertion will fail if you forget to set it back
+
+### Best Practices
+
+**DO:**
+- ✅ **Always default to `false`** - Recording mode should be the exception, not the rule
+- ✅ **Use JSON files** for recorded data (easier to inspect, version control friendly)
+- ✅ **Add `CheckRecordMode()`** at the end of unit test methods
+- ✅ **Document what gets recorded** in code comments or test descriptions
+- ✅ **Version control the JSON files** - they're test artifacts that should be committed
+- ✅ **Structure JSON clearly** - Use descriptive property names, add comments in JSON if needed
+- ✅ **Test both modes** - Verify recording works AND validation works with recorded data
+
+**DON'T:**
+- ❌ **Never commit with `IsRecordMode => true`** - The `CheckRecordMode()` assertion prevents this
+- ❌ **Don't record sensitive data** - Avoid API keys, passwords, user tokens in recorded files
+- ❌ **Don't record large binary data** - Use references or hashes instead
+- ❌ **Don't record timestamps** - Use relative times or remove time-dependent fields
+- ❌ **Don't record absolute file paths** - Use relative paths or path placeholders
+- ❌ **Don't skip validation** - Always test that recorded data can be loaded and used
+
+### Common Patterns
+
+#### Pattern 1: Simple Value Recording
+
+```csharp
+[TestMethod]
+public void TestCalculation()
+{
+    var result = PerformComplexCalculation();
+    
+    if (IsRecordMode)
+    {
+        var expected = new { Value = result, Timestamp = DateTime.Now };
+        SaveToJson("TestCalculationExpected.json", expected);
+        return;
+    }
+    
+    var expected = LoadFromJson<ExpectedResult>("TestCalculationExpected.json");
+    Assert.AreEqual(expected.Value, result, tolerance: 0.001);
+    CheckRecordMode();
+}
+```
+
+#### Pattern 2: HTTP Interaction Recording
+
+```csharp
+[TestMethod]
+public void WebTestFeature()
+{
+    var recorder = IsRecordMode && AllowInternetAccess 
+        ? new HttpClientTestHelper.HttpInteractionRecorder() 
+        : null;
+    
+    using (recorder != null ? HttpClientTestHelper.BeginRecording(recorder) : null)
+    {
+        var results = CallWebService();
+        
+        if (IsRecordMode)
+        {
+            var data = new TestData
+            {
+                Results = results,
+                HttpInteractions = recorder?.Interactions?.ToList()
+            };
+            SaveToJson("WebTestFeatureData.json", data);
+            return;
+        }
+        
+        var expected = LoadFromJson<TestData>("WebTestFeatureData.json");
+        ValidateResults(expected, results);
+    }
+    
+    CheckRecordMode();
+}
+```
+
+#### Pattern 3: UI Element Recording
+
+```csharp
+[TestMethod]
+public void TestGraphLabels()
+{
+    var graph = CreateGraph();
+    var labels = ExtractGraphLabels(graph);
+    
+    if (IsRecordMode)
+    {
+        SaveToJson("TestGraphLabelsExpected.json", new { Labels = labels });
+        return;
+    }
+    
+    var expected = LoadFromJson<ExpectedLabels>("TestGraphLabelsExpected.json");
+    Assert.AreEqual(expected.Labels, labels);
+    CheckRecordMode();
+}
+```
+
+### Troubleshooting
+
+**Issue: Test fails with "Set IsRecordMode to false before commit"**
+
+**Solution:** You forgot to set `IsRecordMode => false` after recording. This is intentional - the assertion prevents committing code in recording mode.
+
+**Issue: JSON file not found during validation**
+
+**Solution:** 
+- Ensure the file was created during recording (check file exists)
+- Verify the path is correct (use `TestContext.GetProjectDirectory()`)
+- Check that the file is included in the project (should be visible in Solution Explorer)
+
+**Issue: Recorded data doesn't match validation**
+
+**Solution:**
+- Check if the data source changed (web service responses, algorithm behavior)
+- Verify you're using the same test data and environment
+- Consider if the change is expected (e.g., web service updated their API)
+- Re-record if the change is legitimate
+
+**Issue: JSON file is too large**
+
+**Solution:**
+- Consider splitting into multiple files
+- Use references/IDs instead of duplicating data
+- Store large binary data separately (e.g., in `TestData/` folder)
+- Compress or summarize data where possible
+
+### HTTP Recording/Playback Pattern
+
+The HTTP recording/playback pattern enables tests to run without network access by recording live HTTP interactions and replaying them during offline test runs. This provides:
+
+- **Fast offline tests** - No network latency, tests run in milliseconds
+- **Deterministic results** - Same responses every time, no flakiness from network issues
+- **Full validation** - Offline tests can validate complete responses, not just success/failure
+- **Easy maintenance** - Re-record when web services change, commit JSON files to version control
+
+#### Simple Pattern: HTTP Interactions Only
+
+For tests that only need to record HTTP request/response pairs (no additional expected data), use this minimal pattern:
+
+**Example:** `ProteomeDbTest.cs` - `TestOlderProteomeDb` / `TestOlderProteomeDbWeb`
+
+```csharp
+[TestClass]
+public class ProteomeDbTest : AbstractUnitTestEx
+{
+    private const string PROTDB_EXPECTED_JSON_RELATIVE_PATH = @"Test\Proteome\ProteomeDbWebData.json";
+    
+    protected override bool IsRecordMode => false;  // Always default to false
+    
+    private ProteomeDbExpectedData _cachedExpectedData;
+    
+    /// <summary>
+    /// Loads recorded HTTP interactions for playback during offline tests.
+    /// Returns empty data if the recording file doesn't exist.
+    /// </summary>
+    private ProteomeDbExpectedData LoadHttpInteractions()
+    {
+        if (_cachedExpectedData != null)
+            return _cachedExpectedData;
+            
+        var jsonPath = TestContext.GetProjectDirectory(PROTDB_EXPECTED_JSON_RELATIVE_PATH);
+        if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
+        {
+            _cachedExpectedData = new ProteomeDbExpectedData();
+            return _cachedExpectedData;
+        }
+        
+        var json = File.ReadAllText(jsonPath, Encoding.UTF8);
+        _cachedExpectedData = JsonConvert.DeserializeObject<ProteomeDbExpectedData>(json) 
+            ?? new ProteomeDbExpectedData();
+        _cachedExpectedData.HttpInteractions ??= new List<HttpInteraction>();
+        return _cachedExpectedData;
+    }
+    
+    /// <summary>
+    /// Records HTTP interactions for playback during offline tests.
+    /// This enables tests to run without network access by replaying recorded request/response pairs.
+    /// </summary>
+    private void RecordHttpInteractions(IReadOnlyList<HttpInteraction> interactions)
+    {
+        if (interactions == null || interactions.Count == 0)
+            return;
+            
+        var jsonPath = TestContext.GetProjectDirectory(PROTDB_EXPECTED_JSON_RELATIVE_PATH);
+        Assert.IsNotNull(jsonPath, @"Unable to locate project-relative path for HTTP interactions.");
+        
+        var data = new ProteomeDbExpectedData
+        {
+            HttpInteractions = interactions.ToList()
+        };
+        
+        var json = JsonConvert.SerializeObject(data, Formatting.Indented);
+        File.WriteAllText(jsonPath, json, new UTF8Encoding(false));
+        Console.Out.WriteLine(@"Recorded HTTP interactions to: " + jsonPath);
+    }
+    
+    private HttpClientTestHelper CreateHttpClientHelper(bool useNetAccess, 
+        ProteomeDbExpectedData expectedData, HttpInteractionRecorder recorder)
+    {
+        if (useNetAccess)
+        {
+            if (recorder != null)
+                return HttpClientTestHelper.BeginRecording(recorder);
+            return null; // use real network access when no recorder is supplied
+        }
+        // Use playback if we have recorded interactions
+        if (expectedData?.HttpInteractions != null && expectedData.HttpInteractions.Count > 0)
+        {
+            return HttpClientTestHelper.PlaybackFromInteractions(expectedData.HttpInteractions);
+        }
+        return null; // No recorded data available
+    }
+    
+    [TestMethod]
+    public void TestOlderProteomeDb()
+    {
+        DoTestOlderProteomeDb(TestContext, false); // offline mode with playback
+    }
+    
+    [TestMethod]
+    public void TestOlderProteomeDbWeb()
+    {
+        // Only run if web access enabled or recording
+        if (AllowInternetAccess || IsRecordMode)
+        {
+            DoTestOlderProteomeDb(TestContext, true); // online mode with recording
+        }
+        CheckRecordMode();
+    }
+    
+    public void DoTestOlderProteomeDb(TestContext testContext, bool doActualWebAccess)
+    {
+        // ... test setup ...
+        
+        var expectedData = LoadHttpInteractions();
+        HttpInteractionRecorder recorder = null;
+        if (doActualWebAccess && IsRecordMode)
+            recorder = new HttpInteractionRecorder();
+            
+        using var helper = CreateHttpClientHelper(doActualWebAccess, expectedData, recorder);
+        // ... test implementation that makes HTTP requests ...
+        
+        if (IsRecordMode && doActualWebAccess)
+        {
+            var recordedInteractions = recorder?.Interactions?.ToList();
+            RecordHttpInteractions(recordedInteractions);
+        }
+    }
+    
+    private class ProteomeDbExpectedData
+    {
+        public List<HttpInteraction> HttpInteractions { get; set; } = new List<HttpInteraction>();
+    }
+}
+```
+
+**Key Components:**
+
+1. **`IsRecordMode` property** - Toggle between recording and playback modes
+2. **`LoadHttpInteractions()`** - Load recorded interactions from JSON file
+3. **`RecordHttpInteractions()`** - Save interactions to JSON file
+4. **`CreateHttpClientHelper()`** - Create recording or playback helper based on mode
+5. **JSON data class** - Simple class with `HttpInteractions` list
+6. **Paired test methods** - One for offline playback, one for online recording
+
+**Naming Convention:**
+
+For tests that use HTTP recording/playback, use the suffix pattern `TestName[Web]`:
+- **Offline test** (playback): `TestOlderProteomeDb` - Uses recorded HTTP interactions
+- **Online test** (recording): `TestOlderProteomeDbWeb` - Records HTTP interactions with live network access
+
+This naming convention:
+- ✅ Keeps related tests together alphabetically in test runners
+- ✅ Clearly indicates which test requires network access
+- ✅ Makes it easy to identify "Connected" tests that should be in `TestConnected` project
+- ✅ Follows the pattern: base test name for offline, `[Web]` suffix for online
+
+**Examples:**
+- `TestFastaImport` / `TestFastaImportWeb`
+- `TestOlderProteomeDb` / `TestOlderProteomeDbWeb`
+- `TestPanoramaUpload` / `TestPanoramaUploadWeb`
+
+**Workflow:**
+
+1. **Recording:** Set `IsRecordMode => true`, run `TestOlderProteomeDbWeb` with internet access enabled
+   - Test makes real HTTP requests
+   - `HttpInteractionRecorder` captures all requests/responses
+   - JSON file is written with recorded interactions
+   - Test fails at end with `CheckRecordMode()` assertion (expected)
+
+2. **Playback:** Set `IsRecordMode => false`, run `TestOlderProteomeDb` without internet access
+   - Test loads recorded interactions from JSON
+   - `HttpClientTestHelper.PlaybackFromInteractions()` replays responses
+   - Test runs identically to online version, but offline
+   - Full validation works because recorded data contains complete responses
+
+**Benefits of this pattern:**
+- ✅ **Simple** - Minimal code, easy to understand
+- ✅ **Fast** - Sub-second execution without network access
+- ✅ **Complete** - Full metadata validation works offline (same as online)
+- ✅ **Maintainable** - Re-record when web services change, commit JSON to git
+
+#### Extended Pattern: HTTP Interactions + Expected Results
+
+For tests that need to record both HTTP interactions AND structured expected results (e.g., protein metadata, calculation results), extend the JSON data class:
+
+**Example:** `FastaImporterTest.cs` - `TestFastaImport` / `WebTestFastaImport`
+
+```csharp
+private class FastaImporterExpectedData
+{
+    public List<FastaImporterExpectedRecord> Records { get; set; } = new List<FastaImporterExpectedRecord>();
+    public List<HttpInteraction> HttpInteractions { get; set; } = new List<HttpInteraction>();
+    
+    [JsonIgnore]
+    public Dictionary<string, FastaImporterExpectedRecord> RecordMap { get; set; }
+}
+```
+
+This pattern allows you to:
+- Record HTTP interactions for offline playback
+- Record expected results (protein metadata, search outcomes) for validation
+- Store both in the same JSON file for easy maintenance
+
+**When to use each pattern:**
+- **Simple pattern** (HTTP interactions only): Use when the HTTP responses themselves contain all validation data needed
+- **Extended pattern** (HTTP + expected results): Use when you need to validate derived/computed results beyond just the raw HTTP responses
+
+#### Implementation Checklist
+
+To add HTTP recording/playback to a test:
+
+1. ✅ Add `IsRecordMode` property (default to `false`)
+2. ✅ Create JSON file path constant
+3. ✅ Add data class with `HttpInteractions` list
+4. ✅ Implement `LoadHttpInteractions()` method
+5. ✅ Implement `RecordHttpInteractions()` method
+6. ✅ Implement `CreateHttpClientHelper()` method
+7. ✅ Create paired test methods (offline/online)
+8. ✅ Add JSON file to project (`.csproj` file)
+9. ✅ Add `CheckRecordMode()` call in online test method
+10. ✅ Record interactions at end of test when `IsRecordMode && doActualWebAccess`
+
+#### References
+
+- **Simple example:** `ProteomeDbTest.cs` - `TestOlderProteomeDb` / `TestOlderProteomeDbWeb`
+- **Extended example:** `FastaImporterTest.cs` - `TestFastaImport` / `TestFastaImportWeb`
+- **Helper classes:** `HttpClientTestHelper.cs` - `BeginRecording()`, `PlaybackFromInteractions()`
+- **Data classes:** `HttpInteraction`, `HttpInteractionRecorder` in `pwiz_tools/Skyline/TestUtil/`
 
 ---
 

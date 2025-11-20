@@ -49,6 +49,8 @@ Detailed reference for building, testing, and analyzing Skyline from LLM-assiste
 
 This script automatically finds MSBuild, handles paths, and provides clear success/failure output.
 
+> ⚠️ **Tests always run the previously compiled binaries.** Run one of the build commands above after every edit and before invoking any test command.
+
 ## MSBuild Path
 
 Use `vswhere` to find MSBuild dynamically:
@@ -100,32 +102,43 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd6
 
 ## Running Tests
 
+> ⚠️ **Always build first.** Calling `Run-Tests.ps1` without a prior build simply reuses the last binaries in `bin\x64\Debug\`.
+
 **Test output directory**: `bin\x64\Debug\`
 
 ### Unit Tests (Test.dll - fast, no UI)
 ```powershell
-cd bin\x64\Debug
-.\TestRunner.exe log=Test.log buildcheck=1 test=Test.dll
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName Test.dll
 ```
-
-**Exit code**: `0` = all tests passed, non-zero = failures
-
-**Output file**: `bin\x64\Debug\Test.log`
 
 ### Unit Tests with Data (TestData.dll)
 ```powershell
-.\TestRunner.exe log=TestData.log buildcheck=1 test=TestData.dll
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestData.dll
 ```
 
 ### Functional Tests (UI tests - slower)
 ```powershell
-.\TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFunctional.dll
 ```
 
 ### Run Specific Test
 ```powershell
-.\TestRunner.exe log=MyTest.log buildcheck=1 test=MyTestName
+# Run single [TestMethod] from FastaImporterTest.cs (use the method name, not the file name)
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFastaImport
 ```
+
+> ℹ️ **Tip:** If you only know the `.cs` file name, open it and search for `[TestMethod]` to get the method names. Passing the file name (e.g. `FastaImporterTest.cs`) will not work—the script passes method names through to TestRunner.
+
+### Run Multiple Tests / Languages
+```powershell
+# Comma-separate test method names and languages.
+# Example: run all FastaImporter tests in English, Chinese, and French.
+pwiz_tools\Skyline\ai\Run-Tests.ps1 `
+    -TestName "TestBasicFastaImport,TestFastaImport,WebTestFastaImport" `
+    -Language "en,zh-CHS,fr-FR"
+```
+
+> ℹ️ **Tip:** Pass `-Language` to exercise multiple UI languages; omit it for the default English run.
 
 ## ReSharper Code Inspection
 

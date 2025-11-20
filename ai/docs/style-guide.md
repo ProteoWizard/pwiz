@@ -510,6 +510,88 @@ All source files should include the standard header with copyright and license i
 - Both formats are acceptable
 
 
+## Comments and XML documentation
+
+### Comment style
+Comments should generally start with a capital letter, especially if they are essentially imperative sentences. True sentences should end with a period.
+
+```csharp
+// ❌ BAD - lowercase start, no period
+// avoid duplicate consecutive entries
+// split on first colon only
+// a hit - now use the replacement expression
+
+// ✅ GOOD - capital start, period for sentences
+// Avoid duplicate consecutive entries.
+// Split on first colon only.
+// A hit - now use the replacement expression to get the ProteinMetadata parts.
+```
+
+**Guidelines:**
+- **Imperative comments** (instructions/commands): Start with capital letter, end with period
+  - `// Ensure at least one response if connection is good.`
+  - `// Split on first colon only.`
+- **Descriptive comments** (explanations): Start with capital letter, end with period if a complete sentence
+  - `// This will be the input GI number, or GI equivalent of input.`
+  - `// Useful for disambiguation of multiple responses.`
+- **Short phrases**: Capital letter, period optional for very short phrases
+  - `// A better read on name.` or `// A better read on name`
+
+### XML documentation comments
+When referencing class names in XML documentation, use `<see cref="ClassName">` for proper IntelliSense linking.
+
+```csharp
+// ❌ BAD - plain text class name
+/// <summary>
+/// Like the actual WebEnabledFastaImporter.WebSearchProvider,
+/// but just notes search terms instead of actually going to the web
+/// </summary>
+
+// ✅ GOOD - use cref for class references
+/// <summary>
+/// Like the actual <see cref="WebEnabledFastaImporter.WebSearchProvider"/>,
+/// but just notes search terms instead of actually going to the web.
+/// </summary>
+```
+
+**Benefits:**
+- IntelliSense provides clickable links to the referenced class
+- Refactoring tools can update references automatically
+- Better IDE navigation and documentation generation
+
+### Return-only documentation
+Often the most important part of a function to document is what it returns. It's valid to put just that in the `<summary>` tag without `<param>` or `<returns>` tags.
+
+```csharp
+// ✅ GOOD - return-only summary, no empty tags
+/// <summary>
+/// Returns a number between 0.0 and 1.0 indicating how bright the color is.
+/// </summary>
+public double GetBrightness(Color color) { ... }
+
+// ❌ BAD - empty <param> and <returns> tags add no value
+/// <summary>
+/// Returns a number between 0.0 and 1.0 indicating how bright the color is.
+/// </summary>
+/// <param name="color"></param>
+/// <returns></returns>
+public double GetBrightness(Color color) { ... }
+
+// ❌ BAD - <returns> tag just repeats the summary
+/// <summary>
+/// Returns a number between 0.0 and 1.0 indicating how bright the color is.
+/// </summary>
+/// <returns>A number between 0.0 and 1.0 indicating how bright the color is.</returns>
+public double GetBrightness(Color color) { ... }
+```
+
+**Guidelines:**
+- ✅ **Return-only summary**: If the summary explains what the function returns, omit `<param>` and `<returns>` tags
+- ✅ **Parameter documentation**: Only include `<param>` tags when they add value beyond what's clear from the parameter name
+- ❌ **Don't include empty tags**: Empty `<param>` or `<returns>` tags add no value and should be removed
+- ❌ **Don't repeat information**: If `<returns>` just repeats the summary, omit it
+- **ReSharper behavior**: ReSharper only warns when you have `<param>` tags but don't document all parameters. It's fine to omit `<param>` tags entirely if they don't add value.
+
 ## Testing guidelines
 
 **For comprehensive testing guidelines, see `ai/TESTING.md`** which covers:
