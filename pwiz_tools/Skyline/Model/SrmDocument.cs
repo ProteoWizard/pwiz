@@ -57,8 +57,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -1858,13 +1856,13 @@ namespace pwiz.Skyline.Model
             {
                 throw new ArgumentOutOfRangeException(string.Format(
                     ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
-                    TransitionGroupTreeNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), nameSet));
+                    TransitionGroupDocNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), nameSet));
             }
             else if (find.IndexInfo == -1)
             {
                 throw new ArgumentOutOfRangeException(string.Format(
                     ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
-                    TransitionGroupTreeNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), filePath));
+                    TransitionGroupDocNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), filePath));
             }
 
             var nodeGroupNew = change(find.NodeGroup, find.ChromInfo, Settings.TransitionSettings.Instrument.MzMatchTolerance, find.IndexSet, find.FileId,

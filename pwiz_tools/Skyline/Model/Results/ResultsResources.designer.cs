@@ -102,6 +102,15 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotation: .
+        /// </summary>
+        public static string Annotation_DisambiguationPrefix_Annotation__ {
+            get {
+                return ResourceManager.GetString("Annotation_DisambiguationPrefix_Annotation__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Expected sorted data.
         /// </summary>
         public static string Block_VerifySort_Expected_sorted_data {
@@ -463,6 +472,33 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CCS={0:F03}.
+        /// </summary>
+        public static string IonMobilityAndCCS_DisplayString_CCS_ {
+            get {
+                return ResourceManager.GetString("IonMobilityAndCCS_DisplayString_CCS_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High Energy Offset={0:F03}.
+        /// </summary>
+        public static string IonMobilityAndCCS_DisplayString_HighEnergyOffset_ {
+            get {
+                return ResourceManager.GetString("IonMobilityAndCCS_DisplayString_HighEnergyOffset_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IM={0:F03}{1} {2}.
+        /// </summary>
+        public static string IonMobilityAndCCS_DisplayString_IM_And_Tolerance_ {
+            get {
+                return ResourceManager.GetString("IonMobilityAndCCS_DisplayString_IM_And_Tolerance_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to need a value for Transition Settings, Ion mobility filtering, Window type.
         /// </summary>
         public static string IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type {
@@ -646,6 +682,15 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Property: .
+        /// </summary>
+        public static string Property_DisambiguationPrefix_Property__ {
+            get {
+                return ResourceManager.GetString("Property_DisambiguationPrefix_Property__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DocNode peak info found for file with no match in document results..
         /// </summary>
         public static string Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results {
@@ -734,7 +779,7 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No isolation window found in {0} for precursor {1} (m/z={2} im={3}).
+        ///   Looks up a localized string similar to No isolation window found in {0} for precursor {1} (m/z={2:F04} {3}).
         /// </summary>
         public static string SpectrumFilter_No_Isolation_Window_Found_For_Precursor_ {
             get {

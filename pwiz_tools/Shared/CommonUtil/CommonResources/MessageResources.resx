@@ -173,4 +173,25 @@
 	<data name="HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_" xml:space="preserve">
     <value>The server {0} returned an error (HTTP {1}). Please try again or contact support.</value>
   </data>
+	<data name="HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_" xml:space="preserve">
+    <value>Downloaded {0} of {1}</value>
+  </data>
+	<data name="HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_" xml:space="preserve">
+    <value>Uploaded {0} of {1}</value>
+  </data>
+	<data name="HttpClientWithProgress_GetProgressMessageWithSize__0____1_" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+	<data name="HttpClientWithProgress_CreateResponseFailedException_Response_status_code_does_not_indicate_success___0____1___for__2_" xml:space="preserve">
+		<value>Response status code does not indicate success: {0} ({1}) for {2}</value>
+	</data>
+	<data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__" xml:space="preserve">
+		<value>The file '{0}' was locked but has since been deleted from '{1}'</value>
+	</data>
+	<data name="FileLockingProcessFinder_ToFileLockingException_this_process" xml:space="preserve">
+		<value>this process</value>
+	</data>
+	<data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_" xml:space="preserve">
+		<value>The file '{0}' is locked by: {1}</value>
+	</data>
 </root>

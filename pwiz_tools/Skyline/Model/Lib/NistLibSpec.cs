@@ -775,6 +775,7 @@ namespace pwiz.Skyline.Model.Lib
 // ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
         private static readonly RegexOptions NOCASE = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
+        // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
         private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks):\s*(\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
         private static readonly string COMMENT = "Comment:";
@@ -807,10 +808,10 @@ namespace pwiz.Skyline.Model.Lib
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
-        private static readonly Regex REGEX_PRECURSORMZ_COMMENT = new Regex(@"Precursor Mz=([^ ,""]+)", NOCASE);
+        private static readonly Regex REGEX_PRECURSORMZ_COMMENT = new Regex(@"(Precursor Mz|Mz_exact)=([^ ,""]+)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT_COMMENT = new Regex(@"ExactMass=([^ ,""]+)", NOCASE);
-        private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass[:=]\s*(.*)", NOCASE);
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INDICATOR = @"Positive scan";
@@ -866,7 +867,7 @@ namespace pwiz.Skyline.Model.Lib
                     line = HandleMzVaultLineVariant(line, out _);
 
                     // Read until name line
-                    if (!ParseName(line, out var isPeptide, out var sequence, out var charge))
+                    if (!ParseName(line, lineCount, out var isPeptide, out var sequence, out var charge))
                     {
                         continue;
                     }
@@ -1000,6 +1001,20 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             // No charge information, but we do have a formula - most likely GCMS data
                             isGC = true;
+                        }
+                    }
+
+                    if (adduct.IsEmpty && precursorMz.HasValue && massMol.HasValue)
+                    {
+                        var implied = Adduct.InferFromMassAndMz(massMol.Value, new SignedMz(precursorMz.Value));
+                        if (!Adduct.IsNullOrEmpty(implied) && (charge == 0 || charge == implied.AdductCharge))
+                        {
+                            adduct = implied;
+                            charge = implied.AdductCharge;
+                            if (string.IsNullOrEmpty(formula))
+                            {
+                                formula = MoleculeMassOffset.FormatMassModification(massMol.Value, massMol.Value, BioMassCalc.MassPrecision);
+                            }
                         }
                     }
 
@@ -1195,7 +1210,7 @@ namespace pwiz.Skyline.Model.Lib
                     libraryEntries.Add(info);
                 }
 
-                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
+                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries, Path.GetFileName(FilePath));
 
                 long locationHeaders = outStream.Position;
                 foreach (var info in libraryEntries)
@@ -1271,7 +1286,7 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        private static bool ParseName(string line, out bool isPeptide, out string sequence, out int charge)
+        private static bool ParseName(string line, long lineCount, out bool isPeptide, out string sequence, out int charge)
         {
             isPeptide = true;
             charge = 0;
@@ -1283,12 +1298,19 @@ namespace pwiz.Skyline.Model.Lib
             Match match = REGEX_NAME.Match(line);
             if (!match.Success)
             {
-                isPeptide = false;
-                match = REGEX_NAME_SMALLMOL.Match(line);
+                // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
+                if (!REGEX_NAME.Match(line.Replace(@"n[",@"[").Replace(@"c[", @"[")).Success)
+                {
+                    // Try to recognize as small molecule
+                    isPeptide = false;
+                    match = REGEX_NAME_SMALLMOL.Match(line);
+                }
             }
 
             if (!match.Success)
             {
+                // Formerly silent, now we at least put up a non-blocking message
+                Messages.WriteAsyncUserMessage(LibResources.NistLibraryBase_ParseName_Failed_to_understand_entry___0___starting_at_line__1_, line, lineCount);
                 return false;
             }
 
@@ -1296,6 +1318,8 @@ namespace pwiz.Skyline.Model.Lib
             if (isPeptide)
             {
                 charge = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+                // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
+                // sequence = sequence.Replace(@"n[", @"[").Replace(@"c[", @"[");
             }
             return true;
         }
@@ -1409,7 +1433,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         try
                         {
-                            precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                            precursorMz = double.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
                         }
                         catch
                         {
@@ -1664,28 +1688,22 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 annot = annot.Trim();
                 var space = annot.IndexOf(" ", StringComparison.Ordinal); 
-                if (space < 0)
+                var name = (space > 0 ? annot.Substring(0, space) : annot).Trim();
+                // Avoid uninteresting annotations e.g. blank, "?", or numeric crud like "85/86"
+                if (string.IsNullOrEmpty(name) || name.StartsWith("?") || !name.Any(char.IsLetter)) 
                 {
-                    annotations.Add(null); // Interesting annotations have more than one part
+                    annotations.Add(null);
                 }
                 else
                 {
-                    var name = annot.Substring(0, space).Trim();
-                    if (string.IsNullOrEmpty(name) || name.StartsWith("?")) 
-                    {
-                        annotations.Add(null);
-                    }
-                    else
-                    {
-                        var note = annot.Substring(space + 1).Trim();
-                        var z = Adduct.IsNullOrEmpty(adduct) ? charge : adduct.AdductCharge;
-                        var fragment_adduct = z > 0 ? Adduct.M_PLUS : Adduct.M_MINUS;
-                        var ion = new CustomIon(null, fragment_adduct,
-                            fragment_adduct.MassFromMz(mz, MassType.Monoisotopic),
-                            fragment_adduct.MassFromMz(mz, MassType.Average),
-                            name);
-                        annotations.Add(new List<SpectrumPeakAnnotation> {SpectrumPeakAnnotation.Create(ion, note)});
-                    }
+                    var note = space > 0 ? annot.Substring(space + 1).Trim() : string.Empty;
+                    var z = Adduct.IsNullOrEmpty(adduct) ? charge : adduct.AdductCharge;
+                    var fragment_adduct = z > 0 ? Adduct.M_PLUS : Adduct.M_MINUS;
+                    var ion = new CustomIon(null, fragment_adduct,
+                        fragment_adduct.MassFromMz(mz, MassType.Monoisotopic),
+                        fragment_adduct.MassFromMz(mz, MassType.Average),
+                        name);
+                    annotations.Add(new List<SpectrumPeakAnnotation> {SpectrumPeakAnnotation.Create(ion, note)});
                 }
                 // ReSharper restore LocalizableElement
             }

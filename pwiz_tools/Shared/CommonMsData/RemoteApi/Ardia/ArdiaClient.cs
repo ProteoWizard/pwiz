@@ -195,7 +195,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         public ArdiaResult DeleteFolder(string folderPath)
         {
             var encodedFolderPath = Uri.EscapeDataString(folderPath);
-            var uri = UriFromParts(ServerUri, string.Format($"{PATH_DELETE_FOLDER}?folder={encodedFolderPath}"));
+            var uri = UriFromParts(ServerUri, string.Format($@"{PATH_DELETE_FOLDER}?folder={encodedFolderPath}"));
 
             HttpStatusCode? statusCode = null;
 
@@ -251,7 +251,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         /// <returns>an <see cref="ArdiaResult"/>. If successful, the value is a <see cref="CreateDocumentResponse"/>. If failure, the value is null and the result includes info about the error.</returns>
         public ArdiaResult<CreateDocumentResponse> PublishDocument(SrmDocumentArchive srmDocumentArchive, string destinationFolderPath, IProgressMonitor progressMonitor)
         {
-            Assume.IsTrue(destinationFolderPath.StartsWith("/"));
+            Assume.IsTrue(destinationFolderPath.StartsWith(@"/"));
             Assume.IsTrue(srmDocumentArchive.PartCount > 0);
 
             IProgressStatus progressStatus = new ProgressStatus(); 
@@ -686,7 +686,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
         // API documentation: https://api.ardia-core-int.cmdtest.thermofisher.com/navigation/api/swagger/index.html
         public ArdiaResult<GetParentFolderResponse> GetFolderByGetParentFolderByPath(string path)
         {
-            var uri = UriFromParts(ServerUri, $"{PATH_GET_PARENT_BY_PATH}?itemPath={Uri.EscapeDataString(path)}");
+            var uri = UriFromParts(ServerUri, $@"{PATH_GET_PARENT_BY_PATH}?itemPath={Uri.EscapeDataString(path)}");
 
             HttpStatusCode? statusCode = null;
             try
@@ -735,6 +735,8 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 exception = exception.InnerException;
             }
 
+            // Note: ArdiaClient uses raw HttpClient (not HttpClientWithProgress), so WebException 
+            // could appear as InnerException of HttpRequestException for DNS failures, etc.
             return exception is HttpRequestException || 
                    exception is WebException || 
                    // Indicates the request timed out
@@ -978,7 +980,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             try
             {
                 var doc = XDocument.Parse(responseBody);
-                var messageElement = doc.Element("Error")?.Element("Message");
+                var messageElement = doc.Element(@"Error")?.Element(@"Message");
                 if (messageElement != null)
                 {
                     return messageElement.Value;

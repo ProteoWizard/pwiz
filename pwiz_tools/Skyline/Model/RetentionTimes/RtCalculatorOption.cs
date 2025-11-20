@@ -147,6 +147,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return _persistentString;
         }
 
+        public virtual string AxisTitle
+        {
+            get { return DisplayName; }
+        }
+
         public class Irt : RtCalculatorOption
         {
             public Irt(string name) : base(PREFIX_IRT + name)
@@ -191,6 +196,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return calculators.FirstOrDefault(calc => calc.Name == Name);
             }
+
+            public override string AxisTitle
+            {
+                get { return Name; }
+            }
+
+            public override AlignmentTargetSpec ToAlignmentTargetSpec()
+            {
+                return AlignmentTargetSpec.Calculator;
+            }
         }
 
 
@@ -216,6 +231,19 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             public override string DisplayName => string.Format(RetentionTimesResources.Library_DisplayName_Library__0_, LibraryName);
+
+            public override string AxisTitle
+            {
+                get
+                {
+                    return string.Format(RetentionTimesResources.Library_AxisTitle_Median_Time_from_Library__0_, LibraryName);
+                }
+            }
+
+            public override AlignmentTargetSpec ToAlignmentTargetSpec()
+            {
+                return AlignmentTargetSpec.Library.ChangeName(LibraryName);
+            }
         }
 
         private class MedianDocumentRetentionTimes : RtCalculatorOption
@@ -241,8 +269,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             public override string DisplayName => RetentionTimesResources.MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times;
+
+            public override AlignmentTargetSpec ToAlignmentTargetSpec()
+            {
+                return AlignmentTargetSpec.ChromatogramPeaks;
+            }
         }
 
         public abstract string DisplayName { get; }
+
+        public abstract AlignmentTargetSpec ToAlignmentTargetSpec();
     }
 }

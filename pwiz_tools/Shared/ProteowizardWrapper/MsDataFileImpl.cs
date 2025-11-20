@@ -745,7 +745,7 @@ namespace pwiz.ProteowizardWrapper
                 {
                     var centroidLevel = new List<int>();
                     _spectrumList = _msDataFile.run.spectrumList;
-                    bool hasSrmSpectra = HasSrmSpectraInList(_spectrumList);
+                    bool hasSrmSpectra = HasSrmSpectraInList();
                     if (!hasSrmSpectra)
                     {
                         if (_requireVendorCentroidedMS1)
@@ -1164,10 +1164,14 @@ namespace pwiz.ProteowizardWrapper
                             if (data == null)
                             {
                                 data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_drift_time_array, ref _cvidIonMobility);
-                                if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                                if (data == null)
                                 {
-                                    _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
-                                    return null;
+                                    data = TryGetIonMobilityData(s, CVID.MS_raw_ion_mobility_drift_time_array, ref _cvidIonMobility);
+                                    if (data == null && HasCombinedIonMobilitySpectra && !s.id.Contains(MERGED_TAG))
+                                    {
+                                        _cvidIonMobility = null; // We can't learn anything from a lockmass spectrum that has no IMS
+                                        return null;
+                                    }
                                 }
                             }
                         }
@@ -1397,12 +1401,13 @@ namespace pwiz.ProteowizardWrapper
 
             metadata = metadata.ChangeTotalIonCurrent(GetTotalIonCurrent(spectrum));
             metadata = metadata.ChangeInjectionTime(GetInjectionTime(spectrum));
+            metadata = metadata.ChangeConstantNeutralLoss(GetConstantNeutralLoss(spectrum));
             return metadata;
         }
 
         public bool HasSrmSpectra
         {
-            get { return HasSrmSpectraInList(SpectrumList); }
+            get { return HasSrmSpectraInList(); }
         }
 
         public bool HasIonMobilitySpectra
@@ -1427,13 +1432,16 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static bool HasSrmSpectraInList(SpectrumList spectrumList)
+        private bool HasSrmSpectraInList()
         {
-            if (spectrumList == null || spectrumList.size() == 0)
+            if (_spectrumList == null || _spectrumList.size() == 0)
                 return false;
 
+            if (_msDataFile.fileDescription.fileContent.hasCVParam(CVID.MS_SRM_spectrum))
+                return true;
+
             // If the first spectrum is not SRM, the others will not be either
-            using (var spectrum = spectrumList.spectrum(0, false))
+            using (var spectrum = _spectrumList.spectrum(0, false))
             {
                 return IsSrmSpectrum(spectrum);
             }
@@ -1654,6 +1662,35 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
             return count == 0 ? (double?) null : total;
+        }
+
+        private double? GetConstantNeutralLoss(Spectrum spectrum) // If return value < 0, it's actually a neutral gain
+        {
+            try
+            {
+                if (spectrum.scanList.empty())
+                {
+                    return null;
+                }
+
+                CVParam paramOffset = spectrum.scanList.scans[0].cvParam(CVID.MS_analyzer_scan_offset);
+                if (paramOffset.empty())
+                {
+                    return null;
+                }
+                
+                CVParam paramScanType = spectrum.scanList.scans[0].cvParam(CVID.MS_constant_neutral_gain_spectrum);
+                if (paramScanType.empty())
+                {
+                    return (double)paramOffset.value; // ConstantNeutralLoss is positive for loss, negative for gain;
+                }
+
+                return  -1.0 * (double)paramOffset.value; // ConstantNeutralLoss is positive for loss, negative for gain
+            }
+            catch (InvalidCastException)
+            {
+                return null;
+            }
         }
 
         private static int GetPresetScanConfiguration(Spectrum spectrum)

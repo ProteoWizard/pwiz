@@ -141,7 +141,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DataGridViewColumnType(typeof(SampleTypeDataGridViewColumn))]
         [Importable(Formatter = typeof(SampleType.PropertyFormatter))]
         public SampleType SampleType
         {

@@ -23,7 +23,6 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -31,8 +30,6 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -101,9 +98,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var rows = new List<FoldChangeRow>();
             if (null != results)
             {
-                var controlGroupIdentifier =
-                    GroupComparisonModel.GroupComparisonDef.GetControlGroupIdentifier(_skylineDataSchema.Document
-                        .Settings);
+                var controlGroupIdentifier = GroupComparisonModel.GroupComparisonDef
+                    .GetControlGroupIdentifier(_skylineDataSchema.Document.Settings);
                 Dictionary<int, double> criticalValuesByDegreesOfFreedom = new Dictionary<int, double>();
                 var groupComparisonDef = results.GroupComparer.ComparisonDef;
                 var adjustedPValues = PValues.AdjustPValues(results.ResultRows.Select(
@@ -162,13 +158,28 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var defaultViewSpec = GetDefaultViewSpec(foldChangeRows);
             var clusteredViewSpec = GetClusteredViewSpec(defaultViewSpec);
 
+            // Build canonical row sources and views for the new Model types
+            var fcRowsSource = new FixedSkylineObjectList<FoldChangeRow>(_skylineDataSchema, foldChangeRows);
+            var fcView = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec)
+                .ChangeViewGroup(ViewGroup.BUILT_IN);
+
+            var fcDetailRowsSource = new FixedSkylineObjectList<FoldChangeDetailRow>(_skylineDataSchema, detailRows);
+            var fcDetailView = new ViewInfo(_skylineDataSchema, typeof(FoldChangeDetailRow), clusteredViewSpec)
+                .ChangeViewGroup(ViewGroup.BUILT_IN);
 
             var rowSourceInfos = new List<RowSourceInfo>()
             {
-                new RowSourceInfo(new FixedSkylineObjectList<FoldChangeRow>(_skylineDataSchema, foldChangeRows),
-                    new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN)),
-                new RowSourceInfo(new FixedSkylineObjectList<FoldChangeDetailRow>(_skylineDataSchema, detailRows),
-                    new ViewInfo(_skylineDataSchema, typeof(FoldChangeDetailRow), clusteredViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN))
+                // Canonical (current) row sources
+                new RowSourceInfo(fcRowsSource, fcView),
+                new RowSourceInfo(fcDetailRowsSource, fcDetailView),
+
+                // Legacy aliases: preserve compatibility with saved .sky/.skyr using old rowsource names
+                new RowSourceInfo(typeof(FoldChangeRow), fcRowsSource, new[] { fcView },
+                    @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeRow",
+                    nameof(FoldChangeRow)),
+                new RowSourceInfo(typeof(FoldChangeDetailRow), fcDetailRowsSource, new[] { fcDetailView },
+                    @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeDetailRow",
+                    nameof(FoldChangeDetailRow))
             };
             return rowSourceInfos;
         }
@@ -323,103 +334,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 throw new ObjectDisposedException(@"FoldChangeBindingSource");
             }
             return _bindingListSource;
-        }
-
-        public abstract class AbstractFoldChangeRow
-        {
-            public AbstractFoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide,
-                IsotopeLabelType labelType,
-                int? msLevel, IDictionary<Replicate, ReplicateRow> replicateResults)
-            {
-                Protein = protein;
-                Peptide = peptide;
-                IsotopeLabelType = labelType;
-                MsLevel = msLevel;
-                ReplicateAbundances = replicateResults;
-            }
-
-            public Protein Protein { get; private set; }
-            public Model.Databinding.Entities.Peptide Peptide { get; private set; }
-            public IsotopeLabelType IsotopeLabelType { get; private set; }
-            public int? MsLevel { get; private set; }
-
-            [OneToMany(IndexDisplayName = "Replicate")]
-            public IDictionary<Replicate, ReplicateRow> ReplicateAbundances { get; private set; }
-
-            public abstract IEnumerable<FoldChangeRow> GetFoldChangeRows();
-        }
-
-        public class FoldChangeRow : AbstractFoldChangeRow
-        {
-            public FoldChangeRow(Protein protein, Model.Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
-                int? msLevel, GroupIdentifier group, int replicateCount, FoldChangeResult foldChangeResult, IDictionary<Replicate, ReplicateRow> replicateResults)
-                :base(protein, peptide, labelType, msLevel, replicateResults)
-            {
-                ReplicateCount = replicateCount;
-                FoldChangeResult = foldChangeResult;
-                Group = group;
-            }
-
-            public GroupIdentifier Group { get; private set; }
-            public int ReplicateCount { get; private set; }
-            public FoldChangeResult FoldChangeResult { get; private set; }
-            public override IEnumerable<FoldChangeRow> GetFoldChangeRows()
-            {
-                yield return this;
-            }
-        }
-
-        public class FoldChangeDetailRow : AbstractFoldChangeRow
-        {
-            public FoldChangeDetailRow(Protein protein, Model.Databinding.Entities.Peptide peptide,
-                IsotopeLabelType labelType,
-                int? msLevel, Dictionary<GroupIdentifier, FoldChangeResult> foldChangeResults,
-                IDictionary<Replicate, ReplicateRow> replicateResult) : base(protein, peptide, labelType, msLevel, replicateResult)
-            {
-                FoldChangeResults = foldChangeResults;
-            }
-
-            [OneToMany(ItemDisplayName = "FoldChange",IndexDisplayName = "GroupIdentifier")]
-            public IDictionary<GroupIdentifier, FoldChangeResult> FoldChangeResults { get; private set; }
-
-            public override IEnumerable<FoldChangeRow> GetFoldChangeRows()
-            {
-                return FoldChangeResults.Select(kvp => 
-                    new FoldChangeRow(Protein, Peptide, IsotopeLabelType, MsLevel, kvp.Key, 0, kvp.Value, ReplicateAbundances));
-            }
-        }
-
-        [InvariantDisplayName("ReplicateAbundance")]
-        public class ReplicateRow : IReplicateValue
-        {
-            public ReplicateRow(Replicate replicate, GroupIdentifier groupIdentifier, String identity, double? abundance)
-            {
-                Replicate = replicate;
-                ReplicateGroup = groupIdentifier;
-                ReplicateSampleIdentity = identity;
-                Abundance = abundance;
-            }
-            public Replicate Replicate { get; private set; }
-            [Format(Formats.CalibrationCurve)]
-            public double? Abundance { get; private set; }
-            public string ReplicateSampleIdentity { get; private set; }
-            public GroupIdentifier ReplicateGroup { get; private set; }
-
-            Replicate IReplicateValue.GetReplicate()
-            {
-                return Replicate;
-            }
-
-            public override string ToString()
-            {
-                var parts = new List<string> {Replicate.ToString()};
-                if (Abundance.HasValue)
-                {
-                    parts.Add(Abundance.Value.ToString(Formats.CalibrationCurve));
-                }
-
-                return TextUtil.SpaceSeparate(parts);
-            }
         }
     }
 }

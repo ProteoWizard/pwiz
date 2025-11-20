@@ -69,21 +69,8 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return null;
             }
-            var listData = GetListData();
-            if (listData == null)
-            {
-                return null;
-            }
-            int rowIndex = listData.RowIndexOfPrimaryKey(annotationValue);
 
-            if (rowIndex < 0)
-            {
-                return ListItem.OrphanRecord(_listItemType, annotationValue, !string.IsNullOrEmpty(listData.ListDef.DisplayProperty));
-            }
-            else
-            {
-                return ListItem.ExistingRecord(_listItemType, listData, rowIndex);
-            }
+            return GetListData()?.GetListItem(annotationValue);
         }
 
         public IEnumerable<ListItem> GetListItems(ListData listData)
@@ -150,10 +137,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         private static Attribute[] GetAttributes(PropertyDescriptor innerPropertyDescriptor)
         {
-            var attributes = new List<Attribute>
-            {
-                new DataGridViewColumnTypeAttribute(typeof(ListLookupDataGridViewColumn)),
-            };
+            var attributes = new List<Attribute>();
             var annotationDef = (innerPropertyDescriptor as AnnotationPropertyDescriptor)?.AnnotationDef;
             if (!string.IsNullOrEmpty(annotationDef?.Lookup))
             {

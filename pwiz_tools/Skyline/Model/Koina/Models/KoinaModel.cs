@@ -30,7 +30,6 @@ using Inference;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Lib;

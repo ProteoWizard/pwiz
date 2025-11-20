@@ -15,13 +15,15 @@
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <ManifestCertificateThumbprint>586806A1F7B1C85AD63BC46CA599EC4142EBE84A</ManifestCertificateThumbprint>
-    <ManifestKeyFile></ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <SignManifests>false</SignManifests>
     <SignAssembly>false</SignAssembly>
-    <FileUpgradeFlags></FileUpgradeFlags>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
@@ -386,8 +388,12 @@
     <Compile Include="Controls\Databinding\CandidatePeakForm.Designer.cs">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Databinding\AuditLog\AuditLogColumn.cs" />
+    <Compile Include="Controls\Databinding\AuditLog\TextImageColumn.cs" />
+    <Compile Include="Controls\Databinding\AnnotationValueListDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
+    <Compile Include="Controls\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
     <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">
       <SubType>Form</SubType>
@@ -435,7 +441,6 @@
     </Compile>
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
-    <Compile Include="Controls\Graphs\ReplicateValue.cs" />
     <Compile Include="Controls\Graphs\SummaryRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
@@ -483,6 +488,7 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\SpectrumFilterAutoComplete.cs" />
     <Compile Include="EditUI\SynchronizedIntegrationDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -530,6 +536,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Model\DecoyGenerator.cs" />
+    <Compile Include="Model\GroupComparison\FoldChangeRows.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -577,7 +584,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
     <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
@@ -599,14 +605,15 @@
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
+    <Compile Include="Model\Results\ReplicateValue.cs" />
     <Compile Include="Model\Results\ScoredPeakBounds.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
+    <Compile Include="Model\Lib\SpectrumDisplayInfo.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
-    <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\RetentionTimes\Alignments.cs" />
@@ -619,6 +626,7 @@
     <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
     <Compile Include="Model\RetentionTimes\RtCalculatorOption.cs" />
     <Compile Include="Model\RetentionTimes\RTPeptideValue.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeRegressionGraphData.cs" />
     <Compile Include="Model\SearchTool.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -667,7 +675,6 @@
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
-    <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
     <Compile Include="FileUI\ImportTransitionListColumnSelectDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -678,7 +685,6 @@
     <Compile Include="Model\AuditLog\Databinding\AuditLogRow.cs" />
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRowTime.cs" />
-    <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -712,10 +718,12 @@
     <Compile Include="Model\Databinding\Entities\PeakGroupScore.cs" />
     <Compile Include="Model\Databinding\FeaturePropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
-    <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
-    <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
+  <Compile Include="Model\Databinding\SublistPaths.cs" />
+    <Compile Include="Controls\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Controls\Databinding\ListLookupDataGridViewColumn.cs" />
+    <Compile Include="Controls\Databinding\NormalizationMethodDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Controls\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Controls\Databinding\RowActions\RowAction.cs" />
@@ -811,6 +819,8 @@
       <DependentUpon>ToolsResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
+    <Compile Include="Properties\GroupComparisonDefList.cs" />
+    <Compile Include="Properties\ListDefList.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
     <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
@@ -1305,6 +1315,7 @@
     <Compile Include="Controls\Databinding\LiveResultsGrid.Designer.cs">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Databinding\ResultsGridViewContext.cs" />
     <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1550,7 +1561,8 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Controls\StatementCompletionTextBox.cs"></Compile>
+    <Compile Include="Controls\StatementCompletionTextBox.cs">
+    </Compile>
     <Compile Include="Controls\TreeViewMS.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -1763,7 +1775,6 @@
     <Compile Include="Model\CustomMolecule.cs" />
     <Compile Include="Model\Databinding\AnnotationPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\AnnotationTargetAttribute.cs" />
-    <Compile Include="Model\Databinding\AnnotationValueListDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\CachedValue.cs" />
     <Compile Include="Model\Databinding\ChromDataCache.cs" />
     <Compile Include="Model\Databinding\Collections\MultiResultList.cs" />
@@ -1798,18 +1809,17 @@
     <Compile Include="Model\Databinding\Entities\Transition.cs" />
     <Compile Include="Model\Databinding\Entities\TransitionResult.cs" />
     <Compile Include="Model\Databinding\IDocumentChangeListener.cs" />
-    <Compile Include="Model\Databinding\NormalizationMethodDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\RatioPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ReplicateSummaries.cs" />
     <Compile Include="Model\Databinding\ReportOrViewSpec.cs" />
+    <Compile Include="Properties\ReportOrViewSpecList.cs" />
     <Compile Include="Model\Databinding\ReportSharing.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />
-    <Compile Include="Model\Databinding\ResultsGridViewContext.cs" />
-    <Compile Include="Model\Databinding\SampleTypeDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
     <Compile Include="Model\Databinding\DocumentViewTransformer.cs" />
-    <Compile Include="Model\Databinding\StandardTypeDataGridViewColumn.cs" />
+    <Compile Include="Controls\Databinding\SampleTypeDataGridViewColumn.cs" />
+    <Compile Include="Controls\Databinding\StandardTypeDataGridViewColumn.cs" />
     <Compile Include="Model\DocNodeChildren.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurve.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurveFitter.cs" />
@@ -1842,7 +1852,6 @@
     <Compile Include="Model\GroupComparison\FoldChangeResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparer.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonDef.cs" />
-    <Compile Include="Model\GroupComparison\GroupComparisonDefList.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonModel.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResults.cs" />
@@ -2397,7 +2406,8 @@
     </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepMatching.cs" />
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
-    <Compile Include="SettingsUI\SettingsListComboDriver.cs"></Compile>
+    <Compile Include="SettingsUI\SettingsListComboDriver.cs">
+    </Compile>
     <Compile Include="Controls\SeqNode\SrmTreeNode.cs" />
     <Compile Include="FileUI\ExportMethodDlg.cs">
       <SubType>Form</SubType>
@@ -3747,6 +3757,7 @@
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>RetentionTimesResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\SpectrumPropertiesResx.ja.resx">
       <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
@@ -6943,200 +6954,250 @@
   <ItemGroup>
     <PublishFile Include="BaseCommon">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BaseDataAccess">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BaseTof">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BiblioSpec.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.Data">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.Data.CommonInterfaces">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore2.RawXYProcessing">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="enzymes.xml">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Instruments.xml">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="JetBrains.Annotations">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="MassSpecDataReader">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.CRT">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.MFC">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Exclude</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="modifications.xml">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="MSGraph.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="OFX.Core.Contracts">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="PanoramaClient.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteowizardWrapper.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.Common.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.CommonUtil.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Sciex.Data.SimpleTypes">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Skyline-daily.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="SkylineTool.pdb">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="unimod.xml">
       <Visible>False</Visible>
-      <Group></Group>
-      <TargetPath></TargetPath>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
@@ -7159,6 +7220,7 @@
     <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent></PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>
