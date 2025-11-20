@@ -39,7 +39,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public const string NAME = "mProphet";  // Proper name not localized
 
         private FeatureCalculators _peakFeatureCalculators;
-        private MissingScoreBehavior _missingScoreBehavior = MissingScoreBehavior.FAIL;
 
         // Number of iterations to run.  Most weight values will converge within this number of iterations.
         private const int MAX_ITERATIONS = 10;
@@ -420,8 +419,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
 
             // Select true target peaks using a q-value cutoff filter.
-            var truePeaks = targetTransitionGroups.SelectTruePeaks(decoyTransitionGroups, qValueCutoff, Lambda, nonParametricPValues);
-            var decoyPeaks = decoyTransitionGroups.SelectMaxPeaks();
+            var truePeaks = SkipMissingScores(weights, targetTransitionGroups.SelectTruePeaks(decoyTransitionGroups, qValueCutoff, Lambda, nonParametricPValues)).ToList();
+            var decoyPeaks = SkipMissingScores(weights, decoyTransitionGroups.SelectMaxPeaks()).ToList();
 
             WriteDistributionInfo(documentPath, targetTransitionGroups, decoyTransitionGroups); // Only if asked to do so in command-line arguments
 
@@ -435,7 +434,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             // Copy target and decoy peaks to training data array.
             int totalTrainingPeaks = truePeaks.Count + decoyTransitionGroups.Count;
-            // Calculate the maximum number of training peaks (8 bytes per score - double, featurCount + 1 scores per peak)
+            // Calculate the maximum number of training peaks (8 bytes per score - double, featureCount + 1 scores per peak)
             int maxTrainingPeaks = MAX_TRAINING_MEMORY/8/(featureCount + 1);
 
             var trainData = new double[Math.Min(totalTrainingPeaks, maxTrainingPeaks), featureCount + 1];
@@ -515,6 +514,27 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return truePeaks.Count;
         }
 
+        private IEnumerable<ScoredPeak> SkipMissingScores(IList<double> weights, IEnumerable<ScoredPeak> peaks)
+        {
+            foreach (var peak in peaks)
+            {
+                bool skip = false;
+                for (int i = 0; i < weights.Count; i++)
+                {
+                    if (!double.IsNaN(weights[i]) && TargetDecoyGenerator.IsUnknown(peak.FeatureScores.Values[i]))
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+
+                if (!skip)
+                {
+                    yield return peak;
+                }
+            }
+        }
+
         private void WriteDistributionInfo(string documentPath, ScoredGroupPeaksSet targetTransitionGroups, ScoredGroupPeaksSet decoyTransitionGroups)
         {
             string documentDir = Path.GetDirectoryName(documentPath);
@@ -537,31 +557,24 @@ namespace pwiz.Skyline.Model.Results.Scoring
             for (int i = 0; i < features.Count; i++)
             {
                 if (!double.IsNaN(weights[i]))
-                    trainData[row, j++] = features.Values[i];
+                {
+                    var value = features.Values[i];
+                    if (TargetDecoyGenerator.IsUnknown(value))
+                    {
+                        Console.Out.WriteLine("Unknown");
+                    }
+                    trainData[row, j++] = value;
+                }
             }
             trainData[row, j] = category;
-        }
-
-        public override MissingScoreBehavior MissingScoreBehavior
-        {
-            get
-            {
-                return _missingScoreBehavior;
-            }
-        }
-
-        public MProphetPeakScoringModel ChangeMissingScoreBehavior(MissingScoreBehavior missingScoreBehavior)
-        {
-            return ChangeProp(ImClone(this), im => im._missingScoreBehavior = missingScoreBehavior);
         }
 
         #region object overrides
         public bool Equals(MProphetPeakScoringModel other)
         {
-            return base.Equals(other) &&
-                   ColinearWarning.Equals(other.ColinearWarning) &&
-                   Lambda.Equals(other.Lambda) &&
-                   Equals(MissingScoreBehavior, other.MissingScoreBehavior);
+            return (base.Equals(other) &&
+                    ColinearWarning.Equals(other.ColinearWarning) &&
+                    Lambda.Equals(other.Lambda));
         }
 
         public override bool Equals(object obj)
@@ -580,7 +593,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 hashCode = (hashCode * 397) ^ ColinearWarning.GetHashCode();
                 hashCode = (hashCode * 397) ^ Lambda.GetHashCode();
                 hashCode = (hashCode * 397) ^ (PeakFeatureCalculators != null ? PeakFeatureCalculators.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ MissingScoreBehavior.GetHashCode();
                 return hashCode;
             }
         }
@@ -593,8 +605,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             colinear_warning,
             uses_decoys,
             uses_false_targets,
-            bias,
-            missing_scores,
+            bias
         }
 
         public static MProphetPeakScoringModel Deserialize(XmlReader reader)
@@ -611,7 +622,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             UsesDecoys = reader.GetBoolAttribute(ATTR.uses_decoys, true);
             UsesSecondBest = reader.GetBoolAttribute(ATTR.uses_false_targets);
             double bias = reader.GetDoubleAttribute(ATTR.bias);
-            _missingScoreBehavior = MissingScoreBehavior.FromName(reader.GetAttribute(ATTR.missing_scores));
 
             // Consume tag
             reader.Read();
@@ -641,7 +651,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
             writer.WriteAttribute(ATTR.colinear_warning, ColinearWarning);
             writer.WriteAttribute(ATTR.uses_decoys, UsesDecoys, true);
             writer.WriteAttribute(ATTR.uses_false_targets, UsesSecondBest);
-            writer.WriteAttribute(ATTR.missing_scores, MissingScoreBehavior.Name);
             if (null != Parameters)
             {
                 writer.WriteAttribute(ATTR.bias, Parameters.Bias);

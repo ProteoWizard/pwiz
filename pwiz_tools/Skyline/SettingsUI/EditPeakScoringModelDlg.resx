@@ -147,7 +147,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>9</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnTrainModel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
@@ -242,13 +242,13 @@ document to calculate the equation with linear regression</value>
     <value>gridPeakCalculators</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=23.1.1.312, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridPeakCalculators.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -278,7 +278,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>8</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -308,85 +308,28 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
-    <value>tabPage1</value>
+  <data name="zedGraphMProphet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, -1</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
-    <value>tabControl1</value>
+  <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
+    <value>447, 443</value>
   </data>
-  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
+  <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;tabPage4.Name" xml:space="preserve">
-    <value>tabPage4</value>
-  </data>
-  <data name="&gt;&gt;tabPage4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPage4.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPage4.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;tabPage3.Name" xml:space="preserve">
-    <value>tabPage3</value>
-  </data>
-  <data name="&gt;&gt;tabPage3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPage3.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPage3.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>434, 12</value>
-  </data>
-  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 467</value>
-  </data>
-  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
-    <value>12</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Name" xml:space="preserve">
     <value>zedGraphMProphet</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8712.17551, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphMProphet.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -421,33 +364,36 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="zedGraphMProphet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
-  </data>
-  <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
-    <value>447, 443</value>
-  </data>
-  <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.Name" xml:space="preserve">
-    <value>zedGraphMProphet</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8712.17551, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <metadata name="toolStripFind.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>427, 17</value>
+    <value>426, 17</value>
   </metadata>
+  <data name="toolStripFind.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="toolStripFind.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="findPeptidesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="findPeptidesButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="findPeptidesButton.ToolTipText" xml:space="preserve">
+    <value>Find Unknown Peptides</value>
+  </data>
+  <data name="toolStripFind.Location" type="System.Drawing.Point, System.Drawing">
+    <value>399, 410</value>
+  </data>
+  <data name="toolStripFind.Size" type="System.Drawing.Size, System.Drawing">
+    <value>26, 25</value>
+  </data>
+  <data name="toolStripFind.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="toolStripFind.Text" xml:space="preserve">
+    <value>toolStripFind</value>
+  </data>
   <data name="&gt;&gt;toolStripFind.Name" xml:space="preserve">
     <value>toolStripFind</value>
   </data>
@@ -460,11 +406,23 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;toolStripFind.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="zedGraphSelectedCalculator.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphSelectedCalculator.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-2, -1</value>
+  </data>
+  <data name="zedGraphSelectedCalculator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>448, 444</value>
+  </data>
+  <data name="zedGraphSelectedCalculator.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Name" xml:space="preserve">
     <value>zedGraphSelectedCalculator</value>
   </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8712.17551, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphSelectedCalculator.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -499,77 +457,23 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="toolStripFind.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>427, 17</value>
-  </metadata>
-  <data name="toolStripFind.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="toolStripFind.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>None</value>
-  </data>
-  <data name="toolStripFind.Location" type="System.Drawing.Point, System.Drawing">
-    <value>399, 410</value>
-  </data>
-  <data name="toolStripFind.Size" type="System.Drawing.Size, System.Drawing">
-    <value>26, 25</value>
-  </data>
-  <data name="toolStripFind.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="toolStripFind.Text" xml:space="preserve">
-    <value>toolStripFind</value>
-  </data>
-  <data name="&gt;&gt;toolStripFind.Name" xml:space="preserve">
-    <value>toolStripFind</value>
-  </data>
-  <data name="&gt;&gt;toolStripFind.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripFind.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;toolStripFind.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="findPeptidesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="findPeptidesButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
-  </data>
-  <data name="findPeptidesButton.ToolTipText" xml:space="preserve">
-    <value>Find Unknown Peptides</value>
-  </data>
-  <data name="zedGraphSelectedCalculator.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="zedGraphPValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="zedGraphSelectedCalculator.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-2, -1</value>
+  <data name="zedGraphPValues.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, -1</value>
   </data>
-  <data name="zedGraphSelectedCalculator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>448, 444</value>
+  <data name="zedGraphPValues.Size" type="System.Drawing.Size, System.Drawing">
+    <value>499, 443</value>
   </data>
-  <data name="zedGraphSelectedCalculator.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;zedGraphSelectedCalculator.Name" xml:space="preserve">
-    <value>zedGraphSelectedCalculator</value>
-  </data>
-  <data name="&gt;&gt;zedGraphSelectedCalculator.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8712.17551, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
-  <data name="&gt;&gt;zedGraphSelectedCalculator.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;zedGraphSelectedCalculator.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="zedGraphPValues.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Name" xml:space="preserve">
     <value>zedGraphPValues</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8712.17551, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphPValues.Parent" xml:space="preserve">
     <value>tabPage4</value>
@@ -604,35 +508,23 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;tabPage4.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="zedGraphPValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="zedGraphQValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="zedGraphPValues.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="zedGraphQValues.Location" type="System.Drawing.Point, System.Drawing">
     <value>-1, -1</value>
   </data>
-  <data name="zedGraphPValues.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="zedGraphQValues.Size" type="System.Drawing.Size, System.Drawing">
     <value>499, 443</value>
   </data>
-  <data name="zedGraphPValues.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.Name" xml:space="preserve">
-    <value>zedGraphPValues</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8712.17551, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.Parent" xml:space="preserve">
-    <value>tabPage4</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="zedGraphQValues.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Name" xml:space="preserve">
     <value>zedGraphQValues</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8712.17551, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphQValues.Parent" xml:space="preserve">
     <value>tabPage3</value>
@@ -667,29 +559,26 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;tabPage3.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="zedGraphQValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>434, 12</value>
   </data>
-  <data name="zedGraphQValues.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
+  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>453, 467</value>
   </data>
-  <data name="zedGraphQValues.Size" type="System.Drawing.Size, System.Drawing">
-    <value>499, 443</value>
+  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
   </data>
-  <data name="zedGraphQValues.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
+    <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;zedGraphQValues.Name" xml:space="preserve">
-    <value>zedGraphQValues</value>
+  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;zedGraphQValues.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.8712.17551, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="&gt;&gt;zedGraphQValues.Parent" xml:space="preserve">
-    <value>tabPage3</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQValues.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
+    <value>10</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -719,55 +608,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.Name" xml:space="preserve">
-    <value>decoyCheckBox</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.Name" xml:space="preserve">
-    <value>secondBestCheckBox</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 112</value>
-  </data>
-  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 67</value>
-  </data>
-  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="groupBox2.Text" xml:space="preserve">
-    <value>Training</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="decoyCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -829,6 +670,30 @@ document to calculate the equation with linear regression</value>
   <data name="&gt;&gt;secondBestCheckBox.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 112</value>
+  </data>
+  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>385, 67</value>
+  </data>
+  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="groupBox2.Text" xml:space="preserve">
+    <value>Training</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -857,7 +722,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>3</value>
   </data>
   <data name="lblColinearWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -890,7 +755,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblColinearWarning.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>4</value>
   </data>
   <data name="comboModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 77</value>
@@ -911,7 +776,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboModel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>5</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -941,7 +806,7 @@ document to calculate the equation with linear regression</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
     <value>Peak calculator</value>
@@ -967,61 +832,6 @@ document to calculate the equation with linear regression</value>
   <data name="dataGridViewTextBoxColumn3.Width" type="System.Int32, mscorlib">
     <value>70</value>
   </data>
-  <data name="lblMissingScores.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMissingScores.Location" type="System.Drawing.Point, System.Drawing">
-    <value>240, 61</value>
-  </data>
-  <data name="lblMissingScores.Size" type="System.Drawing.Size, System.Drawing">
-    <value>118, 13</value>
-  </data>
-  <data name="lblMissingScores.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="lblMissingScores.Text" xml:space="preserve">
-    <value>Missing score behavior:</value>
-  </data>
-  <data name="&gt;&gt;lblMissingScores.Name" xml:space="preserve">
-    <value>lblMissingScores</value>
-  </data>
-  <data name="&gt;&gt;lblMissingScores.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblMissingScores.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblMissingScores.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="comboMissingScoreBehavior.Location" type="System.Drawing.Point, System.Drawing">
-    <value>243, 77</value>
-  </data>
-  <data name="comboMissingScoreBehavior.Size" type="System.Drawing.Size, System.Drawing">
-    <value>154, 21</value>
-  </data>
-  <data name="comboMissingScoreBehavior.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="comboMissingScoreBehavior.ToolTip" xml:space="preserve">
-    <value>Behavior of the peak scoring model when one or more of the peptides in the document are missing a feature score
-
-Fail: A peak scoring model cannot be used in a document where any peptides are missing scores
-Replace: Missing scores are replaced by the value 0
-Skip: The peptides which are missing scores will be skipped over, but the remaining peptides will be reintegrated</value>
-  </data>
-  <data name="&gt;&gt;comboMissingScoreBehavior.Name" xml:space="preserve">
-    <value>comboMissingScoreBehavior</value>
-  </data>
-  <data name="&gt;&gt;comboMissingScoreBehavior.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboMissingScoreBehavior.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboMissingScoreBehavior.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -1044,7 +854,7 @@ Skip: The peptides which are missing scores will be skipped over, but the remain
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.1.1.312, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1110,6 +920,6 @@ Skip: The peptides which are missing scores will be skipped over, but the remain
     <value>EditPeakScoringModelDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.1.1.312, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             });
         }
 
-        public override MissingScoreBehavior MissingScoreBehavior { get {return MissingScoreBehavior.REPLACE;} }
+        public override bool ReplaceUnknownFeatureScores => true;
 
         #region object overrides
 
