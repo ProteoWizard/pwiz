@@ -130,6 +130,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Shimadzu::spectrum(size_t index, DetailLe
 
     if (msLevel == 1)
         result->set(MS_MS1_spectrum);
+    else if (info.isSrm)
+        result->set(MS_SRM_spectrum);
     else
         result->set(MS_MSn_spectrum); // TODO: get more test data
 
