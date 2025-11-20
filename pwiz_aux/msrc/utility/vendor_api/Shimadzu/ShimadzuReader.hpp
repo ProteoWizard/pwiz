@@ -93,6 +93,7 @@ struct PWIZ_API_DECL SpectrumInfo
     double precursorMz;
     unsigned int precursorScan;
     Polarity polarity;
+    bool isSrm;
     int segment;
     int event;
 };
@@ -130,11 +131,11 @@ class PWIZ_API_DECL ShimadzuReader
 {
 public:
     typedef boost::shared_ptr<ShimadzuReader> Ptr;
-    static Ptr create(const std::string& filepath);
+    static Ptr create(const std::string& filepath, bool srmAsSpectra);
 
     //virtual std::string getVersion() const = 0;
     //virtual DeviceType getDeviceType() const = 0;
-    //virtual std::string getDeviceName(DeviceType deviceType) const = 0;
+    virtual std::string getSystemName() const = 0;
     virtual boost::local_time::local_date_time getAnalysisDate(bool adjustToHostTime) const = 0;
 
     virtual const std::set<SRMTransition>& getTransitions() const = 0;
