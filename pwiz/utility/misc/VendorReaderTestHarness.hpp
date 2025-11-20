@@ -43,15 +43,15 @@ struct PWIZ_API_DECL TestPathPredicate
 
 struct PWIZ_API_DECL IsNamedRawFile : public TestPathPredicate
 {
-    IsNamedRawFile(const std::string& rawpath) : filenames({ rawpath }) {}
-    IsNamedRawFile(const std::initializer_list<std::string>& filenames) : filenames(filenames) {}
+    IsNamedRawFile(const bfs::path& rawpath) : filenames({ rawpath }) {}
+    IsNamedRawFile(const std::initializer_list<bfs::path>& filenames) : filenames(filenames) {}
 
     bool operator() (const std::string& rawpath) const
     {
-        return filenames.count(bfs::path(rawpath).filename().string()) > 0;
+        return filenames.count(bfs::path(rawpath).filename()) > 0;
     }
 
-    std::set<std::string> filenames;
+    std::set<bfs::path> filenames;
 };
 
 struct PWIZ_API_DECL TestResult

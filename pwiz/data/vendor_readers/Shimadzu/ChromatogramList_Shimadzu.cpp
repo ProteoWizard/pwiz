@@ -172,6 +172,9 @@ PWIZ_API_DECL void ChromatogramList_Shimadzu::createIndex() const
         // It appears that some LabSolutions versions don't provide TIC, if that's not the issue then presumably the MS_SRM_chromatogram entries will also fail so let this pass quietly
     }
 
+    if (config_.srmAsSpectra)
+        return;
+
     for (const SRMTransition& transition : transitions)
     {
         index_.push_back(IndexEntry());

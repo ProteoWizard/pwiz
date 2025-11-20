@@ -202,7 +202,7 @@ public:
 class ShimadzuReaderImpl : public ShimadzuReader
 {
     public:
-    ShimadzuReaderImpl(const string& filepath)
+    ShimadzuReaderImpl(const string& filepath, bool srmAsSpectra)
     {
         try
         {
@@ -256,7 +256,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
                 for (int j = 1; j <= eventNumbers.size(); ++j)
                 {
                     short eventNo = eventNumbers[j - 1] = chromatogramMng->GetEventNo(i, j);
-                    if (getEventInfo(eventNo)->AnalysisMode == ShimadzuGeneric::AcqModes::MRM)
+                    if (!srmAsSpectra && getEventInfo(eventNo)->AnalysisMode == ShimadzuGeneric::AcqModes::MRM)
                         continue;
 
                     unsigned int eventLastScanNumber;
@@ -351,6 +351,11 @@ class ShimadzuReaderImpl : public ShimadzuReader
         CATCH_AND_FORWARD
     }
 
+    virtual std::string getSystemName() const
+    {
+        return ToStdString(dataObject_->IO->SystemName());
+    }
+
     virtual boost::local_time::local_date_time getAnalysisDate(bool adjustToHostTime) const
     {
         if ((System::Object^)dataObject_ == nullptr)
@@ -418,6 +423,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
         info.scanTime = retentionTime * TIME_MULTIPLIER;
         info.precursorMz = precursorMass * MASS_MULTIPLIER;
         info.polarity = (Polarity) (int) polarity;
+        info.isSrm = getEventInfo(info.event)->AnalysisMode == ShimadzuGeneric::AcqModes::MRM;
         return info;
     }
 
@@ -448,9 +454,9 @@ class ShimadzuReaderImpl : public ShimadzuReader
 
 
 PWIZ_API_DECL
-ShimadzuReaderPtr ShimadzuReader::create(const string& filepath)
+ShimadzuReaderPtr ShimadzuReader::create(const string& filepath, bool srmAsSpectra)
 {
-    try { return ShimadzuReaderPtr(new ShimadzuReaderImpl(filepath)); } CATCH_AND_FORWARD
+    try { return ShimadzuReaderPtr(new ShimadzuReaderImpl(filepath, srmAsSpectra)); } CATCH_AND_FORWARD
 }
 
 

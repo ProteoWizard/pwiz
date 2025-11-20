@@ -321,10 +321,10 @@ namespace pwiz.Skyline.FileUI
                         folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                     else
                     {
-                        string effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+                        string effectiveValue = (string)moduleProperties[0]![@"effectiveValue"];
                         folderNode.ImageIndex =
                             folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
+                            (effectiveValue!.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
                                 ? (int)ImageId.chrom_lib
                                 : (int)ImageId.labkey;
                     }
