@@ -34,9 +34,9 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
     [XmlRoot("waters_connect_account")]
     public class WatersConnectAccount : RemoteAccount
     {
-        public static readonly string HANDLER_NAME = "WatersConnect.Handler.Main";
-        public static readonly string AUTH_HANDLER_NAME = "WatersConnect.Handler.Authentication";
-        public static readonly string TOKEN_DATA = "token";
+        public static readonly string HANDLER_NAME = @"WatersConnect.Handler.Main";
+        public static readonly string AUTH_HANDLER_NAME = @"WatersConnect.Handler.Authentication";
+        public static readonly string TOKEN_DATA = @"token";
 
         public class TokenCacheEntry
         {
@@ -68,7 +68,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         static WatersConnectAccount()
         {
             var services = new ServiceCollection();
-            var builder = services.AddHttpClient("customClient");
+            var builder = services.AddHttpClient(@"customClient");
             builder.ConfigurePrimaryHttpMessageHandler(() =>
                 // Get mock handler for testing purposes.
                 CommonApplicationSettings.HttpMessageHandlerFactory.getMessageHandler(
@@ -193,7 +193,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                     ex = new AuthenticationException(newToken.Error);
                 else
                     ex = new AuthenticationException(string.Format(CultureInfo.CurrentCulture,
-                        "Failed to authenticate waters_connect account {0} with error: {1}",
+                        WatersConnectResources.WatersConnectAccount_Authenticate_Failed_to_authenticate_waters_connect_account__0__with_error___1_,
                         Username, newToken.ErrorDescription ?? newToken.Error));
                 ex.Data[TOKEN_DATA] = newToken.Raw;
                 throw ex;
@@ -236,7 +236,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public HttpClient GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
-            var httpClient = _httpClientFactory.CreateClient("customClient");
+            var httpClient = _httpClientFactory.CreateClient(@"customClient");
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");

@@ -1,4 +1,23 @@
-﻿using System;
+/*
+ * Original author: Rita Chupalov <ritach .at. uw.edu>
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -39,6 +58,7 @@ namespace pwiz.Common.Mock
     {
         protected Func<HttpRequestMessage, bool> _matcher;
         protected HttpStatusCode _statusCode;
+
         public RequestMatcher(Func<HttpRequestMessage, bool> matcher, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             _matcher = matcher;
@@ -60,18 +80,20 @@ namespace pwiz.Common.Mock
     public class RequestMatcherString : RequestMatcher
     {
         protected string _response;
+
         public RequestMatcherString(Func<HttpRequestMessage, bool> matcher, string response, HttpStatusCode statusCode = HttpStatusCode.OK)
             : base(matcher, statusCode)
         {
             _response = response ?? throw new ArgumentNullException(nameof(response), @"Response cannot be null");
         }
+
         public override HttpResponseMessage GetResponse(HttpRequestMessage request)
         {
             var response = new HttpResponseMessage(_statusCode)
             {
                 Content = new StringContent(_response)
             };
-            Trace.WriteLine(string.Format("Request {0} received, string {1} served.", request.RequestUri, _response));
+            Trace.WriteLine(string.Format(@"Request {0} received, string {1} served.", request.RequestUri, _response));
             return response;
         }
     }
@@ -93,7 +115,7 @@ namespace pwiz.Common.Mock
             {
                 Content = new StringContent(File.ReadAllText(_responseFile))
             };
-            Trace.WriteLine(string.Format("Request {0} received, file {1} served.", request.RequestUri, _responseFile));
+            Trace.WriteLine(string.Format(@"Request {0} received, file {1} served.", request.RequestUri, _responseFile));
             return response;
         }
     }
@@ -101,11 +123,13 @@ namespace pwiz.Common.Mock
     public class RequestMatcherFunction : RequestMatcher
     {
         private Func<HttpRequestMessage, string> _responseFunction;
+
         public RequestMatcherFunction(Func<HttpRequestMessage, bool> matcher, Func<HttpRequestMessage, string> responseFunction, HttpStatusCode statusCode = HttpStatusCode.OK)
             : base(matcher, statusCode)
         {
             _responseFunction = responseFunction ?? throw new ArgumentNullException(nameof(responseFunction), @"Response function cannot be null");
         }
+
         public override HttpResponseMessage GetResponse(HttpRequestMessage request)
         {
             try
@@ -117,7 +141,7 @@ namespace pwiz.Common.Mock
             {
                 return new HttpResponseMessage(HttpStatusCode.BadRequest)
                 {
-                    Content = new StringContent(e.Message + "\n" + e.StackTrace)
+                    Content = new StringContent(e.Message + Environment.NewLine + e.StackTrace)
                 };
             }
         }
@@ -139,13 +163,13 @@ namespace pwiz.Common.Mock
             
             return CreateReplaceHandler(handlerName);
         }
+
         public MockHttpMessageHandler CreateReplaceHandler(string handlerName)
         {
             var handler = new MockHttpMessageHandler();
             _handlers[handlerName] = handler;
             return handler;
         }
-
 
         public HttpMessageHandler getMessageHandler(string handlerName, Func<HttpMessageHandler> defaultHandlerFactory = null)
         {

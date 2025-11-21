@@ -135,7 +135,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CommonMsDataResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RemoteApi\WatersConnect\WatersConnectWatersConnectAcquisitionMethodObjectMethodObject.cs" />
+    <Compile Include="RemoteApi\WatersConnect\WatersConnectAcquisitionMethodObject.cs" />
     <Compile Include="SampleHelp.cs" />
   </ItemGroup>
   <ItemGroup>

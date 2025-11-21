@@ -191,8 +191,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 csv3.ReadLine();
                 csv4.ReadLine();
-                Assert.IsTrue(csv3.TryGetHeadersRange(startHeader, endHeader, out var csv3Line) &
-                              csv4.TryGetHeadersRange(startHeader, endHeader, out var csv4Line));
+                Assert.IsTrue(csv3.TryGetHeadersRange(startHeader, endHeader, out var csv3Line));
+                Assert.IsTrue(csv4.TryGetHeadersRange(startHeader, endHeader, out var csv4Line));
                 Assert.IsTrue(csv3Line.SequenceEqual(csv4Line), "Averaged and single replicate exports do not match.");
             }
         }

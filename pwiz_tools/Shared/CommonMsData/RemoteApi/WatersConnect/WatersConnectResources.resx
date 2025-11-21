@@ -124,4 +124,13 @@
   <data name="WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__" xml:space="preserve">
     <value>waters_connect server returns an error code: {0}.</value>
    </data>
+  <data name="WatersConnectAccount_Authenticate_Failed_to_authenticate_waters_connect_account__0__with_error___1_" xml:space="preserve">
+    <value>Failed to authenticate waters_connect account {0} with error: {1}</value>
+  </data>
+  <data name="WatersConnectAcquisitionMethodUrl_Init_Invalid_method_version_Id__0_" xml:space="preserve">
+    <value>Invalid method version Id {0}</value>
+  </data>
+  <data name="WatersConnectSessionAcquisitionMethod_UploadMethod_Uploading_method__0__to__1_" xml:space="preserve">
+    <value>Uploading method {0} to {1}</value>
+  </data>
 </root>

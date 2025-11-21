@@ -1035,6 +1035,7 @@ namespace pwiz.Skyline.Model
 
             return exporter;
         }
+
         public AbstractMassListExporter ExportWatersConnectMethod(SrmDocument document, string exportMethodUrlString, string templateMethodUrlString)
         {
             if (exportMethodUrlString == null)

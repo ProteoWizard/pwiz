@@ -22,6 +22,7 @@ using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
@@ -32,8 +33,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         public WatersConnectSession(WatersConnectAccount account) : base(account)
         {
-            if (account == null)
-                throw new ArgumentException(@"WatersConnectSession requires a WatersConnectAccount");
+            Assume.IsNotNull(account, @"WatersConnectSession requires a WatersConnectAccount");
             _httpClient = account.GetAuthenticatedHttpClient();
         }
 
@@ -86,22 +86,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             yield return new WatersConnectFolderObject(currentFolder, parentId, false);
         }
 
-        // TODO: [RC] Change into a method returning a folder and set the folder Id on the caller side
-        public WatersConnectUrl SetUrlId(WatersConnectUrl url)
-        {
-            if (url.EncodedPath == null)
-                return url;
-            ImmutableList<WatersConnectFolderObject> folders;
-            if (TryGetData(GetRootContentsUrl(), out folders))
-            {
-                var folder = folders.FirstOrDefault(f => f.Path.Equals(url.EncodedPath));
-                if (folder != null)
-                {
-                    return url.ChangeFolderOrSampleSetId(folder.Id);
-                }
-            }
-            return url;
-        }
         public bool TryGetFolderByUrl(WatersConnectUrl url, out WatersConnectFolderObject folder)
         {
             folder = null;
@@ -181,12 +165,12 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             // if injection is part of a replicate set with more than 1 replicate, add (rep N) to the name to ensure it is unique
             string FormatInjectionName(JObject o)
             {
-                var injectionProperties = o["injectionProperties"];
-                int replicateCount = injectionProperties.Value<int>("replicateCount");
-                string name = o.Value<string>("name");
+                var injectionProperties = o[@"injectionProperties"];
+                int replicateCount = injectionProperties.Value<int>(@"replicateCount");
+                string name = o.Value<string>(@"name");
                 if (replicateCount == 1)
                     return name;
-                return name + @" (rep " + injectionProperties.Value<int>("replicateIndex") + @")";
+                return name + @" (rep " + injectionProperties.Value<int>(@"replicateIndex") + @")";
             }
 
             var items = itemsValue.OfType<JObject>().ToList();
@@ -201,13 +185,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 if (itemNamesByCount[name] > 1)
                 {
                     itemNamesIndex[name]++;
-                    itemNames[i] = name + " (" + itemNamesIndex[name] + ")";
+                    itemNames[i] = name + @" (" + itemNamesIndex[name] + @")";
                 }
             }
 
             var uniqueItems = items.Zip(itemNames, (item, uniqueName) =>
             {
-                item["skylineName"] = uniqueName;
+                item[@"skylineName"] = uniqueName;
                 return item;
             });
             return ImmutableList.ValueOf(uniqueItems.Select(f => new WatersConnectFileObject(f)));

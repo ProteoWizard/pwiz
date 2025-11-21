@@ -109,6 +109,7 @@ namespace pwiz.CommonMsData.RemoteApi
             }
             return account.ServerUrl == ServerUrl && account.Username == Username;
         }
+
         public bool SameAccountAs(RemoteUrl url)
         {
             if (url == null)

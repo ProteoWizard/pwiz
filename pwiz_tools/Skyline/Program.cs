@@ -85,7 +85,8 @@ namespace pwiz.Skyline
         public static HttpMessageHandlerFactory HttpMessageHandlerFactory
         {
             get { return CommonApplicationSettings.HttpMessageHandlerFactory; }
-        } 
+        }
+
         // TODO(nicksh): Remove this once intermittent failures in these tests are fixed
         public static bool IsVerboseLogging(string name)
         {

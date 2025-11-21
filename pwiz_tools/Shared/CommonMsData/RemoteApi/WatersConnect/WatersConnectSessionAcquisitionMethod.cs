@@ -1,7 +1,7 @@
-﻿/*
- * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
+/*
+ * Original author: Rita Chupalov <ritach .at. uw.edu>
  *
- * Copyright 2024 University of Washington - Seattle, WA
+ * Copyright 2025 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,30 +41,28 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             if (!(remoteUrl is WatersConnectUrl wcUrl))
                 throw new ArgumentException();
 
-            if (wcUrl.Type == WatersConnectUrl.ItemType.folder_with_methods)
+            // Since this is acquisition methods session we should receive folder_with_methods URL, otherwise there is something wrong in the caller code.
+            Assume.AreEqual(WatersConnectUrl.ItemType.folder_with_methods, wcUrl.Type,  @"Url type mismatch: " + wcUrl.Type);
+
+            RemoteServerException ex1, ex2 = null;
+            var res1 = AsyncFetch(GetRootContentsUrl(), GetFolders, out ex1);
+
+            ImmutableList<WatersConnectFolderObject> folders;
+            bool canReadMethods = false;
+            if (TryGetData(GetRootContentsUrl(), out folders))
             {
-                RemoteServerException ex1, ex2 = null;
-                var res1 = AsyncFetch(GetRootContentsUrl(), GetFolders, out ex1);
-
-                ImmutableList<WatersConnectFolderObject> folders;
-                bool canReadMethods = false;
-                if (TryGetData(GetRootContentsUrl(), out folders))
-                {
-                    var currentFolder = folders.FirstOrDefault(f => f.Path.Equals(WebUtility.UrlDecode(wcUrl.EncodedPath)));
-                    canReadMethods = currentFolder?.CanRead ?? false;
-                }
-                if (canReadMethods)
-                {
-                    var res2 = AsyncFetch(GetAcquisitionMethodsUrl(wcUrl), GetAcquisitionMethods, out ex2);
-                    remoteException = ex1 ?? ex2;
-                    return res1 && res2;
-                }
-
-                remoteException = ex1;
-                return res1;
+                var currentFolder = folders.FirstOrDefault(f => f.Path.Equals(WebUtility.UrlDecode(wcUrl.EncodedPath)));
+                canReadMethods = currentFolder?.CanRead ?? false;
+            }
+            if (canReadMethods)
+            {
+                var res2 = AsyncFetch(GetAcquisitionMethodsUrl(wcUrl), GetAcquisitionMethods, out ex2);
+                remoteException = ex1 ?? ex2;
+                return res1 && res2;
             }
 
-            throw new Exception("Url type mismatch: " + wcUrl.Type);
+            remoteException = ex1;
+            return res1;
         }
 
         private ImmutableList<WatersConnectAcquisitionMethodObject> GetAcquisitionMethods(Uri requestUri)
@@ -91,7 +89,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 request.Content = new StringContent(methodJson);
             else
             {
-                var status = new ProgressStatus(string.Format("Uploading method {0} to {1}", methodName, WatersConnectAccount.ServerUrl));
+                // we want to show progress during upload since it can be a long operation
+                var status = new ProgressStatus(string.Format(WatersConnectResources.WatersConnectSessionAcquisitionMethod_UploadMethod_Uploading_method__0__to__1_,
+                    methodName, WatersConnectAccount.ServerUrl));
+                // here the StringStream is just a wrapper. It is used because the ProgressStream requires an underlying stream for its constructor.
                 var progressStream = new ProgressStream(new StringStream(methodJson));
                 progressMonitor.UpdateProgress(status);
                 progressStream.SetProgressMonitor(progressMonitor, status, true);
