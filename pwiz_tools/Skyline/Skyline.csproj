@@ -155,6 +155,10 @@
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -162,9 +166,6 @@
     <Reference Include="Microsoft.ConcurrencyVisualizer.Markers, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\Microsoft.ConcurrencyVisualizer.Markers.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate">
       <SpecificVersion>False</SpecificVersion>
@@ -202,6 +203,10 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Controls\Databinding\BuiltInReports.cs" />
+    <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Alerts\AboutDlg.cs">
@@ -384,8 +389,12 @@
     <Compile Include="Controls\Databinding\CandidatePeakForm.Designer.cs">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Databinding\AuditLog\AuditLogColumn.cs" />
+    <Compile Include="Controls\Databinding\AuditLog\TextImageColumn.cs" />
+    <Compile Include="Controls\Databinding\AnnotationValueListDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
+    <Compile Include="Controls\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
     <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">
       <SubType>Form</SubType>
@@ -433,7 +442,6 @@
     </Compile>
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
-    <Compile Include="Controls\Graphs\ReplicateValue.cs" />
     <Compile Include="Controls\Graphs\SummaryRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
@@ -481,6 +489,7 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\SpectrumFilterAutoComplete.cs" />
     <Compile Include="EditUI\SynchronizedIntegrationDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -521,7 +530,14 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\PublishDocumentDlgArdia.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Model\DecoyGenerator.cs" />
+    <Compile Include="Model\GroupComparison\FoldChangeRows.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -561,6 +577,7 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\Databinding\ReplicatePivotColumns.cs" />
+    <Compile Include="Model\DdaSearch\TideSearchEngine.cs" />
     <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
@@ -568,7 +585,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
     <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
@@ -590,14 +606,15 @@
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
+    <Compile Include="Model\Results\ReplicateValue.cs" />
     <Compile Include="Model\Results\ScoredPeakBounds.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummary.cs" />
+    <Compile Include="Model\Lib\SpectrumDisplayInfo.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
-    <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\RetentionTimes\Alignments.cs" />
@@ -610,6 +627,8 @@
     <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
     <Compile Include="Model\RetentionTimes\RtCalculatorOption.cs" />
     <Compile Include="Model\RetentionTimes\RTPeptideValue.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeRegressionGraphData.cs" />
+    <Compile Include="Model\SearchTool.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -657,7 +676,6 @@
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
-    <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
     <Compile Include="FileUI\ImportTransitionListColumnSelectDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -668,7 +686,6 @@
     <Compile Include="Model\AuditLog\Databinding\AuditLogRow.cs" />
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRowTime.cs" />
-    <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -702,10 +719,12 @@
     <Compile Include="Model\Databinding\Entities\PeakGroupScore.cs" />
     <Compile Include="Model\Databinding\FeaturePropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
-    <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
-    <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
+  <Compile Include="Model\Databinding\SublistPaths.cs" />
+    <Compile Include="Controls\Databinding\BoundComboBoxColumn.cs" />
+    <Compile Include="Controls\Databinding\ListLookupDataGridViewColumn.cs" />
+    <Compile Include="Controls\Databinding\NormalizationMethodDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Controls\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Controls\Databinding\RowActions\RowAction.cs" />
@@ -801,6 +820,8 @@
       <DependentUpon>ToolsResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
+    <Compile Include="Properties\GroupComparisonDefList.cs" />
+    <Compile Include="Properties\ListDefList.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
     <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
@@ -899,6 +920,12 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FileUIResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\EditSearchToolDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\EditSearchToolDlg.Designer.cs">
+      <DependentUpon>EditSearchToolDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\PythonInstallerUI.cs" />
     <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
@@ -1289,6 +1316,7 @@
     <Compile Include="Controls\Databinding\LiveResultsGrid.Designer.cs">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Databinding\ResultsGridViewContext.cs" />
     <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1717,9 +1745,11 @@
     <Compile Include="FileUI\PeptideSearch\TransitionSettingsControl.Designer.cs">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\PublishDocumentDlg.cs" />
-    <Compile Include="FileUI\PublishDocumentDlg.Designer.cs">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <Compile Include="FileUI\PublishDocumentDlgBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlgBase.Designer.cs">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\RenameResultDlg.cs">
       <SubType>Form</SubType>
@@ -1746,7 +1776,6 @@
     <Compile Include="Model\CustomMolecule.cs" />
     <Compile Include="Model\Databinding\AnnotationPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\AnnotationTargetAttribute.cs" />
-    <Compile Include="Model\Databinding\AnnotationValueListDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\CachedValue.cs" />
     <Compile Include="Model\Databinding\ChromDataCache.cs" />
     <Compile Include="Model\Databinding\Collections\MultiResultList.cs" />
@@ -1781,18 +1810,17 @@
     <Compile Include="Model\Databinding\Entities\Transition.cs" />
     <Compile Include="Model\Databinding\Entities\TransitionResult.cs" />
     <Compile Include="Model\Databinding\IDocumentChangeListener.cs" />
-    <Compile Include="Model\Databinding\NormalizationMethodDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\RatioPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ReplicateSummaries.cs" />
     <Compile Include="Model\Databinding\ReportOrViewSpec.cs" />
+    <Compile Include="Properties\ReportOrViewSpecList.cs" />
     <Compile Include="Model\Databinding\ReportSharing.cs" />
     <Compile Include="Model\Databinding\ReportSpecConverter.cs" />
-    <Compile Include="Model\Databinding\ResultsGridViewContext.cs" />
-    <Compile Include="Model\Databinding\SampleTypeDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
     <Compile Include="Model\Databinding\DocumentViewTransformer.cs" />
-    <Compile Include="Model\Databinding\StandardTypeDataGridViewColumn.cs" />
+    <Compile Include="Controls\Databinding\SampleTypeDataGridViewColumn.cs" />
+    <Compile Include="Controls\Databinding\StandardTypeDataGridViewColumn.cs" />
     <Compile Include="Model\DocNodeChildren.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurve.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\CalibrationCurveFitter.cs" />
@@ -1825,7 +1853,6 @@
     <Compile Include="Model\GroupComparison\FoldChangeResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparer.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonDef.cs" />
-    <Compile Include="Model\GroupComparison\GroupComparisonDefList.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonModel.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResult.cs" />
     <Compile Include="Model\GroupComparison\GroupComparisonResults.cs" />
@@ -3661,11 +3688,11 @@
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.ja.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.ja.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.zh-CHS.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.zh-CHS.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RenameResultDlg.ja.resx">
       <DependentUpon>RenameResultDlg.cs</DependentUpon>
@@ -3731,6 +3758,7 @@
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>RetentionTimesResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\SpectrumPropertiesResx.ja.resx">
       <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
@@ -4765,8 +4793,9 @@
       <DependentUpon>ImportResultsControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PublishDocumentDlg.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlgBase.resx">
+      <DependentUpon>PublishDocumentDlgBase.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RescoreResultsDlg.resx">
       <DependentUpon>RescoreResultsDlg.cs</DependentUpon>
@@ -4892,6 +4921,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.zh-CHS.resx">
       <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditSearchToolDlg.resx">
+      <DependentUpon>EditSearchToolDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.ja.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
