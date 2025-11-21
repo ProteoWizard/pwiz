@@ -16,6 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -40,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(()=>
+            RunUI(() =>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("PeakMetrics.sky"));
                 SkylineWindow.ShowDocumentGrid(true);
@@ -72,10 +76,12 @@ namespace pwiz.SkylineTestFunctional
                              })
                     {
                         var propertyPath = ppMetrics.Property(name);
-                        Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(propertyPath), "Unable to select {0}", propertyPath);
+                        Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(propertyPath), "Unable to select {0}",
+                            propertyPath);
                         viewEditor.ChooseColumnsTab.AddSelectedColumn();
                     }
                 }
+
                 viewEditor.OkDialog();
             });
             WaitForConditionUI(() => documentGrid.IsComplete);
@@ -84,9 +90,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, documentGrid.RowCount);
                 var ppPrecursorResult = PropertyPath.Root.Property(nameof(Precursor.Results)).DictionaryValues();
                 var ppMs1 = ppPrecursorResult.Property(nameof(PrecursorResult.LcPeakIonMetricsMS1));
-                var colMs1 = documentGrid.FindColumn(ppMs1);
-                Assert.IsNotNull(colMs1, "Unable to find column {0}", ppMs1);
-                var ms1Metrics = (LcPeakIonMetrics) documentGrid.DataGridView.Rows[0].Cells[colMs1.Index].Value;
+                var colMs1 = FindColumn(documentGrid, ppMs1);
+                var ms1Metrics = (LcPeakIonMetrics)documentGrid.DataGridView.Rows[0].Cells[colMs1.Index].Value;
                 Assert.IsNotNull(ms1Metrics);
                 Assert.IsNotNull(ms1Metrics.ApexSpectrumId);
 
@@ -98,8 +103,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertApexMetrics(ms1Metrics, apexSpectrumMs1);
 
                 var ppMs2 = ppPrecursorResult.Property(nameof(PrecursorResult.LcPeakIonMetricsFragment));
-                var colMs2 = documentGrid.FindColumn(ppMs2);
-                Assert.IsNotNull(colMs2, "Unable to find column {0}", ppMs2);
+                var colMs2 = FindColumn(documentGrid, ppMs2);
                 var ms2Metrics = (LcPeakIonMetrics)documentGrid.DataGridView.Rows[0].Cells[colMs2.Index].Value;
                 Assert.IsNotNull(ms2Metrics);
                 Assert.IsNotNull(ms2Metrics.ApexSpectrumId);
@@ -108,6 +112,75 @@ namespace pwiz.SkylineTestFunctional
                 var apexSpectrumMs2 = msDataFile.GetSpectrum(apexSpectrumIndexMs2);
                 Assert.AreEqual(2, apexSpectrumMs2.Level);
                 AssertApexMetrics(ms2Metrics, apexSpectrumMs2);
+            });
+
+            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                var ppTransition = PropertyPath.Root.Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
+                    .Property(nameof(Protein.Peptides)).LookupAllItems().Property(nameof(Peptide.Precursors))
+                    .LookupAllItems().Property(nameof(Precursor.Transitions)).LookupAllItems();
+                var ppTransitionIonMetrics = ppTransition.Property(nameof(Transition.Results)).DictionaryValues().Property(nameof(TransitionResult.TransitionIonMetrics));
+                foreach (var ppColumn in new[]
+                         {
+                             ppTransition,
+                             ppTransitionIonMetrics.Property(nameof(TransitionIonMetrics.ApexTransitionIonCount)),
+                             ppTransitionIonMetrics.Property(nameof(TransitionIonMetrics.LcPeakTransitionIonCount))
+                         })
+                {
+                    Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(ppColumn), "Unable to select {0}", ppColumn);
+                    viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                }
+                viewEditor.OkDialog();
+            });
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunUI(() =>
+            {
+                var colTransition = FindColumn(documentGrid, PropertyPath.Root);
+                var ppTransitionResult = PropertyPath.Root.Property(nameof(Transition.Results)).DictionaryValues();
+                var ppPrecursorResult = ppTransitionResult.Property(nameof(TransitionResult.PrecursorResult));
+                var ppTransitionMetrics = ppTransitionResult.Property(nameof(TransitionResult.TransitionIonMetrics));
+                var colTransitionApex = FindColumn(documentGrid,
+                    ppTransitionMetrics.Property(nameof(TransitionIonMetrics.ApexTransitionIonCount)));
+                var colTransitionLcPeak = FindColumn(documentGrid,
+                    ppTransitionMetrics.Property(nameof(TransitionIonMetrics.LcPeakTransitionIonCount)));
+
+                foreach (bool fragment in new []{false, true})
+                {
+                    var transitionApexValues = new List<double>();
+                    var transitionLcPeakValues = new List<double>();
+                    var apexValues = new List<double>();
+                    var lcPeakValues = new List<double>();
+
+                    var ppLcPeakMetrics = ppPrecursorResult.Property(fragment
+                        ? nameof(PrecursorResult.LcPeakIonMetricsFragment)
+                        : nameof(PrecursorResult.LcPeakIonMetricsMS1));
+                    var colApex = FindColumn(documentGrid,
+                        ppLcPeakMetrics.Property(nameof(LcPeakIonMetrics.ApexAnalyteIonCount)));
+                    var colLcPeak = FindColumn(documentGrid,
+                        ppLcPeakMetrics.Property(nameof(LcPeakIonMetrics.LcPeakAnalyteIonCount)));
+
+                    foreach (DataGridViewRow row in documentGrid.DataGridView.Rows)
+                    {
+                        var transitionValue = row.Cells[colTransition.Index].Value;
+                        Assert.IsInstanceOfType(transitionValue, typeof(Transition));
+                        var transition = (Transition)transitionValue;
+                        if (fragment == transition.DocNode.IsMs1)
+                        {
+                            continue;
+                        }
+                        transitionApexValues.Add(GetDouble(row, colTransitionApex));
+                        transitionLcPeakValues.Add(GetDouble(row, colTransitionLcPeak));
+                        apexValues.Add(GetDouble(row, colApex));
+                        lcPeakValues.Add(GetDouble(row, colLcPeak));
+                    }
+
+                    var apexValue = apexValues.Distinct().Single();
+                    var lcPeakValue = lcPeakValues.Distinct().Single();
+                    var sumApex = transitionApexValues.Sum();
+                    var sumLcPeak = transitionLcPeakValues.Sum();
+                    Assert.AreEqual(apexValue, sumApex);
+                    Assert.AreEqual(lcPeakValue, sumLcPeak);
+                }
             });
         }
 
@@ -119,6 +192,20 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(metadata.InjectionTime);
             var expectedTotalIonCount = (metadata.TotalIonCurrent * metadata.InjectionTime / 1000).Value;
             Assert.AreEqual(expectedTotalIonCount, peakIonMetrics.ApexTotalIonCount.Value, .0001);
+        }
+
+        private DataGridViewColumn FindColumn(DataboundGridForm grid, PropertyPath propertyPath)
+        {
+            var column = grid.FindColumn(propertyPath);
+            Assert.IsNotNull(column, "Unable to find column {0}", propertyPath);
+            return column;
+        }
+
+        private double GetDouble(DataGridViewRow row, DataGridViewColumn column)
+        {
+            var value = row.Cells[column.Index].Value;
+            Assert.IsInstanceOfType(value, typeof(double));
+            return (double) value;
         }
     }
 }
