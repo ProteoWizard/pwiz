@@ -225,7 +225,7 @@ namespace pwiz.Common.Collections
                     }
                     catch (Exception ex)
                     {
-                        throw new InvalidOperationException("InvalidOperation_IComparerFailed", ex);
+                        throw new InvalidOperationException(@"InvalidOperation_IComparerFailed", ex);
                     }
                     var key1 = this.keys[median];
                     do
@@ -239,11 +239,11 @@ namespace pwiz.Common.Collections
                         }
                         catch (IndexOutOfRangeException)
                         {
-                            throw new ArgumentException("Arg_BogusIComparer");
+                            throw new ArgumentException(@"Arg_BogusIComparer");
                         }
                         catch (Exception ex)
                         {
-                            throw new InvalidOperationException("InvalidOperation_IComparerFailed", ex);
+                            throw new InvalidOperationException(@"InvalidOperation_IComparerFailed", ex);
                         }
                         if (index1 <= index2)
                         {
@@ -288,11 +288,11 @@ namespace pwiz.Common.Collections
                 }
                 catch (IndexOutOfRangeException)
                 {
-                    throw new ArgumentException("Arg_BogusIComparer");
+                    throw new ArgumentException(@"Arg_BogusIComparer");
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException("InvalidOperation_IComparerFailed", ex);
+                    throw new InvalidOperationException(@"InvalidOperation_IComparerFailed", ex);
                 }
             }
 
