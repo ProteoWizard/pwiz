@@ -3596,5 +3596,17 @@ namespace pwiz.Skyline.Properties {
                 return ((string)(this["MsFraggerDownloadUrl"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public int MaxChromatogramWindows {
+            get {
+                return ((int)(this["MaxChromatogramWindows"]));
+            }
+            set {
+                this["MaxChromatogramWindows"] = value;
+            }
+        }
     }
 }

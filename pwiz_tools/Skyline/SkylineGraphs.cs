@@ -80,7 +80,6 @@ namespace pwiz.Skyline
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
         private CandidatePeakForm _candidatePeakForm;
-        public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private bool _alignToPrediction;
@@ -335,6 +334,7 @@ namespace pwiz.Skyline
 
                 if (!ReferenceEquals(settingsNew.MeasuredResults, settingsOld.MeasuredResults))
                 {
+                    int maxChromatogramWindows = Settings.Default.MaxChromatogramWindows;
                     // First hide all graph windows for results that no longer exist in the document
                     foreach (var graphChromatogram in _listGraphChrom.ToArray())
                     {
@@ -386,7 +386,7 @@ namespace pwiz.Skyline
                                 var graphChrom = GetGraphChrom(name);
                                 if (graphChrom == null)
                                 {
-                                    if (_listGraphChrom.Count < MAX_GRAPH_CHROM) // Limit window count to conserve win32 handles
+                                    if (_listGraphChrom.Count < maxChromatogramWindows) // Limit window count to conserve win32 handles
                                     {
                                         layoutLock.EnsureLocked();
                                         graphChrom = CreateGraphChrom(name, nameLast, false);
@@ -675,7 +675,7 @@ namespace pwiz.Skyline
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
-                if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
+                if (_listGraphChrom.Count >= Settings.Default.MaxChromatogramWindows)
                 {
                     return null;
                 }
@@ -1856,7 +1856,7 @@ namespace pwiz.Skyline
             }
             else if (show)
             {
-                if (_listGraphChrom.Count >= MAX_GRAPH_CHROM)
+                if (_listGraphChrom.Count >= Settings.Default.MaxChromatogramWindows)
                 {
                     // List is too long, re-purpose least recently used
                     graphChrom = _listGraphChrom[0];

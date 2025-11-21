@@ -44,16 +44,16 @@ namespace pwiz.SkylineTestFunctional
         public void TestHighReplicateCount()
         {
             TestFilesZip = ZIP_FILE;
-            int maxGraphChromOld = Skyline.SkylineWindow.MAX_GRAPH_CHROM;
+            int maxGraphChromOld = Settings.Default.MaxChromatogramWindows;
             try
             {
                 // Actually need about 2000 to make Skyline hit the 10,000 window handle limit if it tries to open all chromatogram views at once, and creates a progress bar for each in the loading window
-                Skyline.SkylineWindow.MAX_GRAPH_CHROM = 3; // Normally 100, reduce for quicker test
+                Settings.Default.MaxChromatogramWindows = 3; // Normally 100, reduce for quicker test
                 RunFunctionalTest();
             }
             finally
             {
-                Skyline.SkylineWindow.MAX_GRAPH_CHROM = maxGraphChromOld;
+                Settings.Default.MaxChromatogramWindows = maxGraphChromOld;
             }
         }
 
@@ -71,13 +71,13 @@ namespace pwiz.SkylineTestFunctional
 
             var listChromatograms = new List<ChromatogramSet>();
             var filenames = new List<string>();
-            var TOO_MANY_FILES = Skyline.SkylineWindow.MAX_GRAPH_CHROM * 2;
+            var TOO_MANY_FILES = Settings.Default.MaxChromatogramWindows * 2;
             int count;
             for (count = 0; count < TOO_MANY_FILES; count++)
             {
                 var fname = TestFilesDir.GetTestPath(GetReplicateNameFromIndex(count));
                 filenames.Add(fname);
-                if (count != Skyline.SkylineWindow.MAX_GRAPH_CHROM)
+                if (count != Settings.Default.MaxChromatogramWindows)
                     File.Copy(sourceData, fname);
                 var path = MsDataFileUri.Parse(fname);
                 listChromatograms.Add(AssertResult.FindChromatogramSet(doc, path) ??
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             var newest = "distinct_mzML"; // This replicate should have a different peak
             Assert.IsFalse(graphChromatograms.Any(g => g.NameSet.Equals(newest)));
             // Now select a graph not currently displayed
-            RunUI(() => SkylineWindow.SelectedResultsIndex = Skyline.SkylineWindow.MAX_GRAPH_CHROM);
+            RunUI(() => SkylineWindow.SelectedResultsIndex = Settings.Default.MaxChromatogramWindows);
             WaitForGraphs();
             graphChromatograms = SkylineWindow.GraphChromatograms.ToList();
             Assert.IsFalse(graphChromatograms.Any(g => g.NameSet.Equals(oldest)));
@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     name = GetReplicateNameFromIndex(index).Replace(@".",@"_");
                     var visible = graphChromatograms.Any(g => g.NameSet.Equals(name) && g.Visible);
-                    var shouldBeVisible = (index > count - Skyline.SkylineWindow.MAX_GRAPH_CHROM) && (index <= count);
+                    var shouldBeVisible = (index > count - Settings.Default.MaxChromatogramWindows) && (index <= count);
                     Assert.IsTrue(visible == shouldBeVisible);
                     if (shouldBeVisible)
                     {
@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static string GetReplicateNameFromIndex(int count)
         {
-            return (count==Skyline.SkylineWindow.MAX_GRAPH_CHROM ? "distinct" : "R" + count) + ExtensionTestContext.ExtMzml;
+            return (count== Settings.Default.MaxChromatogramWindows ? "distinct" : "R" + count) + ExtensionTestContext.ExtMzml;
         }
 
         private SrmDocument InitHighReplicateCountDocument(TestFilesDir testFilesDir, string fileName)
