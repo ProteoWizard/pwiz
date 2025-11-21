@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Author: David Shteynberg <dshteyn .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -98,19 +98,6 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         public static string PythonVersionSetting => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersionSetting, CARAFE_NAME);
 
-        private static IList<ModificationIndex> MODIFICATION_INDICES =>
-            new[]
-            {
-                new ModificationIndex(4, new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")),
-                new ModificationIndex(21, new ModificationType(@"21", @"Phospho", @"H O(3) P")),
-                new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O"))
-            };
-
-        /// <summary>
-        /// List of UniMod Modifications supported by Carafe/AlphaPeptDeep
-        /// </summary>
-        internal static readonly IList<ModificationType> MODIFICATION_NAMES = PopulateUniModList(MODIFICATION_INDICES);
-
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
             return training ? TrainingTableColumnNamesCarafe : PrecursorTableColumnNamesCarafe;
@@ -156,8 +143,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
         }
 
         protected override string ToolName => CARAFE;
-        protected override IList<ModificationType> ModificationTypes => MODIFICATION_NAMES;
-
+        protected override LibraryBuilderModificationSupport LibraryBuilderModificationSupport { get; }
         public LibrarySpec LibrarySpec { get; private set; }
         private string PythonVersion { get; }
         private string PythonVirtualEnvironmentName { get; }
@@ -256,6 +242,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
+            LibraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
         }
 
         public CarafeLibraryBuilder(
@@ -278,6 +265,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeDir);
+            LibraryBuilderModificationSupport = new LibraryBuilderModificationSupport(null);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -333,9 +321,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
                 // download java sdk package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
-                if (!webClient.DownloadFileAsync(JavaSdkUri, JavaSdkDownloadPath, out var exception))
-                    throw new Exception(
-                        @"Failed to download java sdk package", exception);
+                webClient.DownloadFileAsyncOrThrow(JavaSdkUri, JavaSdkDownloadPath);
 
                 // unzip java sdk package
                 using var javaSdkZip = ZipFile.Read(JavaSdkDownloadPath);
@@ -351,9 +337,7 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
-                if (!webClient.DownloadFileAsync(CarafeJarZipDownloadUrl, CarafeJarZipDownloadPath, out var exception))
-                    throw new Exception(
-                        @"Failed to download carafe jar package", exception);
+                webClient.DownloadFileAsyncOrThrow(CarafeJarZipDownloadUrl, CarafeJarZipDownloadPath);
 
                 // unzip carafe jar package
                 using var carafeJarZip = ZipFile.Read(CarafeJarZipDownloadPath);

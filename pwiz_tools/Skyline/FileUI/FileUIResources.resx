@@ -575,13 +575,16 @@ Would you like to remove some or all of this suffix to shorten the names used in
     <value>Upload Document</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers" xml:space="preserve">
-    <value>Retrieving information from servers</value>
+    <value>Loading remote server folders</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
     <value>Failed attempting to retrieve information from the following servers:</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_" xml:space="preserve">
     <value>Go to Tools &gt; Options &gt; Panorama tab to update the username and password.</value>
+  </data>
+  <data name="PublishDocumentDlg_Panorama_ServerFolders" xml:space="preserve">
+    <value>Panorama Folders:</value>
   </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information" xml:space="preserve">
     <value>Error obtaining server information.</value>

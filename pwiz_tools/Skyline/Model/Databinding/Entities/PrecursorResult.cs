@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -392,8 +392,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return null;
             }
             float tolerance = (float) SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var ms1Chromatograms = new List<TimeIntensities>();
-            var fragmentChromatograms = new List<TimeIntensities>();
+            var chromatogramInfos = new List<ChromatogramInfo>();
             foreach (var transitionDocNode in Precursor.DocNode.Transitions)
             {
                 var transitionChromInfo = GetResultFile().FindChromInfo(transitionDocNode.Results);
@@ -409,21 +408,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     continue;
                 }
+                chromatogramInfos.Add(chromatogramInfo);
+            }
 
-                var timeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[chromatogramInfo.TransitionIndex];
-
-                if (chromatogramInfo.Source == ChromSource.ms1)
-                {
-                    ms1Chromatograms.Add(timeIntensities);
-                }
-                else if (chromatogramInfo.Source == ChromSource.fragment)
-                {
-                    fragmentChromatograms.Add(timeIntensities);
-                }
+            var chromatogramsBySource = chromatogramInfos.ToLookup(
+                chromInfo => chromInfo.Source, chromInfo => timeIntensitiesGroup.TransitionTimeIntensities[chromInfo.TransitionIndex]);
+            var ms1Chromatograms = chromatogramsBySource[ChromSource.sim].ToList();
+            if (ms1Chromatograms.Count == 0)
+            {
+                ms1Chromatograms = chromatogramsBySource[ChromSource.ms1].ToList();
             }
 
             return Tuple.Create(GetIonMetrics(resultFileMetadata, ms1Chromatograms),
-                GetIonMetrics(resultFileMetadata, fragmentChromatograms));
+                GetIonMetrics(resultFileMetadata, chromatogramsBySource[ChromSource.fragment].ToList()));
         }
 
         private LcPeakIonMetrics GetIonMetrics(ResultFileMetaData resultFileMetadata, IList<TimeIntensities> chromatograms)

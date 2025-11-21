@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -154,10 +154,12 @@ namespace pwiz.SkylineTestUtil
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
         public const string COMET_UNICODE_ISSUES = "Comet doesn't handle unicode paths";
+        public const string TIDE_UNICODE_ISSUES = "Tide doesn't handle unicode paths";
         public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
         public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
+        public const string WEB_BROWSER_USE = "WebBrowser class throws UnauthorizedAccessException on Wine";
     }
 
     /// <summary>
@@ -1983,12 +1985,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void CancelDialog(Form form)
+        {
+            RunUI(() => form.CancelButton.PerformClick());
+            WaitForClosedForm(form);
+        }
+        
         public static void CancelDialog(Form form, Action cancelAction)
         {
             RunUI(cancelAction);
             WaitForClosedForm(form);
         }
 
+        public static void OkDialog(Form form)
+        {
+            RunUI(() => form.AcceptButton.PerformClick());
+            WaitForClosedForm(form);
+        }
+        
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);
@@ -2035,11 +2049,10 @@ namespace pwiz.SkylineTestUtil
             {
                 //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
                 const string errorSeparator = "------------------------------------------------------";
-                Assert.Fail("{0}{1}{2}{3}",
-                    Environment.NewLine + Environment.NewLine,
-                    errorSeparator + Environment.NewLine,
-                    Program.TestExceptions[0],
-                    Environment.NewLine + errorSeparator + Environment.NewLine);
+                Assert.Fail(new StringBuilder().AppendLine().AppendLine()
+                    .AppendLine(errorSeparator)
+                    .AppendLine(Program.TestExceptions[0].ToString())
+                    .AppendLine(errorSeparator).ToString());
             }
 
             if (!_testCompleted)
@@ -2513,7 +2526,7 @@ namespace pwiz.SkylineTestUtil
 
             DoTest();
 
-            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
+            CheckRecordMode();
 
             if (null != SkylineWindow)
             {
@@ -2728,16 +2741,13 @@ namespace pwiz.SkylineTestUtil
 
         public void RestoreViewOnScreen(string viewFilePath)
         {
-            if (!Program.SkylineOffscreen)
+            RunUI(() =>
             {
-                RunUI(() =>
+                using (var fileStream = new FileStream(viewFilePath, FileMode.Open))
                 {
-                    using (var fileStream = new FileStream(viewFilePath, FileMode.Open))
-                    {
-                        SkylineWindow.LoadLayout(fileStream);
-                    }
-                });
-            }
+                    SkylineWindow.LoadLayout(fileStream);
+                }
+            });
         }
 
         protected abstract void DoTest();

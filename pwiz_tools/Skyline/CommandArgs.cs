@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
@@ -455,7 +455,7 @@ namespace pwiz.Skyline
         public double? LockmassPositive { get; private set; }
         public double? LockmassNegative { get; private set; }
         public double? LockmassTolerance { get; private set; }
-        public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
+        public LockMassParameters LockMassParameters { get { return LockMassParameters.Create(LockmassPositive, LockmassNegative, LockmassTolerance); } }
 
         private void ParseImportFile(NameValuePair pair)
         {
@@ -2438,7 +2438,9 @@ namespace pwiz.Skyline
 
         public static string GenerateUsageHtml()
         {
-            var sb = new StringBuilder(@"<html><head>");
+            var sb = new StringBuilder();
+            sb.AppendLine(@"<html><head>");
+            sb.AppendLine(@"<meta charset=""utf-8"">");
             sb.AppendLine(DocumentationGenerator.GetStyleSheetHtml());
             sb.AppendLine(@"</head><body>");
             foreach (var block in UsageBlocks)

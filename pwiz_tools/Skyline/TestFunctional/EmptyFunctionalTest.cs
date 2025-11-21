@@ -1,8 +1,5 @@
-﻿/*
- * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
- *                  MacCoss Lab, Department of Genome Sciences, UW
- *
- * Copyright 2012 University of Washington - Seattle, WA
+/*
+ * Copyright 2025 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +19,21 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     //[TestClass]
-    public class EmptyFunctionalTest : AbstractFunctionalTest
+    public class EmptyFunctionalTest : AbstractFunctionalTestEx
     {
         //[TestMethod]
         public void EmptyTest()
         {
+            // Can also be an unzipped directory in TestFunctional following the naming convention:
+            //          TestFunctional\EmptyFunctionalTest.data
+            TestFilesZip = @"TestFunctional\EmptyFunctionalTest.zip";
+
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            // var document = OpenDocument("<name>.sky");
         }
     }
 }

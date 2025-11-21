@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -34,14 +34,14 @@ namespace pwiz.SkylineTest
             // Test for JSON containing no writable folders. Tree should be empty.
             JToken containers = JObject.Parse(NOWRITABLEFOLDER_JSON);
             TreeNode rootNode = new TreeNode("Root");
-            PublishDocumentDlg.AddChildContainers(null, rootNode, containers);
+            PublishDocumentDlgPanorama.AddChildContainers(null, rootNode, containers);
             Assert.AreEqual(0, rootNode.Nodes.Count);
 
 
             // Test for JSON containing 1 writable subfolder. 
             containers = JObject.Parse(WRITABLEFOLDER_1_JSON);
             rootNode = new TreeNode("Root");
-            PublishDocumentDlg.AddChildContainers(null, rootNode, containers);
+            PublishDocumentDlgPanorama.AddChildContainers(null, rootNode, containers);
             Assert.AreEqual(1, rootNode.Nodes.Count);
             TreeNode maccossFolder = rootNode.Nodes[0];
             Assert.AreEqual("MacCoss", maccossFolder.Text); // Readable
@@ -56,7 +56,7 @@ namespace pwiz.SkylineTest
             //    only the MacCoss and Gibson folders have TargetedMS enabled sub-folders.
             containers = JObject.Parse(WRITABLEFOLDER_2_JSON);
             rootNode = new TreeNode("Root");
-            PublishDocumentDlg.AddChildContainers(null, rootNode, containers);
+            PublishDocumentDlgPanorama.AddChildContainers(null, rootNode, containers);
             Assert.AreEqual(2, rootNode.Nodes.Count);
             maccossFolder = rootNode.Nodes[0];
             Assert.AreEqual("MacCoss", maccossFolder.Text); // No permissions

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -47,6 +47,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RunToRunAlignmentTest.sky")));
+            var startDocument = WaitForDocumentLoaded();
             RunLongDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>
             {
                 RunDlg<RescoreResultsDlg>(manageResultsDlg.Rescore, dlg =>
@@ -54,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
                     dlg.Rescore(false);
                 });
             }, x => { });
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(startDocument);
             int originalPeakCount = CountOriginalPeaks(SkylineWindow.Document);
             Assert.AreNotEqual(0, originalPeakCount);
             Assert.AreEqual(0, CountReintegratedPeaks(SkylineWindow.Document));

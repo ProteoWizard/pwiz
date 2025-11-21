@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -53,8 +53,11 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 using pwiz.Skyline.Controls.Lists;
+using pwiz.Skyline.Model.Lib;
 using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
@@ -481,6 +484,10 @@ namespace pwiz.Skyline
         {
             using (new DockPanelLayoutLock(dockPanel, true))
             {
+                if (Program.SkylineOffscreen)
+                {
+                    layoutStream = MoveLayoutOffScreen(layoutStream);
+                }
                 LoadLayoutLocked(layoutStream);
             }
         }
@@ -532,6 +539,40 @@ namespace pwiz.Skyline
             }
 
             EnsureFloatingWindowsVisible();
+        }
+
+        /// <summary>
+        /// Change the "Bounds" attribute of the "FloatingWindow" elements in the .sky.view file
+        /// to a point offscreen.
+        /// </summary>
+        private static MemoryStream MoveLayoutOffScreen(Stream layoutStream)
+        {
+            const string attrBounds = @"Bounds";
+            var xd = new XmlDocument();
+            xd.Load(layoutStream);
+            var rectangleConverter = new RectangleConverter();
+            foreach (XmlElement el in xd.SelectNodes(@"//FloatingWindow")!)
+            {
+                var strBounds = el.GetAttribute(attrBounds);
+                if (!string.IsNullOrEmpty(strBounds))
+                {
+                    if (rectangleConverter.ConvertFromInvariantString(el.GetAttribute(attrBounds)) 
+                        is Rectangle rectBounds)
+                    {
+                        var newBounds = new Rectangle(GetOffscreenPoint(), rectBounds.Size);
+                        el.SetAttribute(attrBounds, rectangleConverter.ConvertToInvariantString(newBounds));
+                    }
+                }
+            }
+
+            var memoryStream = new MemoryStream();
+            var xmlTextWriter = new XmlTextWriter(memoryStream, new UTF8Encoding(false)) // UTF-8 without BOM
+            {
+                Formatting = Formatting.Indented
+            };
+            xd.Save(xmlTextWriter);
+            memoryStream.Position = 0;
+            return memoryStream;
         }
 
         public void DestroyAllChromatogramsGraph()
@@ -4165,32 +4206,26 @@ namespace pwiz.Skyline
         {
             ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
-            if (groupByValues.Length == 0)
-                currentGroupBy = null;
 
-            // If not grouped by an annotation, show the order-by menuitem
-            if (currentGroupBy == null)
+            var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
+                value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
+            menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
+            replicateOrderContextMenuItem.DropDownItems.Clear();
+            replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
             {
-                var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
-                    value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
-                menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-                replicateOrderContextMenuItem.DropDownItems.Clear();
-                replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        replicateOrderDocumentContextMenuItem,
-                        replicateOrderAcqTimeContextMenuItem
-                    });
-                replicateOrderDocumentContextMenuItem.Checked
-                    = null == orderByReplicateAnnotationDef &&
-                      SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
-                replicateOrderAcqTimeContextMenuItem.Checked
-                    = null == orderByReplicateAnnotationDef &&
-                      SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
-                foreach (var replicateValue in groupByValues)
-                {
-                    replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
-                        replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
-                }
+                replicateOrderDocumentContextMenuItem,
+                replicateOrderAcqTimeContextMenuItem
+            });
+            replicateOrderDocumentContextMenuItem.Checked
+                = null == orderByReplicateAnnotationDef &&
+                  SummaryReplicateOrder.document == SummaryReplicateGraphPane.ReplicateOrder;
+            replicateOrderAcqTimeContextMenuItem.Checked
+                = null == orderByReplicateAnnotationDef &&
+                  SummaryReplicateOrder.time == SummaryReplicateGraphPane.ReplicateOrder;
+            foreach (var replicateValue in groupByValues)
+            {
+                replicateOrderContextMenuItem.DropDownItems.Add(OrderByReplicateAnnotationMenuItem(
+                    replicateValue, SummaryReplicateGraphPane.OrderByReplicateAnnotation));
             }
             
             if (groupByValues.Length > 0)

@@ -1,0 +1,18 @@
+# Top-most EditorConfig file
+root = true
+
+# All files - UTF-8 without BOM, CRLF line endings (Windows project)
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Shell scripts must use LF (Unix line endings)
+[*.sh]
+end_of_line = lf
+
+[*.cs]
+
+# IDE0011: Add braces
+csharp_prefer_braces = true

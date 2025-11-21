@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Rita Chupalov <ritach .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -39,11 +39,11 @@ using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
+using pwiz.Skyline.Controls.Databinding.AuditLog;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -491,13 +491,13 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
 
-                var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
+                var publishDialog = ShowDialog<PublishDocumentDlgPanorama>(loginDialog.OkDialog);
                 WaitForCondition(() => publishDialog.IsLoaded);
                 RunUI(() =>
                 {
                     publishDialog.SelectItem(testFolderName);
                 });
-                PauseForScreenShot<PublishDocumentDlg>("Folder selection dialog.");
+                PauseForScreenShot<PublishDocumentDlgPanorama>("Folder selection dialog.");
                 var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
                 var browserConfirmationDialog = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
                 OkDialog(browserConfirmationDialog, browserConfirmationDialog.ClickYes);

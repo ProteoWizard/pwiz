@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,18 +25,19 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -49,8 +50,8 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -388,48 +389,26 @@ namespace pwiz.SkylineTestUtil
             return def;
         }
 
-        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue)
+        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue, string identityAnnotation = null)
         {
             var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
 
             RunUI(() =>
             {
                 dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
+                dialog.ControlAnnotation = controlGroupAnnotation;
             });
 
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
+            WaitForConditionUI(() => dialog.ControlValueOptions.Any());
 
             RunUI(() =>
             {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.RadioScopePerProtein.Checked = false;
-            });
-
-            OkDialog(dialog, dialog.OkDialog);
-
-            return FindGroupComparison(name);
-        }
-
-        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation,
-            string controlGroupValue, string compareValue, string identityAnnotation)
-        {
-            var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
-
-            RunUI(() =>
-            {
-                dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
-            });
-
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
-
-            RunUI(() =>
-            {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
+                dialog.ControlValue = controlGroupValue;
+                dialog.CaseValue = compareValue;
+                if (identityAnnotation != null)
+                {
+                    dialog.IdentityAnnotation = identityAnnotation;
+                }
                 dialog.RadioScopePerProtein.Checked = false;
             });
 
@@ -472,6 +451,75 @@ namespace pwiz.SkylineTestUtil
         {
             RunUI(() => SkylineWindow.NewDocument(forced));
             WaitForDocumentLoaded();
+        }
+
+        public static void TestHttpClientCancellation(Action actionToCancel)
+        {
+            // This should get canceled silently without showing a MessageDlg.
+            // While it is difficult to test for not showing something without waiting,
+            // if a MessageDlg were shown, that would cause a failure in subsequent tests.
+            using (HttpClientTestHelper.SimulateCancellationClickWithException())
+            {
+                TestCancellationWithoutMessageDlg(actionToCancel);
+            }
+        }
+
+        public static void TestCancellationWithoutMessageDlg(Action actionToCancel)
+        {
+            SkylineWindow.BeginInvoke(actionToCancel);
+            // This wait triggered reliably with a failure that showed a message.
+            // Even if it does not, the test will fail later, but may be more confusing
+            // to debug, which is the reason for adding this assertion.
+            var messageDlg = TryWaitForOpenForm<MessageDlg>(200);
+            Assert.IsNull(messageDlg, string.Format("Unexpected MessageDlg: {0}", messageDlg?.Message));
+        }
+
+
+        public static void TestHttpClientWithNoNetwork(Action actionToFail, string prefix = null)
+        {
+            TestHttpClientWithNoNetwork(actionToFail, (expectedMessage, actualMessage) =>
+            {
+                if (prefix != null)
+                    expectedMessage = TextUtil.LineSeparate(prefix, expectedMessage);
+
+                Assert.AreEqual(expectedMessage, actualMessage);
+            });
+        }
+
+        public static void TestHttpClientWithNoNetworkEx(Action actionToFail, params string[] extraParts)
+        {
+            TestHttpClientWithNoNetwork(actionToFail, (expectedMessage, actualMessage) =>
+            {
+                AssertEx.Contains(actualMessage, expectedMessage);
+                AssertEx.Contains(actualMessage, extraParts);
+            });
+        }
+
+        public static void TestHttpClientWithNoNetwork(Action actionToFail, Action<string, string> validateMessage)
+        {
+            using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
+            var expectedMessage = helper.GetExpectedMessage();
+            TestMessageDlgShown(actionToFail, actualMessage => validateMessage(expectedMessage, actualMessage));
+        }
+
+        public static void TestMessageDlgShown(Action actionToShow, string expectedMessage)
+        {
+            TestMessageDlgShown(actionToShow, actualMessage =>
+                Assert.AreEqual(expectedMessage, actualMessage));
+        }
+
+        public static void TestMessageDlgShownContaining(Action actionToShow, params string[] parts)
+        {
+            TestMessageDlgShown(actionToShow, actualMessage =>
+                AssertEx.Contains(actualMessage, parts));
+        }
+
+        public static void TestMessageDlgShown(Action actionToShow, Action<string> validateMessage)
+        {
+            // Cannot use RunDlg here because it requires actionShow to complete.
+            var errDlg = ShowDialog<MessageDlg>(actionToShow);
+            RunUI(() => validateMessage(errDlg.Message));
+            OkDialog(errDlg, errDlg.OkDialog);
         }
 
         public class Tool : IDisposable
@@ -921,6 +969,67 @@ namespace pwiz.SkylineTestUtil
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
 
             return docAfterAdd;
+        }
+
+
+        /// <summary>
+        /// Helper class for tests to show and dispose of a <see cref="DocumentationViewer"/>.
+        /// </summary>
+        public class DocumentationViewerHelper : IDisposable
+        {
+            private readonly string _originalDirectory;
+
+            public DocumentationViewerHelper(TestContext testContext, Action showViewer)
+            {
+                _originalDirectory = DocumentationViewer.TestWebView2EnvironmentDirectory;
+                DocumentationViewer.TestWebView2EnvironmentDirectory = testContext.GetTestResultsPath(@"WebView2");
+                Directory.CreateDirectory(DocumentationViewer.TestWebView2EnvironmentDirectory);
+
+                DocViewer = ShowDialog<DocumentationViewer>(showViewer);
+
+                // Wait for the document to load completely in WebView2
+                WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Length > 0);
+            }
+            
+            public DocumentationViewer DocViewer { get; }
+
+            public void Dispose()
+            {
+                OkDialog(DocViewer, DocViewer.Close);
+                
+                // Give folder clean-up an extra 2 seconds to complete
+                TryWaitForCondition(2000, CleanupTestDataFolder);
+                DocumentationViewer.TestWebView2EnvironmentDirectory = _originalDirectory;
+            }
+
+            private bool CleanupTestDataFolder()
+            {
+                var testDataFolder = DocumentationViewer.TestWebView2EnvironmentDirectory;
+                // Clean up test data folder if it was created
+                if (Directory.Exists(testDataFolder))
+                {
+                    // Give WebView2 more time to release file handles
+                    Thread.Sleep(200);
+
+                    // Force garbage collection to help release any remaining handles
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+
+                    // Try to delete with retry logic for locked files
+                    try
+                    {
+                        TryHelper.TryTwice(() => Directory.Delete(testDataFolder, true), 5, 200, @"Failed to cleanup WebView2 test folder");
+                    }
+                    catch
+                    {
+                        // Ignore and expect the test to fail with a useful message about why this folder cannot be removed
+                        return false;
+                    }
+                }
+
+                return true;
+            }
         }
     }
 }

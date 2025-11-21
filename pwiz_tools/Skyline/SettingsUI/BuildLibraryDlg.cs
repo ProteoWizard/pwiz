@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -139,7 +139,10 @@ namespace pwiz.Skyline.SettingsUI
             Grid = gridInputFiles;
             Grid.FilesChanged += (sender, e) =>
             {
-                btnNext.Enabled = tabControlMain.SelectedIndex == (int)Pages.files || Grid.IsReady;
+                if (tabControlMain.SelectedIndex == (int)Pages.files)
+                {
+                    btnNext.Enabled = Grid.IsReady;
+                }
             };
 
             // If we're not using dataSourceGroupBox (because we're in small molecule mode) shift other controls over where it was
@@ -195,7 +198,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public string AddLibraryFile { get; private set; }
 
-        private bool ValidateBuilder(bool validateInputFiles)
+        public bool ValidateBuilder(bool validateInputFiles)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))

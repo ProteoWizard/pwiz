@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Util.Extensions
         public const string SPACE = " ";
         public const string CARET = @"^";
         public const string AMPERSAND = @"&";
+        public const string AT = @"@";
         public const string EQUAL = @"=";
         public const string FORWARD_SLASH = @"/";
         public const string SEMICOLON = @";";

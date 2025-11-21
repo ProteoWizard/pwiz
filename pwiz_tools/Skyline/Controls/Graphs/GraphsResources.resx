@@ -169,9 +169,6 @@
   <data name="AllChromatogramsGraph_UpdateStatus_Hide" xml:space="preserve">
     <value>Hide</value>
   </data>
-  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
-    <value>Annotation: </value>
-  </data>
   <data name="AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1" xml:space="preserve">
     <value>{0} cutoff value must be greater or equal than 0. and lesser or equal than 1.</value>
   </data>
@@ -586,9 +583,6 @@ Here are the last 3 errors:
   <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
     <value>Peptide</value>
   </data>
-  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
-    <value>Property: </value>
-  </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0} (at {1} points minimum)</value>
   </data>
@@ -743,10 +737,10 @@ Here are the last 3 errors:
     <value>No quantitative chromatograms found</value>
   </data>
   <data name="GraphChromatogram_SetRetentionTimeIdIndicators_Libraries_are_still_loading" xml:space="preserve">
-	  <value>Libraries are still loading</value>
+    <value>Libraries are still loading</value>
   </data>
   <data name="GraphChromatogram_SetRetentionTimeIdIndicators_Waiting_for_retention_time_alignment" xml:space="preserve">
-	  <value>Waiting for retention time alignment</value>
+    <value>Waiting for retention time alignment</value>
   </data>
   <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
     <value>Calculating...</value>

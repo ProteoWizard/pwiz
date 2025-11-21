@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Sophie Pallanck <srpall .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,8 +21,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -355,10 +355,10 @@ public class LKContainerBrowser : PanoramaFolderBrowser
     private readonly bool _uploadPerms;
     private readonly List<KeyValuePair<PanoramaServer, JToken>> _listServerFolders = new List<KeyValuePair<PanoramaServer, JToken>>();
 
-    public LKContainerBrowser(List<PanoramaServer> servers, string state, bool uploadPerms, string initialPath) : base(servers, state, initialPath)
+    public LKContainerBrowser(List<PanoramaServer> servers, string state, bool uploadPerms, string initialPath, IProgressMonitor progressMonitor = null) : base(servers, state, initialPath)
     {
         _uploadPerms = uploadPerms;
-        InitializeServers();
+        InitializeServers(progressMonitor ?? new SilentProgressMonitor());
     }
 
     public override void DynamicLoad(TreeNode node)
@@ -370,7 +370,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
     /// Initializes the JSON that will be
     /// used to build the TreeView of folders
     /// </summary>
-    private void InitializeServers()
+    private void InitializeServers(IProgressMonitor progressMonitor)
     {
         if (ServerList == null)
         {
@@ -378,24 +378,39 @@ public class LKContainerBrowser : PanoramaFolderBrowser
         }
 
         var listErrorServers = new List<Tuple<PanoramaServer, string>>();
-        foreach (var server in ServerList)
+        IProgressStatus progressStatus = new ProgressStatus(Resources.PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders);
+        
+        for (int i = 0; i < ServerList.Count; i++)
         {
+            var server = ServerList[i];
+            
+            // Update progress for multiple servers after the first server
+            if (i > 0)
+            {
+                progressStatus = progressStatus.ChangePercentComplete(i * 100 / ServerList.Count);
+                progressMonitor.UpdateProgress(progressStatus);
+            }
+            
+            // Check for cancellation
+            if (progressMonitor is { IsCanceled: true })
+                throw new OperationCanceledException();
+            
             try
             {
-                InitializeTreeServers(server, _listServerFolders);
+                InitializeTreeServers(server, _listServerFolders, progressMonitor, progressStatus);
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                if (ex is WebException || ex is PanoramaServerException)
-                {
-
-                    listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
-                }
+                // Network errors are expected when servers are unreachable
+                // NetworkRequestException extends IOException
+                listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
             }
+            // Let all other exceptions propagate (ArgumentException, NullReferenceException, etc. are programming defects)
         }
         if (listErrorServers.Count > 0)
         {
-            throw new Exception(CommonTextUtil.LineSeparate(Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers,
+            throw new IOException(CommonTextUtil.LineSeparate(
+                Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers_,
                 string.Empty,
                 ServersToString(listErrorServers)));
         }
@@ -409,10 +424,11 @@ public class LKContainerBrowser : PanoramaFolderBrowser
     /// <summary>
     /// Generates JSON containing the folder structure for the given server
     /// </summary>
-    public virtual void InitializeTreeServers(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
+    public virtual void InitializeTreeServers(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers, 
+        IProgressMonitor progressMonitor, IProgressStatus progressStatus)
     {
         IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI, server.Username, server.Password);
-        listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(null)));
+        listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(null, progressMonitor, progressStatus)));
     }
 
     public override void InitializeTreeView(TreeView tree)
@@ -489,11 +505,11 @@ public class LKContainerBrowser : PanoramaFolderBrowser
                     folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                 else
                 {
-                    var effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+                    var effectiveValue = (string)moduleProperties[0]![@"effectiveValue"];
 
                     folderNode.ImageIndex =
                         folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
+                            (effectiveValue!.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
                                 ? (int)ImageId.chrom_lib
                                 : (int)ImageId.labkey;
                 }
@@ -540,20 +556,20 @@ public class WebDavBrowser : PanoramaFolderBrowser
             Uri query = null;
             try
             {
-                query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, "?method=json"));
-                using var requestHelper = new PanoramaRequestHelper(new LabkeySessionWebClient(folderInfo.Server));
+                query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, @"?method=json"));
+                using var requestHelper = new HttpPanoramaRequestHelper(folderInfo.Server);
                 JToken json = requestHelper.Get(query);
                 if ((int)json[@"fileCount"] != 0)
                 {
                     var files = json[@"files"];
-                    foreach (var file in files)
+                    foreach (var file in files!)
                     {
                         var fileName = (string)file[@"text"];
                         var isFile = (bool)file[@"leaf"];
                         if (!isFile)
                         {
                             var canRead = (bool)file[@"canRead"];
-                            if (!canRead || fileName.Equals("assaydata"))
+                            if (!canRead || fileName!.Equals(@"assaydata"))
                             {
                                 continue;
                             }
@@ -692,8 +708,9 @@ public class TestPanoramaFolderBrowser : LKContainerBrowser
     }
 
     public override void InitializeTreeServers(PanoramaServer server,
-        List<KeyValuePair<PanoramaServer, JToken>> listServers)
+        List<KeyValuePair<PanoramaServer, JToken>> listServers,
+        IProgressMonitor progressMonitor, IProgressStatus progressStatus)
     {
-        // Do nothing
+        // Do nothing - test class uses pre-loaded JSON
     }
 }

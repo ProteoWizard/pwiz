@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,7 +32,7 @@ namespace pwiz.SkylineCmd
         static int Main(string[] args)
         {
             var argsList = args.ToList();
-            if (argsList.FirstOrDefault() == "--ui")
+            if (argsList.FirstOrDefault() == @"--ui")
             {
                 // If "--ui" is specified, remove it from the argument list
                 // This enables invoking Skyline's Main without any arguments to bring up the UI
@@ -63,7 +63,8 @@ namespace pwiz.SkylineCmd
         {
             try
             {
-                argsList.Insert(0, "--sw=" + (Console.BufferWidth - 1));
+                // ReSharper disable once LocalizableElement
+                argsList.Insert(0, @"--sw=" + (Console.BufferWidth - 1));
             }
             catch
             {
@@ -74,15 +75,16 @@ namespace pwiz.SkylineCmd
         private static Encoding GetPreferredEncoding(List<string> argsList)
         {
             // If forcing culture to be something other than the system settings, then also force UTF8 encoding
-            return argsList.FirstOrDefault(arg => arg.StartsWith("--culture=")) != null ? Encoding.UTF8 : null;
+            // ReSharper disable once LocalizableElement
+            return argsList.FirstOrDefault(arg => arg.StartsWith(@"--culture=")) != null ? Encoding.UTF8 : null;
         }
 
         private static MethodInfo GetMainFunction()
         {
             // SkylineCmd and Skyline must be in the same directory
             string dirPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
-            const string SKYLINE = "Skyline.exe";
-            const string SKYLINE_DAILY = "Skyline-daily.exe"; // Keep -daily;
+            const string SKYLINE = @"Skyline.exe";
+            const string SKYLINE_DAILY = @"Skyline-daily.exe"; // Keep -daily;
             foreach (var exeName in new []{SKYLINE, SKYLINE_DAILY})
             {
                 string exePath = Path.Combine(dirPath, exeName);

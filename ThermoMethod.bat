@@ -1,0 +1,1 @@
+C:\proj\review\pwiz_tools\Skyline\bin\x64\Debug\Method\Thermo\BuildThermoMethod.exe -t -m "E:\test\20250212_ThermoMethod\ThoriumMethod\60SPD_PQ500PRTC_ToAlignTemplate.meth" "E:\test\20250212_ThermoMethod\ThoriumMethod\13xjtwsa.qkw\transitions.txt"

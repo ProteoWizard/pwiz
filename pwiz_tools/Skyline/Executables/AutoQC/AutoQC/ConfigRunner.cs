@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -1112,6 +1112,17 @@ namespace AutoQC
         public bool CanStart()
         {
             return IsStopped() || IsError();
+        }
+
+        public bool PanoramaUploadError
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _panoramaUploadError || _panoramaFatalError;
+                }
+            }
         }
 
         public string ImportResultsFileArgs(ImportContext importContext)

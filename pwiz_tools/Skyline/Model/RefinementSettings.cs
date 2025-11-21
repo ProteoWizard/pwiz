@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,6 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -202,7 +201,7 @@ namespace pwiz.Skyline.Model
         public bool AutoPickChildrenOff { get; set; }
         public int NumberOfDecoys { get; set; }
         public string DecoysMethod { get; set; }
-        public bool NeverShiftDecoyPrecursorMass { get; set; } = false;
+        public bool NeverShiftDecoyPrecursorMass { get; set; }
 
         public enum ReplicateInclusion { all, best }
 
@@ -257,9 +256,15 @@ namespace pwiz.Skyline.Model
             HashSet<int> outlierIds = new HashSet<int>();
             if (RTRegressionThreshold.HasValue)
             {
-                // TODO: Move necessary code into Model.
-                var outliers = RTLinearRegressionGraphPane.CalcOutliers(document,
-                    RTRegressionThreshold.Value, RTRegressionPrecision, UseBestResult);
+                var outliers = RetentionTimes.RetentionTimeRegressionGraphData.CalcOutliers(
+                    document,
+                    RTRegressionThreshold.Value,
+                    RTRegressionPrecision,
+                    UseBestResult,
+                    RetentionTimes.PointsTypeRT.targets, // Explicit, Model-level enum
+                    RetentionTimes.RegressionMethodRT.linear,
+                    Settings.Default.RtCalculatorOption,
+                    Settings.Default.RTRefinePeptides);
 
                 foreach (var nodePep in outliers)
                     outlierIds.Add(nodePep.Id.GlobalIndex);

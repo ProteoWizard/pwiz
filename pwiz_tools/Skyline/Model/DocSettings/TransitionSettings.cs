@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -2363,6 +2363,9 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public FullScanAcquisitionMethod AcquisitionMethod { get; private set; }
 
+        public bool IsAllIons => (Equals(AcquisitionMethod, FullScanAcquisitionMethod.DIA) && IsolationScheme.IsAllIons) ||
+                                 Equals(AcquisitionMethod, FullScanAcquisitionMethod.EI);
+
         [TrackChildren]
         public IsolationScheme IsolationScheme { get; private set; }
 
@@ -2532,6 +2535,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsEnabledMsMs
         {
             get { return AcquisitionMethod != FullScanAcquisitionMethod.None; }
+        }
+
+        public bool IsEI
+        {
+            get { return AcquisitionMethod == FullScanAcquisitionMethod.EI; }
         }
 
         public bool IsCentroidedMsMs

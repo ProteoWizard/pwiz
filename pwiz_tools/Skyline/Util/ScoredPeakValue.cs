@@ -1,4 +1,4 @@
-﻿using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Hibernate;
 using System;

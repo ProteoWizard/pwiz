@@ -331,10 +331,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
     <value>トランジション設定、イオン移動度フィルタリング、ウィンドウタイプの値が必要です</value>
-    <comment>Needs Review:English text changed
-Old English:need a value for  Transition Settings  Ion mobility filtering  Window type
-Current English:need a value for Transition Settings, Ion mobility filtering, Window type
-Old Localized:トランジション設定のイオン移動度フィルタウィンドウタイプの値が必要</comment>
   </data>
   <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
     <value>混合イオン移動度タイプには対応していません</value>
@@ -347,5 +343,17 @@ Old Localized:トランジション設定のイオン移動度フィルタウィ
   </data>
   <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
     <value>次に対する空のクロマトグラムを破棄しています: {0}</value>
+  </data>
+  <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
+    <value>Loading {0}</value>
+    <comment>Needs Review:Inconsistent translation
+Candidate Translation:{0}の読み込み中
+Candidate Translation:{0}を読み込んでいます</comment>
+  </data>
+  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
+    <value>注釈： </value>
+  </data>
+  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
+    <value>プロパティ： </value>
   </data>
 </root>

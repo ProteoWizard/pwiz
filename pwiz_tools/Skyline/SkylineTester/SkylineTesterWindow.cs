@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -271,6 +271,18 @@ namespace SkylineTester
                         statusLabel.Text = line.Substring(3);
                     });
                     return false;
+                }
+
+                // Detect TestRunner completion
+                if (line.StartsWith("Tests finished in "))
+                {
+                    RunUI(() =>
+                    {
+                        // Clear the running test name and reset status
+                        RunningTestName = null;
+                        statusLabel.Text = "Tests completed";
+                    });
+                    return true; // Still show this line in output
                 }
 
                 if (line.StartsWith("...skipped ") ||

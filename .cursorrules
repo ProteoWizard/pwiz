@@ -1,0 +1,118 @@
+# Cursor project orientation for ProteoWizard (pwiz)
+#
+# This file provides Cursor-specific behavior guidance.
+# For detailed coding conventions, style guidelines, and testing patterns,
+# see ai/STYLEGUIDE.md - the comprehensive style guide used by all AI tools.
+# For project context, common gotchas, and architectural patterns,
+# see ai/MEMORY.md - essential context for AI tools working on this project.
+
+[CRITICAL_FOR_AI_TOOLS]
+# READ THESE FILES AT THE START OF EVERY CONVERSATION AND AFTER ANY CONTEXT RESET/SUMMARY:
+# 
+# 1. MEMORY.md - DRY principle, common patterns, architectural decisions, project gotchas
+# 2. STYLEGUIDE.md - Code style, file headers, testing patterns, localization, file I/O (FileSaver)
+# 3. TESTING.md - Test structure, AbstractFunctionalTestEx helpers, translation-proof testing
+# 4. WORKFLOW.md - Git workflow, TODO lifecycle, branch management
+#
+# These files contain essential context that MUST be maintained across conversation summaries.
+# When writing code or tests, actively apply the principles documented in these files:
+# - DRY: Extract common patterns into parameterized helpers (see MEMORY.md examples)
+# - Use AbstractFunctionalTestEx helpers (TestMessageDlgShownContaining, TestHttpClientCancellation, etc.)
+# - Always use resource strings for assertions (never hardcoded English)
+# - Always use FileSaver for atomic file writes (see STYLEGUIDE.md)
+# - Follow established patterns in similar existing code
+#
+# If you notice yourself writing repetitive code or tests, STOP and refactor to be DRY.
+
+[project]
+name = "ProteoWizard (pwiz)"
+description = "C++ libraries and tools for proteomics; native builds via MSVC/GCC and Boost.Build"
+primary_languages = ["C++", "C#", "Jam", "Batch", "Shell"]
+
+[on_open]
+message = "Use quickbuild.bat on Windows to build. Do not introduce new build systems. Respect existing indentation and avoid unrelated reformatting."
+
+[paths]
+code_roots = [
+  "pwiz/",
+  "pwiz_tools/",
+  "pwiz_aux/",
+]
+third_party = ["libraries/"]
+outputs = [
+  "build-nt-x86/msvc-release-x86_64/",
+]
+
+entry_points = [
+  "quickbuild.bat",
+  "quickbuild.sh",
+  "pwiz.sln",
+  "pwiz_tools/Skyline/Skyline.sln",
+  "bs.bat",
+  "doc/index.html",
+]
+
+[rules]
+- Prefer `quickbuild.bat` on Windows; pass non-interactive flags where applicable.
+- Keep code style intact: do not reformat unrelated files; preserve tabs/spaces.
+- When adding sources, update the appropriate Jamfile or Visual Studio project.
+- Use existing vendor libraries from `libraries/`; do not fetch replacements.
+- For documentation, add concise notes to `README.md` and `doc/`.
+- Project conventions: See ai/MEMORY.md for essential project context and common gotchas.
+
+[skyline]
+primary_solution = "pwiz_tools/Skyline/Skyline.sln"
+requires_full_repo_checkout = true
+full_build_command = "bs.bat"  # Calls pwiz_tools\\build-skyline.bat with vendor license acceptance
+shared_dependencies = [
+  "pwiz_tools/Shared",
+]
+docs = [
+  "https://skyline.ms/wiki/home/software/Skyline/page.view?name=HowToBuildSkylineTip",
+]
+
+[assistant_behaviors]
+- Provide minimal, actionable explanations.
+- Use fenced code blocks only for relevant snippets or commands.
+- Default to read-only discovery before edits; then apply focused edits.
+- When referring to the person working with the AI, use "the developer" not "the user".
+  - "The user" refers to end-users of Skyline software.
+  - "The developer" refers to the person pair-programming with the AI.
+  - This avoids confusion when discussing both developers and end-users in the same conversation.
+
+[async_patterns]
+# See ai/STYLEGUIDE.md for comprehensive async/await guidelines
+reference = "ai/STYLEGUIDE.md"
+
+[build_and_testing]
+- LLM agents CANNOT build or run this project directly.
+- Build and test operations must be performed by the developer using Visual Studio.
+- When code changes are made, request that the developer build and test the changes.
+- Do not attempt to run quickbuild.bat, bs.bat, or any build commands.
+- Do not attempt to run tests or execute the application.
+
+[file_headers]
+# See ai/STYLEGUIDE.md for file header format and AI attribution guidelines
+reference = "ai/STYLEGUIDE.md"
+
+[testing]
+# See ai/TESTING.md for comprehensive testing guidelines
+reference = "ai/TESTING.md"
+
+[style_skyline_csharp]
+# See ai/STYLEGUIDE.md for comprehensive C# coding conventions
+reference = "ai/STYLEGUIDE.md"
+docs = [
+  "ai/STYLEGUIDE.md"
+]
+
+[localization]
+# See ai/STYLEGUIDE.md for detailed localization guidelines
+reference = "ai/STYLEGUIDE.md"
+
+[ui_guidelines]
+# See ai/STYLEGUIDE.md for detailed UI guidelines
+reference = "ai/STYLEGUIDE.md"
+
+[executables]
+note = "Projects under pwiz_tools/Skyline/Executables are separate solutions (stand-alone tools and utilities). Not built by Skyline.sln; prefer Skyline conventions unless local overrides are required."

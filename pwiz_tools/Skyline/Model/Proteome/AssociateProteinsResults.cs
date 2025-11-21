@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -263,12 +263,6 @@ namespace pwiz.Skyline.Model.Proteome
             public bool IsDocumentChanged(SrmDocument docOrig)
             {
                 return false;
-            }
-
-            public System.Windows.Forms.DialogResult ShowDialog(
-                Func<System.Windows.Forms.IWin32Window, System.Windows.Forms.DialogResult> show)
-            {
-                throw new InvalidOperationException();
             }
 
             public void SetProgressCheckCancel(int step, int totalSteps)

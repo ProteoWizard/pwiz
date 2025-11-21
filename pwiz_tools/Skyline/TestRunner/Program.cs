@@ -267,6 +267,7 @@ namespace TestRunner
         [STAThread, MethodImpl(MethodImplOptions.NoOptimization)]
         static int Main(string[] args)
         {
+            Console.OutputEncoding = Encoding.UTF8;
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
@@ -288,9 +289,6 @@ namespace TestRunner
                     Report(commandLineArgs.ArgAsString("report"));
                     return 0;
             }
-
-            if (commandLineArgs.ArgAsString("language") != "en" && commandLineArgs.ArgAsString("language") != "en-US")
-                Console.OutputEncoding = Encoding.UTF8;  // So we can send Japanese to SkylineTester, which monitors our stdout
 
             Console.WriteLine();
             if (!commandLineArgs.ArgAsBool("status") && !commandLineArgs.ArgAsBool("buildcheck") && !commandLineArgs.HasArg("listonly") && commandLineArgs.ArgAsBool("showheader"))
@@ -663,7 +661,7 @@ namespace TestRunner
         {
             var dockerVersionOutput = RunTests.RunCommand("docker", "version -f \"{{json .}}\"", RunTests.IS_DOCKER_RUNNING_MESSAGE);
             var dockerVersionJson = JObject.Parse(dockerVersionOutput);
-            if (dockerVersionJson["Server"]["Os"].Value<string>() != "windows")
+            if (dockerVersionJson["Server"]!["Os"]!.Value<string>() != "windows")
             {
                 Console.WriteLine("Switching Docker engine to Windows containers (this will stop any running containers)...");
                 RunTests.RunCommand($"{Environment.GetEnvironmentVariable("ProgramFiles")}\\Docker\\Docker\\DockerCli.exe",
@@ -700,12 +698,20 @@ namespace TestRunner
                 if (!File.Exists(RunTests.ALWAYS_UP_SERVICE_EXE))
                 {
                     using var tmpDir = new TemporaryDirectory();
-                    using var webClient = new WebClient();
-                    string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
-                    webClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
+                    try
+                    {
+                        using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                        string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
+                        httpClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
 
-                    using var alwaysUpRunnerCode = new ZipFile(tmpFile);
-                    alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+                        using var alwaysUpRunnerCode = new ZipFile(tmpFile);
+                        alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to download AlwaysUpRunner: {ex.Message}");
+                        throw new IOException($"Cannot build Docker image without AlwaysUpRunner. {ex.Message}", ex);
+                    }
 
                     Console.Write("Enter password to extract AlwaysUpCLT_licensed_binaries: ");
                     var pass = commandLineArgs.ArgAsStringOrDefault("alwaysupcltpassword") ?? GetPasswordFromConsole();

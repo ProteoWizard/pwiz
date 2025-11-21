@@ -102,7 +102,17 @@ namespace BiblioSpec
                                        "of false-positives.");
         }
 
-        collectSpectra();
+        try
+        {
+            collectSpectra();
+        }
+        catch (BlibException& e)
+        {
+            if (bal::icontains(e.what(), "no such table: details.MassSpectrumItems"))
+                throw BlibException(false, "This file seems to have been exported without the appropriate \"Spectra to store\" option. Export it again with the \"All\" setting.\r\n%s", e.what());
+            throw;
+        }
+
         collectPsms();
 
         // add psms by filename

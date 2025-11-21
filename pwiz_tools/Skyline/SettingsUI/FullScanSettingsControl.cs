@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *
@@ -349,8 +349,26 @@ namespace pwiz.Skyline.SettingsUI
                 comboEnrichments.Enabled = true;
             }
 
+            SetPrecursorResEnabled(); // EI mode treats MS1 data as fragments, so grey out MS1 settings in EI mode
+
             UpdateSelectivityOption();
         }
+
+        private void SetPrecursorResEnabled()
+        {
+            // EI mode treats MS1 data as fragments, so grey out MS1 settings in EI mode
+            var enableRes = (PrecursorIsotopesCurrent != FullScanPrecursorIsotopes.None) && !MS2Only;
+            textPrecursorRes.Enabled = enableRes;
+            textPrecursorAt.Enabled = enableRes;
+            comboPrecursorAnalyzerType.Enabled = enableRes;
+            // Set tooltip on MS1 settings label to explain why combo is disabled
+            toolTip.SetToolTip(this.label32,
+                PrecursorIsotopesCurrent == FullScanPrecursorIsotopes.None || !MS2Only
+                    ? string.Empty
+                    : DocSettingsResources.FullScanAcquisitionMethod_EI_TOOLTIP);
+        }
+
+        private bool MS2Only => AcquisitionMethod == FullScanAcquisitionMethod.EI; // Does MS2 acquisition mode preclude MS1 analysis?
 
         private void comboPrecursorIsotopes_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -405,7 +423,6 @@ namespace pwiz.Skyline.SettingsUI
 
                 comboEnrichments.Enabled = (comboEnrichments.SelectedIndex != -1);
                 textPrecursorIsotopeFilter.Enabled = true;
-                comboPrecursorAnalyzerType.Enabled = true;
             }
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(comboPrecursorAnalyzerType.Enabled, null)); // Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
@@ -663,6 +680,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 comboProductAnalyzerType.Enabled = true;
             }
+
+            SetPrecursorResEnabled(); // EI mode treats MS1 data as fragments, so grey out MS1 settings in EI mode
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(null, comboProductAnalyzerType.Enabled));// Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
             AcquisitionMethodChanged?.Invoke();
@@ -900,7 +919,7 @@ namespace pwiz.Skyline.SettingsUI
                 resolvingPower.Value.ToString(@"#,0.####");
         }
 
-        public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
+        private void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
                                     FullScanMassAnalyzerType analyzerTypeCurrent,
                                     double? resCurrent,
                                     double? resMzCurrent,

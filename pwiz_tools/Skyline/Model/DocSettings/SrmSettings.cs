@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -531,7 +531,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangeMeasuredResults(MeasuredResults prop)
         {
+            ValidateMeasuredResults(prop);
+
             return ChangeProp(ImClone(this), im => im.MeasuredResults = prop);
+        }
+
+        private void ValidateMeasuredResults(MeasuredResults measuredResults)
+        {
+            if (measuredResults != null && measuredResults.Chromatograms.Count == 0)
+                throw new ArgumentException(@"MeasuredResults must have at least one ChromatogramSet. Use null to remove all results.");
         }
 
         public SrmSettings ChangeIsResultsJoiningDisabled(bool prop)
@@ -1227,6 +1235,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetAlignedRetentionTimes(ChromatogramSet chromatogramSet, MsDataFileUri filePath, IList<Target> targets)
         {
+            var alignmentFunction = DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, filePath, true);
+            if (alignmentFunction == null)
+            {
+                return Array.Empty<double>();
+            }
             var batchNames = new List<string> { null };
             if (!string.IsNullOrEmpty(chromatogramSet?.BatchName))
             {
@@ -1259,22 +1272,17 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
 
-                    var alignmentFunction = libraryAlignment.Alignments.GetAlignmentFunction(filePath, true);
-                    if (alignmentFunction != null)
+                    var times = new List<double>();
+                    foreach (var normalizedTime in libraryAlignment.GetNormalizedRetentionTimes(spectrumSourceFiles,
+                                 targets))
                     {
-                        var times = new List<double>();
-                        foreach (var normalizedTime in libraryAlignment.GetNormalizedRetentionTimes(spectrumSourceFiles,
-                                     targets))
-                        {
-                            var alignedTime = alignmentFunction.GetY(normalizedTime);
-                            // Console.Out.WriteLine("Mapping normalized time {0} to {1} for file {2}", normalizedTime, alignedTime, filePath.GetFileName());
-                            times.Add(alignedTime);
-                        }
-                        if (times.Count > 0)
-                        {
-                            return times.ToArray();
-                        }
-
+                        var alignedTime = alignmentFunction.GetY(normalizedTime);
+                        // Console.Out.WriteLine("Mapping normalized time {0} to {1} for file {2}", normalizedTime, alignedTime, filePath.GetFileName());
+                        times.Add(alignedTime);
+                    }
+                    if (times.Count > 0)
+                    {
+                        return times.ToArray();
                     }
                 }
             }
@@ -1301,6 +1309,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetRetentionTimesNotAlignedTo(ChromatogramSet chromatogramSet, MsDataFileUri fileNotAlignedTo, ICollection<Target> targets, ICollection<SignedMz> precursorMzs)
         {
+            if (null != DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, fileNotAlignedTo,
+                    true))
+            {
+                return Array.Empty<double>();
+            }
             var result = new List<double>();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
@@ -1309,11 +1322,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
-                if (null != DocumentRetentionTimes.GetLibraryAlignment(library.Name))
-                {
-                    // TODO(nicksh): if there is a batch name, then potentially a subset of the times in this library should be returned.
-                    continue;
-                }
                 result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
@@ -2021,7 +2029,13 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasUnalignedTimes()
         {
-            return DocumentRetentionTimes.HasUnalignedTimes();
+            if (TryGetAlignmentTarget(out var alignmentTarget) && alignmentTarget == null)
+            {
+                return true;
+            }
+
+            return MeasuredResults.MSDataFilePaths.Any(file =>
+                DocumentRetentionTimes.GetLibraryAlignmentFunction(PeptideSettings.Libraries, file, true) == null);
         }
 
         /// <summary>
@@ -2109,6 +2123,17 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
 
                 result = result.ChangeDocumentRetentionTimes(DocumentRetentionTimes.EMPTY);
+            }
+
+            if (documentFormat < DocumentFormat.ELECTRON_IONIZATION)
+            {
+                if (Equals(FullScanAcquisitionMethod.EI, result.TransitionSettings.FullScan.AcquisitionMethod))
+                {
+                    result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(
+                        result.TransitionSettings.FullScan.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA,
+                            new IsolationScheme(null, Array.Empty<IsolationWindow>(),
+                                IsolationScheme.SpecialHandlingType.ALL_IONS))));
+                }
             }
 
             return result;
@@ -2265,13 +2290,13 @@ namespace pwiz.Skyline.Model.DocSettings
             // We want Skyline to be able to read older documents where <measured_results> come before <data_settings>
             if (reader.IsStartElement(new XmlElementHelper<MeasuredResults>().ElementNames[0]))
             {
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>()?.NullIfEmpty();
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;   
             }
             else
             {
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>()?.NullIfEmpty();
             }
             DocumentRetentionTimes = reader.DeserializeElement<DocumentRetentionTimes>() ?? DocumentRetentionTimes.EMPTY;
             reader.ReadEndElement();
@@ -2857,7 +2882,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // If the integration strategy has changed, then force a full update of all results
             if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll
                 || !Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation)
-                || !Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
+                || !settingsNew.DocumentRetentionTimes.Equivalent(settingsOld.DocumentRetentionTimes))
             {
                 DiffResults = DiffResultsAll = true;
             }

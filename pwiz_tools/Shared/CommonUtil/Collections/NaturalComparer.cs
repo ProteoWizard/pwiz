@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Clark Brace <clarkbrace@gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -96,7 +96,7 @@ namespace pwiz.Common.Collections
                 var decimalPart = ParseLocalizedDecimal(stringPart);
                 if (!decimalPart.HasValue)
                 {
-                    if (StringComparer.OrdinalIgnoreCase.Compare(stringPart, "0") >= 0)
+                    if (StringComparer.OrdinalIgnoreCase.Compare(stringPart, @"0") >= 0)
                     {
                         decimalPart = decimal.MaxValue;
                     }

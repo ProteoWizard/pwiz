@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model
 
             _sequences = sequences.GetEnumerator();
 
-            InitMatcherSettings(settings, defSetStatic, defSetHeavy);
+            InitMatcherSettings(settings, defSetStatic, defSetHeavy, null);
             if (UnmatchedSequences.Count > 0)
             {
                 UnmatchedSequences.Sort();

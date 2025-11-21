@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return;
             }
 
-            var selectedRows = GetSelectedRows<FoldChangeBindingSource.FoldChangeRow>(BoundDataGridView);
+            var selectedRows = GetSelectedRows<FoldChangeRow>(BoundDataGridView);
             if (!selectedRows.Any())
             {
                 MessageDlg.Show(BoundDataGridView,
@@ -134,19 +134,19 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private ViewLayoutList GetClusteredLayout()
         {
             var ppRunAbundances = PropertyPath.Root
-                .Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.ReplicateAbundances)).DictionaryValues();
+                .Property(nameof(FoldChangeDetailRow.ReplicateAbundances)).DictionaryValues();
             var roles = new List<Tuple<PropertyPath, ClusterRole>>();
-            roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.Protein)),
+            roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeDetailRow.Protein)),
                 ClusterRole.ROWHEADER));
-            roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeBindingSource.FoldChangeDetailRow.Peptide)),
+            roles.Add(Tuple.Create(PropertyPath.Root.Property(nameof(FoldChangeDetailRow.Peptide)),
                 ClusterRole.ROWHEADER));
             roles.Add(Tuple.Create(
-                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateSampleIdentity)),
+                ppRunAbundances.Property(nameof(ReplicateRow.ReplicateSampleIdentity)),
                 ClusterRole.COLUMNHEADER));
             roles.Add(Tuple.Create(
-                ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.ReplicateGroup)),
+                ppRunAbundances.Property(nameof(ReplicateRow.ReplicateGroup)),
                 ClusterRole.COLUMNHEADER));
-            roles.Add(Tuple.Create(ppRunAbundances.Property(nameof(FoldChangeBindingSource.ReplicateRow.Abundance)),
+            roles.Add(Tuple.Create(ppRunAbundances.Property(nameof(ReplicateRow.Abundance)),
                 (ClusterRole) ClusterRole.ZSCORE));
             var viewLayout = new ViewLayout(@"clustered").ChangeClusterSpec(new ClusteringSpec(roles.Select(role =>
                 new ClusteringSpec.ValueSpec(new ClusteringSpec.ColumnRef(role.Item1), role.Item2))));

@@ -849,8 +849,17 @@
 
 Would you like to continue building this predicted library?</value>
   </data>
+  <data name="Alphapeptdeep_Warn_limited_modification" xml:space="preserve">
+    <value>Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
+
+{0}
+
+Please consider using the fine-tuning method provided by Carafe for building this library.
+
+Would you like to continue building this predicted library?</value>
+  </data>
   <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
-    <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+    <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don't have the necessary permissions and ask them to run the following script:
 
 {0}
 
@@ -858,36 +867,67 @@ Would you like to continue?
     </value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
-      <value>Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command.</value>
+    <value>Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
-      <value>Failed to build library by running the AlphaPeptDeep cmd-flow command.</value>
+    <value>Failed to build library by running the AlphaPeptDeep cmd-flow command.</value>
   </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
-      <value>Preparing prediction input file</value>
+    <value>Preparing prediction input file</value>
   </data>
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
-      <value>Preparing training input file</value>
+    <value>Preparing training input file</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
-      <value>Preparing settings file</value>
+    <value>Preparing settings file</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
-      <value>Running AlphaPeptDeep</value>
+    <value>Running AlphaPeptDeep</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
-      <value>Importing spectral library</value>
+    <value>Importing spectral library</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
-      <value>BlibBuild completed successfully.</value>
+    <value>BlibBuild completed successfully.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
-      <value>BlibBuild failed to complete.</value>
+    <value>BlibBuild failed to complete.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
-      <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
+    <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
   </data>
   <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
     <value>Detailed Info</value>
+  </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_" xml:space="preserve">
+      <value>In "{0}": {1}</value>
+  </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_" xml:space="preserve">
+      <value>In entry "{0}" of "{1}": {2}</value>
+  </data>
+  <data name="TransitionDocNode_GetLabel__0__1__" xml:space="preserve">
+    <value>{0} [{1}]</value>
+  </data>
+  <data name="TransitionDocNode_GetLabel_irank__0__" xml:space="preserve">
+    <value>irank {0}</value>
+    <comment>Isotope rank "irank" for transition node</comment>
+  </data>
+  <data name="TransitionDocNode_GetLabel_rank__0__" xml:space="preserve">
+    <value>rank {0}</value>
+  </data>
+  <data name="PeptideDocNode_Title" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="PeptideDocNode_Title_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="TransitionGroupDocNode_Title" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="TransitionDocNode_Title" xml:space="preserve">
+    <value>Transition</value>
+  </data>
+  <data name="TransitionDocNode_Titles" xml:space="preserve">
+    <value>Transitions</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -30,6 +30,7 @@ namespace pwiz.CommonMsData
         public bool CentroidMs1 { get; set; }
         public bool CentroidMs2 { get; set; }
         public bool IgnoreZeroIntensityPoints { get; set; }
+        public bool PassEntireDiaPasefFrame { get; set; } // When true, ask for diPASEF frames in a single chunk instead of split by isolation ranges
         public string DownloadPath { get; set; }
 
         public MsDataFileImpl OpenLocalFile(MsDataFilePath msDataFilePath)
@@ -42,7 +43,8 @@ namespace pwiz.CommonMsData
             return new MsDataFileImpl(path, sampleIndex: Math.Max(sampleIndex, 0), lockmassParameters: lockMassParameters,
                 simAsSpectra: SimAsSpectra, requireVendorCentroidedMS1: CentroidMs1,
                 requireVendorCentroidedMS2: CentroidMs2, preferOnlyMsLevel: PreferOnlyMs1 ? 1 : 0,
-                ignoreZeroIntensityPoints: IgnoreZeroIntensityPoints);
+                ignoreZeroIntensityPoints: IgnoreZeroIntensityPoints,
+                passEntireDiaPasefFrame: PassEntireDiaPasefFrame);
         }
     }
 }

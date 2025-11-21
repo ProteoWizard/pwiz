@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -188,8 +188,11 @@ namespace pwiz.Skyline.ToolsUI
             }
             else if (accountType == RemoteAccountType.ARDIA)
             {
-                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'))
-                    .ChangeUsername(textArdiaAlias_Username.Text.Trim());
+                // CONSIDER: does serverUrl need more input validation? For example:
+                //              (1) removing the scheme (ex: https://), if provided
+                //              (2) checking for a valid URL?
+                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'));
+                remoteAccount = remoteAccount.ChangeUsername(textArdiaAlias_Username.Text.Trim());
 
                 var ardiaAccount = (ArdiaAccount) remoteAccount;
                 ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbArdiaDeleteRawAfterImport.Checked);
@@ -198,6 +201,7 @@ namespace pwiz.Skyline.ToolsUI
                     && _ardiaAccount_CurrentlyLoggedIn.ServerUrl.Equals(ardiaAccount.ServerUrl))
                 {
                     ardiaAccount.SetAuthenticatedHttpClientFactory(_ardiaAccount_CurrentlyLoggedIn);
+                    ardiaAccount = ardiaAccount.ChangeToken(_ardiaAccount_CurrentlyLoggedIn.Token);
                 }
 
                 //  Ardia Test Only Pass Through
@@ -275,7 +279,7 @@ namespace pwiz.Skyline.ToolsUI
             using var httpClient = new HttpClient(handler);
             httpClient.BaseAddress = baseUri;
             // Add the Bff-Host cookie to the cookie container
-            cookieContainer.Add(apiBaseUri, new Cookie(@"Bff-Host", ArdiaAccount.GetSessionCookieString(_ardiaAccount_CurrentlyLoggedIn)));
+            cookieContainer.Add(apiBaseUri, new Cookie(@"Bff-Host", ArdiaCredentialHelper.GetToken(_ardiaAccount_CurrentlyLoggedIn).Decrypted));
             // Add the required headers to the request
             httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
             httpClient.DefaultRequestHeaders.Add(@"applicationCode", applicationCode);
@@ -347,6 +351,11 @@ namespace pwiz.Skyline.ToolsUI
             DialogResult = DialogResult.OK;
         }
 
+        /// <summary>
+        /// Button event handler. For Ardia accounts, the label might be [Test] or [Connect].
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnTest_Click(object sender, EventArgs e)
         {
             TestSettings();
@@ -641,6 +650,29 @@ namespace pwiz.Skyline.ToolsUI
                 wizardPagesByAccountType.SelectedIndex = ARDIA_WIZARD_PAGE_INDEX;
 
                 process_ardiaAccount_CurrentlyLoggedIn_EnableDisableControls();
+
+                // Skyline only supports one Ardia account so these checks prevent adding second account in two scenarios:
+                // 
+                //   1) Users click the [Edit] button on an existing Ardia account. This allows editing an existing Ardia account.
+                //   2) Users click the [Add] button and choose "Ardia" as the account type in the new account dialog
+                //
+                // Both scenarios are handled here because this combobox event handler runs in both cases.
+
+                // Scenario #1: Allow editing an existing Ardia account by checking the account passed to the edit dialog.
+                if (_originalAccount != null && _originalAccount.AccountType == RemoteAccountType.ARDIA)
+                {
+                    return;
+                }
+
+                // Scenario #2: if Skyline gets here, it's not editing an existing Ardia account so must be adding a new one. So see if
+                // an Ardia account is already defined, show an error message if so, and switch the dialog's AccountType back to the default (Unifi).
+                if (_existing.ToList().Any(account => account.AccountType == RemoteAccountType.ARDIA))
+                {
+                    MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_Ardia_OneAccountSupported, false, MessageBoxButtons.OK);
+
+                    // Reset back to the default account type
+                    AccountType = RemoteAccountType.UNIFI;
+                }
             }
         }
 
@@ -676,6 +708,12 @@ namespace pwiz.Skyline.ToolsUI
                     btnTest.Text = btnText_Connect;
                 }
             }
+        }
+
+        // Test helper
+        public bool IsVisibleAccountType(RemoteAccountType accountType)
+        {
+            return comboAccountType.SelectedIndex == RemoteAccountType.ALL.IndexOf(accountType);
         }
     }
 }

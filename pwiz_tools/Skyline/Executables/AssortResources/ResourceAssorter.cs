@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -156,9 +156,10 @@ namespace AssortResources
             }
 
             var moves = new List<string>();
+            var csProjModified = false;
             foreach (var entry in uniqueReferences)
             {
-                MakeResourceFile(entry.Key, folders[entry.Key], entry.Value.ToHashSet(), moves);
+                MakeResourceFile(entry.Key, folders[entry.Key], entry.Value.ToHashSet(), moves, ref csProjModified);
             }
 
             if (InspectOnly)
@@ -200,7 +201,10 @@ namespace AssortResources
             }
             WriteDocument(resxDocument, ResourceFile.FilePath);
             RunCustomTool(ResourceFile.FilePath);
-            WriteDocument(CsProjFile.Document, CsProjFile.ProjFilePath);
+            if (csProjModified)
+            {
+                WriteDocument(CsProjFile.Document, CsProjFile.ProjFilePath);
+            }
         }
 
         public void RemoveResources(string filePath, HashSet<string> namesToDelete)
@@ -226,7 +230,7 @@ namespace AssortResources
             }
         }
 
-        public void MakeResourceFile(string folderPath, IEnumerable<string> files, HashSet<string> resourceIdentifiers, List<string> moves)
+        public void MakeResourceFile(string folderPath, IEnumerable<string> files, HashSet<string> resourceIdentifiers, List<string> moves, ref bool csProjModified)
         {
             string folderName;
             if (string.IsNullOrEmpty(folderPath))
@@ -261,6 +265,7 @@ namespace AssortResources
             if (!resourceFileExists)  // If we didn't create it just now, assume it's already noted in the project file
             {
                 CsProjFile.AddResourceFile(resourceFilePath, ResourceFile.Languages.Keys);
+                csProjModified = true;
             }
             foreach (var sourceFile in files)
             {
@@ -270,7 +275,7 @@ namespace AssortResources
                     var newCode = ResourceFile.ResourceIdentifiers.ReplaceReferences(code, newResourcesName, resourceIdentifiers);
                     if (newCode != code)
                     {
-                        File.WriteAllText(sourceFile, newCode, Encoding.UTF8);
+                        File.WriteAllText(sourceFile, newCode, new UTF8Encoding(false)); // UTF-8 without BOM
                     }
                 }
             }

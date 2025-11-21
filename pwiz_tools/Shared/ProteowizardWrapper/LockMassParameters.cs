@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -24,9 +24,9 @@ namespace pwiz.ProteowizardWrapper
     /// </summary>
     public class LockMassParameters : IComparable
     {
-        public LockMassParameters(double? lockmassPositve, double? lockmassNegative, double? lockmassTolerance)
+        private LockMassParameters(double? lockmassPositive, double? lockmassNegative, double? lockmassTolerance)
         {
-            LockmassPositive = lockmassPositve;
+            LockmassPositive = lockmassPositive;
             LockmassNegative = lockmassNegative;
             if (LockmassPositive.HasValue || LockmassNegative.HasValue)
             {
@@ -36,6 +36,16 @@ namespace pwiz.ProteowizardWrapper
             {
                 LockmassTolerance = null;  // Means nothing when no mz is given
             }
+        }
+
+        public static LockMassParameters Create(double? positive, double? negative, double? tolerance)
+        {
+            if (positive.HasValue || negative.HasValue || tolerance.HasValue)
+            {
+                return new LockMassParameters(positive, negative, tolerance);
+            }
+
+            return EMPTY;
         }
 
         public double? LockmassPositive { get; private set; }
