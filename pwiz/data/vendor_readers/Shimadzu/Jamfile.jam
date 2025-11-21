@@ -44,7 +44,7 @@ rule vendor-api-requirements ( properties * )
     local result ;
     if [ project-exists $(API_PATH) ]
     {
-        #result += <source>Reader_Agilent_Detail.cpp ;
+        result += <source>Reader_Shimadzu_Detail.cpp ;
     }
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
 }
