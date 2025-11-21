@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>147</ApplicationRevision>
-    <ApplicationVersion>25.1.1.147</ApplicationVersion>
+    <ApplicationRevision>271</ApplicationRevision>
+    <ApplicationVersion>25.1.1.271</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1717,9 +1717,7 @@
     <Compile Include="FileUI\PeptideSearch\TransitionSettingsControl.Designer.cs">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\PublishDocumentDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlg.cs" />
     <Compile Include="FileUI\PublishDocumentDlg.Designer.cs">
       <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
     </Compile>

@@ -17,6 +17,7 @@
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
     <TargetFrameworkProfile />
+    <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -168,7 +169,8 @@
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
+  <!-- DataGridViewColumnTypeAttribute.cs removed -->
+    <Compile Include="DataBinding\Attributes\DataTypeSpecifierAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
     <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />
@@ -585,6 +587,11 @@
     <None Include="Resources\restore.bmp" />
     <None Include="Resources\maximize.bmp" />
     <None Include="Resources\MatchCase.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <Version>1.0.2420.47</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MSGraph\MSGraph.csproj">
