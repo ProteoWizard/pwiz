@@ -34,6 +34,7 @@ IF EXIST libraries\expat-2.0.1 rmdir /s /q libraries\expat-2.0.1
 
 del /f /q libraries\libfftw3-3.d* > nul 2>&1
 del /f /q libraries\msparser_*_win64 > nul 2>&1
+git clean -f -d -X libraries
 
 del /f /q pwiz\Version.cpp > nul 2>&1
 del /f /q pwiz\data\msdata\Version.cpp > nul 2>&1
@@ -47,6 +48,7 @@ del /f /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc10 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc9 > nul 2>&1
+git clean -f -d -X pwiz_aux\msrc\utility\vendor_api\ABI > nul 2>&1
 
 del /f /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\x86 > nul 2>&1
@@ -61,11 +63,13 @@ rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\install_pwiz_vendor_api_bruk
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\x64 > nul 2>&1
 IF EXIST pwiz\data\vendor_api\Mobilion git clean -f -d -X pwiz\data\vendor_api\Mobilion > nul
+git clean -f -d -X pwiz_aux\msrc\utility\vendor_api\Mobilion > nul
 del /f /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\EULA.SFCS > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64 > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\*.dll > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\ja-JP > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Shimadzu\zh-CN > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
 del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
 git clean -f -d -X pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul
