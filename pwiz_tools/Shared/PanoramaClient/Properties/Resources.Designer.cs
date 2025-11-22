@@ -681,5 +681,15 @@ namespace pwiz.PanoramaClient.Properties {
                 return ResourceManager.GetString("WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server did not return a valid LabKey Server response. {0} is not a LabKey server..
+        /// </summary>
+        public static string WebPanoramaClient_ValidateUri_Server_did_not_return_a_valid_LabKey_Server_response___0__is_not_a_LabKey_server_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaClient_ValidateUri_Server_did_not_return_a_valid_LabKey_Server_response___0__is" +
+                        "_not_a_LabKey_server_", resourceCulture);
+            }
+        }
     }
 }

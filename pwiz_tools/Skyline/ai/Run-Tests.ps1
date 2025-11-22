@@ -71,7 +71,16 @@ param(
     [switch]$ShowUI = $false,  # Run on-screen (offscreen=off) to see the UI
     
     [Parameter(Mandatory=$false)]
-    [switch]$EnableInternet = $false
+    [switch]$EnableInternet = $false,
+    
+    [Parameter(Mandatory=$false)]
+    [int]$Loop = 0,  # Number of iterations (0 = run forever, 1 = run once, 20 = run 20 times)
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$ReportHandles = $false,  # Enable handle count diagnostics
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$ReportHeaps = $false  # Enable heap count diagnostics (only useful when handles aren't leaking)
 )
 
 $scriptRoot = Split-Path -Parent $PSCommandPath
@@ -128,6 +137,8 @@ Write-Host "  Test: $TestName" -ForegroundColor Gray
 Write-Host "  Language(s): $languageParam" -ForegroundColor Gray
 Write-Host "  UI Mode: $(if ($ShowUI) { 'On-screen (visible)' } else { 'Offscreen (hidden)' })" -ForegroundColor Gray
 Write-Host "  Internet: $(if ($EnableInternet) { 'Enabled' } else { 'Disabled' })" -ForegroundColor Gray
+Write-Host "  Loop: $(if ($Loop -eq 0) { 'Forever' } else { "$Loop iterations" })" -ForegroundColor Gray
+Write-Host "  Diagnostics: Handles=$(if ($ReportHandles) { 'on' } else { 'off' }), Heaps=$(if ($ReportHeaps) { 'on' } else { 'off' })" -ForegroundColor Gray
 Write-Host "  Log: $outputDir\$logFile`n" -ForegroundColor Gray
 
 # Build TestRunner command line
@@ -161,14 +172,25 @@ try {
         # Build full command line for display
         $commonArgs = @("test=$testParam", "language=$languageParam", "offscreen=$offscreenParam", "log=$logFile")
 
-        if ($useBuildCheck) {
+        # buildcheck forces loop=1, so don't use it when we want to loop multiple times
+        if ($useBuildCheck -and ($Loop -eq 0 -or $Loop -eq 1)) {
             $runnerArgs = @("buildcheck=1") + $commonArgs
         } else {
-            $runnerArgs = @("loop=1") + $commonArgs
+            # Use loop parameter if specified, otherwise default to 1 (run once)
+            $loopValue = if ($Loop -gt 0) { $Loop } else { 1 }
+            $runnerArgs = @("loop=$loopValue") + $commonArgs
         }
 
         if ($EnableInternet) {
             $runnerArgs += "internet=on"
+        }
+        
+        if ($ReportHandles) {
+            $runnerArgs += "reporthandles=on"
+        }
+        
+        if ($ReportHeaps) {
+            $runnerArgs += "reportheaps=on"
         }
 
         $cmdLine = ".\TestRunner.exe " + ($runnerArgs -join ' ')

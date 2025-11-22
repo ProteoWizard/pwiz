@@ -38,10 +38,11 @@ namespace pwiz.PanoramaClient
         public const string LABKEY_CTX = "/labkey/";
         public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view";
         public const string WEBDAV = @"_webdav";
-        public const string WEBDAV_W_SLASH = WEBDAV + @"/";
+        public const string WEBDAV_W_SLASH = WEBDAV + SLASH;
         public const string FILES = @"@files";
-        public const string FILES_W_SLASH = @"/" + FILES;
+        public const string FILES_W_SLASH = SLASH + FILES;
         public const string PERMS_JSON_PROP = @"effectivePermissions";
+        private const string SLASH = @"/";
 
         public static Uri ServerNameToUri(string serverName)
         {
@@ -147,7 +148,7 @@ namespace pwiz.PanoramaClient
         public static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query,
             bool isApi = false)
         {
-            const string separator = @"/";
+            const string separator = SLASH;
             // Trim leading and trailing '/' from the folderPath so that we don't end up with double '//' in the Uri
             folderPath = string.IsNullOrEmpty(folderPath) ? string.Empty : folderPath.Trim().Trim(separator.ToCharArray());
             if (!(string.IsNullOrEmpty(folderPath) || folderPath.EndsWith(separator))) folderPath += separator;
@@ -172,11 +173,66 @@ namespace pwiz.PanoramaClient
             return new Uri(serverUri, path);
         }
 
-        public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders)
+        public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders, PanoramaServer server = null, string serverFolderPath = null)
         {
             var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS",
                 includeSubfolders ? @"true" : @"false");
-            return Call(serverUri, @"project", folder, @"getContainers", queryString);
+            
+            // Combine server folder path with the folder parameter (if provided)
+            // Prefer server.GetFullPath() if server is provided, otherwise use serverFolderPath parameter
+            string effectiveFolder = null;
+            if (server != null)
+            {
+                // Use GetFullPath() to combine server.FolderPath with folder parameter
+                // folder parameter is relative (no leading "/"), so prepend "/" for GetFullPath
+                // GetFullPath returns paths with leading "/", but URLs need paths without leading "/"
+                string folderPathForGetFullPath = string.IsNullOrEmpty(folder) ? folder : SLASH + folder.TrimStart('/');
+                string fullPath = server.GetFullPath(folderPathForGetFullPath);
+                effectiveFolder = string.IsNullOrEmpty(fullPath) || fullPath == SLASH 
+                    ? null 
+                    : fullPath.TrimStart('/');
+            }
+            else if (!string.IsNullOrEmpty(serverFolderPath))
+            {
+                // Legacy path: combine serverFolderPath with folder parameter
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    // Combine paths: serverFolderPath + folder
+                    // e.g., "SkylineTest" + "ForPanoramaClientTest" -> "SkylineTest/ForPanoramaClientTest"
+                    effectiveFolder = serverFolderPath + SLASH + folder.Trim('/');
+                }
+                else
+                {
+                    // Use server folder path only
+                    effectiveFolder = serverFolderPath;
+                }
+            }
+            else if (!string.IsNullOrEmpty(folder))
+            {
+                // Use folder parameter only
+                effectiveFolder = folder;
+            }
+            
+            // Always use new-style URL format: {folder}/project-getContainers.view (preferred by LabKey Server)
+            // This format is required when serverFolderPath is set (e.g., "SkylineTest")
+            // Old format (project/folder/getContainers.view) would incorrectly place the module between server and folder
+            // If effectiveFolder is null/empty, returns project-getContainers.view (gets all folders)
+            // If effectiveFolder is "SkylineTest", returns SkylineTest/project-getContainers.view (gets only that folder)
+            if (string.IsNullOrEmpty(effectiveFolder))
+            {
+                // For empty folder, construct URL directly without leading slash
+                // Using CallNewInterface with empty folder would add a leading slash, so construct manually
+                string apiString = @"view";
+                string queryParam = string.IsNullOrEmpty(queryString) ? string.Empty : @"?" + queryString;
+                string path = $@"project-getContainers.{apiString}{queryParam}";
+                return new Uri(serverUri, path);
+            }
+            else
+            {
+                // Use new-style format: {folder}/project-getContainers.view
+                // e.g., SkylineTest/project-getContainers.view
+                return CallNewInterface(serverUri, @"project", effectiveFolder, @"getContainers", queryString);
+            }
         }
 
         public static Uri GetPipelineContainerUrl(Uri serverUri, string folderPath)
@@ -584,9 +640,19 @@ namespace pwiz.PanoramaClient
 
     public class PanoramaServer : Immutable
     {
+        private const string SLASH = "/";
+        private const char SLASH_C = '/';
+
         public Uri URI { get; protected set; }
         public string Username { get; protected set; }
         public string Password { get; protected set; }
+
+        /// <summary>
+        /// Optional folder path (e.g., "SkylineTest") that can be combined with URI for folder-specific operations.
+        /// This allows users to specify a project-specific server URL for faster responses.
+        /// The base URI (without folder path) is used for operations like ensureLogin.
+        /// </summary>
+        public string FolderPath { get; protected set; }
 
         protected PanoramaServer()
         {
@@ -601,26 +667,72 @@ namespace pwiz.PanoramaClient
             Username = username;
             Password = password;
 
-            var path = serverUri.AbsolutePath;
+            (URI, FolderPath) = ParseUri(serverUri);
+        }
 
-            if (path.Length > 1)
+        private (Uri uri, string folderPath) ParseUri(Uri serverUri)
+        {
+            var fullPath = serverUri.AbsolutePath;
+            string contextPath = null;
+            string folderPath = null;
+
+            // Parse the path to separate context path (e.g., /labkey) from folder path (e.g., /SkylineTest)
+            // Context path is typically the first segment after root (e.g., /labkey)
+            // Folder path is any additional segments (e.g., /SkylineTest)
+            if (fullPath.Length > 1)
             {
-                // Get the context path (e.g. /labkey) from the path
-                var idx = path.IndexOf(@"/", 1, StringComparison.Ordinal);
-                if (idx != -1 && path.Length > idx + 1)
+                var segments = fullPath.Trim(SLASH_C).Split(SLASH_C);
+                if (segments.Length > 0)
                 {
-                    path = path.Substring(0, idx + 1);
+                    // First segment is typically the context path (e.g., "labkey")
+                    // But if it looks like a project folder name (no "labkey" pattern), treat it as folder path
+                    // For now, assume context path is empty for panoramaweb.org (most common case)
+                    // and any path segments are folder paths
+                    if (segments[0].Equals(@"labkey", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Context path found
+                        contextPath = SLASH + segments[0];
+                        if (segments.Length > 1)
+                        {
+                            // Remaining segments are folder path
+                            folderPath = string.Join(SLASH, segments.Skip(1));
+                        }
+                    }
+                    else
+                    {
+                        // No context path, all segments are folder path
+                        folderPath = string.Join(SLASH, segments);
+                    }
                 }
             }
 
+            // Construct base URI with context path only (no folder path)
+            var basePath = contextPath ?? SLASH;
             // Need trailing '/' for correct URIs with new Uri(baseUri, relativeUri) method
             // With no trailing '/', new Uri("https://panoramaweb.org/labkey", "project/getContainers.view") will
             // return https://panoramaweb.org/project/getContainers.view (no labkey)
             // ReSharper disable LocalizableElement
-            path += path.EndsWith("/") ? "" : "/";
+            if (!basePath.EndsWith(SLASH))
+                basePath += SLASH;
             // ReSharper restore LocalizableElement
 
-            URI = new UriBuilder(serverUri) { Path = path, Query = string.Empty, Fragment = string.Empty }.Uri;
+            var uri = new UriBuilder(serverUri) { Path = basePath, Query = string.Empty, Fragment = string.Empty }.Uri;
+            // Normalize FolderPath: remove leading/trailing slashes so it's stored consistently
+            // This allows us to avoid trimming in GetFullPath() and other methods
+            folderPath = NormalizePath(folderPath);
+            return (uri, folderPath);
+        }
+
+        /// <summary>
+        /// Normalizes a folder path by trimming leading/trailing slashes.
+        /// Returns null for null/empty strings, or the trimmed path (which may be empty string if input was just slashes).
+        /// </summary>
+        private static string NormalizePath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return null;
+            var trimmed = path.Trim(SLASH_C);
+            return string.IsNullOrEmpty(trimmed) ? null : trimmed;
         }
 
         public string AuthHeader => GetBasicAuthHeader(Username, Password);
@@ -637,14 +749,14 @@ namespace pwiz.PanoramaClient
 
         public bool HasContextPath()
         {
-            return !URI.AbsolutePath.Equals(@"/");
+            return !URI.AbsolutePath.Equals(SLASH);
         }
 
         public PanoramaServer RemoveContextPath()
         {
             if (HasContextPath())
             {
-                var newUri = new UriBuilder(URI) { Path = @"/" }.Uri;
+                var newUri = new UriBuilder(URI) { Path = SLASH }.Uri;
                 return new PanoramaServer(newUri, Username, Password);
             }
 
@@ -660,6 +772,94 @@ namespace pwiz.PanoramaClient
             }
 
             return this;
+        }
+
+        /// <summary>
+        /// Constructs a full URI by combining the server's base URI with a folder path.
+        /// Handles trailing slashes in the base URI and leading slashes in the folder path to avoid double slashes.
+        /// Note: This method does NOT incorporate PanoramaServer.FolderPath. If you need FolderPath included,
+        /// use GetFullUri() instead, or call GetFullPath() first and pass the result to this method.
+        /// </summary>
+        /// <param name="folderPath">A folder path (maybe null, empty, or have leading slashes, will be normalized)</param>
+        /// <param name="webdav">If true, includes the "_webdav/" prefix in the path</param>
+        /// <returns>The full URI combining Server.URI with the folder path</returns>
+        public string GetUri(string folderPath, bool webdav = false)
+        {
+            var serverUri = URI.ToString();
+            var normalizedFolderPath = folderPath ?? string.Empty;
+            
+            if (webdav)
+            {
+                normalizedFolderPath = AppendPath(PanoramaUtil.WEBDAV, normalizedFolderPath);
+            }
+            
+            return AppendPath(serverUri, normalizedFolderPath);
+        }
+
+        protected static string AppendPath(string root, string append)
+        {
+            if (string.IsNullOrEmpty(append))
+                return root;
+            if (root.EndsWith(SLASH))
+                root = root.Substring(0, root.Length - 1);
+            if (append.StartsWith(SLASH))
+                append = append.Substring(1);
+            return root + SLASH + append;
+        }
+
+        /// <summary>
+        /// Constructs a full URI by combining the server's base URI with a folder path,
+        /// incorporating PanoramaServer.FolderPath if it is set.
+        /// This is equivalent to calling GetFullPath() followed by GetUri().
+        /// </summary>
+        /// <param name="folderPath">A folder path (maybe absolute or relative, will be combined with FolderPath if set)</param>
+        /// <param name="webdav">If true, includes the "_webdav/" prefix in the path</param>
+        /// <returns>The full URI combining Server.URI with FolderPath (if set) and the folder path</returns>
+        public string GetFullUri(string folderPath = null, bool webdav = false)
+        {
+            return GetUri(GetFullPath(folderPath), webdav);
+        }
+
+        /// <summary>
+        /// Combines the server's FolderPath with a relative or absolute folder path.
+        /// Returns the full path accounting for the server's base folder.
+        /// Both FolderPath and the input folderPath are normalized (no leading/trailing slashes)
+        /// to ensure consistent behavior.
+        /// </summary>
+        /// <param name="folderPath">A folder path (maybe absolute like "/SkylineTest/ForPanoramaClientTest" or relative like "/ForPanoramaClientTest" or "ForPanoramaClientTest")</param>
+        /// <returns>The full path combining FolderPath with folderPath, with a leading slash and no trailing slash</returns>
+        public string GetFullPath(string folderPath)
+        {
+            return SLASH + GetNormalizedFullPath(folderPath);
+        }
+
+        private string GetNormalizedFullPath(string folderPath)
+        {
+            // Normalize input folderPath (returns null for null/empty/just-slashes)
+            string normalizedInput = NormalizePath(folderPath);
+
+            // If FolderPath is not set, return normalized input with leading slash (or "/" if null)
+            if (FolderPath == null)
+            {
+                return normalizedInput ?? string.Empty;
+            }
+
+            // If normalized input is null, return just FolderPath
+            if (normalizedInput == null)
+            {
+                return FolderPath;
+            }
+
+            // Check if normalizedInput already starts with or is FolderPath
+            if (normalizedInput.StartsWith(FolderPath + SLASH, StringComparison.Ordinal) ||
+                normalizedInput == FolderPath)
+            {
+                // Input already includes FolderPath, return with leading slash
+                return normalizedInput;
+            }
+
+            // Otherwise, combine FolderPath with normalizedInput
+            return AppendPath(FolderPath, normalizedInput);
         }
 
         public PanoramaServer Redirect(string redirectUri, string panoramaActionPath)
@@ -683,7 +883,7 @@ namespace pwiz.PanoramaClient
             return this;
         }
 
-        public static string getFolderPath(PanoramaServer server, Uri serverPlusPath)
+        public static string GetFolderPath(PanoramaServer server, Uri serverPlusPath)
         {
             var path = serverPlusPath.AbsolutePath;
             var contextPath = server.URI.AbsolutePath;

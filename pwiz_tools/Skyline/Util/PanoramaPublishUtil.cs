@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Util
 
         public string GetKey()
         {
-            return URI + (HasUserAccount() ? string.Empty : UtilResources.Server_GetKey___anonymous_);
+            return AppendPath(URI.ToString(), FolderPath) + (HasUserAccount() ? string.Empty : UtilResources.Server_GetKey___anonymous_);
         }
 
 
@@ -71,7 +71,8 @@ namespace pwiz.Skyline.Util
             username,
             password,
             password_encrypted,
-            uri
+            uri,
+            folder_path
         }
 
         public static Server Deserialize(XmlReader reader)
@@ -121,6 +122,9 @@ namespace pwiz.Skyline.Util
             {
                 throw new InvalidDataException(UtilResources.Server_ReadXml_Server_URL_is_corrupt);
             }
+
+            FolderPath = reader.GetAttribute(ATTR.folder_path); // Optional: may be null
+
             // Consume tag
             reader.Read();
 
@@ -136,6 +140,8 @@ namespace pwiz.Skyline.Util
                 writer.WriteAttributeString(ATTR.password_encrypted, TextUtil.EncryptString(Password));
             }
             writer.WriteAttribute(ATTR.uri, URI);
+            if (!string.IsNullOrEmpty(FolderPath))
+                writer.WriteAttributeString(ATTR.folder_path, FolderPath);
         }
         #endregion
 
@@ -144,8 +150,9 @@ namespace pwiz.Skyline.Util
         private bool Equals(Server other)
         {
             return string.Equals(Username, other.Username) &&
-                string.Equals(Password, other.Password) &&
-                Equals(URI, other.URI);
+                   string.Equals(Password, other.Password) &&
+                   Equals(URI, other.URI) &&
+                   Equals(FolderPath, other.FolderPath);
         }
 
         public override bool Equals(object obj)
@@ -162,6 +169,7 @@ namespace pwiz.Skyline.Util
                 int hashCode = (Username != null ? Username.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Password != null ? Password.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (URI != null ? URI.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FolderPath != null ? FolderPath.GetHashCode() : 0);
                 return hashCode;
             }
         }

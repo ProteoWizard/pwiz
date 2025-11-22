@@ -232,7 +232,17 @@ namespace pwiz.Skyline.FileUI
                     var panoramaClient = PanoramaPublishClient != null
                         ? PanoramaPublishClient.PanoramaClient
                         : GetDefaultPublishClient(server).PanoramaClient;
-                    folders = panoramaClient.GetInfoForFolders(null, progressMonitor, progressStatus);
+
+                    // Request folders from server, using its FolderPath which may be null for the entire server
+                    folders = panoramaClient.GetInfoForFolders(server.FolderPath, progressMonitor, progressStatus);
+
+                    // If FolderPath is set, wrap the response to include the folder path as the root node
+                    // This ensures the TreeView displays the folder (e.g., "MacCoss") even though
+                    // the server only returned its children
+                    if (!string.IsNullOrEmpty(server.FolderPath) && folders != null)
+                    {
+                        folders = LKContainerBrowser.WrapFolderResponse(folders, server.FolderPath, server.URI);
+                    }
                 }
                 catch (Exception ex)
                 {
