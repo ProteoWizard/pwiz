@@ -19,8 +19,7 @@
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
-    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
     <SignAssembly>false</SignAssembly>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -102,7 +101,10 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
+    <WarningLevel>3</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
   <ItemGroup>
     <Reference Include="Dapper">
       <HintPath>..\Shared\Lib\Dapper.dll</HintPath>
@@ -233,7 +235,9 @@
     <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\KeyValueGridDlg.cs" />
+    <Compile Include="Alerts\KeyValueGridDlg.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -602,6 +606,12 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Lib\Carafe\CarafeSupportedModifications.cs" />
+    <Compile Include="Model\ModelResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ModelResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
@@ -866,6 +876,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>GroupComparisonResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\BuildLibraryDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\BuildLibraryDlg.Designer.cs">
+      <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\SettingsUIResources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -910,11 +926,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ListsResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\ModelResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelResources.resx</DependentUpon>
     </Compile>
     <Compile Include="FileUI\FileUIResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -2311,12 +2322,6 @@
     </Compile>
     <Compile Include="SettingsUI\Irt\AddIrtStandardsDlg.Designer.cs">
       <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\BuildLibraryDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\BuildLibraryDlg.Designer.cs">
-      <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\BuildBackgroundProteomeDlg.cs">
       <SubType>Form</SubType>
@@ -4322,11 +4327,13 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.ja.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.resx">
+      <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
@@ -4955,10 +4962,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.ja.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <Content Include="..\BiblioSpec\src\modifications.xml">
       <Link>modifications.xml</Link>
@@ -4977,6 +4986,7 @@
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.zh-CHS.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ToolStoreDlg.ja.resx">
       <DependentUpon>ToolStoreDlg.cs</DependentUpon>
@@ -5080,9 +5090,11 @@
     <Compile Include="ToolsUI\ToolInstallUI.cs" />
     <Compile Include="ToolsUI\ToolOptionsUI.cs">
       <SubType>Form</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Include="ToolsUI\ToolOptionsUI.Designer.cs">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Include="ToolsUI\ToolStoreDlg.cs">
       <SubType>Form</SubType>
@@ -5909,26 +5921,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <FileAssociation Include=".sky">
-      <Visible>False</Visible>
-      <Description>Skyline Document</Description>
-      <Progid>Skyline.Document.0</Progid>
-      <DefaultIcon>SkylineDoc.ico</DefaultIcon>
-    </FileAssociation>
-    <FileAssociation Include=".skyd">
-      <Visible>False</Visible>
-      <Description>Skyline Chromatogram Data</Description>
-      <Progid>Skyline.Data.0</Progid>
-      <DefaultIcon>SkylineData.ico</DefaultIcon>
-    </FileAssociation>
-    <FileAssociation Include=".skyp">
-      <Visible>False</Visible>
-      <Description>Skyline Document Pointer</Description>
-      <Progid>Skyline.Pointer.0</Progid>
-      <DefaultIcon>SkylineDocPointer.ico</DefaultIcon>
-    </FileAssociation>
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="..\Shared\Lib\Microsoft.VC90.CRT\x64\msvcr90.dll">
       <Link>percolator\msvcr90.DLL</Link>
@@ -6770,10 +6763,6 @@
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.resx">
       <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.resx">
-      <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -6881,6 +6870,8 @@
     <None Include="SkylineLog4Net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Skyline_1_TemporaryKey.pfx" />
+    <None Include="Skyline_2_TemporaryKey.pfx" />
     <None Include="Skyline_TemporaryKey.pfx" />
     <None Include="Resources\PeptideStandard.bmp" />
     <None Include="Resources\PeptideStandardLib.bmp" />
@@ -7209,10 +7200,7 @@
       <Version>1.0.2420.47</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Model\AlphaPeptDeep\" />
-    <Folder Include="Model\Carafe\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />

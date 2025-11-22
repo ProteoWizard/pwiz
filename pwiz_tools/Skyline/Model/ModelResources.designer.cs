@@ -232,6 +232,195 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Computational Device (cpu or gpu) to use for model prediction..
+        /// </summary>
+        public static string AlphaPeptDeep_device_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_device_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Computational Device.
+        /// </summary>
+        public static string AlphaPeptDeep_device_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_device_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keep k of the highest intensity fragment peaks in the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_keep_k_highest_peaks_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_keep_k_highest_peaks_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keep k-Highest Peaks.
+        /// </summary>
+        public static string AlphaPeptDeep_keep_k_highest_peaks_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_keep_k_highest_peaks_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Charge of the fragments peaks in the spectra of the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_max_fragment_charge_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_fragment_charge_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_max_fragment_charge_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_fragment_charge_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Mass-to-Charge Ratio (m/z) of predicted spectra in the library..
+        /// </summary>
+        public static string AlphaPeptDeep_max_fragment_mz_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_fragment_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Mass-to-Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_max_fragment_mz_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_fragment_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Length of predicted spectra in the library..
+        /// </summary>
+        public static string AlphaPeptDeep_max_peptide_length_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_peptide_length_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Length.
+        /// </summary>
+        public static string AlphaPeptDeep_max_peptide_length_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_peptide_length_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Precursor Charge of the spectra in the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_max_precursor_charge_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_precursor_charge_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Precursor Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_max_precursor_charge_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_max_precursor_charge_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Mass-to-Charge Ratio (m/z) of predicted spectra in the library..
+        /// </summary>
+        public static string AlphaPeptDeep_min_fragment_mz_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_fragment_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Mass-to-Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_min_fragment_mz_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_fragment_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Length of predicted spectra in the library..
+        /// </summary>
+        public static string AlphaPeptDeep_min_peptide_length_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_peptide_length_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Length.
+        /// </summary>
+        public static string AlphaPeptDeep_min_peptide_length_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_peptide_length_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Precursor Charge of the spectra in the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_min_precursor_charge_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_precursor_charge_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Precursor Charge.
+        /// </summary>
+        public static string AlphaPeptDeep_min_precursor_charge_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_precursor_charge_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum relative intensities of the fragment peaks in the spectra of the predicted library..
+        /// </summary>
+        public static string AlphaPeptDeep_min_relative_intensity_long {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_relative_intensity_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Relative Intensity.
+        /// </summary>
+        public static string AlphaPeptDeep_min_relative_intensity_short {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_min_relative_intensity_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AlphaPeptDeep Settings ....
+        /// </summary>
+        public static string AlphaPeptDeep_Settings {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
         ///
         ///{0}
@@ -364,6 +553,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder completed ok.
+        /// </summary>
+        public static string Blib_completed_ok {
+            get {
+                return ResourceManager.GetString("Blib_completed_ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder failed to complete.
+        /// </summary>
+        public static string Blib_failed_to_complete {
+            get {
+                return ResourceManager.GetString("Blib_failed_to_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} ({1} - {2}).
         /// </summary>
         public static string BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__ {
@@ -412,6 +619,677 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DIA-NN report files.
+        /// </summary>
+        public static string Carafe_DIANN_report_files {
+            get {
+                return ResourceManager.GetString("Carafe_DIANN_report_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Carafe failed to complete.
+        /// </summary>
+        public static string Carafe_failed_to_complete {
+            get {
+                return ResourceManager.GetString("Carafe_failed_to_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
+        ///
+        ///{0}
+        ///
+        ///Would you like to continue building this predicted library?.
+        /// </summary>
+        public static string Carafe_Warn_limited_modification {
+            get {
+                return ResourceManager.GetString("Carafe_Warn_limited_modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to When digesting a protein starting with amino acid M (Methionine), two copies of the leading peptide (i.e. with and without the N-terminal M) are considered or not considered..
+        /// </summary>
+        public static string CarafeLibrary_clip_nterm_methionine_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_clip_nterm_methionine_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clip N-Terminal Methionine.
+        /// </summary>
+        public static string CarafeLibrary_clip_nterm_methionine_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_clip_nterm_methionine_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enzyme used for protein digestion..
+        /// </summary>
+        public static string CarafeLibrary_enzyme_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_enzyme_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enzyme.
+        /// </summary>
+        public static string CarafeLibrary_enzyme_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_enzyme_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed Modifications to consider for library generation..
+        /// </summary>
+        public static string CarafeLibrary_fixed_modification_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_fixed_modification_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed Modifications Selected.
+        /// </summary>
+        public static string CarafeLibrary_fixed_modification_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_fixed_modification_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select an available Fixed Modification to use in the analysis..
+        /// </summary>
+        public static string CarafeLibrary_fixed_modification_types_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_fixed_modification_types_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed Modification Available.
+        /// </summary>
+        public static string CarafeLibrary_fixed_modification_types_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_fixed_modification_types_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectral Library Format for library generation..
+        /// </summary>
+        public static string CarafeLibrary_library_format_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_library_format_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectral Library Format.
+        /// </summary>
+        public static string CarafeLibrary_library_format_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_library_format_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Mass-to-Charge Ratio (m/z) to consider for inclusion in the library..
+        /// </summary>
+        public static string CarafeLibrary_max_fragment_mz_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_fragment_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Fragment Mass-to-Charge.
+        /// </summary>
+        public static string CarafeLibrary_max_fragment_mz_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_fragment_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Charge to consider for inclusion in the library..
+        /// </summary>
+        public static string CarafeLibrary_max_peptide_charge_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_peptide_charge_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Charge.
+        /// </summary>
+        public static string CarafeLibrary_max_peptide_charge_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_peptide_charge_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Length to consider for inclusion in the library..
+        /// </summary>
+        public static string CarafeLibrary_max_peptide_length_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_peptide_length_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Length.
+        /// </summary>
+        public static string CarafeLibrary_max_peptide_length_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_peptide_length_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Mass-to-Charge Ratio (m/z) to consider for inclusion in the library..
+        /// </summary>
+        public static string CarafeLibrary_max_peptide_mz_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_peptide_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Peptide Mass-to-Charge.
+        /// </summary>
+        public static string CarafeLibrary_max_peptide_mz_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_peptide_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Variable Modifications allowed per peptide..
+        /// </summary>
+        public static string CarafeLibrary_max_variable_modification_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_variable_modification_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Variable Modifications.
+        /// </summary>
+        public static string CarafeLibrary_max_variable_modification_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_max_variable_modification_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Mass-to-Charge Ratio (m/z) to consider for inclusion in the library..
+        /// </summary>
+        public static string CarafeLibrary_min_fragment_mz_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_min_fragment_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Mass-to-Charge.
+        /// </summary>
+        public static string CarafeLibrary_min_fragment_mz_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_min_fragment_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Charge to consider for inclusion in the library..
+        /// </summary>
+        public static string CarafeLibrary_min_peptide_charge_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_min_peptide_charge_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Charge.
+        /// </summary>
+        public static string CarafeLibrary_min_peptide_charge_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_min_peptide_charge_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Length to consider for inclusion in the library..
+        /// </summary>
+        public static string CarafeLibrary_min_peptide_length_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_min_peptide_length_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Length.
+        /// </summary>
+        public static string CarafeLibrary_min_peptide_length_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_min_peptide_length_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Mass-to-Charge Ratio (m/z) to consider for inclusion in the library..
+        /// </summary>
+        public static string CarafeLibrary_min_peptide_mz_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_min_peptide_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Peptide Mass-to-Charge.
+        /// </summary>
+        public static string CarafeLibrary_min_peptide_mz_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_min_peptide_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Missed Cleavages allowed..
+        /// </summary>
+        public static string CarafeLibrary_missed_cleavage_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_missed_cleavage_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missed Cleavages.
+        /// </summary>
+        public static string CarafeLibrary_missed_cleavage_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_missed_cleavage_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Generation ....
+        /// </summary>
+        public static string CarafeLibrary_Settings {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Number of Fragment Ions (of highest intensity) to consider for library generation..
+        /// </summary>
+        public static string CarafeLibrary_topN_fragments_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_topN_fragments_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Number of Fragment Ions.
+        /// </summary>
+        public static string CarafeLibrary_topN_fragments_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_topN_fragments_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variable Modifications to consider for library generation..
+        /// </summary>
+        public static string CarafeLibrary_variable_modification_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_variable_modification_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variable Modifications Selected.
+        /// </summary>
+        public static string CarafeLibrary_variable_modification_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_variable_modification_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select an available Variable Modification to use in the analysis..
+        /// </summary>
+        public static string CarafeLibrary_variable_modification_types_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_variable_modification_types_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variable Modifications Available.
+        /// </summary>
+        public static string CarafeLibrary_variable_modification_types_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_variable_modification_types_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download Carafe jar package.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Failed_to_download_Carafe_jar_package {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Failed_to_download_Carafe_jar_package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download Java Software Development Kit package.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Failed_to_download_Java_Software_Development_Kit_package {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Failed_to_download_Java_Software_Development_Kit_package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing spectral library.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Importing_spectral_library {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Importing_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Java directory {0} has more than one Java Software Development Kit.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Java_directory__0__has_more_than_one_Java_Software_Development_Kit {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Java_directory__0__has_more_than_one_Java_Software_Developme" +
+                        "nt_Kit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Running Carafe.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Running_Carafe {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Running_Carafe", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Setting up Java environment.
+        /// </summary>
+        public static string CarafeLibraryBuilder_Setting_up_Java_environment {
+            get {
+                return ResourceManager.GetString("CarafeLibraryBuilder_Setting_up_Java_environment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Computational Device (cpu or gpu) to use for model training and prediction..
+        /// </summary>
+        public static string CarafeModel_device_long {
+            get {
+                return ResourceManager.GetString("CarafeModel_device_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Computational Device.
+        /// </summary>
+        public static string CarafeModel_device_short {
+            get {
+                return ResourceManager.GetString("CarafeModel_device_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS Instrument Type used to generate the training data will automatically be extracted from the mzML file if this parameter is not set. Otherwise, it will use the value of this setting..
+        /// </summary>
+        public static string CarafeModel_instrument_long {
+            get {
+                return ResourceManager.GetString("CarafeModel_instrument_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS Instrument Type.
+        /// </summary>
+        public static string CarafeModel_instrument_short {
+            get {
+                return ResourceManager.GetString("CarafeModel_instrument_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Model Type can be general DIA or phosphorylated DIA data..
+        /// </summary>
+        public static string CarafeModel_model_long {
+            get {
+                return ResourceManager.GetString("CarafeModel_model_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model Type.
+        /// </summary>
+        public static string CarafeModel_model_short {
+            get {
+                return ResourceManager.GetString("CarafeModel_model_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized Collision Energy will be automatically extracted from the mzML data if this parameter is not set. Otherwise, it will use the value of this setting..
+        /// </summary>
+        public static string CarafeModel_nce_long {
+            get {
+                return ResourceManager.GetString("CarafeModel_nce_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normalized Collision Energy.
+        /// </summary>
+        public static string CarafeModel_nce_short {
+            get {
+                return ResourceManager.GetString("CarafeModel_nce_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model Settings ....
+        /// </summary>
+        public static string CarafeModel_Settings {
+            get {
+                return ResourceManager.GetString("CarafeModel_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum False Discovery Rate to consider..
+        /// </summary>
+        public static string CarafeTraining_fdr_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_fdr_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to False Discovery Rate.
+        /// </summary>
+        public static string CarafeTraining_fdr_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_fdr_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment Ion Mass Tolerance used during fragment ion matching and XIC extraction..
+        /// </summary>
+        public static string CarafeTraining_fragment_ion_mass_tolerance_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_fragment_ion_mass_tolerance_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment Ion Mass Tolerance.
+        /// </summary>
+        public static string CarafeTraining_fragment_ion_mass_tolerance_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_fragment_ion_mass_tolerance_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment Ion Mass Tolerance Units used during fragment ion matching and XIC extraction..
+        /// </summary>
+        public static string CarafeTraining_fragment_ion_mass_tolerance_units_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_fragment_ion_mass_tolerance_units_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment Ion Mass Tolerance Units.
+        /// </summary>
+        public static string CarafeTraining_fragment_ion_mass_tolerance_units_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_fragment_ion_mass_tolerance_units_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Mass-to-Charge Ratio (m/z) to consider during model training..
+        /// </summary>
+        public static string CarafeTraining_min_fragment_mz_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_min_fragment_mz_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Fragment Mass-to-Charge.
+        /// </summary>
+        public static string CarafeTraining_min_fragment_mz_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_min_fragment_mz_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is used to filter matches to only include those with PTM site localization probability larger than the defined threshold for modeling training. This is only used for PTM model training, such as training models using phospho-enriched data..
+        /// </summary>
+        public static string CarafeTraining_ptm_site_prob_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_ptm_site_prob_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PTM Site Probability.
+        /// </summary>
+        public static string CarafeTraining_ptm_site_prob_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_ptm_site_prob_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is used to filter matches to only include those with PTM site q-value less than the defined threshold for modeling training. This is only used for PTM model training, such as training models using phospho-enriched data..
+        /// </summary>
+        public static string CarafeTraining_ptm_site_qvalue_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_ptm_site_qvalue_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PTM Site Q-value.
+        /// </summary>
+        public static string CarafeTraining_ptm_site_qvalue_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_ptm_site_qvalue_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refine peak boundaries when using DIA data for fine-tuning..
+        /// </summary>
+        public static string CarafeTraining_refine_peak_detection_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_refine_peak_detection_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refine Peak Boundaries.
+        /// </summary>
+        public static string CarafeTraining_refine_peak_detection_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_refine_peak_detection_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT Window in minutes for refining peak boundaries. This is only used when refining peak detection is enabled..
+        /// </summary>
+        public static string CarafeTraining_RT_window_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_RT_window_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RT Peak Window.
+        /// </summary>
+        public static string CarafeTraining_RT_window_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_RT_window_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training Data Generation ....
+        /// </summary>
+        public static string CarafeTraining_Settings {
+            get {
+                return ResourceManager.GetString("CarafeTraining_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum XIC correlation to consider when determining shared fragments..
+        /// </summary>
+        public static string CarafeTraining_XIC_correlation_long {
+            get {
+                return ResourceManager.GetString("CarafeTraining_XIC_correlation_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to XIC Correlation.
+        /// </summary>
+        public static string CarafeTraining_XIC_correlation_short {
+            get {
+                return ResourceManager.GetString("CarafeTraining_XIC_correlation_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bad chromatogram data for charge {0} state of peptide {1}.
         /// </summary>
         public static string ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_ {
@@ -446,6 +1324,15 @@ namespace pwiz.Skyline.Model {
         public static string ChromatogramExporter_GetExtractorName_Invalid_extractor_name_ {
             get {
                 return ResourceManager.GetString("ChromatogramExporter_GetExtractorName_Invalid_extractor_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: &quot;{0}&quot; is not a valid value for {1}..
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_", resourceCulture);
             }
         }
         
@@ -1336,6 +2223,24 @@ namespace pwiz.Skyline.Model {
         public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
             get {
                 return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install.
+        /// </summary>
+        public static string NvidiaInstaller_Install {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Install", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing resource {0}.
+        /// </summary>
+        public static string NvidiaInstaller_Missing_resource_0_ {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Missing_resource_0_", resourceCulture);
             }
         }
         

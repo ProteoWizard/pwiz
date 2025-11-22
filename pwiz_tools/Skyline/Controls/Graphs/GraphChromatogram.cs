@@ -728,7 +728,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return RTGraphItem.RetentionPrediction; }
         }
-
+        public double? PredictedCCS
+        {
+            get { return RTGraphItem.CCSPrediction; }
+        }
         private ChromGraphItem RTGraphItem
         {
             get { return GetGraphItems(graphControl.GraphPane).Last(); }
@@ -2330,6 +2333,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodePeps);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
                 nodePeps, nodeGroups);
+            
+            var libKey = nodeGroups[0].GetLibKey(settings, nodePeps[0]);
+            LibraryIonMobilityInfo libImInfo;
+            
+            if (!settings.PeptideSettings.Libraries.IsLoaded)
+                return;
+
+            if (settings.PeptideSettings.Libraries.TryGetSpectralLibraryIonMobilities(new[] { libKey },
+                    chromGraphPrimary.Chromatogram.FilePath, out libImInfo))
+            {
+                var ccs = libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey);
+                if (ccs != null)
+                {
+                    chromGraphPrimary.CCSPrediction = ccs; 
+                }
+            }
             ShowImputedPeakBounds(chromGraphPrimary, nodePeps);
         }
 

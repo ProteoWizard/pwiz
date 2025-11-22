@@ -27,6 +27,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using JetBrains.Annotations;
 using log4net;
@@ -38,6 +39,75 @@ using Exception = System.Exception;
 
 namespace TestRunnerLib
 {
+    public static class FileChecker
+    {
+        public static List<string> CheckLockedFiles(string directoryPath)
+        {
+            List<string> lockedFiles = new List<string>();
+
+            // Check if directory exists
+            if (!Directory.Exists(directoryPath))
+            {
+                throw new DirectoryNotFoundException($"Directory not found: {directoryPath}");
+            }
+
+            // Get all files in the directory
+            string[] files = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories);
+
+            foreach (string filePath in files)
+            {
+                if (IsFileLocked(filePath))
+                {
+                    lockedFiles.Add(filePath);
+                }
+            }
+           
+
+
+            if (lockedFiles.Count > 0)
+            {
+                string message = $@"Unable to remove temp directory {directoryPath}, LOCKED FILES: ";
+                foreach (string file in lockedFiles)
+                {
+                    message += $@"{file} ";
+                }
+                throw new IOException($@"{message}");
+            }
+            return lockedFiles;
+        }
+
+        public static bool IsFileLocked(string filePath)
+        {
+            FileStream stream = null;
+
+            try
+            {
+                // Attempt to open the file with read/write access
+                stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException)
+            {
+                // File is locked if we get an IOException
+                return true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // File might be inaccessible due to permissions
+                return true;
+            }
+            finally
+            {
+                if (stream != null)
+                {
+                    stream.Close();
+                    stream.Dispose();
+                }
+            }
+
+            return false;
+        }
+    }
+
     public class TestInfo
     {
         private bool? _isAuditLogTest;
@@ -128,6 +198,7 @@ namespace TestRunnerLib
         private readonly bool _showStatus;
         private readonly bool _buildMode;
         private readonly bool _cleanupLevelAll;
+        private readonly bool _logDriveInfo;
 
         public readonly TestRunnerContext TestContext;
         public CultureInfo Language = new CultureInfo("en-US");
@@ -163,6 +234,52 @@ namespace TestRunnerLib
             get { return false; }
         }
 
+        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
+        public void RetryAction([InstantHandle] Action act, int maxRetries = 100)
+        {
+            int retry = 0;
+
+            while (retry++ < maxRetries)
+            {
+                try
+                {
+                    act();
+                    break;
+                }
+                catch (Exception x)
+                {
+                    // if it's a file locking issue, wrap the exception to report the locking process
+                    if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
+                    {
+                        var match = Regex.Match(ioException.Message, "'(.*)'");
+                        if (match.Success)
+                        {
+                            string lockedFilepath = match.Captures[0].Value.Trim('\'');
+                            if (!File.Exists(lockedFilepath))
+                            {
+                                x = new IOException(
+                                    string.Format("file '{0}' was locked but has since been deleted", lockedFilepath),
+                                    x);
+                            }
+                            else
+                            {
+                                int currentProcessId = Process.GetCurrentProcess().Id;
+                                Func<int, string> pidOrThisProcess = pid =>
+                                    pid == currentProcessId ? "this process" : $"PID: {pid}";
+                                var processesLockingFile =
+                                    FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+                                var names = string.Join(@", ",
+                                    processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                                x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names),
+                                    x);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public RunTests(
             bool demoMode,
             bool buildMode,
@@ -183,12 +300,14 @@ namespace TestRunnerLib
             string results = null,
             StreamWriter log = null,
             bool verbose = false,
-            bool isParallelClient = false)
+            bool isParallelClient = false,
+            bool logDriveInfo = false)
         {
             _buildMode = buildMode;
             _log = log;
             _process = Process.GetCurrentProcess();
             _showStatus = showStatus;
+            _logDriveInfo = logDriveInfo;
             TestContext = new TestRunnerContext();
             IsParallelClient = isParallelClient;
             SetTestDir(TestContext, results);
@@ -275,9 +394,30 @@ namespace TestRunnerLib
                 throw new ApplicationException("Can't find path to TestRunner.exe");
             return Path.Combine(runnerExeDirectory, assembly);
         }
+        private void LogDriveInfo()
+        {
+            foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
+            {
+                if (driveInfo.IsReady) // Check if drive is accessible
+                {
+                    string driveName = driveInfo.Name; // e.g., "C:\"
+                    long freeSpace = driveInfo.AvailableFreeSpace; // Bytes
+                    double freeSpaceGB = freeSpace / (1024.0 * 1024 * 1024); // Convert to GB
+                    long totalSpace = driveInfo.TotalSize; // Bytes
+                    double totalSpaceGB = totalSpace / (1024.0 * 1024 * 1024); // Convert to GB
 
+                    Log("\r\n[INFO] Drive: {0}\r\n", driveName);
+                    Log("[INFO]  Available Free Space: {0:F2} GB\r\n", freeSpaceGB);
+                    Log("[INFO]  Total Space: {0:F2} GB\r\n", totalSpaceGB);
+                    Log("[INFO]  Used Space: {0:F2} GB\r\n", (totalSpaceGB - freeSpaceGB));
+                }
+            }
+        } 
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
+            if (_logDriveInfo)
+                LogDriveInfo();
+
             TeamCityStartTest(test, pass);
 
             if (_showStatus)
@@ -557,7 +697,8 @@ namespace TestRunnerLib
                 }
 
                 TeamCityFinishTest(test, pass);
-
+                if (_logDriveInfo)
+                    LogDriveInfo();
                 return true;
             }
 
@@ -594,6 +735,8 @@ namespace TestRunnerLib
                 test.TestMethod.Name,
                 message,
                 exception);
+            if (_logDriveInfo)
+                LogDriveInfo();
             return false;
         }
 

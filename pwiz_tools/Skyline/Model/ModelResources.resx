@@ -189,6 +189,288 @@
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_" xml:space="preserve">
     <value>Template is required for method export.</value>
   </data>
+  <data name="AlphaPeptDeep_min_peptide_length_short" xml:space="preserve">
+    <value>Minimum Peptide Length</value>
+  </data>
+  <data name="AlphaPeptDeep_min_peptide_length_long" xml:space="preserve">
+    <value>Minimum Peptide Length of predicted spectra in the library.</value>
+  </data>
+  <data name="AlphaPeptDeep_max_peptide_length_short" xml:space="preserve">
+    <value>Maximum Peptide Length</value>
+  </data>
+  <data name="AlphaPeptDeep_max_peptide_length_long" xml:space="preserve">
+    <value>Maximum Peptide Length of predicted spectra in the library.</value>
+  </data>
+  <data name="AlphaPeptDeep_min_fragment_mz_short" xml:space="preserve">
+    <value>Minimum Fragment Mass-to-Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_min_fragment_mz_long" xml:space="preserve">
+    <value>Minimum Fragment Mass-to-Charge Ratio (m/z) of predicted spectra in the library.</value>
+  </data>
+  <data name="AlphaPeptDeep_max_fragment_mz_short" xml:space="preserve">
+    <value>Maximum Fragment Mass-to-Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_max_fragment_mz_long" xml:space="preserve">
+    <value>Maximum Fragment Mass-to-Charge Ratio (m/z) of predicted spectra in the library.</value>
+  </data>
+  <data name="AlphaPeptDeep_min_precursor_charge_short" xml:space="preserve">
+    <value>Minimum Precursor Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_min_precursor_charge_long" xml:space="preserve">
+    <value>Minimum Precursor Charge of the spectra in the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_max_precursor_charge_short" xml:space="preserve">
+    <value>Maximum Precursor Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_max_precursor_charge_long" xml:space="preserve">
+    <value>Maximum Precursor Charge of the spectra in the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_max_fragment_charge_short" xml:space="preserve">
+    <value>Maximum Fragment Charge</value>
+  </data>
+  <data name="AlphaPeptDeep_max_fragment_charge_long" xml:space="preserve">
+    <value>Maximum Fragment Charge of the fragments peaks in the spectra of the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_min_relative_intensity_short" xml:space="preserve">
+    <value>Minimum Fragment Relative Intensity</value>
+  </data>
+  <data name="AlphaPeptDeep_min_relative_intensity_long" xml:space="preserve">
+    <value>Minimum relative intensities of the fragment peaks in the spectra of the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_keep_k_highest_peaks_short" xml:space="preserve">
+    <value>Keep k-Highest Peaks</value>
+  </data>
+  <data name="AlphaPeptDeep_keep_k_highest_peaks_long" xml:space="preserve">
+    <value>Keep k of the highest intensity fragment peaks in the predicted library.</value>
+  </data>
+  <data name="AlphaPeptDeep_device_short" xml:space="preserve">
+    <value>Computational Device</value>
+  </data>
+  <data name="AlphaPeptDeep_device_long" xml:space="preserve">
+    <value>Computational Device (cpu or gpu) to use for model prediction.</value>
+  </data>
+  <data name="AlphaPeptDeep_Settings" xml:space="preserve">
+  <value>AlphaPeptDeep Settings ...</value>
+  </data>
+  <data name="AlphaPeptDeep_Settings" xml:space="preserve">
+  <value>AlphaPeptDeep Settings ...</value>
+  </data>
+  <data name="Carafe_DIANN_report_files" xml:space="preserve">
+    <value>DIA-NN report files</value>
+  </data>
+  <data name="CarafeTraining_Settings" xml:space="preserve">
+    <value>Training Data Generation ...</value>
+  </data>
+  <data name="CarafeModel_Settings" xml:space="preserve">
+    <value>Model Settings ...</value>
+  </data>
+  <data name="CarafeTraining_fdr_short" xml:space="preserve">
+    <value>False Discovery Rate</value>
+  </data>
+  <data name="CarafeLibrary_Settings" xml:space="preserve">
+    <value>Library Generation ...</value>
+  </data>
+  <data name="CarafeTraining_fdr_long" xml:space="preserve">
+    <value>The minimum False Discovery Rate to consider.</value>
+  </data>
+  <data name="CarafeTraining_ptm_site_prob_short" xml:space="preserve">
+    <value>PTM Site Probability</value>
+  </data>
+  <data name="CarafeTraining_ptm_site_prob_long" xml:space="preserve">
+    <value>This is used to filter matches to only include those with PTM site localization probability larger than the defined threshold for modeling training. This is only used for PTM model training, such as training models using phospho-enriched data.</value>
+  </data>
+  <data name="CarafeTraining_ptm_site_qvalue_short" xml:space="preserve">
+    <value>PTM Site Q-value</value>
+  </data>
+  <data name="CarafeTraining_ptm_site_qvalue_long" xml:space="preserve">
+    <value>This is used to filter matches to only include those with PTM site q-value less than the defined threshold for modeling training. This is only used for PTM model training, such as training models using phospho-enriched data.</value>
+  </data>
+  <data name="CarafeTraining_fragment_ion_mass_tolerance_short" xml:space="preserve">
+    <value>Fragment Ion Mass Tolerance</value>
+  </data>
+  <data name="CarafeTraining_fragment_ion_mass_tolerance_long" xml:space="preserve">
+    <value>Fragment Ion Mass Tolerance used during fragment ion matching and XIC extraction.</value>
+  </data>
+  <data name="CarafeTraining_fragment_ion_mass_tolerance_units_short" xml:space="preserve">
+    <value>Fragment Ion Mass Tolerance Units</value>
+  </data>
+  <data name="CarafeTraining_fragment_ion_mass_tolerance_units_long" xml:space="preserve">
+    <value>Fragment Ion Mass Tolerance Units used during fragment ion matching and XIC extraction.</value>
+  </data>
+  <data name="CarafeTraining_refine_peak_detection_short" xml:space="preserve">
+    <value>Refine Peak Boundaries</value>
+  </data>
+  <data name="CarafeTraining_refine_peak_detection_long" xml:space="preserve">
+    <value>Refine peak boundaries when using DIA data for fine-tuning.</value>
+  </data>
+  <data name="CarafeTraining_RT_window_short" xml:space="preserve">
+    <value>RT Peak Window</value>
+  </data>
+  <data name="CarafeTraining_RT_window_long" xml:space="preserve">
+    <value>RT Window in minutes for refining peak boundaries. This is only used when refining peak detection is enabled.</value>
+  </data>
+  <data name="CarafeTraining_XIC_correlation_short" xml:space="preserve">
+    <value>XIC Correlation</value>
+  </data>
+  <data name="CarafeTraining_XIC_correlation_long" xml:space="preserve">
+    <value>The minimum XIC correlation to consider when determining shared fragments.</value>
+  </data>
+  <data name="CarafeTraining_min_fragment_mz_short" xml:space="preserve">
+    <value>Minimum Fragment Mass-to-Charge</value>
+  </data>
+  <data name="CarafeTraining_min_fragment_mz_long" xml:space="preserve">
+    <value>Minimum Fragment Mass-to-Charge Ratio (m/z) to consider during model training.</value>
+  </data>
+  <data name="CarafeModel_model_short" xml:space="preserve">
+    <value>Model Type</value>
+  </data>
+  <data name="CarafeModel_model_long" xml:space="preserve">
+    <value>The Model Type can be general DIA or phosphorylated DIA data.</value>
+  </data>
+  <data name="CarafeModel_nce_short" xml:space="preserve">
+    <value>Normalized Collision Energy</value>
+  </data>
+  <data name="CarafeModel_nce_long" xml:space="preserve">
+    <value>Normalized Collision Energy will be automatically extracted from the mzML data if this parameter is not set. Otherwise, it will use the value of this setting.</value>
+  </data>
+  <data name="CarafeModel_instrument_short" xml:space="preserve">
+    <value>MS Instrument Type</value>
+  </data>
+  <data name="CarafeModel_instrument_long" xml:space="preserve">
+    <value>MS Instrument Type used to generate the training data will automatically be extracted from the mzML file if this parameter is not set. Otherwise, it will use the value of this setting.</value>
+  </data>
+  <data name="CarafeModel_device_short" xml:space="preserve">
+    <value>Computational Device</value>
+  </data>
+  <data name="CarafeModel_device_long" xml:space="preserve">
+    <value>Computational Device (cpu or gpu) to use for model training and prediction.</value>
+  </data>
+  <data name="CarafeLibrary_enzyme_short" xml:space="preserve">
+    <value>Enzyme</value>
+  </data>
+  <data name="CarafeLibrary_enzyme_long" xml:space="preserve">
+    <value>Enzyme used for protein digestion.</value>
+  </data>
+  <data name="CarafeLibrary_missed_cleavage_short" xml:space="preserve">
+    <value>Missed Cleavages</value>
+  </data>
+  <data name="CarafeLibrary_missed_cleavage_long" xml:space="preserve">
+    <value>Maximum Missed Cleavages allowed.</value>
+  </data>
+  <data name="CarafeLibrary_fixed_modification_types_short" xml:space="preserve">
+    <value>Fixed Modification Available</value>
+  </data>
+  <data name="CarafeLibrary_fixed_modification_types_long" xml:space="preserve">
+    <value>Select an available Fixed Modification to use in the analysis.</value>
+  </data>
+  <data name="CarafeLibrary_fixed_modification_short" xml:space="preserve">
+    <value>Fixed Modifications Selected</value>
+  </data>
+  <data name="CarafeLibrary_fixed_modification_long" xml:space="preserve">
+    <value>Fixed Modifications to consider for library generation.</value>
+  </data>
+  <data name="CarafeLibrary_variable_modification_types_short" xml:space="preserve">
+    <value>Variable Modifications Available</value>
+  </data>
+  <data name="CarafeLibrary_variable_modification_types_long" xml:space="preserve">
+    <value>Select an available Variable Modification to use in the analysis.</value>
+  </data>
+  <data name="CarafeLibrary_variable_modification_short" xml:space="preserve">
+    <value>Variable Modifications Selected</value>
+  </data>
+  <data name="CarafeLibrary_variable_modification_long" xml:space="preserve">
+    <value>Variable Modifications to consider for library generation.</value>
+  </data>
+  <data name="CarafeLibrary_max_variable_modification_short" xml:space="preserve">
+    <value>Maximum Variable Modifications</value>
+  </data>
+  <data name="CarafeLibrary_max_variable_modification_long" xml:space="preserve">
+    <value>Maximum Variable Modifications allowed per peptide.</value>
+  </data>
+  <data name="CarafeLibrary_clip_nterm_methionine_short" xml:space="preserve">
+    <value>Clip N-Terminal Methionine</value>
+  </data>
+  <data name="CarafeLibrary_clip_nterm_methionine_long" xml:space="preserve">
+    <value>When digesting a protein starting with amino acid M (Methionine), two copies of the leading peptide (i.e. with and without the N-terminal M) are considered or not considered.</value>
+  </data>
+  <data name="CarafeLibrary_min_peptide_length_short" xml:space="preserve">
+    <value>Minimum Peptide Length</value>
+  </data>
+  <data name="CarafeLibrary_min_peptide_length_long" xml:space="preserve">
+    <value>Minimum Peptide Length to consider for inclusion in the library.</value>
+  </data>
+  <data name="CarafeLibrary_max_peptide_length_short" xml:space="preserve">
+    <value>Maximum Peptide Length</value>
+  </data>
+  <data name="CarafeLibrary_max_peptide_length_long" xml:space="preserve">
+    <value>Maximum Peptide Length to consider for inclusion in the library.</value>
+  </data>
+  <data name="CarafeLibrary_min_peptide_mz_short" xml:space="preserve">
+    <value>Minimum Peptide Mass-to-Charge</value>
+  </data>
+  <data name="CarafeLibrary_min_peptide_mz_long" xml:space="preserve">
+    <value>Minimum Peptide Mass-to-Charge Ratio (m/z) to consider for inclusion in the library.</value>
+  </data>
+  <data name="CarafeLibrary_max_peptide_mz_short" xml:space="preserve">
+    <value>Maximum Peptide Mass-to-Charge</value>
+  </data>
+  <data name="CarafeLibrary_max_peptide_mz_long" xml:space="preserve">
+    <value>Maximum Peptide Mass-to-Charge Ratio (m/z) to consider for inclusion in the library.</value>
+  </data>
+  <data name="CarafeLibrary_min_peptide_charge_short" xml:space="preserve">
+    <value>Minimum Peptide Charge</value>
+  </data>
+  <data name="CarafeLibrary_min_peptide_charge_long" xml:space="preserve">
+    <value>Minimum Peptide Charge to consider for inclusion in the library.</value>
+  </data>
+  <data name="CarafeLibrary_max_peptide_charge_short" xml:space="preserve">
+    <value>Maximum Peptide Charge</value>
+  </data>
+  <data name="CarafeLibrary_max_peptide_charge_long" xml:space="preserve">
+    <value>Maximum Peptide Charge to consider for inclusion in the library.</value>
+  </data>
+  <data name="CarafeLibrary_min_fragment_mz_short" xml:space="preserve">
+    <value>Minimum Fragment Mass-to-Charge</value>
+  </data>
+  <data name="CarafeLibrary_min_fragment_mz_long" xml:space="preserve">
+    <value>Minimum Fragment Mass-to-Charge Ratio (m/z) to consider for inclusion in the library.</value>
+  </data>
+  <data name="CarafeLibrary_max_fragment_mz_short" xml:space="preserve">
+    <value>Maximum Fragment Mass-to-Charge</value>
+  </data>
+  <data name="CarafeLibrary_max_fragment_mz_long" xml:space="preserve">
+    <value>Maximum Fragment Mass-to-Charge Ratio (m/z) to consider for inclusion in the library.</value>
+  </data>
+  <data name="CarafeLibrary_topN_fragments_short" xml:space="preserve">
+    <value>Maximum Number of Fragment Ions</value>
+  </data>
+  <data name="CarafeLibrary_topN_fragments_long" xml:space="preserve">
+    <value>Maximum Number of Fragment Ions (of highest intensity) to consider for library generation.</value>
+  </data>
+  <data name="CarafeLibrary_library_format_short" xml:space="preserve">
+    <value>Spectral Library Format</value>
+  </data>
+  <data name="CarafeLibrary_library_format_long" xml:space="preserve">
+    <value>Spectral Library Format for library generation.</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Running_Carafe" xml:space="preserve">
+      <value>Running Carafe</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Java_directory__0__has_more_than_one_Java_Software_Development_Kit" xml:space="preserve">
+      <value>Java directory {0} has more than one Java Software Development Kit</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Setting_up_Java_environment" xml:space="preserve">
+      <value>Setting up Java environment</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Failed_to_download_Java_Software_Development_Kit_package" xml:space="preserve">
+      <value>Failed to download Java Software Development Kit package</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Failed_to_download_Carafe_jar_package" xml:space="preserve">
+      <value>Failed to download Carafe jar package</value>
+  </data>
+  <data name="CarafeLibraryBuilder_Importing_spectral_library" xml:space="preserve">
+      <value>Importing spectral library</value>
+  </data>
   <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
     <value>Bad chromatogram data for charge {0} state of peptide {1}</value>
   </data>
@@ -465,6 +747,21 @@
   </data>
   <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
     <value>Adjusting peak boundaries</value>
+  </data>
+  <data name="Blib_completed_ok" xml:space="preserve">
+    <value>BlibBuilder completed ok</value>
+  </data>
+  <data name="Blib_failed_to_complete" xml:space="preserve">
+    <value>BlibBuilder failed to complete</value>
+  </data>
+  <data name="Carafe_failed_to_complete" xml:space="preserve">
+    <value>Carafe failed to complete</value>
+  </data>
+  <data name="NvidiaInstaller_Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="NvidiaInstaller_Missing_resource_0_" xml:space="preserve">
+    <value>Missing resource {0}</value>
   </data>
   <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
     <value>The precursor m/z {0} is not measureable with your current instrument settings.</value>
@@ -858,6 +1155,13 @@ Please consider using the fine-tuning method provided by Carafe for building thi
 
 Would you like to continue building this predicted library?</value>
   </data>
+  <data name="Carafe_Warn_limited_modification" xml:space="preserve">
+    <value>Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
+
+{0}
+
+Would you like to continue building this predicted library?</value>
+  </data>
   <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
     <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don't have the necessary permissions and ask them to run the following script:
 
@@ -898,6 +1202,9 @@ Would you like to continue?
   </data>
   <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
     <value>Detailed Info</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_" xml:space="preserve">
+    <value>Error: "{0}" is not a valid value for {1}.</value>
   </data>
   <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_" xml:space="preserve">
       <value>In "{0}": {1}</value>

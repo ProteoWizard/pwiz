@@ -1,5 +1,5 @@
 /*
- * Author: David Shteynberg <dshteyn .at. proteinms.net>,
+ * Author: David Shteynberg <dshteynberg .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         // Processing intermediate file names
         private const string INPUT_FILE_NAME = @"input.tsv";
-        private const string SETTINGS_FILE_NAME = @"settings.yaml";
+        private const string SETTINGS_FILE_NAME = @"settings_defaults.yaml";
         private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
         private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_sky.speclib.tsv";
 
@@ -92,7 +92,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> UserParameters { get; private set; }
 
+        public static void AlphaPeptDeepDefaultSettings()
+        {
+            UserParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultUserExposedParameters)
+                UserParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+        }
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
 
         public static PythonInstaller CreatePythonInstaller(TextWriter writer)
@@ -132,19 +139,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         protected override string GetTableRow(PeptideDocNode peptide, ModifiedSequence modifiedSequence,
             int charge, bool training, string modsBuilder, string modSitesBuilder)
         {
-            return new[] { modifiedSequence.GetUnmodifiedSequence(), modsBuilder, modSitesBuilder, charge.ToString() }
-                .ToDsvLine(TextUtil.SEPARATOR_TSV);
+            return ToTsvLine(modifiedSequence.GetUnmodifiedSequence(), modsBuilder, modSitesBuilder, charge);
         }
 
         private string PeptdeepExecutablePath => Path.Combine(ScriptsDir, PEPTDEEP_EXECUTABLE);
 
         public override string InputFilePath => Path.Combine(WorkDir, INPUT_FILE_NAME);
         public override string TrainingFilePath => null;
-        
+
         private string SettingsFilePath => Path.Combine(WorkDir, SETTINGS_FILE_NAME);
         private string OutputModelsDir => Path.Combine(WorkDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(WorkDir, OUTPUT_SPECTRAL_LIBS);
-        
+
         public string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         public string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
@@ -165,10 +171,34 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 new ArgumentAndValue(@"library--output_tsv--enabled", @"True"),
                 new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
                 new ArgumentAndValue(@"library--rt_to_irt", @"True"),
-                new ArgumentAndValue(@"library--decoy", @"diann"),
-                new ArgumentAndValue(@"device", 
-                    PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD ? @"gpu" : @"cpu")
+                new ArgumentAndValue(@"library--decoy", @"diann")
             };
+
+        private static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultUserExposedParameters =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
+                new Dictionary<string, AbstractDdaSearchEngine.Setting>
+                {
+                    {
+                        ModelResources.AlphaPeptDeep_min_fragment_mz_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_fragment_mz_short, 200, 0.0, double.MaxValue, ModelResources.AlphaPeptDeep_min_fragment_mz_long)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_max_fragment_mz_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_max_fragment_mz_short, 2000, 0.0, double.MaxValue, ModelResources.AlphaPeptDeep_max_fragment_mz_long)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_min_relative_intensity_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_min_relative_intensity_short, 0.001, 0, double.MaxValue, ModelResources.AlphaPeptDeep_min_relative_intensity_long)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short, 12, 1, int.MaxValue,ModelResources.AlphaPeptDeep_keep_k_highest_peaks_long)
+                    },
+                    {
+                        ModelResources.AlphaPeptDeep_device_short,
+                        new AbstractDdaSearchEngine.Setting(ModelResources.AlphaPeptDeep_device_short, DeviceTypes.gpu.ToString(), Enum.GetNames(typeof(DeviceTypes)), ModelResources.AlphaPeptDeep_device_long)
+                    },
+                });
 
         private Dictionary<string, string> OpenSwathAssayLikeColName =>
             new Dictionary<string, string>()
@@ -200,6 +230,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             rootProcessingDir = Path.Combine(rootProcessingDir, Path.GetFileNameWithoutExtension(libOutPath));
             EnsureWorkDir(rootProcessingDir, PREFIX_WORKDIR);
+            if (AlphapeptdeepLibraryBuilder.UserParameters == null) 
+                AlphapeptdeepLibraryBuilder.AlphaPeptDeepDefaultSettings();
+
+            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD)
+                DefaultTestDevice = DeviceTypes.gpu;
+            else
+                DefaultTestDevice = DeviceTypes.cpu;
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -219,16 +256,69 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
 
+        private List<ArgumentAndValue> getUserSettingArgumentAndValues(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        {
+            var readyArgs = new List<ArgumentAndValue>();
+            foreach (var arg in UserParameters)
+            {
+                if (arg.Key == ModelResources.AlphaPeptDeep_min_peptide_length_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--min_peptide_len", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_max_peptide_length_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--max_peptide_len", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_min_fragment_mz_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--min_fragment_mz ", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_max_fragment_mz_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--max_fragment_mz ", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_min_precursor_charge_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--min_precursor_charge ", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_max_precursor_charge_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--max_precursor_charge ", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_max_fragment_charge_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--max_frag_charge ", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_min_relative_intensity_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--min_relative_intensity", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_keep_k_highest_peaks_short)
+                {
+                    readyArgs.Add(MakeArgument(@"library--output_tsv--keep_higest_k_peaks", arg.Value.Value));
+                }
+                else if (arg.Key == ModelResources.AlphaPeptDeep_device_short)
+                {
+                    if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONE) 
+                        readyArgs.Add(MakeArgument(@"torch_device--device_type", arg.Value.Value));
+                    else
+                        readyArgs.Add(MakeArgument(@"torch_device--device_type", DefaultTestDevice));
+                }
+            }
+            return readyArgs;
+        }
+
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             // Note: Segments are distributed to balance the expected work of each task
             var segmentEndPercentages = new[] { 5, 10, 15, 95 };
+
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
             PreparePrecursorInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             PrepareSettingsFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-            ExecutePeptdeep(progress, ref progressStatus);
+            ExecutePeptdeep(progress, ref progressStatus, getUserSettingArgumentAndValues(progress, ref progressStatus));
             progressStatus = progressStatus.NextSegment();
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
@@ -264,7 +354,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             }
         }
 
-        private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus, IList<ArgumentAndValue> userArgs)
         {
             Stopwatch timer = new Stopwatch();
             progress.UpdateProgress(progressStatus = progressStatus
@@ -272,7 +362,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             progressStatus.ChangePercentComplete(0);
             // Compose peptdeep cmd-flow command arguments to build library
-            var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
+            var allArgs = CmdFlowCommandArguments.Concat(userArgs);
+            var args = TextUtil.SpaceSeparate(allArgs.Select(arg => arg.ToString()));
 
             // Execute command
             var pr = new ProcessRunner();
@@ -294,13 +385,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     @"  / ____/  __/ /_/ / /_/ /_/ /  __/  __/ /_/ /",
                     @" /_/    \___/ .___/\__/_____/\___/\___/ .___/",
                     @"           /_/                       /_/",
+                    @"s/^.*AlphaPeptDeep\\\\lib\\\\site-packages\\\\torch\\\\nn\\\\modules\\\\module.py:1762.*$//",
+                    @"s/^  return forward_call.*$//",
+                    @"s/^  [0-9]%.*$//",
+                    @"s/^ [0-9][0-9]%.*$//",
                     @"s/DiaNN\/Spectronaut/Skyline/"    // Replace DiaNN/Spectronaut with Skyline
                 };
 
                 pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
-                pr.ExpectedOutputLinesCount = 119;
+                pr.ExpectedOutputLinesCount = 80;
                 timer.Start();
-                pr.Run(psi, string.Empty, progress, ref progressStatus, new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);
+                pr.Run(psi, string.Empty, progress, ref progressStatus, 
+                    new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);
                 timer.Stop();
                 string message = string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_, timer.Elapsed.Minutes, timer.Elapsed.Seconds);
                 Messages.WriteAsyncUserMessage(message);

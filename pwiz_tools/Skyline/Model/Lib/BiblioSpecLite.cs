@@ -133,14 +133,25 @@ namespace pwiz.Skyline.Model.Lib
         private BiblioLiteSourceInfo[] _librarySourceFiles;
         private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private bool _anyExplicitPeakBounds;
+        // Static lock object to synchronize access
+        private static readonly object _lock = new object();
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
             if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
             {
-                var library = new BiblioSpecLiteLibrary(spec);
-                if (library.Load(loader))
-                    return library;
+                try
+                {
+                    Console.Out.WriteLine(@"Beginning load {0}", spec.FilePath);
+                    var library = new BiblioSpecLiteLibrary(spec);
+                    if (library.Load(loader))
+                        return library;
+
+                }
+                finally
+                {
+                    Console.Out.WriteLine(@"Finished load {0}", spec.FilePath);
+                }
             }
             return null;
         }
@@ -621,23 +632,40 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                try
                 {
-                    if (!reader.Read())
-                        throw new IOException(string.Format(
-                            LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__,
-                            FilePath));
+                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                            throw new IOException(string.Format(
+                                LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__,
+                                FilePath));
 
-                    rows = reader.GetInt32(LibInfo.numSpecs);
+                        rows = reader.GetInt32(LibInfo.numSpecs);
 
-                    lsid = reader.GetString(LibInfo.libLSID);
+                        lsid = reader.GetString(LibInfo.libLSID);
 
-                    dataRev = reader.GetInt32(LibInfo.majorVersion);
-                    schemaVer = reader.GetInt32(LibInfo.minorVersion);
+                        dataRev = reader.GetInt32(LibInfo.majorVersion);
+                        schemaVer = reader.GetInt32(LibInfo.minorVersion);
 
-                    // Set these now, in case we encounter an error further in
-                    Lsid = lsid;
-                    SetRevision(dataRev, schemaVer);
+                        // Set these now, in case we encounter an error further in
+                        Lsid = lsid;
+                        SetRevision(dataRev, schemaVer);
+                    }
+
+                }
+                catch (Exception)
+                {
+                    // test if file is empty
+                    if (FilePath != null)
+                    {
+                        FileInfo fileInfo = new FileInfo(FilePath);
+                        if (fileInfo.Exists && fileInfo.Length == 0)
+                            return false;
+                    }
+
+                    // Console.Out.WriteLine($@"Exception caught: {ex}");
+                    throw;
                 }
 
                 // Corrupted library without a valid row count, but try to compensate

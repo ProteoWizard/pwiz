@@ -220,8 +220,38 @@
   <data name="BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path" xml:space="preserve">
     <value>The output path {0} is a directory. You must specify a file path.</value>
   </data>
+  <data name="BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_loaded" xml:space="preserve">
+    <value>Cannot predict library for a FASTA file when a Skyline document is already loaded.</value>
+  </data>
+  <data name="BuildLibraryDlg_Cannot_predict_library_for_and_tune_from_the_same_document" xml:space="preserve">
+	<value>Cannot predict library for and tune from the same document.</value>
+  </data>
   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
     <value>You must specify an output file path.</value>
+  </data>
+  <data name="BuildLibraryDlg_No_Skyline_document_is_currently_loaded" xml:space="preserve">
+    <value>No Skyline document is currently loaded. Please load a Skyline document for training.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
+    <value>You must specify an output file path.</value>
+  </data>
+  <data name="BuildLibraryDlg_Current_Skyline_document_is_missing_peptides" xml:space="preserve">
+    <value>Current Skyline document is missing peptides.</value>
+  </data>	
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue" xml:space="preserve">
+    <value>You must fill out this form to continue.</value>
+  </data>
+  <data name="BuildLibraryDlg_Skyline_tuning_document" xml:space="preserve">
+    <value>&amp;Skyline tuning document:</value>
+  </data>
+  <data name="BuildLibraryDlg_Select_Skyline_document_file" xml:space="preserve">
+    <value>Select Skyline Document File</value>
+  </data>
+  <data name="BuildLibraryDlg_DIANN_report_document" xml:space="preserve">
+    <value>&amp;DIA-NN report document:</value>
+  </data>
+  <data name="BuildLibraryDlg_Select_DIANN_report_document" xml:space="preserve">
+    <value>Select DIA-NN report document:</value>
   </data>
   <data name="BuildLibraryNotification_BuildLibraryNotification_Library__0__" xml:space="preserve">
     <value>Library {0}</value>

@@ -1,5 +1,5 @@
 /*
- * Author: David Shteynberg <dshteyn .at. proteinms.net>,
+ * Author: David Shteynberg <dshteynberg .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -36,13 +37,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     public abstract class AbstractDeepLibraryBuilder : ILibraryBuildWarning
     {
         private DateTime _nowTime = DateTime.Now;
-        
-        protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard)
+
+        protected AbstractDeepLibraryBuilder(SrmDocument document, IrtStandard irtStandard) : this(document, null, irtStandard)
         {
-            Document = document;
-            IrtStandard = irtStandard;
         }
 
+        protected AbstractDeepLibraryBuilder(SrmDocument document, SrmDocument trainingDocument, IrtStandard irtStandard)
+        {
+            Document = document;
+            TrainingDocument = trainingDocument;
+            IrtStandard = irtStandard;
+            DefaultTestDevice = DeviceTypes.cpu;
+        }
         public SrmDocument Document { get; private set; }
 
         public SrmDocument TrainingDocument { get; private set; }
@@ -57,6 +63,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
 
         public string WorkDir { get; private set; }
+
+        public enum DeviceTypes
+        {
+            gpu,
+            cpu
+        };
+
+        public static DeviceTypes DefaultTestDevice
+        {
+            get;
+            protected set;
+        }
 
         public void EnsureWorkDir(string path, string tool)
         {
@@ -160,6 +178,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             ModifiedSequence modifiedSequence, int charge, bool training,
             string modsBuilder, string modSitesBuilder);
 
+        public static string ToTsvLine(params object[] values)
+        {
+            return TextUtil.ToDsvLine(values.Select(ToStringInvariant), TextUtil.SEPARATOR_TSV);
+        }
+
         protected abstract string ToolName { get; }
 
         protected abstract LibraryBuilderModificationSupport LibraryBuilderModificationSupport { get; }
@@ -260,8 +283,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             return mod.AlphaNameWithAminoAcid(unmodifiedSequence, modIndexAA);
         }
-
-        public string GetWarning()
+        public virtual string GetWarning()
         {
             var warningModSupports = GetWarningMods();
             if (warningModSupports.IsNullOrEmpty())
@@ -313,8 +335,34 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             return warningModSupports;
         }
+        public static ArgumentAndValue MakeArgument(string name, object value)
+        {
+            return new ArgumentAndValue(name, ToStringInvariant(value));
+        }
+
+        protected static string ToStringInvariant(object value)
+        {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
+            if (value is string stringValue)
+            {
+                return stringValue;
+            }
+
+            if (value is IFormattable formattable)
+            {
+                return formattable.ToString(null, CultureInfo.InvariantCulture);
+            }
+
+            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, value.ToString);
+        }
+
+
     }
-    
+
     [Flags]
     public enum PredictionSupport { none = 0, fragmentation = 1, retention_time = 2, ccs = 4, all = 7 }
 

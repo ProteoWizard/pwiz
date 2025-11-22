@@ -33,12 +33,25 @@ namespace pwiz.Skyline.Model.Lib.Midas
         private readonly SrmDocument _doc;
         private readonly MidasLibrary _library;
         private readonly LibrarySpec _libSpec;
+        public string BuilderLibraryPath
+        {
+            get => _library.FilePath;
+            set => throw new NotImplementedException();
+        }
+        public string TestLibraryPath
+        {
+            get => _library.FilePath;
+            set => throw new NotImplementedException();
+        }
 
+        public SrmDocument Document { get => _doc; }
+        public string ToolName { get; }
         public MidasBlibBuilder(SrmDocument doc, MidasLibrary library, string libName, string blibPath)
         {
             _doc = doc;
             _library = library;
             _libSpec = new BiblioSpecLiteSpec(libName, blibPath);
+            ToolName = @"midas";
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -90,6 +103,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
             }
         }
 
+        public string ProductLibraryPath()
+        {
+            return _library.FilePath;
+
+        }
         public LibrarySpec LibrarySpec { get { return _libSpec; } }
     }
 }
