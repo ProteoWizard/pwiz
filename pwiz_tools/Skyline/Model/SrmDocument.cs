@@ -2626,67 +2626,6 @@ namespace pwiz.Skyline.Model
         #endregion
 
         /// <summary>
-        /// Compares documents, returns null if equal, or a text diff if not
-        /// </summary>
-        public static string EqualsVerbose(SrmDocument expected, SrmDocument actual)
-        {
-            if (ReferenceEquals(null, expected))
-            {
-                return ReferenceEquals(null, actual) ? null : @"expected a null document";
-            }
-            if (ReferenceEquals(null, actual))
-            {
-                return @"expected a non-null document";
-            }
-            if (expected.Equals(actual))
-            {
-                return null;
-            }
-
-            string textExpected;
-            using (var stringWriterExpected = new StringWriter())
-            using (var xmlWriterExpected = new XmlTextWriter(stringWriterExpected))
-            {
-                xmlWriterExpected.Formatting = Formatting.Indented;
-                expected.Serialize(xmlWriterExpected, null, SkylineVersion.CURRENT, null);
-                textExpected = stringWriterExpected.ToString();
-            }
-            string textActual;
-            using (var stringWriterActual = new StringWriter())
-            using (var xmlWriterActual = new XmlTextWriter(stringWriterActual))
-            {
-                xmlWriterActual.Formatting = Formatting.Indented;
-                actual.Serialize(xmlWriterActual, null, SkylineVersion.CURRENT, null);
-                textActual = stringWriterActual.ToString();
-            }
-
-            var linesExpected = textExpected.Split('\n');
-            var linesActual = textActual.Split('\n');
-            int lineNumber;
-            for (lineNumber = 0; lineNumber < linesExpected.Length && lineNumber < linesActual.Length; lineNumber++)
-            {
-                var lineExpected = linesExpected[lineNumber];
-                var lineActual = linesActual[lineNumber];
-                if (!Equals(lineExpected, lineActual))
-                {
-                    return $@"Expected XML representation of document does not match actual at line {lineNumber}\n" +
-                           $@"Expected line:\n{lineExpected}\n" +
-                           $@"Actual line:\n{lineActual}\n" +
-                           $@"Expected full document:\n{textExpected}\n" +
-                           $@"Actual full document:\n{textActual}\n";
-                }
-            }
-            if (lineNumber < linesExpected.Length || lineNumber < linesActual.Length)
-            {
-                return @"Expected XML representation of document is not the same length as actual\n"+
-                       $@"Expected full document:\n{textExpected}\n"+
-                       $@"Actual full document:\n{textActual}\n";
-            }
-
-            return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
-        }
-
-        /// <summary>
         /// If the passed in IdentityPath is below the specified Level, then return the ancestor IdentityPath
         /// at the specified level.
         /// If the passed in IdentityPath is above the specified level, then return all descendent IdentityPaths
@@ -2761,6 +2700,15 @@ namespace pwiz.Skyline.Model
             {
                 return (base.GetHashCode()*397) ^ Settings.GetHashCode();
             }
+        }
+
+        public override string ToString()
+        {
+            // For debugging convenience, not user-facing
+            // These are the same values in the same order used to summarize the document in the UI (lower right corner of Skyline window).
+            // That's also the same values and order as used in CheckDocumentState() calls.
+            // This is terse by design, for ease of display in debugger.
+            return $@"doc {MoleculeGroupCount},{MoleculeCount},{MoleculeTransitionGroupCount},{MoleculeTransitionCount}"; 
         }
 
         #endregion

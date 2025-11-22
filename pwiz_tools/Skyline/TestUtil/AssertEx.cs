@@ -873,7 +873,7 @@ namespace pwiz.SkylineTestUtil
                         RemovePathDifferences(ref lineTarget, ref lineActual);
                     }
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
-                    if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
+                    if (!CommonTextUtil.LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
                     {
                         int pos;
                         for (pos = 0; pos < expectedLine?.Length && pos < actualLine?.Length && expectedLine[pos] == actualLine[pos];) {pos++;}
@@ -961,69 +961,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-
-        private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
-            Dictionary<int, double> columnTolerances = null) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
-        {
-            if (string.Equals(lineExpected, lineActual))
-            {
-                return true; // Identical
-            }
-
-            // If only difference appears to be a generated GUID, let it pass
-            var regexGUID =
-                new Regex(
-                    @"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
-            var matchExpected = regexGUID.Match(lineExpected);
-            var matchActual = regexGUID.Match(lineActual);
-            if (matchExpected.Success && matchActual.Success
-                                      && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                      && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
-            {
-                return true;
-            }
-
-            // If only difference appears to be a generated ISO timestamp, let it pass
-            // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
-            var regexTimestamp =
-                new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
-            matchExpected = regexTimestamp.Match(lineExpected);
-            matchActual = regexTimestamp.Match(lineActual);
-            if (matchExpected.Success && matchActual.Success
-                                      && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                      && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
-            {
-                return true;
-            }
-
-            if (columnTolerances != null)
-            {
-                // ReSharper disable PossibleNullReferenceException
-                var colsActual = lineActual.Split('\t');
-                var colsExpected = lineExpected.Split('\t');
-                // ReSharper restore PossibleNullReferenceException
-                if (colsExpected.Length == colsActual.Length)
-                {
-                    for (var c = 0; c < colsActual.Length; c++)
-                    {
-                        if (colsActual[c] != colsExpected[c])
-                        {
-                            // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
-                            if ((!columnTolerances.TryGetValue(c, out var tolerance) && !columnTolerances.TryGetValue(-1, out tolerance)) || // No tolerance given for this column
-                                !(TextUtil.TryParseDoubleUncertainCulture(colsActual[c], out var valActual) &&
-                                  TextUtil.TryParseDoubleUncertainCulture(colsExpected[c], out var valExpected)) || // One or both don't parse as doubles
-                                (Math.Abs(valActual - valExpected) > tolerance + tolerance / 1000)) // Allow for rounding cruft
-                            {
-                                return false; // Can't account for difference
-                            }
-                        }
-                    }
-                    return true; // Differences accounted for
-                }
-            }
-
-            return false; // Could not account for difference
-        }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)
         {
