@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             List<double> decoyScores = peakScoringModel.UsesDecoys ? new List<double>(DecoyCount) : null;
             List<double> secondBestScores = peakScoringModel.UsesSecondBest ? new List<double>(TargetCount) : null;
 
-            GetScores(scoringParams, scoringParams, targetScores, decoyScores, secondBestScores, ReplaceUnknownFeatureScores, 1);
+            GetScores(scoringParams, calculatorParams, targetScores, decoyScores, secondBestScores, ReplaceUnknownFeatureScores, 1);
 
             if (peakScoringModel.UsesDecoys && !peakScoringModel.UsesSecondBest)
                 activeDecoyScores = decoyScores;
