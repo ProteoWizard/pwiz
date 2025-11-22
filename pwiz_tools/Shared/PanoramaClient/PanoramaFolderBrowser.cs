@@ -801,11 +801,11 @@ public class LKContainerBrowser : PanoramaFolderBrowser
                     folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                 else
                 {
-                    var effectiveValue = (string)moduleProperties[0][JSON_PROP_EFFECTIVE_VALUE];
+                    var effectiveValue = (string)moduleProperties[0]![JSON_PROP_EFFECTIVE_VALUE];
 
                     folderNode.ImageIndex =
                         folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals(JSON_PROP_LIBRARY) || effectiveValue.Equals(JSON_PROP_LIBRARY_PROTEIN))
+                            (effectiveValue!.Equals(JSON_PROP_LIBRARY) || effectiveValue.Equals(JSON_PROP_LIBRARY_PROTEIN))
                                 ? (int)ImageId.chrom_lib
                                 : (int)ImageId.labkey;
                 }
