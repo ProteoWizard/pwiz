@@ -374,6 +374,7 @@ namespace pwiz.Skyline.Model.Results
                                     results = results.UpdateCaches(documentPath, resultsLoad);
                                 docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
                                 docNew = _manager.ApplyMetadataRules(docNew);
+                                docNew = UpdateUserRevisionIndex(docCurrent, docNew);
                             }
                         }
                         catch (OperationCanceledException)
@@ -385,6 +386,22 @@ namespace pwiz.Skyline.Model.Results
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
             }
+        }
+
+        /// <summary>
+        /// If any new files have been imported, then increment UserRevisionIndex so the document is treated as dirty.
+        /// </summary>
+        private static SrmDocument UpdateUserRevisionIndex(SrmDocument docOriginal, SrmDocument docNew)
+        {
+            var oldImportTimes = docOriginal.MeasuredResults?.MSDataFileInfos.Select(file => file.ImportTime) ??
+                                 Array.Empty<DateTime?>();
+            var newImportTimes = docNew.MeasuredResults?.MSDataFileInfos.Select(file => file.ImportTime) ??
+                                 Array.Empty<DateTime?>();
+            if (oldImportTimes.SequenceEqual(newImportTimes))
+            {
+                return docNew;
+            }
+            return docNew.IncrementUserRevisionIndex();
         }
 
         public SrmDocument ApplyMetadataRules(SrmDocument document)
