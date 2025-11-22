@@ -136,7 +136,6 @@ namespace pwiz.SkylineTestUtil
             return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(newMeasuredResults));
         }
 
-
         /// <summary>
         /// Set all of FileWriteTime values in all of the ChromFileInfos to null.
         /// </summary>
