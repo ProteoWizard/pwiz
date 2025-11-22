@@ -879,14 +879,14 @@ public class WebDavBrowser : PanoramaFolderBrowser
                 if ((int)json[@"fileCount"] != 0)
                 {
                     var files = json[@"files"];
-                    foreach (var file in files)
+                    foreach (var file in files!)
                     {
                         var fileName = (string)file[@"text"];
                         var isFile = (bool)file[@"leaf"];
                         if (!isFile)
                         {
                             var canRead = (bool)file[@"canRead"];
-                            if (!canRead || fileName.Equals(@"assaydata"))
+                            if (!canRead || fileName!.Equals(@"assaydata"))
                             {
                                 continue;
                             }

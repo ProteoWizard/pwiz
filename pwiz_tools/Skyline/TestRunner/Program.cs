@@ -662,7 +662,7 @@ namespace TestRunner
         {
             var dockerVersionOutput = RunTests.RunCommand("docker", "version -f \"{{json .}}\"", RunTests.IS_DOCKER_RUNNING_MESSAGE);
             var dockerVersionJson = JObject.Parse(dockerVersionOutput);
-            if (dockerVersionJson["Server"]["Os"].Value<string>() != "windows")
+            if (dockerVersionJson["Server"]!["Os"]!.Value<string>() != "windows")
             {
                 Console.WriteLine("Switching Docker engine to Windows containers (this will stop any running containers)...");
                 RunTests.RunCommand($"{Environment.GetEnvironmentVariable("ProgramFiles")}\\Docker\\Docker\\DockerCli.exe",
