@@ -1295,8 +1295,18 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
             }
             // Watch out for n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
-            // If we remove the "n" and the "c" Skyline will just modify the AA at the appropriate end
-            Match match = REGEX_NAME.Match(line.Replace(@"n[", @"[").Replace(@"c[", @"["));
+            // Skyline should treat this as "A[43]LAVLALLSLSGLEAIQR" or AACDEFGHIK[17]
+            var scrubbed = line.Replace(@"c[", @"["); // Deal with c-term
+            var nterm = scrubbed.IndexOf(@"n[", StringComparison.Ordinal);
+            if (nterm > 0) // Deal with n-term
+            { 
+                var closeBracket = line.IndexOf(']');
+                scrubbed = scrubbed.Substring(0, nterm) + // "Name: "
+                           scrubbed.Substring(closeBracket+1, 1) + // "A"
+                           line.Substring(nterm+1, closeBracket - nterm) + // [43]
+                           scrubbed.Substring(closeBracket + 2); // LAVLALLSLSGLEAIQR
+            }
+            Match match = REGEX_NAME.Match(scrubbed);
             if (!match.Success)
             {
                 // Try to recognize as small molecule
