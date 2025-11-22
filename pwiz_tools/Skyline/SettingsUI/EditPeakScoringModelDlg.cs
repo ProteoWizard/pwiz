@@ -93,6 +93,7 @@ namespace pwiz.Skyline.SettingsUI
             InitializeGraphPanes();
             lblColinearWarning.Visible = false;
             toolStripFind.Visible = false;
+            toolStripFindUnknownModelScores.Visible = false;
 
             comboModel.Items.Add(MProphetPeakScoringModel.NAME);
             comboModel.Items.Add(LegacyScoringModel.DEFAULT_NAME);
@@ -327,14 +328,23 @@ namespace pwiz.Skyline.SettingsUI
 
         public void FindMissingValues(int selectedCalculatorIndex)
         {
-            string calculatorName = _peakScoringModel.PeakFeatureCalculators[selectedCalculatorIndex].Name;
             var featureDictionary = _targetDecoyGenerator.PeakTransitionGroupDictionary;
-            var finders = new[]
-                {
-                    new MissingScoresFinder(calculatorName, selectedCalculatorIndex, featureDictionary)
-                };
-            var findOptions = new FindOptions().ChangeCustomFinders(finders).ChangeCaseSensitive(false).ChangeText(string.Empty);
+            FindMissingValues(new MissingScoresFinder(_peakScoringModel.PeakFeatureCalculators, new[]{selectedCalculatorIndex}, featureDictionary));
+        }
+
+        private void FindMissingValues(MissingScoresFinder missingScoresFinder)
+        {
+            var findOptions = new FindOptions().ChangeCustomFinders(new[]{missingScoresFinder}).ChangeCaseSensitive(false).ChangeText(string.Empty);
             Program.MainWindow.FindAll(this, findOptions);
+        }
+
+        public void FindUnknownModelScores()
+        {
+            var calculatorIndices = Enumerable.Range(0, _peakScoringModel.Parameters.Weights.Count)
+                .Where(i => !double.IsNaN(_peakScoringModel.Parameters.Weights[i])).ToList();
+            var finder = new MissingScoresFinder(_peakScoringModel.PeakFeatureCalculators, calculatorIndices,
+                _targetDecoyGenerator.PeakTransitionGroupDictionary);
+            FindMissingValues(finder);
         }
 
         /// <summary>
@@ -615,6 +625,7 @@ namespace pwiz.Skyline.SettingsUI
                 graphPane.CurveList.Add(curve);
             }
 
+            toolStripFindUnknownModelScores.Visible = hasUnknownScores && !allUnknownScores;
             ScaleGraph(graphPane, min, max, hasUnknownScores);
             ScaleGraph(graphPaneQ, minQ, maxQ, hasUnknownScores);
             ScaleGraph(graphPaneP, minP, maxP, hasUnknownScores);
@@ -1120,6 +1131,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             FindMissingValues(_selectedCalculator);
         }
+        private void findUnknownModelScoresButton_Click(object sender, EventArgs e)
+        {
+            FindUnknownModelScores();
+        }
+
         #endregion
 
         #region Functional test support
@@ -1280,5 +1296,6 @@ namespace pwiz.Skyline.SettingsUI
             }
             return null;
         }
+
     }
 }

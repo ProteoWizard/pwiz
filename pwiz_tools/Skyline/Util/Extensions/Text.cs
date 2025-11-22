@@ -486,6 +486,14 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Separates items in a list with the localized comma character
+        /// </summary>
+        public static string CommaSeparateListItems(this IEnumerable<string> values)
+        {
+            return string.Concat(ExtensionsResources.ListItemSeparator, values);
+        }
+
+        /// <summary>
         /// Convert a collection of strings to a TSV line for serialization purposes,
         /// watching out for tabs, CRLF, and existing escapes
         /// </summary>
