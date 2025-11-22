@@ -1,0 +1,629 @@
+{
+  "Records": [
+    {
+      "Header": ">sp|P10636-3|TAU_HUMAN Isoform Tau-A of Microtubule-associated protein tau OS=Homo sapiens GN=MAPT",
+      "Results": [
+        {
+          "Name": "sp|P10636-3|TAU_HUMAN",
+          "Description": "Isoform Tau-A of Microtubule-associated protein tau OS=Homo sapiens GN=MAPT",
+          "PreferredName": "TAU_HUMAN",
+          "Accession": "P10636-3",
+          "Gene": "MAPT",
+          "Species": "Homo sapiens",
+          "SequenceLength": 316,
+          "WellFormed": true,
+          "WebSearchInfo": "X"
+        }
+      ]
+    },
+    {
+      "Header": ">sp|P10636-2|TAU_HUMAN Isoform Fetal-tau of Microtubule-associated protein tau OS=Homo sapiens",
+      "Results": [
+        {
+          "Name": "sp|P10636-2|TAU_HUMAN",
+          "Description": "Isoform Fetal-tau of Microtubule-associated protein tau OS=Homo sapiens",
+          "PreferredName": "TAU_HUMAN",
+          "Accession": "P10636-2",
+          "Gene": "MAPT MAPTL MTBT1 TAU",
+          "Species": "Homo sapiens (Human)",
+          "SequenceLength": 352,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UP10636-2"
+        }
+      ]
+    },
+    {
+      "Header": ">IPI:IPI00197700.1 Tax_Id=10116 Gene_Symbol=Apoa2 Apolipoprotein A-II\u0001",
+      "Results": [
+        {
+          "Name": "IPI:IPI00197700.1",
+          "Description": "Tax_Id=10116 Gene_Symbol=Apoa2 Apolipoprotein A-II",
+          "PreferredName": "APOA2_RAT",
+          "Accession": "P04638",
+          "Gene": "Apoa2",
+          "Species": "Rattus norvegicus (Rat)",
+          "SequenceLength": 102,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UP04638#UIPI00197700"
+        }
+      ]
+    },
+    {
+      "Header": ">ref|xp_915497.1| PREDICTED: similar to Syntaxin binding protein 3 (UNC-18 homolog 3) (UNC-18C) (MUNC-18-3) [Mus musculus].  Id=ref|XP_915497.1|gi|82891194| hash=28566A6F69346EB3",
+      "Results": [
+        {
+          "Name": "ref|xp_915497.1|",
+          "Description": "PREDICTED: similar to Syntaxin binding protein 3 (UNC-18 homolog 3) (UNC-18C) (MUNC-18-3) [Mus musculus].  Id=ref|XP_915497.1|gi|82891194| hash=28566A6F69346EB3",
+          "PreferredName": null,
+          "Accession": "NP_035634",
+          "Gene": null,
+          "Species": "Mus musculus",
+          "SequenceLength": 566,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UNP_035634 AND (organism_id:10090)#Exp_915497.1"
+        }
+      ]
+    },
+    {
+      "Header": ">IPI:IPI00197700.1|SWISS-PROT:P04638|ENSEMBL:ENSRNOP00000004662|REFSEQ:NP_037244 Tax_Id=10116 Gene_Symbol=Apoa2 Apolipoprotein A-II\u0001",
+      "Results": [
+        {
+          "Name": "IPI:IPI00197700.1|SWISS-PROT:P04638|ENSEMBL:ENSRNOP00000004662|REFSEQ:NP_037244",
+          "Description": "Tax_Id=10116 Gene_Symbol=Apoa2 Apolipoprotein A-II",
+          "PreferredName": "APOA2_RAT",
+          "Accession": "P04638",
+          "Gene": "Apoa2",
+          "Species": "Rattus norvegicus (Rat)",
+          "SequenceLength": 102,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UP04638#UIPI00197700"
+        }
+      ]
+    },
+    {
+      "Header": ">Q08641",
+      "Results": [
+        {
+          "Name": "Q08641",
+          "Description": "tRNA(Thr) (cytosine(32)-N(3))-methyltransferase (EC 2.1.1.268) (Actin-binding protein of 140 kDa) (tRNA methyltransferase of 140 kDa)",
+          "PreferredName": "AB140_YEAST",
+          "Accession": "Q08641",
+          "Gene": "ABP140 TRM140 YOR239W YOR240W",
+          "Species": "Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast)",
+          "SequenceLength": 628,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UQ08641"
+        }
+      ]
+    },
+    {
+      "Header": ">SYHC Histidyl-tRNA synthetase, cytoplasmic OS=Homo sapiens GN=HARS PE=1 SV=2",
+      "Results": [
+        {
+          "Name": "SYHC",
+          "Description": "Histidyl-tRNA synthetase, cytoplasmic OS=Homo sapiens GN=HARS PE=1 SV=2",
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": "HARS",
+          "Species": "Homo sapiens",
+          "SequenceLength": 20,
+          "WellFormed": false,
+          "WebSearchInfo": "X"
+        }
+      ]
+    },
+    {
+      "Header": ">YOR242C SSP2 SGDID:S000005768, Chr XV from 789857-788742, reverse complement, Verified ORF, \"Sporulation specific protein that localizes to the spore wall; required for sporulation at a point after meiosis II and during spore wall formation; SSP2 expression is induced midway in meiosis\"",
+      "Results": [
+        {
+          "Name": "YOR242C",
+          "Description": "SSP2 SGDID:S000005768, Chr XV from 789857-788742, reverse complement, Verified ORF, \"Sporulation specific protein that localizes to the spore wall; required for sporulation at a point after meiosis II and during spore wall formation; SSP2 expression is induced midway in meiosis\"",
+          "PreferredName": "SSP2_YEAST",
+          "Accession": "Q08646",
+          "Gene": "SSP2 YOR242C O5251",
+          "Species": "Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast)",
+          "SequenceLength": 371,
+          "WellFormed": false,
+          "WebSearchInfo": "X#US000005768"
+        }
+      ]
+    },
+    {
+      "Header": ">F26D10.3\tCE09682 WBGene00002005 locus:hsp-1 HSP-1 heat shock 70kd protein A status:Confirmed SW:P09446 protein_id:CAB02319.1",
+      "Results": [
+        {
+          "Name": "F26D10.3",
+          "Description": "CE09682 WBGene00002005 locus:hsp-1 HSP-1 heat shock 70kd protein A status:Confirmed SW:P09446 protein_id:CAB02319.1",
+          "PreferredName": "HSP1_CAEEL",
+          "Accession": "P09446",
+          "Gene": "hsp-1 hsp70a F26D10.3",
+          "Species": "Caenorhabditis elegans",
+          "SequenceLength": 640,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UF26D10.3"
+        }
+      ]
+    },
+    {
+      "Header": ">UniRef100_A5DI11 Elongation factor 2 n=1 Tax=Pichia guilliermondii RepID=EF2_PICGU",
+      "Results": [
+        {
+          "Name": "UniRef100_A5DI11",
+          "Description": "Elongation factor 2 n=1 Tax=Pichia guilliermondii RepID=EF2_PICGU",
+          "PreferredName": "EF2_PICGU",
+          "Accession": "A5DI11",
+          "Gene": "EFT2 PGUG_02912",
+          "Species": "Meyerozyma guilliermondii (strain ATCC 6260 / CBS 566 / DSM 6381 / JCM 1539 / NBRC 10279 / NRRL Y-324) (Yeast) (Candida guilliermondii)",
+          "SequenceLength": 842,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UA5DI11"
+        }
+      ]
+    },
+    {
+      "Header": ">gi|15834432|30S_ribosomal_sub gi|15834432|ref|NP_313205.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]",
+      "Results": [
+        {
+          "Name": "gi|15834432|30S_ribosomal_sub",
+          "Description": "gi|15834432|ref|NP_313205.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]",
+          "PreferredName": "RS18_ECO57",
+          "Accession": "P0A7T9",
+          "Gene": "rpsR Z5811 ECs5178",
+          "Species": "Escherichia coli O157:H7",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UNP_313205#UNP_313205 AND (organism_id:386585)#G15834432"
+        }
+      ]
+    },
+    {
+      "Header": ">NP_313205 gi|15834432|ref|NP_313205.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]",
+      "Results": [
+        {
+          "Name": "NP_313205",
+          "Description": "gi|15834432|ref|NP_313205.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]",
+          "PreferredName": "RS18_ECO57",
+          "Accession": "P0A7T9",
+          "Gene": "rpsR Z5811 ECs5178",
+          "Species": "Escherichia coli O157:H7",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UNP_313205"
+        }
+      ]
+    },
+    {
+      "Header": ">sp|P01222|TSHB_HUMAN Thyrotropin subunit beta OS=Homo sapiens GN=TSHB PE=1 SV=2",
+      "Results": [
+        {
+          "Name": "sp|P01222|TSHB_HUMAN",
+          "Description": "Thyrotropin subunit beta OS=Homo sapiens GN=TSHB PE=1 SV=2",
+          "PreferredName": "TSHB_HUMAN",
+          "Accession": "P01222",
+          "Gene": "TSHB",
+          "Species": "Homo sapiens",
+          "SequenceLength": 138,
+          "WellFormed": true,
+          "WebSearchInfo": "X"
+        }
+      ]
+    },
+    {
+      "Header": ">Y62E10A.1\tCE22694 WBGene00004410 locus:rpa-2 status:Confirmed TR:Q9U1X9 protein_id:CAB60595.1",
+      "Results": [
+        {
+          "Name": "Y62E10A.1",
+          "Description": "CE22694 WBGene00004410 locus:rpa-2 status:Confirmed TR:Q9U1X9 protein_id:CAB60595.1",
+          "PreferredName": "Q9U1X9_CAEEL",
+          "Accession": "Q9U1X9",
+          "Gene": "rplp-2.2 CELE_Y62E10A.1 Y62E10A.1",
+          "Species": "Caenorhabditis elegans",
+          "SequenceLength": 110,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UY62E10A.1"
+        }
+      ]
+    },
+    {
+      "Header": ">CGI_10000780",
+      "Results": [
+        {
+          "Name": "CGI_10000780",
+          "Description": "Uncharacterized protein",
+          "PreferredName": "K1QN71_MAGGI",
+          "Accession": "K1QN71",
+          "Gene": "CGI_10000780",
+          "Species": "Magallana gigas (Pacific oyster) (Crassostrea gigas)",
+          "SequenceLength": 449,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UCGI_10000780"
+        }
+      ]
+    },
+    {
+      "Header": ">ENSMUSP00000100344 pep:known chromosome:GRCm38:14:52427928:52428874:1 gene:ENSMUSG00000076758 transcript:ENSMUST00000103567 gene_biotype:TR_V_gene transcript_biotype:TR_V_gene",
+      "Results": [
+        {
+          "Name": "ENSMUSP00000100344",
+          "Description": "pep:known chromosome:GRCm38:14:52427928:52428874:1 gene:ENSMUSG00000076758 transcript:ENSMUST00000103567 gene_biotype:TR_V_gene transcript_biotype:TR_V_gene",
+          "PreferredName": "A0A075B5Z4_MOUSE",
+          "Accession": "A0A075B5Z4",
+          "Gene": "Trav1",
+          "Species": "Mus musculus (Mouse)",
+          "SequenceLength": 110,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UENSMUSP00000100344"
+        }
+      ]
+    },
+    {
+      "Header": ">AARS.IPI00027442 IPI:IPI00027442.4|SWISS-PROT:P49588|ENSEMBL:ENSP00000261772|REFSEQ:NP_001596|H-INV:HIT000035254|VEGA:OTTHUMP00000080084 Tax_Id=9606 Gene_Symbol=AARS Alanyl-tRNA synthetase, cytoplasmic",
+      "Results": [
+        {
+          "Name": "AARS.IPI00027442",
+          "Description": "IPI:IPI00027442.4|SWISS-PROT:P49588|ENSEMBL:ENSP00000261772|REFSEQ:NP_001596|H-INV:HIT000035254|VEGA:OTTHUMP00000080084 Tax_Id=9606 Gene_Symbol=AARS Alanyl-tRNA synthetase, cytoplasmic",
+          "PreferredName": "SYAC_HUMAN",
+          "Accession": "P49588",
+          "Gene": "AARS1 AARS",
+          "Species": "Homo sapiens (Human)",
+          "SequenceLength": 968,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UP49588#UIPI00027442"
+        }
+      ]
+    },
+    {
+      "Header": ">gi|15834432|30S_ribosomal_sub| gi|15834432|ref|NP_313205.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]\u0001gi|16132024|ref|NP_418623.1| 30S ribosomal subunit protein S18 [Escherichia coli K12]\u0001gi|16763210|ref|NP_458827.1| 30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi]\u0001gi|24115555|ref|NP_710065.1| 30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 301]\u0001gi|26251099|ref|NP_757139.1| 30S ribosomal protein S18 [Escherichia coli CFT073]\u0001gi|29144689|ref|NP_808031.1| 30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi Ty2]\u0001gi|30065573|ref|NP_839744.1| 30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 2457T]\u0001gi|133836|sp|P02374|RS18_ECOLI 30S ribosomal protein S18\u0001gi|2144767|pir||R3EC18 ribosomal protein S18 [validated] - Escherichia coli (strain K-12)\u0001gi|25294828|pir||AI1052 30s ribosomal chain protein S18 [imported] - Salmonella enterica subsp. enterica serovar Typhi (strain CT18)\u0001gi|25294838|pir||B91276 30S ribosomal subunit protein S18 [imported] - Escherichia coli (strain O157:H7, substrain RIMD 0509952)\u0001gi|42847|emb|CAA27654.1| unnamed protein product [Escherichia coli]\u0001gi|537043|gb|AAA97098.1| 30S ribosomal subunit protein S18 [Escherichia coli]\u0001gi|1790646|gb|AAC77159.1| 30S ribosomal subunit protein S18 [Escherichia coli K12]\u0001gi|13364655|dbj|BAB38601.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]\u0001gi|16505518|emb|CAD06870.1| 30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi]\u0001gi|24054886|gb|AAN45772.1|AE015442_2 30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 301]\u0001gi|26111531|gb|AAN83713.1|AE016771_224 30S ribosomal protein S18 [Escherichia coli CFT073]\u0001gi|29140328|gb|AAO71891.1| 30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi Ty2]\u0001gi|30043837|gb|AAP19556.1| 30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 2457T] [MASS=8986]",
+      "Results": [
+        {
+          "Name": "gi|15834432|30S_ribosomal_sub|",
+          "Description": "gi|15834432|ref|NP_313205.1| 30S ribosomal subunit protein S18 [Escherichia coli O157:H7]",
+          "PreferredName": "RS18_ECO57",
+          "Accession": "P0A7T9",
+          "Gene": "rpsR Z5811 ECs5178",
+          "Species": "Escherichia coli O157:H7",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UNP_313205#UNP_313205 AND (organism_id:386585)#G15834432"
+        },
+        {
+          "Name": "gi|16132024|ref|NP_418623.1|",
+          "Description": "30S ribosomal subunit protein S18 [Escherichia coli K12]",
+          "PreferredName": "RS18_ECOLI",
+          "Accession": "P0A7T7",
+          "Gene": "rpsR b4202 JW4160",
+          "Species": "Escherichia coli (strain K12)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UNP_418623#UNP_418623 AND (organism_id:511145)#G16132024"
+        },
+        {
+          "Name": "gi|16763210|ref|NP_458827.1|",
+          "Description": "30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi]",
+          "PreferredName": "A0A718ARV1_SALTI",
+          "Accession": "A0A718ARV1",
+          "Gene": "rpsR G1V83_19805 GYJ61_18895",
+          "Species": "Salmonella enterica subsp. enterica serovar Typhi str. CT18",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UWP_000135199.1 AND (organism_id:220341)#G16763210"
+        },
+        {
+          "Name": "gi|24115555|ref|NP_710065.1|",
+          "Description": "30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 301]",
+          "PreferredName": "A0AB36P917_SHIFL",
+          "Accession": "A0AB36P917",
+          "Gene": "rpsR SF301_4715",
+          "Species": "Shigella flexneri 2a str. 301",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UNP_710065 AND (organism_id:198214)#G24115555"
+        },
+        {
+          "Name": "gi|26251099|ref|NP_757139.1|",
+          "Description": "30S ribosomal protein S18 [Escherichia coli CFT073]",
+          "PreferredName": "RS18_ECOL6",
+          "Accession": "P0A7T8",
+          "Gene": "rpsR c5292",
+          "Species": "Escherichia coli O6:H1 (strain CFT073 / ATCC 700928 / UPEC)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UWP_000135199.1 AND (organism_id:199310)#G26251099"
+        },
+        {
+          "Name": "gi|29144689|ref|NP_808031.1|",
+          "Description": "30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi Ty2]",
+          "PreferredName": "ref|NP_808031.1|",
+          "Accession": "WP_000135199.1",
+          "Gene": null,
+          "Species": "Salmonella enterica subsp. enterica serovar Typhi str. Ty2",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UNP_808031#UWP_000135199.1#UWP_000135199.1 AND (organism_id:209261)#G29144689"
+        },
+        {
+          "Name": "gi|30065573|ref|NP_839744.1|",
+          "Description": "30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 2457T]",
+          "PreferredName": "ref|NP_839744.1|",
+          "Accession": "WP_000135199.1",
+          "Gene": null,
+          "Species": "Shigella flexneri 2a str. 2457T",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UNP_839744#UWP_000135199.1#UWP_000135199.1 AND (organism_id:198215)#G30065573"
+        },
+        {
+          "Name": "gi|133836|sp|P02374|RS18_ECOLI",
+          "Description": "30S ribosomal protein S18",
+          "PreferredName": "RS18_ECOLI",
+          "Accession": "P0A7T7",
+          "Gene": "rpsR b4202 JW4160",
+          "Species": "Escherichia coli (strain K12)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UP0A7T7#UP0A7T7 AND (organism_id:562)#G133836"
+        },
+        {
+          "Name": "gi|2144767|pir||R3EC18",
+          "Description": "ribosomal protein S18 [validated] - Escherichia coli (strain K-12)",
+          "PreferredName": "pir||R3EC18",
+          "Accession": "P02374",
+          "Gene": null,
+          "Species": "Escherichia coli (strain K-12)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UR3EC18#UP02374#UP02374 AND (organism_id:562)#G2144767"
+        },
+        {
+          "Name": "gi|25294828|pir||AI1052",
+          "Description": "30s ribosomal chain protein S18 [imported] - Salmonella enterica subsp. enterica serovar Typhi (strain CT18)",
+          "PreferredName": "pir||AI1052",
+          "Accession": "AI1052",
+          "Gene": null,
+          "Species": "Salmonella enterica subsp. enterica serovar Typhi (strain CT18)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UAI1052#UAI1052 AND (organism_id:90370)#G25294828"
+        },
+        {
+          "Name": "gi|25294838|pir||B91276",
+          "Description": "30S ribosomal subunit protein S18 [imported] - Escherichia coli (strain O157:H7, substrain RIMD 0509952)",
+          "PreferredName": "RS18_ECO57",
+          "Accession": "P0A7T9",
+          "Gene": "rpsR Z5811 ECs5178",
+          "Species": "Escherichia coli O157:H7",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UB91276#UP02374#UP02374 AND (organism_id:562)#G25294838"
+        },
+        {
+          "Name": "gi|42847|emb|CAA27654.1|",
+          "Description": "unnamed protein product [Escherichia coli]",
+          "PreferredName": "RS18_ECOLI",
+          "Accession": "P0A7T7",
+          "Gene": "rpsR b4202 JW4160",
+          "Species": "Escherichia coli (strain K12)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UCAA27654#UCAA27654 AND (organism_id:562)#G42847"
+        },
+        {
+          "Name": "gi|537043|gb|AAA97098.1|",
+          "Description": "30S ribosomal subunit protein S18 [Escherichia coli]",
+          "PreferredName": "RS18_ECOLI",
+          "Accession": "P0A7T7",
+          "Gene": "rpsR b4202 JW4160",
+          "Species": "Escherichia coli (strain K12)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UAAA97098#UAAA97098 AND (organism_id:511145)#G537043"
+        },
+        {
+          "Name": "gi|1790646|gb|AAC77159.1|",
+          "Description": "30S ribosomal subunit protein S18 [Escherichia coli K12]",
+          "PreferredName": "RS18_ECOLI",
+          "Accession": "P0A7T7",
+          "Gene": "rpsR b4202 JW4160",
+          "Species": "Escherichia coli (strain K12)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UAAC77159#UAAC77159 AND (organism_id:511145)#G1790646"
+        },
+        {
+          "Name": "gi|13364655|dbj|BAB38601.1|",
+          "Description": "30S ribosomal subunit protein S18 [Escherichia coli O157:H7]",
+          "PreferredName": "RS18_ECO57",
+          "Accession": "P0A7T9",
+          "Gene": "rpsR Z5811 ECs5178",
+          "Species": "Escherichia coli O157:H7",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UBAB38601#UBAB38601 AND (organism_id:386585)#G13364655"
+        },
+        {
+          "Name": "gi|16505518|emb|CAD06870.1|",
+          "Description": "30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi]",
+          "PreferredName": "RS18_SALTI",
+          "Accession": "P0A7U1",
+          "Gene": "rpsR STY4749 t4444",
+          "Species": "Salmonella typhi",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UCAD06870#UCAD06870 AND (organism_id:220341)#G16505518"
+        },
+        {
+          "Name": "gi|24054886|gb|AAN45772.1|AE015442_2",
+          "Description": "30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 301]",
+          "PreferredName": "RS18_SHIFL",
+          "Accession": "P0A7U2",
+          "Gene": "rpsR SF4355 S4627",
+          "Species": "Shigella flexneri",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UAAN45772#UAAN45772 AND (organism_id:198214)#G24054886"
+        },
+        {
+          "Name": "gi|26111531|gb|AAN83713.1|AE016771_224",
+          "Description": "30S ribosomal protein S18 [Escherichia coli CFT073]",
+          "PreferredName": "RS18_ECOL6",
+          "Accession": "P0A7T8",
+          "Gene": "rpsR c5292",
+          "Species": "Escherichia coli O6:H1 (strain CFT073 / ATCC 700928 / UPEC)",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UAAN83713 AND (organism_id:199310)#G26111531"
+        },
+        {
+          "Name": "gi|29140328|gb|AAO71891.1|",
+          "Description": "30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi Ty2]",
+          "PreferredName": "RS18_SALTI",
+          "Accession": "P0A7U1",
+          "Gene": "rpsR STY4749 t4444",
+          "Species": "Salmonella typhi",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UAAO71891#UAAO71891 AND (organism_id:209261)#G29140328"
+        },
+        {
+          "Name": "gi|30043837|gb|AAP19556.1|",
+          "Description": "30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 2457T] [MASS=8986]",
+          "PreferredName": "RS18_SHIFL",
+          "Accession": "P0A7U2",
+          "Gene": "rpsR SF4355 S4627",
+          "Species": "Shigella flexneri",
+          "SequenceLength": 75,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UAAP19556#UAAP19556 AND (organism_id:198215)#G30043837"
+        }
+      ]
+    },
+    {
+      "Header": ">scoogly doodly abeebopboom",
+      "Results": [
+        {
+          "Name": "scoogly",
+          "Description": "doodly abeebopboom",
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": null,
+          "Species": null,
+          "SequenceLength": 340,
+          "WellFormed": false,
+          "WebSearchInfo": "X"
+        }
+      ]
+    },
+    {
+      "Header": ">AAS51520 pep:known chromosome:ASM9102v1:IV:2278:3450:1 gene:AGOS_ADL400W transcript:AAS51520 description:\"ADL400WpAFR758Cp\"",
+      "Results": [
+        {
+          "Name": "AAS51520",
+          "Description": "pep:known chromosome:ASM9102v1:IV:2278:3450:1 gene:AGOS_ADL400W transcript:AAS51520 description:\"ADL400WpAFR758Cp\"",
+          "PreferredName": "Q75BG2_EREGS",
+          "Accession": "Q75BG2",
+          "Gene": "AGOS_ADL400W AGOS_AFR758C",
+          "Species": "Eremothecium gossypii (strain ATCC 10895 / CBS 109.51 / FGSC 9923 / NRRL Y-1056) (Yeast) (Ashbya gossypii)",
+          "SequenceLength": 390,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UAAS51520"
+        }
+      ]
+    },
+    {
+      "Header": ">000001 ENSBTAP00000055373 pep:known scaffold:UMD3.1:GJ059509.1:3535:6470:-1 gene:ENSBTAG00000047958 transcript:ENSBTAT00000064726 gene_biotype:protein_coding transcript_biotype:protein_coding",
+      "Results": [
+        {
+          "Name": "000001",
+          "Description": "ENSBTAP00000055373 pep:known scaffold:UMD3.1:GJ059509.1:3535:6470:-1 gene:ENSBTAG00000047958 transcript:ENSBTAT00000064726 gene_biotype:protein_coding transcript_biotype:protein_coding",
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": null,
+          "Species": null,
+          "SequenceLength": 330,
+          "WellFormed": false,
+          "WebSearchInfo": "X#U000001"
+        }
+      ]
+    },
+    {
+      "Header": ">Q9090909090 this is meant to fail",
+      "Results": [
+        {
+          "Name": "Q9090909090",
+          "Description": "this is meant to fail",
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": null,
+          "Species": null,
+          "SequenceLength": 130,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UQ9090909090"
+        }
+      ]
+    },
+    {
+      "Header": ">ABC",
+      "Results": [
+        {
+          "Name": "ABC",
+          "Description": null,
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": null,
+          "Species": null,
+          "SequenceLength": 110,
+          "WellFormed": false,
+          "WebSearchInfo": "X"
+        }
+      ]
+    },
+    {
+      "Header": ">eat[19]:fish(b)",
+      "Results": [
+        {
+          "Name": "eat[19]:fish(b)",
+          "Description": null,
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": null,
+          "Species": null,
+          "SequenceLength": 10,
+          "WellFormed": false,
+          "WebSearchInfo": "X"
+        }
+      ]
+    },
+    {
+      "Header": ">CGI_99999999",
+      "Results": [
+        {
+          "Name": "CGI_99999999",
+          "Description": null,
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": null,
+          "Species": null,
+          "SequenceLength": 120,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UCGI_99999999"
+        }
+      ]
+    },
+    {
+      "Header": ">ENSMUSP99999999999 pep:known chromosome:GRCm83:14:52742928:52824874:1 gene:ENSMUSG99999999999999 transcript:ENSMUST9999999999999999 gene_biotype:TR_Z_gene transcript_biotype:TR_Z_gene",
+      "Results": [
+        {
+          "Name": "ENSMUSP99999999999",
+          "Description": "pep:known chromosome:GRCm83:14:52742928:52824874:1 gene:ENSMUSG99999999999999 transcript:ENSMUST9999999999999999 gene_biotype:TR_Z_gene transcript_biotype:TR_Z_gene",
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": null,
+          "Species": null,
+          "SequenceLength": 230,
+          "WellFormed": false,
+          "WebSearchInfo": "X#UENSMUSP99999999999"
+        }
+      ]
+    }
+  ]
+}

@@ -110,25 +110,9 @@ namespace CommonTest
     [TestClass]
     public class FastaImporterTest : AbstractUnitTestEx
     {
-        protected override bool IsRecordMode => false;
+        private const string FASTA_EXPECTED_JSON_RELATIVE_PATH = @"CommonTest\FastaImporterTestExpected.json";
 
-        [Flags]
-        private enum DiagnosticMode
-        {
-            none = 0,
-            results = 1,
-            requests = 2
-        }
-
-        private DiagnosticMode CurrentDiagnosticMode => DiagnosticMode.none;
-
-        private bool CaptureResults => (CurrentDiagnosticMode & DiagnosticMode.results) != 0;
-        private bool CaptureRequests => (CurrentDiagnosticMode & DiagnosticMode.requests) != 0;
-
-        private const string FASTA_EXPECTED_JSON_RELATIVE_PATH = @"CommonTest\FastaImporterWebData.json";
- 
         private FastaImporterExpectedData _cachedExpectedData;
-        private List<HttpInteraction> _recordedInteractions;
 
         private const string NEGTEST_NAME = @"Q9090909090"; // For use in negative test
         private const string NEGTEST_DESCRIPTION = @"this is meant to fail"; // For use in negative test
@@ -605,8 +589,7 @@ namespace CommonTest
             public int SequenceLength { get; }
         }
 
-        private void RecordExpectedData(List<DbProtein> dbProteins, List<FastaHeaderParserTest> tests,
-            IReadOnlyList<HttpInteraction> interactions)
+        private void RecordExpectedData(List<DbProtein> dbProteins, List<FastaHeaderParserTest> tests)
         {
             var jsonPath = TestContext.GetProjectDirectory(FASTA_EXPECTED_JSON_RELATIVE_PATH);
             Assert.IsNotNull(jsonPath, @"Unable to locate project-relative path for FASTA importer expectations.");
@@ -708,8 +691,7 @@ namespace CommonTest
 
             var data = new FastaImporterExpectedData
             {
-                Records = records,
-                HttpInteractions = interactions?.ToList() ?? new List<HttpInteraction>()
+                Records = records
             };
             data.RecordMap = data.Records.ToDictionary(r => r.Header, StringComparer.Ordinal);
 
@@ -736,7 +718,6 @@ namespace CommonTest
             var json = File.ReadAllText(jsonPath, Encoding.UTF8);
             var data = JsonConvert.DeserializeObject<FastaImporterExpectedData>(json) ?? new FastaImporterExpectedData();
             data.Records ??= new List<FastaImporterExpectedRecord>();
-            data.HttpInteractions ??= new List<HttpInteraction>();
             data.RecordMap = data.Records.ToDictionary(r => r.Header, StringComparer.Ordinal);
 
             _cachedExpectedData = data;
@@ -773,18 +754,11 @@ namespace CommonTest
         {
             var tests = GetTests(1);
 
-            var jsonPath = ExtensionTestContext.GetProjectDirectory(FASTA_EXPECTED_JSON_RELATIVE_PATH);
-            if (!string.IsNullOrEmpty(jsonPath) && File.Exists(jsonPath))
+            // Load HTTP interactions from the standardized file (FastaImportTestWebData.json)
+            var httpInteractions = LoadHttpInteractionsForType(typeof(FastaImporterTest), ExtensionTestContext.GetProjectDirectory);
+            if (httpInteractions != null && httpInteractions.Count > 0)
             {
-                var json = File.ReadAllText(jsonPath, Encoding.UTF8);
-                var data = JsonConvert.DeserializeObject<FastaImporterExpectedData>(json) ?? new FastaImporterExpectedData();
-                data.Records ??= new List<FastaImporterExpectedRecord>();
-                data.HttpInteractions ??= new List<HttpInteraction>();
-                var recordMap = data.Records.ToDictionary(r => r.Header, StringComparer.Ordinal);
-                tests = MergeExpectedRecords(tests, recordMap);
-
-                if (data.HttpInteractions.Count > 0)
-                    return HttpClientTestHelper.PlaybackFromInteractions(data.HttpInteractions);
+                return HttpClientTestHelper.PlaybackFromInteractions(httpInteractions);
             }
 
             return BeginLegacyPlayback(tests);
@@ -955,7 +929,6 @@ namespace CommonTest
         private class FastaImporterExpectedData
         {
             public List<FastaImporterExpectedRecord> Records { get; set; } = new List<FastaImporterExpectedRecord>();
-            public List<HttpInteraction> HttpInteractions { get; set; } = new List<HttpInteraction>();
 
             [JsonIgnore]
             public Dictionary<string, FastaImporterExpectedRecord> RecordMap { get; set; } = new Dictionary<string, FastaImporterExpectedRecord>(StringComparer.Ordinal);
@@ -1134,6 +1107,20 @@ namespace CommonTest
                 ProteinSearchInfo.Intersection(new List<ProteinSearchInfo> { new ProteinSearchInfo(a, 0), new ProteinSearchInfo(b, 0), new ProteinSearchInfo(bb, 0), new ProteinSearchInfo(bbb, 0) }).GetProteinMetadata());
         }
 
+        [Flags]
+        private enum DiagnosticMode
+        {
+            none = 0,
+            results = 1,
+            requests = 2
+        }
+
+        private DiagnosticMode CurrentDiagnosticMode => DiagnosticMode.none;
+
+        private bool CaptureResults => (CurrentDiagnosticMode & DiagnosticMode.results) != 0;
+        private bool CaptureRequests => (CurrentDiagnosticMode & DiagnosticMode.requests) != 0;
+
+        protected override bool IsRecordMode => false;
 
         [TestMethod]
         public void TestFastaImport()
@@ -1143,13 +1130,8 @@ namespace CommonTest
 
             TestProteinSearchInfoIntersection();
 
-            if (!IsRecordMode)
-            {
-                DoTestFastaImport(false, false);  // Run with simulated web access
-                DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
-            }
-
-            CheckTestFlags();
+            DoTestFastaImport(false, false);  // Run with simulated web access
+            DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
         }
 
         [TestMethod]
@@ -1236,22 +1218,15 @@ namespace CommonTest
                 }
             }
 
-            HttpInteractionRecorder recorder = null;
-            if (useActualWebAccess && !doNegTests && IsRecordMode)
-                recorder = new HttpInteractionRecorder();
-
+            DoActualWebAccess = useActualWebAccess;
+            using var scope = new ConditionalHttpRecordingScope(this, !doNegTests);
             var finalProteinsToSearch = CreateProteinSearchInfos();
             ExecuteLookupScenario(useActualWebAccess, tests, finalProteinsToSearch, LookupTestMode.normal,
-                expectedData, skipExtraValidation: doNegTests, allowRecordedPlayback: !doNegTests, recorder: recorder);
+                expectedData, skipExtraValidation: doNegTests, allowRecordedPlayback: !doNegTests, scope);
 
-            _recordedInteractions = recorder?.Interactions?.ToList();
-
-            if (IsRecordMode && useActualWebAccess)
+            if (IsRecordMode && useActualWebAccess && !doNegTests)
             {
-                if (!doNegTests)
-                {
-                    RecordExpectedData(dbProteins, tests, _recordedInteractions);
-                }
+                RecordExpectedData(dbProteins, tests);
                 return;
             }
 
@@ -1328,7 +1303,7 @@ namespace CommonTest
 
         private void ExecuteLookupScenario(bool useNetAccess, List<FastaHeaderParserTest> testList,
             IList<ProteinSearchInfo> proteins, LookupTestMode mode, FastaImporterExpectedData expectedData,
-            bool skipExtraValidation = false, bool allowRecordedPlayback = true, HttpInteractionRecorder recorder = null)
+            bool skipExtraValidation = false, bool allowRecordedPlayback = true, ConditionalHttpRecordingScope scope = null)
         {
             var captureInteractions = CaptureRequests && mode == LookupTestMode.normal && !skipExtraValidation;
             HttpInteractionRecorder diagnosticsRecorder = null;
@@ -1337,7 +1312,7 @@ namespace CommonTest
             {
                 if (useNetAccess)
                 {
-                    diagnosticsRecorder = recorder == null ? new HttpInteractionRecorder() : null;
+                    diagnosticsRecorder = scope?.Helper == null ? new HttpInteractionRecorder() : null;
                 }
                 else
                 {
@@ -1355,33 +1330,45 @@ namespace CommonTest
 
             HttpClientTestHelper CreateNormalHelper()
             {
+                // Use HttpRecordingScope if provided (always provided for normal tests)
+                if (scope != null)
+                {
+                    return scope.Helper; // May be null for real network access when DoActualWebAccess=true and IsRecordMode=false
+                }
+
+                // Fallback for negative tests or other cases where scope is not provided
                 if (useNetAccess)
                 {
-                    var activeRecorder = recorder ?? diagnosticsRecorder;
+                    var activeRecorder = diagnosticsRecorder;
                     if (activeRecorder != null)
                         return HttpClientTestHelper.BeginRecording(activeRecorder);
                     return null; // use real network access when no recorder is supplied
                 }
-                if (allowRecordedPlayback && expectedData?.HttpInteractions != null &&
-                    expectedData.HttpInteractions.Count > 0)
+                
+                // Load HTTP interactions from the standardized file for playback
+                if (allowRecordedPlayback)
                 {
-                    return HttpClientTestHelper.PlaybackFromInteractions(expectedData.HttpInteractions, playbackDiagnostics);
+                    var httpInteractions = LoadHttpInteractions();
+                    if (httpInteractions != null && httpInteractions.Count > 0)
+                    {
+                        return HttpClientTestHelper.PlaybackFromInteractions(httpInteractions, playbackDiagnostics);
+                    }
                 }
 
                 return BeginLegacyPlayback(testList);
             }
+
 
             var initialSnapshot = CaptureResults
                 ? proteins.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: false)).ToList()
                 : null;
 
             // Use FastWebSearchProvider for playback to skip politeness delays
-            bool useFastProvider = !useNetAccess && allowRecordedPlayback && 
-                                   expectedData?.HttpInteractions != null && 
-                                   expectedData.HttpInteractions.Count > 0;
+            // Check if we're using playback (scope.Helper is not null and not recording)
+            bool useFastProvider = !useNetAccess && allowRecordedPlayback && scope?.Helper != null;
             IList<ProteinSearchInfo> results = RunLookup(proteins, mode, useFastProvider);
 
-            if (!skipExtraValidation && recorder == null)
+            if (!skipExtraValidation)
             {
                 ValidateLookupResult(mode, proteins, results, helper, initialSnapshot);
             }
@@ -1389,7 +1376,6 @@ namespace CommonTest
             if (captureInteractions)
             {
                 IReadOnlyCollection<HttpInteraction> interactions =
-                    recorder?.Interactions ??
                     diagnosticsRecorder?.Interactions ??
                     playbackDiagnostics;
                 if (interactions != null && interactions.Count > 0)
@@ -1435,7 +1421,7 @@ namespace CommonTest
             var failureException = proteins.FirstOrDefault(p => p.FailureException != null)?.FailureException;
             if (mode == LookupTestMode.normal)
             {
-                Assert.IsNull(failureException);
+                Assert.IsNull(failureException, $"Unexpected exception thrown: {failureException}");
                 // We should have results for everything
                 Assert.AreEqual(proteins.Count, results.Count);
                 // There should still be the same number of proteins that were resolved without a web search
@@ -1601,6 +1587,30 @@ namespace CommonTest
             var importer = new WebEnabledFastaImporter(provider);
             var results = importer.DoWebserviceLookup(proteins, progressMonitor, false).ToList();
             return results;
+        }
+
+        /// <summary>
+        /// Wrapper around HttpRecordingScope that conditionally creates the scope based on test requirements.
+        /// For negative tests, the scope is not created (no-op). For normal tests, it always creates the scope.
+        /// </summary>
+        private class ConditionalHttpRecordingScope : IDisposable
+        {
+            private readonly HttpRecordingScope _scope;
+
+            public HttpClientTestHelper Helper => _scope?.Helper;
+
+            public ConditionalHttpRecordingScope(FastaImporterTest test, bool createScope)
+            {
+                if (createScope)
+                {
+                    _scope = test.GetHttpRecordingScope();
+                }
+            }
+
+            public void Dispose()
+            {
+                _scope?.Dispose();
+            }
         }
     }
 }

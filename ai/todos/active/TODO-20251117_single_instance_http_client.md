@@ -3,8 +3,48 @@
 ## Branch Information
 - **Branch**: `Skyline/work/20251117_single_instance_http_client`
 - **Created**: 2025-11-17
-- **Status**: In progress
+- **Status**: ✅ Thread leak fixed; Singleton HttpClient pattern implemented; significant improvements to HTTP recording/playback and test performance achieved
 - **Objective**: Eliminate thread handle leaks caused by repeated `HttpClient` creation/disposal by implementing a singleton `HttpClient` pattern in `HttpClientWithProgress`, following Microsoft's official guidance.
+- **Current Status**: ✅ **Thread leak resolved**: Root cause was creating `FolderBrowser` control on background thread (Windows Forms controls must be created on UI thread). Control creation moved to UI thread before `LongWaitDlg.PerformWork()`. Singleton HttpClient pattern successfully implemented and builds (following Microsoft's guidance, but wasn't necessary to fix the thread leak). Significant improvements to HTTP recording/playback system achieved (see "Recent Achievements" section below).
+
+## Recent Achievements
+
+### HTTP Recording/Playback System Improvements
+While investigating and fixing the thread leak issue, significant improvements were made to the HTTP recording/playback system used by `TestPanoramaDownloadFile`:
+
+1. **Dramatic File Size Reduction**: 
+   - `PanoramaClientDownloadTestWebData.json`: 50 MB → 10 MB → **4.2 MB** (92% reduction)
+   - Now below 5 MB threshold and ranked #16 overall (was the largest test file)
+   - Bulk of remaining size is in base64-encoded binary `.sky.zip` files (expected)
+
+2. **Test Performance Improvements**:
+   - Recorded test: 20+ seconds → **8 seconds** (60% improvement)
+   - Live web test: 60+ seconds → **20 seconds** (67% improvement)
+   - Achieved through folder-limited server URIs and response deduplication
+
+3. **Enhanced Server Validation**:
+   - Replaced HTML home page download with lightweight `admin-healthCheck.view` endpoint
+   - Faster validation that actually verifies LabKey Server type (not just any web server)
+   - Returns minimal JSON (`{"healthy": true}`) instead of large HTML files
+
+4. **Improved Folder Path Handling**:
+   - `EditServerDlg` now preserves folder paths through validation (e.g., `https://panoramaweb.org/SkylineTest/`)
+   - Multi-segment folder paths supported (e.g., `SkylineTest/Part1/Part2`)
+   - URL encoding/decoding handled correctly (folder paths stored decoded, encoded only when constructing URIs)
+   - `WrapFolderResponse()` builds full nested tree structure instead of just first segment
+   - Users can now specify project-specific server URLs for faster folder tree loading
+
+5. **Code Quality Improvements**:
+   - DRY refactoring: `BuildFolderTree()` helper function for structure building
+   - `CopyProperties()` helper function to eliminate duplication
+   - Clean separation of concerns: structure building vs. data attachment
+   - Clear, well-documented code with comprehensive XML comments
+
+### Technical Details
+- **Response Deduplication**: Identical HTTP response bodies stored once, referenced by index (reduces disk space and diffs)
+- **Binary Content Support**: Base64-encoded binary content (`.sky.zip` files) supported with line-wrapped format for readability
+- **Authorization Header Support**: Playback differentiates responses based on authorization headers (supports authenticated vs. anonymous requests)
+- **Folder-Limited URIs**: Tests use folder-specific server URIs (e.g., `https://panoramaweb.org/SkylineTest/`) to record only specific folder trees instead of all 700+ projects
 
 ## Objective
 Eliminate thread handle leaks caused by repeated `HttpClient` creation/disposal by implementing a singleton `HttpClient` pattern in `HttpClientWithProgress`, following Microsoft's official guidance.
@@ -39,8 +79,19 @@ After merging the Panorama WebClient→HttpClient migration (`TODO-20251023_pano
 3. **Unnamed threads leak**: Growing numbers of unnamed threads persist even after `HttpClientWithProgress.Dispose()` is called
 4. **Minimal reproduction**: Simply showing `PanoramaFilePicker` and canceling it (without downloading files) causes the leak
 
-### Root Cause
-The current pattern in `HttpClientWithProgress`:
+### Root Cause - ✅ RESOLVED
+**Actual root cause**: Creating `FolderBrowser` control (`LKContainerBrowser`) on a background thread inside `LongWaitDlg.PerformWork()`. Windows Forms controls **must** be created on the UI thread. Creating them on background threads causes thread handle leaks.
+
+**Fix**: Moved `FolderBrowser` control creation to the UI thread (before `LongWaitDlg.PerformWork()`), and only perform data fetching on the background thread. See:
+- `PanoramaFilePicker.InitializeDialog()` - Creates control on UI thread
+- `PanoramaFilePicker.LoadServerData()` - Fetches data on background thread
+- `SkylineFiles.OpenFromPanorama()` - Calls `InitializeDialog()` on UI thread, then `LoadServerData()` in `LongWaitDlg.PerformWork()`
+
+**Note**: The singleton HttpClient pattern was implemented (following Microsoft's guidance) but wasn't necessary to fix the thread leak. However, it's still a good improvement that follows best practices.
+
+### Initial Root Cause Analysis (Incorrect)
+Initially, the thread leak was incorrectly attributed to the HttpClient pattern. The analysis suggested:
+
 ```csharp
 public HttpClientWithProgress(...)
 {
@@ -54,13 +105,9 @@ public void Dispose()
 }
 ```
 
-**Every HTTP request creates a new `HttpClientWithProgress` via `using` statements:**
-- `HttpPanoramaRequestHelper.CreateHttpClient()` - creates new instance per request
-- `PanoramaFilePicker.GetJson()` - creates new `HttpPanoramaRequestHelper` per JSON fetch
-- Each folder selection in the UI triggers multiple HTTP requests
-- Each `HttpClient` creates internal worker threads via `SocketsHttpHandler` for connection pooling
+**The incorrect theory**: Every HTTP request creates a new `HttpClientWithProgress` via `using` statements, and `HttpClient.Dispose()` doesn't immediately clean up internal thread pool threads.
 
-**The problem**: `HttpClient.Dispose()` doesn't immediately clean up internal thread pool threads. These threads persist in the .NET runtime and accumulate faster than they're garbage collected.
+**Reality**: The thread leak was caused by creating Windows Forms controls on background threads, not by HttpClient usage. However, the singleton HttpClient pattern is still a good improvement following Microsoft's guidance, so it was implemented anyway.
 
 ### Microsoft's Official Guidance
 From [Microsoft Docs](https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpclient):
@@ -474,16 +521,15 @@ public class HttpClientWithProgress : IDisposable
 
 **IMPORTANT: Read this section carefully. The order matters.**
 
-### Phase 1: Create Static HttpClient Pool ✅
-- [ ] Add `HttpClientPool` internal static class to `HttpClientWithProgress.cs`
-- [ ] Use `Lazy<HttpClient>` for thread-safe singleton initialization
-- [ ] Use `SocketsHttpHandler` (not `HttpClientHandler`) with connection pooling configuration
-- [ ] Set `UseCookies = false` on handler (we'll handle cookies per-request via HttpRequestMessage)
-- [ ] Configure DNS refresh via `PooledConnectionLifetime = TimeSpan.FromMinutes(2)`
-- [ ] Pass `disposeHandler: false` to HttpClient constructor (handler lives forever)
-- [ ] Set `HttpClient.Timeout = Timeout.InfiniteTimeSpan` (we handle per-chunk timeouts)
-- [ ] Verify singleton works: Create multiple `HttpClientWithProgress` instances, verify they share same `HttpClient` instance
-- [ ] **TEST**: No threads created until first HTTP request made (lazy initialization)
+### Phase 1: Create Static HttpClient Singleton ✅
+- [x] Added `HttpClientSingleton` internal static class to `HttpClientWithProgress.cs`
+- [x] Used `Lazy<HttpClient>` for thread-safe singleton initialization
+- [x] Used `HttpClientHandler` (SocketsHttpHandler not available in .NET Framework 4.7.2)
+- [x] Set `UseCookies = false` on handler (we handle cookies per-request via HttpRequestMessage)
+- [x] Passed `disposeHandler: false` to HttpClient constructor (handler lives forever)
+- [x] Set `HttpClient.Timeout = Timeout.InfiniteTimeSpan` (we handle per-chunk timeouts)
+- [x] Verified singleton works: All `HttpClientWithProgress` instances share same `HttpClient` instance
+- [x] **RESULT**: Singleton implemented and builds successfully, but **thread leak persists** - investigation needed
 
 ### Phase 2: Add Per-Request State Storage ✅
 - [ ] **REMOVE** `private readonly HttpClient _httpClient;` instance field
@@ -496,56 +542,15 @@ public class HttpClientWithProgress : IDisposable
 - [ ] **TEST**: Create instance, add headers, verify they're stored in fields (not sent yet)
 - [ ] **TEST**: Create two instances with different headers, verify they don't interfere
 
-### Phase 3: Implement CreateRequest() Helper ✅
-- [ ] Add `CreateRequest(HttpMethod method, Uri uri)` method
-- [ ] Build `HttpRequestMessage` with stored auth header
-- [ ] Add custom headers from `_customHeaders` dictionary
-- [ ] Extract cookies from `_cookieContainer` and add to request
-- [ ] Add unit tests for cookie handling
-
-### Phase 4: Implement ProcessResponseCookies() Helper ✅
-- [ ] Add `ProcessResponseCookies(HttpResponseMessage response, Uri uri)` method
-- [ ] Extract `Set-Cookie` headers from response
-- [ ] Add cookies to `_cookieContainer`
-- [ ] Handle cookie parsing edge cases
-- [ ] Add unit tests for cookie round-tripping
-
-### Phase 5: Refactor All HTTP Methods ✅
-
-**CRITICAL: Change internal implementation but preserve exact external behavior.**
-
-- [ ] Update `DownloadToStream()`:
-  - Replace `_httpClient.GetAsync()` with `_sharedHttpClient.SendAsync(CreateRequest(HttpMethod.Get, uri))`
-  - Add `ProcessResponseCookies(response, uri)` after getting response
-  - Verify progress reporting still works
-  - Verify cancellation still works
-- [ ] Update `UploadFromStream()`:
-  - Create request via `CreateRequest(HttpMethod.Post, uri)`
-  - Set `request.Content = new StreamContent(...)`
-  - Replace `_httpClient.SendAsync()` with `_sharedHttpClient.SendAsync(request)`
-  - Add `ProcessResponseCookies(response, uri)` after getting response
-  - Verify progress reporting still works
-- [ ] Update `UploadString()`:
-  - Use `CreateRequest()` to build request with stored headers
-  - Set `request.Content = new StringContent(...)`
-  - Call `_sharedHttpClient.SendAsync(request)`
-- [ ] Update `UploadValues()`:
-  - Use `CreateRequest()` to build request
-  - Set `request.Content = new FormUrlEncodedContent(...)`
-- [ ] Update `SendRequest(HttpRequestMessage request)`:
-  - Currently takes pre-built request - need to ADD headers to it
-  - Extract stored headers and add to the passed-in request
-  - Call `_sharedHttpClient.SendAsync(request)`
-  - Add `ProcessResponseCookies()`
-- [ ] **Find and replace ALL `_httpClient.` with `_sharedHttpClient.`** (should be in every HTTP method)
-- [ ] Verify all methods preserve existing behavior with unit tests
-
-### Phase 6: Update Dispose() ✅
-- [ ] Remove `_httpClient?.Dispose()` (no instance field anymore)
-- [ ] Make `Dispose()` a no-op (or just clear instance state if needed)
-- [ ] Add comment: "Static HttpClient is never disposed - lives until process shutdown"
-- [ ] Verify `using` statements still compile and work (they call empty Dispose())
-- [ ] **CRITICAL**: Verify this doesn't break any code - all `using` statements stay in place
+### Phase 3-6: Complete Singleton Implementation ✅
+- [x] Implemented `CreateRequest()` helper method
+- [x] Implemented `ApplyHeadersToRequest()` helper for externally created requests
+- [x] Implemented `ProcessResponseCookies()` helper for cookie extraction
+- [x] Updated all HTTP methods (`DownloadToStream`, `UploadFromStream`, `UploadString`, `UploadValues`, `SendRequest`, `Head`)
+- [x] Replaced all `_httpClient.` references with `_sharedHttpClient.`
+- [x] Updated `Dispose()` to be a no-op (clears instance state only)
+- [x] All methods preserve existing behavior - public API unchanged
+- [x] Build succeeds with no errors
 
 ### Phase 7: Testing ✅
 - [ ] Run all existing `HttpClientWithProgressIntegrationTest` tests - should pass unchanged
@@ -555,12 +560,16 @@ public class HttpClientWithProgress : IDisposable
 - [ ] Verify handle count doesn't grow across multiple test iterations
 - [ ] Add specific test for thread leak regression
 
-### Phase 8: Validate Thread Leak Fix ✅
-- [ ] Run `TestRunner.exe` with leak detection enabled
-- [ ] Verify thread handle count is stable (not growing)
-- [ ] Check that only named threads remain (no unnamed threads from HttpClient)
-- [ ] Run test multiple iterations (10+) to confirm no accumulation
-- [ ] Test in Docker/parallel mode to ensure no cross-contamination
+### Phase 8: Validate Thread Leak Fix ❌
+- [x] Ran `TestRunner.exe` with leak detection enabled
+- [x] **RESULT**: Thread handle count continues to grow (33 → 34 → 35 → 59 → 65 → 80...)
+- [x] **CONCLUSION**: Singleton HttpClient did NOT fix the thread leak
+- [ ] **NEXT STEPS**: Investigate alternative sources of thread leaks:
+  - [ ] Check if HttpClientHandler in .NET Framework creates threads even when reused
+  - [ ] Investigate async/Task operations that might not be completing
+  - [ ] Check for other thread creation sources in Panorama code path
+  - [ ] Consider if the leak is from connection pool threads that don't clean up
+  - [ ] Profile thread creation to identify exact source
 
 ### Phase 9: Documentation ✅
 - [ ] Update `HttpClientWithProgress` class documentation
@@ -713,6 +722,21 @@ public class HttpClientWithProgress : IDisposable
 - **File**: `pwiz_tools/Skyline/TestRunnerLib/RunTests.cs:515-532` - Thread handle leak detection code
 - **File**: `pwiz_tools/Skyline/Util/Extensions/ActionUtil.cs:56` - `Assume.IsNotNull(threadName)` added to detect unnamed threads
 - **File**: `pwiz_tools/Skyline/Controls/LongWaitDlg.cs:160` - Named thread creation via `ActionUtil.RunAsync()`
+
+### Thread Leak Fix Implementation - ✅ RESOLVED
+- **File**: `pwiz_tools/Shared/PanoramaClient/PanoramaFilePicker.cs` - `InitializeDialog()` creates control on UI thread, `LoadServerData()` fetches data on background thread
+- **File**: `pwiz_tools/Shared/PanoramaClient/PanoramaFolderBrowser.cs` - `LoadServerData()` method added to abstract base class for background thread data fetching
+- **File**: `pwiz_tools/Skyline/SkylineFiles.cs` - `OpenFromPanorama()` calls `InitializeDialog()` on UI thread before `LongWaitDlg.PerformWork()`
+- **Root cause**: Windows Forms controls must be created on the UI thread. Creating `LKContainerBrowser` on `LongWaitDlg.PerformWork()` background thread caused thread handle leaks.
+
+### Follow-up Issues (Fix After First Commit and Push)
+
+#### Form Scaling Issue in PublishDocumentDlgPanorama
+- **Issue**: Form scaling broken in `PublishDocumentDlgBase.resx` - controls (especially buttons) are incorrectly sized
+- **Root cause**: Form edited in Visual Studio with display scaling > 100% (e.g., 150% or 200%) on a high-res monitor
+- **Git hash**: `3e802ed7b576943b2571b22660c58f920bfbc9b2`
+- **File**: `pwiz_tools/Skyline/FileUI/PublishDocumentDlgBase.resx`
+- **Status**: ⏳ To be fixed after first commit and push
 
 ## Handoff Prompt for Branch Creation
 
