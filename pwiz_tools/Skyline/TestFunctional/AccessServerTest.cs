@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
             
             // We assume that the first component of the path element is the context path where LabKey Server is deployed.
             // Both VALID_PANORAMA_Server and VALID_PANORAMA_SERVER/libkey will be saved as two different servers.
-            CheckServerInfoSuccess(new TestPanoramaClient(VALID_PANORAMA_SERVER + "libkey/", VALID_USER_NAME, VALID_PASSWORD), 2);
+            CheckServerInfoSuccess(new TestPanoramaClient(VALID_PANORAMA_SERVER + "libkey", VALID_USER_NAME, VALID_PASSWORD), 2);
             
             // Non-existent server
             CheckServerInfoFailure(new TestPanoramaClient(NON_EXISTENT_SERVER, VALID_USER_NAME, VALID_PASSWORD), 2);

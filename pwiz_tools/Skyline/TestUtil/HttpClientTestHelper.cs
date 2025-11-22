@@ -1064,12 +1064,6 @@ namespace pwiz.SkylineTestUtil
 
             var urlString = uri.ToString();
             
-            // Debug point: Automatically breaks into debugger when this URL is recorded
-            if (urlString.Equals("https://panoramaweb.org/project-getContainers.view?includeSubfolders=true&moduleProperties=TargetedMS"))
-            {
-                System.Diagnostics.Debugger.Break(); // Breaks here when recording the full folder hierarchy request
-            }
-            
             var interaction = new HttpInteraction
             {
                 Url = urlString,
