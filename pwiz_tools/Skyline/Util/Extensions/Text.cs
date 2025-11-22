@@ -490,7 +490,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string CommaSeparateListItems(this IEnumerable<string> values)
         {
-            return string.Concat(ExtensionsResources.ListItemSeparator, values);
+            return string.Join(ExtensionsResources.ListItemSeparator, values);
         }
 
         /// <summary>

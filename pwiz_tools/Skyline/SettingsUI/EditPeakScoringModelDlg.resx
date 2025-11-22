@@ -329,7 +329,7 @@ document to calculate the equation with linear regression</value>
     <value>23, 22</value>
   </data>
   <data name="findUnknownModelScoresButton.ToolTipText" xml:space="preserve">
-    <value>Find Unknown Peptides</value>
+    <value>Find peptides missing model scores</value>
   </data>
   <data name="toolStripFindUnknownModelScores.Location" type="System.Drawing.Point, System.Drawing">
     <value>368, 410</value>
