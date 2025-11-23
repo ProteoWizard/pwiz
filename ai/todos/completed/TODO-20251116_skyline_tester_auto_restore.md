@@ -3,7 +3,7 @@
 ## Branch Information
 - **Branch**: Skyline/work/20251116_skyline_tester_auto_restore
 - **Created**: 2025-11-16
-- **PR**: (To be added when created)
+- **PR**: #3680
 
 ## Objective
 
