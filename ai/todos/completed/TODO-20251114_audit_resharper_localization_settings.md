@@ -1,7 +1,9 @@
 # TODO-audit_resharper_localization_settings.md
 
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/YYYYMMDD_audit_resharper_localization_settings`
+## Branch Information
+- **Branch**: `Skyline/work/20251114_audit_resharper_localization_settings`
+- **Created**: 2025-11-14
+- **PR**: 3671
 - **Objective**: Audit and configure ReSharper localization settings for all .csproj files in Skyline.sln to ensure user-facing strings are properly flagged for translation
 
 ## Background
@@ -44,45 +46,59 @@ Where:
 ## Task Checklist
 
 ### Phase 1: Audit and Discovery
-- [ ] Run `check-csproj-l10n-settings.ps1` to confirm current state
-- [ ] For each high-priority project, do a quick audit of string literals:
-  - [ ] `PanoramaClient.csproj` - Search for user-facing strings
-  - [ ] `CommonUtil.csproj` - Search for user-facing strings
-- [ ] For each medium-priority project, do a quick audit:
-  - [ ] `ProteowizardWrapper.csproj`
-  - [ ] `CommonMsData.csproj`
-  - [ ] `SkylineTool.csproj`
-  - [ ] `SkylineCmd.csproj`
+- [x] Run `check-csproj-l10n-settings.ps1` to confirm current state
+- [x] For each high-priority project, do a quick audit of string literals:
+  - [x] `PanoramaClient.csproj` - Contains many user-facing strings and has existing .resx resources
+  - [x] `CommonUtil.csproj` - Contains user-facing messages and .resx resources
+- [x] For each medium-priority project, do a quick audit:
+  - [x] `ProteowizardWrapper.csproj` - Mostly technical strings; some exceptions thrown; likely OK to enable
+  - [x] `CommonMsData.csproj` - Has multiple resource files and user-facing messages
+  - [x] `SkylineTool.csproj` - Minimal strings; mostly protocol/identifiers
+  - [x] `SkylineCmd.csproj` - Has resources and user messages (CLI output)
 - [ ] Document findings: which projects definitely need settings vs. which can be skipped
 
+Findings from script (missing .DotSettings):
+- High priority: PanoramaClient, CommonUtil
+- Medium priority: CommonMsData, SkylineCmd, SkylineTool, ProteowizardWrapper
+- Exclusions/low: ZedGraph (3rd party), BullseyeSharp (3rd party), SkylineNightly, SkylineNightlyShim (internal tools)
+
 ### Phase 2: Configure High Priority Projects
-- [ ] Copy template `.DotSettings` file to high-priority projects
-- [ ] `PanoramaClient.csproj.DotSettings` - Create settings file
-- [ ] `CommonUtil.csproj.DotSettings` - Create settings file
-- [ ] Open each project in Visual Studio and verify ReSharper shows localization warnings
-- [ ] Commit the `.DotSettings` files with message: "Enable ReSharper localization inspection for [project names]"
+- [x] Copy template `.DotSettings` file to high-priority projects
+- [x] `PanoramaClient.csproj.DotSettings` - Created
+- [x] `CommonUtil.csproj.DotSettings` - Created
+- [x] Open each project in Visual Studio and verify ReSharper shows localization warnings
+  - ✅ Verified via command-line inspectcode: 76 LocalizableElement warnings found
+  - PanoramaClient: ~25 warnings
+  - CommonUtil: ~38 warnings
+  - CommonMsData: ~4 warnings
+  - SkylineCmd: ~9 warnings
+- [x] Commit the `.DotSettings` files with message: "Enable ReSharper localization inspection for [project names]"
 
 ### Phase 3: Address Flagged String Literals (High Priority)
-- [ ] Review all strings flagged by ReSharper in `PanoramaClient`
-- [ ] For each flagged string, determine if it needs localization:
-  - [ ] User-facing messages → Move to resources for translation
-  - [ ] Internal/debug strings → Mark with `[Localizable(false)]` attribute
-  - [ ] Constants/identifiers → Mark with `[Localizable(false)]` attribute
-- [ ] Review all strings flagged by ReSharper in `CommonUtil`
-- [ ] Apply same categorization as above
-- [ ] Commit changes incrementally by category/file
+- [x] Review all strings flagged by ReSharper in `PanoramaClient`
+- [x] For each flagged string, determine if it needs localization:
+  - [x] User-facing messages → Move to resources for translation
+  - [x] Internal/debug strings → Mark with @ verbatim string attribute
+  - [x] Constants/identifiers → Mark with @ verbatim string attribute
+- [x] Review all strings flagged by ReSharper in `CommonUtil`
+- [x] Apply same categorization as above
+- [x] Commit changes incrementally by category/file
 
 ### Phase 4: Configure Medium Priority Projects (Optional)
-- [ ] Based on Phase 1 audit, decide which medium-priority projects need settings
-- [ ] Create `.DotSettings` files for selected projects
-- [ ] Address any critical user-facing strings found
-- [ ] Document decision for projects that don't need settings (e.g., "SkylineTool has no user-facing strings")
+- [x] Based on Phase 1 audit, decide which medium-priority projects need settings
+  - Selected now: `SkylineCmd`, `CommonMsData`
+  - Defer: `ProteowizardWrapper` (technical messages), `SkylineTool` (minimal UI)
+- [x] Create `.DotSettings` files for selected projects
+  - [x] `SkylineCmd.csproj.DotSettings` - Created
+  - [x] `CommonMsData.csproj.DotSettings` - Created
+- [x] Address any critical user-facing strings found
+- [x] Document decision for projects that don't need settings (currently deferring `ProteowizardWrapper`, `SkylineTool`)
 
 ### Phase 5: Documentation and Process
 - [ ] Update project documentation about localization expectations
 - [ ] Add note about `.DotSettings` files in relevant developer docs
 - [ ] Consider adding `check-csproj-l10n-settings.ps1` to periodic code health checks
-- [ ] Document patterns for when to use `[Localizable(false)]` attribute
+- [ ] Document patterns for when to use @ verbatim string or `[Localizable(false)]` attribute
 
 ## Tools & Scripts
 
@@ -147,15 +163,15 @@ string debugMessage = "Internal error code: 0x1234";
 
 ## Success Criteria
 
-- [ ] All high-priority projects (`PanoramaClient`, `CommonUtil`) have `.DotSettings` files configured
-- [ ] All user-facing strings in high-priority projects are either:
+- [x] All high-priority projects (`PanoramaClient`, `CommonUtil`) have `.DotSettings` files configured
+- [x] All user-facing strings in high-priority projects are either:
   - Moved to resource files for translation, OR
   - Marked with `[Localizable(false)]` if non-user-facing
-- [ ] No ReSharper localization warnings remain unaddressed in high-priority projects
-- [ ] Medium-priority projects are audited and decisions documented
-- [ ] Script `check-csproj-l10n-settings.ps1` is committed to `scripts/misc/`
+- [x] No ReSharper localization warnings remain unaddressed in high-priority projects
+- [x] Medium-priority projects are audited and decisions documented
+- [x] Script `check-csproj-l10n-settings.ps1` is committed to `scripts/misc/`
 - [ ] Team documentation updated with localization best practices
-- [ ] All changes build successfully and pass existing tests
+- [x] All changes build successfully and pass existing tests
 
 ## Handoff Prompt for Branch Creation
 
