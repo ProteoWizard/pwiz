@@ -965,6 +965,7 @@ namespace pwiz.SkylineTestUtil
         /// Authorization header value (e.g., "Basic base64credentials" or "Bearer token").
         /// Used to distinguish between different authentication contexts for the same URL during playback.
         /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Authorization { get; set; }
         public int? StatusCode { get; set; }
         public string ContentType { get; set; }
@@ -983,8 +984,11 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? ResponseBodyIndex { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ExceptionType { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ExceptionMessage { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string FailureType { get; set; }
 
         /// <summary>

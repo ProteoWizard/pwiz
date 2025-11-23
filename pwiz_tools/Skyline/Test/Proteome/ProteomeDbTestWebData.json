@@ -3,23 +3,17 @@
     {
       "Url": "https://rest.uniprot.org/uniprotkb/stream?query=(Y18D10A.20)&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
       "Method": "GET",
-      "Authorization": null,
       "StatusCode": 200,
       "ContentType": "text/plain; format=tsv",
       "ResponseBodyIsBase64": false,
       "ResponseBodyLines": [
         "Entry\tEntry Name\tReviewed\tProtein names\tGene Names\tOrganism\tLength",
-        "Q9XW16\tPROF1_CAEEL\treviewed\tProfilin-1\tpfn-1 Y18D10A.20\tCaenorhabditis elegans\t132",
-        ""
-      ],
-      "ExceptionType": null,
-      "ExceptionMessage": null,
-      "FailureType": null
+        "Q9XW16\tPROF1_CAEEL\treviewed\tProfilin-1\tpfn-1 Y18D10A.20\tCaenorhabditis elegans\t132"
+      ]
     },
     {
       "Url": "https://rest.uniprot.org/uniprotkb/stream?query=(R05G6.7)&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
       "Method": "GET",
-      "Authorization": null,
       "StatusCode": 200,
       "ContentType": "text/plain; format=tsv",
       "ResponseBodyIsBase64": false,
@@ -32,17 +26,12 @@
         "A0A016V0Z2\tA0A016V0Z2_9BILA\tunreviewed\tUncharacterized protein\tAcey_s0020.g216 Acey-R05G6.7 Y032_0020g216\tAncylostoma ceylanicum\t302",
         "A0A0B2V317\tA0A0B2V317_TOXCA\tunreviewed\tPutative voltage-dependent anion-selective channel\tR05G6.7 Tcan_10529 TCNE_LOCUS13315\tToxocara canis (Canine roundworm)\t283",
         "A0A6G1SJ64\tA0A6G1SJ64_9ACAR\tunreviewed\tPutative voltage-dependent anion-selective channel\tR05G6.7_1 g.2557\tAceria tosichella (wheat curl mite)\t101",
-        "A0A6G1SMT3\tA0A6G1SMT3_9ACAR\tunreviewed\tPutative voltage-dependent anion-selective channel\tR05G6.7_0 g.2558\tAceria tosichella (wheat curl mite)\t100",
-        ""
-      ],
-      "ExceptionType": null,
-      "ExceptionMessage": null,
-      "FailureType": null
+        "A0A6G1SMT3\tA0A6G1SMT3_9ACAR\tunreviewed\tPutative voltage-dependent anion-selective channel\tR05G6.7_0 g.2558\tAceria tosichella (wheat curl mite)\t100"
+      ]
     },
     {
       "Url": "https://rest.uniprot.org/uniprotkb/stream?query=(C37A2.7)&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
       "Method": "GET",
-      "Authorization": null,
       "StatusCode": 200,
       "ContentType": "text/plain; format=tsv",
       "ResponseBodyIsBase64": false,
@@ -50,17 +39,12 @@
         "Entry\tEntry Name\tReviewed\tProtein names\tGene Names\tOrganism\tLength",
         "O01501\tCCNE_CAEEL\treviewed\tG1/S-specific cyclin-E\tcye-1 C37A2.4\tCaenorhabditis elegans\t524",
         "O01504\tRLA2_CAEEL\treviewed\tLarge ribosomal subunit protein P2 (60S acidic ribosomal protein P2) (Ribosomal protein lateral stalk subunit P2A)\trplp-2.1 C37A2.7\tCaenorhabditis elegans\t107",
-        "A0A2G5VL84\tA0A2G5VL84_9PELO\tunreviewed\tLarge ribosomal subunit protein P2 (60S acidic ribosomal protein P2)\tCni-C37A2.7 Cnig_chr_I.g2595 B9Z55_002595\tCaenorhabditis nigoni\t108",
-        ""
-      ],
-      "ExceptionType": null,
-      "ExceptionMessage": null,
-      "FailureType": null
+        "A0A2G5VL84\tA0A2G5VL84_9PELO\tunreviewed\tLarge ribosomal subunit protein P2 (60S acidic ribosomal protein P2)\tCni-C37A2.7 Cnig_chr_I.g2595 B9Z55_002595\tCaenorhabditis nigoni\t108"
+      ]
     },
     {
       "Url": "https://rest.uniprot.org/uniprotkb/stream?query=(C17H12.14+OR+F02A9.2)&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
       "Method": "GET",
-      "Authorization": null,
       "StatusCode": 200,
       "ContentType": "text/plain; format=tsv",
       "ResponseBodyIsBase64": false,
@@ -76,17 +60,12 @@
         "A0A016RVL6\tA0A016RVL6_9BILA\tunreviewed\tProbable methylcrotonoyl-CoA carboxylase beta chain, mitochondrial (EC 6.4.1.4) (3-methylcrotonyl-CoA carboxylase 2) (3-methylcrotonyl-CoA carboxylase non-biotin-containing subunit) (3-methylcrotonyl-CoA:carbon dioxide ligase subunit beta)\tAcey_s0361.g3479 Acey-F02A9.4 Y032_0361g3479\tAncylostoma ceylanicum\t551",
         "P34382\tFAR1_CAEEL\treviewed\tFatty-acid and retinol-binding protein 1\tfar-1 F02A9.2\tCaenorhabditis elegans\t182",
         "P34383\tFAR2_CAEEL\treviewed\tFatty-acid and retinol-binding protein 2\tfar-2 F02A9.3\tCaenorhabditis elegans\t182",
-        "P34380\tYLPA_CAEEL\treviewed\tUncharacterized protein F02A9.1\tF02A9.1\tCaenorhabditis elegans\t200",
-        ""
-      ],
-      "ExceptionType": null,
-      "ExceptionMessage": null,
-      "FailureType": null
+        "P34380\tYLPA_CAEEL\treviewed\tUncharacterized protein F02A9.1\tF02A9.1\tCaenorhabditis elegans\t200"
+      ]
     },
     {
       "Url": "https://rest.uniprot.org/uniprotkb/stream?query=(T05A7.4+OR+D1007.6)&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
       "Method": "GET",
-      "Authorization": null,
       "StatusCode": 200,
       "ContentType": "text/plain; format=tsv",
       "ResponseBodyIsBase64": false,
@@ -96,17 +75,12 @@
         "G5EE06\tFUTD_CAEEL\treviewed\tAlpha-(1,3)-fucosyltransferase fut-5 (EC 2.4.1.65) (Fucosyltransferase fut-5)\tfut-5 CEFT-2 T05A7.10\tCaenorhabditis elegans\t378",
         "G5EEE1\tFUTE_CAEEL\treviewed\tAlpha-(1,3)-fucosyltransferase fut-6 (EC 2.4.1.-)\tfut-6 CEFT-3 T05A7.5\tCaenorhabditis elegans\t392",
         "O01869\tO01869_CAEEL\tunreviewed\tPlectin/eS10 N-terminal domain-containing protein\trps-10 CELE_D1007.6 D1007.6\tCaenorhabditis elegans\t149",
-        "G5EEL9\tG5EEL9_CAEEL\tunreviewed\tHMG (High mobility group protein I alpha)\thmg-11 hmg-I-alpha CELE_T05A7.4 T05A7.4\tCaenorhabditis elegans\t137",
-        ""
-      ],
-      "ExceptionType": null,
-      "ExceptionMessage": null,
-      "FailureType": null
+        "G5EEL9\tG5EEL9_CAEEL\tunreviewed\tHMG (High mobility group protein I alpha)\thmg-11 hmg-I-alpha CELE_T05A7.4 T05A7.4\tCaenorhabditis elegans\t137"
+      ]
     },
     {
       "Url": "https://rest.uniprot.org/uniprotkb/stream?query=(T08A9.9+OR+C53H9.1)&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
       "Method": "GET",
-      "Authorization": null,
       "StatusCode": 200,
       "ContentType": "text/plain; format=tsv",
       "ResponseBodyIsBase64": false,
@@ -117,17 +91,12 @@
         "O01826\tO01826_CAEEL\tunreviewed\tLarge subunit GTPase 1 homolog\tC53H9.2 CELE_C53H9.2\tCaenorhabditis elegans\t554",
         "P91914\tRL27_CAEEL\treviewed\tLarge ribosomal subunit protein eL27 (60S ribosomal protein L27)\trpl-27 C53H9.1\tCaenorhabditis elegans\t136",
         "Q86FL8\tQ86FL8_CAEEL\tunreviewed\tSaposin B-type domain-containing protein\tspp-5 CELE_T08A9.9 T08A9.9\tCaenorhabditis elegans\t103",
-        "A0A016W8E9\tA0A016W8E9_9BILA\tunreviewed\tLarge subunit GTPase 1 homolog\tAcey_s0961.g3225 Acey-C53H9.2 Y032_0961g3225\tAncylostoma ceylanicum\t515",
-        ""
-      ],
-      "ExceptionType": null,
-      "ExceptionMessage": null,
-      "FailureType": null
+        "A0A016W8E9\tA0A016W8E9_9BILA\tunreviewed\tLarge subunit GTPase 1 homolog\tAcey_s0961.g3225 Acey-C53H9.2 Y032_0961g3225\tAncylostoma ceylanicum\t515"
+      ]
     },
     {
       "Url": "https://rest.uniprot.org/uniprotkb/stream?query=(P01127+OR+P01137+OR+Q9UJJ9+OR+P09493)&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
       "Method": "GET",
-      "Authorization": null,
       "StatusCode": 200,
       "ContentType": "text/plain; format=tsv",
       "ResponseBodyIsBase64": false,
@@ -192,17 +161,12 @@
         "Q9Y6D9\tMD1L1_HUMAN\treviewed\tMitotic spindle assembly checkpoint protein MAD1 (Mitotic arrest deficient 1-like protein 1) (MAD1-like protein 1) (Mitotic checkpoint MAD1 protein homolog) (HsMAD1) (hMAD1) (Tax-binding protein 181)\tMAD1L1 MAD1 TXBP181\tHomo sapiens (Human)\t718",
         "Q8IZT9\tFAM9C_HUMAN\treviewed\tProtein FAM9C\tFAM9C TEX39C\tHomo sapiens (Human)\t166",
         "Q2M329\tCF184_HUMAN\treviewed\tCilia- and flagella-associated protein 184\tCFAP184 CCDC96\tHomo sapiens (Human)\t555",
-        "V9HW56\tV9HW56_HUMAN\tunreviewed\tEpididymis secretory protein Li 108\tHEL-S-108\tHomo sapiens (Human)\t248",
-        ""
-      ],
-      "ExceptionType": null,
-      "ExceptionMessage": null,
-      "FailureType": null
+        "V9HW56\tV9HW56_HUMAN\tunreviewed\tEpididymis secretory protein Li 108\tHEL-S-108\tHomo sapiens (Human)\t248"
+      ]
     },
     {
       "Url": "https://rest.uniprot.org/uniprotkb/stream?query=(O95865+OR+P28062+OR+Q14847+OR+Q06830+OR+Q9Y4L1)&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
       "Method": "GET",
-      "Authorization": null,
       "StatusCode": 200,
       "ContentType": "text/plain; format=tsv",
       "ResponseBodyIsBase64": false,
@@ -370,12 +334,8 @@
         "Q5T013\tHYI_HUMAN\treviewed\tPutative hydroxypyruvate isomerase (EC 5.3.1.22) (Endothelial cell apoptosis protein E-CE1)\tHYI HT036 SB156\tHomo sapiens (Human)\t277",
         "Q96GY0\tZC21A_HUMAN\treviewed\tZinc finger C2HC domain-containing protein 1A\tZC2HC1A C8orf70 FAM164A CGI-62\tHomo sapiens (Human)\t325",
         "Q3LI73\tKR194_HUMAN\treviewed\tKeratin-associated protein 19-4\tKRTAP19-4 KAP19.4\tHomo sapiens (Human)\t84",
-        "A0ABM1ZJH5\tA0ABM1ZJH5_AEDAL\tunreviewed\tUncharacterized protein\t\tAedes albopictus (Asian tiger mosquito) (Stegomyia albopicta)\t184",
-        ""
-      ],
-      "ExceptionType": null,
-      "ExceptionMessage": null,
-      "FailureType": null
+        "A0ABM1ZJH5\tA0ABM1ZJH5_AEDAL\tunreviewed\tUncharacterized protein\t\tAedes albopictus (Asian tiger mosquito) (Stegomyia albopicta)\t184"
+      ]
     }
   ]
 }
