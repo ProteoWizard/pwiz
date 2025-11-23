@@ -1,4 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -20,9 +22,20 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("2025-DIA-Webinar-MagNet.sky")));
+            RunUI(() =>
+            {
+                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("2025-DIA-Webinar-MagNet.sky"));
+                SkylineWindow.ShowDocumentGrid(true);
+            });
+            var documentGrid = FindOpenForm<DocumentGridForm>();
+            RunUI(()=>documentGrid.ChooseView("Protein Areas"));
             WaitForDocumentLoaded();
-            PauseTest();
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            PauseForScreenShot(documentGrid);
+            RunUI(()=>SkylineWindow.ShowGroupComparisonWindow("EV-Enrich"));
+            var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
+            WaitForConditionUI(() => foldChangeGrid.IsComplete);
+            PauseForScreenShot(foldChangeGrid);
         }
     }
 }
