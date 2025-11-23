@@ -1466,17 +1466,32 @@ namespace SkylineTester
             if (parentNode == null)
                 return;
 
-            int checkedCount = 0;
-            int totalCount = parentNode.Nodes.Count;
+            ApplyTriStateToNode(parentNode);
 
-            foreach (TreeNode child in parentNode.Nodes)
+            // Recursively update grandparent
+            UpdateParentNodeCheckState(parentNode.Parent);
+        }
+
+        /// <summary>
+        /// Applies tri-state checkbox logic to a single node based on its children's states.
+        /// Sets checked state and ForeColor (gray for partial selection).
+        /// </summary>
+        private void ApplyTriStateToNode(TreeNode node)
+        {
+            if (node.Nodes.Count == 0)
+                return;
+
+            int checkedCount = 0;
+            int totalCount = node.Nodes.Count;
+
+            foreach (TreeNode child in node.Nodes)
             {
                 if (child.Checked)
                     checkedCount++;
             }
 
             // Temporarily disable AfterCheck event to prevent recursion
-            var treeView = parentNode.TreeView;
+            var treeView = node.TreeView;
             if (treeView != null)
             {
                 treeView.AfterCheck -= node_AfterCheck;
@@ -1484,19 +1499,19 @@ namespace SkylineTester
                 {
                     if (checkedCount == 0)
                     {
-                        parentNode.Checked = false;
-                        parentNode.ForeColor = treeView.ForeColor; // Normal color
+                        node.Checked = false;
+                        node.ForeColor = treeView.ForeColor; // Normal color
                     }
                     else if (checkedCount == totalCount)
                     {
-                        parentNode.Checked = true;
-                        parentNode.ForeColor = treeView.ForeColor; // Normal color
+                        node.Checked = true;
+                        node.ForeColor = treeView.ForeColor; // Normal color
                     }
                     else
                     {
                         // Partial selection - show as checked with different color to indicate mixed state
-                        parentNode.Checked = true;
-                        parentNode.ForeColor = Color.Gray; // Mixed state indicator
+                        node.Checked = true;
+                        node.ForeColor = Color.Gray; // Mixed state indicator
                     }
                 }
                 finally
@@ -1504,9 +1519,6 @@ namespace SkylineTester
                     treeView.AfterCheck += node_AfterCheck;
                 }
             }
-
-            // Recursively update grandparent
-            UpdateParentNodeCheckState(parentNode.Parent);
         }
 
         /// <summary>
@@ -1530,45 +1542,7 @@ namespace SkylineTester
             }
 
             // Then update this node if it has children
-            if (node.Nodes.Count > 0)
-            {
-                int checkedCount = 0;
-                int totalCount = node.Nodes.Count;
-
-                foreach (TreeNode child in node.Nodes)
-                {
-                    if (child.Checked)
-                        checkedCount++;
-                }
-
-                var treeView = node.TreeView;
-                if (treeView != null)
-                {
-                    treeView.AfterCheck -= node_AfterCheck;
-                    try
-                    {
-                        if (checkedCount == 0)
-                        {
-                            node.Checked = false;
-                            node.ForeColor = treeView.ForeColor;
-                        }
-                        else if (checkedCount == totalCount)
-                        {
-                            node.Checked = true;
-                            node.ForeColor = treeView.ForeColor;
-                        }
-                        else
-                        {
-                            node.Checked = true;
-                            node.ForeColor = Color.Gray;
-                        }
-                    }
-                    finally
-                    {
-                        treeView.AfterCheck += node_AfterCheck;
-                    }
-                }
-            }
+            ApplyTriStateToNode(node);
         }
 
         private static void CheckNodes(TreeView treeView, ICollection<string> checkedNames)
