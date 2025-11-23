@@ -140,6 +140,62 @@ pwiz_tools\Skyline\ai\Run-Tests.ps1 `
 
 > ℹ️ **Tip:** Pass `-Language` to exercise multiple UI languages; omit it for the default English run.
 
+## AI/SkylineTester Integration
+
+Run-Tests.ps1 and SkylineTester share a test list file (`SkylineTester test list.txt`) for bidirectional workflow. This enables seamless handoff between human-driven and LLM-driven test execution.
+
+### Using the Shared Test List
+
+```powershell
+# Run tests that developer selected in SkylineTester
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -UseTestList
+
+# Run tests from SkylineTester list in specific language(s)
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -UseTestList -Language ja
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -UseTestList -Language fr,tr
+
+# Update test list and run (developer will see tests pre-checked in SkylineTester)
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName "TestA,TestB,TestC" -UpdateTestList
+```
+
+### Integration Workflows
+
+**Human → LLM Handoff:**
+1. Developer selects tests in SkylineTester UI (Tests tab)
+2. LLM runs: `Run-Tests.ps1 -UseTestList`
+3. Same tests run without re-specifying
+
+**LLM → Human Handoff:**
+1. LLM runs: `Run-Tests.ps1 -TestName "TestA,TestB" -UpdateTestList`
+2. Developer opens SkylineTester → tests automatically checked
+3. Developer can review, modify, or re-run
+
+**Sprint Test Set Management:**
+1. Developer curates test set for current work in SkylineTester
+2. LLM runs `Run-Tests.ps1 -UseTestList` throughout development
+3. Test set persists across SkylineTester restarts and LLM sessions
+
+**Failed Tests Workflow:**
+1. Developer runs tests in SkylineTester, some fail
+2. Developer clicks "Check Failed Tests" button
+3. Developer closes SkylineTester, makes fixes
+4. Developer reopens SkylineTester → failed tests still checked (auto-restored)
+5. LLM can run same failed tests: `Run-Tests.ps1 -UseTestList`
+
+### Test List File Format
+
+**Location:** `pwiz_tools\Skyline\SkylineTester test list.txt`
+
+```
+# SkylineTester test list
+# One test name per line
+CodeInspection
+TestPanoramaDownloadFile
+TestProteomeDb
+```
+
+Lines starting with `#` are comments. When `-UpdateTestList` is used, the existing file is backed up with a timestamp before being overwritten.
+
 ## ReSharper Code Inspection
 
 **Using ReSharper Command Line Tools (if installed)**:
