@@ -1,5 +1,10 @@
 # TODO: AI/SkylineTester Integration - Run-Tests.ps1 Enhancements
 
+## Branch Information
+- **Branch**: Skyline/work/20251123_ai_skyline_tester_integration
+- **Created**: 2025-11-23
+- **PR**: (To be added when created)
+
 ## Objective
 
 Complete the bidirectional integration between LLM-driven test execution (Run-Tests.ps1) and human-driven test execution (SkylineTester) by adding test list file support and standardized logging to Run-Tests.ps1.
