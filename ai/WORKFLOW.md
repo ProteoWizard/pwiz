@@ -72,9 +72,11 @@ git push
 
 **Before PR approval:**
 1. Add completion summary to TODO
-2. Add PR reference to TODO (`**PR**: #1234`)
+2. Add PR reference to TODO (`**PR**: #1234` or `**PR**: [#1234](https://github.com/ProteoWizard/pwiz/pull/1234)`)
 3. Mark all completed tasks as `[x]`
 4. Commit TODO updates to branch
+
+**PR URL format:** `https://github.com/ProteoWizard/pwiz/pull/{PR_NUMBER}`
 
 **After PR merge:**
 ```bash
