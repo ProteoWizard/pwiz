@@ -406,6 +406,9 @@ namespace SkylineTester
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();
 
+                    // Restore checked tests from file after tree is populated
+                    RestoreCheckedTestsFromFile();
+
                     tutorialsLoaded = tutorialsTree.Nodes.Count > 0;
 
 //                    var focusNode = new TreeNode("Focus tests");
@@ -454,6 +457,42 @@ namespace SkylineTester
             if (_openFile != null && Path.GetExtension(_openFile) == ".skytr")
             {
                 RunUI(Run);
+            }
+        }
+
+        /// <summary>
+        /// Restore checked tests from "SkylineTester test list.txt" file on startup.
+        /// This enables bidirectional sync between SkylineTester UI and LLM test execution.
+        /// </summary>
+        private void RestoreCheckedTestsFromFile()
+        {
+            var testListPath = Path.Combine(RootDir, "SkylineTester test list.txt");
+
+            if (!File.Exists(testListPath))
+                return; // No file to restore from
+
+            try
+            {
+                // Read test names from file (skip comments and blank lines)
+                var testNames = File.ReadAllLines(testListPath)
+                    .Select(line => line.Trim())
+                    .Where(line => !string.IsNullOrEmpty(line))
+                    .Where(line => !line.StartsWith("#"))
+                    .ToHashSet();
+
+                if (testNames.Count == 0)
+                    return; // Empty file, nothing to restore
+
+                // Check tests in the tree that match the file
+                CheckNodes(testsTree, testNames);
+
+                // Update parent nodes to show tri-state (gray = partial selection)
+                UpdateAllParentNodeCheckStates(testsTree);
+            }
+            catch (Exception)
+            {
+                // If we can't read or parse the file, just skip auto-restore
+                // Don't crash the application on startup for this feature
             }
         }
 
@@ -1392,7 +1431,143 @@ namespace SkylineTester
             if (e.Action != TreeViewAction.Unknown)
             {
                 if (e.Node.Nodes.Count > 0)
+                {
                     TabTests.CheckAllChildNodes(e.Node, e.Node.Checked);
+                    // Reset colors for this node and all descendants since they all have the same state now
+                    ResetNodeColorsRecursive(e.Node);
+                }
+
+                // Update parent nodes to reflect mixed state
+                UpdateParentNodeCheckState(e.Node.Parent);
+            }
+        }
+
+        /// <summary>
+        /// Resets ForeColor to default for a node and all its descendants.
+        /// Used after checking/unchecking all children to clear any mixed-state indicators.
+        /// </summary>
+        private void ResetNodeColorsRecursive(TreeNode node)
+        {
+            var defaultColor = node.TreeView?.ForeColor ?? SystemColors.WindowText;
+            node.ForeColor = defaultColor;
+            foreach (TreeNode child in node.Nodes)
+            {
+                ResetNodeColorsRecursive(child);
+            }
+        }
+
+        /// <summary>
+        /// Updates a parent node's checked state based on its children.
+        /// Uses tri-state logic: unchecked (no children checked), checked (all checked),
+        /// or indeterminate (some checked) shown via ForeColor.
+        /// </summary>
+        private void UpdateParentNodeCheckState(TreeNode parentNode)
+        {
+            if (parentNode == null)
+                return;
+
+            int checkedCount = 0;
+            int totalCount = parentNode.Nodes.Count;
+
+            foreach (TreeNode child in parentNode.Nodes)
+            {
+                if (child.Checked)
+                    checkedCount++;
+            }
+
+            // Temporarily disable AfterCheck event to prevent recursion
+            var treeView = parentNode.TreeView;
+            if (treeView != null)
+            {
+                treeView.AfterCheck -= node_AfterCheck;
+                try
+                {
+                    if (checkedCount == 0)
+                    {
+                        parentNode.Checked = false;
+                        parentNode.ForeColor = treeView.ForeColor; // Normal color
+                    }
+                    else if (checkedCount == totalCount)
+                    {
+                        parentNode.Checked = true;
+                        parentNode.ForeColor = treeView.ForeColor; // Normal color
+                    }
+                    else
+                    {
+                        // Partial selection - show as checked with different color to indicate mixed state
+                        parentNode.Checked = true;
+                        parentNode.ForeColor = Color.Gray; // Mixed state indicator
+                    }
+                }
+                finally
+                {
+                    treeView.AfterCheck += node_AfterCheck;
+                }
+            }
+
+            // Recursively update grandparent
+            UpdateParentNodeCheckState(parentNode.Parent);
+        }
+
+        /// <summary>
+        /// Updates all parent nodes in a tree to reflect their children's check states.
+        /// Call this after programmatically checking/unchecking child nodes.
+        /// </summary>
+        private void UpdateAllParentNodeCheckStates(TreeView treeView)
+        {
+            foreach (TreeNode rootNode in treeView.Nodes)
+            {
+                UpdateParentNodesRecursive(rootNode);
+            }
+        }
+
+        private void UpdateParentNodesRecursive(TreeNode node)
+        {
+            // First, recurse to update children
+            foreach (TreeNode child in node.Nodes)
+            {
+                UpdateParentNodesRecursive(child);
+            }
+
+            // Then update this node if it has children
+            if (node.Nodes.Count > 0)
+            {
+                int checkedCount = 0;
+                int totalCount = node.Nodes.Count;
+
+                foreach (TreeNode child in node.Nodes)
+                {
+                    if (child.Checked)
+                        checkedCount++;
+                }
+
+                var treeView = node.TreeView;
+                if (treeView != null)
+                {
+                    treeView.AfterCheck -= node_AfterCheck;
+                    try
+                    {
+                        if (checkedCount == 0)
+                        {
+                            node.Checked = false;
+                            node.ForeColor = treeView.ForeColor;
+                        }
+                        else if (checkedCount == totalCount)
+                        {
+                            node.Checked = true;
+                            node.ForeColor = treeView.ForeColor;
+                        }
+                        else
+                        {
+                            node.Checked = true;
+                            node.ForeColor = Color.Gray;
+                        }
+                    }
+                    finally
+                    {
+                        treeView.AfterCheck += node_AfterCheck;
+                    }
+                }
             }
         }
 
