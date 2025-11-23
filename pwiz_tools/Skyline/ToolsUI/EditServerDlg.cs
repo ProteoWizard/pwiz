@@ -133,7 +133,7 @@ namespace pwiz.Skyline.ToolsUI
                 catch (Exception x)
                 {
                     // Message may contain braces ({}) that will cause an exception if passed as a format string
-                    helper.ShowTextBoxError(textServerURL, x.Message, Array.Empty<object>());
+                    helper.ShowTextBoxError(textServerURL, @"{0}", x.Message);
                     return;
                 }
             }

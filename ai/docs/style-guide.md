@@ -398,6 +398,86 @@ using (var fileSaver = new FileSaver(destinationPath))
 }
 ```
 
+## Common utility classes
+
+**Before implementing custom text manipulation functions, check if `TextUtil` already provides what you need.**
+
+`TextUtil` (from `pwiz.Skyline.Util.Extensions`) is a commonly used utility class for text operations throughout the Skyline codebase. Using existing utilities follows DRY principles and leverages well-tested code.
+
+### TextUtil for text manipulation
+
+#### Reading lines from strings
+```csharp
+// ❌ BAD - Custom implementation (duplicates existing functionality)
+private static List<string> SplitIntoLines(string text)
+{
+    var lines = new List<string>();
+    // ... 30+ lines of custom parsing logic
+    return lines;
+}
+
+// ✅ GOOD - Use existing TextUtil extension method
+using pwiz.Skyline.Util.Extensions;
+
+var lines = text.ReadLines().ToList();
+```
+
+`TextUtil.ReadLines()` is an extension method that:
+- Handles both `\r\n` (Windows) and `\n` (Unix) line endings automatically
+- Uses `StringReader.ReadLine()` internally (well-tested .NET API)
+- Returns `IEnumerable<string>` (can be converted to `List` with `.ToList()`)
+
+#### Joining lines and values
+```csharp
+// ✅ Join lines with newline separators
+var multiLineText = TextUtil.LineSeparate("line1", "line2", "line3");
+// Result: "line1\nline2\nline3"
+
+// ✅ Join values with space separators
+var spacedValues = TextUtil.SpaceSeparate("value1", "value2", "value3");
+// Result: "value1 value2 value3"
+```
+
+#### CSV/TSV/DSV (Delimiter-Separated Values) operations
+`TextUtil` provides locale-sensitive CSV/TSV handling:
+
+```csharp
+// ✅ Get locale-appropriate CSV separator (comma or semicolon)
+char separator = TextUtil.CsvSeparator;  // Uses current culture
+char separator = TextUtil.GetCsvSeparator(cultureInfo);  // For specific culture
+
+// ✅ Safely write DSV fields (handles escaping, quotes, newlines)
+writer.WriteDsvField(text, separator);
+
+// ✅ Convert string to safe DSV field format
+string safeField = text.ToDsvField(separator);
+```
+
+**Key features:**
+- **Locale-aware**: Automatically uses semicolon (`;`) in locales where comma is the decimal separator (e.g., German, French)
+- **Proper escaping**: Handles quotes, separators, and newlines in field values
+- **File dialog filters**: `TextUtil.FILTER_CSV` and `TextUtil.FILTER_TSV` for file dialogs
+
+#### Other TextUtil utilities
+- **Constants**: `TextUtil.HYPHEN`, `TextUtil.SPACE`, `TextUtil.EXT_CSV`, `TextUtil.EXT_TSV`, etc.
+- **Parsing helpers**: DSV field parsing, CSV/TSV reading
+- **String manipulation**: Various text transformation utilities
+
+**When to use TextUtil:**
+- ✅ Reading lines from strings (instead of custom `SplitIntoLines()`)
+- ✅ Joining lines or values with separators
+- ✅ Working with CSV/TSV files (locale-aware, proper escaping)
+- ✅ Any text manipulation that might already be implemented
+
+**When NOT to use TextUtil:**
+- ❌ Simple string operations that don't need special handling (use standard .NET `string` methods)
+- ❌ Operations specific to a single use case with no reuse potential
+
+**Finding TextUtil:**
+- **Namespace**: `pwiz.Skyline.Util.Extensions`
+- **File**: `pwiz_tools/Skyline/Util/Extensions/Text.cs`
+- **Add using**: `using pwiz.Skyline.Util.Extensions;`
+
 ## Naming conventions (mirrors ReSharper rules)
 - Private instance fields: prefix with `_` and use `camelCase` (e.g., `_filePath`).
 - Private static fields: prefix with `_` and use `camelCase`.

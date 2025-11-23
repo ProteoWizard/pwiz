@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Controls
             EnsureControlTabPagesVisible(control);
             if (vals.Length > 0 && vals[0] == null)
                 vals[0] = GetControlMessage(control);
-            MessageDlg.Show(_parent, vals.Length != 0 ? string.Format(message, vals) : message);
+            MessageDlg.Show(_parent, string.Format(message, vals));
             control.Focus();
             var textBox = control as TextBox;
             if(textBox != null)

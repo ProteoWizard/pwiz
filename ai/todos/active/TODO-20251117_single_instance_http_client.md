@@ -730,12 +730,101 @@ public class HttpClientWithProgress : IDisposable
 
 ### Follow-up Issues (Fix After First Commit and Push)
 
-#### Form Scaling Issue in PublishDocumentDlgPanorama
+#### Form Scaling Issue in PublishDocumentDlgPanorama ✅
 - **Issue**: Form scaling broken in `PublishDocumentDlgBase.resx` - controls (especially buttons) are incorrectly sized
 - **Root cause**: Form edited in Visual Studio with display scaling > 100% (e.g., 150% or 200%) on a high-res monitor
 - **Git hash**: `3e802ed7b576943b2571b22660c58f920bfbc9b2`
 - **File**: `pwiz_tools/Skyline/FileUI/PublishDocumentDlgBase.resx`
-- **Status**: ⏳ To be fixed after first commit and push
+- **Status**: ✅ **FIXED** - All control sizes and locations restored to original values, Margin properties removed
+
+### PR Review Suggestions (PR #3679: https://github.com/ProteoWizard/pwiz/pull/3679)
+
+**Reviewer**: @nickshulman  
+**Status**: All suggestions are cosmetic improvements
+
+#### Implementation Status
+
+✅ **Completed (7 items):**
+1. ✅ Fixed typo: "LongOptionRunner" → "LongOperationRunner" in `TestPanoramaClient.cs` (lines 356, 366)
+2. ✅ Fixed using directive ordering in `AbstractUnitTestEx.cs` (System namespaces before pwiz namespaces, per ReSharper conventions)
+3. ✅ Used null-conditional operator: `referencedInteraction.ResponseBodyLines?.ToList()` in `AbstractUnitTestEx.cs` (line 287)
+4. ✅ Removed redundant `Contains("\r\n")` check in `HttpClientTestHelper.cs` (already covered by `Contains("\n")`, lines 1128, 1199, 1270)
+5. ✅ Used format string `@"{0}"` instead of `Array.Empty<object>()` in `EditServerDlg.cs` for curly brace protection (line 136)
+6. ✅ Added `[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]` to `ResponseBodyIndex` in `HttpClientTestHelper.cs` (line 982)
+7. ✅ Replaced `SplitIntoLines()` with `TextUtil.ReadLines().ToList()` in `HttpClientTestHelper.cs` - uses existing utility class (removed ~30 lines of duplicate code)
+
+**Note on TextUtil**: `TextUtil` is a commonly used utility class in the Skyline codebase for text operations:
+- `TextUtil.ReadLines()` - Extension method for reading lines from strings (like `File.ReadLines()`)
+- `TextUtil.LineSeparate()` - Join lines with newline separators
+- `TextUtil.SpaceSeparate()` - Join values with space separators
+- CSV/TSV/DSV parsing and formatting helpers (locale-sensitive delimiter handling)
+- Other text manipulation utilities
+
+Using `TextUtil.ReadLines()` instead of a custom `SplitIntoLines()` method follows DRY principles and leverages existing, well-tested code.
+
+✅ **Completed (2 additional items):**
+8. ✅ Moved ProcessExit handler registration from static constructor to `CreateHttpClient()` method in `HttpClientWithProgress.cs`
+9. ✅ Replaced `Lazy<HttpClient>` with direct static initialization: `private static HttpClient _instance = CreateHttpClient();` - simpler code with no functional difference
+
+⏳ **Skipped (1 item):**
+10. Remove `ConditionalHttpRecordingScope` wrapper class - **SKIPPED** - wrapper provides clearer intent than `using var scope = doNegTests ? null : GetHttpRecordingScope();`
+
+#### Plan to Address Remaining PR Review Suggestions
+
+1. **HttpClientSingleton.cs - Move ProcessExit handler registration**
+   - **Suggestion**: Move `AppDomain.CurrentDomain.ProcessExit` registration from static constructor into `CreateHttpClient()` method
+   - **Rationale**: No work needed until HttpClient is created, so registration should happen when client is created
+   - **File**: `pwiz_tools/Shared/CommonUtil/SystemUtil/HttpClientWithProgress.cs` (lines 1153-1158)
+   - **Action**: Move ProcessExit registration to end of `CreateHttpClient()` method
+
+2. **HttpClientSingleton.cs - Simplify Lazy initialization**
+   - **Suggestion**: Replace `Lazy<HttpClient>` with direct static initialization: `private static HttpClient _instance = CreateHttpClient();`
+   - **Rationale**: First access to `HttpClientSingleton` is same as first access to `_instance.Value`, so Lazy isn't necessary
+   - **File**: `pwiz_tools/Shared/CommonUtil/SystemUtil/HttpClientWithProgress.cs` (line 1149)
+   - **Action**: Replace `Lazy<HttpClient>` pattern with direct static initialization
+
+3. **FastaImporterTest.cs - Simplify ConditionalHttpRecordingScope**
+   - **Suggestion**: Replace `ConditionalHttpRecordingScope` with: `using HttpRecordingScope scope = doNegTests ? null : GetHttpRecordingScope();`
+   - **Rationale**: `using` statements work fine with null values, no need for special wrapper class
+   - **File**: `pwiz_tools/Skyline/CommonTest/FastaImporterTest.cs` (line 1222)
+   - **Action**: Replace `ConditionalHttpRecordingScope` usage with conditional null assignment
+
+4. **TestPanoramaClient.cs - Fix typo in comment**
+   - **Suggestion**: Change "LongOptionRunner" → "LongOperationRunner"
+   - **File**: `pwiz_tools/Skyline/TestFunctional/TestPanoramaClient.cs` (lines 356, 366)
+   - **Action**: Fix typo in both comments
+
+5. **AbstractUnitTestEx.cs - Fix using directive ordering**
+   - **Suggestion**: Move `using System;` to top of using directives (per ReSharper settings)
+   - **File**: `pwiz_tools/Skyline/TestUtil/AbstractUnitTestEx.cs` (line 28)
+   - **Action**: Reorder using directives so `System` namespaces come first, then project namespaces
+
+6. **AbstractUnitTestEx.cs - Simplify null check with null-conditional operator**
+   - **Suggestion**: Replace `interaction.ResponseBodyLines = referencedInteraction.ResponseBodyLines != null ? referencedInteraction.ResponseBodyLines.ToList() : null;` with `interaction.ResponseBodyLines = referencedInteraction.ResponseBodyLines?.ToList();`
+   - **File**: `pwiz_tools/Skyline/TestUtil/AbstractUnitTestEx.cs` (line 287)
+   - **Action**: Use null-conditional operator for cleaner code
+
+7. **HttpClientTestHelper.cs - Remove redundant Contains check**
+   - **Suggestion**: Remove `text.Contains("\r\n")` check since `text.Contains("\n")` already covers it
+   - **File**: `pwiz_tools/Skyline/TestUtil/HttpClientTestHelper.cs` (line 1270)
+   - **Action**: Remove redundant `|| text.Contains("\r\n")` check
+
+8. **HttpClientTestHelper.cs - Use existing TextUtil.ReadLines method**
+   - **Suggestion**: Replace custom `SplitIntoLines()` method with `TextUtil.ReadLines(text).ToList()`
+   - **Rationale**: `TextUtil.ReadLines` is an extension method that already does this
+   - **File**: `pwiz_tools/Skyline/TestUtil/HttpClientTestHelper.cs` (lines 1298-1300+)
+   - **Action**: Replace `SplitIntoLines()` calls with `TextUtil.ReadLines(text).ToList()` and remove the method
+
+9. **EditServerDlg.cs - Use format string for curly brace protection**
+   - **Suggestion**: Replace `Array.Empty<object>()` with format string `@"{0}"` to protect from curly braces in message
+   - **File**: `pwiz_tools/Skyline/ToolsUI/EditServerDlg.cs` (line 136)
+   - **Action**: Change to `helper.ShowTextBoxError(textServerURL, @"{0}", x.Message);`
+
+10. **HttpClientTestHelper.cs - Add JsonProperty attribute to prevent null in JSON**
+    - **Suggestion**: Add `[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]` to `ResponseBodyIndex` property
+    - **Rationale**: Prevents null values from being written to JSON files, making them simpler
+    - **File**: `pwiz_tools/Skyline/TestUtil/HttpClientTestHelper.cs` (line 982)
+    - **Action**: Add JsonProperty attribute to ResponseBodyIndex property
 
 ## Handoff Prompt for Branch Creation
 

@@ -26,9 +26,11 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -979,6 +981,7 @@ namespace pwiz.SkylineTestUtil
         /// If set, ResponseBody and ResponseBodyLines should be null/empty as they are referenced by index.
         /// Used to deduplicate identical responses and reduce file size.
         /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? ResponseBodyIndex { get; set; }
         public string ExceptionType { get; set; }
         public string ExceptionMessage { get; set; }
@@ -1123,9 +1126,9 @@ namespace pwiz.SkylineTestUtil
             entry.Interaction.ResponseBody = responseBody;
             entry.Interaction.ResponseBodyIsBase64 = false; // responseBody is already a string (text)
             // If text contains newlines, also store as array of lines for better JSON readability
-            if (!string.IsNullOrEmpty(responseBody) && (responseBody.Contains("\n") || responseBody.Contains("\r\n")))
+            if (!string.IsNullOrEmpty(responseBody) && responseBody.Contains("\n"))
             {
-                entry.Interaction.ResponseBodyLines = SplitIntoLines(responseBody);
+                entry.Interaction.ResponseBodyLines = responseBody.ReadLines().ToList();
             }
             else
             {
@@ -1194,9 +1197,9 @@ namespace pwiz.SkylineTestUtil
                     interaction.ResponseBody = networkException.ResponseBody;
                     interaction.ResponseBodyIsBase64 = false; // networkException.ResponseBody is already a string (text)
                     // If text contains newlines, also store as array of lines for better JSON readability
-                    if (networkException.ResponseBody.Contains("\n") || networkException.ResponseBody.Contains("\r\n"))
+                    if (networkException.ResponseBody.Contains("\n"))
                     {
-                        interaction.ResponseBodyLines = SplitIntoLines(networkException.ResponseBody);
+                        interaction.ResponseBodyLines = networkException.ResponseBody.ReadLines().ToList();
                     }
                     else
                     {
@@ -1267,9 +1270,9 @@ namespace pwiz.SkylineTestUtil
                 interaction.ResponseBodyIsBase64 = false;
                 
                 // If text contains newlines, also store as array of lines for better JSON readability
-                if (text.Contains("\n") || text.Contains("\r\n"))
+                if (text.Contains("\n"))
                 {
-                    interaction.ResponseBodyLines = SplitIntoLines(text);
+                    interaction.ResponseBodyLines = text.ReadLines().ToList();
                 }
                 else
                 {
@@ -1291,41 +1294,6 @@ namespace pwiz.SkylineTestUtil
                 int length = Math.Min(lineLength, base64String.Length - i);
                 lines.Add(base64String.Substring(i, length));
             }
-            
-            return lines;
-        }
-
-        private static List<string> SplitIntoLines(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return new List<string>();
-            
-            // Split on both \r\n and \n, preserving empty lines
-            var lines = new List<string>();
-            var currentLine = new StringBuilder();
-            
-            for (int i = 0; i < text.Length; i++)
-            {
-                char c = text[i];
-                if (c == '\r' && i + 1 < text.Length && text[i + 1] == '\n')
-                {
-                    lines.Add(currentLine.ToString());
-                    currentLine.Clear();
-                    i++; // Skip the \n
-                }
-                else if (c == '\n')
-                {
-                    lines.Add(currentLine.ToString());
-                    currentLine.Clear();
-                }
-                else
-                {
-                    currentLine.Append(c);
-                }
-            }
-            
-            // Add final line (even if empty)
-            lines.Add(currentLine.ToString());
             
             return lines;
         }

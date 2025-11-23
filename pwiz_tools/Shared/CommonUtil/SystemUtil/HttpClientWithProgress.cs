@@ -1146,21 +1146,18 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     internal static class HttpClientSingleton
     {
-        private static readonly Lazy<HttpClient> _instance = new Lazy<HttpClient>(CreateHttpClient, LazyThreadSafetyMode.ExecutionAndPublication);
+        private static HttpClient _instance = CreateHttpClient();
         private static HttpClientHandler _handler;
         private static bool _disposed;
 
-        static HttpClientSingleton()
+        public static HttpClient Instance => _instance;
+
+        private static HttpClient CreateHttpClient()
         {
             // Register for process exit to dispose HttpClient cleanly
             // This prevents background threads from blocking process shutdown
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => DisposeInstance();
-        }
 
-        public static HttpClient Instance => _instance.Value;
-
-        private static HttpClient CreateHttpClient()
-        {
             // Use HttpClientHandler (SocketsHttpHandler is not available in .NET Framework 4.7.2)
             // Note: Connection pooling and DNS refresh are handled automatically by HttpClient
             _handler = new HttpClientHandler
@@ -1200,10 +1197,7 @@ namespace pwiz.Common.SystemUtil
             try
             {
                 // Dispose HttpClient to close connections and stop background threads
-                if (_instance.IsValueCreated)
-                {
-                    _instance.Value?.Dispose();
-                }
+                _instance?.Dispose();
 
                 // Dispose handler to release resources
                 _handler?.Dispose();

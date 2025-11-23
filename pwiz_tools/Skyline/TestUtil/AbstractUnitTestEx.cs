@@ -19,12 +19,6 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.Koina.Config;
-using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -35,6 +29,12 @@ using System.Resources;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Koina.Config;
+using pwiz.Skyline.Util.Extensions;
 using Formatting = Newtonsoft.Json.Formatting;
 
 
@@ -284,9 +284,7 @@ namespace pwiz.SkylineTestUtil
                     // Copy response body content from the referenced interaction
                     interaction.ResponseBody = referencedInteraction.ResponseBody;
                     interaction.ResponseBodyIsBase64 = referencedInteraction.ResponseBodyIsBase64;
-                    interaction.ResponseBodyLines = referencedInteraction.ResponseBodyLines != null
-                        ? new List<string>(referencedInteraction.ResponseBodyLines)
-                        : null;
+                    interaction.ResponseBodyLines = referencedInteraction.ResponseBodyLines?.ToList();
                     
                     // Clear the reference index now that we've resolved it
                     interaction.ResponseBodyIndex = null;

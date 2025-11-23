@@ -672,7 +672,9 @@ public class LKContainerBrowser : PanoramaFolderBrowser
         // Traverse from root down to leaf, copying properties to each folder along the path
         var targetPath = (string)leafFolder[JSON_PROP_PATH];
         var rootPath = (string)rootFolder[JSON_PROP_PATH];
-        
+        if (targetPath == null || rootPath == null)
+            return; // Should not happen, but to be safe and avoid ReShaper warnings
+
         // Split paths into segments (filter out empty segments from leading/trailing slashes)
         var targetSegments = targetPath.Split('/').Where(s => !string.IsNullOrEmpty(s)).ToList();
         var rootSegments = rootPath.Split('/').Where(s => !string.IsNullOrEmpty(s)).ToList();
