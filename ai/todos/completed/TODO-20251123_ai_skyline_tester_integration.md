@@ -3,7 +3,7 @@
 ## Branch Information
 - **Branch**: Skyline/work/20251123_ai_skyline_tester_integration
 - **Created**: 2025-11-23
-- **PR**: (To be added when created)
+- **PR**: #3681
 
 ## Objective
 
@@ -167,7 +167,7 @@ Note: Current logging behavior in `bin\x64\Debug\` is working well, deferring st
 - [x] Document `SkylineTester test list.txt` format and bidirectional sync
 - [x] Add examples of `-UseTestList` and `-UpdateTestList` usage
 - [x] Document "Check Failed Tests" → LLM workflow
-- [ ] Update `ai/docs/build-and-test-guide.md` with workflow examples (optional - README covers this)
+- [x] Update `ai/docs/build-and-test-guide.md` with workflow examples
 
 ## Technical Details
 
