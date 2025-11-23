@@ -12,6 +12,15 @@
     Name of specific test to run, or:
     - "Test.dll" / "TestData.dll" / "TestFunctional.dll" - Run all tests in DLL
     - "@filepath" - Load test names from file (e.g., "@SkylineTester test list.txt")
+    Note: Not required when using -UseTestList
+
+.PARAMETER UseTestList
+    Read tests from "SkylineTester test list.txt" file.
+    Enables bidirectional sync with SkylineTester UI.
+
+.PARAMETER UpdateTestList
+    Write specified tests to "SkylineTester test list.txt" before running.
+    Use with -TestName to update the shared test list for SkylineTester.
 
 .PARAMETER Language
     Language(s) to run tests in:
@@ -50,6 +59,14 @@
     .\Run-Tests.ps1 -TestName Test.dll
     Run all tests in Test.dll (fast unit tests) in English
 
+.EXAMPLE
+    .\Run-Tests.ps1 -UseTestList
+    Run tests from "SkylineTester test list.txt" (bidirectional sync with SkylineTester)
+
+.EXAMPLE
+    .\Run-Tests.ps1 -TestName "TestA,TestB,TestC" -UpdateTestList
+    Update "SkylineTester test list.txt" with specified tests, then run them
+
 .NOTES
     Author: LLM-assisted development
     Requires: TestRunner.exe built (run Build-Skyline.ps1 first if needed)
@@ -57,28 +74,34 @@
 #>
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [string]$TestName,
-    
+
+    [Parameter(Mandatory=$false)]
+    [switch]$UseTestList = $false,  # Read tests from "SkylineTester test list.txt"
+
+    [Parameter(Mandatory=$false)]
+    [switch]$UpdateTestList = $false,  # Write tests to "SkylineTester test list.txt"
+
     [Parameter(Mandatory=$false)]
     [string]$Language = "en",
-    
+
     [Parameter(Mandatory=$false)]
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Debug",
-    
+
     [Parameter(Mandatory=$false)]
     [switch]$ShowUI = $false,  # Run on-screen (offscreen=off) to see the UI
-    
+
     [Parameter(Mandatory=$false)]
     [switch]$EnableInternet = $false,
-    
+
     [Parameter(Mandatory=$false)]
     [int]$Loop = 0,  # Number of iterations (0 = run forever, 1 = run once, 20 = run 20 times)
-    
+
     [Parameter(Mandatory=$false)]
     [switch]$ReportHandles = $false,  # Enable handle count diagnostics
-    
+
     [Parameter(Mandatory=$false)]
     [switch]$ReportHeaps = $false  # Enable heap count diagnostics (only useful when handles aren't leaking)
 )
@@ -110,6 +133,72 @@ $expandedLanguages = $Language.Split(',') | ForEach-Object {
     }
 }
 $languageParam = $expandedLanguages -join ','
+
+# Test list file path (shared with SkylineTester)
+$testListFile = Join-Path $skylineRoot "SkylineTester test list.txt"
+
+# Handle -UseTestList and -UpdateTestList parameters
+if ($UseTestList) {
+    if ($TestName) {
+        Write-Host "⚠️ Warning: -TestName ignored when -UseTestList is specified" -ForegroundColor Yellow
+    }
+
+    if (-not (Test-Path $testListFile)) {
+        Write-Host "❌ Test list file not found: $testListFile" -ForegroundColor Red
+        Write-Host "Create tests in SkylineTester first, or use -TestName parameter" -ForegroundColor Yellow
+        exit 1
+    }
+
+    # Read tests from file (skip comments and blank lines)
+    $testsFromFile = Get-Content $testListFile |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_ -and -not $_.StartsWith('#') }
+
+    if ($testsFromFile.Count -eq 0) {
+        Write-Host "❌ No tests found in: $testListFile" -ForegroundColor Red
+        Write-Host "The file exists but contains no valid test names" -ForegroundColor Yellow
+        exit 1
+    }
+
+    Write-Host "📋 Using test list from: $testListFile" -ForegroundColor Cyan
+    Write-Host "   Found $($testsFromFile.Count) test(s)" -ForegroundColor Gray
+
+    # Use @file syntax for TestRunner
+    $TestName = "@$testListFile"
+}
+elseif ($UpdateTestList) {
+    if (-not $TestName) {
+        Write-Host "❌ -UpdateTestList requires -TestName parameter" -ForegroundColor Red
+        Write-Host "Example: .\Run-Tests.ps1 -TestName 'TestA,TestB' -UpdateTestList" -ForegroundColor Yellow
+        exit 1
+    }
+
+    # Parse test names (comma-separated)
+    $testNames = $TestName.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+
+    # Backup existing file if it exists
+    if (Test-Path $testListFile) {
+        $backupFile = $testListFile -replace '\.txt$', "_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+        Copy-Item $testListFile $backupFile
+        Write-Host "📦 Backed up existing test list to: $backupFile" -ForegroundColor Gray
+    }
+
+    # Write new test list
+    $header = "# SkylineTester test list"
+    $timestamp = "# Updated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') by Run-Tests.ps1"
+    $content = @($header, $timestamp, "") + $testNames
+    $content | Set-Content $testListFile -Encoding UTF8
+
+    Write-Host "📝 Updated test list: $testListFile" -ForegroundColor Cyan
+    Write-Host "   Wrote $($testNames.Count) test(s)" -ForegroundColor Gray
+}
+elseif (-not $TestName) {
+    Write-Host "❌ Either -TestName or -UseTestList is required" -ForegroundColor Red
+    Write-Host "Examples:" -ForegroundColor Yellow
+    Write-Host "  .\Run-Tests.ps1 -TestName CodeInspection" -ForegroundColor Cyan
+    Write-Host "  .\Run-Tests.ps1 -UseTestList" -ForegroundColor Cyan
+    exit 1
+}
 
 # Determine output directory
 $Platform = "x64"
