@@ -1162,6 +1162,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.ImportTime = importTime);
         }
 
+        public ChromFileInfo ChangeFileWriteTime(DateTime? fileWriteTime)
+        {
+            return ChangeProp(ImClone(this), im => im.FileWriteTime = fileWriteTime);
+        }
+
         public ChromFileInfo ChangeSampleId(string sampleId)
         {
             return ChangeProp(ImClone(this), im => im.SampleId = sampleId);
