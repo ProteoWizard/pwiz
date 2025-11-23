@@ -42,6 +42,51 @@ Additional guidance:
 - Place private helpers after the public methods that use them; keep helpers close to their primary call sites.
 - Avoid "old C" style where helpers appear at the top and the main logic at the bottom.
 
+## Using directive ordering
+
+**System and Windows namespaces come first** (not strictly alphabetical). This matches the ReSharper setting: "Place 'System.*' and 'Windows.*' namespaces first when sorting 'using' directives".
+
+### Correct ordering
+```csharp
+// ✅ GOOD - System namespaces first, then external libraries, then project namespaces
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Model;
+using Formatting = Newtonsoft.Json.Formatting;  // Aliases at the end
+```
+
+### Incorrect ordering
+```csharp
+// ❌ BAD - External libraries before System namespaces
+using Microsoft.VisualStudio.TestTools.UnitTesting;  // Should come after System
+using Newtonsoft.Json;
+using System;  // System should come first
+using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
+```
+
+```csharp
+// ❌ BAD - Strictly alphabetical (doesn't match ReSharper setting)
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using pwiz.Common.SystemUtil;  // Project namespace before System
+using pwiz.Skyline;
+using System;  // System namespace should come first
+using System.Collections.Generic;
+```
+
+**Why this matters:**
+- ReSharper is configured to place `System.*` and `Windows.*` namespaces first
+- AI tools may sort alphabetically by default, which conflicts with this convention
+- Consistent ordering makes code reviews easier and matches developer expectations
+
 ## General guidelines
 - Match surrounding file style (indentation, spacing, line breaks).
 - Prefer focused edits; do not reformat unrelated code.
