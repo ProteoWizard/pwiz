@@ -45,7 +45,7 @@ PowerShell script for building, testing, and validating Skyline from LLM-assiste
 ```
 
 ### Run-Tests.ps1
-PowerShell wrapper for TestRunner.exe with natural language-style test execution.
+PowerShell wrapper for TestRunner.exe with natural language-style test execution and SkylineTester integration.
 
 **Usage** (from `pwiz_tools\Skyline`):
 ```powershell
@@ -58,9 +58,6 @@ PowerShell wrapper for TestRunner.exe with natural language-style test execution
 # Run specific test in Japanese
 .\ai\Run-Tests.ps1 -TestName TestPanoramaDownloadFile -Language ja
 
-# Run tests from SkylineTester test list in English and Japanese
-.\ai\Run-Tests.ps1 -TestName "@SkylineTester test list.txt" -Language en,ja
-
 # Run all tests in Test.dll
 .\ai\Run-Tests.ps1 -TestName Test.dll
 ```
@@ -68,6 +65,57 @@ PowerShell wrapper for TestRunner.exe with natural language-style test execution
 **Intelligent error handling**: If you use a class name by mistake (e.g., "CodeInspectionTest"), the script searches for [TestMethod] annotations and suggests the correct method name.
 
 **See also**: [`ai/docs/build-and-test-guide.md`](../../../ai/docs/build-and-test-guide.md) for comprehensive build/test documentation.
+
+## AI/SkylineTester Integration
+
+Run-Tests.ps1 and SkylineTester share a test list file for bidirectional workflow:
+
+### Using the Shared Test List
+
+```powershell
+# Run tests that developer selected in SkylineTester
+.\ai\Run-Tests.ps1 -UseTestList
+
+# Update test list and run (developer will see tests pre-checked in SkylineTester)
+.\ai\Run-Tests.ps1 -TestName "TestA,TestB,TestC" -UpdateTestList
+```
+
+### Integration Workflows
+
+**Human → LLM Handoff:**
+1. Developer selects tests in SkylineTester UI
+2. LLM runs: `.\ai\Run-Tests.ps1 -UseTestList`
+3. Same tests run without re-specifying
+
+**LLM → Human Handoff:**
+1. LLM runs: `.\ai\Run-Tests.ps1 -TestName "TestA,TestB" -UpdateTestList`
+2. Developer opens SkylineTester → tests automatically checked
+3. Developer can review, modify, or re-run
+
+**Sprint Test Set:**
+1. Developer curates tests in SkylineTester
+2. LLM runs `.\ai\Run-Tests.ps1 -UseTestList` throughout sprint
+3. Consistent test validation without re-specifying tests
+
+**Failed Tests Workflow:**
+1. Developer runs tests in SkylineTester, some fail
+2. Developer clicks "Check Failed Tests" button
+3. Developer closes SkylineTester, makes fixes
+4. Developer reopens SkylineTester → failed tests still checked
+5. (Optional) LLM can run same tests: `.\ai\Run-Tests.ps1 -UseTestList`
+
+### Test List File
+
+**Location:** `pwiz_tools\Skyline\SkylineTester test list.txt`
+
+**Format:**
+```
+# SkylineTester test list
+# One test name per line
+TestPanoramaDownloadFile
+TestLibraryBuildNotification
+CodeInspection
+```
 
 ## Purpose
 
