@@ -54,6 +54,14 @@ param(
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+# Auto-change to script's parent directory (AutoQC root) so script works from any PWD
+$scriptRoot = Split-Path -Parent $PSCommandPath
+$autoQCRoot = Split-Path -Parent $scriptRoot
+$initialLocation = Get-Location
+
+try {
+    Set-Location $autoQCRoot
+
 $Platform = "Any CPU"
 
 # Find MSBuild using vswhere (installed with VS 2022)
@@ -238,4 +246,6 @@ if ($RunTests) {
 
 Write-Host ""
 Write-Host "✅ All operations completed successfully" -ForegroundColor Green
-
+} finally {
+    Set-Location $initialLocation
+}

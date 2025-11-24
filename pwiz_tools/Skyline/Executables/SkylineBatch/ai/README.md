@@ -7,20 +7,22 @@ Scripts and tools for LLM-assisted development of SkylineBatch.
 ### Build-SkylineBatch.ps1
 PowerShell script for building and testing SkylineBatch from LLM-assisted IDEs.
 
-**Usage** (from `pwiz_tools\Skyline\Executables\SkylineBatch`):
+**Usage** (works from any working directory):
 ```powershell
 # Build solution
-.\ai\Build-SkylineBatch.ps1
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1
 
 # Build and run tests
-.\ai\Build-SkylineBatch.ps1 -RunTests
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1 -RunTests
 
 # Build, inspect, and test
-.\ai\Build-SkylineBatch.ps1 -RunInspection -RunTests
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1 -RunInspection -RunTests
 
 # Release build
-.\ai\Build-SkylineBatch.ps1 -Configuration Release
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1 -Configuration Release
 ```
+
+**Key feature**: Script automatically changes to the correct project directory, so you don't need to `Set-Location` first. This makes it easier to use from LLM-assisted IDEs where the current working directory may not be transparent.
 
 ## Differences from Skyline
 
