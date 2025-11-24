@@ -583,7 +583,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                         var parentPath = Account.GetPathFromFolderContentsUrl(uri.AbsoluteUri);
 
                         var foldersEnumerable = itemsValue.OfType<JObject>().
-                            Where(f => f[@"type"].Value<string>().Contains(@"folder")).
+                            Where(f => f[@"type"]!.Value<string>().Contains(@"folder")).
                             Select(folder => new ArdiaFolderObject(folder, parentPath));
 
                         items = new List<RemoteItem>();
@@ -958,13 +958,13 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
                 var jsonResponse = JObject.Parse(responseBody);
 
                 var sb = new StringBuilder();
-                if (jsonResponse?[@"title"] != null)
+                if (jsonResponse[@"title"] != null)
                 {
                     sb.Append(jsonResponse[@"title"]);
                 }
 
                 // TODO: read specific fields from the errors object
-                if (jsonResponse?[@"errors"] != null)
+                if (jsonResponse[@"errors"] != null)
                 {
                     sb.Append(jsonResponse[@"errors"]);
                 }

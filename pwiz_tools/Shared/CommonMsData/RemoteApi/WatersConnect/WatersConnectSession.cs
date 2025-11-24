@@ -142,10 +142,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             if (string.IsNullOrEmpty(responseBody))
                 return ImmutableList<WatersConnectFolderObject>.EMPTY;
             var itemsValue = JArray.Parse(responseBody);
-            if (itemsValue == null)
-            {
-                return ImmutableList<WatersConnectFolderObject>.EMPTY;
-            }
             return ImmutableList.ValueOf(itemsValue.OfType<JObject>()
                 .Where(f => WatersConnectObject.GetProperty(f, @"contentType").StartsWith(@"SampleSet"))
                 .Select(f => new WatersConnectFolderObject(f, null, true)));
