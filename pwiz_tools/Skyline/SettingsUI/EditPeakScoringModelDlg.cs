@@ -191,7 +191,7 @@ namespace pwiz.Skyline.SettingsUI
 
             try
             {
-                TrainModel(true);
+                TrainModel();
             }
             catch (InvalidDataException x)
             {
@@ -206,9 +206,9 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Train mProphet scoring model. If suppressWeights is true, disable the weights unchecked by the user
+        /// Train mProphet scoring model. Weights which have been unchecked by the user will be suppressed.
         /// </summary>
-        public void TrainModel(bool suppressWeights = false)
+        public void TrainModel()
         {
             // Create new scoring model using the default calculators.
             IPeakScoringModel peakScoringModel;
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI
                                                              .Where((type, i) => indicesToSuppress[i])
                                                              .ToList();
             var weightSuppressors =
-                peakScoringModel.PeakFeatureCalculators.Select(calc => suppressWeights && calculatorsToSuppress.Contains(calc.GetType())).ToList();
+                peakScoringModel.PeakFeatureCalculators.Select(calc => calculatorsToSuppress.Contains(calc.GetType())).ToList();
 
 
             // Need to regenerate the targets and decoys if the set of calculators has changed (backward compatibility)

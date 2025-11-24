@@ -558,12 +558,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 if (!double.IsNaN(weights[i]))
                 {
-                    var value = features.Values[i];
-                    if (TargetDecoyGenerator.IsUnknown(value))
-                    {
-                        Console.Out.WriteLine("Unknown");
-                    }
-                    trainData[row, j++] = value;
+                    trainData[row, j++] = features.Values[i];
                 }
             }
             trainData[row, j] = category;
