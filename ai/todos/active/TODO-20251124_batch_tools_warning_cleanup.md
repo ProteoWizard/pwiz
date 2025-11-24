@@ -1,5 +1,9 @@
 # TODO-batch_tools_warning_cleanup.md
 
+- **Branch**: Skyline/work/20251124_batch_tools_warning_cleanup
+- **Created**: 2025-11-24
+- **PR**: tbd
+
 ## Objective
 Clean up ReSharper static analysis warnings in SkylineBatch and AutoQC projects to match Skyline.exe quality standards.
 
