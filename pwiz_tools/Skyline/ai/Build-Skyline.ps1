@@ -91,6 +91,28 @@ try {
 # Ensure UTF-8 output for status symbols regardless of terminal settings
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+# Fix line endings in modified files (CRLF is project standard, but LLM tools may introduce LF-only)
+# This is fast because it only processes files in 'git status' (modified/added)
+# Run from repo root so git status works correctly
+$repoRoot = (git rev-parse --show-toplevel 2>$null)
+if ($repoRoot) {
+    $fixCrlfScript = Join-Path $repoRoot "ai\scripts\fix-crlf.ps1"
+    if (Test-Path $fixCrlfScript) {
+        Write-Host "Checking line endings in modified files..." -ForegroundColor Cyan
+        Push-Location $repoRoot
+        try {
+            & $fixCrlfScript
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "`n⚠️  Line ending fix failed - some files may still have LF-only line endings" -ForegroundColor Yellow
+                Write-Host "This may cause large Git diffs. Consider running: .\ai\scripts\fix-crlf.ps1`n" -ForegroundColor Gray
+            }
+        }
+        finally {
+            Pop-Location
+        }
+    }
+}
+
 # Find MSBuild using vswhere
 $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (-not (Test-Path $vswherePath)) {
