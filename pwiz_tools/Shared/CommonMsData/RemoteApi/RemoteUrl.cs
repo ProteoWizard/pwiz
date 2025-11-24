@@ -198,7 +198,7 @@ namespace pwiz.CommonMsData.RemoteApi
         public virtual string FormattedString()
         {
             var nameValuePairs = GetParameters();
-            return string.Join("\n", nameValuePairs.GetEnumerable().Select(pair => pair.Key + ":\t" + pair.Value));
+            return string.Join(@"\n", nameValuePairs.GetEnumerable().Select(pair => pair.Key + @":\t" + pair.Value));
         }
 
         public override int GetSampleIndex()
