@@ -176,13 +176,6 @@ elseif ($UpdateTestList) {
     # Parse test names (comma-separated)
     $testNames = $TestName.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
-    # Backup existing file if it exists
-    if (Test-Path $testListFile) {
-        $backupFile = $testListFile -replace '\.txt$', "_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
-        Copy-Item $testListFile $backupFile
-        Write-Host "📦 Backed up existing test list to: $backupFile" -ForegroundColor Gray
-    }
-
     # Write new test list
     $header = "# SkylineTester test list"
     $timestamp = "# Updated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') by Run-Tests.ps1"
