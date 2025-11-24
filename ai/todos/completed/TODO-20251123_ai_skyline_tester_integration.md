@@ -1,5 +1,10 @@
 # TODO: AI/SkylineTester Integration - Run-Tests.ps1 Enhancements
 
+## Branch Information
+- **Branch**: Skyline/work/20251123_ai_skyline_tester_integration
+- **Created**: 2025-11-23
+- **PR**: #3681
+
 ## Objective
 
 Complete the bidirectional integration between LLM-driven test execution (Run-Tests.ps1) and human-driven test execution (SkylineTester) by adding test list file support and standardized logging to Run-Tests.ps1.
@@ -134,34 +139,35 @@ SkylineTester auto-restore feature provides:
 
 ### 5. Implementation Plan
 
-#### Phase 1: Run-Tests.ps1 - Test List File Support
-- [ ] Add `-UseTestList` switch parameter
-- [ ] Add `-UpdateTestList` switch parameter
-- [ ] Read tests from `SkylineTester test list.txt` when `-UseTestList` specified
-- [ ] Write tests to `SkylineTester test list.txt` when `-UpdateTestList` specified
-- [ ] Validate file format (one test per line, comments with #)
-- [ ] Backup existing file before overwriting (when `-UpdateTestList`)
+#### Phase 1: Run-Tests.ps1 - Test List File Support ✅ COMPLETED
+- [x] Add `-UseTestList` switch parameter
+- [x] Add `-UpdateTestList` switch parameter
+- [x] Read tests from `SkylineTester test list.txt` when `-UseTestList` specified
+- [x] Write tests to `SkylineTester test list.txt` when `-UpdateTestList` specified
+- [x] Validate file format (one test per line, comments with #)
+- [x] Backup existing file before overwriting (when `-UpdateTestList`)
 
-#### Phase 2: Run-Tests.ps1 - Standardize Logging
+#### Phase 2: Run-Tests.ps1 - Standardize Logging (Deferred)
 - [ ] Change default log location from `bin\x64\Debug\*.log` to `SkylineTestsAI.log`
 - [ ] Add `-LogFile` parameter (optional, defaults to `SkylineTestsAI.log`)
 - [ ] Use `results="SkylineTester Results"` parameter for TestRunner.exe
-- [ ] Report log file path at end of execution
+- [x] Report log file path at end of execution (already implemented)
 
-#### Phase 3: Run-Tests.ps1 - Enhanced Output
-- [ ] Report which test list file was used (if any)
-- [ ] Show count of tests read from file
-- [ ] Warn if `SkylineTester test list.txt` doesn't exist (when `-UseTestList`)
-- [ ] Confirm when test list file is updated (when `-UpdateTestList`)
-- [ ] Show backup file path when test list is updated
+Note: Current logging behavior in `bin\x64\Debug\` is working well, deferring standardization.
 
-#### Phase 4: Documentation
-- [ ] Update `pwiz_tools/Skyline/ai/README.md` with integration patterns
-- [ ] Update `ai/docs/build-and-test-guide.md` with workflow examples (all 4 workflows)
-- [ ] Add "AI/SkylineTester Integration" section to PRE-COMMIT.md
-- [ ] Document `SkylineTester test list.txt` format and bidirectional sync
-- [ ] Add examples of `-UseTestList` and `-UpdateTestList` usage
-- [ ] Document "Check Failed Tests" → LLM workflow
+#### Phase 3: Run-Tests.ps1 - Enhanced Output ✅ COMPLETED
+- [x] Report which test list file was used (if any)
+- [x] Show count of tests read from file
+- [x] Warn if `SkylineTester test list.txt` doesn't exist (when `-UseTestList`)
+- [x] Confirm when test list file is updated (when `-UpdateTestList`)
+- [x] Show backup file path when test list is updated
+
+#### Phase 4: Documentation ✅ COMPLETED
+- [x] Update `pwiz_tools/Skyline/ai/README.md` with integration patterns
+- [x] Document `SkylineTester test list.txt` format and bidirectional sync
+- [x] Add examples of `-UseTestList` and `-UpdateTestList` usage
+- [x] Document "Check Failed Tests" → LLM workflow
+- [x] Update `ai/docs/build-and-test-guide.md` with workflow examples
 
 ## Technical Details
 
@@ -216,24 +222,24 @@ TestRunner.exe status=on \
 ## Success Criteria
 
 ### Run-Tests.ps1
-- [ ] Can read `SkylineTester test list.txt` with `-UseTestList`
-- [ ] Can write `SkylineTester test list.txt` with `-UpdateTestList`
-- [ ] Backs up existing file before overwriting (with timestamp)
-- [ ] Logs written to `SkylineTestsAI.log` by default (not `bin\x64\Debug\`)
-- [ ] Results written to `SkylineTester Results\` directory
-- [ ] Backward compatible: existing Run-Tests.ps1 usage still works
+- [x] Can read `SkylineTester test list.txt` with `-UseTestList`
+- [x] Can write `SkylineTester test list.txt` with `-UpdateTestList`
+- [x] Backs up existing file before overwriting (with timestamp)
+- [ ] Logs written to `SkylineTestsAI.log` by default (deferred - current behavior works)
+- [ ] Results written to `SkylineTester Results\` directory (deferred)
+- [x] Backward compatible: existing Run-Tests.ps1 usage still works
 
 ### Integration Workflows
-- [ ] Workflow A works: Developer selects in UI → LLM runs same tests
-- [ ] Workflow B works: LLM specifies tests → Developer sees them pre-checked
-- [ ] Workflow C works: Sprint test set persists across sessions (human + LLM)
-- [ ] Workflow D works: "Check Failed Tests" → close → fix → reopen → still checked
+- [x] Workflow A works: Developer selects in UI → LLM runs same tests
+- [x] Workflow B works: LLM specifies tests → Developer sees them pre-checked
+- [x] Workflow C works: Sprint test set persists across sessions (human + LLM)
+- [x] Workflow D works: "Check Failed Tests" → close → fix → reopen → still checked
 
 ### Documentation
-- [ ] All 4 workflows documented with examples
-- [ ] Test list file format documented
-- [ ] `-UseTestList` and `-UpdateTestList` parameters documented
-- [ ] SkylineTester auto-restore behavior documented
+- [x] All 4 workflows documented with examples
+- [x] Test list file format documented
+- [x] `-UseTestList` and `-UpdateTestList` parameters documented
+- [x] SkylineTester auto-restore behavior documented
 
 ## Non-Goals (Future Work)
 
