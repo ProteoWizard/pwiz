@@ -1,5 +1,9 @@
 # TODO-skylinebatch_test_cleanup.md
 
+- Branch: Skyline/work/20251123_skylinebatch_test_cleanup
+- Created: 2025-11-23
+- PR: tbd
+
 ## Objective
 Fix SkylineBatch test quality issues: file pollution, flaky tests, and proper test infrastructure.
 
