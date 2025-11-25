@@ -72,6 +72,17 @@ $initialLocation = Get-Location
 try {
     Set-Location $skylineBatchRoot
 
+    # Synchronize ReSharper DotSettings from Skyline baseline
+    # Path: SkylineBatch -> Executables -> Skyline -> ai/scripts
+    $skylineRoot = Split-Path -Parent (Split-Path -Parent $skylineBatchRoot)
+    $syncScript = Join-Path $skylineRoot 'ai/scripts/Sync-DotSettings.ps1'
+    if (Test-Path $syncScript) {
+        Write-Host 'Synchronizing DotSettings...' -ForegroundColor Cyan
+        & $syncScript
+    } else {
+        Write-Host "Sync-DotSettings.ps1 not found at: $syncScript" -ForegroundColor Yellow
+    }
+
 $Platform = "Any CPU"
 
 # Find MSBuild using vswhere (installed with VS 2022)
