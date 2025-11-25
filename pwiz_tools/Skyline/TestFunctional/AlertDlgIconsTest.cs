@@ -48,15 +48,14 @@ namespace pwiz.SkylineTestFunctional
                 Size size = default;
                 RunLongDlg<MessageDlg>(() => MessageDlg.Show(SkylineWindow, message), dlg =>
                 {
-                    // PauseTest();
+                    PauseForScreenShot();
                     size = dlg.Size;
                 }, dlg => dlg.OkDialog());
                 Size sizeWithIcon = default;
                 RunLongDlg<MessageDlg>(() => MessageDlg.Show(SkylineWindow, message, messageIcon: MessageIcons.Success, ignoreModeUI: false),
-
                     dlg =>
                     {
-                        // PauseTest();
+                        PauseForScreenShot();
                         sizeWithIcon = dlg.Size;
                     }, dlg => dlg.OkDialog());
                 // The width of the form should be the same regardless of whether the icon is shown

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
@@ -51,7 +52,7 @@ namespace pwiz.Common.GUI
             InitializeComponent();
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
-            SetMessageIconVisible(false);
+            MessageIconVisible = false;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
             Text = CommonApplicationSettings.ProgramName;
@@ -81,7 +82,8 @@ namespace pwiz.Common.GUI
 
         private void UpdateLabelMessageMaximumSize()
         {
-            labelMessage.MaximumSize = new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_PADDING), 0);
+            labelMessage.MaximumSize =
+                new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_PADDING), 0);
         }
 
         private void UpdateFormHeight()
@@ -93,12 +95,9 @@ namespace pwiz.Common.GUI
             Height = _originalFormHeight + formGrowth;
         }
 
-        public string DetailMessage 
+        public string DetailMessage
         {
-            get
-            {
-                return _detailMessage;
-            }
+            get { return _detailMessage; }
             set
             {
                 _detailMessage = value;
@@ -163,7 +162,7 @@ namespace pwiz.Common.GUI
 
         public override string DetailedMessage
         {
-            get { return GetTitleAndMessageDetail();  }
+            get { return GetTitleAndMessageDetail(); }
         }
 
         protected string GetTitleAndMessageDetail()
@@ -213,36 +212,44 @@ namespace pwiz.Common.GUI
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+
         public Image MessageIcon
         {
-            get
-            {
-                return iconPictureBox.Image;
-            }
+            get { return MessageIconVisible ? iconPictureBox.Image : null; }
             set
             {
                 iconPictureBox.Image = value;
-                SetMessageIconVisible(value != null);
+                MessageIconVisible = value != null;
             }
         }
 
-        private void SetMessageIconVisible(bool visible)
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        private bool MessageIconVisible
         {
-            if (visible == !iconAndMessageSplitContainer.Panel1Collapsed)
+            get { return !iconAndMessageSplitContainer.Panel1Collapsed; }
+            set
             {
-                return;
+                if (value == MessageIconVisible)
+                {
+                    return;
+                }
+
+                if (value)
+                {
+                    iconAndMessageSplitContainer.Panel1Collapsed = false;
+                    labelMessage.Location = new Point(0, labelMessage.Location.Y);
+                }
+                else
+                {
+                    iconAndMessageSplitContainer.Panel1Collapsed = true;
+                    labelMessage.Location = new Point(LABEL_PADDING, labelMessage.Location.Y);
+                }
+
+                UpdateFormHeight();
             }
-            if (visible)
-            {
-                iconAndMessageSplitContainer.Panel1Collapsed = false;
-                labelMessage.Location = new Point(0, labelMessage.Location.Y);
-            }
-            else
-            {
-                iconAndMessageSplitContainer.Panel1Collapsed = true;
-                labelMessage.Location = new Point(LABEL_PADDING, labelMessage.Location.Y);
-            }
-            UpdateFormHeight();
         }
 
         /// <summary>
@@ -377,6 +384,7 @@ namespace pwiz.Common.GUI
         }
 
         private const int MAX_MESSAGE_LENGTH = 50000;
+
         /// <summary>
         /// Labels have difficulty displaying text longer than 50,000 characters, and SetWindowText
         /// replaces strings longer than 520,000 characters with the empty string.

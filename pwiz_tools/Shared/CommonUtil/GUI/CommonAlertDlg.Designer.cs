@@ -132,6 +132,7 @@ namespace pwiz.Common.GUI
             // 
             // iconPictureBox
             // 
+            this.iconPictureBox.Image = global::pwiz.Common.CommonResources.Images.SuccessMessageIcon;
             resources.ApplyResources(this.iconPictureBox, "iconPictureBox");
             this.iconPictureBox.Name = "iconPictureBox";
             this.iconPictureBox.TabStop = false;
