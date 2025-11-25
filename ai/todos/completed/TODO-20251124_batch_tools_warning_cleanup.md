@@ -1,12 +1,15 @@
-# TODO-batch_tools_warning_cleanup.md
+# TODO-20251124_batch_tools_warning_cleanup.md
 
-- **Branch**: Skyline/work/20251124_batch_tools_warning_cleanup
+## Branch Information
+- **Branch**: `Skyline/work/20251124_batch_tools_warning_cleanup`
 - **Created**: 2025-11-24
 - **Completed**: 2025-11-24
-- **PR**: (squash merge pending)
+- **Status**: ✅ Completed
+- **PR**: [#3683](https://github.com/ProteoWizard/pwiz/pull/3683)
+- **Objective**: Achieve zero ReSharper warnings for SkylineBatch & AutoQC with DotSettings parity (localization severity intentionally downgraded) and supporting build/inspection automation.
 
 ## Objective
-Clean up ReSharper static analysis warnings in SkylineBatch and AutoQC projects to match Skyline.exe quality standards.
+Clean up ReSharper static analysis warnings in SkylineBatch and AutoQC projects to match Skyline.exe quality standards (now achieved; see Completion Summary below).
 
 ## Background
 
