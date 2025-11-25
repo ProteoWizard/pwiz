@@ -8,6 +8,7 @@ using System.Threading;
 using FluentFTP;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -155,7 +156,8 @@ namespace SkylineBatch
                         percentDone + (int)percentScale);
                     var serverFiles = new List<ConnectedFileInfo>();
                     var client = GetFtpClient(server);
-                    var connectThread = new Thread(() =>
+                    var connectComplete = new ManualResetEvent(false);
+                    CommonActionUtil.RunAsync(() =>
                     {
                         try
                         {
@@ -172,13 +174,15 @@ namespace SkylineBatch
                         {
                             _serverExceptions[server] = e;
                         }
-
+                        finally
+                        {
+                            connectComplete.Set();
+                        }
                     });
-                    connectThread.Start();
-                    while (connectThread.IsAlive)
+                    while (!connectComplete.WaitOne(100))
                     {
                         if (cancelToken.IsCancellationRequested)
-                            connectThread.Abort();
+                            break;
                     }
                     client.Disconnect();
 

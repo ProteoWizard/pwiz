@@ -1247,6 +1247,12 @@ namespace AutoQC
             return false;
         }
 
+        public override int GetHashCode()
+        {
+            // Use RuntimeHelpers to get identity-based hash code matching reference-equality Equals
+            return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
+        }
+
         #region [Implementation of IProcessControl interface]
         public ProcStatus RunProcess(ProcessInfo processInfo)
         {

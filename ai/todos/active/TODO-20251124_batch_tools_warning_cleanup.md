@@ -110,3 +110,119 @@ Follow Skyline.exe patterns:
 ## Priority
 **Medium** - Not blocking current work, but important for long-term maintainability and consistency across the codebase.
 
+---
+
+## Sprint Progress
+
+### Phase 1: Assessment ✅ COMPLETED
+
+**Current .DotSettings Status:**
+- ✅ **Skyline.sln.DotSettings**: Comprehensive (~399 lines) with strict standards
+- ✅ **SkylineBatch.sln.DotSettings**: Minimal (~7 lines) - mostly LocalizableElement downgraded
+- ✅ **AutoQC.sln.DotSettings**: Minimal (~10 lines) - some naming conventions
+
+**Key Finding:**
+Projects like `PanoramaClient` and `CommonUtil` are **warning-free in Skyline** but have warnings in batch tools because:
+1. Batch tools lack the full ReSharper configuration from Skyline
+2. Missing severity downgrades (e.g., many inspections set to HINT in Skyline are WARNING in batch tools)
+3. Missing naming convention rules
+
+**Localization Status:**
+- ✅ Skyline: `LocalizableElement` = `WARNING` (enforced)
+- ✅ SkylineBatch: `LocalizableElement` = `HINT` (not enforced - correct for now)
+- ✅ AutoQC: No explicit setting (inherits defaults)
+- ✅ Confirmed: We will **NOT** propagate localization requirements to batch tools
+
+**Implementation Strategy:**
+Copy Skyline.sln.DotSettings to batch tool solutions with modification:
+- Keep `LocalizableElement` downgraded (HINT or DO_NOT_SHOW)
+- Copy all other severity downgrades
+- Copy all naming conventions
+- Copy all user-defined rules
+
+### Phase 2: Configuration ✅ COMPLETED
+
+**Actions Taken:**
+1. ✅ Copied `Skyline.sln.DotSettings` (399 lines) to:
+   - `SkylineBatch.sln.DotSettings` (replaced minimal 7-line version)
+   - `AutoQC.sln.DotSettings` (replaced minimal 10-line version)
+2. ✅ Modified `LocalizableElement` severity: `WARNING` → `HINT` in both
+3. ✅ Retained all other Skyline ReSharper settings:
+   - ~100 inspection severity downgrades
+   - All naming convention rules (_camelCase, AA_BB, etc.)
+   - All user-defined rules
+   - Code coverage filters
+   - Live templates
+
+**Result:**
+Batch tools now have **identical** ReSharper configuration to Skyline except for localization enforcement.
+
+### Phase 3: Assessment After Configuration ✅ COMPLETED
+
+**Build Script Improvements:**
+1. ✅ Enhanced `Build-SkylineBatch.ps1` with improved inspection support
+2. ✅ Enhanced `Build-AutoQC.ps1` with improved inspection support
+3. ✅ Added self-CD logic to both scripts (matching Build-Skyline.ps1)
+4. ✅ Added persistent cache support for faster inspections
+5. ✅ Improved error reporting with issue count and details
+
+**Inspection Results:**
+
+**SkylineBatch.sln** (32.8s inspection time):
+- ✅ **28 warnings** (down from likely 100+)
+- ✅ **0 errors**
+- Most common issues:
+  - Unused method return values (7 warnings in SkylineBatchConfigManager)
+  - Potential null references (3 warnings)
+  - Async lambda warnings (1 warning)
+  - Empty catch blocks (1 warning)
+  - Unused usings (1 warning)
+  - Resource disposal issues (2 warnings in tests)
+
+**AutoQC.sln** (26.4s inspection time):
+- ✅ **22 warnings** (down from likely 100+)
+- ✅ **0 errors**
+- Most common issues:
+  - Potential null references (10 warnings, mostly in tests)
+  - Unused method return values (5 warnings in AutoQcConfigManager)
+  - Override Equals without GetHashCode (1 warning - also a C# compiler warning)
+  - Unused field (1 warning)
+  - Unused using (1 warning)
+  - Possible unassigned object (1 warning)
+
+**SharedBatch** (included in both solutions):
+- 3 warnings appear in both: ConfigManager, SkylineSettings
+
+**Total Combined Unique Warnings: ~47** (some overlap between solutions)
+
+**Analysis:**
+The .DotSettings changes have **dramatically reduced warnings** by downgrading many code style suggestions to HINT. The remaining warnings are legitimate code quality issues:
+- Type safety (null references)
+- API design (unused return values, missing GetHashCode)
+- Code cleanup (unused usings, unused fields)
+
+### Phase 4: Next Steps 📋 READY
+
+**Remaining Work:**
+The 47 warnings are now at a manageable level for focused cleanup. Options:
+
+1. **Fix All Warnings** (Recommended for quality)
+   - Fix null reference warnings with proper null checks
+   - Fix unused return value warnings (either use them or change to void)
+   - Fix GetHashCode override issue
+   - Remove unused usings and fields
+   - Estimated: 2-4 hours
+
+2. **Strategic Suppression**
+   - Suppress specific warnings that are acceptable (with justification)
+   - Fix critical issues only (null refs, GetHashCode)
+   - Estimated: 1-2 hours
+
+3. **Defer Cleanup**
+   - Accept current state (47 warnings, 0 errors)
+   - Document that .DotSettings alignment is complete
+   - Clean up warnings in future sprint
+   - Estimated: 0 hours (just documentation)
+
+**Recommendation:** Option 1 - These are real code quality issues worth fixing, and at 47 warnings, they're very manageable.
+

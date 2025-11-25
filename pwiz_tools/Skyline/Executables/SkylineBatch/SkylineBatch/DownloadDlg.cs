@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using Timer = System.Windows.Forms.Timer;
 
@@ -50,7 +51,7 @@ namespace SkylineBatch
 
         private void Download()
         {
-            new Thread( async () =>
+            CommonActionUtil.RunAsync(() =>
             {
                 using (var wc = new WebClient())
                 {
@@ -73,16 +74,18 @@ namespace SkylineBatch
                                 _percent = Math.Min((int)((double)e.BytesReceived / size * 100), 99);
                             };
 
-                            await wc.DownloadFileTaskAsync(downloadUri, fs.SafeName);
+                            // Use synchronous Wait to avoid async void in background thread
+                            wc.DownloadFileTaskAsync(downloadUri, fs.SafeName).GetAwaiter().GetResult();
                             fs.Commit();
                             if (Visible) BeginInvoke((MethodInvoker)delegate { Close(); });
                         }
                         catch (Exception)
                         {
+                            // Do nothing, file saver will clean up
                         }
                     }
                 }
-            }).Start();
+            });
         }
     }
 }
