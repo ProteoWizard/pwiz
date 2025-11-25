@@ -7,20 +7,22 @@ Scripts and tools for LLM-assisted development of AutoQC.
 ### Build-AutoQC.ps1
 PowerShell script for building and testing AutoQC from LLM-assisted IDEs.
 
-**Usage** (from `pwiz_tools\Skyline\Executables\AutoQC`):
+**Usage** (works from any working directory):
 ```powershell
 # Build solution
-.\ai\Build-AutoQC.ps1
+.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1
 
 # Build and run tests
-.\ai\Build-AutoQC.ps1 -RunTests
+.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1 -RunTests
 
 # Build, inspect, and test
-.\ai\Build-AutoQC.ps1 -RunInspection -RunTests
+.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1 -RunInspection -RunTests
 
 # Release build
-.\ai\Build-AutoQC.ps1 -Configuration Release
+.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1 -Configuration Release
 ```
+
+**Key feature**: Script automatically changes to the correct project directory, so you don't need to `Set-Location` first. This makes it easier to use from LLM-assisted IDEs where the current working directory may not be transparent.
 
 ## Panorama Credentials for Testing
 

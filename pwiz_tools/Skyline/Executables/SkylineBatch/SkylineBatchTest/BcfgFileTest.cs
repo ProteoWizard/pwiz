@@ -32,9 +32,8 @@ using static SkylineBatch.RefineInputObject;
 namespace SkylineBatchTest
 {
     [TestClass]
-    public class BcfgFileTest
+    public class BcfgFileTest : AbstractSkylineBatchUnitTest
     {
-
         private string AppendToFileName(string filePath, string appendText) => Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath) + appendText + Path.GetExtension(filePath));
 
         private string ImportFilePath(string version, string type) => Path.Combine(TestUtils.GetTestFilePath("BcfgTestFiles"), $"{version}_{type}{TextUtil.EXT_BCFG}");
@@ -90,7 +89,7 @@ namespace SkylineBatchTest
             Assert.IsTrue(File.Exists(currentVersionFile), currentVersionFile + " does not exist.");
 
 
-            var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var configManager = new SkylineBatchConfigManager(GetTestLogger());
             configManager.Import(oldVersionFile, null);
             IConfig[] oldVersionConfigs = new IConfig[configManager.State.BaseState.ConfigList.Count];
             configManager.State.BaseState.ConfigList.CopyTo(oldVersionConfigs);
@@ -114,7 +113,7 @@ namespace SkylineBatchTest
                 Assert.Fail(filePathImport + " does not exist. Must import from an existing file.");
             
             var filePathActualExport = filePathExpectedExport.Replace("expected", "actual");
-            var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var configManager = new SkylineBatchConfigManager(GetTestLogger());
             configManager.Import(filePathImport, null);
             int[] indiciesToSave = new int[configManager.State.BaseState.ConfigList.Count];
             for (int index = 0; index < indiciesToSave.Length; index++)
@@ -138,7 +137,7 @@ namespace SkylineBatchTest
             // test version of expected bcfg files to make sure they import correctly
             var filePath = ExpectedFilePath("21_1_0_312", "complex_test");
             using var fileSaver = TestUtils.CreateBcfgWithCurrentRVersion(filePath);
-            var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var configManager = new SkylineBatchConfigManager(GetTestLogger());
             configManager.Import(fileSaver.SafeName, null);
             var actualConfig = configManager.GetConfig(0);
 
