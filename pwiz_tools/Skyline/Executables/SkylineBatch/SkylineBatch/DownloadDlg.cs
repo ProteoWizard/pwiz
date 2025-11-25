@@ -74,8 +74,8 @@ namespace SkylineBatch
                                 _percent = Math.Min((int)((double)e.BytesReceived / size * 100), 99);
                             };
 
-                            // Use synchronous Wait to avoid async void in background thread
-                            wc.DownloadFileTaskAsync(downloadUri, fs.SafeName).GetAwaiter().GetResult();
+                            // Use synchronous Wait to avoid async void in background thread; ConfigureAwait(false) prevents context capture.
+                            wc.DownloadFileTaskAsync(downloadUri, fs.SafeName).ConfigureAwait(false).GetAwaiter().GetResult();
                             fs.Commit();
                             if (Visible) BeginInvoke((MethodInvoker)delegate { Close(); });
                         }

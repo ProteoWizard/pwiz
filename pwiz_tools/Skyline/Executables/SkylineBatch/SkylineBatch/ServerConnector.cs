@@ -182,7 +182,11 @@ namespace SkylineBatch
                     while (!connectComplete.WaitOne(100))
                     {
                         if (cancelToken.IsCancellationRequested)
+                        {
+                            // Cancellation requested; wait briefly for background task to finish cleanup to avoid leaving connection open.
+                            connectComplete.WaitOne(2000);
                             break;
+                        }
                     }
                     client.Disconnect();
 

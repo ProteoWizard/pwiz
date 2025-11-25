@@ -992,7 +992,7 @@ namespace SharedBatch
             return config;
         }
 
-        // Attempts to force path root replacement; returns original config if replacement fails.
+        // Attempts to force path root replacement; returns original config if replacement fails (never returns null).
         private IConfig ForceRootReplacement(IConfig config, string oldRoot, string newRoot)
         {
             try

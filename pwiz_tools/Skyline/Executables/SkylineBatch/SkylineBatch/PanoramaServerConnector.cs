@@ -154,7 +154,7 @@ namespace SkylineBatch
             var requestUri = new Uri(folderUri, "?method=json");
             var filesJsonAsString = webClient.DownloadStringAsync(requestUri, cancelToken);
             dynamic jsonObject = JsonConvert.DeserializeObject(filesJsonAsString);
-            
+            // TODO: Future enhancement - add structured validation (ensure expected properties) & typed models.
             if (jsonObject == null)
             {
                 throw new IOException(TextUtil.LineSeparate($"Failed to parse JSON response from {requestUri}. Response was empty or invalid.",
