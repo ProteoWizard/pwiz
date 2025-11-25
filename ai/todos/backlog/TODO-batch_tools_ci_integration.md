@@ -1,122 +1,82 @@
-# TODO: Integrate ReSharper Inspection into CI (TeamCity/Jamfile)
+# TODO: Batch Tools CI Integration (SkylineBatch + AutoQC)
 
 **Status**: Backlog  
 **Priority**: High  
-**Complexity**: Medium-High  
-**Created**: 2025-11-24
+**Complexity**: Medium  
+**Created**: 2025-11-24  
+**Last Updated**: 2025-11-24
 
-## Problem
+## Goal (Sprint Scope)
+Enable Skyline master/PR TeamCity config to reliably build SkylineBatch and AutoQC and run their test suites, with Panorama-dependent AutoQC tests skipped gracefully when credentials are absent.
 
-ReSharper code inspections for SkylineBatch and AutoQC are currently manual (invoked via `Build-*.ps1 -RunInspection`). This creates risk:
-- Developers may forget to run inspection before commit
-- Warnings can accumulate silently until someone manually checks
-- No enforcement mechanism for maintaining zero-warning baseline
+## Out of Scope (Can Defer)
+The following are valuable but not required for initial integration:
+- ReSharper InspectCode enforcement for SkylineBatch/AutoQC
+- Full AutoQC test execution against PanoramaWeb (credential provisioning)
+- Code coverage integration for batch tools
 
-Additionally, **AutoQC TestEnableInvalid** test is currently disabled due to pre-existing failure exposed during cleanup. This masks a real configuration validation issue.
+## Current Gaps
+- Primary config builds Skyline (SkylineBatch likely included, AutoQC likely excluded – not in `Skyline/Jamfile.jam`).
+- AutoQC tests requiring Panorama authentication cannot run headless without credential injection.
+- No standardized skip mechanism for auth-required tests (risk: failures or disabled tests hide issues).
+- Disabled AutoQC test: `TestEnableInvalid` (exposed latent logic issue after threading fix).
 
-## Current State
+## Sprint Priorities
+1. Confirm/ensure Jamfile (or equivalent build config) includes AutoQC build in master/PR pipeline.
+2. Implement test skip mechanism for Panorama-auth-required AutoQC tests (e.g. environment variable `AUTOQC_SKIP_PANORAMA_AUTH=1`).
+3. Re-enable and fix `TestEnableInvalid` (root cause analysis + correction) OR clearly annotate reason and create targeted follow-up if fix exceeds sprint time.
+4. Run SkylineBatch tests in same pipeline (validate they all pass in CI environment).
 
-### Inspection Execution
-- **Skyline**: Has TeamCity integration and Jamfile inspection targets (established baseline)
-- **SkylineBatch**: Manual via `Build-SkylineBatch.ps1 -RunInspection` (~2-5 min)
-- **AutoQC**: Manual via `Build-AutoQC.ps1 -RunInspection` (~2-5 min)
-
-### DotSettings Synchronization
-- **Automated** as of 2025-11-24: `Sync-DotSettings.ps1` runs on every build
-- Ensures consistent baseline across Skyline, SkylineBatch, AutoQC
-- LocalizableElement intentionally lowered (WARNING → HINT) for batch tools
-
-### Test Status
-- **SkylineBatch**: All tests passing ✅
-- **AutoQC**: TestEnableInvalid disabled (pre-existing failure, not caused by recent cleanup)
-
-## Proposed Solution
-
-### Phase 1: CI Inspection Integration (SkylineBatch, AutoQC)
-
-Add ReSharper inspection to TeamCity build configurations:
-```xml
-<!-- TeamCity build step example -->
-<runner type="jetbrains_inspectcode">
-  <parameters>
-    <param name="jetbrains_resharper_platform">x64</param>
-    <param name="jetbrains_resharper_solution">pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch.sln</param>
-    <param name="jetbrains_resharper_profile">SkylineBatch.sln.DotSettings</param>
-    <param name="jetbrains_resharper_severity">WARNING</param>
-    <param name="jetbrains_resharper_cache_home">%system.teamcity.build.tempDir%/.inspectcode-cache</param>
-  </parameters>
-</runner>
-```
-
-**Key configuration**:
-- Fail build on WARNING or higher (matches `--severity=WARNING` in Build scripts)
-- Use persistent cache directory for faster reruns
-- Run after successful compilation (inspection requires built assemblies)
-
-### Phase 2: Jamfile Integration (Optional)
-
-For local developer workflow consistency:
-```jam
-# libraries/boost-build/example-jamfile-snippet
-actions inspect-skyline-batch {
-    jb inspectcode "$(SOLUTION)" --profile="$(PROFILE)" --output="$(OUTPUT)" --severity=WARNING
+## Skip Mechanism Design (AutoQC)
+Introduce conditional logic in test setup:
+```csharp
+// Pseudocode
+if (Environment.GetEnvironmentVariable("AUTOQC_SKIP_PANORAMA_AUTH") == "1")
+{
+    if (TestRequiresPanoramaLogin())
+        Assert.Inconclusive("Skipped: requires Panorama credentials");
 }
 ```
+Guidelines:
+- Use `Assert.Inconclusive` (records skip without failure).
+- Centralize `TestRequiresPanoramaLogin()` tagging (attribute or helper).
+- Ensure non-auth tests still exercise core logic paths.
 
-**Decision point**: May be redundant given PowerShell build scripts already support `-RunInspection`.
+## Follow-Up (Post-Sprint Options)
+1. Provision secure Panorama credentials via TeamCity parameters/secret storage; run full AutoQC suite.
+2. Add SkylineBatch + AutoQC InspectCode to existing "Skyline Code Inspection" TeamCity config (fail on new WARNINGs).
+3. Extend coverage config to include SkylineBatch + AutoQC after tests fully green and stable.
 
-### Phase 3: Fix Disabled AutoQC Test
+## Implementation Checklist (Sprint)
+- [ ] Audit `Skyline/Jamfile.jam` for batch tool inclusions (SkylineBatch ✅ / AutoQC ❌?).
+- [ ] Add AutoQC build target to Jamfile or CI config.
+- [ ] Introduce environment variable driven skip logic for auth-required AutoQC tests.
+- [ ] Tag/identify Panorama-auth tests (attribute or naming convention).
+- [ ] Investigate and address `TestEnableInvalid` (fix or justify deferral).
+- [ ] Validate CI run: Skyline + SkylineBatch + AutoQC non-auth tests all pass.
+- [ ] Document skip mechanism in `README` or test guidelines.
 
-**TestEnableInvalid failure details**:
-- Pre-existing issue (not introduced by recent cleanup)
-- Exposed when dormant thread was fixed in ConfigManagerTest
-- Likely related to configuration state validation in `AutoQcConfigManager`
-
-**Resolution steps**:
-1. Debug root cause (investigate ConfigRunner validation logic)
-2. Fix underlying issue or update test expectations
-3. Re-enable test in AutoQC test suite
-4. Verify in CI
-
-## Benefits
-
-- **Automated enforcement**: Zero-warning baseline maintained without manual vigilance
-- **Early detection**: Catch regressions immediately after commit, not days/weeks later
-- **Consistent standards**: CI verifies same inspection rules locally tested via build scripts
-- **Reduced friction**: Developers get fast feedback (inspection ~2-5 min vs full Skyline ~20-25 min)
-
-## Implementation Checklist
-
-- [ ] Add TeamCity build step for SkylineBatch inspection
-- [ ] Add TeamCity build step for AutoQC inspection
-- [ ] Configure failure threshold (WARNING or higher)
-- [ ] Set up inspection cache directories for performance
-- [ ] Verify builds fail on introduced warnings (negative test)
-- [ ] Document CI configuration in team wiki/README
-- [ ] (Optional) Add Jamfile inspection targets
-- [ ] Debug and fix AutoQC TestEnableInvalid
-- [ ] Re-enable TestEnableInvalid in AutoQC test suite
+## Deferred Checklist (Post-Sprint)
+- [ ] Secure credentials for full AutoQC test execution.
+- [ ] Integrate InspectCode for SkylineBatch/AutoQC into "Skyline Code Inspection" config.
+- [ ] Consolidate coverage reporting across all three (Skyline, SkylineBatch, AutoQC).
 
 ## Risks & Mitigations
+**Credential Handling Complexity**: Avoid in initial sprint; use skip variable.  
+**Hidden Logic in Skipped Tests**: Ensure partial tests still touch core configuration paths.  
+**`TestEnableInvalid` Root Cause Larger Than Expected**: Time-box analysis; if unresolved create dedicated TODO.
 
-**Risk**: Inspection duration adds significant CI time  
-**Mitigation**: Run inspection in parallel with other build steps; cache improves repeat times to ~1-2 min
-
-**Risk**: Transient ReSharper CLI failures (tooling issues)  
-**Mitigation**: Add retry logic; monitor failure patterns; maintain fallback to manual inspection
-
-**Risk**: TeamCity/Jamfile configuration drift from local build scripts  
-**Mitigation**: Single source of truth for severity/profile via DotSettings; periodic sync verification
-
-## Related Work
-
-- **Sync-DotSettings.ps1**: Ensures CI and local inspections use identical configuration
-- **TODO-consolidate_test_utilities.md**: Shared test infrastructure improves test reliability (helps fix TestEnableInvalid)
-- **Skyline inspection baseline**: Established TeamCity pattern to replicate for batch tools
+## Success Criteria
+- CI pipeline builds Skyline, SkylineBatch, AutoQC without manual changes.
+- Non-auth AutoQC tests run and pass (no blanket disabling).
+- Auth-required tests recorded as skipped (Inconclusive) rather than failed or silently ignored.
+- Clear path documented for enabling full test + inspection + coverage in future.
 
 ## References
+- TeamCity configs screenshot (internal) – validates existing code inspection separation.
+- `AutoQcConfigManager` and test files for Panorama-dependent logic.
+- Existing `Build-*.ps1` scripts show local build/test workflow.
 
-- Skyline TeamCity configuration (model for batch tool integration)
-- ReSharper CLI docs: https://www.jetbrains.com/help/resharper/InspectCode.html
-- Build scripts: `Build-SkylineBatch.ps1`, `Build-AutoQC.ps1` (contain inspection command examples)
-- Disabled test: `AutoQC/AutoQCTest/ConfigManagerTest.cs::TestEnableInvalid`
+## Related TODOs
+- `TODO-batch_tools_consolidate_test_util.md` (shared skip helpers).
+- `TODO-panorama_json_typed_models.md` (typed models reduce fragile auth-related parsing).

@@ -1,109 +1,117 @@
-# TODO: Consolidate Test Utilities Across Skyline, SkylineBatch, AutoQC
+# TODO: Normalize and Consolidate Batch Tools Test Utilities
 
 **Status**: Backlog  
 **Priority**: Medium  
 **Complexity**: Medium  
-**Created**: 2025-11-24
+**Created**: 2025-11-24  
+**Last Updated**: 2025-11-24
 
-## Problem
+## Scope
 
-Test utility code is duplicated across Skyline, SkylineBatch, and AutoQC test projects. This creates maintenance overhead, inconsistent behavior, and missed opportunities for shared improvements.
+SkylineBatch and AutoQC test projects currently duplicate test utility code. These projects **explicitly cannot depend on Skyline** and share only:
+- **PanoramaClient** (production shared library)
+- **CommonUtil** (production shared library)
+- **SharedBatch** (production code shared by batch tools)
+- **SharedBatchTest** (test infrastructure shared by batch tools)
 
-### Current Duplication Examples
+This TODO focuses on reviewing and normalizing test utilities **within the batch tools ecosystem** using `SharedBatchTest` as the consolidation target.
 
-- **WaitForCondition**: Polling loop utility exists in multiple test suites with slight variations
-- **File system helpers**: Temporary directory creation, cleanup logic scattered across projects
-- **Threading test patterns**: Background task verification, timeout handling reimplemented multiple times
+## Current Duplication
 
-### Impact
+Both `SkylineBatchTest.TestUtils` and `AutoQCTest.TestUtils` exist with potentially overlapping functionality:
+- **SkylineBatchTest/TestUtils.cs** (~527 lines): Mock R setup, file paths, config builders, WaitForCondition, etc.
+- **AutoQCTest/TestUtils.cs** (~326 lines): Panorama credentials, file paths, Skyline bin resolution, config validation, etc.
 
-- **Maintenance burden**: Bug fixes and improvements must be replicated across codebases
-- **Inconsistent behavior**: Different timeout defaults, error messages, retry logic
-- **Discoverability**: Developers unaware shared patterns exist, leading to further duplication
+Abstract base classes also exist:
+- **SkylineBatchTest/AbstractSkylineBatchFunctionalTest** (extends `SharedBatchTest.AbstractBaseFunctionalTest`)
+- **SkylineBatchTest/AbstractSkylineBatchUnitTest** (does NOT extend `SharedBatchTest.AbstractUnitTest` – review why)
+- AutoQC likely has similar patterns (need audit)
 
-## Proposed Solution
+**SharedBatchTest already provides**:
+- `AbstractBaseFunctionalTest`, `AbstractUnitTest`
+- `AssertEx`, `Helpers`, `ExtensionTestContext`, `TestFilesDir`
+- `NormalizedValueCalculatorVerifier`
 
-### Phase 1: Identify Consolidation Candidates
+## Goals
 
-Audit test projects for:
-- Polling/wait utilities (WaitForCondition, timeout loops)
-- File system test helpers (temp directories, resource extraction)
-- UI automation patterns (if applicable to batch tools)
-- Common assertion extensions
-- Mock/stub infrastructure
+1. **Audit both TestUtils** for duplication (file paths, config builders, wait utilities, assertions).
+2. **Consolidate shared utilities** into `SharedBatchTest.TestUtils` (create if needed) or appropriate abstract base classes.
+3. **Normalize abstract base classes**:
+   - Why doesn't `AbstractSkylineBatchUnitTest` extend `SharedBatchTest.AbstractUnitTest`?
+   - Should utilities like `WaitForCondition` move from static `TestUtil` methods to abstract base class protected methods?
+   - Are functional test base classes properly aligned?
+4. **Keep project-specific utilities local**:
+   - Mock R installations (SkylineBatch-specific) stay in `SkylineBatchTest.TestUtils`.
+   - Panorama credentials/auth (AutoQC-specific) stay in `AutoQCTest.TestUtils`.
+5. **DRY and concise**: Eliminate redundancy, improve discoverability, clean up sprawl.
 
-### Phase 2: Create Shared Test Library
+## Audit Questions
 
-**Option A**: Extend existing `CommonUtil` or `Common` projects with test-specific namespace
-- Pros: Single dependency, natural evolution of shared code
-- Cons: Mixes production and test concerns
+### TestUtils.cs Files
+- **File path resolution**: Do both projects solve this the same way? Can `SharedBatchTest.ExtensionTestContext` cover both?
+- **Config builders/validation**: SkylineBatch has `GetChangedConfig`, AutoQC has config validation helpers – are these shareable or tool-specific?
+- **Wait/polling utilities**: `WaitForCondition` implementations – do they differ? Should they be in abstract base class or `SharedBatchTest.TestUtils`?
+- **Mock/test data setup**: Anything beyond R mocks and Panorama auth that's truly shared?
 
-**Option B**: New `Skyline.TestUtilities` project referenced by all test assemblies
-- Pros: Clear separation, explicit test-only scope
-- Cons: Additional project/assembly to maintain
+### Abstract Base Classes
+- **SkylineBatchTest.AbstractSkylineBatchFunctionalTest** extends `SharedBatchTest.AbstractBaseFunctionalTest` ✅
+- **SkylineBatchTest.AbstractSkylineBatchUnitTest** does NOT extend `SharedBatchTest.AbstractUnitTest` ❓ – Review inheritance rationale.
+- Does AutoQC have equivalent abstract classes? If so, are they aligned with SharedBatchTest?
+- Should common test helpers (WaitForCondition, assertions) be instance methods in abstract bases rather than static TestUtils calls?
 
-### Phase 3: Migrate Incrementally
+### SharedBatchTest Opportunities
+- Create `SharedBatchTest.TestUtils` if utilities span both batch tools (avoid forcing into abstract bases if simple static helpers suffice).
+- Enhance existing `SharedBatchTest.AssertEx` or `Helpers` if assertion/validation logic is duplicated.
+- Ensure `ExtensionTestContext` file path resolution covers both projects' needs.
 
-1. Move highest-value utilities first (WaitForCondition, temp file helpers)
-2. Update consumers project-by-project
-3. Remove duplicated implementations
-4. Document shared utilities in test coding standards
+## Implementation Strategy
 
-## Example: WaitForCondition Consolidation
+1. **Side-by-side comparison**: Print full contents of both `TestUtils.cs` files; highlight overlaps.
+2. **Abstract base class review**: Inspect inheritance hierarchy; identify why `AbstractSkylineBatchUnitTest` doesn't extend shared base.
+3. **Consolidation plan**:
+   - Shared utilities → `SharedBatchTest.TestUtils` (or appropriate abstract base).
+   - Tool-specific utilities → remain in `SkylineBatchTest.TestUtils` / `AutoQCTest.TestUtils`.
+   - Static vs. instance methods: decide case-by-case (simple helpers stay static; state-dependent move to abstract bases).
+4. **Incremental migration**: Move highest-value duplicates first (WaitForCondition, path resolution); validate tests pass after each move.
+5. **Document conventions**: Update test coding guidelines with where to add new utilities (SharedBatchTest vs. project-specific).
 
-### Current State
+## Example: WaitForCondition
+
+**Current suspected state** (verify during audit):
 ```csharp
-// SkylineBatch: ConfigManagerTest.cs
+// SkylineBatchTest – static method in TestUtils or instance in abstract class?
 void WaitForCondition(Func<bool> condition, int timeoutMs = 5000) { /* implementation A */ }
 
-// AutoQC: ConfigManagerTest.cs  
-void WaitForCondition(Func<bool> condition) { /* implementation B - no timeout param */ }
-
-// Skyline: AbstractUnitTest.cs (different signature entirely)
+// AutoQC – likely similar but possibly different signature/timeout
+void WaitForCondition(Func<bool> condition) { /* implementation B */ }
 ```
 
-### Target State
-```csharp
-// Skyline.TestUtilities / CommonUtil
-public static class TestWaitHelpers
-{
-    public static void WaitForCondition(Func<bool> condition, int timeoutMs = 5000, string description = null)
-    {
-        // Single canonical implementation with proper error messages
-    }
-}
-```
+**Target state** (decide during implementation):
+- **Option A (static utility)**: `SharedBatchTest.TestUtils.WaitForCondition(...)` called by both projects.
+- **Option B (abstract base method)**: `SharedBatchTest.AbstractUnitTest.WaitForCondition(...)` inherited by all unit tests.
+- Choose based on whether state/context from test instance is needed.
 
-## Benefits
+## Success Criteria
 
-- **Single source of truth** for common test patterns
-- **Improved maintainability**: One place to fix bugs, add features
-- **Consistency**: Same timeout defaults, error messages across all tests
-- **Faster test development**: Reusable utilities accelerate new test authoring
+- Zero functional duplication between `SkylineBatchTest.TestUtils` and `AutoQCTest.TestUtils` for truly shared utilities.
+- Abstract base class hierarchy clean and consistent (both tools extend `SharedBatchTest` bases unless justified exception).
+- `SharedBatchTest` provides all common patterns; project-specific utilities clearly scoped.
+- Test suites pass with no regressions after consolidation.
+- Clear documentation of where to add future test utilities (decision tree: SharedBatchTest vs. project-specific).
 
-## Risks & Mitigations
+## Out of Scope
 
-**Risk**: Breaking existing tests during migration  
-**Mitigation**: Migrate incrementally; run full test suites after each utility consolidation
-
-**Risk**: Over-abstraction / premature generalization  
-**Mitigation**: Consolidate only after seeing 3+ real usages; prefer simple copies over complex frameworks
+- **Skyline test utilities**: Batch tools cannot depend on Skyline; no consolidation with `Skyline.Test` infrastructure.
+- **Production code consolidation**: Focus is test utilities; `SharedBatch` production code is separate effort.
 
 ## Related Work
 
-- AutoQC dormant thread issue revealed need for shared WaitForCondition
-- SkylineBatch cleanup identified duplicated file system helpers
-- Future CI integration will benefit from consistent test infrastructure
-
-## Next Steps
-
-1. **Audit phase**: Search for `WaitForCondition`, temp file patterns across test projects
-2. **Design decision**: Choose Option A (extend CommonUtil) vs Option B (new project)
-3. **Pilot migration**: Move WaitForCondition as proof-of-concept
-4. **Document**: Update test coding guidelines with consolidated utilities
+- **TODO-batch_tools_ci_integration.md**: Consolidated test utilities improve CI skip mechanisms (e.g., shared `Assert.Inconclusive` patterns).
+- Discovered during: Skyline/work/20251124_batch_tools_warning_cleanup – WaitForCondition threading fix highlighted duplication.
 
 ## References
 
-- Related to TODO-ci_integration_resharper.md (shared test utilities enable better CI)
-- Discovered during: Skyline/work/20251124_batch_tools_warning_cleanup branch
-- Discussion context: AutoQC ConfigManagerTest.cs WaitForCondition dormant thread fix
+- `SharedBatchTest` project: AbstractBaseFunctionalTest, AbstractUnitTest, AssertEx, ExtensionTestContext, Helpers, TestFilesDir.
+- `SkylineBatchTest/TestUtils.cs` (~527 lines)
+- `AutoQCTest/TestUtils.cs` (~326 lines)
+- `SkylineBatchTest/AbstractSkylineBatchFunctionalTest.cs`, `AbstractSkylineBatchUnitTest.cs`
