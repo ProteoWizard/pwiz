@@ -183,7 +183,7 @@ function Sync-FromMaster {
 
 function Sync-ToMaster {
     Write-Status "`n═══════════════════════════════════════════════════════"
-    Write-Status "  Sync ai-context TO master (batch documentation update)"
+    Write-Status "  Prepare PR branch: ai-context → master"
     Write-Status "═══════════════════════════════════════════════════════`n"
     
     # Fetch latest
@@ -198,70 +198,63 @@ function Sync-ToMaster {
         return
     }
     
+    # Create PR branch name
+    $dateTag = (Get-Date).ToString('yyyyMMdd')
+    $prBranch = "$dateTag-ai-context-update"
+    
     if ($DryRun) {
-        Write-Warning-Custom "`n[DRY RUN] Would merge ai-context into master (no changes made)"
-        Write-Host "`nTo execute merge, create PR or run:" -ForegroundColor Yellow
+        Write-Warning-Custom "`n[DRY RUN] Would create PR branch '$prBranch' from master, then merge ai-context into it (no changes made to master)"
+        Write-Host "`nTo execute, run:" -ForegroundColor Yellow
         Write-Host "  .\\ai\\scripts\\sync-ai-context.ps1 -Direction ToMaster -Push" -ForegroundColor Yellow
         return
     }
     
-    # Warn about direct master merge
-    Write-Warning-Custom "`nYou are about to merge ai-context → master directly."
-    Write-Host "Consider creating a PR instead for team visibility:" -ForegroundColor Yellow
-    Write-Host "  1. Push ai-context: git push origin ai-context" -ForegroundColor Yellow
-    Write-Host "  2. Open PR: ai-context → master on GitHub" -ForegroundColor Yellow
-    Write-Host "  3. Merge via GitHub (requires approval if branch protection enabled)`n" -ForegroundColor Yellow
+    Write-Status "Creating PR branch: $prBranch"
     
-    $response = Read-Host "Continue with direct merge? (y/N)"
-    if ($response -ne 'y' -and $response -ne 'Y') {
-        Write-Warning-Custom "Merge cancelled"
-        return
-    }
-    
-    # Ensure on master branch
-    $currentBranch = Get-CurrentBranch
-    if ($currentBranch -ne 'master') {
-        Write-Status "`nSwitching to master branch..."
-        git checkout master
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    }
-    
-    # Pull latest master
-    Write-Status "Pulling latest master..."
+    # Ensure starting from latest master
+    Write-Status "Switching to master and pulling latest..."
+    git checkout master
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     git pull origin master
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     
-    # Merge ai-context
-    Write-Status "`nMerging ai-context into master..."
+    # Create branch off master
+    git checkout -b $prBranch
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    
+    # Merge ai-context into PR branch
+    Write-Status "Merging origin/ai-context into $prBranch..."
     git merge origin/ai-context --no-ff -m "Merge ai-context: batch update ai/ documentation"
     if ($LASTEXITCODE -ne 0) {
         Write-Error-Custom "Merge conflict detected. Resolve conflicts manually, then run:"
         Write-Host "  git merge --continue" -ForegroundColor Yellow
         exit 1
     }
+    Write-Success "Merged ai-context into $prBranch"
     
-    Write-Success "Merged ai-context into master"
-    
-    # Push
+    # Push PR branch
     if ($Push) {
-        Write-Status "`nPushing master..."
-        git push origin master
+        Write-Status "`nPushing PR branch $prBranch..."
+        git push -u origin $prBranch
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        Write-Success "Pushed master to origin"
+        Write-Success "Pushed $prBranch to origin"
         
-        # Sync ai-context back
-        Write-Status "`nSyncing ai-context with updated master..."
+        Write-Host "`nOpen a PR: $prBranch → master on GitHub" -ForegroundColor Yellow
+        
+        # Optional: switch back to ai-context and sync
+        Write-Status "`nSyncing ai-context with latest master (optional)..."
         git checkout ai-context
-        git merge master --no-ff -m "Merge master back into ai-context after batch merge"
-        git push origin ai-context
-        Write-Success "ai-context synchronized with master"
+        git merge origin/master --no-ff -m "Merge master back into ai-context after preparing PR branch"
+        if ($LASTEXITCODE -eq 0) {
+            git push origin ai-context
+            Write-Success "ai-context synchronized with master"
+        } else {
+            Write-Warning-Custom "Skipped ai-context sync due to merge issues; sync manually if desired."
+        }
     } else {
-        Write-Warning-Custom "`nMerge complete locally. Push with:"
-        Write-Host "  git push origin master" -ForegroundColor Yellow
-        Write-Host "`nThen sync ai-context:" -ForegroundColor Yellow
-        Write-Host "  git checkout ai-context" -ForegroundColor Yellow
-        Write-Host "  git merge master" -ForegroundColor Yellow
-        Write-Host "  git push origin ai-context" -ForegroundColor Yellow
+        Write-Warning-Custom "`nPR branch created locally. Push and open PR with:"
+        Write-Host "  git push -u origin $prBranch" -ForegroundColor Yellow
+        Write-Host "  (Then open PR: $prBranch → master on GitHub)" -ForegroundColor Yellow
     }
 }
 
