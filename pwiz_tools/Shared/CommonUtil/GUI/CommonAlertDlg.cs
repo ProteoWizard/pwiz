@@ -57,7 +57,7 @@ namespace pwiz.Common.GUI
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
             Text = CommonApplicationSettings.ProgramName;
             toolStrip1.Renderer = new NoBorderSystemRenderer();
-            messageScrollPanel.Resize += (sender, args) => UpdateLabelMessageMaximumSize();
+            messageScrollPanel.Resize += (sender, args) => UpdateLabelMessageSize();
         }
 
         public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)
@@ -80,7 +80,7 @@ namespace pwiz.Common.GUI
             }
         }
 
-        private void UpdateLabelMessageMaximumSize()
+        private void UpdateLabelMessageSize()
         {
             labelMessage.MaximumSize =
                 new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_PADDING), 0);
@@ -88,7 +88,7 @@ namespace pwiz.Common.GUI
 
         private void UpdateFormHeight()
         {
-            UpdateLabelMessageMaximumSize();
+            UpdateLabelMessageSize();
             int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
             formGrowth = Math.Max(formGrowth, 0);
             formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
@@ -384,7 +384,6 @@ namespace pwiz.Common.GUI
         }
 
         private const int MAX_MESSAGE_LENGTH = 50000;
-
         /// <summary>
         /// Labels have difficulty displaying text longer than 50,000 characters, and SetWindowText
         /// replaces strings longer than 520,000 characters with the empty string.
