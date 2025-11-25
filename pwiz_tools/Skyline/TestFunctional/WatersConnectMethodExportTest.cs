@@ -139,7 +139,6 @@ namespace pwiz.SkylineTestFunctional
                 methodFileDlg.SourcePathTextBox.Text = @"TestMethod";
                 methodFileDlg.KeyPressHandler(Keys.Enter);
             });
-            PauseTest();
             RunUI(() =>
             {
                 var uploadResultDlg = TryWaitForOpenForm<MessageDlg>(2000);
