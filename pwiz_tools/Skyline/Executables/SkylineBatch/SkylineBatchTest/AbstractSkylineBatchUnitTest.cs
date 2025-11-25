@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
@@ -66,9 +65,9 @@ namespace SkylineBatchTest
         /// <summary>
         /// Creates a test ConfigManager with a logger in TestResults and three test configs.
         /// </summary>
-        protected SkylineBatch.SkylineBatchConfigManager GetTestConfigManager()
+        protected SkylineBatchConfigManager GetTestConfigManager()
         {
-            var testConfigManager = new SkylineBatch.SkylineBatchConfigManager(GetTestLogger());
+            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
             testConfigManager.UserAddConfig(TestUtils.GetTestConfig("one"));
             testConfigManager.UserAddConfig(TestUtils.GetTestConfig("two"));
             testConfigManager.UserAddConfig(TestUtils.GetTestConfig("three"));
