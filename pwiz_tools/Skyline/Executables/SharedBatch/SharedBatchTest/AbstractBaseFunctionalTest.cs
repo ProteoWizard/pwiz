@@ -507,8 +507,9 @@ namespace SharedBatchTest
         // -------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Tracks which zip files were downloaded this run, and which might possibly be stale
+        /// Tracks which zip files were downloaded this run, and which might be stale (for debugging purposes).
         /// </summary>
+        // ReSharper disable once CollectionNeverQueried.Global
         public Dictionary<string, bool> DictZipFileIsKnownCurrent { get; private set; }
         public string TestFilesZip
         {

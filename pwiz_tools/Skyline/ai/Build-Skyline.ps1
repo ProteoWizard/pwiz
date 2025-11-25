@@ -88,6 +88,15 @@ $initialLocation = Get-Location
 try {
     Set-Location $skylineRoot
 
+    # Synchronize ReSharper DotSettings (canonical baseline Skyline -> batch tools)
+    $syncScript = Join-Path $scriptRoot 'scripts/Sync-DotSettings.ps1'
+    if (Test-Path $syncScript) {
+        Write-Host 'Synchronizing DotSettings...' -ForegroundColor Cyan
+        & $syncScript
+    } else {
+        Write-Host 'Sync-DotSettings.ps1 not found; skipping settings sync.' -ForegroundColor Yellow
+    }
+
 # Ensure UTF-8 output for status symbols regardless of terminal settings
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 

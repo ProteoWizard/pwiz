@@ -29,6 +29,30 @@ ai/todos/
 3. **Completed** - Merged to master (`ai/todos/completed/`)
 4. **Archive** - Cleanup after 3 months (`ai/todos/archive/`)
 
+### Header Standard (All TODO Files)
+
+Each TODO (active or completed) MUST begin with the file name as a level-1 heading followed by a standardized Branch Information block:
+
+```
+# TODO-YYYYMMDD_feature_name.md
+
+## Branch Information
+- **Branch**: `Skyline/work/YYYYMMDD_feature_name`
+- **Created**: YYYY-MM-DD
+- **Completed**: YYYY-MM-DD | (pending)
+- **Status**: 🚧 In Progress | ✅ Completed
+- **PR**: [#NNNN](https://github.com/ProteoWizard/pwiz/pull/NNNN) | (pending)
+- **Objective**: Single concise sentence describing the end goal
+```
+
+Rules:
+- Before moving a TODO from `active/` to `completed/`, the **PR** field must be populated with the number (linked form preferred). If absent, automated tools / LLM must prompt the user: "Provide PR number before completion move.".
+- Use backticks around the branch name.
+- Keep the Objective to one line; expanded background goes in later sections.
+- Do not retroactively edit completed TODOs except to apply this header standard at merge time.
+- Status should reflect current state ("🚧 In Progress" until merged; then change to "✅ Completed").
+
+
 ## Key Workflows
 
 ### Workflow 1: Start Work from Backlog TODO
