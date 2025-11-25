@@ -81,8 +81,37 @@ param(
     [string]$Verbosity = "minimal"
 )
 
+$scriptRoot = Split-Path -Parent $PSCommandPath
+$skylineRoot = Split-Path -Parent $scriptRoot
+$initialLocation = Get-Location
+
+try {
+    Set-Location $skylineRoot
+
 # Ensure UTF-8 output for status symbols regardless of terminal settings
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Fix line endings in modified files (CRLF is project standard, but LLM tools may introduce LF-only)
+# This is fast because it only processes files in 'git status' (modified/added)
+# Run from repo root so git status works correctly
+$repoRoot = (git rev-parse --show-toplevel 2>$null)
+if ($repoRoot) {
+    $fixCrlfScript = Join-Path $repoRoot "ai\scripts\fix-crlf.ps1"
+    if (Test-Path $fixCrlfScript) {
+        Write-Host "Checking line endings in modified files..." -ForegroundColor Cyan
+        Push-Location $repoRoot
+        try {
+            & $fixCrlfScript
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "`n⚠️  Line ending fix failed - some files may still have LF-only line endings" -ForegroundColor Yellow
+                Write-Host "This may cause large Git diffs. Consider running: .\ai\scripts\fix-crlf.ps1`n" -ForegroundColor Gray
+            }
+        }
+        finally {
+            Pop-Location
+        }
+    }
+}
 
 # Find MSBuild using vswhere
 $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -202,6 +231,31 @@ if ($RunTests -and $Target -ne "Clean") {
 }
 
 # Helper function to get modified projects from git
+function Get-ProjectNameFromPath {
+    param(
+        [string]$FullPath,
+        [string]$RepoRoot
+    )
+
+    $currentDir = Split-Path $FullPath -Parent
+    while ($currentDir -and $currentDir.StartsWith($RepoRoot)) {
+        $folderName = Split-Path $currentDir -Leaf
+        if (-not [string]::IsNullOrWhiteSpace($folderName)) {
+            $candidateCsproj = Join-Path $currentDir "$folderName.csproj"
+            if (Test-Path $candidateCsproj) {
+                return $folderName
+            }
+        }
+        $parentDir = Split-Path $currentDir -Parent
+        if ($parentDir -eq $currentDir) {
+            break
+        }
+        $currentDir = $parentDir
+    }
+
+    return $null
+}
+
 function Get-ModifiedProjects {
     try {
         # Get modified files from git (excluding deleted files)
@@ -215,6 +269,13 @@ function Get-ModifiedProjects {
             Write-Host "No modified files detected in git working directory" -ForegroundColor Yellow
             return @()
         }
+
+        $repoRoot = (git rev-parse --show-toplevel 2>$null)
+        if (-not $repoRoot) {
+            Write-Warning "Unable to determine repository root - inspecting all projects"
+            return $null
+        }
+        $repoRoot = [System.IO.Path]::GetFullPath($repoRoot.Trim())
         
         # Directories to skip (documentation, build artifacts)
         $skipDirs = @('ai', 'bin', 'obj', 'Executables')
@@ -227,37 +288,34 @@ function Get-ModifiedProjects {
                 continue
             }
             
-            # Skip documentation and build artifact directories
-            if ($file -match '^pwiz_tools/Skyline/(ai|bin|obj)/') {
+            # Normalize to forward slashes and skip obvious non-code directories
+            $normalizedPath = $file -replace '\\', '/'
+            if ($normalizedPath -match '^pwiz_tools/Skyline/(ai|bin|obj)/') {
                 continue
             }
             
-            # Map to actual project names from Skyline.sln
-            if ($file -match '^pwiz_tools/Skyline/([^/]+)/') {
-                $dirName = $matches[1]
-                # Skip certain directories that aren't projects
-                if ($skipDirs -contains $dirName) {
-                    continue
-                }
+            $fullPath = if ([System.IO.Path]::IsPathRooted($file)) {
+                [System.IO.Path]::GetFullPath($file)
+            }
+            else {
+                [System.IO.Path]::GetFullPath((Join-Path $repoRoot $file))
+            }
 
-                # Prefer project named after directory if corresponding .csproj exists
-                $candidateCsproj = Join-Path "pwiz_tools/Skyline/$dirName" "$dirName.csproj"
-                if (Test-Path $candidateCsproj) {
-                    $projects[$dirName] = $true
-                }
-                else {
-                    # Fallback to main Skyline project (e.g. EditUI, Controls subfolders)
-                    $projects["Skyline"] = $true
+            if (-not (Test-Path $fullPath)) {
+                continue
+            }
+
+            $projectName = Get-ProjectNameFromPath -FullPath $fullPath -RepoRoot $repoRoot
+
+            if (-not $projectName) {
+                # As a fallback, try to map files under Skyline root to the Skyline project
+                if ($normalizedPath -match '^pwiz_tools/Skyline/' -or $normalizedPath -notmatch '^pwiz_tools/') {
+                    $projectName = "Skyline"
                 }
             }
-            elseif ($file -match '^pwiz_tools/Skyline/[^/]+\.(cs|csproj|resx)') {
-                # Root Skyline files (EditUI, Controls, Model, etc.) map to main Skyline project
-                $projects["Skyline"] = $true
-            }
-            elseif ($file -match '^pwiz_tools/Shared/([^/]+)/') {
-                # Shared projects (CommonUtil, ProteomeDb, etc.)
-                $sharedProject = $matches[1]
-                $projects[$sharedProject] = $true
+
+            if ($projectName -and ($skipDirs -notcontains $projectName)) {
+                $projects[$projectName] = $true
             }
         }
         
@@ -466,6 +524,10 @@ if (($RunInspection -or $QuickInspection) -and $Target -ne "Clean") {
     }
 }
 
-Write-Host "`n✅ All operations completed successfully" -ForegroundColor Green
-exit 0
+    Write-Host "`n✅ All operations completed successfully" -ForegroundColor Green
+    exit 0
+}
+finally {
+    Set-Location $initialLocation
+}
 

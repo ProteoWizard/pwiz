@@ -117,7 +117,7 @@ namespace AutoQCTest
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"),
                 TextUtil.LineSeparate("The server https://fake_panoramaweb.org/ does not exist.", 
                     "Error: Failed to resolve host fake_panoramaweb.org. Please check your DNS settings or VPN/proxy.",
-                    "URL: https://fake_panoramaweb.org/"));
+                    "URL: https://fake_panoramaweb.org/admin-healthCheck.view"));
             TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),
                 "The Panorama server Url cannot be empty. Please specify a Panorama server Url.");
             TestInvalidPanoramaSettings(

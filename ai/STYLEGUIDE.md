@@ -46,6 +46,22 @@ if (condition)
 5. public methods/properties
 6. private helper methods (placed after methods that use them)
 
+### Using Directive Ordering
+**System and Windows namespaces come first**, then external libraries, then project namespaces (not strictly alphabetical):
+```csharp
+// ✅ GOOD - System namespaces first, then external libraries, then project namespaces
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Model;
+```
+
+**ReSharper setting**: "Place 'System.*' and 'Windows.*' namespaces first when sorting 'using' directives" is enabled.
+
 ## Resource Strings (Localization)
 
 **CRITICAL**: ALL user-facing text must be in .resx files.
@@ -121,6 +137,12 @@ All source files should include:
 ```
 
 **Always include AI assistance line** when code is created/modified with AI tools.
+
+## Comments and XML Documentation
+
+**CRITICAL**: Comments should start with a capital letter (especially imperative sentences). True sentences should end with a period. Use `<see cref="ClassName">` for class references in XML docs.
+
+See [ai/docs/style-guide.md](docs/style-guide.md) for detailed guidelines and examples.
 
 ## User Interface Guidelines
 

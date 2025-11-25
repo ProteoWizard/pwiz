@@ -42,6 +42,51 @@ Additional guidance:
 - Place private helpers after the public methods that use them; keep helpers close to their primary call sites.
 - Avoid "old C" style where helpers appear at the top and the main logic at the bottom.
 
+## Using directive ordering
+
+**System and Windows namespaces come first** (not strictly alphabetical). This matches the ReSharper setting: "Place 'System.*' and 'Windows.*' namespaces first when sorting 'using' directives".
+
+### Correct ordering
+```csharp
+// ✅ GOOD - System namespaces first, then external libraries, then project namespaces
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Model;
+using Formatting = Newtonsoft.Json.Formatting;  // Aliases at the end
+```
+
+### Incorrect ordering
+```csharp
+// ❌ BAD - External libraries before System namespaces
+using Microsoft.VisualStudio.TestTools.UnitTesting;  // Should come after System
+using Newtonsoft.Json;
+using System;  // System should come first
+using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
+```
+
+```csharp
+// ❌ BAD - Strictly alphabetical (doesn't match ReSharper setting)
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using pwiz.Common.SystemUtil;  // Project namespace before System
+using pwiz.Skyline;
+using System;  // System namespace should come first
+using System.Collections.Generic;
+```
+
+**Why this matters:**
+- ReSharper is configured to place `System.*` and `Windows.*` namespaces first
+- AI tools may sort alphabetically by default, which conflicts with this convention
+- Consistent ordering makes code reviews easier and matches developer expectations
+
 ## General guidelines
 - Match surrounding file style (indentation, spacing, line breaks).
 - Prefer focused edits; do not reformat unrelated code.
@@ -398,6 +443,86 @@ using (var fileSaver = new FileSaver(destinationPath))
 }
 ```
 
+## Common utility classes
+
+**Before implementing custom text manipulation functions, check if `TextUtil` already provides what you need.**
+
+`TextUtil` (from `pwiz.Skyline.Util.Extensions`) is a commonly used utility class for text operations throughout the Skyline codebase. Using existing utilities follows DRY principles and leverages well-tested code.
+
+### TextUtil for text manipulation
+
+#### Reading lines from strings
+```csharp
+// ❌ BAD - Custom implementation (duplicates existing functionality)
+private static List<string> SplitIntoLines(string text)
+{
+    var lines = new List<string>();
+    // ... 30+ lines of custom parsing logic
+    return lines;
+}
+
+// ✅ GOOD - Use existing TextUtil extension method
+using pwiz.Skyline.Util.Extensions;
+
+var lines = text.ReadLines().ToList();
+```
+
+`TextUtil.ReadLines()` is an extension method that:
+- Handles both `\r\n` (Windows) and `\n` (Unix) line endings automatically
+- Uses `StringReader.ReadLine()` internally (well-tested .NET API)
+- Returns `IEnumerable<string>` (can be converted to `List` with `.ToList()`)
+
+#### Joining lines and values
+```csharp
+// ✅ Join lines with newline separators
+var multiLineText = TextUtil.LineSeparate("line1", "line2", "line3");
+// Result: "line1\nline2\nline3"
+
+// ✅ Join values with space separators
+var spacedValues = TextUtil.SpaceSeparate("value1", "value2", "value3");
+// Result: "value1 value2 value3"
+```
+
+#### CSV/TSV/DSV (Delimiter-Separated Values) operations
+`TextUtil` provides locale-sensitive CSV/TSV handling:
+
+```csharp
+// ✅ Get locale-appropriate CSV separator (comma or semicolon)
+char separator = TextUtil.CsvSeparator;  // Uses current culture
+char separator = TextUtil.GetCsvSeparator(cultureInfo);  // For specific culture
+
+// ✅ Safely write DSV fields (handles escaping, quotes, newlines)
+writer.WriteDsvField(text, separator);
+
+// ✅ Convert string to safe DSV field format
+string safeField = text.ToDsvField(separator);
+```
+
+**Key features:**
+- **Locale-aware**: Automatically uses semicolon (`;`) in locales where comma is the decimal separator (e.g., German, French)
+- **Proper escaping**: Handles quotes, separators, and newlines in field values
+- **File dialog filters**: `TextUtil.FILTER_CSV` and `TextUtil.FILTER_TSV` for file dialogs
+
+#### Other TextUtil utilities
+- **Constants**: `TextUtil.HYPHEN`, `TextUtil.SPACE`, `TextUtil.EXT_CSV`, `TextUtil.EXT_TSV`, etc.
+- **Parsing helpers**: DSV field parsing, CSV/TSV reading
+- **String manipulation**: Various text transformation utilities
+
+**When to use TextUtil:**
+- ✅ Reading lines from strings (instead of custom `SplitIntoLines()`)
+- ✅ Joining lines or values with separators
+- ✅ Working with CSV/TSV files (locale-aware, proper escaping)
+- ✅ Any text manipulation that might already be implemented
+
+**When NOT to use TextUtil:**
+- ❌ Simple string operations that don't need special handling (use standard .NET `string` methods)
+- ❌ Operations specific to a single use case with no reuse potential
+
+**Finding TextUtil:**
+- **Namespace**: `pwiz.Skyline.Util.Extensions`
+- **File**: `pwiz_tools/Skyline/Util/Extensions/Text.cs`
+- **Add using**: `using pwiz.Skyline.Util.Extensions;`
+
 ## Naming conventions (mirrors ReSharper rules)
 - Private instance fields: prefix with `_` and use `camelCase` (e.g., `_filePath`).
 - Private static fields: prefix with `_` and use `camelCase`.
@@ -509,6 +634,88 @@ All source files should include the standard header with copyright and license i
 - Existing files: Keep existing `u.washington.edu` format (no need to change)
 - Both formats are acceptable
 
+
+## Comments and XML documentation
+
+### Comment style
+Comments should generally start with a capital letter, especially if they are essentially imperative sentences. True sentences should end with a period.
+
+```csharp
+// ❌ BAD - lowercase start, no period
+// avoid duplicate consecutive entries
+// split on first colon only
+// a hit - now use the replacement expression
+
+// ✅ GOOD - capital start, period for sentences
+// Avoid duplicate consecutive entries.
+// Split on first colon only.
+// A hit - now use the replacement expression to get the ProteinMetadata parts.
+```
+
+**Guidelines:**
+- **Imperative comments** (instructions/commands): Start with capital letter, end with period
+  - `// Ensure at least one response if connection is good.`
+  - `// Split on first colon only.`
+- **Descriptive comments** (explanations): Start with capital letter, end with period if a complete sentence
+  - `// This will be the input GI number, or GI equivalent of input.`
+  - `// Useful for disambiguation of multiple responses.`
+- **Short phrases**: Capital letter, period optional for very short phrases
+  - `// A better read on name.` or `// A better read on name`
+
+### XML documentation comments
+When referencing class names in XML documentation, use `<see cref="ClassName">` for proper IntelliSense linking.
+
+```csharp
+// ❌ BAD - plain text class name
+/// <summary>
+/// Like the actual WebEnabledFastaImporter.WebSearchProvider,
+/// but just notes search terms instead of actually going to the web
+/// </summary>
+
+// ✅ GOOD - use cref for class references
+/// <summary>
+/// Like the actual <see cref="WebEnabledFastaImporter.WebSearchProvider"/>,
+/// but just notes search terms instead of actually going to the web.
+/// </summary>
+```
+
+**Benefits:**
+- IntelliSense provides clickable links to the referenced class
+- Refactoring tools can update references automatically
+- Better IDE navigation and documentation generation
+
+### Return-only documentation
+Often the most important part of a function to document is what it returns. It's valid to put just that in the `<summary>` tag without `<param>` or `<returns>` tags.
+
+```csharp
+// ✅ GOOD - return-only summary, no empty tags
+/// <summary>
+/// Returns a number between 0.0 and 1.0 indicating how bright the color is.
+/// </summary>
+public double GetBrightness(Color color) { ... }
+
+// ❌ BAD - empty <param> and <returns> tags add no value
+/// <summary>
+/// Returns a number between 0.0 and 1.0 indicating how bright the color is.
+/// </summary>
+/// <param name="color"></param>
+/// <returns></returns>
+public double GetBrightness(Color color) { ... }
+
+// ❌ BAD - <returns> tag just repeats the summary
+/// <summary>
+/// Returns a number between 0.0 and 1.0 indicating how bright the color is.
+/// </summary>
+/// <returns>A number between 0.0 and 1.0 indicating how bright the color is.</returns>
+public double GetBrightness(Color color) { ... }
+```
+
+**Guidelines:**
+- ✅ **Return-only summary**: If the summary explains what the function returns, omit `<param>` and `<returns>` tags
+- ✅ **Parameter documentation**: Only include `<param>` tags when they add value beyond what's clear from the parameter name
+- ❌ **Don't include empty tags**: Empty `<param>` or `<returns>` tags add no value and should be removed
+- ❌ **Don't repeat information**: If `<returns>` just repeats the summary, omit it
+- **ReSharper behavior**: ReSharper only warns when you have `<param>` tags but don't document all parameters. It's fine to omit `<param>` tags entirely if they don't add value.
 
 ## Testing guidelines
 

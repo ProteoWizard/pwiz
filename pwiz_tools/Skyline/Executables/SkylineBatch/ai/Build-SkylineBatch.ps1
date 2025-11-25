@@ -12,6 +12,9 @@
 .PARAMETER RunTests
     Run SkylineBatchTest.dll tests after building
 
+.PARAMETER TestName
+    Specific test method name to run (optional, runs all tests if not specified)
+
 .PARAMETER RunInspection
     Run ReSharper code inspection after building
 
@@ -25,6 +28,10 @@
 .EXAMPLE
     .\Build-SkylineBatch.ps1 -RunTests
     Build and run all tests
+
+.EXAMPLE
+    .\Build-SkylineBatch.ps1 -RunTests -TestName DataDownloadTest
+    Build and run only the DataDownloadTest
 
 .EXAMPLE
     .\Build-SkylineBatch.ps1 -RunInspection -RunTests
@@ -44,6 +51,9 @@ param(
     [switch]$RunTests = $false,
     
     [Parameter(Mandatory=$false)]
+    [string]$TestName = $null,
+    
+    [Parameter(Mandatory=$false)]
     [switch]$RunInspection = $false,
     
     [Parameter(Mandatory=$false)]
@@ -53,6 +63,14 @@ param(
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Auto-change to script's parent directory (SkylineBatch root) so script works from any PWD
+$scriptRoot = Split-Path -Parent $PSCommandPath
+$skylineBatchRoot = Split-Path -Parent $scriptRoot
+$initialLocation = Get-Location
+
+try {
+    Set-Location $skylineBatchRoot
 
 $Platform = "Any CPU"
 
@@ -223,7 +241,12 @@ if ($RunTests) {
     Write-Host ""
     
     $testStart = Get-Date
-    & $vstestPath $testDll /Logger:console
+    if ($TestName) {
+        Write-Host "Running specific test: $TestName" -ForegroundColor Cyan
+        & $vstestPath $testDll /Logger:console /Tests:$TestName
+    } else {
+        & $vstestPath $testDll /Logger:console
+    }
     $testExitCode = $LASTEXITCODE
     $testDuration = (Get-Date) - $testStart
     
@@ -238,4 +261,6 @@ if ($RunTests) {
 
 Write-Host ""
 Write-Host "✅ All operations completed successfully" -ForegroundColor Green
-
+} finally {
+    Set-Location $initialLocation
+}

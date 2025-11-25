@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net; // HttpStatusCode
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
@@ -950,72 +950,74 @@ namespace pwiz.Skyline
                     {
                         // Set initial message with indeterminate progress (marquee/busy-wait) before downloading folder JSON
                         progressMonitor.UpdateProgress(new ProgressStatus(PanoramaClient.Properties.Resources.PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders).ChangePercentComplete(-1));
-                        dlg.InitializeDialog(progressMonitor);
+                        // Fetch data on background thread (control already created on UI thread)
+                        dlg.LoadServerData(progressMonitor);
                     });
                     
                     if (status.IsCanceled)
                         return; // User canceled - don't show dialog
                 }
 
-                if (dlg.ShowDialog(this) != DialogResult.Cancel)
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
+                var folderPath = string.Empty;
+                if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
                 {
-                    Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
-                    var folderPath = string.Empty;
-                    if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
-                    {
-                        folderPath = Settings.Default.PanoramaLocalSavePath;
-                    }
-                    var curServer = dlg.FolderBrowser.GetActiveServer();
+                    folderPath = Settings.Default.PanoramaLocalSavePath;
+                }
+                var curServer = dlg.FolderBrowser.GetActiveServer();
 
-                    var downloadPath = string.Empty;
-                    var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
-                    if (downloadFilePath == null)
+                var downloadPath = string.Empty;
+                var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
+                if (downloadFilePath == null)
+                {
+                    using (var saveAsDlg = new SaveFileDialog())
                     {
-                        using (var saveAsDlg = new SaveFileDialog())
+                        saveAsDlg.FileName = dlg.FileName;
+                        saveAsDlg.DefaultExt = extension;
+                        saveAsDlg.SupportMultiDottedExtensions = true;
+                        saveAsDlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP);
+                        saveAsDlg.InitialDirectory = folderPath;
+                        saveAsDlg.OverwritePrompt = true;
+                        if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
                         {
-                            saveAsDlg.FileName = dlg.FileName;
-                            saveAsDlg.DefaultExt = extension;
-                            saveAsDlg.SupportMultiDottedExtensions = true;
-                            saveAsDlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP);
-                            saveAsDlg.InitialDirectory = folderPath;
-                            saveAsDlg.OverwritePrompt = true;
-                            if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
-                            {
-                                return;
-                            }
-
-                            Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
-                            var folder = Path.GetDirectoryName(saveAsDlg.FileName);
-                            if (!string.IsNullOrEmpty(folder))
-                            {
-                                downloadPath = saveAsDlg.FileName;
-                            }
+                            return;
                         }
-                    }
-                    else
-                    {
-                        downloadPath = downloadFilePath;
-                    }
 
-                    if (!string.IsNullOrEmpty(downloadPath))
-                    {
-                        var size = dlg.FileSize;
-                        var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
-                        if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
+                        Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
+                        var folder = Path.GetDirectoryName(saveAsDlg.FileName);
+                        if (!string.IsNullOrEmpty(folder))
                         {
-                            OpenSharedFile(downloadPath);
-                        }
-                        else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
-                        {
-                            OpenFile(downloadPath);
+                            downloadPath = saveAsDlg.FileName;
                         }
                     }
                 }
+                else
+                {
+                    downloadPath = downloadFilePath;
+                }
+
+                if (!string.IsNullOrEmpty(downloadPath))
+                {
+                    var size = dlg.FileSize;
+                    var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
+                    if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
+                    {
+                        OpenSharedFile(downloadPath);
+                    }
+                    else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
+                    {
+                        OpenFile(downloadPath);
+                    }
+                }
+
                 Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
             }
             catch (Exception e)
             {
-                MessageDlg.ShowException(this, e);
+                ExceptionUtil.DisplayOrReportException(this, e);
             }
         }
 
@@ -1048,7 +1050,7 @@ namespace pwiz.Skyline
                     throw;
                 
                 // Check for 404 Not Found - show user-friendly message
-                var statusCode = GetHttpStatusCode(e);
+                var statusCode = NetworkRequestException.GetHttpStatusCode(e);
                 if (statusCode == HttpStatusCode.NotFound)
                 {
                     MessageDlg.ShowWithException(this,
@@ -1061,24 +1063,6 @@ namespace pwiz.Skyline
                 }
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Extracts HTTP status code from exception (NetworkRequestException or legacy WebException).
-        /// Walks inner exception chain to find the status code.
-        /// </summary>
-        private static HttpStatusCode? GetHttpStatusCode(Exception e)
-        {
-            // Check for NetworkRequestException with structured status code
-            // HttpClientWithProgress throws this for HTTP errors
-            if (e is NetworkRequestException netEx)
-                return netEx.StatusCode;
-
-            // Check inner exception chain recursively
-            if (e.InnerException != null)
-                return GetHttpStatusCode(e.InnerException);
-
-            return null;
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)
@@ -3817,7 +3801,7 @@ namespace pwiz.Skyline
         {
             JToken folders = null;
             var folderPath = panoramaSavedUri.AbsolutePath;
-            var folderPathNoCtx = PanoramaServer.getFolderPath(server, panoramaSavedUri); // get folder path without the context path
+            var folderPathNoCtx = PanoramaServer.GetFolderPath(server, panoramaSavedUri); // get folder path without the context path
             var folderToQuery = folderPathNoCtx.TrimEnd('/').TrimStart('/');
             
             // Get folder information with progress dialog (can be slow, needs cancellation)

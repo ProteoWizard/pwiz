@@ -2526,7 +2526,7 @@ namespace pwiz.SkylineTestUtil
 
             DoTest();
 
-            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
+            CheckRecordMode();
 
             if (null != SkylineWindow)
             {

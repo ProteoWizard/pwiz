@@ -8,46 +8,92 @@ Detailed reference for building, testing, and analyzing Skyline from LLM-assiste
 
 - Visual Studio 2022 Community/Professional installed
 - Initial full build completed with `bs.bat` (Boost.Build + native dependencies)
-- Working directory: `C:\proj\pwiz\pwiz_tools\Skyline`
+
+## ⚠️ CRITICAL: Never Call MSBuild Directly
+
+**All builds MUST use the `Build-*.ps1` scripts**, never call `msbuild.exe` directly:
+
+- ✅ `.\pwiz_tools\Skyline\ai\Build-Skyline.ps1`
+- ✅ `.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1`
+- ✅ `.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1`
+- ❌ `msbuild.exe Skyline.sln ...` (NEVER DO THIS)
+
+**Why**: Build scripts handle working directory changes, find MSBuild automatically, fix line endings, and provide consistent output formatting.
+
+**Scripts work from any working directory** - they automatically change to the correct project directory, so you don't need to `Set-Location` first.
 
 ## Quick Start (PowerShell Helper Script)
 
-**Easiest method for LLM-assisted IDEs:**
+### Main Skyline Application
 
 ```powershell
 # Build entire solution (DEFAULT - recommended, matches Visual Studio Ctrl+Shift+B)
-.\ai\Build-Skyline.ps1
+# Works from ANY working directory - no need to cd first
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1
 
 # Pre-commit validation (recommended before committing)
-.\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -RunInspection -RunTests -TestName CodeInspection
 
 # Build, run ReSharper inspection
-.\ai\Build-Skyline.ps1 -RunInspection
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -RunInspection
 
 # Build entire solution and run unit tests
-.\ai\Build-Skyline.ps1 -RunTests
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -RunTests
 
 # Build and run specific test
-.\ai\Build-Skyline.ps1 -RunTests -TestName CodeInspection
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -RunTests -TestName CodeInspection
 
 # Build specific project only
-.\ai\Build-Skyline.ps1 -Target Skyline
-.\ai\Build-Skyline.ps1 -Target Test
-.\ai\Build-Skyline.ps1 -Target TestFunctional
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -Target Skyline
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -Target Test
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -Target TestFunctional
 
 # Clean build
-.\ai\Build-Skyline.ps1 -Target Clean
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -Target Clean
 
 # Release build (entire solution)
-.\ai\Build-Skyline.ps1 -Configuration Release
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1 -Configuration Release
 ```
 
-**Script location**: `pwiz_tools\Skyline\ai\Build-Skyline.ps1`  
-**Working directory**: `pwiz_tools\Skyline`
+### SkylineBatch
 
-**Default behavior**: Builds entire solution (all projects including all test projects). This ensures all compilation errors are detected, matching typical Visual Studio workflow.
+```powershell
+# Build solution (works from any directory)
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1
 
-This script automatically finds MSBuild, handles paths, and provides clear success/failure output.
+# Build and run tests
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1 -RunTests
+
+# Build, inspect, and test
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1 -RunInspection -RunTests
+
+# Release build
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1 -Configuration Release
+```
+
+### AutoQC
+
+```powershell
+# Build solution (works from any directory)
+.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1
+
+# Build and run tests
+.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1 -RunTests
+
+# Build, inspect, and test
+.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1 -RunInspection -RunTests
+```
+
+**Key Features**:
+- **Works from any directory** - scripts auto-change to correct project directory
+- **Finds MSBuild automatically** using vswhere
+- **Fixes line endings** in modified files (CRLF standard)
+- **Clear success/failure output** with exit codes
+- **Default behavior**: Builds entire solution (all projects including tests)
+
+This ensures all compilation errors are detected, matching typical Visual Studio workflow.
+
+> ⚠️ **Tests always run the previously compiled binaries.** Run one of the build commands above after every edit and before invoking any test command.
 
 ## MSBuild Path
 
@@ -63,69 +109,116 @@ Or use standard path (Community edition):
 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe
 ```
 
-## Iterative Build Commands
+## How Build Scripts Work
 
-**Working directory: `pwiz_tools\Skyline`**
+All `Build-*.ps1` scripts follow this pattern:
 
-### Build Skyline (Main Application)
-```powershell
-& $msbuild Skyline.sln /t:Skyline /p:Configuration=Debug /p:Platform=x64 /nologo /verbosity:minimal
-```
+1. **Auto-locate script directory**: `$scriptRoot = Split-Path -Parent $PSCommandPath`
+2. **Change to project directory**: `Set-Location $projectRoot`
+3. **Find MSBuild**: Use `vswhere.exe` to locate Visual Studio installation
+4. **Fix line endings**: Run `fix-crlf.ps1` on modified files
+5. **Build**: Invoke MSBuild with appropriate parameters
+6. **Restore location**: Return to original directory in `finally` block
 
-**Exit code**: `0` = success, non-zero = build failed
+This means **you can call the script from anywhere** without manually changing directories first.
 
-**Output**: Errors and warnings only (verbosity:minimal)
-
-### Build Specific Project
-```powershell
-# Build Test project only
-& $msbuild Skyline.sln /t:Test /p:Configuration=Debug /p:Platform=x64 /nologo /verbosity:minimal
-
-# Build TestFunctional project only
-& $msbuild Skyline.sln /t:TestFunctional /p:Configuration=Debug /p:Platform=x64 /nologo /verbosity:minimal
-
-# Build multiple projects
-& $msbuild Skyline.sln /t:Skyline /t:Test /t:TestFunctional /p:Configuration=Debug /p:Platform=x64 /nologo /verbosity:minimal
-```
-
-### Clean Build
-```powershell
-& $msbuild Skyline.sln /t:Clean /p:Configuration=Debug /p:Platform=x64 /nologo /verbosity:minimal
-```
-
-### Rebuild (Clean + Build)
-```powershell
-& $msbuild Skyline.sln /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /nologo /verbosity:minimal
-```
+**Exit codes**: `0` = success, non-zero = build failed
 
 ## Running Tests
+
+> ⚠️ **Always build first.** Calling `Run-Tests.ps1` without a prior build simply reuses the last binaries in `bin\x64\Debug\`.
 
 **Test output directory**: `bin\x64\Debug\`
 
 ### Unit Tests (Test.dll - fast, no UI)
 ```powershell
-cd bin\x64\Debug
-.\TestRunner.exe log=Test.log buildcheck=1 test=Test.dll
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName Test.dll
 ```
-
-**Exit code**: `0` = all tests passed, non-zero = failures
-
-**Output file**: `bin\x64\Debug\Test.log`
 
 ### Unit Tests with Data (TestData.dll)
 ```powershell
-.\TestRunner.exe log=TestData.log buildcheck=1 test=TestData.dll
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestData.dll
 ```
 
 ### Functional Tests (UI tests - slower)
 ```powershell
-.\TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFunctional.dll
 ```
 
 ### Run Specific Test
 ```powershell
-.\TestRunner.exe log=MyTest.log buildcheck=1 test=MyTestName
+# Run single [TestMethod] from FastaImporterTest.cs (use the method name, not the file name)
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFastaImport
 ```
+
+> ℹ️ **Tip:** If you only know the `.cs` file name, open it and search for `[TestMethod]` to get the method names. Passing the file name (e.g. `FastaImporterTest.cs`) will not work—the script passes method names through to TestRunner.
+
+### Run Multiple Tests / Languages
+```powershell
+# Comma-separate test method names and languages.
+# Example: run all FastaImporter tests in English, Chinese, and French.
+pwiz_tools\Skyline\ai\Run-Tests.ps1 `
+    -TestName "TestBasicFastaImport,TestFastaImport,WebTestFastaImport" `
+    -Language "en,zh-CHS,fr-FR"
+```
+
+> ℹ️ **Tip:** Pass `-Language` to exercise multiple UI languages; omit it for the default English run.
+
+## AI/SkylineTester Integration
+
+Run-Tests.ps1 and SkylineTester share a test list file (`SkylineTester test list.txt`) for bidirectional workflow. This enables seamless handoff between human-driven and LLM-driven test execution.
+
+### Using the Shared Test List
+
+```powershell
+# Run tests that developer selected in SkylineTester
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -UseTestList
+
+# Run tests from SkylineTester list in specific language(s)
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -UseTestList -Language ja
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -UseTestList -Language fr,tr
+
+# Update test list and run (developer will see tests pre-checked in SkylineTester)
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName "TestA,TestB,TestC" -UpdateTestList
+```
+
+### Integration Workflows
+
+**Human → LLM Handoff:**
+1. Developer selects tests in SkylineTester UI (Tests tab)
+2. LLM runs: `Run-Tests.ps1 -UseTestList`
+3. Same tests run without re-specifying
+
+**LLM → Human Handoff:**
+1. LLM runs: `Run-Tests.ps1 -TestName "TestA,TestB" -UpdateTestList`
+2. Developer opens SkylineTester → tests automatically checked
+3. Developer can review, modify, or re-run
+
+**Sprint Test Set Management:**
+1. Developer curates test set for current work in SkylineTester
+2. LLM runs `Run-Tests.ps1 -UseTestList` throughout development
+3. Test set persists across SkylineTester restarts and LLM sessions
+
+**Failed Tests Workflow:**
+1. Developer runs tests in SkylineTester, some fail
+2. Developer clicks "Check Failed Tests" button
+3. Developer closes SkylineTester, makes fixes
+4. Developer reopens SkylineTester → failed tests still checked (auto-restored)
+5. LLM can run same failed tests: `Run-Tests.ps1 -UseTestList`
+
+### Test List File Format
+
+**Location:** `pwiz_tools\Skyline\SkylineTester test list.txt`
+
+```
+# SkylineTester test list
+# One test name per line
+CodeInspection
+TestPanoramaDownloadFile
+TestProteomeDb
+```
+
+Lines starting with `#` are comments. When `-UpdateTestList` is used, the existing file is backed up with a timestamp before being overwritten.
 
 ## ReSharper Code Inspection
 
@@ -247,8 +340,29 @@ Errors while running CTest
 
 ## Troubleshooting
 
+### "The term '.\ai\Build-*.ps1' is not recognized" or "cannot open file"
+
+**Symptom**: Build script fails with PowerShell errors about not recognizing the command or file not found.
+
+**Root cause**: You're calling the script with an incorrect path or execution policy issue.
+
+**Solution**: Use the **full relative path from repo root**:
+```powershell
+# ✅ CORRECT - Works from any directory
+.\pwiz_tools\Skyline\ai\Build-Skyline.ps1
+.\pwiz_tools\Skyline\Executables\SkylineBatch\ai\Build-SkylineBatch.ps1
+.\pwiz_tools\Skyline\Executables\AutoQC\ai\Build-AutoQC.ps1
+
+# ❌ WRONG - These patterns will fail
+./ai/Build-Skyline.ps1                    # Wrong directory
+c:\proj\...\Build-Skyline.ps1            # Absolute paths fail
+& "path\to\script"                        # Call operator fails with RemoteSigned policy
+```
+
+**Note**: The scripts automatically change to the correct project directory, so you don't need to `Set-Location` first.
+
 ### "MSBuild not found"
-Use `vswhere.exe` to locate MSBuild (see Prerequisites section above)
+Use `vswhere.exe` to locate MSBuild (installed with Visual Studio 2022). The Build scripts do this automatically.
 
 ### "Cannot find TestRunner.exe"
 TestRunner.exe is in the output directory: `bin\x64\Debug\TestRunner.exe`

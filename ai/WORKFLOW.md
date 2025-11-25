@@ -34,6 +34,7 @@ ai/todos/
 ### Workflow 1: Start Work from Backlog TODO
 
 **On master - claim the work:**
+> **Tip:** If your working tree has in-progress changes, `git stash push -u` before these steps so the TODO move commit is the only change on `master`. After switching to the new branch, `git stash pop` to restore your work.
 ```bash
 git checkout master
 git pull origin master
@@ -71,9 +72,11 @@ git push
 
 **Before PR approval:**
 1. Add completion summary to TODO
-2. Add PR reference to TODO (`**PR**: #1234`)
+2. Add PR reference to TODO (`**PR**: #1234` or `**PR**: [#1234](https://github.com/ProteoWizard/pwiz/pull/1234)`)
 3. Mark all completed tasks as `[x]`
 4. Commit TODO updates to branch
+
+**PR URL format:** `https://github.com/ProteoWizard/pwiz/pull/{PR_NUMBER}`
 
 **After PR merge:**
 ```bash
@@ -135,6 +138,8 @@ git checkout Skyline/work/YYYYMMDD_current_feature
 4. Handle exceptions per established patterns
 
 ### Build and Test Automation (Optional)
+
+> ⚠️ **Always build before running tests.** Skyline executables load the last compiled binaries, so running tests without rebuilding will exercise stale code.
 
 **For LLM-assisted IDEs that can execute PowerShell:**
 
