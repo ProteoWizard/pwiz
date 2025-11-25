@@ -285,11 +285,7 @@ if ($RunTests) {
 
 Write-Host ""
 Write-Host "✅ All operations completed successfully" -ForegroundColor Green
-<<<<<<< HEAD
-} finally {
-=======
 }
 finally {
->>>>>>> f2d9d5746d (Skyline: batch-tools initial static analysis cleanup and parity)
     Set-Location $initialLocation
 }
