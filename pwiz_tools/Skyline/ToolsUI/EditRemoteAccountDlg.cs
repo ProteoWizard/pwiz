@@ -584,9 +584,9 @@ namespace pwiz.Skyline.ToolsUI
             if (session.Account is WatersConnectAccount wca && !wca.SupportsMethodDevelopment)
                 MessageDlg.Show(this,
                     ToolsUIResources.EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_instance_does_not_support_method_development__Method_upload_will_be_disabled_,
-                    false, CommonAlertDlg.MessageIcon.Warning);
+                    false, MessageIcons.Warning);
             else
-                MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Settings_are_correct, false, CommonAlertDlg.MessageIcon.Success);
+                MessageDlg.Show(this, ToolsUIResources.EditRemoteAccountDlg_TestSettings_Settings_are_correct, false, MessageIcons.Success);
 
             return true;
         }

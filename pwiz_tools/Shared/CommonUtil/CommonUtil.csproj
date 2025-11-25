@@ -153,10 +153,10 @@
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
     <Compile Include="CommonResources\MessageResources.Designer.cs">
-	<AutoGen>True</AutoGen>
+      <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>MessageResources.resx</DependentUpon>
-    </Compile>	
+    </Compile>
     <Compile Include="GUI\GuiMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -178,6 +178,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Images.resx</DependentUpon>
     </Compile>
+    <Compile Include="GUI\MessageIcons.cs" />
     <Compile Include="Mock\MockHttpMessageHandler.cs" />
     <Compile Include="SystemUtil\Assume.cs" />
     <Compile Include="SystemUtil\Caching\ProductionFacility.cs" />
@@ -300,6 +301,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\CommonAlertDlg.resx">
       <DependentUpon>CommonAlertDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\CommonAlertDlg.zh-CHS.resx">
       <DependentUpon>CommonAlertDlg.cs</DependentUpon>
