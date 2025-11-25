@@ -133,7 +133,7 @@ namespace SkylineBatch
         public void CheckPanoramaServer(CancellationToken cancelToken, Action<PanoramaFile, Exception> callback)
         {
             RemoteFileSource remoteFileSource = GetRemoteFileSource();
-            new Thread(() =>
+            CommonActionUtil.RunAsync(() =>
             {
                 try
                 {
@@ -146,7 +146,7 @@ namespace SkylineBatch
                     callback(null, ex);
                 }
 
-            }).Start();
+            });
         }
 
         public RemoteFileSource RemoteFileSourceFromUi()
