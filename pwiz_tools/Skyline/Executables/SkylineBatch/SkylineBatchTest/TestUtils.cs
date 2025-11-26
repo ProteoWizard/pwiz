@@ -86,7 +86,7 @@ namespace SkylineBatchTest
                 currentPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
             }
 
-            var batchTestPath = Path.Combine(currentPath, "Test");
+            var batchTestPath = Path.Combine(currentPath ?? string.Empty, "Test");
             if (!Directory.Exists(batchTestPath))
                 throw new DirectoryNotFoundException("Unable to find test data directory at: " + batchTestPath);
             return Path.Combine(batchTestPath, fileName);
@@ -250,7 +250,7 @@ namespace SkylineBatchTest
 
         /// <summary>
         /// Replaces R version references in a line with the current installed version.
-        /// Handles both formats: <r_script> and <script_path>.
+        /// Handles both formats: &lt;r_script&gt; and &lt;script_path&gt;.
         /// </summary>
         public static string ReplaceRVersionWithCurrent(string line)
         {

@@ -399,14 +399,14 @@ namespace AutoQC
             state.ConfigRunners.TryGetValue(config.Name, out configRunner);
             try
             {
-                ((ConfigRunner)configRunner).Start();
+                ((ConfigRunner)configRunner!).Start();
             }
             catch (Exception)
             {
                 state.DisableConfig(configIndex, _uiControl);
                 SetState(initialState, state);
                 state.ConfigRunners.TryGetValue(config.Name, out configRunner);
-                ((ConfigRunner)configRunner).ChangeStatus(RunnerStatus.Error);
+                ((ConfigRunner)configRunner!).ChangeStatus(RunnerStatus.Error);
                 throw;
             }
         }
@@ -415,7 +415,7 @@ namespace AutoQC
         {
             foreach (var configRunner in AutoQcState.ConfigRunners.Values)
             {
-                ((ConfigRunner)configRunner).Stop();
+                ((ConfigRunner)configRunner!).Stop();
             }
         }
         #endregion
@@ -673,6 +673,7 @@ namespace AutoQC
             return this;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private AutoQcConfigManagerState ProgramaticallyRemoveAt(int index)
         {
             var config = BaseState.ConfigList[index];
@@ -681,6 +682,7 @@ namespace AutoQC
             return this;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private AutoQcConfigManagerState RemoveConfig(IConfig iconfig)
         {
             var config = (AutoQcConfig)iconfig;
@@ -717,6 +719,7 @@ namespace AutoQC
             return this;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private AutoQcConfigManagerState UpdateFromBaseState(IMainUiControl uiControl)
         {
             foreach (var iconfig in BaseState.ConfigList)
@@ -826,6 +829,7 @@ namespace AutoQC
             return this;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private AutoQcConfigManagerState ReorderConfigs(List<int> newIndexOrder, bool sameColumn)
         {
             if (sameColumn && IsSorted(newIndexOrder))
