@@ -415,17 +415,18 @@ namespace pwiz.Skyline.ToolsUI
                     return false;
                 }
                 var tokenResponse = JObject.Parse((string)ae.Data[WatersConnectAccount.TOKEN_DATA]);
-                string error = (tokenResponse[@"error_description"] ?? tokenResponse[@"error"]).ToString();
-                if (tokenResponse[@"error"].ToString() == @"invalid_scope")
+                string error = (tokenResponse[@"error_description"] ?? tokenResponse[@"error"] ?? "").ToString();
+                var errorType = (tokenResponse[@"error"] ?? "").ToString();
+                if (errorType.ToString() == @"invalid_scope")
                 {
                     tbxClientScope.Focus();
                 }
-                else if (tokenResponse[@"error"].ToString() == @"invalid_client")
+                else if (errorType.ToString() == @"invalid_client")
                 {
                     tbxClientSecret.Focus();
                     error = ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret;
                 }
-                else if (tokenResponse[@"error"].ToString() == @"invalid_grant")
+                else if (errorType.ToString() == @"invalid_grant")
                 {
                     textPassword.Focus();
                 }
