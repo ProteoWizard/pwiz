@@ -465,6 +465,7 @@
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Detail.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\ChromatogramList_Thermo.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\Reader_Thermo.cpp" />
@@ -1012,6 +1013,7 @@
     <ClInclude Include="pwiz\data\vendor_readers\Mobilion\SpectrumList_Mobilion.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Detail.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\ChromatogramList_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.hpp" />

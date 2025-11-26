@@ -19,7 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Net;
+using System.Net; // HttpStatusCode
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;

@@ -56,7 +56,7 @@ namespace pwiz.PanoramaClient
             catch (NetworkRequestException e)
             {
                 messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, @"GET");
-                throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
+                throw PanoramaServerException.CreateWithLabKeyError(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
         }
 
@@ -93,7 +93,7 @@ namespace pwiz.PanoramaClient
             {
                 // HttpPanoramaRequestHelper throws NetworkRequestException
                 messageOnError ??= string.Format(Resources.AbstractRequestHelper_DoRequest__0__request_was_unsuccessful_, @"POST");
-                throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
+                throw PanoramaServerException.CreateWithLabKeyError(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
         }
 
@@ -109,7 +109,7 @@ namespace pwiz.PanoramaClient
             // 2.Well - formed HTTP requests with parameters that we don't like. This is less clear cut to me.
             // 3.Well - formed HTTP requests with legit parameters, but which exercise some sort of error scenario. We clearly shouldn't be sending a 400 for these.
             // 
-            // We have to look for the status and any exception in the returned JSON rather than expecting a WebException (non-200 response) if the request
+            // We have to look for the status and any exception in the returned JSON rather than expecting a NetworkRequestException (non-200 response) if the request
             // fails on the server. Example JSON response with error: {"exception":"Filename may not contain space followed by dash.","success":false,"status":400}
             AddHeader(HttpRequestHeader.Accept, APPLICATION_JSON);
         }
@@ -132,7 +132,7 @@ namespace pwiz.PanoramaClient
             {
                 // HttpPanoramaRequestHelper throws NetworkRequestException.
                 // NetworkRequestException includes response body for error extraction.
-                throw PanoramaServerException.CreateWithResponseDisposal(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
+                throw PanoramaServerException.CreateWithLabKeyError(messageOnError, uri, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
         }
 
@@ -145,7 +145,7 @@ namespace pwiz.PanoramaClient
             catch (NetworkRequestException e)
             {
                 // HttpPanoramaRequestHelper throws NetworkRequestException.
-                throw PanoramaServerException.CreateWithResponseDisposal(
+                throw PanoramaServerException.CreateWithLabKeyError(
                     Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_, address, PanoramaUtil.GetErrorFromNetworkRequestException, e);
             }
         }
@@ -158,8 +158,8 @@ namespace pwiz.PanoramaClient
             }
             catch (JsonReaderException e)
             {
-                throw PanoramaServerException.Create(
-                    Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_, uri, response, e);
+                throw new PanoramaServerException(new ErrorMessageBuilder(Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
+                    .ExceptionMessage(e.Message).Uri(uri).Response(response).ToString(), e);
             }
         }
 
@@ -334,7 +334,7 @@ namespace pwiz.PanoramaClient
                 if (labKeyError != null)
                 {
                     // Re-throw with LabKey error details
-                    throw PanoramaServerException.CreateWithResponseDisposal(
+                    throw PanoramaServerException.CreateWithLabKeyError(
                         Resources.AbstractPanoramaClient_UploadTempZipFile_There_was_an_error_uploading_the_file_,
                         address,
                         PanoramaUtil.GetErrorFromNetworkRequestException,
@@ -387,7 +387,7 @@ namespace pwiz.PanoramaClient
                 {
                     // Wrap CSRF token retrieval failures with a more informative error message
                     var csrfUri = new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH);
-                    throw PanoramaServerException.CreateWithResponseDisposal(
+                    throw PanoramaServerException.CreateWithLabKeyError(
                         Resources.HttpPanoramaRequestHelper_GetCsrfTokenFromServer_There_was_an_error_getting_a_CSRF_token_from_the_server_,
                         csrfUri, PanoramaUtil.GetErrorFromNetworkRequestException, ex);
                 }

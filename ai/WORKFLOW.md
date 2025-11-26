@@ -5,6 +5,7 @@ Essential workflows for LLM-assisted development. See [ai/docs/workflow-guide.md
 ## Branch Strategy
 
 - **master** - Stable releases, requires review
+- **ai-context** - Rapid iteration on `ai/` documentation (merges to master periodically)
 - **Skyline/skyline_YY_N** - Release branches
 - **Skyline/work/YYYYMMDD_description** - Feature/fix branches (all development)
 
@@ -24,27 +25,53 @@ ai/todos/
 - `TODO-20251105_feature_name.md` - Active (dated, in ai/todos/active/)
 
 ### Lifecycle
-1. **Backlog** - Planning on master (`ai/todos/backlog/`)
-2. **Active** - Development on branch (`ai/todos/active/`)
-3. **Completed** - Merged to master (`ai/todos/completed/`)
+1. **Backlog** - Planning on ai-context (`ai/todos/backlog/`)
+2. **Active** - Development on feature branch (`ai/todos/active/`)
+3. **Completed** - On feature branch, merged to master with code (`ai/todos/completed/`)
 4. **Archive** - Cleanup after 3 months (`ai/todos/archive/`)
+
+> **Note:** Backlog TODOs are committed to `ai-context` branch to avoid churning master. See [ai/docs/ai-context-branch-strategy.md](docs/ai-context-branch-strategy.md) for details.
+
+### Header Standard (All TODO Files)
+
+Each TODO (active or completed) MUST begin with the file name as a level-1 heading followed by a standardized Branch Information block:
+
+```
+# TODO-YYYYMMDD_feature_name.md
+
+## Branch Information
+- **Branch**: `Skyline/work/YYYYMMDD_feature_name`
+- **Created**: YYYY-MM-DD
+- **Completed**: YYYY-MM-DD | (pending)
+- **Status**: 🚧 In Progress | ✅ Completed
+- **PR**: [#NNNN](https://github.com/ProteoWizard/pwiz/pull/NNNN) | (pending)
+- **Objective**: Single concise sentence describing the end goal
+```
+
+Rules:
+- Before moving a TODO from `active/` to `completed/`, the **PR** field must be populated with the number (linked form preferred). If absent, automated tools / LLM must prompt the user: "Provide PR number before completion move.".
+- Use backticks around the branch name.
+- Keep the Objective to one line; expanded background goes in later sections.
+- Do not retroactively edit completed TODOs except to apply this header standard at merge time.
+- Status should reflect current state ("🚧 In Progress" until merged; then change to "✅ Completed").
+
 
 ## Key Workflows
 
 ### Workflow 1: Start Work from Backlog TODO
 
-**On master - claim the work:**
+**On master - create feature branch:**
+> **Note:** Backlog TODOs live on `ai-context` branch. You'll copy (not move) to your feature branch.
 ```bash
 git checkout master
 git pull origin master
-git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
-git commit -m "Start feature_name work - move TODO to active"
-git push origin master
+git checkout -b Skyline/work/20251105_feature_name
 ```
 
-**Create branch:**
+**Copy TODO from ai-context to active:**
 ```bash
-git checkout -b Skyline/work/20251105_feature_name
+git checkout ai-context -- ai/todos/backlog/TODO-feature_name.md
+git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
 ```
 
 **Update TODO header and commit:**
@@ -71,9 +98,11 @@ git push
 
 **Before PR approval:**
 1. Add completion summary to TODO
-2. Add PR reference to TODO (`**PR**: #1234`)
+2. Add PR reference to TODO (`**PR**: #1234` or `**PR**: [#1234](https://github.com/ProteoWizard/pwiz/pull/1234)`)
 3. Mark all completed tasks as `[x]`
 4. Commit TODO updates to branch
+
+**PR URL format:** `https://github.com/ProteoWizard/pwiz/pull/{PR_NUMBER}`
 
 **After PR merge:**
 ```bash
@@ -94,31 +123,20 @@ git branch -d Skyline/work/YYYYMMDD_feature  # Delete local branch
 
 When inspiration strikes during development:
 
-**Option 1: Create on master (recommended):**
+**Create on ai-context branch:**
 ```bash
 git stash
-git checkout master
-git pull origin master
+git checkout ai-context
+git pull origin ai-context
 # Create ai/todos/backlog/TODO-new_idea.md
 git add ai/todos/backlog/TODO-new_idea.md
 git commit -m "Add backlog TODO for new_idea planning"
-git push origin master
+git push origin ai-context
 git checkout Skyline/work/YYYYMMDD_current_feature
 git stash pop
 ```
 
-**Option 2: Cherry-pick from branch:**
-```bash
-# Create TODO on current branch
-git add ai/todos/backlog/TODO-new_idea.md
-git commit -m "Add backlog TODO for new_idea planning"
-# Cherry-pick to master
-git checkout master
-git pull origin master
-git cherry-pick <commit-hash>
-git push origin master
-git checkout Skyline/work/YYYYMMDD_current_feature
-```
+> **Why ai-context?** Backlog TODOs are committed to `ai-context` to avoid frequent master churn. See [ai/docs/ai-context-branch-strategy.md](docs/ai-context-branch-strategy.md).
 
 ## LLM Tool Guidelines
 
@@ -135,6 +153,8 @@ git checkout Skyline/work/YYYYMMDD_current_feature
 4. Handle exceptions per established patterns
 
 ### Build and Test Automation (Optional)
+
+> ⚠️ **Always build before running tests.** Skyline executables load the last compiled binaries, so running tests without rebuilding will exercise stale code.
 
 **For LLM-assisted IDEs that can execute PowerShell:**
 
