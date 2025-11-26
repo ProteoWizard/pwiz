@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             // But then set to NaN the weights that have unknown values for this dataset
             for (var i = 0; i < initialWeights.Length; ++i)
             {
-                if (!targetDecoyGenerator.EligibleScores[i])
+                if (!targetDecoyGenerator.EligibleScores[i].EnabledByDefault)
                     initialWeights[i] = double.NaN;
             }
             var initialParams = new LinearModelParams(initialWeights);
