@@ -119,6 +119,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 throw new RemoteServerException(message);
             }
         }
+
         protected ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
         {
             var response = _httpClient.GetAsync(requestUri).Result;

@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -93,7 +94,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 var status = new ProgressStatus(string.Format(WatersConnectResources.WatersConnectSessionAcquisitionMethod_UploadMethod_Uploading_method__0__to__1_,
                     methodName, WatersConnectAccount.ServerUrl));
                 // here the StringStream is just a wrapper. It is used because the ProgressStream requires an underlying stream for its constructor.
-                var progressStream = new ProgressStream(new StringStream(methodJson));
+                var progressStream = new ProgressStream(new MemoryStream(Encoding.UTF8.GetBytes(methodJson)));
                 progressMonitor.UpdateProgress(status);
                 progressStream.SetProgressMonitor(progressMonitor, status, true);
                 request.Content = new StreamContent(progressStream);
@@ -195,48 +196,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         private Uri GetAquisitionMethodUploadUrl()
         {
             return new Uri(WatersConnectAccount.ServerUrl + UPLOAD_METHOD_ENDPOINT);
-        }
-    }
-
-    class StringStream : Stream
-    {
-        private readonly MemoryStream _memoryStream;
-        public StringStream(string str)
-        {
-            _memoryStream = new MemoryStream();
-            var writer = new StreamWriter(_memoryStream);
-            writer.Write(str);
-            writer.Flush();
-            _memoryStream.Position = 0;
-        }
-        public override void Flush()
-        {
-            _memoryStream.Flush();
-        }
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            return _memoryStream.Seek(offset, origin);
-        }
-        public override void SetLength(long value)
-        {
-            _memoryStream.SetLength(value);
-        }
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return _memoryStream.Read(buffer, offset, count);
-        }
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-        public override bool CanRead => true;
-        public override bool CanSeek => true;
-        public override bool CanWrite => false;
-        public override long Length => _memoryStream.Length;
-        public override long Position
-        {
-            get => _memoryStream.Position;
-            set => _memoryStream.Position = value;
         }
     }
 
