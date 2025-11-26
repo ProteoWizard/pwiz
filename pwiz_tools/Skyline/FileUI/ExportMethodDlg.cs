@@ -2786,19 +2786,21 @@ namespace pwiz.Skyline.FileUI
                             if (exception.ServerData != null)
                             {
                                 var errors = JObject.Parse(exception.ServerData)[JSON_TOKEN_ERRORS] as JArray;
-                                if (errors != null && errors.Any() && errors.All(err => err[JSON_TOKEN_DETAILS] != null))
+                                if (errors != null && errors.Any(err => err[JSON_TOKEN_DETAILS] != null))
                                 {
-                                    sbMessage.Append(string.Format(FileUIResources.ExportDlgProperties_PerformLongExport_The_server_returns_the_following_message, errors.First()[JSON_TOKEN_DETAILS].Value<string>()));
-                                    if (errors.Count > 1)
+                                    var errorsWithMessage =
+                                        errors.ToList().FindAll(err => err[JSON_TOKEN_DETAILS] != null);
+                                    sbMessage.Append(string.Format(FileUIResources.ExportDlgProperties_PerformLongExport_The_server_returns_the_following_message, (errorsWithMessage.First()[JSON_TOKEN_DETAILS] ?? "").Value<string>()));
+                                    if (errorsWithMessage.Count > 1)
                                     {
-                                        sbMessage.Append(string.Format(FileUIResources.ExportDlgProperties_PerformLongExport_and_0_other_Click_More_Info, errors.Count - 1, 
-                                            errors.Count > 2 ? FileUIResources.ExportDlgProperties_PerformLongExport_messages : FileUIResources.ExportDlgProperties_PerformLongExport_message));
-                                        foreach (var error in errors)
-                                            detailMessage.Append(Environment.NewLine + error[JSON_TOKEN_DETAILS].Value<string>());
+                                        sbMessage.Append(string.Format(FileUIResources.ExportDlgProperties_PerformLongExport_and_0_other_Click_More_Info, errorsWithMessage.Count - 1,
+                                            errorsWithMessage.Count > 2 ? FileUIResources.ExportDlgProperties_PerformLongExport_messages : FileUIResources.ExportDlgProperties_PerformLongExport_message));
+                                        foreach (var error in errorsWithMessage)
+                                            detailMessage.Append(Environment.NewLine + error[JSON_TOKEN_DETAILS]?.Value<string>());
                                     }
                                 }
                             }
-                            detailMessage.Append(Environment.NewLine + exception.ToString());
+                            detailMessage.Append(Environment.NewLine + exception);
                             MessageDlg.ShowWithDetails(_dialog, sbMessage.ToString(), detailMessage.ToString(), messageIcon: MessageIcons.Error);
                         }
                     }

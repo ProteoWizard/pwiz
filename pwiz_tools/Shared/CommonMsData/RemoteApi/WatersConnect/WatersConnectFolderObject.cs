@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
@@ -28,6 +29,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         public WatersConnectFolderObject(JObject jobject, string parentId, bool isSampleSet)
         {
+            Assume.IsNotNull(jobject);
             // ReSharper disable LocalizableElement
             Name = GetProperty(jobject, "name");
             if (isSampleSet)
@@ -40,8 +42,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             {
                 Id = GetProperty(jobject, "id");
                 Path = GetProperty(jobject, "path");
-                CanRead = jobject["accessType"]["read"].Value<bool>();
-                CanWrite = jobject["accessType"]["write"].Value<bool>();
+                CanRead = jobject["accessType"]["read"]?.Value<bool>() ?? false;
+                CanWrite = jobject["accessType"]["write"]?.Value<bool>() ?? false;
             }
             // ReSharper restore LocalizableElement
             ParentId = parentId;

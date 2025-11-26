@@ -169,21 +169,21 @@ namespace pwiz.SkylineTestFunctional
         public void ValidateMethodUpload(string jsonPayload)
         {
             var methodModel = JObject.Parse(jsonPayload);
-            Assert.AreNotEqual("FailMethod", methodModel["name"].ToString().Trim());    // FailMethod is used to test the failed upload
-            Assert.AreEqual("TestMethod", methodModel["name"].ToString().Trim());
-            Assert.AreEqual("Multiple", methodModel["creationMode"].ToString().Trim());
-            Assert.AreEqual("AcquisitionWindows", methodModel["scheduleType"].ToString().Trim());
-            Assert.AreEqual(12, methodModel["compounds"].Children().Count());
-            Assert.IsTrue(methodModel["compounds"].Children().All(item =>
+            Assert.AreNotEqual("FailMethod", methodModel["name"]?.ToString().Trim());    // FailMethod is used to test the failed upload
+            Assert.AreEqual("TestMethod", methodModel["name"]?.ToString().Trim());
+            Assert.AreEqual("Multiple", methodModel["creationMode"]?.ToString().Trim());
+            Assert.AreEqual("AcquisitionWindows", methodModel["scheduleType"]?.ToString().Trim());
+            Assert.AreEqual(12, methodModel["compounds"]?.Children().Count());
+            Assert.IsTrue(methodModel["compounds"] != null && methodModel["compounds"].Children().All(item =>
             {
-                if (double.TryParse(item["startTime"].Value<string>(), out var startTime))
+                if (double.TryParse(item["startTime"]?.Value<string>(), out var startTime))
                     return startTime >= 0;
                 return false;
             }), "Negative start time in the method");
             methodModel["compounds"].Children().ToList().ForEach(compound =>
             {
                 var badAdducts = compound["adducts"].Children().ToList().FindAll(
-                    adduct => adduct["transitions"].Children().Count(transition => transition["isQuanIon"].Value<bool>()) != 1);
+                    adduct => adduct["transitions"].Children().Count(transition => transition["isQuanIon"] != null && transition["isQuanIon"].Value<bool>()) != 1);
                 if (badAdducts.Count > 0)
                     Assert.Fail($"Compound {compound["name"]} has adducts with incorrect number of quant ions.");
             });
