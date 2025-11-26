@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
@@ -35,55 +36,37 @@ namespace pwiz.Common.GUI
     public partial class CommonAlertDlg : CommonFormEx
     {
         private const int MAX_HEIGHT = 500;
+        private const int LABEL_PADDING = 18;
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
-        private int _labelPadding;
         private string _message;
         private string _detailMessage;
 
-        public enum MessageIcon
-        {
-            None = MessageBoxIcon.None,
-            Error = MessageBoxIcon.Error,
-            Information = MessageBoxIcon.Information,
-            Question = MessageBoxIcon.Question,
-            Warning = MessageBoxIcon.Warning,
-            Success = 17 // not a standard icon, which so far are always even numbers
-        }
-
         public CommonAlertDlg() : this(@"Alert dialog for Forms designer")
         {
-            // hide icon by default and restore padding
-            iconAndMessageSplitContainer.Panel1Collapsed = true;
-            labelMessage.Location = labelMessage.Location.Offset(24);
         }
 
         [SuppressMessage("ReSharper", "VirtualMemberCallInConstructor")]
         protected CommonAlertDlg(string message)
         {
             InitializeComponent();
-
-            // hide icon by default and restore padding
-            iconAndMessageSplitContainer.Panel1Collapsed = true;
-            labelMessage.Location = labelMessage.Location.Offset(24);
-
             _originalFormHeight = Height;
             _originalMessageHeight = labelMessage.Height;
-            _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;
+            MessageIconVisible = false;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
             Text = CommonApplicationSettings.ProgramName;
             toolStrip1.Renderer = new NoBorderSystemRenderer();
+            messageScrollPanel.Resize += (sender, args) => UpdateLabelMessageSize();
         }
 
-        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons, MessageIcon messageIcon = MessageIcon.None) : this(message, messageBoxButtons, DialogResult.None, messageIcon)
+        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)
         {
         }
 
-        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton, MessageIcon messageIcon = MessageIcon.None) : this(message)
+        public CommonAlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton) : this(message)
         {
             AddMessageBoxButtons(messageBoxButtons, defaultButton);
-            SetMessageBoxIcon(messageIcon);
         }
 
         public string Message
@@ -93,19 +76,28 @@ namespace pwiz.Common.GUI
             {
                 _message = value;
                 labelMessage.Text = TruncateMessage(_message);
-                int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
-                formGrowth = Math.Max(formGrowth, 0);
-                formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
-                Height = _originalFormHeight + formGrowth;
+                UpdateFormHeight();
             }
         }
 
-        public string DetailMessage 
+        private void UpdateLabelMessageSize()
         {
-            get
-            {
-                return _detailMessage;
-            }
+            labelMessage.MaximumSize =
+                new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_PADDING), 0);
+        }
+
+        private void UpdateFormHeight()
+        {
+            UpdateLabelMessageSize();
+            int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
+            formGrowth = Math.Max(formGrowth, 0);
+            formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
+            Height = _originalFormHeight + formGrowth;
+        }
+
+        public string DetailMessage
+        {
+            get { return _detailMessage; }
             set
             {
                 _detailMessage = value;
@@ -170,7 +162,7 @@ namespace pwiz.Common.GUI
 
         public override string DetailedMessage
         {
-            get { return GetTitleAndMessageDetail();  }
+            get { return GetTitleAndMessageDetail(); }
         }
 
         protected string GetTitleAndMessageDetail()
@@ -220,25 +212,44 @@ namespace pwiz.Common.GUI
             }
         }
 
-        private void SetMessageBoxIcon(MessageIcon messageIcon)
-        {
-            if (messageIcon == MessageIcon.None)
-            {
-                iconAndMessageSplitContainer.Panel1Collapsed = true;
-                return;
-            }
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 
-            _labelPadding = iconAndMessageSplitContainer.Width - labelMessage.MaximumSize.Width;
-            iconAndMessageSplitContainer.Panel1Collapsed = false;
-            iconPictureBox.Image = messageIcon switch
+        public Image MessageIcon
+        {
+            get { return MessageIconVisible ? iconPictureBox.Image : null; }
+            set
             {
-                MessageIcon.Error => SystemIcons.Error.ToBitmap(),
-                MessageIcon.Information => SystemIcons.Information.ToBitmap(),
-                MessageIcon.Question => SystemIcons.Question.ToBitmap(),
-                MessageIcon.Warning => SystemIcons.Warning.ToBitmap(),
-                MessageIcon.Success => Images.SuccessMessageIcon,
-                _ => throw new ArgumentOutOfRangeException(nameof(messageIcon), messageIcon, null)
-            };
+                iconPictureBox.Image = value;
+                MessageIconVisible = value != null;
+            }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        private bool MessageIconVisible
+        {
+            get { return !iconAndMessageSplitContainer.Panel1Collapsed; }
+            set
+            {
+                if (value == MessageIconVisible)
+                {
+                    return;
+                }
+
+                if (value)
+                {
+                    iconAndMessageSplitContainer.Panel1Collapsed = false;
+                    labelMessage.Location = new Point(0, labelMessage.Location.Y);
+                }
+                else
+                {
+                    iconAndMessageSplitContainer.Panel1Collapsed = true;
+                    labelMessage.Location = new Point(LABEL_PADDING, labelMessage.Location.Y);
+                }
+
+                UpdateFormHeight();
+            }
         }
 
         /// <summary>
@@ -370,13 +381,6 @@ namespace pwiz.Common.GUI
                 default:
                     throw new ArgumentException();
             }
-        }
-
-        private void messageScrollPanel_Resize(object sender, EventArgs e)
-        {
-            int newMaxWidth = messageScrollPanel.Width - _labelPadding;
-            newMaxWidth = Math.Max(newMaxWidth, 100);
-            labelMessage.MaximumSize = new Size(newMaxWidth, 0);
         }
 
         private const int MAX_MESSAGE_LENGTH = 50000;

@@ -159,6 +159,7 @@
     <Compile Include="AddMixedLibraryTest.cs" />
     <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
+    <Compile Include="AlertDlgIconsTest.cs" />
     <Compile Include="AlertDlgTest.cs" />
     <Compile Include="AlignedIdTimesTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />

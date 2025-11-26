@@ -247,6 +247,9 @@
   <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
   </data>
+  <data name="WebPanoramaClient_ValidateUri_Server_did_not_return_a_valid_LabKey_Server_response___0__is_not_a_LabKey_server_" xml:space="preserve">
+    <value>Server did not return a valid LabKey Server response. {0} is not a LabKey server.</value>
+  </data>
   <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
     <value>There was an error getting the status of the document import pipeline job.</value>
   </data>

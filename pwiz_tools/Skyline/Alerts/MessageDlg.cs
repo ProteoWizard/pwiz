@@ -18,7 +18,9 @@
  */
 
 using System;
+using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -29,9 +31,9 @@ namespace pwiz.Skyline.Alerts
             new MessageDlg(message, ignoreModeUI).ShowAndDispose(parent);
         }
 
-        public static void Show(IWin32Window parent, string message, bool ignoreModeUI, MessageIcon messageIcon)
+        public static void Show(IWin32Window parent, string message, bool ignoreModeUI, Image messageIcon)
         {
-            new MessageDlg(message, ignoreModeUI, messageIcon: messageIcon).ShowAndDispose(parent);
+            new MessageDlg(message, ignoreModeUI) {MessageIcon = messageIcon}.ShowAndDispose(parent);
         }
 
         // For displaying a MessageDlg with a specific set of buttons
@@ -40,9 +42,9 @@ namespace pwiz.Skyline.Alerts
             return new MessageDlg(message, IgnoreModeUI, buttons).ShowAndDispose(parent);
         }
 
-        public static DialogResult Show(IWin32Window parent, string message, bool IgnoreModeUI, MessageBoxButtons buttons, MessageIcon messageIcon)
+        public static DialogResult Show(IWin32Window parent, string message, bool IgnoreModeUI, MessageBoxButtons buttons, Image messageIcon)
         {
-            return new MessageDlg(message, IgnoreModeUI, buttons, messageIcon).ShowAndDispose(parent);
+            return new MessageDlg(message, IgnoreModeUI, buttons) {MessageIcon = messageIcon}.ShowAndDispose(parent);
         }
 
         public static void ShowException(IWin32Window parent, Exception exception, bool ignoreModeUI = false)
@@ -52,12 +54,12 @@ namespace pwiz.Skyline.Alerts
 
         public static void ShowWithException(IWin32Window parent, string message, Exception exception, bool ignoreModeUI = false)
         {
-            new MessageDlg(message, ignoreModeUI, messageIcon: MessageIcon.Error) { Exception = exception }.ShowAndDispose(parent);
+            new MessageDlg(message, ignoreModeUI) { Exception = exception }.ShowAndDispose(parent);
         }
 
-        public static void ShowWithDetails(IWin32Window parent, string message, string detailMessage, MessageIcon messageIcon, bool ignoreModeUI = false)
+        public static void ShowWithDetails(IWin32Window parent, string message, string detailMessage, Image messageIcon, bool ignoreModeUI = false)
         {
-            new MessageDlg(message, ignoreModeUI, messageIcon: messageIcon) { DetailMessage = detailMessage}.ShowAndDispose(parent);
+            new MessageDlg(message, ignoreModeUI) { MessageIcon = messageIcon, DetailMessage = detailMessage}.ShowAndDispose(parent);
         }
 
         // Display a MessageDlg and add additional, caller-provided information about a network failure to the More Info section
@@ -78,10 +80,10 @@ namespace pwiz.Skyline.Alerts
 
         public static void ShowError(IWin32Window parent, string message, bool ignoreModeUI = false)
         {
-            new MessageDlg(message, ignoreModeUI, messageIcon: MessageIcon.Error).ShowAndDispose(parent);
+            new MessageDlg(message, ignoreModeUI) { MessageIcon = MessageIcons.Error}.ShowAndDispose(parent);
         }
 
-        private MessageDlg(string message, bool ignoreModeUI, MessageBoxButtons buttons = MessageBoxButtons.OK, MessageIcon messageIcon = MessageIcon.None) : base(message, buttons, messageIcon)
+        private MessageDlg(string message, bool ignoreModeUI, MessageBoxButtons buttons = MessageBoxButtons.OK) : base(message, buttons)
         {
             GetModeUIHelper().IgnoreModeUI = ignoreModeUI; // May not want any "peptide"->"molecule" translation
         }

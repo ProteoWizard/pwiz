@@ -29,6 +29,7 @@ using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using NHibernate;
 using pwiz.Common;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
@@ -41,7 +42,6 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using static pwiz.Common.GUI.CommonAlertDlg;
 using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.FileUI
@@ -1157,7 +1157,7 @@ namespace pwiz.Skyline.FileUI
                           .AppendLine(dpName ?? FileUIResources.ExportMethodDlg_OkDialog_None);
                     }
                     sb.AppendLine().Append(FileUIResources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
-                    var result = MessageDlg.Show(this, sb.ToString(), false, MessageBoxButtons.YesNoCancel, MessageIcon.Warning);
+                    var result = MessageDlg.Show(this, sb.ToString(), false, MessageBoxButtons.YesNoCancel, MessageIcons.Warning);
                     if (result == DialogResult.Yes)
                     {
                         documentExport = ChangeInstrumentTypeSettings(documentExport, ceNameDefault, dpNameDefault);
@@ -1292,7 +1292,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (!wca.SupportsMethodDevelopment)
                     {
-                        MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_, false, MessageIcon.Error);
+                        MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_, false, MessageIcons.Error);
                         return;
                     }
                 }
@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     // technically, this should never happen because user just selected a folder under this account.
                     // Maybe it should be an assumption instead of the error message.
-                    MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_, false, MessageIcon.Error);
+                    MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_, false, MessageIcons.Error);
                     return;
                 }
 
@@ -1363,7 +1363,7 @@ namespace pwiz.Skyline.FileUI
                 var exporter = _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
                 if (exporter is WatersConnectMethodExporter wcExporter && wcExporter.UploadSuccessful)
                 {
-                    MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_WC_Upload_Successful + wcExporter.UploadResult, false, MessageBoxButtons.OK, MessageIcon.Success);
+                    MessageDlg.Show(this, FileUIResources.ExportMethodDlg_OkDialog_WC_Upload_Successful + wcExporter.UploadResult, false, MessageBoxButtons.OK, MessageIcons.Success);
                 }
             }
             catch (UnauthorizedAccessException x)
@@ -2396,7 +2396,7 @@ namespace pwiz.Skyline.FileUI
                         {
                             MessageDlg.Show(this,
                                 FileUIResources.ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_,
-                                false, MessageIcon.Warning);
+                                false, MessageIcons.Warning);
                             dlgOpen.InitialDirectory = RemoteUrl.EMPTY;
                         }
                     }
@@ -2799,7 +2799,7 @@ namespace pwiz.Skyline.FileUI
                                 }
                             }
                             detailMessage.Append(Environment.NewLine + exception.ToString());
-                            MessageDlg.ShowWithDetails(_dialog, sbMessage.ToString(), detailMessage.ToString(), messageIcon: MessageIcon.Error);
+                            MessageDlg.ShowWithDetails(_dialog, sbMessage.ToString(), detailMessage.ToString(), messageIcon: MessageIcons.Error);
                         }
                     }
                     else

@@ -132,6 +132,7 @@ namespace pwiz.Common.GUI
             // 
             // iconPictureBox
             // 
+            this.iconPictureBox.Image = global::pwiz.Common.CommonResources.Images.SuccessMessageIcon;
             resources.ApplyResources(this.iconPictureBox, "iconPictureBox");
             this.iconPictureBox.Name = "iconPictureBox";
             this.iconPictureBox.TabStop = false;
@@ -141,7 +142,6 @@ namespace pwiz.Common.GUI
             resources.ApplyResources(this.messageScrollPanel, "messageScrollPanel");
             this.messageScrollPanel.Controls.Add(this.labelMessage);
             this.messageScrollPanel.Name = "messageScrollPanel";
-            this.messageScrollPanel.Resize += new System.EventHandler(this.messageScrollPanel_Resize);
             // 
             // labelMessage
             // 

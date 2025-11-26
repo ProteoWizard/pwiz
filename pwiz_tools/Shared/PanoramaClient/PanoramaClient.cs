@@ -134,7 +134,8 @@ namespace pwiz.PanoramaClient
             }
 
             // Retrieve folders from server.
-            var uri = PanoramaUtil.GetContainersUri(ServerUri, folder, true);
+            // Use server.FolderPath if available (allows project-specific server URLs for faster responses)
+            var uri = PanoramaUtil.GetContainersUri(ServerUri, folder, true, server);
 
             using (var requestHelper = GetRequestHelper())
             {
@@ -224,17 +225,17 @@ namespace pwiz.PanoramaClient
                 JToken jStatusResponse = requestHelper.Get(statusUri,
                     Resources
                         .AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_);
-                JToken rows = jStatusResponse[@"rows"];
+                JToken rows = jStatusResponse[@"rows"]!;
                 var row = rows.FirstOrDefault(r => (int)r[@"RowId"] == pipelineJobRowId);
                 if (row == null)
                     continue;
 
-                var jobUrl = new Uri(ServerUri, (string)row[@"_labkeyurl_RowId"]);
+                var jobUrl = new Uri(ServerUri, row.Value<string>(@"_labkeyurl_RowId"));
                 var status = new ImportStatus((string)row[@"Status"]);
                 if (status.IsComplete)
                 {
                     progressMonitor.UpdateProgress(_progressStatus.Complete());
-                    return new Uri(ServerUri, (string)row[@"_labkeyurl_Description"]);
+                    return new Uri(ServerUri, row.Value<string>(@"_labkeyurl_Description"));
                 }
 
                 else if (status.IsCancelled)
@@ -284,8 +285,8 @@ namespace pwiz.PanoramaClient
 
 
             // ID to check import status.
-            var details = importResponse[@"UploadedJobDetails"];
-            return (int)details[0][@"RowId"];
+            var details = importResponse[@"UploadedJobDetails"]!;
+            return (int)details[0]![@"RowId"];
         }
 
         private Uri UploadTempZipFile(string zipFilePath, Uri baseUploadUri, string escapedZipFileName,
@@ -553,7 +554,47 @@ namespace pwiz.PanoramaClient
             try
             {
                 using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
-                httpClient.DownloadString(uri);
+                
+                // Use admin-healthCheck.view endpoint to verify it's a LabKey Server
+                // This endpoint is specifically designed for server health checks:
+                // - Always present on every LabKey Server
+                // - Returns minimal JSON immediately (no login required)
+                // - Returns {"healthy": true} for a valid LabKey Server
+                // - Much smaller than downloading HTML home page
+                // IMPORTANT: Use only the root server URL (without folder paths or WebDAV paths)
+                // The admin-healthCheck.view endpoint must be called at the server root level
+                // Use PanoramaServer to extract the root server URI for consistency with ValidateServerAndUser
+                var pServer = new PanoramaServer(uri);
+                var validationUri = new Uri(pServer.URI, @"admin-healthCheck.view");
+                string responseBody = httpClient.DownloadString(validationUri);
+                
+                // Verify the response is valid JSON and contains the expected health check structure
+                try
+                {
+                    var jsonResponse = JObject.Parse(responseBody);
+                    // Verify it's a LabKey Server by checking for the "healthy" property
+                    var healthy = jsonResponse.Value<bool?>(@"healthy");
+                    if (!healthy.HasValue)
+                    {
+                        throw new PanoramaServerException(
+                            new ErrorMessageBuilder(ServerStateEnum.unknown.Error(uri))
+                                .Uri(validationUri)
+                                .ErrorDetail(string.Format(
+                                    Resources.WebPanoramaClient_ValidateUri_Server_did_not_return_a_valid_LabKey_Server_response___0__is_not_a_LabKey_server_,
+                                    uri)).ToString());
+                    }
+                }
+                catch (JsonReaderException)
+                {
+                    // Response is not JSON - likely HTML or other non-LabKey content
+                    throw new PanoramaServerException(
+                        new ErrorMessageBuilder(ServerStateEnum.unknown.Error(uri))
+                            .Uri(validationUri)
+                            .ErrorDetail(string.Format(
+                                Resources.WebPanoramaClient_ValidateUri_Server_did_not_return_a_valid_LabKey_Server_response___0__is_not_a_LabKey_server_,
+                                uri)).ToString());
+                }
+                
                 return uri;
             }
             catch (NetworkRequestException ex)
@@ -666,7 +707,7 @@ namespace pwiz.PanoramaClient
                     throw new PanoramaServerException(
                         new ErrorMessageBuilder(UserStateEnum.unknown.Error(ServerUri))
                             .Uri(requestUri)
-                            .ErrorDetail(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_)
+                            .ErrorDetail(string.Format(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_, ServerUri))
                             .LabKeyError(PanoramaUtil.GetIfErrorInResponse(jsonResponse))
                             .Response(jsonResponse).ToString());
                 }
