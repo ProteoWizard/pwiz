@@ -3834,7 +3834,7 @@ namespace pwiz.Skyline
         {
             JToken folders = null;
             var folderPath = panoramaSavedUri.AbsolutePath;
-            var folderPathNoCtx = PanoramaServer.getFolderPath(server, panoramaSavedUri); // get folder path without the context path
+            var folderPathNoCtx = PanoramaServer.GetFolderPath(server, panoramaSavedUri); // get folder path without the context path
             var folderToQuery = folderPathNoCtx.TrimEnd('/').TrimStart('/');
             
             // Get folder information with progress dialog (can be slow, needs cancellation)
