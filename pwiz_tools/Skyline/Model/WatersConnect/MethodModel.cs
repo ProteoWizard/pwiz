@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
-using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.WatersConnect
 {
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.WatersConnect
             return columnAttribute?.ColumnName ?? string.Empty;
         }
 
-        public virtual void ParseObject(DsvStreamReader reader)
+        public virtual void ParseObject(DsvFileReader reader)
         {
             if (reader == null)
                 return;
@@ -77,13 +77,13 @@ namespace pwiz.Skyline.Model.WatersConnect
             {
                 var columnAttribute = field.GetCustomAttributes(true).ToList().OfType<ColumnNameAttribute>().FirstOrDefault();
                 
-                if (columnAttribute != null && reader.HasHeader(columnAttribute.ColumnName) && !columnAttribute.DoNotParse)
+                if (columnAttribute != null && reader.GetFieldByName(columnAttribute.ColumnName) != null && !columnAttribute.DoNotParse)
                 {
-                    if (TryParseType(field.PropertyType, reader[columnAttribute.ColumnName], out var result))
+                    if (TryParseType(field.PropertyType, reader.GetFieldByName(columnAttribute.ColumnName), out var result))
                         field.SetValue(this, result);
                     else
                         throw new FormatException(string.Format(@"Cannot parse value {0} of type {1}",
-                            reader[columnAttribute.ColumnName], field.PropertyType.FullName));
+                            reader.GetFieldByName(columnAttribute.ColumnName), field.PropertyType.FullName));
                 }
             }
         }
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.WatersConnect
         [JsonProperty("adducts", Order = 8)]
         public List<AdductInfo> Adducts;
 
-        public override void ParseObject(DsvStreamReader reader)
+        public override void ParseObject(DsvFileReader reader)
         {
             base.ParseObject(reader);
 
@@ -186,12 +186,12 @@ namespace pwiz.Skyline.Model.WatersConnect
         /// <summary>
         /// Determines if the current line in the reader belongs to the same compound
         /// </summary>
-        public bool IsSameCompound(DsvStreamReader reader)
+        public bool IsSameCompound(DsvFileReader reader)
         {
             var colAttribute =  GetType().GetProperty("Name")?.GetCustomAttribute(typeof(ColumnNameAttribute)) as ColumnNameAttribute;
             if (colAttribute != null)
             {
-                return string.Equals(Name, reader[colAttribute.ColumnName], StringComparison.OrdinalIgnoreCase);
+                return string.Equals(Name, reader.GetFieldByName(colAttribute.ColumnName), StringComparison.OrdinalIgnoreCase);
             }
             return false;
         }
@@ -210,11 +210,11 @@ namespace pwiz.Skyline.Model.WatersConnect
         [JsonProperty("transitions")]
         public IList<Transition> Transitions { get; set; }
 
-        public override void ParseObject(DsvStreamReader reader)
+        public override void ParseObject(DsvFileReader reader)
         {
             base.ParseObject(reader);
             var polarityHeader = GetColumnName(@"Polarity");
-            if (reader.TryGetColumn(polarityHeader, out var precursorCharge) &&
+            if (reader.TryGetFieldByName(polarityHeader, out var precursorCharge) &&
                 int.TryParse(precursorCharge, out var charge))
             {
                 if (charge > 0)
@@ -223,12 +223,12 @@ namespace pwiz.Skyline.Model.WatersConnect
                     Polarity = @"Negative";
             }
         }
-        public bool IsSameAdduct(DsvStreamReader reader)
+        public bool IsSameAdduct(DsvFileReader reader)
         {
             var colAttribute = GetType().GetProperty("Name")?.GetCustomAttribute(typeof(ColumnNameAttribute)) as ColumnNameAttribute;
             if (colAttribute != null)
             {
-                var name = reader[colAttribute.ColumnName];
+                var name = reader.GetFieldByName(colAttribute.ColumnName);
                 return string.Equals(Name, name, StringComparison.OrdinalIgnoreCase);
             }
             return false;

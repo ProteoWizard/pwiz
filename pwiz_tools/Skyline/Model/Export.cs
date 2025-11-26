@@ -5153,13 +5153,12 @@ namespace pwiz.Skyline.Model
         // Using fully-qualified names of the Waters Connect method model for clarity.
         public MethodModel ParseMethod(string outputLines)
         {
-            var linesReader = new DsvStreamReader(new StringReader(outputLines), ',');
+            var linesReader = new DsvFileReader(new StringReader(outputLines), ',');
             var targets = new List<WatersConnect.Compound>();
             WatersConnect.Compound currentTarget = null;
             WatersConnect.AdductInfo currentAdduct = null;
-            while (!linesReader.EndOfStream)
+            while (linesReader.ReadLine() != null)
             {
-                linesReader.ReadLine();
                 // we assume that the lines are sorted by target
                 if (currentTarget == null || !currentTarget.IsSameCompound(linesReader))
                 {

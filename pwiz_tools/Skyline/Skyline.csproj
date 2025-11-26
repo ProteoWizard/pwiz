@@ -731,7 +731,7 @@
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
-  <Compile Include="Model\Databinding\SublistPaths.cs" />
+    <Compile Include="Model\Databinding\SublistPaths.cs" />
     <Compile Include="Controls\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Controls\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\NormalizationMethodDataGridViewColumn.cs" />
@@ -945,7 +945,6 @@
     </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
-    <Compile Include="Util\DsvStreamReader.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>

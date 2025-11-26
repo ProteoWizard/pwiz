@@ -968,7 +968,6 @@ namespace pwiz.Skyline.Util.Extensions
             return _currentFields;
         }
 
-
         /// <summary>
         /// For the current line, outputs the field corresponding to the column name fieldName, or null if
         /// there is no such field name.
@@ -979,6 +978,18 @@ namespace pwiz.Skyline.Util.Extensions
         {
             int fieldIndex = GetFieldIndex(fieldName);
             return GetFieldByIndex(fieldIndex);
+        }
+
+        public bool TryGetFieldByName(string fieldName, out string fieldValue)
+        {
+            int fieldIndex = GetFieldIndex(fieldName);
+            if (fieldIndex == -1)
+            {
+                fieldValue = null;
+                return false;
+            }
+            fieldValue = GetFieldByIndex(fieldIndex);
+            return true;
         }
 
         /// <summary>
