@@ -321,6 +321,28 @@ Errors while running CTest
 33% tests passed, 2 tests failed out of 3
 ```
 
+### Handling Intermittent Test Failures
+
+**Critical Rule**: Never commit, push, or merge code without proving tests can pass reliably.
+
+When a test failure is believed to be intermittent or pre-existing:
+
+1. **Re-run the specific failing test** to verify it's truly intermittent:
+   ```powershell
+   .\pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName FailingTestName
+   ```
+
+2. **If the test fails consistently**, it is NOT intermittent—your changes may have made it repeatable, or the "known issue" memory is incorrect.
+
+3. **If the test passes on re-run**, document the intermittent behavior (frequency, suspected cause) and consider:
+   - Filing an issue to fix the flakiness
+   - Adding retry logic or better test isolation
+   - Running multiple iterations to establish failure rate
+
+4. **Document pre-existing failures** in the PR description or commit message if proceeding with known failing tests, but only after confirming they fail on `master` branch as well.
+
+**Rationale**: "I thought it was intermittent" or "I remember it failing before" is not sufficient due diligence. Test failures must be reproducible and understood before being dismissed.
+
 ## Configuration Options
 
 ### Configuration
