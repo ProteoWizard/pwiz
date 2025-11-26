@@ -980,18 +980,6 @@ namespace pwiz.Skyline.Util.Extensions
             return GetFieldByIndex(fieldIndex);
         }
 
-        public bool TryGetFieldByName(string fieldName, out string fieldValue)
-        {
-            int fieldIndex = GetFieldIndex(fieldName);
-            if (fieldIndex == -1)
-            {
-                fieldValue = null;
-                return false;
-            }
-            fieldValue = GetFieldByIndex(fieldIndex);
-            return true;
-        }
-
         /// <summary>
         /// For the current line, outputs the field numbered fieldIndex
         /// </summary>

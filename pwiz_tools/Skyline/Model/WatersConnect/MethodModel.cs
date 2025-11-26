@@ -214,8 +214,7 @@ namespace pwiz.Skyline.Model.WatersConnect
         {
             base.ParseObject(reader);
             var polarityHeader = GetColumnName(@"Polarity");
-            if (reader.TryGetFieldByName(polarityHeader, out var precursorCharge) &&
-                int.TryParse(precursorCharge, out var charge))
+            if (int.TryParse(reader.GetFieldByName(polarityHeader), out var charge))
             {
                 if (charge > 0)
                     Polarity = @"Positive";
