@@ -5,6 +5,7 @@ Essential workflows for LLM-assisted development. See [ai/docs/workflow-guide.md
 ## Branch Strategy
 
 - **master** - Stable releases, requires review
+- **ai-context** - Rapid iteration on `ai/` documentation (merges to master periodically)
 - **Skyline/skyline_YY_N** - Release branches
 - **Skyline/work/YYYYMMDD_description** - Feature/fix branches (all development)
 
@@ -24,10 +25,12 @@ ai/todos/
 - `TODO-20251105_feature_name.md` - Active (dated, in ai/todos/active/)
 
 ### Lifecycle
-1. **Backlog** - Planning on master (`ai/todos/backlog/`)
-2. **Active** - Development on branch (`ai/todos/active/`)
-3. **Completed** - Merged to master (`ai/todos/completed/`)
+1. **Backlog** - Planning on ai-context (`ai/todos/backlog/`)
+2. **Active** - Development on feature branch (`ai/todos/active/`)
+3. **Completed** - On feature branch, merged to master with code (`ai/todos/completed/`)
 4. **Archive** - Cleanup after 3 months (`ai/todos/archive/`)
+
+> **Note:** Backlog TODOs are committed to `ai-context` branch to avoid churning master. See [ai/docs/ai-context-branch-strategy.md](docs/ai-context-branch-strategy.md) for details.
 
 ### Header Standard (All TODO Files)
 
@@ -57,19 +60,18 @@ Rules:
 
 ### Workflow 1: Start Work from Backlog TODO
 
-**On master - claim the work:**
-> **Tip:** If your working tree has in-progress changes, `git stash push -u` before these steps so the TODO move commit is the only change on `master`. After switching to the new branch, `git stash pop` to restore your work.
+**On master - create feature branch:**
+> **Note:** Backlog TODOs live on `ai-context` branch. You'll copy (not move) to your feature branch.
 ```bash
 git checkout master
 git pull origin master
-git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
-git commit -m "Start feature_name work - move TODO to active"
-git push origin master
+git checkout -b Skyline/work/20251105_feature_name
 ```
 
-**Create branch:**
+**Copy TODO from ai-context to active:**
 ```bash
-git checkout -b Skyline/work/20251105_feature_name
+git checkout ai-context -- ai/todos/backlog/TODO-feature_name.md
+git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
 ```
 
 **Update TODO header and commit:**
@@ -121,31 +123,20 @@ git branch -d Skyline/work/YYYYMMDD_feature  # Delete local branch
 
 When inspiration strikes during development:
 
-**Option 1: Create on master (recommended):**
+**Create on ai-context branch:**
 ```bash
 git stash
-git checkout master
-git pull origin master
+git checkout ai-context
+git pull origin ai-context
 # Create ai/todos/backlog/TODO-new_idea.md
 git add ai/todos/backlog/TODO-new_idea.md
 git commit -m "Add backlog TODO for new_idea planning"
-git push origin master
+git push origin ai-context
 git checkout Skyline/work/YYYYMMDD_current_feature
 git stash pop
 ```
 
-**Option 2: Cherry-pick from branch:**
-```bash
-# Create TODO on current branch
-git add ai/todos/backlog/TODO-new_idea.md
-git commit -m "Add backlog TODO for new_idea planning"
-# Cherry-pick to master
-git checkout master
-git pull origin master
-git cherry-pick <commit-hash>
-git push origin master
-git checkout Skyline/work/YYYYMMDD_current_feature
-```
+> **Why ai-context?** Backlog TODOs are committed to `ai-context` to avoid frequent master churn. See [ai/docs/ai-context-branch-strategy.md](docs/ai-context-branch-strategy.md).
 
 ## LLM Tool Guidelines
 

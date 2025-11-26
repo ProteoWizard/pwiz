@@ -360,6 +360,9 @@ ASALocalRun/
 # NVidia Nsight GPU debugger configuration file
 *.nvuser
 
+# Ephemeral LLM browser-to-IDE handoff files (usually *.md)
+/ai/.tmp/
+
 build-nt-x86
 /src_subset
 /*.log
