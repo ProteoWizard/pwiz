@@ -47,6 +47,8 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -235,6 +237,8 @@ namespace pwiz.SkylineTest
                 @"(new XmlTextWriter|File\.WriteAllText|File\.WriteAllLines|\.SaveAsXml|new StreamWriter)\(.*Encoding\.UTF8[^E]", // Forbidden pattern - catches file writing with Encoding.UTF8 (but not UTF8Encoding)
                 true, // Pattern is a regular expression
                 @"Encoding.UTF8 includes a BOM by default. Use 'new UTF8Encoding(false)' for UTF-8 without BOM, or 'new UTF8Encoding(true)' if you explicitly need a BOM."); // Explanation for prohibition, appears in report
+
+            FilesTreeDataModelInspection();
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -557,6 +561,14 @@ namespace pwiz.SkylineTest
             }
         }
 
+        // Assert the file data model is not an IIdentityContainer. Implementing IIdentityContainer on the IFile
+        // interface causes other Skyline tests (esp. tutorials) to fail with subtle errors. It would be easy
+        // to implement so this inspection checks that has not happened.
+        private static void FilesTreeDataModelInspection()
+        {
+            Assert.IsFalse(typeof(IIdentiyContainer).IsAssignableFrom(typeof(IFile)));
+        }
+
         /// <summary>
         /// Inspect the P/Invoke API. This looks at classes inside the .PInvoke
         /// namespace to monitor for changes to which Win32 APIs are referenced,
@@ -671,17 +683,60 @@ namespace pwiz.SkylineTest
             // Directories to skip (build outputs, test results, Git submodules, etc.)
             var skipDirectories = new[] { "\\bin\\", "\\obj\\", "\\TestResults\\", "\\SkylineTester Results\\", "\\Executables\\BullseyeSharp\\", "\\Executables\\Hardklor\\", "\\Executables\\DevTools\\DocumentConverter\\" };
 
-            // Search paths: Skyline and Shared directories
+            // Search paths: All projects in Skyline.sln
             var searchPaths = new List<string> { root };
-            var sharedCommon = Path.Combine(root, "..", "Shared", "Common");
-            var sharedCommonUtil = Path.Combine(root, "..", "Shared", "CommonUtil");
-            if (Directory.Exists(sharedCommon))
-                searchPaths.Add(sharedCommon);
-            if (Directory.Exists(sharedCommonUtil))
-                searchPaths.Add(sharedCommonUtil);
+            string slnPath = Path.Combine(root, "Skyline.sln");
+            if (File.Exists(slnPath))
+            {
+                // Parse solution file to get all project directories
+                var projectDirs = File.ReadAllLines(slnPath)
+                    .Where(line => line.Trim().StartsWith("Project(") && (line.Contains(".csproj") || line.Contains(".vcxproj")))
+                    .Select(line =>
+                    {
+                        var parts = line.Split('"');
+                        if (parts.Length >= 6)
+                        {
+                            var projectPath = parts[5].Replace('\\', Path.DirectorySeparatorChar);
+                            try
+                            {
+                                var fullProjectPath = Path.GetFullPath(Path.Combine(root, projectPath));
+                                if (File.Exists(fullProjectPath))
+                                {
+                                    return Path.GetDirectoryName(fullProjectPath);
+                                }
+                            }
+                            catch
+                            {
+                                // Skip invalid paths
+                            }
+                        }
+                        return null;
+                    })
+                    .Where(dir => dir != null && Directory.Exists(dir))
+                    .Distinct()
+                    .ToList();
+                
+                foreach (var projectDir in projectDirs)
+                {
+                    if (!searchPaths.Contains(projectDir, StringComparer.OrdinalIgnoreCase))
+                    {
+                        searchPaths.Add(projectDir);
+                    }
+                }
+            }
+            else
+            {
+                // Fallback: if solution file not found, use original approach
+                var sharedCommon = Path.Combine(root, "..", "Shared", "Common");
+                var sharedCommonUtil = Path.Combine(root, "..", "Shared", "CommonUtil");
+                if (Directory.Exists(sharedCommon))
+                    searchPaths.Add(sharedCommon);
+                if (Directory.Exists(sharedCommonUtil))
+                    searchPaths.Add(sharedCommonUtil);
+            }
 
-            // File types to check
-            var fileMasks = new[] { "*.cs", "*.cpp", "*.h", "*.resx", "*.xml", "*.config", "*.csproj", "*.sln", "*.xsd" };
+            // File types to check (including Skyline document file types)
+            var fileMasks = new[] { "*.cs", "*.cpp", "*.h", "*.resx", "*.xml", "*.config", "*.csproj", "*.sln", "*.xsd", "*.sky", "*.sky.view", "*.skyl" };
 
             // ReSharper disable once CollectionNeverQueried.Local
             var filesWithBom = new List<string>();

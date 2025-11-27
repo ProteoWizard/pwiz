@@ -19,9 +19,36 @@ if (-not $files) {
   exit 0
 }
 
+# Function to check if a file is binary
+function Test-BinaryFile {
+  param([string]$filePath)
+  
+  # Check Git attributes for binary marking
+  $attr = git check-attr binary -- $filePath 2>$null
+  if ($attr -match 'binary:\s+set') {
+    return $true
+  }
+  
+  # Check common binary file extensions
+  $binaryExtensions = @('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.ico', '.zip', 
+                        '.gz', '.tar', '.skyd', '.mzml', '.mzxml', '.raw', 
+                        '.wiff', '.dll', '.exe', '.so', '.dylib', '.pdf')
+  $ext = [System.IO.Path]::GetExtension($filePath).ToLower()
+  if ($binaryExtensions -contains $ext) {
+    return $true
+  }
+  
+  return $false
+}
+
 # Force CRLF
 foreach ($f in $files) {
   if (Test-Path $f) {
+    # Skip binary files
+    if (Test-BinaryFile -filePath $f) {
+      continue
+    }
+    
     $absolutePath = (Resolve-Path -LiteralPath $f).Path
     $text  = [System.IO.File]::ReadAllText($absolutePath, [System.Text.UTF8Encoding]::new($false))
     $fixed = [regex]::Replace($text, "`r?`n", "`r`n")
@@ -36,6 +63,11 @@ foreach ($f in $files) {
 $bad = @()
 foreach ($f in $files) {
   if (Test-Path $f) {
+    # Skip binary files
+    if (Test-BinaryFile -filePath $f) {
+      continue
+    }
+    
     $absolutePath = (Resolve-Path -LiteralPath $f).Path
     $s = [System.IO.File]::ReadAllText($absolutePath, [System.Text.UTF8Encoding]::new($false))
     if ($s -match '(?<!\r)\n') { $bad += $f }

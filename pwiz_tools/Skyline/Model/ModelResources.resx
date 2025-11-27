@@ -900,10 +900,10 @@ Would you like to continue?
     <value>Detailed Info</value>
   </data>
   <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_" xml:space="preserve">
-      <value>In "{0}": {1}</value>
+    <value>In "{0}": {1}</value>
   </data>
   <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_" xml:space="preserve">
-      <value>In entry "{0}" of "{1}": {2}</value>
+    <value>In entry "{0}" of "{1}": {2}</value>
   </data>
   <data name="TransitionDocNode_GetLabel__0__1__" xml:space="preserve">
     <value>{0} [{1}]</value>

@@ -585,6 +585,35 @@ EditorConfig
   - Example: "Keyboard Shortcuts" → `Keyboard_Shortcuts`; "File > New" → `File_New`.
 - Prefer reusing existing keys when text matches; avoid near-duplicate strings.
 
+### UTF-8 Encoding for Localized Files
+
+**For AI agents and developers working with `.ja.resx` and `.zh-CHS.resx` files:**
+
+Skyline is translated to Japanese and Chinese. When viewing or diffing localized RESX files, ensure UTF-8 encoding is configured in your terminal to display characters correctly.
+
+**PowerShell configuration:**
+```powershell
+# PowerShell 7+ (recommended - defaults to UTF-8)
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Or use chcp for legacy compatibility
+chcp 65001
+```
+
+**Why this matters:**
+- Git diffs of `.ja.resx` and `.zh-CHS.resx` files contain Japanese (日本語) and Chinese (中文) characters
+- Without UTF-8, these characters display as garbled text (e.g., `πâçπâòπé⌐` instead of `デフォルト`)
+- PowerShell 7+ defaults to UTF-8; PowerShell 5.1 requires explicit configuration
+- See `ai/docs/developer-setup-guide.md` for full terminal setup instructions
+
+**Verification:**
+```powershell
+# Test UTF-8 display
+Write-Host "Test: ファイル (Japanese), 文件 (Chinese)"
+# Should display correctly, not as garbled characters
+```
+
 
 ## User interface guidelines
 
