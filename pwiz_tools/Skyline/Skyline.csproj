@@ -205,6 +205,9 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
+    <Compile Include="Controls\FilesTree\FileSystemUtil.cs" />
+    <Compile Include="Controls\FilesTree\ManagedFileSystemWatcher.cs" />
     <Compile Include="Controls\Databinding\BuiltInReports.cs" />
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
@@ -396,6 +399,18 @@
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
+    <Compile Include="Controls\FilesTree\BackgroundActionService.cs" />
+    <Compile Include="Controls\FilesTree\FilesTree.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\FilesTree\FilesTreeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\FilesTree\FilesTreeForm.Designer.cs">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\FilesTree\FilesTreeNode.cs" />
+    <Compile Include="Controls\FilesTree\FileSystemService.cs" />
     <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -586,9 +601,38 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
+    <Compile Include="Model\DocSettings\IFile.cs" />
     <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
+    <Compile Include="Model\Files\BackgroundProteome.cs" />
+    <Compile Include="Model\Files\BackgroundProteomeFolder.cs" />
+    <Compile Include="Model\Files\FileModel.cs" />
+    <Compile Include="Controls\FilesTree\FilesTreeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FilesTreeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Files\IonMobilityLibrary.cs" />
+    <Compile Include="Model\Files\IonMobilityLibraryFolder.cs" />
+    <Compile Include="Model\Files\OptimizationLibraryFolder.cs" />
+    <Compile Include="Model\Files\OptimizationLibrary.cs" />
+    <Compile Include="Model\Files\Replicate.cs" />
+    <Compile Include="Model\Files\ReplicateSampleFile.cs" />
+    <Compile Include="Model\Files\ReplicatesFolder.cs" />
+    <Compile Include="Model\Files\SkylineFile.cs" />
+    <Compile Include="Model\Files\RTCalcFolder.cs" />
+    <Compile Include="Model\Files\RTCalc.cs" />
+    <Compile Include="Model\Files\SkylineAuditLog.cs" />
+    <Compile Include="Model\Files\SkylineChromatogramCache.cs" />
+    <Compile Include="Model\Files\SkylineViewFile.cs" />
+    <Compile Include="Model\Files\SpectralLibrariesFolder.cs" />
+    <Compile Include="Model\Files\SpectralLibrary.cs" />
+    <Compile Include="Model\Files\FileResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FileResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -2719,6 +2763,10 @@
     <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.zh-CHS.resx">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeForm.resx">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.ja.resx">
       <DependentUpon>AreaCVToolbar.cs</DependentUpon>
     </EmbeddedResource>
@@ -3735,6 +3783,16 @@
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx">
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FilesTreeResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\FileResources.resx">
+      <SubType>Designer</SubType>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FileResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.ja.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
