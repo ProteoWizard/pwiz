@@ -32,6 +32,7 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Common;
 using pwiz.Common.Collections;
+using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -79,6 +80,11 @@ namespace pwiz.Skyline
             {
                 CommonApplicationSettings.FunctionalTest = value;
             }
+        }
+
+        public static HttpMessageHandlerFactory HttpMessageHandlerFactory
+        {
+            get { return CommonApplicationSettings.HttpMessageHandlerFactory; }
         }
 
         // TODO(nicksh): Remove this once intermittent failures in these tests are fixed

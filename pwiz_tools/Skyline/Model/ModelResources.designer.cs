@@ -470,6 +470,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Compound from Skyline document {0} - {1}.
+        /// </summary>
+        public static string Compound_ParseObject_Compound_from_Skyline_document__0_____1_ {
+            get {
+                return ResourceManager.GetString("Compound_ParseObject_Compound_from_Skyline_document__0_____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Custom molecules must specify a formula or valid monoisotopic and average masses..
         /// </summary>
         public static string CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_ {
@@ -745,6 +754,26 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot use a template method from another server..
+        /// </summary>
+        public static string ExportProperties_ExportWatersConnectMethod_Cannot_use_a_template_method_from_another_server_ {
+            get {
+                return ResourceManager.GetString("ExportProperties_ExportWatersConnectMethod_Cannot_use_a_template_method_from_anot" +
+                        "her_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching Waters Connect account is found for this URL..
+        /// </summary>
+        public static string ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_found_for_this_URL_ {
+            get {
+                return ResourceManager.GetString("ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_" +
+                        "found_for_this_URL_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average.
         /// </summary>
         public static string ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Average {
@@ -795,6 +824,15 @@ namespace pwiz.Skyline.Model {
         public static string ExportStrategyExtension_LOCALIZED_VALUES_Single {
             get {
                 return ResourceManager.GetString("ExportStrategyExtension_LOCALIZED_VALUES_Single", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WcDecide.
+        /// </summary>
+        public static string ExportStrategyExtension_LOCALIZED_VALUES_WcDecide {
+            get {
+                return ResourceManager.GetString("ExportStrategyExtension_LOCALIZED_VALUES_WcDecide", resourceCulture);
             }
         }
         
@@ -2499,6 +2537,44 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creating MRM method &apos;{0}&apos; from Skyline document &apos;{1}&apos;.
+        /// </summary>
+        public static string WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__ {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_d" +
+                        "ocument___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder ID is missing. Cannot upload the method. Folder info: {0}.
+        /// </summary>
+        public static string WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method creation from Skyline transition list.
+        /// </summary>
+        public static string WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_list {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_" +
+                        "list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exported from Skyline.
+        /// </summary>
+        public static string WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline {
+            get {
+                return ResourceManager.GetString("WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to find a valid MassLynx installation..
         /// </summary>
         public static string WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation {
@@ -2525,6 +2601,15 @@ namespace pwiz.Skyline.Model {
             get {
                 return ResourceManager.GetString("WatersMethodExporter_EnsureLibraries_Waters_method_creation_software_may_not_be_i" +
                         "nstalled_correctly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected WatersConnectSessionAcquisitionMethod, got {0}..
+        /// </summary>
+        public static string WatersMethodExporter_Wrong_Session_Type {
+            get {
+                return ResourceManager.GetString("WatersMethodExporter_Wrong_Session_Type", resourceCulture);
             }
         }
         

@@ -311,6 +311,15 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
     <value>An import error occurred on the Panorama server {0}.</value>
   </data>
+  <data name="DsvStreamReader_this_Header__0__not_found_in_DSV_file_" xml:space="preserve">
+    <value>Header {0} not found in DSV file.</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_" xml:space="preserve">
+    <value>Stream is null or empty.</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Empty_stream_" xml:space="preserve">
+    <value>Empty stream.</value>
+  </data>
   <data name="ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_" xml:space="preserve">
     <value>Failed accessing the clipboard.</value>
   </data>

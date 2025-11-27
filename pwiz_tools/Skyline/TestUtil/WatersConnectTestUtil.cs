@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestUtil
             {
                 return null;
             }
-            return (WatersConnectAccount)WatersConnectAccount.DEFAULT.ChangeUsername("skyline")
+            return (WatersConnectAccount)WatersConnectAccount.DEV_DEFAULT.ChangeUsername("skyline")
                 .ChangePassword(password);
 
         }

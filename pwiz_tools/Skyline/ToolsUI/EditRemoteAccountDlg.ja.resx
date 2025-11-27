@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>232, 409</value>
+    <value>232, 411</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>151, 409</value>
+    <value>151, 411</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -355,7 +355,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnTest.Location" type="System.Drawing.Point, System.Drawing">
-    <value>70, 409</value>
+    <value>70, 411</value>
   </data>
   <data name="btnTest.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -537,7 +537,7 @@ Old Localized:アカウントタイプ：</comment>
     <value>0, 142</value>
   </data>
   <data name="groupBoxUnifi.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 182</value>
+    <value>288, 189</value>
   </data>
   <data name="groupBoxUnifi.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -683,6 +683,21 @@ Old Localized:アイデンティティサーバー：</comment>
   <data name="wizardPagesByAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="tabUnifiSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabUnifiSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabUnifiSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>288, 329</value>
+  </data>
+  <data name="tabUnifiSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabUnifiSettings.Text" xml:space="preserve">
+    <value>Unifi</value>
+  </data>
   <data name="&gt;&gt;tabUnifiSettings.Name" xml:space="preserve">
     <value>tabUnifiSettings</value>
   </data>
@@ -822,7 +837,7 @@ Old Localized:アイデンティティサーバー：</comment>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>288, 325</value>
+    <value>288, 329</value>
   </data>
   <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -844,6 +859,9 @@ Old Localized:アイデンティティサーバー：</comment>
   </data>
   <data name="cbArdiaDeleteRawAfterImport.Text" xml:space="preserve">
     <value>インポート後RAWファイルを削除</value>
+  </data>
+  <data name="wizardPagesByAccountType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>296, 353</value>
   </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
@@ -939,7 +957,7 @@ Old Localized:アイデンティティサーバー：</comment>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>323, 444</value>
+    <value>323, 446</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
