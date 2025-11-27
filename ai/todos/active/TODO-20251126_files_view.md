@@ -4,8 +4,8 @@
 - **Branch**: `Skyline/work/20251126_files_view`
 - **Created**: 2025-11-26
 - **Completed**: (pending)
-- **Status**: 🚧 In Progress
-- **PR**: (pending - will replace #3334)
+- **Status**: 🚧 In Progress - PR created, bug fix required before merge
+- **PR**: #3867 (replaces #3334)
 - **Objective**: Clean up and prepare the Files view feature for merge to master by creating a fresh branch with all changes from the 11-month-old branch, carefully reviewing each change, and creating a clean squashed commit ready for merge
 
 ## Background
@@ -126,13 +126,14 @@ Based on the old branch, key areas to review:
 
 ## Success Criteria
 
-- [ ] New branch created from latest master
-- [ ] All intended changes from old branch applied as uncommitted
-- [ ] All unintended changes identified and reverted
-- [ ] Build succeeds with clean changes
-- [ ] Tests pass (request developer to verify)
-- [ ] Clean, well-organized commit created
-- [ ] New PR created and linked in TODO
+- [x] New branch created from latest master
+- [x] All intended changes from old branch applied as uncommitted
+- [x] All unintended changes identified and reverted
+- [x] Build succeeds with clean changes
+- [x] Tests pass (request developer to verify)
+- [x] Clean, well-organized commit created
+- [x] New PR created and linked in TODO (PR #3867)
+- [ ] **TreeViewStateRestorer bug fixed** (BLOCKER - must fix before merge)
 - [ ] Old PR #3334 closed with explanation
 
 ## Notes
@@ -147,7 +148,8 @@ Based on the old branch, key areas to review:
 ### Current Status
 - [x] Phase 1: New branch creation - ✅ Complete
 - [x] Phase 2: Review and cleanup - ✅ Complete  
-- [ ] Phase 3: Commit and PR creation - 🚧 Ready to commit
+- [x] Phase 3: Commit and PR creation - ✅ Complete (PR #3867 created)
+- [ ] Phase 4: Bug fixes - 🚧 In Progress (TreeViewStateRestorer bug must be fixed before merge)
 
 ### Recent Work
 - 2025-11-26: Created migration plan TODO
@@ -164,7 +166,12 @@ Based on the old branch, key areas to review:
   - Removed empty `SkylineWindowEventsTest.zip` file
   - Reduced `FilesTreeFormTest.zip` from 87 MB to ~1 MB (removed unnecessary mass spec data files)
   - Added `.data` folder structure for better version control (FilesTreeFormTest.data, FilesTreeFileSystemTest.data)
-- 2025-11-26: Ready to commit and create new PR
+- 2025-11-26: Committed and pushed branch, created PR #3867
+- 2025-11-26: Identified bug: TreeViewStateRestorer not correctly saving/restoring FilesView tree state (must fix before merge)
+- 2025-11-26: Updated localized RESX files using `IncrementalUpdateResxFiles` Boost Build target
+- 2025-11-26: Confirmed "Files" is translated in Japanese (`ファイル`) and Chinese (`文件`) in ViewMenu.resx
+- 2025-11-26: Reviewed RESX file changes - accepted PanoramaClient translation updates, reverted Peptide translation (key rename issue), noted RetentionTimesResources new key not appearing (tool design issue)
+- 2025-11-26: Added UTF-8 encoding documentation to STYLEGUIDE.md and style-guide.md for viewing localized files
 
 ## Review Findings (2025-11-26)
 
@@ -261,6 +268,49 @@ The main areas with lower coverage are:
   - Test method: `TestSkylineWindowEvents`
 
 All tests have been added to `pwiz_tools/Skyline/SkylineTester test list.txt` for easy execution.
+
+## Localization Updates (2025-11-26)
+
+### RESX File Updates
+- Ran `IncrementalUpdateResxFiles` Boost Build target to synchronize all `.ja.resx` and `.zh-CHS.resx` files with English `.resx` files
+- Confirmed "Files" menu item is properly translated:
+  - Japanese: `ファイル` (in `ViewMenu.ja.resx`)
+  - Chinese: `文件` (in `ViewMenu.zh-CHS.resx`)
+- Reviewed and accepted translation updates in PanoramaClient Resources files (minor refinements from HttpClient migration)
+- Reverted Peptide translation in ModelResources (key rename from `PeptideTreeNode_Title` to `PeptideDocNode_Title` caused tool to flag as inconsistent)
+- Noted issue: `RetentionTimesResources` new key `AlignmentTargetSpec_GetLabel_Default__None_` not appearing in localized files (tool design - new resources with English text are skipped; to discuss with Nick Shulman)
+
+### Documentation
+- Added UTF-8 encoding guidance to `ai/STYLEGUIDE.md` and `ai/docs/style-guide.md` for viewing localized RESX files
+- Ensures Japanese and Chinese characters display correctly in git diffs and terminal output
+
+## Known Issues / Blockers (Must Fix Before Merge)
+
+### TreeViewStateRestorer Not Saving/Restoring FilesView Tree State
+
+**Status**: 🔴 **BLOCKER** - Must be fixed before PR #3867 can be merged
+
+**Description**: 
+The `TreeViewStateRestorer` is not correctly saving the state of the FilesView tree so that it can be restored from the `.sky.view` file. This means that when a document is reopened, the Files view tree state (expanded nodes, selected nodes, scroll position) is not preserved.
+
+**Discovered**: 2025-11-26 while reducing the 87 MB `FilesTreeFormTest.zip` file
+
+**Impact**: 
+- Users will lose their Files view tree state when reopening documents
+- Poor user experience - users must manually re-expand nodes and navigate to their previous position
+- May affect test reliability if tests depend on tree state persistence
+
+**Next Steps**:
+1. Investigate how `TreeViewStateRestorer` is integrated with `FilesTreeForm`
+2. Verify that tree state is being saved to the `.sky.view` file
+3. Verify that tree state is being restored when the document is loaded
+4. Add test coverage for tree state persistence
+5. Fix the issue and verify with tests
+
+**Related Files** (to investigate):
+- `pwiz_tools/Skyline/Controls/FilesTree/FilesTreeForm.cs`
+- `pwiz_tools/Shared/CommonUtil/SystemUtil/TreeViewStateRestorer.cs`
+- `pwiz_tools/Skyline/Controls/SequenceTreeForm.cs` (reference implementation)
 
 ## Future Work Items (Deferred to Post-Merge Phase)
 

@@ -80,6 +80,12 @@ MessageBox.Show(Resources.ErrorMessage_FileNotFound);
 3. Keep properties in alphabetical order
 4. Build to verify no CS0117 errors
 
+**Note:** When viewing `.ja.resx` and `.zh-CHS.resx` files (Japanese/Chinese translations), configure UTF-8 encoding so characters display correctly:
+```powershell
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+```
+Use PowerShell 7+ (defaults to UTF-8) or run this command in PowerShell 5.1. See `ai/docs/style-guide.md` for details.
+
 ## Asynchronous Programming
 
 **CRITICAL**: DO NOT use `async`/`await` keywords.

@@ -261,9 +261,9 @@
     <value>Files</value>
   </data>
   <data name="viewFilesMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-      <value>Alt+9</value>
+    <value>Alt+9</value>
   </data>
-    <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="documentGridMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+3</value>
   </data>
@@ -928,7 +928,7 @@
     <value>viewTargetsMenuItem</value>
   </data>
   <data name="viewTargetsMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-      <value>Alt+0</value>
+    <value>Alt+0</value>
   </data>
   <data name="&gt;&gt;viewTargetsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

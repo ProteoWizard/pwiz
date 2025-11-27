@@ -1197,7 +1197,7 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
     <value>Add peptide precursors to the document to build a library from AlphaPeptDeep predictions.</value>
   </data>
   <data name="PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip" xml:space="preserve">
-	  <value>Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,
+    <value>Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,
 and between result files in the document for peak boundary imputation.</value>
   </data>
 </root>

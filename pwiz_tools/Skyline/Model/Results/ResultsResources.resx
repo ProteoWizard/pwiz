@@ -357,12 +357,12 @@ It is recommended that you delete this file so that Skyline can create a new fil
     <value>Property: </value>
   </data>
   <data name="IonMobilityAndCCS_DisplayString_HighEnergyOffset_" xml:space="preserve">
-      <value>High Energy Offset={0:F03}</value>
+    <value>High Energy Offset={0:F03}</value>
   </data>
   <data name="IonMobilityAndCCS_DisplayString_CCS_" xml:space="preserve">
-      <value>CCS={0:F03}</value>
+    <value>CCS={0:F03}</value>
   </data>
   <data name="IonMobilityAndCCS_DisplayString_IM_And_Tolerance_" xml:space="preserve">
-      <value>IM={0:F03}{1} {2}</value>
+    <value>IM={0:F03}{1} {2}</value>
   </data>
 </root>
