@@ -154,7 +154,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
-            if (itemsValue == null)
+            if (itemsValue.Count == 0)
             {
                 return ImmutableList<WatersConnectFileObject>.EMPTY;
             }
