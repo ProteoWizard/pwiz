@@ -384,11 +384,30 @@ namespace pwiz.SkylineTestUtil
         {
             if (null != SkylineWindow)
             {
-                SkylineWindow.Invoke(act);
+
+                if (SkylineWindow.InvokeRequired)
+                {
+                    SkylineWindow.Invoke(act);
+                }
+                else
+                {
+                    Console.WriteLine("# Nested SkylineWindow.Invoke() in SkylineInvoke");
+                    act();
+                }
             }
             else
             {
-                FindOpenForm<StartPage>().Invoke(act);
+                var startPage = FindOpenForm<StartPage>();
+
+                if (startPage.InvokeRequired)
+                {
+                    startPage.Invoke(act);
+                }
+                else
+                {
+                    Console.WriteLine("# Nested StartPage.Invoke() in SkylineInvoke");
+                    act();
+                }
             }
         }
 
@@ -396,11 +415,14 @@ namespace pwiz.SkylineTestUtil
         {
             if (null != SkylineWindow)
             {
+                AssertEx.IsTrue(SkylineWindow.InvokeRequired, "Nested SkylineWindow.Invoke() in SkylineBeginInvoke");
                 SkylineWindow.BeginInvoke(act);
             }
             else
             {
-                FindOpenForm<StartPage>().BeginInvoke(act);
+                var startPage = FindOpenForm<StartPage>();
+                AssertEx.IsTrue(startPage.InvokeRequired, "Nested StartPage.Invoke() in SkylineBeginInvoke");
+                startPage.BeginInvoke(act);
             }
         }
 
