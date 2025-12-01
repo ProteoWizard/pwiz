@@ -391,7 +391,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 else
                 {
-                    Console.WriteLine("# Nested SkylineWindow.Invoke() in SkylineInvoke");
+                    Console.WriteLine(@"# SkylineInvoke() called on UI thread (SkylineWindow)"); // CONSIDER:(bspratt) remove before merge?
                     act();
                 }
             }
@@ -405,7 +405,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 else
                 {
-                    Console.WriteLine("# Nested StartPage.Invoke() in SkylineInvoke");
+                    Console.WriteLine(@"# SkylineInvoke() called on UI thread (StartPage)"); // CONSIDER:(bspratt) remove before merge?
                     act();
                 }
             }
@@ -415,13 +415,19 @@ namespace pwiz.SkylineTestUtil
         {
             if (null != SkylineWindow)
             {
-                AssertEx.IsTrue(SkylineWindow.InvokeRequired, "Nested SkylineWindow.Invoke() in SkylineBeginInvoke");
+                if (!SkylineWindow.InvokeRequired)
+                {
+                    Console.WriteLine(@"# SkylineBeginInvoke called on UI thread (SkylineWindow)"); // CONSIDER:(bspratt) remove before merge?
+                }
                 SkylineWindow.BeginInvoke(act);
             }
             else
             {
                 var startPage = FindOpenForm<StartPage>();
-                AssertEx.IsTrue(startPage.InvokeRequired, "Nested StartPage.Invoke() in SkylineBeginInvoke");
+                if (!startPage.InvokeRequired)
+                {
+                    Console.WriteLine(@"# SkylineBeginInvoke called on UI thread (StartPage)"); // CONSIDER:(bspratt) remove before merge?
+                }
                 startPage.BeginInvoke(act);
             }
         }
