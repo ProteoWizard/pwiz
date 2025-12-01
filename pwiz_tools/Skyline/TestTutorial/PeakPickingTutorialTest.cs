@@ -124,6 +124,7 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(generateDecoysDlg, generateDecoysDlg.OkDialog);
 
             RestoreViewOnScreen(3);
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             RunUIForScreenShot(() =>
             {
                 SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11];

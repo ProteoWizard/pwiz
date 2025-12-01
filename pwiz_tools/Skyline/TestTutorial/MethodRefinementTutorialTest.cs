@@ -235,6 +235,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual("YLAEVASEDR", SkylineWindow.SequenceTree.SelectedNode.Text); // Not L10N
                 });
             RestoreViewOnScreen(12);
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             //  Restoring the view changes the selection
             RunUI(SkylineWindow.CollapsePeptides);
             FindNode("YLAEVASEDR");
@@ -280,6 +281,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             PauseForScreenShot<SequenceTreeForm>("Targets view clipped");
             PauseForGraphScreenShot("Chromatogram graph", SkylineWindow.GetGraphChrom(replicateName));
             RestoreViewOnScreen(16);
@@ -293,7 +295,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedNode.Expand();
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
             });
-
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             PauseForScreenShot<SequenceTreeForm>("Targets view clipped"); // Not L10N
 
             RunUI(() =>
@@ -354,6 +356,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
             RestoreViewOnScreen(17);
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             PauseForScreenShot<SequenceTreeForm>("Targets view clipped");
             PauseForGraphScreenShot("Chromatogram graph", SkylineWindow.GetGraphChrom(replicateName));
 

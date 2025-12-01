@@ -534,8 +534,31 @@ namespace pwiz.Skyline
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
 
+            InsertFilesViewIntoLegacyLayout();
+
+            // TreeViews resizes often prior to display, so we must restore horizontal scrolling after
+            // all resizing has occurred
+            ResetHorizontalScroll(SequenceTree);
+            ResetHorizontalScroll(FilesTree);
+
+            EnsureFloatingWindowsVisible();
+        }
+
+        private static void ResetHorizontalScroll(TreeViewMS treeView)
+        {
+            if (treeView == null)
+                return;
+            treeView.UpdateTopNode();
+            treeView.SetScrollPos(Orientation.Horizontal, 0);
+        }
+
+        private void InsertFilesViewIntoLegacyLayout()
+        {
             if (_filesTreeForm == null && _shouldShowFilesTree)
             {
+                // Store whatever is active now
+                var activeForm = dockPanel.ActiveContent as DockableForm;
+
                 // First time displaying FilesTree so no view state to restore
                 _filesTreeForm = CreateFilesTreeForm(null);
             
@@ -545,11 +568,27 @@ namespace pwiz.Skyline
                     var sequenceTreeDockState = _sequenceTreeForm.DockState;
                     if (sequenceTreeDockState != DockState.Hidden)
                     {
-                        _filesTreeForm.Show(dockPanel, sequenceTreeDockState);
+                        var sequencePane = _sequenceTreeForm.Pane;
+                        // Show FilesTree in the same pane as SequenceTree - note that it is not
+                        // possible to show after the SequenceTree. So, we activate it after showing.
+                        if (sequencePane != null)
+                        {
+                            // Add as a tab in the same pane
+                            _filesTreeForm.Show(sequencePane, null);
+                        }
+                        else
+                        {
+                            // Hacky fallback that often works if pane is null
+                            _filesTreeForm.Show(dockPanel, sequenceTreeDockState);
+                        }
+
+                        // Activate SequenceTree again to keep it on top but re-activate whatever was active before
                         _sequenceTreeForm.Activate();
                     }
                     // If SequenceTree is hidden, skip.
                     // CONSIDER: if SequenceTree exists but is hidden, FilesTree cannot be added. Ignoring that case for now.
+
+                    activeForm?.Activate();
                 }
                 else
                 {
@@ -559,22 +598,6 @@ namespace pwiz.Skyline
             
                 _shouldShowFilesTree = false;
             }
-
-            // SequenceTree resizes often prior to display, so we must restore its scrolling after
-            // all resizing has occurred
-            if (SequenceTree != null)
-            {
-                SequenceTree.UpdateTopNode();
-                SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
-            }
-
-            if (FilesTree != null)
-            {
-                FilesTree.UpdateTopNode();
-                FilesTree.SetScrollPos(Orientation.Horizontal, 0);
-            }
-
-            EnsureFloatingWindowsVisible();
         }
 
         /// <summary>
