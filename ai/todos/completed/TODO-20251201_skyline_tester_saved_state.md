@@ -3,9 +3,9 @@
 ## Branch Information
 - **Branch**: `Skyline/work/20251201_skyline_tester_saved_state`
 - **Created**: 2025-12-01
-- **Completed**: (pending)
-- **Status**: 🚧 In Progress
-- **PR**: (pending)
+- **Completed**: 2025-12-01
+- **Status**: ✅ Completed
+- **PR**: [#3690](https://github.com/ProteoWizard/pwiz/pull/3690)
 - **Objective**: Restore tutorial selections, screenshot settings, and smart tab navigation to streamline edit-build-test workflow
 
 ## Objective
@@ -133,24 +133,24 @@ SkylineTester uses an XML-based settings system that saves/restores all UI state
 - [x] Modify `CreateElement()` to save workflow tab instead of Output tab
 - [x] Call `StoreLastActiveTab()` in `LoadSettings()` after tab is restored
 
-### Phase 3: Testing
-- [ ] Test tutorial checkbox persistence across restarts
-- [ ] Test screenshot number persistence
-- [ ] Verify tri-state indicators work in Tutorials tab (already implemented in PR #3680)
-- [ ] Verify existing Tests tab behavior unchanged
+### Phase 3: Testing ✅ COMPLETE
+- [x] Test tutorial checkbox persistence across restarts
+- [x] Test screenshot number persistence
+- [x] Verify tri-state indicators work in Tutorials tab (already implemented in PR #3680)
+- [x] Verify existing Tests tab behavior unchanged
 
-### Phase 4: Documentation
+### Phase 4: Documentation ✅ COMPLETE
 - [x] Update TODO with actual solution
-- [ ] Test and verify functionality
-- [ ] Update commit message
+- [x] Test and verify functionality
+- [x] Create PR #3690
 
 ## Success Criteria
 
-### Tutorial Persistence
+### Tutorial Persistence ✅ COMPLETE
 - [x] Tri-state checkbox indicators already work in Tutorials tab (from PR #3680)
 - [x] `pauseStartingScreenshot` added to SaveSettings()
-- [ ] Checked tutorials persist across SkylineTester restarts (needs testing)
-- [ ] Screenshot number persists across restarts (needs testing)
+- [x] Checked tutorials persist across SkylineTester restarts (tested)
+- [x] Screenshot number persists across restarts (tested)
 - [x] Uses existing Settings.Default.SavedSettings infrastructure
 - [x] No separate file needed
 
