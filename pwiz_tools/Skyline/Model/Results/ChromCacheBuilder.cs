@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -203,6 +203,7 @@ namespace pwiz.Skyline.Model.Results
                                     .IsEnabledMsMs, // If we don't want MS2, ask reader to totally skip it (not guaranteed)
                             CentroidMs1 = fullScan.IsCentroidedMs,
                             CentroidMs2 = fullScan.IsCentroidedMsMs,
+                            PassEntireDiaPasefFrame = true, // Ask for diaPASEF frames as single chunks instead of split by isolation ranges
                             DownloadPath = docDir
                         };
                         inFile = MSDataFilePath.OpenMsDataFile(openMsDataFileParams);
@@ -1415,6 +1416,7 @@ namespace pwiz.Skyline.Model.Results
             UsedMs1Centroids = file.RequireVendorCentoridedMs1;
             UsedMs2Centroids = file.RequireVendorCentoridedMs2;
             HasCombinedIonMobility = file.HasCombinedIonMobilitySpectra;
+            PassEntireDiaPasefFrame = file.PassEntireDiaPasefFrame;
             SampleId = file.GetSampleId();
             SerialNumber = file.GetInstrumentSerialNumber();
         }
@@ -1429,6 +1431,7 @@ namespace pwiz.Skyline.Model.Results
             UsedMs2Centroids = cachedFile.UsedMs2Centroids;
             HasMidasSpectra = cachedFile.HasMidasSpectra;
             HasCombinedIonMobility = cachedFile.HasCombinedIonMobility;
+            PassEntireDiaPasefFrame = cachedFile.PassEntireDiaPasefFrame;
             SampleId = cachedFile.SampleId;
             SerialNumber = cachedFile.InstrumentSerialNumber;
             IsSrm = cachedFile.IsSrm;
@@ -1481,7 +1484,12 @@ namespace pwiz.Skyline.Model.Results
             get { return (Flags & ChromCachedFile.FlagValues.used_ms2_centroids) != 0; }
             set { SetFlag(value, ChromCachedFile.FlagValues.used_ms2_centroids); }
         }
-
+        
+        public bool PassEntireDiaPasefFrame
+        {
+            get { return (Flags & ChromCachedFile.FlagValues.pass_entire_dia_pasef_frame) != 0; }
+            set { SetFlag(value, ChromCachedFile.FlagValues.pass_entire_dia_pasef_frame); }
+        }
         public bool HasMidasSpectra
         {
             get { return (Flags & ChromCachedFile.FlagValues.has_midas_spectra) != 0; }

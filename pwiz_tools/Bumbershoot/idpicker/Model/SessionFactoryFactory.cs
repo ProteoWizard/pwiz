@@ -1,4 +1,4 @@
-﻿/*
+/*
  * $Id$
  *
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,

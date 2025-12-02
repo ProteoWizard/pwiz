@@ -217,9 +217,6 @@
   <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
     <value>欠損しているファイルが含まれているフォルダを選択してください。</value>
   </data>
-  <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
-    <value>必要なファイルをダウンロードしています...</value>
-  </data>
   <data name="SimpleFileDownloaderDlg_Show_The_following_file_is_required__Do_you_want_to_download_it_" xml:space="preserve">
     <value>以下のファイルが必要です。ダウンロードしますか？</value>
   </data>
@@ -323,5 +320,14 @@
   </data>
   <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0__Login_Page_URL___1_" xml:space="preserve">
     <value>ログインページを読み込めませんでした。HTTPステータスコードは{0}です。クライアント登録コードが無効な可能性があります。新しいクライアント登録コードをサーバーから受信した直後であるため、不具合の可能性があります。ログインページURL: {1}</value>
+  </data>
+  <data name="MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email" xml:space="preserve">
+    <value>Check your email for the verification code and copy it into the box.
+
+If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
+    <comment>Needs Review:Missing translation</comment>
+  </data>
+  <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
+    <value>ツールのダウンロードエラー</value>
   </data>
 </root>

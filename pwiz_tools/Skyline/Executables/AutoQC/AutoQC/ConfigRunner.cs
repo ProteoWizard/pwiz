@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -1114,6 +1114,17 @@ namespace AutoQC
             return IsStopped() || IsError();
         }
 
+        public bool PanoramaUploadError
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _panoramaUploadError || _panoramaFatalError;
+                }
+            }
+        }
+
         public string ImportResultsFileArgs(ImportContext importContext)
         {
             // Get the current results time window
@@ -1234,6 +1245,12 @@ namespace AutoQC
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return false;
+        }
+
+        public override int GetHashCode()
+        {
+            // Use RuntimeHelpers to get identity-based hash code matching reference-equality Equals
+            return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
         }
 
         #region [Implementation of IProcessControl interface]

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,12 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
@@ -30,6 +24,12 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -96,14 +96,16 @@ namespace pwiz.Skyline.Model.Results
         }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
-        public int? BestWindowGroup { get; private set; }
-        public double? BestWindowGroupDistance { get; private set; }
-        public IList<int> OtherWindowGroups { get; private set; }
+        public int BestWindowGroup { get; private set; }  // For DIA PASEF
+        public bool HasBestWindowGroup => BestWindowGroup > 0; // For DIA PASEF
+        public float BestWindowGroupMatchArea { get; private set; }  // For DIA PASEF
+        public float BestWindowGroupMatchDistance { get; private set; }  // For DIA PASEF
+        private int _knownWindowGroupsBitField; // For DIA PASEF
         public int? OptStep { get; }
         private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
-        private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
+        internal SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
         private IIonMobilityFunctionsProvider IonMobilityFunctionsProvider { get; set; }
@@ -130,7 +132,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (existing == null)
                 return added;
-            return existing.Select(f => new SpectrumFilterValues(f.TargetMz, f.HighEnergyIonMobilityValueOffset)).Union(added);
+            return existing.Select(f => new SpectrumFilterValues(f.TargetMz, f.HighEnergyIonMobilityValueOffsetLow, f.HighEnergyIonMobilityValueOffsetHigh)).Union(added);
         }
 
         private int AddFilterValues(IEnumerable<SpectrumFilterValues> filterValues,
@@ -138,7 +140,7 @@ namespace pwiz.Skyline.Model.Results
                                             Action<SpectrumProductFilter[]> setFilters)
         {
             var arrayFilters = filterValues.OrderBy(mz => mz)
-                .Select(mz => new SpectrumProductFilter(mz.mz, getFilterWindow(mz.mz), mz.ionMobilityHighEnergyOffset))
+                .Select(mz => new SpectrumProductFilter(mz.mz, getFilterWindow(mz.mz), mz.ionMobilityHighEnergyOffsetLow, mz.ionMobilityHighEnergyOffsetHigh))
                 .ToArray();
             setFilters(arrayFilters);
             return arrayFilters.Length;
@@ -174,7 +176,14 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
+            // Filter out spectra with no overlap of any target with the spectrum's scan window
+            var filteredSpectra = spectra.Where(spectrum => spectrum.Metadata == null ||
+                                                            !spectrum.Metadata.ScanWindowLowerLimit.HasValue ||
+                                                            !spectrum.Metadata.ScanWindowUpperLimit.HasValue ||
+                                                            (Ms2ProductFilters.Any() &&
+                                                             spectrum.Metadata.ScanWindowLowerLimit < Ms2ProductFilters.Last().TargetMz &&
+                                                             spectrum.Metadata.ScanWindowUpperLimit > Ms2ProductFilters.First().TargetMz));
+            return FilterSpectrumList(filteredSpectra.ToArray(), Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
 
         /// <summary>
@@ -226,9 +235,8 @@ namespace pwiz.Skyline.Model.Results
                 {
                     spectrumCount++; // Our flag to process this as zero rather than null
                 }
-            }
-//            if (spectra.Length > 1)
-//                Console.Write(string.Empty);
+            } 
+
             for (int specIndex = imRangeHelper.IndexFirst; specIndex < spectra.Length; specIndex++)
             {
                 var spectrum = spectra[specIndex];
@@ -269,6 +277,7 @@ namespace pwiz.Skyline.Model.Results
                 var imsArray = spectrum.IonMobilities;
 
                 // Search for matching peaks for each Q3 filter
+                // N.B. this code searches both MS1 data and MS2, for MS1 Q1 is nominal precursor mz and "Q3" is isotope mz, so it's really Q1
                 // Use binary search to get to the first m/z value to be considered more quickly
                 // This should help MS1 where isotope distributions will be very close in m/z
                 // It should also help MS/MS when more selective, larger fragment ions are used,
@@ -277,10 +286,13 @@ namespace pwiz.Skyline.Model.Results
                 for (int targetIndex = 0; targetIndex < targetCount; targetIndex++)
                 {
                     var productFilter = productFilters[targetIndex];
+                    // In this context HighEnergyIonMobilityValue* may represent the effect of higher CE,
+                    // or it may reflect the use of the information found in DIA PASEF window group tables
                     // Ensure uncombined IM spectra are within range
                     if (spectrum.IonMobilities == null &&
-                        !ContainsIonMobilityValue(spectrum.IonMobility, useIonMobilityHighEnergyOffset
-                            ? productFilter.HighEnergyIonMobilityValueOffset : 0))
+                        !ContainsIonMobilityValue(spectrum.IonMobility, 
+                            useIonMobilityHighEnergyOffset ? productFilter.HighEnergyIonMobilityValueOffsetLow : 0,
+                            useIonMobilityHighEnergyOffset ? productFilter.HighEnergyIonMobilityValueOffsetHigh : 0))
                     {
                         continue;
                     }
@@ -303,6 +315,8 @@ namespace pwiz.Skyline.Model.Results
                         if (iPeak >= mzArray.Length)
                             break; // No further overlap
                     }
+                    
+                    // TODO:(bspratt) for full frame diaPASEF MS2, try not sorting - make IM the initial binary search range (and deal with mz that rolls over)
 
                     // Add the intensity values of all peaks that pass the filter
                     var accumulator = new IntensityAccumulator(highAcc, Extractor, targetMz)
@@ -311,12 +325,30 @@ namespace pwiz.Skyline.Model.Results
                         MeanMassError = highAcc ? meanErrors[targetIndex] : 0
                     };
 
+                    var isMs2DiaPasefWithoutPrecursorIM = spectrum.WindowGroup > 0 && !MinIonMobilityValue.HasValue;
                     for (int iNext = iPeak; iNext < mzArray.Length && mzArray[iNext] < endFilter; iNext++)
                     {
                         // Avoid adding points that are not within the allowed ion mobility range
-                        if (imsArray != null && !ContainsIonMobilityValue(imsArray[iNext], useIonMobilityHighEnergyOffset
-                                ? productFilter.HighEnergyIonMobilityValueOffset : 0))
-                            continue;
+                        // In the case of full-frame MS2 DiaPASEF this also enforces mz range
+                        var im = imsArray == null ? spectrum.IonMobility?.Mobility : imsArray[iNext];
+                        if (im != null)
+                        {
+                            if (isMs2DiaPasefWithoutPrecursorIM)
+                            {
+                                // MS2 DiaPASEF without precursor filter - we use the frame information to make IM a cue for isolation range
+                                if (productFilter.HighEnergyIonMobilityValueOffsetLow > im.Value ||
+                                    productFilter.HighEnergyIonMobilityValueOffsetHigh < im.Value)
+                                {
+                                    continue;
+                                }
+                            }
+                            else if (!ContainsIonMobilityValue(im.Value,
+                                useIonMobilityHighEnergyOffset ? productFilter.HighEnergyIonMobilityValueOffsetLow : 0,
+                                useIonMobilityHighEnergyOffset ? productFilter.HighEnergyIonMobilityValueOffsetHigh : 0))
+                            {
+                                continue;
+                            }
+                        }
                         accumulator.AddPoint(mzArray[iNext], intensityArray[iNext]);
                     }
                     extractedIntensities[targetIndex] = (float) accumulator.TotalIntensity;
@@ -398,8 +430,8 @@ namespace pwiz.Skyline.Model.Results
                     spectrumProductFilter.FilterId = listChromKeys.Count;
                     var key = new ChromKey(ChromatogramGroupId,
                         Q1,
-                        ionMobilityFilter.ApplyOffset(highEnergy 
-                            ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
+                        ionMobilityFilter.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffsetLow : 0,
+                            highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffsetHigh : 0),
                         spectrumProductFilter.TargetMz,
                         OptStep ?? 0,
                         0,  // CE value (Shimadzu SRM only)
@@ -421,15 +453,15 @@ namespace pwiz.Skyline.Model.Results
                    IonMobilityInfo.HasIonMobilityValue;
         }
 
-        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffset)
+        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffsetLow, double highEnergyOffsetHigh)
         {
-            return !ionMobility.HasValue || ContainsIonMobilityValue(ionMobility.Mobility.Value, highEnergyOffset);
+            return !ionMobility.HasValue || ContainsIonMobilityValue(ionMobility.Mobility.Value, highEnergyOffsetLow, highEnergyOffsetHigh);
         }
 
-        public bool ContainsIonMobilityValue(double ionMobilityValue, double highEnergyOffset)
+        public bool ContainsIonMobilityValue(double ionMobilityValue, double highEnergyOffsetLow, double highEnergyOffsetHigh)
         {
-            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value + highEnergyOffset <= ionMobilityValue) &&
-                   (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value + highEnergyOffset >= ionMobilityValue);
+            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value + highEnergyOffsetLow <= ionMobilityValue) &&
+                   (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value + highEnergyOffsetHigh >= ionMobilityValue);
         }
 
         public IonMobilityFilter GetIonMobilityWindow()
@@ -447,10 +479,21 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool IsKnownWindowGroup(int windowGroup)
+        public bool GetIsKnownWindowGroup(int windowGroup)
         {
-            return windowGroup == BestWindowGroup ||
-                   (OtherWindowGroups != null && OtherWindowGroups.Contains(windowGroup));
+            return windowGroup == SpectrumFilter.WINDOWGROUP_NONE || ((_knownWindowGroupsBitField & (1 << (windowGroup-1))) != 0); // WindowGroup is 1-based
+        }
+
+        public void SetIsKnownWindowGroup(int windowGroup)
+        {
+            if (windowGroup == SpectrumFilter.WINDOWGROUP_NONE)
+            {
+                _knownWindowGroupsBitField = -1; // None of the window groups was a match
+            }
+            else
+            {
+                _knownWindowGroupsBitField |= (1 << (windowGroup - 1)); // WindowGroup is 1-based
+            }
         }
 
         public bool IsBestWindowGroup(int windowGroup)
@@ -458,34 +501,44 @@ namespace pwiz.Skyline.Model.Results
             return windowGroup == BestWindowGroup;
         }
 
-        public bool UpdateBestWindowGroup(int windowGroup, double distance)
+        public bool ProposeBestWindowGroup(int proposedBestWindowGroup, double area, double distance)
         {
-            if (BestWindowGroup.HasValue)
+            // We look at how much of the target mz x IM search area overlaps that in the window group
+            // In a tie, we go for the window that is most centered on the target
+            if (BestWindowGroup > 0)
             {
-                // Already have a best value and this is it
-                if (BestWindowGroup.Value == windowGroup)
-                    return true;
-                // Not it and the distance is not closer
-                if (BestWindowGroupDistance.Value <= distance)
-                    return false;
-            }
-            // This becomes the best window group
-            if (BestWindowGroup.HasValue)
-            {
-                // Save any previously seen window groups, providing for most likely cases:
-                // 1. No other possible window groups
-                // 2. 1 other possible window group
-                if (OtherWindowGroups == null)
-                    OtherWindowGroups = new[] {BestWindowGroup.Value};
-                else
+                // We have identified at least one window that hits - update?
+                if (area < BestWindowGroupMatchArea)
                 {
-                    if (OtherWindowGroups.Count == 1)
-                        OtherWindowGroups = new List<int>(OtherWindowGroups);
-                    OtherWindowGroups.Add(BestWindowGroup.Value);
+                    // Proposed window is not better than current winner, but note that we checked this window
+                    SetIsKnownWindowGroup(proposedBestWindowGroup);
+                    return false;
+                }
+                if (area >= BestWindowGroupMatchArea || // Better coverage
+                    distance < BestWindowGroupMatchDistance) // Same coverage, take the one closest to center
+                {
+                    BestWindowGroupMatchArea = (float)area;
+                    BestWindowGroupMatchDistance = (float)distance;
+                    BestWindowGroup = proposedBestWindowGroup;
+                    SetIsKnownWindowGroup(proposedBestWindowGroup);
+//Console.WriteLine($@"{this.ChromatogramGroupId} wg={BestWindowGroup}");
+                    return true;
+                }
+                // Already have a best window and this is it
+                if (BestWindowGroup == proposedBestWindowGroup)
+                {
+                    return true;
                 }
             }
-            BestWindowGroup = windowGroup;
-            BestWindowGroupDistance = distance;
+            else if (area <= 0)
+            {
+                // No hit on this window, nor any other yet - reserve judgment, don't mark as known
+                return false;
+            }
+            BestWindowGroup = proposedBestWindowGroup;
+            BestWindowGroupMatchArea = (float)area;
+            BestWindowGroupMatchDistance = (float)distance;
+            SetIsKnownWindowGroup(BestWindowGroup);
             return true;
         }
 
@@ -514,6 +567,11 @@ namespace pwiz.Skyline.Model.Results
 
             return SpectrumClassFilter.MakePredicate()(spectrumMetadata);
         }
+
+        public override string ToString() // For debug convenience
+        {
+            return $@"{Q1} {BestWindowGroup}";
+        }
     }
 
     internal class IonMobilityRangeHelper
@@ -533,8 +591,8 @@ namespace pwiz.Skyline.Model.Results
             double startOffset = 0;
             if (productFilters != null)
             {
-                startOffset = productFilters.Select(f => f.HighEnergyIonMobilityValueOffset).Min();
-                _endOffset = productFilters.Select(f => f.HighEnergyIonMobilityValueOffset).Max();
+                startOffset = productFilters.Select(f => f.HighEnergyIonMobilityValueOffsetLow).Min();
+                _endOffset = productFilters.Select(f => f.HighEnergyIonMobilityValueOffsetHigh).Max();
                 SwapIfDescending(ref startOffset, ref _endOffset);
             }
 
@@ -619,22 +677,24 @@ namespace pwiz.Skyline.Model.Results
 
     public class SpectrumProductFilter
     {
-        public SpectrumProductFilter(double targetMz, double filterWidth, double highEnergyIonMobilityValueOffset) :
-            this(new SignedMz(targetMz), filterWidth, highEnergyIonMobilityValueOffset)
+        public SpectrumProductFilter(double targetMz, double filterWidth, double? highEnergyIonMobilityValueOffsetLow = null, double? highEnergyIonMobilityValueOffsetHigh = null) :
+            this(new SignedMz(targetMz), filterWidth, highEnergyIonMobilityValueOffsetLow, highEnergyIonMobilityValueOffsetHigh)
         {
         }
 
-        public SpectrumProductFilter(SignedMz targetMz, double filterWidth, double highEnergyIonMobilityValueOffset)
+        public SpectrumProductFilter(SignedMz targetMz, double filterWidth, double? highEnergyIonMobilityValueOffsetLow = null, double? highEnergyIonMobilityValueOffsetHigh = null)
         {
             TargetMz = targetMz;
             FilterWidth = filterWidth;
-            HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
+            HighEnergyIonMobilityValueOffsetLow = highEnergyIonMobilityValueOffsetLow ?? 0; // Shift lower edge of window
+            HighEnergyIonMobilityValueOffsetHigh= highEnergyIonMobilityValueOffsetHigh ?? HighEnergyIonMobilityValueOffsetLow; // Shift upper edge of window
         }
 
         public SignedMz TargetMz { get; private set; }
         public double FilterWidth { get; private set; }
         public int FilterId { get; set; }
-        public double HighEnergyIonMobilityValueOffset { get; private set; }
+        public double HighEnergyIonMobilityValueOffsetLow { get; set; }
+        public double HighEnergyIonMobilityValueOffsetHigh { get; set; }
 
 
         #region object overrides
@@ -643,7 +703,8 @@ namespace pwiz.Skyline.Model.Results
         {
             return TargetMz.Equals(other.TargetMz) && FilterWidth.Equals(other.FilterWidth) &&
                    FilterId == other.FilterId && 
-                   Equals(HighEnergyIonMobilityValueOffset, other.HighEnergyIonMobilityValueOffset);
+                   Equals(HighEnergyIonMobilityValueOffsetLow, other.HighEnergyIonMobilityValueOffsetLow) &&
+                   Equals(HighEnergyIonMobilityValueOffsetHigh, other.HighEnergyIonMobilityValueOffsetHigh);
         }
 
         public override bool Equals(object obj)
@@ -661,14 +722,17 @@ namespace pwiz.Skyline.Model.Results
                 var hashCode = TargetMz.GetHashCode();
                 hashCode = (hashCode*397) ^ FilterWidth.GetHashCode();
                 hashCode = (hashCode*397) ^ FilterId;
-                hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffset.GetHashCode();
+                hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffsetLow.GetHashCode();
+                hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffsetHigh.GetHashCode();
                 return hashCode;
             }
         }
 
         public override string ToString() // For debug convenience
         {
-            return $@"mz={TargetMz} w={FilterWidth} id={FilterId} heo={HighEnergyIonMobilityValueOffset}";
+            return HighEnergyIonMobilityValueOffsetLow == HighEnergyIonMobilityValueOffsetHigh ? 
+                $@"mz={TargetMz} w={FilterWidth} id={FilterId} heo={HighEnergyIonMobilityValueOffsetLow}" : 
+                $@"mz={TargetMz} w={FilterWidth} id={FilterId} heo={HighEnergyIonMobilityValueOffsetLow}:{HighEnergyIonMobilityValueOffsetHigh}";
         }
 
         #endregion
@@ -677,12 +741,14 @@ namespace pwiz.Skyline.Model.Results
     public class SpectrumFilterValues : IComparable<SpectrumFilterValues>, IComparable
     {
         public SignedMz mz;
-        public double ionMobilityHighEnergyOffset;
+        public double ionMobilityHighEnergyOffsetLow; // Allow for asymmetrical ion mobility window adjustments
+        public double ionMobilityHighEnergyOffsetHigh;
 
-        public SpectrumFilterValues(SignedMz mz, double ionMobilityHighEnergyOffset)
+        public SpectrumFilterValues(SignedMz mz, double ionMobilityHighEnergyOffsetLow, double? ionMobilityHighEnergyOffsetHigh = null)
         {
             this.mz = mz;
-            this.ionMobilityHighEnergyOffset = ionMobilityHighEnergyOffset;
+            this.ionMobilityHighEnergyOffsetLow = ionMobilityHighEnergyOffsetLow;
+            this.ionMobilityHighEnergyOffsetHigh = ionMobilityHighEnergyOffsetHigh ?? ionMobilityHighEnergyOffsetLow;
         }
 
         public override bool Equals(object obj)
@@ -694,20 +760,24 @@ namespace pwiz.Skyline.Model.Results
         {
             return other != null &&
                    mz.Equals(other.mz) &&
-                   ionMobilityHighEnergyOffset == other.ionMobilityHighEnergyOffset;
+                   ionMobilityHighEnergyOffsetLow == other.ionMobilityHighEnergyOffsetLow &&
+                   ionMobilityHighEnergyOffsetHigh == other.ionMobilityHighEnergyOffsetHigh;
         }
 
         public override int GetHashCode()
         {
             var hashCode = 1155459730;
             hashCode = hashCode * -1521134295 + EqualityComparer<SignedMz>.Default.GetHashCode(mz);
-            hashCode = hashCode * -1521134295 + ionMobilityHighEnergyOffset.GetHashCode();
+            hashCode = hashCode * -1521134295 + ionMobilityHighEnergyOffsetLow.GetHashCode();
+            hashCode = hashCode * -1521134295 + ionMobilityHighEnergyOffsetHigh.GetHashCode();
             return hashCode;
         }
 
-        public override string ToString()
+        public override string ToString() // For debug convenience, not user facing
         {
-            return $@"mz={mz} heo={ionMobilityHighEnergyOffset}"; // For debug convenience, not user facing
+            return ionMobilityHighEnergyOffsetLow == ionMobilityHighEnergyOffsetHigh ?
+                $@"mz={mz} heo={ionMobilityHighEnergyOffsetLow}" : 
+                $@"mz={mz} heo={ionMobilityHighEnergyOffsetLow}:{ionMobilityHighEnergyOffsetHigh}";
         }
 
         public int CompareTo(SpectrumFilterValues other)
@@ -716,7 +786,9 @@ namespace pwiz.Skyline.Model.Results
             if (ReferenceEquals(null, other)) return 1;
             var mzComparison = mz.CompareTo(other.mz);
             if (mzComparison != 0) return mzComparison;
-            return ionMobilityHighEnergyOffset.CompareTo(other.ionMobilityHighEnergyOffset);
+            var lowComparison = ionMobilityHighEnergyOffsetLow.CompareTo(other.ionMobilityHighEnergyOffsetLow);
+            if (lowComparison != 0) return lowComparison;
+            return ionMobilityHighEnergyOffsetHigh.CompareTo(other.ionMobilityHighEnergyOffsetHigh);
         }
 
         public int CompareTo(object obj)

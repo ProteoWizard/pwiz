@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -177,15 +177,20 @@
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
+    <Compile Include="ConstantNeutralLossTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="CopyProteinGroupTest.cs" />
     <Compile Include="CrosslinkImsTest.cs" />
     <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
     <Compile Include="DetectionsPlotErrorTest.cs" />
+    <Compile Include="DissociationMethodTest.cs" />
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EditablePivotTest.cs" />
+    <Compile Include="LookupGroupComparisonTest.cs" />
+    <Compile Include="HelpDocumentationContentTest.cs" />
+    <Compile Include="ManagingSearchToolsTest.cs" />
     <Compile Include="EditNeutralLossesTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
@@ -200,6 +205,7 @@
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="IrtCalibrationTest.cs" />
     <Compile Include="InternationalFilenamesTest.cs" />
+    <Compile Include="KeyboardShortcutHelpTest.cs" />
     <Compile Include="LegacyIgnoreSimTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
@@ -208,11 +214,13 @@
     <Compile Include="LogScaleAxisTest.cs" />
     <Compile Include="MedianNormalizationTest.cs" />
     <Compile Include="MessageBoxHelperTest.cs" />
+    <Compile Include="MinimizeWithEmptyFilesTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MissingOptStepsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="Ms1SpectrumFilterTest.cs" />
+    <Compile Include="MultiInjectCandidatePeakTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="MultiInjectReplicatePivotTest.cs" />
     <Compile Include="MultiInjectRescoreTest.cs" />
@@ -277,6 +285,7 @@
     <Compile Include="DuplicateSmallMoleculePrecursorTest.cs" />
     <Compile Include="ExplicitAnalyteConcentrationTest.cs" />
     <Compile Include="GroupComparisonRefineTest.cs" />
+    <Compile Include="HttpClientWithProgressIntegrationTest.cs" />
     <Compile Include="InstrumentMinMaxTimeTest.cs" />
     <Compile Include="InvalidPeptideRankIdTest.cs" />
     <Compile Include="InvalidPeptidesInLibraryTest.cs" />
@@ -568,6 +577,7 @@
     <None Include="ChromGraphTransformTest.zip" />
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
+    <None Include="ConstantNeutralLossTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkImsTest.zip" />
     <None Include="CrosslinkingTest.zip" />

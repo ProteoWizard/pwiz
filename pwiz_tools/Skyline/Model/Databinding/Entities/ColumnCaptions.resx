@@ -321,6 +321,9 @@
   <data name="ConfidenceLevel">
     <value>Confidence Level</value>
   </data>
+  <data name="ConstantNeutralLoss">
+    <value>Constant Neutral Loss</value>
+  </data>
   <data name="CountTruncated">
     <value>Count Truncated</value>
   </data>
@@ -383,6 +386,9 @@
   </data>
   <data name="DetectionZScore">
     <value>Detection Z Score</value>
+  </data>
+  <data name="DissociationMethod">
+    <value>Dissociation Method</value>
   </data>
   <data name="DriftTimeFragment">
     <value>Drift Time Fragment</value>

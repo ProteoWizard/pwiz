@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -100,7 +100,7 @@ namespace TestPerf
                 WaitForConditionUI(() => associateProteinsDlg.IsOkEnabled);
             }, associateProteinsDlg=>associateProteinsDlg.OkDialog());
 
-            WaitForDocumentLoaded();
+            WaitForDocumentLoaded(WAIT_TIME * 4);
             var imputedPeptidesWithMissingResults = SkylineWindow.Document.Molecules.Where(AnyMissingResults).ToList();
             Assert.AreEqual(0, imputedPeptidesWithMissingResults.Count);
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>

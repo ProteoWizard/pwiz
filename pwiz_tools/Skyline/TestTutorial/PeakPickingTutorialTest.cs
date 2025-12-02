@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford
  *
@@ -36,6 +36,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;

@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.ToolsUI
+namespace pwiz.Skyline.ToolsUI
 {
     partial class EditCustomThemeDlg
     {

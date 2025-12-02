@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -44,16 +44,19 @@ namespace pwiz.Skyline.Model.GroupComparison
             var annotationCalculator = new AnnotationCalculator(document);
             _qrFactorizationCache = qrFactorizationCache;
             List<KeyValuePair<int, ReplicateDetails>> replicateIndexes = new List<KeyValuePair<int, ReplicateDetails>>();
-            var controlGroupIdentifier = ComparisonDef.GetControlGroupIdentifier(SrmDocument.Settings);
+            var controlReplicateValue = ComparisonDef.GetControlReplicateValue(document.Settings);
+            var identityReplicateValue = ComparisonDef.GetIdentityReplicateValue(document.Settings);
+            var controlGroupIdentifier = ComparisonDef.GetControlGroupIdentifier(controlReplicateValue);
+            var caseGroupIdentifier = ComparisonDef.GetCaseGroupIdentifier(controlReplicateValue);
             if (SrmDocument.Settings.HasResults)
             {
                 var chromatograms = SrmDocument.Settings.MeasuredResults.Chromatograms;
                 for (int i = 0; i < chromatograms.Count; i++)
                 {
                     var chromatogramSet = chromatograms[i];
-                    ReplicateDetails replicateDetails = new ReplicateDetails()
+                    ReplicateDetails replicateDetails = new ReplicateDetails
                     {
-                        GroupIdentifier = comparisonDef.GetGroupIdentifier(annotationCalculator, chromatogramSet)
+                        GroupIdentifier = GroupIdentifier.MakeGroupIdentifier(controlReplicateValue?.GetValue(annotationCalculator, chromatogramSet)),
                     };
                     if (Equals(controlGroupIdentifier, replicateDetails.GroupIdentifier))
                     {
@@ -61,19 +64,15 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     else
                     {
-                        if (!string.IsNullOrEmpty(ComparisonDef.CaseValue))
+                        if (caseGroupIdentifier.HasValue && !Equals(caseGroupIdentifier, replicateDetails.GroupIdentifier))
                         {
-                            var annotationValue = chromatogramSet.Annotations.GetAnnotation(ComparisonDef.ControlAnnotation);
-                            if (!Equals(annotationValue, ComparisonDef.CaseValue))
-                            {
-                                continue;
-                            }
+                            continue;
                         }
                     }
-                    if (null != ComparisonDef.IdentityAnnotation)
+
+                    if (identityReplicateValue != null)
                     {
-                        replicateDetails.BioReplicate =
-                            chromatogramSet.Annotations.GetAnnotation(ComparisonDef.IdentityAnnotation);
+                        replicateDetails.BioReplicate = GroupIdentifier.MakeGroupIdentifier(identityReplicateValue.GetValue(annotationCalculator, chromatogramSet));
                     }
                     replicateIndexes.Add(new KeyValuePair<int, ReplicateDetails>(i, replicateDetails));
                 }
@@ -275,15 +274,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             var summarizedRows = replicateRows;
             if (replicateRows.Any(row => null != row.BioReplicate))
             {
-                var groupedByBioReplicate = replicateRows.ToLookup(
-                    row => new KeyValuePair<string, bool>(row.BioReplicate, row.Control));
+                var groupedByBioReplicate = replicateRows.ToLookup(row => Tuple.Create(row.BioReplicate, row.Control));
                 summarizedRows = groupedByBioReplicate.Select(
                     grouping =>
                     {
                         return new RunAbundance()
                         {
-                            BioReplicate = grouping.Key.Key,
-                            Control = grouping.Key.Value,
+                            BioReplicate = grouping.Key.Item1,
+                            Control = grouping.Key.Item2,
                             ReplicateIndex = -1,
                             Log2Abundance = grouping.Average(row => row.Log2Abundance),
                         };
@@ -560,7 +558,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             public int ReplicateIndex { get; set; }
             public bool Control { get; set; }
-            public string BioReplicate { get; set; }
+            public GroupIdentifier? BioReplicate { get; set; }
             public double Log2Abundance { get; set; }
         }
        
@@ -569,7 +567,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             public IdentityPath IdentityPath { get; set; }
             public int ReplicateIndex { get; set; }
             public bool Control { get; set; }
-            public string BioReplicate { get; set; }
+            public GroupIdentifier? BioReplicate { get; set; }
             public double Intensity;
             public double Denominator;
 
@@ -582,11 +580,11 @@ namespace pwiz.Skyline.Model.GroupComparison
         private struct ReplicateDetails
         {
             public bool IsControl { get; set; }
-            public string BioReplicate { get; set; }
+            public GroupIdentifier? BioReplicate { get; set; }
             public GroupIdentifier GroupIdentifier { get; set; }
         }
 
-        private abstract class FoldChangeCalculator : FoldChangeCalculator<int, IdentityPath, string>
+        private abstract class FoldChangeCalculator : FoldChangeCalculator<int, IdentityPath, object>
         {
         }
 

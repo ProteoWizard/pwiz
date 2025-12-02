@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -102,10 +102,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             response.EnsureSuccessStatusCode();
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
-            if (itemsValue == null)
-            {
-                return ImmutableList<WatersConnectFolderObject>.EMPTY;
-            }
             return ImmutableList.ValueOf(itemsValue.OfType<JObject>()
                 .Where(f => WatersConnectObject.GetProperty(f, @"contentType").StartsWith(@"SampleSet"))
                 .Select(f => new WatersConnectFolderObject(f, null, true)));
@@ -118,10 +114,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             response.EnsureSuccessStatusCode();
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var itemsValue = JArray.Parse(responseBody);
-            if (itemsValue == null)
-            {
-                return ImmutableList<WatersConnectFileObject>.EMPTY;
-            }
             return ImmutableList.ValueOf(itemsValue.OfType<JObject>().Select(f => new WatersConnectFileObject(f)));
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -158,7 +158,7 @@ namespace pwiz.SkylineTestFunctional
                             else
                             {
                                 StringAssert.Contains(transitionGroupNodeText, strTotalRatio);
-                                string ratioText = TransitionGroupTreeNode.FormatRatioValue(expectedRatio);
+                                string ratioText = TransitionGroupDocNode.FormatRatioValue(expectedRatio);
                                 StringAssert.Contains(transitionGroupNodeText, ratioText);
                             }
 

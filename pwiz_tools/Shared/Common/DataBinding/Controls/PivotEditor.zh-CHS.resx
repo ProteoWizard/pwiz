@@ -682,6 +682,6 @@
     <value>PivotEditor</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Common.Controls.CommonFormEx, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Common.SystemUtil.CommonFormEx, pwiz.CommonUtil, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Sophie Pallanck <srpall .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -351,7 +352,8 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         public void ShowPanoramaFilePicker(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
         {
-            using var dlg = new PanoramaFilePicker(new Uri(server), user, pass, folderJson, fileJson, sizeJson);
+            using var dlg = new PanoramaFilePicker(new Server(new Uri(server), user, pass), folderJson, fileJson, sizeJson);
+            dlg.LoadServerData(new SilentProgressMonitor());   // CONSIDER: Should this be using LongOperationRunner like SkylineWindow?
             dlg.ShowDialog(SkylineWindow);
         }
 
@@ -360,7 +362,8 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void ShowPanoramaDirectoryPicker(JToken folderJson)
         {
-            using var remoteDlg = new PanoramaDirectoryPicker(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD, folderJson);
+            using var remoteDlg = new PanoramaDirectoryPicker(new Server(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD), folderJson);
+            remoteDlg.LoadServerData(new SilentProgressMonitor());   // CONSIDER: Should this be using LongOperationRunner like SkylineWindow?
             remoteDlg.ShowDialog(SkylineWindow);
         }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
         protected override string GetPersistentString()
         {
-            return PersistentString.FromParts(GetType().ToString())
+            return PersistentString.FromParts(base.GetPersistentString())
                 .Concat(OwnerGridForm?.DataGridId?.ToPersistedString()).ToString();
         }
 

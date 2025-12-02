@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .@. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -22,7 +22,7 @@ namespace pwiz.SkylineTestUtil
 {
     /// <summary>
     /// Helper methods for testing the Ardia server.
-    /// In order for Ardia tests to be enabled, you must have an environment variable "ARDIA_PASSWORD".
+    /// In order for Ardia tests to be enabled, you must have environment variables "ARDIA_PASSWORD" and "ARDIA_PASSWORD_1ROLE";
     /// </summary>
     public static class ArdiaTestUtil
     {
@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestUtil
             switch (type)
             {
                 case AccountType.MultiRole:
-                    return (ArdiaAccount)ArdiaAccount.DEFAULT.ChangeTestingOnly_NotSerialized_Role("Tester")
+                    return (ArdiaAccount)ArdiaAccount.DEFAULT.ChangeTestingOnly_NotSerialized_Role("SkylineTester")
                         .ChangeTestingOnly_NotSerialized_Username("matt.chambers42@gmail.com")
                         .ChangeTestingOnly_NotSerialized_Password(password)
                         .ChangeUsername("Testing_FAKE_ArdiaUser_MultiRole")

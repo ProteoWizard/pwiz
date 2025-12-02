@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Util
                 return;
             }
 
-            if (Equals(e.KeyData, Keys.Control | Keys.V))
+            if (ClipboardHelper.IsPaste(e.KeyData))
             {
                 var clipboardText = ClipboardHelper.GetClipboardText(DataGridView);
                 if (null == clipboardText)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -52,8 +52,6 @@ namespace pwiz.SkylineTestFunctional
             public MzTolerance FragmentMzTolerance { get; set; }
             public List<KeyValuePair<string, string>> AdditionalSettings { get; set; }
 
-            public bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine);
-
             public class DocumentCounts
             {
                 public int ProteinCount;
@@ -102,6 +100,8 @@ namespace pwiz.SkylineTestFunctional
                 TestAction = TestDiaUmpireSearch
             };
         }
+
+        public bool HasMissingDependencies() => CallUI(() => !SearchSettingsControl.HasRequiredFilesDownloaded(_testDetails.SearchEngine));
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
@@ -467,7 +467,7 @@ namespace pwiz.SkylineTestFunctional
             // Run the search
             SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
 
-            if (testDetails.HasMissingDependencies)
+            if (HasMissingDependencies())
             {
                 if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {
@@ -759,7 +759,7 @@ namespace pwiz.SkylineTestFunctional
             // Run the search
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
 
-            if (testDetails.HasMissingDependencies)
+            if (HasMissingDependencies())
             {
                 if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {

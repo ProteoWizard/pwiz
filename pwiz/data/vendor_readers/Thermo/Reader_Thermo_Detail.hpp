@@ -54,6 +54,23 @@ PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translate(PolarityType polarityType);
 PWIZ_API_DECL void setActivationType(ActivationType activationType, ActivationType supplementalActivationType, Activation& activation);
 
+constexpr double MAX_SRM_SCAN_RANGE = 1.0; // if Q3 m/z range is larger than this, don't produce SRM chromatogram
+
+
+PWIZ_API_DECL struct MassListTableEntry
+{
+    std::string compound;
+    double precursor_mz;
+    double product_mz;
+    double collision_energy;
+    std::string polarity;
+};
+
+typedef std::map<double, std::map<double, MassListTableEntry>> MassListTable; /// keyed by precursor m/z, then product m/z
+
+PWIZ_API_DECL MassListTable parseMassListTables(const std::string& instrumentMethod);
+
+
 } // Thermo
 } // detail
 } // msdata

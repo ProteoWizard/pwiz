@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public bool TryGetRegressionFunction(MsDataFileUri filePath, out AlignmentFunction regressionFunction)
             {
-                regressionFunction = SrmSettings.DocumentRetentionTimes.GetAlignmentFunction(SrmSettings.PeptideSettings.Libraries, filePath,
+                regressionFunction = SrmSettings.DocumentRetentionTimes.GetRunToRunAlignmentFunction(SrmSettings.PeptideSettings.Libraries, filePath,
                     false);
                 return regressionFunction != null;
             }

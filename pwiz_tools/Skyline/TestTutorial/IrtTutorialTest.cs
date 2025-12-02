@@ -1,5 +1,5 @@
 /*
- * Original author: Brendan MacLean <bmaclean .at. u.washington.edu>,
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2012 University of Washington - Seattle, WA
@@ -224,6 +224,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForRegression();
 
             RestoreViewOnScreen(9);
+            WaitForRegression();
             PauseForRetentionTimeGraphScreenShot("Retention Times Regression graph metafile");   // RT Regression graph
 
             RunUI(() =>

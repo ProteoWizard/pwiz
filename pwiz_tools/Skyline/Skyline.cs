@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,6 +32,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using log4net;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Documentation;
@@ -203,7 +204,21 @@ namespace pwiz.Skyline
 
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
-                ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), @"Check for tool updates");
+            {
+                ActionUtil.RunAsync(() => 
+                {
+                    try
+                    {
+                        ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray());
+                    }
+                    catch (Exception ex)
+                    {
+                        // Ignore network errors when checking for tool updates in background
+                        // The user will get proper error handling when they explicitly open the Tool Store
+                        Debug.WriteLine($@"Failed to check for tool updates: {ex.Message}");
+                    }
+                }, @"Check for tool updates");
+            }
 
             // Get placement values before changing anything.
             bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
@@ -255,6 +270,16 @@ namespace pwiz.Skyline
             else
             {
                 Settings.Default.UIMode = defaultUIMode; // OnShown() will ask user for it
+            }
+
+            // Push settings to an in-memory cache that can be read by ArdiaAccount since it cannot read Skyline settings directly.
+            // CONSIDER: this approach is rudimentary. Revisit and consider:
+            //              (1) moving all RemoteAccount-related config elsewhere
+            //              (2) doing #1 in the background
+            //              (3) the relationship between user.config models (ex: ArdiaRegistrationCodeEntry) and ArdiaAccount/Session
+            foreach (var kvPair in Settings.Default.ArdiaRegistrationCodeEntries)
+            {
+                ArdiaCredentialHelper.SetApplicationCode(kvPair.Key, kvPair.Value.ClientApplicationCode);
             }
         }
 
@@ -1788,12 +1813,12 @@ namespace pwiz.Skyline
             if (Settings.Default.UIMode == UiModes.PROTEOMIC)
             {
                 expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Protein;
-                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title;
+                expandSelectionPeptidesContextMenuItem.Text = PeptideDocNode.TITLE;
             }
             else
             {
                 expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Molecule_List;
-                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title_Molecule;
+                expandSelectionPeptidesContextMenuItem.Text = PeptideDocNode.TITLE_MOLECULE;
             }
             pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
@@ -2598,7 +2623,7 @@ namespace pwiz.Skyline
                     {
                         throw;
                     }
-                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
+                    MessageDlg.ShowWithException(parent ?? this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
                     return false;
                 }
                 finally
@@ -2764,6 +2789,19 @@ namespace pwiz.Skyline
             {
                 dlg.ShowDialog(this);
             }
+        }
+
+        private void searchToolsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSearchToolsDlg();
+        }
+
+        public void ShowSearchToolsDlg()
+        {
+            using var listbox = new ListBox();
+            var driverTools = new SettingsListBoxDriver<SearchTool>(listbox, Settings.Default.SearchToolList);
+            driverTools.LoadList();
+            driverTools.EditList();
         }
 
         private void toolsMenu_DropDownOpening(object sender, EventArgs e)
@@ -3073,6 +3111,18 @@ namespace pwiz.Skyline
             };
             DocumentationViewer documentationViewer = new DocumentationViewer(true);
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
+            documentationViewer.Show(this);
+        }
+
+        private void keyboardShortcutsHelpMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowKeyboardShortcutsDocumentation();
+        }
+
+        public void ShowKeyboardShortcutsDocumentation()
+        {
+            DocumentationViewer documentationViewer = new DocumentationViewer(true);
+            documentationViewer.DocumentationHtml = KeyboardShortcutDocumentation.GenerateKeyboardShortcutHtml(menuMain);
             documentationViewer.Show(this);
         }
 
@@ -4386,16 +4436,33 @@ namespace pwiz.Skyline
 
         public void ShowList(string listName)
         {
-            var listForm = Application.OpenForms.OfType<ListGridForm>()
-                .FirstOrDefault(form => form.ListName == listName);
+            var listForm = FindListForm(listName);
             if (listForm != null)
             {
                 listForm.Activate();
                 return;
             }
-            listForm = new ListGridForm(this, listName);
+            listForm = CreateListForm(listName);
             var rectFloat = GetFloatingRectangleForNewWindow();
             listForm.Show(dockPanel, rectFloat);
+        }
+
+        private ListGridForm FindListForm(string listName)
+        {
+            return Application.OpenForms.OfType<ListGridForm>()
+                .FirstOrDefault(form => form.ListName == listName);
+        }
+
+        private ListGridForm CreateListForm(string listName)
+        {
+            if (string.IsNullOrEmpty(listName))
+            {
+                var listDefault = Document.Settings.DataSettings.Lists.FirstOrDefault();
+                if (listDefault == null)
+                    return null;
+                listName = listDefault.ListName;
+            }
+            return FindListForm(listName) ?? new ListGridForm(this, listName);
         }
 
         public void SelectElement(ElementRef elementRef)
@@ -4698,6 +4765,8 @@ namespace pwiz.Skyline
             {
                 case ArdiaAccount ardia:
                 {
+                    // ISSUE: if ArdiaLoginDlg fails, callers receive no error. When debugging tests, use breakpoints to look at ArdiaLoginDlg before it closes.
+                    //        For example, this happens if the remote server URL cannot be found.
                     using var loginDlg = new ArdiaLoginDlg(ardia);
                     if (DialogResult.Cancel == loginDlg.ShowDialog(this))
                         throw new OperationCanceledException();
@@ -4790,6 +4859,19 @@ namespace pwiz.Skyline
         public IEnumerable<RemoteAccount> GetRemoteAccounts()
         {
             return Settings.Default.RemoteAccountList;
+        }
+
+        /// <summary>
+        /// Reset the token for all Ardia-type accounts in <see cref="Settings.RemoteAccountList"/>.
+        /// Used only in tests.
+        /// </summary>
+        // CONSIDER: this should go elsewhere. Maybe when CommonMsData supports RemoteAccountList
+        public void ClearArdiaAccountTokens()
+        {
+            Settings.Default.RemoteAccountList.
+                Where(a => a.AccountType == RemoteAccountType.ARDIA).
+                Cast<ArdiaAccount>().
+                ForEach(ArdiaCredentialHelper.ClearToken);
         }
     }
 }

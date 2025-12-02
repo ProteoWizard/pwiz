@@ -27,6 +27,8 @@
 #include "pwiz/utility/misc/String.hpp"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
+#include "Reader_Shimadzu_Detail.hpp"
+
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_Shimadzu::identify(const std::string& filename, const std::string& head) const
 {
@@ -64,8 +66,9 @@ namespace Shimadzu = pwiz::vendor_api::Shimadzu;
 namespace {
 
 void initializeInstrumentConfigurationPtrs(MSData& msd,
-                                           Shimadzu::ShimadzuReaderPtr rawfile,
-                                           const SoftwarePtr& instrumentSoftware)
+                                           ShimadzuReaderPtr rawfile,
+                                           const SoftwarePtr& instrumentSoftware,
+                                           const Reader::Config& config)
 {
     // create instrument configuration templates based on the instrument model
     vector<InstrumentConfigurationPtr> configurations(1, InstrumentConfigurationPtr(new InstrumentConfiguration));
@@ -76,11 +79,17 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
 
         ic->id = (format("IC%d") % (i+1)).str();
         ic->softwarePtr = instrumentSoftware;
-        ic->set(MS_Shimadzu_instrument_model);
+        auto instrumentModel = detail::Shimadzu::translateAsInstrumentModel(rawfile->getSystemName());
+        ic->set(instrumentModel);
+        if (instrumentModel == MS_Shimadzu_instrument_model)
+        {
+            config.instrumentMetadataError("unable to parse instrument model; make sure you are using the latest version of ProteoWizard; if you are, please report this error to the ProteoWizard developers with this information: systemName(" + rawfile->getSystemName() + ")");
+            ic->userParams.emplace_back("system name", rawfile->getSystemName(), "xsd:string");
+        }
 
         ic->componentList.emplace_back(Component(MS_ESI, 1));
 
-        if (rawfile->getScanCount() == 0)
+        if (!rawfile->getTransitions().empty()) // assume transitions present means SRM and QQQ
         {
             ic->componentList.emplace_back(Component(MS_quadrupole, 2));
             ic->componentList.emplace_back(Component(MS_quadrupole, 3));
@@ -102,17 +111,20 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
 }
 
 
-void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, MSData& msd, const Reader::Config& config)
+void fillInMetadata(const string& rawpath, ShimadzuReaderPtr rawfile, MSData& msd, const Reader::Config& config)
 {
     msd.cvs = defaultCVList();
 
-    if (rawfile->getScanCount() == 0)
+    auto transitions = rawfile->getTransitions();
+    if (!transitions.empty() && !config.srmAsSpectra)
         msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
     else
     {
         if (rawfile->getMSLevels().count(1) > 0)
             msd.fileDescription.fileContent.set(MS_MS1_spectrum);
-        if (rawfile->getMSLevels().count(2) > 0)
+        if (!transitions.empty())
+            msd.fileDescription.fileContent.set(MS_SRM_spectrum);
+        else if (rawfile->getMSLevels().count(2) > 0)
             msd.fileDescription.fileContent.set(MS_MSn_spectrum);
         if (msd.fileDescription.fileContent.empty())
             throw runtime_error("[Reader_Shimadzu::fillInMetadata] unexpected values from getMSLevels()");
@@ -125,8 +137,8 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
     sourceFile->id = p.filename().string(utf8);
     sourceFile->name = p.filename().string(utf8);
     sourceFile->location = "file:///" + bfs::system_complete(p.parent_path()).string(utf8);
-    sourceFile->set(MS_scan_number_only_nativeID_format);
-    sourceFile->set(MS_mass_spectrometer_file_format);
+    sourceFile->set(MS_Shimadzu_Biotech_QTOF_nativeID_format);
+    sourceFile->set(MS_Shimadzu_Biotech_LCD_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.run.defaultSourceFilePtr = sourceFile;
@@ -136,7 +148,7 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
     SoftwarePtr softwareShimadzu(new Software);
     softwareShimadzu->id = "Shimadzu software";
     softwareShimadzu->set(MS_Shimadzu_Corporation_software);
-    softwareShimadzu->version = "4.0";
+    softwareShimadzu->version = "5.0";
     msd.softwarePtrs.push_back(softwareShimadzu);
 
     SoftwarePtr softwarePwiz(new Software);
@@ -157,7 +169,7 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
-    initializeInstrumentConfigurationPtrs(msd, rawfile, softwareShimadzu);
+    initializeInstrumentConfigurationPtrs(msd, rawfile, softwareShimadzu, config);
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
@@ -182,15 +194,22 @@ void Reader_Shimadzu::read(const string& filename,
         throw ReaderFail("[Reader_Shimadzu::read] multiple runs not supported");
 
     // instantiate RawFile, share ownership with SpectrumList_Shimadzu
+    ShimadzuReaderPtr dataReader(ShimadzuReader::create(filename, config.srmAsSpectra));
 
-    Shimadzu::ShimadzuReaderPtr dataReader(Shimadzu::ShimadzuReader::create(filename));
+    // workaround for Shimadzu 8060RX SRM chromatogram bug
+    Config workaroundConfig(config);
+    if (!config.srmAsSpectra && bal::contains(dataReader->getSystemName(), "8060RX"))
+    {
+        dataReader = ShimadzuReader::create(filename, true);
+        workaroundConfig.srmAsSpectra = true;
+    }
 
-    shared_ptr<SpectrumList_Shimadzu> sl(new SpectrumList_Shimadzu(result, dataReader, config));
-    shared_ptr<ChromatogramList_Shimadzu> cl(new ChromatogramList_Shimadzu(dataReader, config));
+    shared_ptr<SpectrumList_Shimadzu> sl(new SpectrumList_Shimadzu(result, dataReader, workaroundConfig));
+    shared_ptr<ChromatogramList_Shimadzu> cl(new ChromatogramList_Shimadzu(dataReader, workaroundConfig));
     result.run.spectrumListPtr = sl;
     result.run.chromatogramListPtr = cl;
 
-    fillInMetadata(filename, dataReader, result, config);
+    fillInMetadata(filename, dataReader, result, workaroundConfig);
 }
 
 

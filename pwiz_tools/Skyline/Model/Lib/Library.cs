@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -127,13 +127,16 @@ namespace pwiz.Skyline.Model.Lib
                     if (spec == null || dictLibraries.ContainsKey(spec.Name))
                         continue;
                     var library = LoadLibrary(container, spec);
+                    if (library != null)
+                    {
+                        dictLibraries.Add(spec.Name, library);
+                    }
                     if (library == null || !ReferenceEquals(document.Id, container.Document.Id))
                     {
                         // Loading was cancelled or document changed
                         EndProcessing(document);
                         return false;
                     }
-                    dictLibraries.Add(spec.Name, library);
                 }
 
                 var missingMidasFiles = MidasLibrary.GetMissingFiles(document, libraries.Libraries);
@@ -1024,7 +1027,7 @@ namespace pwiz.Skyline.Model.Lib
             ICollection<Target> targets)
         {
             var result = new List<IList<double>>();
-            foreach (var file in spectrumSourceFiles)
+            foreach (var file in spectrumSourceFiles ?? LibraryFiles)
             {
                 int? fileIndex = null;
                 result.Add(GetRetentionTimesWithSequences(file, targets, ref fileIndex).ToList());
@@ -1139,15 +1142,19 @@ namespace pwiz.Skyline.Model.Lib
             _libraryEntries = new LibKeyMap<TInfo>(entryList, entryList.Select(entry=>entry.Key.LibraryKey));
         }
 
-        protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries)
+        // Try to build a precursor from the information in each entry of the library. For those that fail, report the issue
+        // and remove them from the list of entries.
+        protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries, string dataSource)
         {
             var validEntries = new List<TInfo>();
             var invalidKeys = new List<LibKey>();
             foreach (var entry in entries)
             {
-                if (!IsValidLibKey(entry.Key))
+                if (!IsValidLibKey(entry.Key, out var whyNot))
                 {
                     invalidKeys.Add(entry.Key);
+                    Messages.WriteAsyncUserMessage(ModelResources.AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_, 
+                        entry.Key, dataSource, whyNot);  // Report to immediate window
                 }
                 else
                 {
@@ -1159,15 +1166,17 @@ namespace pwiz.Skyline.Model.Lib
             return validEntries;
         }
 
-        protected bool IsValidLibKey(LibKey libKey)
+        protected bool IsValidLibKey(LibKey libKey, out string errorMessage)
         {
             try
             {
+                errorMessage = null;
                 var unused = libKey.LibraryKey.CreatePeptideIdentityObj();
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                errorMessage = e.Message;
                 return false;
             }
         }

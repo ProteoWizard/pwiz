@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42+UW .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,7 +27,7 @@ using Inference;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model;
 using pwiz.Skyline;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Viktoria Dorfer <viktoria.dorfer .at. fh-hagenberg.at>,
  *                  Bioinformatics Research Group, University of Applied Sciences Upper Austria
  *
@@ -259,6 +259,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Invoke(UpdateUI, status);
             }
         }
+
+        public bool CanCancel => btnCancel.Enabled;
 
         public void Cancel()
         {

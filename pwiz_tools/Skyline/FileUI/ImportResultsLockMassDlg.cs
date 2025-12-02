@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinmet>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.FileUI
             else if (!helper.ValidateDecimalTextBox(textLockmassTolerance, LockMassParameters.LOCKMASS_TOLERANCE_MIN, LockMassParameters.LOCKMASS_TOLERANCE_MAX, out lockmassTolerance))
                 return;
 
-            Settings.Default.LockmassParameters = LockMassParameters = new LockMassParameters(lockmassPositive, lockmassNegative, lockmassTolerance);
+            Settings.Default.LockmassParameters = LockMassParameters = LockMassParameters.Create(lockmassPositive, lockmassNegative, lockmassTolerance);
             DialogResult = DialogResult.OK;
         }
 

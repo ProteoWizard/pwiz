@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -127,15 +127,9 @@ namespace pwiz.SkylineTest
             var times = new double[] {0, 1};
             var intensities = new double[] {0, 1};
             var stats = PeakShapeStatistics.Calculate(times, intensities);
-
-            var samples = new List<double>();
-            for (int i = 0; i <= 10000; i++)
-            {
-                var time = i / 10000.0;
-                samples.AddRange(Enumerable.Repeat(time, i));
-            }
-
+            var samples = Enumerable.Range(0, 10001).SelectMany(i => Enumerable.Repeat(i / 10000.0, i));
             var runningStatistics = new RunningStatistics(samples);
+
             Assert.AreEqual(runningStatistics.Mean, stats.MeanTime, .001);
             Assert.AreEqual(runningStatistics.StandardDeviation, stats.StdDevTime, .001);
             Assert.AreEqual(runningStatistics.Skewness, stats.Skewness, .001);
@@ -156,19 +150,18 @@ namespace pwiz.SkylineTest
 
         private RunningStatistics GetRunningStatisticsBySampling(IList<double> times, IList<double> intensities)
         {
-            var samples = new List<double>();
             var maxIntensity = intensities.Max();
             var timeIntensities = new TimeIntensities(times.Select(t => (float) t), intensities.Select(i => (float) i),
                 null, null);
             const int nTimes = 1000;
-            for (int i = 0; i < nTimes; i++)
+            var samples = Enumerable.Range(0, nTimes).SelectMany(i =>
             {
                 var time = (times[0] + i * (times[times.Count - 1] - times[0]) / nTimes);
                 var interpolatedTimeIntensities = timeIntensities.InterpolateTime((float) time);
                 var intensity = interpolatedTimeIntensities.Intensities[interpolatedTimeIntensities.IndexOfNearestTime((float) time)];
                 int count = (int) Math.Round(intensity * 100 / maxIntensity);
-                samples.AddRange(Enumerable.Repeat(time, count));
-            }
+                return Enumerable.Repeat(time, count);
+            });
 
             return new RunningStatistics(samples);
         }

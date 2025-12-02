@@ -1,4 +1,4 @@
-﻿namespace pwiz.PanoramaClient
+namespace pwiz.PanoramaClient
 {
     partial class PanoramaFolderBrowser
     {
@@ -59,7 +59,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.treeView);
             this.Name = "PanoramaFolderBrowser";
-            this.Load += new System.EventHandler(this.FolderBrowser_Load);
             this.ResumeLayout(false);
 
         }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -26,15 +26,15 @@ using SkylineBatch;
 namespace SkylineBatchTest
 {
     [TestClass]
-    public class SkylineBatchLoggerTest
+    public class SkylineBatchLoggerTest : AbstractSkylineBatchUnitTest
     {
         [TestMethod]
         public void TestTinyLog()
         {
-            var logFolder = TestUtils.GetTestFilePath("OldLogs\\TestTinyLog");
+            var logFolder = GetTestResultsPath("TestTinyLog");
             if (!Directory.Exists(logFolder)) Directory.CreateDirectory(logFolder);
 
-            var logger = TestUtils.GetTestLogger(logFolder);
+            var logger = GetTestLogger("TestTinyLog");
             var logFile = logger.LogFile;
             Assert.IsTrue(File.Exists(logFile));
             var fileInfo = new FileInfo(logFile);
@@ -46,7 +46,7 @@ namespace SkylineBatchTest
 
             var oldLogger = logger.Archive();
             var fileLengthAfterArchive = new FileInfo(logger.LogFile).Length;
-            var logFilesAfterArchive = TestUtils.GetAllLogFiles();
+            var logFilesAfterArchive = TestUtils.GetAllLogFiles(TestContext, logFolder);
             var archivedFileLength = logFilesAfterArchive.Count > 1 ? new FileInfo(logFilesAfterArchive[1]).Length : -1;
             logger.Delete();
             oldLogger.Delete();
@@ -66,7 +66,7 @@ namespace SkylineBatchTest
         {
             TestUtils.InitializeRInstallation();
 
-            var logFolder = TestUtils.GetTestFilePath("MultipleLogsTest");
+            var logFolder = GetTestResultsPath("MultipleLogsTest");
             if (Directory.Exists(logFolder))
             {
                 foreach (var file in Directory.EnumerateFiles(logFolder))

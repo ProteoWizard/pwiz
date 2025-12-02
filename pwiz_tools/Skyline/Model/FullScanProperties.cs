@@ -1,4 +1,22 @@
-﻿using System.ComponentModel;
+/*
+ * Original author: Rita Chupalov <ritach .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -71,6 +89,7 @@ namespace pwiz.Skyline.Model
                         (precursor.IsolationMz + precursor.IsolationWindowUpper).Value.RawValue.ToString(Formats.Mz),
                         precursor.IsolationWindowLower.Value.ToString(Formats.Mz), 
                         precursor.IsolationWindowUpper.Value.ToString(Formats.Mz));
+                res.DissociationMethod = precursor.DissociationMethod;
             }
 
             res.RetentionTime = spectrum.RetentionTime.HasValue ? spectrum.RetentionTime.Value.ToString(Formats.RETENTION_TIME) : null;
@@ -99,6 +118,16 @@ namespace pwiz.Skyline.Model
             res.Instrument.InstrumentSerialNumber = spectrum.InstrumentSerialNumber;
 
             res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
+
+            if (spectrum.Metadata.ConstantNeutralLoss.HasValue)
+            {
+                res.ConstantNeutralLoss = spectrum.Metadata.ConstantNeutralLoss.Value.ToString(Formats.Mz);
+            }
+
+            if (spectrum.WindowGroup > 0)
+            {
+                res.WindowGroup = spectrum.WindowGroup.ToString(CultureInfo.CurrentCulture); // For Bruker PASEF MS2
+            }
             return res;
         }
         [Category("FileInfo")] public string FileName { get; set; }
@@ -112,12 +141,14 @@ namespace pwiz.Skyline.Model
         [Category("PrecursorInfo")] public string CCS { get; set; }
         [Category("PrecursorInfo")] public string IonMobility { get; set; }
         [Category("PrecursorInfo")] public string IsolationWindow { get; set; }
+        [Category("PrecursorInfo")] public string DissociationMethod { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityRange { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityFilterRange { get; set; }
         [Category("PrecursorInfo")] public string HighEnergyOffset { get; set; }
         [Category("AcquisitionInfo")] public string ScanId { get; set; }
         [Category("AcquisitionInfo")] public string CE { get; set; }
         [Category("AcquisitionInfo")] public string MSLevel { get; set; }
+        [Category("AcquisitionInfo")] public string ConstantNeutralLoss { get; set; }
         [Category("AcquisitionInfo")] public InstrumentInfo Instrument { get; set; }
         [Category("AcquisitionInfo")] public string DataPoints { get; set; }
         [Category("AcquisitionInfo")] public string MzCount { get; set; }
@@ -125,6 +156,7 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string TotalIonCurrent { get; set; }
         [Category("AcquisitionInfo")] public string InjectionTime { get; set; }
         [Category("AcquisitionInfo")] public string IsCentroided { get; set; }
+        [Category("AcquisitionInfo")] public string WindowGroup { get; set; } // For Bruker PASEF
         [Category("MatchInfo")] public string dotp { get; set; }
         [Category("MatchInfo")] public string idotp { get; set; }
         [Category("MatchInfo")] public string rdotp { get; set; }

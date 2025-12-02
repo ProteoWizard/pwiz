@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
             
             // We assume that the first component of the path element is the context path where LabKey Server is deployed.
             // Both VALID_PANORAMA_Server and VALID_PANORAMA_SERVER/libkey will be saved as two different servers.
-            CheckServerInfoSuccess(new TestPanoramaClient(VALID_PANORAMA_SERVER + "/libkey", VALID_USER_NAME, VALID_PASSWORD), 2);
+            CheckServerInfoSuccess(new TestPanoramaClient(VALID_PANORAMA_SERVER + "libkey", VALID_USER_NAME, VALID_PASSWORD), 2);
             
             // Non-existent server
             CheckServerInfoFailure(new TestPanoramaClient(NON_EXISTENT_SERVER, VALID_USER_NAME, VALID_PASSWORD), 2);
@@ -181,13 +181,13 @@ namespace pwiz.SkylineTestFunctional
             supportedVersions.AddRange(SkylineVersion.SupportedForSharing().Select(v => v.ToString()));
             CheckPublishSuccess(WRITE_TARGETED, true, supportedVersions, testPanoramaClient);
             
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd15.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("skyd18.sky")));
             WaitForDocumentLoaded();
             testPanoramaClient.ServerSkydVersion = "14";
             // Document's cache version is higher than what the server supports. The available options in ShareTypeDlg should not 
             // include the current saved file format or any Skyline versions associated with a cache version higher than 14.
             supportedVersions = SkylineVersion.SupportedForSharing()
-                .Where(ver => ver.CacheFormatVersion <= CacheFormatVersion.Fourteen)
+                .Where(ver => CacheFormat.GetVersionRequired(ver.CacheFormatVersion) <= CacheFormatVersion.Fourteen)
                 .Select(v => v.ToString()).ToList();
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions, testPanoramaClient);
             
@@ -222,7 +222,7 @@ namespace pwiz.SkylineTestFunctional
             }
             else
             {
-                var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
+                var publishDocumentDlg = ShowDialog<PublishDocumentDlgPanorama>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
                 WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
                 RunUI(() =>
                 {
@@ -253,7 +253,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var testPublishClient = new TestPanoramaPublishClient(panoramaClient);
 
-            var publishDocumentDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
+            var publishDocumentDlg = ShowDialog<PublishDocumentDlgPanorama>(() => SkylineWindow.ShowPublishDlg(testPublishClient));
             WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
             RunUI(() =>
             {
@@ -408,23 +408,23 @@ namespace pwiz.SkylineTestFunctional
             });
 
 
-            // 2. PublishDocumentDlg should NOT display the "Show anonymous servers" checkbox
-            var publishDocDlg = ShowDialog<PublishDocumentDlg>(editServerDlg.OkDialog);
-            RunUI( () => Assert.IsFalse(publishDocDlg.CbAnonymousServersVisible));
+            // 2. PublishDocumentDlgBase should NOT display the "Show anonymous servers" checkbox
+            var publishDocDlg = ShowDialog<PublishDocumentDlgPanorama>(editServerDlg.OkDialog);
+            RunUI( () => Assert.IsFalse(publishDocDlg.AnonymousServersCheckboxVisible));
             OkDialog(publishDocDlg, publishDocDlg.CancelDialog);
 
 
 
             // Add another anonymous server
-            // 1. PublishDocumentDlg should display the "Show anonymous servers" checkbox
+            // 1. PublishDocumentDlgBase should display the "Show anonymous servers" checkbox
             // 2. View anonymous servers
             const string pweb = "https://panoramaweb.org/";
             AddAnonymousServer(pweb, 2);
-            publishDocDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            publishDocDlg = ShowDialog<PublishDocumentDlgPanorama>(() => SkylineWindow.ShowPublishDlg(publishClient));
             RunUI(() =>
             {
-                // 1. PublishDocumentDlg should display the "Show anonymous servers" checkbox
-                Assert.IsTrue(publishDocDlg.CbAnonymousServersVisible);
+                // 1. PublishDocumentDlgBase should display the "Show anonymous servers" checkbox
+                Assert.IsTrue(publishDocDlg.AnonymousServersCheckboxVisible);
 
                 var servers = publishDocDlg.GetServers();
                 Assert.AreEqual(1, servers.Count);
@@ -500,11 +500,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException").ToString());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri)).Uri(ServerUri).ErrorDetail($"Test {nameof(PanoramaServerException)}").ToString());
                 }
 
                 else if (string.Equals(Server, NON_EXISTENT_SERVER))
-                    throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.missing.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - NameResolutionFailure").ToString());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.missing.Error(ServerUri)).Uri(ServerUri).ErrorDetail($"Test {nameof(PanoramaServerException)} - NameResolutionFailure").ToString());
 
                 else if (Server.Contains(VALID_PANORAMA_SERVER))
                 {
@@ -516,10 +516,10 @@ namespace pwiz.SkylineTestFunctional
                     else
                     {
                         throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                            .Uri(PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password))).ErrorDetail("Test WebException").ToString());
+                            .Uri(PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password))).ErrorDetail($"Test {nameof(PanoramaServerException)}").ToString());
                     }
                 }
-                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - unknown failure").ToString());
+                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail($"Test {nameof(PanoramaServerException)} - unknown failure").ToString());
             }
 
             public override void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true)
@@ -532,7 +532,8 @@ namespace pwiz.SkylineTestFunctional
                 set { _serverSkydVersion = value; }
             }
 
-            public override JToken GetInfoForFolders(string folder)
+            public override JToken GetInfoForFolders(string folder,
+                IProgressMonitor progressMonitor, IProgressStatus progressStatus)
             {
                 // this addition is hacky but necessary as far as I can tell to get PanoramaSavedUri testing to work
                 // basically adds a WRITE_TARGET type folder in the root because the new code to deal with publishing to a 
@@ -553,7 +554,8 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            public override Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+            public override Uri SendZipFile(string folderPath, string zipFilePath,
+                IProgressMonitor progressMonitor, IProgressStatus progressStatus)
             {
                 return null;
             }

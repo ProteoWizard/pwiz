@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.EditUI
+namespace pwiz.Skyline.EditUI
 {
     partial class UniquePeptidesDlg
     {
@@ -33,7 +33,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UniquePeptidesDlg));
-            this.dataGridView1 = new pwiz.Common.Controls.CommonDataGridView();
+            this.dataGridView1 = new pwiz.Skyline.Controls.DataGridViewEx();
             this.PeptideIncludedColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.PeptideColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -306,7 +306,7 @@
 
         #endregion
 
-        private pwiz.Common.Controls.CommonDataGridView dataGridView1;
+        private pwiz.Skyline.Controls.DataGridViewEx dataGridView1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem includeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem excludeToolStripMenuItem;

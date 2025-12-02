@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding

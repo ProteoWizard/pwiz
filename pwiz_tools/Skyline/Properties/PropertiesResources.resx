@@ -163,6 +163,12 @@
   <data name="EnzymeList_Title_Edit_Enzymes" xml:space="preserve">
     <value>Edit Enzymes</value>
   </data>
+  <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
+    <value>Group Comparisons</value>
+  </data>
+  <data name="GroupComparisonDefList_Title_Define_Group_Comparisons" xml:space="preserve">
+    <value>Define Group Comparisons</value>
+  </data>
   <data name="HeavyModList_EditItem_Edit_Isotope_Modification" xml:space="preserve">
     <value>Edit Isotope Modification</value>
   </data>
@@ -202,6 +208,12 @@
   <data name="IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments" xml:space="preserve">
     <value>Edit Isotope Labeling Enrichments</value>
   </data>
+  <data name="ListDefList_Label_Lists" xml:space="preserve">
+    <value>Lists</value>
+  </data>
+  <data name="ListDefList_Title_Define_Lists" xml:space="preserve">
+    <value>Define Lists</value>
+  </data>
   <data name="MeasuredIonList_Label_Special_ion" xml:space="preserve">
     <value>&amp;Special ion:</value>
   </data>
@@ -238,6 +250,12 @@
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>Edit Remote Accounts</value>
   </data>
+  <data name="ReportSpecList_Label_Report" xml:space="preserve">
+    <value>&amp;Report:</value>
+  </data>
+  <data name="ReportSpecList_Title_Edit_Reports" xml:space="preserve">
+    <value>Edit Reports</value>
+  </data>
   <data name="RetentionTimeList_Label_Retention_Time_Regression" xml:space="preserve">
     <value>&amp;Retention Time Regression:</value>
   </data>
@@ -255,6 +273,15 @@
   </data>
   <data name="RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators" xml:space="preserve">
     <value>Edit Retention Time Calculators</value>
+  </data>
+  <data name="SearchToolList_Label_Internal__Tools" xml:space="preserve">
+    <value>Internal &amp;Tools</value>
+  </data>
+  <data name="SearchToolList_Label_Search__Tools" xml:space="preserve">
+    <value>Search &amp;Tools</value>
+  </data>
+  <data name="SearchToolList_Title_Edit_Search_Tools" xml:space="preserve">
+    <value>Edit Search Tools</value>
   </data>
   <data name="ServerList_Label__Servers" xml:space="preserve">
     <value>&amp;Servers</value>

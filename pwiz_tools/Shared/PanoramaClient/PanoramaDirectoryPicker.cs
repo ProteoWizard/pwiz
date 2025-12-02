@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Sophie Pallanck <srpall .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,7 +38,16 @@ namespace pwiz.PanoramaClient
         private readonly List<PanoramaServer> _servers;
         private readonly bool _showWebDav;
         private string _treeState;
+        private bool _serverDataLoaded;
 
+        /// <summary>
+        /// This is the production version of the constructor, but it is only used in SkylineBatch.
+        /// Since, Skyline does not use this dialog directly, it uses the test version below to ensure the class gets tested.
+        /// </summary>
+        /// <param name="servers">A list of <see cref="PanoramaServer"/> objects to use to populate the folder tree</param>
+        /// <param name="stateString">A tree state string in the format understood by <see cref="TreeViewStateRestorer"/></param>
+        /// <param name="showWebDavFolders">True to show folders using WebDAV, and false to use the JSON API from LabKey Server</param>
+        /// <param name="selectedPath">A path string in the tree to select initially</param>
         public PanoramaDirectoryPicker(List<PanoramaServer> servers, string stateString, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
@@ -46,11 +55,39 @@ namespace pwiz.PanoramaClient
             _servers = servers;
             _treeState = stateString;
             _showWebDav = showWebDavFolders;
+            _serverDataLoaded = showWebDavFolders; // WebDav does not require background data loading
 
             SelectedPath = selectedPath;
+
+            InitializeDialog();
         }
 
-        public void InitializeDialog()
+
+        #region Test Support
+
+        /// <summary>
+        /// This constructor version is used in Skyline testing only.
+        /// </summary>
+        /// <param name="server">A single <see cref="PanoramaServer"/> object for which to show folders, passed directly as JSON</param>
+        /// <param name="folderJson">The folder JSON for the server. The server is never called for its project folders</param>
+        public PanoramaDirectoryPicker(PanoramaServer server, JToken folderJson)
+        {
+            InitializeComponent();
+
+            _servers = new List<PanoramaServer> { server };
+            _showWebDav = false;
+            _serverDataLoaded = true; // Test class uses preloaded JSON, so no background data loading needed
+
+            FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
+
+            InitializeDialog();
+
+            IsLoaded = true;
+        }
+
+        #endregion
+
+        private void InitializeDialog()
         {
             if (FolderBrowser == null)
             {
@@ -78,8 +115,32 @@ namespace pwiz.PanoramaClient
                 back.Enabled = FolderBrowser.BackEnabled;
                 forward.Enabled = FolderBrowser.ForwardEnabled;
             }
+        }
 
-            IsLoaded = true;
+        /// <summary>
+        /// Loads server folder data from the web on a background thread.
+        /// Must be called before ShowDialog() on a background thread.
+        /// The TreeView will be populated automatically when the form loads (OnLoad lifecycle event).
+        /// </summary>
+        public void LoadServerData(IProgressMonitor progressMonitor)
+        {
+            Assume.IsFalse(IsHandleCreated, @"LoadServerData must be called before the form handle is created (before ShowDialog)");
+
+            // Prevent duplicate loading if already called
+            if (_serverDataLoaded)
+                return;
+
+            FolderBrowser.LoadServerData(progressMonitor);
+            _serverDataLoaded = true;
+        }
+
+        /// <summary>
+        /// Populates the TreeView with the loaded server data.
+        /// Must be called on the UI thread after LoadServerData() completes.
+        /// </summary>
+        public void PopulateTreeView()
+        {
+            FolderBrowser?.PopulateTreeView();
         }
 
         private void Open_Click(object sender, EventArgs e)
@@ -97,6 +158,14 @@ namespace pwiz.PanoramaClient
             if (!string.IsNullOrEmpty(OkButtonText))
             {
                 open.Text = OkButtonText;
+            }
+            IsLoaded = true;
+            
+            // Populate TreeView with server data if it was loaded before the form was shown
+            // Both LKContainerBrowser and WebDavBrowser require LoadServerData to be called first
+            if (_serverDataLoaded)
+            {
+                PopulateTreeView();
             }
             urlLink.Text = FolderBrowser.GetSelectedUri();
         }
@@ -162,24 +231,5 @@ namespace pwiz.PanoramaClient
         {
             Clipboard.SetText(urlLink.Text);
         }
-
-
-        #region Test Support
-
-        public PanoramaDirectoryPicker(Uri serverUri, string user, string pass, JToken folderJson)
-        {
-            InitializeComponent();
-
-            var server = new PanoramaServer(serverUri, user, pass);
-            _servers = new List<PanoramaServer> { server };
-
-            FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
-
-            InitializeDialog();
-
-            IsLoaded = true;
-        }
-
-        #endregion
     }
 }

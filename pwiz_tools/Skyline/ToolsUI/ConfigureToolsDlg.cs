@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -706,19 +706,21 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        public static readonly string EXECUTABLE_FILES_FILTER = TextUtil.FileDialogFiltersAll(
+            TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, ToolDescription.EXTENSIONS),
+            TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Exe_Files, ToolDescription.EXTENSIONS[0]),
+            TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, ToolDescription.EXTENSIONS[1]),
+            TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, ToolDescription.EXTENSIONS[2]),
+            TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, ToolDescription.EXTENSIONS[3], ToolDescription.EXTENSIONS[4]),
+            TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, ToolDescription.EXTENSIONS[5]),
+            TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, ToolDescription.EXTENSIONS[6])
+        );
+
         public void CommandBtnClick()
         {
-            int i = 0;
             using (var dlg = new OpenFileDialog())
             {
-                dlg.Filter = TextUtil.FileDialogFiltersAll(
-                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, ToolDescription.EXTENSIONS[i++], ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, ToolDescription.EXTENSIONS[i++]),
-                    TextUtil.FileDialogFilter(ToolsUIResources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, ToolDescription.EXTENSIONS[i])
-                );
+                dlg.Filter = EXECUTABLE_FILES_FILTER;
                 dlg.FilterIndex = 1;
                 dlg.Multiselect = false;
                 if (dlg.ShowDialog(this) == DialogResult.OK)

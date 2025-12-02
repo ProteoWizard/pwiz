@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
  *
  * Copyright 2009 Vanderbilt University - Nashville, TN 37232
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.FileUI
             List<MsDataFileUri> dataSourceList = new List<MsDataFileUri>();
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (!DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+                if (!TreatAsFolder(item.SubItems[1].Text))
                 {
                     dataSourceList.Add(((SourceInfo)item.Tag).MsDataFileUri);
                 }
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.FileUI
             // should navigate to
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+                if (TreatAsFolder(item.SubItems[1].Text))
                 {
                     OpenFolderItem(item);
                     return;

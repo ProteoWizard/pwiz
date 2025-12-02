@@ -283,6 +283,12 @@
   <data name="Description_IsCentroided" xml:space="preserve">
     <value>Is this a centroided or high resolution spectrum.</value>
   </data>
+  <data name="WindowGroup" xml:space="preserve">
+    <value>Window Group</value>
+  </data>
+  <data name="Description_WindowGroup" xml:space="preserve">
+    <value>PASEF MS2 window group</value>
+  </data>
   <data name="HighEnergyOffset" xml:space="preserve">
     <value>High Energy Offset</value>
   </data>
@@ -306,5 +312,17 @@
   </data>
   <data name="Description_rdotp" xml:space="preserve">
     <value>Measure of similarity between labeled and non-labeled spectra.</value>
+  </data>
+  <data name="Description_DissociationMethod" xml:space="preserve">
+    <value>Fragmentation technique (e.g. CID, HCD, ETD)</value>
+  </data>
+  <data name="DissociationMethod" xml:space="preserve">
+    <value>Dissociation Method</value>
+  </data>
+  <data name="ConstantNeutralLoss" xml:space="preserve">
+    <value>Constant Neutral Loss</value>
+  </data>
+  <data name="Description_ConstantNeutralLoss" xml:space="preserve">
+    <value>Analyzer offset for Constant Neutral Loss spectrum (negative value for constant neutral gain)</value>
   </data>
 </root>

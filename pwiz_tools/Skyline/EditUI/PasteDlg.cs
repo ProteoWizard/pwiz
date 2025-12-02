@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1114,7 +1114,7 @@ namespace pwiz.Skyline.EditUI
         
         private void gridViewProteins_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
+            if (ClipboardHelper.IsPaste(e.KeyData))
             {
                 if (!gridViewProteins.IsCurrentCellInEditMode)
                 {
@@ -1136,7 +1136,7 @@ namespace pwiz.Skyline.EditUI
         
         private void gridViewPeptides_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
+            if (ClipboardHelper.IsPaste(e.KeyData))
             {
                 if (!gridViewPeptides.IsCurrentCellInEditMode)
                 {

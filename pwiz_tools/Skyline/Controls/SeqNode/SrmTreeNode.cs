@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,8 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1366,50 +1364,5 @@ namespace pwiz.Skyline.Controls.SeqNode
             get { return _sizeF.Height; }
             set { _sizeF.Height = value; }
         }
-    }
-
-    public class DisplaySettings
-    {
-        internal readonly bool _showBestReplicate;
-        internal readonly int _resultsIndex;
-
-        public DisplaySettings(NormalizedValueCalculator normalizedValueCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, NormalizeOption normalizeOption)
-        {
-            NormalizedValueCalculator = normalizedValueCalculator;
-            _showBestReplicate = showBestReplicate;
-            _resultsIndex = resultsIndex;
-            NormalizeOption = normalizeOption;
-            NodePep = nodePep;
-        }
-         
-        public DisplaySettings(DisplaySettings settings, PeptideDocNode nodePep) 
-        {
-            _showBestReplicate = settings._showBestReplicate;
-            _resultsIndex = settings._resultsIndex;
-            NormalizeOption = settings.NormalizeOption;
-            NodePep = nodePep;
-        }
-
-        public PeptideDocNode NodePep { get; private set; }
-
-        public int ResultsIndex
-        {
-            get
-            {
-                return _showBestReplicate && NodePep != null && NodePep.BestResult != -1 ? NodePep.BestResult : _resultsIndex;
-            }
-        }
-
-        public NormalizeOption NormalizeOption { get; private set; }
-
-        public NormalizationMethod NormalizationMethod
-        {
-            get
-            {
-                return NormalizedValueCalculator.NormalizationMethodForMolecule(NodePep, NormalizeOption);
-            }
-        }
-
-        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
     }
 }

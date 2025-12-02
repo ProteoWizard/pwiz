@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Author: David Shteynberg <dshteyn .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -199,9 +199,27 @@ namespace TestPerf
                 RunUI(buildLibraryDlg.OkWizardPage);
             }
 
+            if (buildLibraryDlg.Builder == null)
+            {
+                // Recreate builder when running the test multiple times (e.g. in different lanquages)
+                RunUI(() =>
+                {
+                    PythonInstaller.SimulatedInstallationState =
+                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
+                    buildLibraryDlg.ValidateBuilder(true);
+                });
+                PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
+            }
+
+            WaitForCondition(() => buildLibraryDlg.Builder != null);
+
             var alphaPeptDeepBuilder = (AlphapeptdeepLibraryBuilder) buildLibraryDlg.Builder;
+            Assert.IsNotNull(alphaPeptDeepBuilder);
             string builtLibraryPath = alphaPeptDeepBuilder.TransformedOutputSpectraLibFilepath;
 
+            var limitedModelAlert = WaitForOpenForm<AlertDlg>();
+            Assert.AreEqual(string.Format(ModelResources.Alphapeptdeep_Warn_limited_modification, @"Phospho (ST)".Indent(1)), limitedModelAlert.Message);
+            OkDialog(limitedModelAlert, limitedModelAlert.OkDialog);
             if (iRTtype != null)
             {
                 VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
@@ -229,7 +247,7 @@ namespace TestPerf
         {
             RunUI(() =>
             {
-                Assert.AreEqual(7, dlg.PeptidesCount);
+                Assert.AreEqual(6, dlg.PeptidesCount);
                 Assert.AreEqual(1, dlg.RunsConvertedCount); // Libraries now convert through internal alignment to single RT scale
                 Assert.AreEqual(0, dlg.RunsFailedCount);
             });

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -49,8 +49,6 @@ using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
@@ -195,7 +193,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                return new LockMassParameters(
+                return LockMassParameters.Create(
                     LockMassPositive == 0 ? (double?) null : LockMassPositive,
                     LockMassNegative == 0 ? (double?) null : LockMassNegative,
                     LockMassTolerance == 0 ? (double?) null : LockMassTolerance);
@@ -1203,6 +1201,26 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
+        public SearchToolList SearchToolList
+        {
+            get
+            {
+                var list = (SearchToolList)this[@"SearchToolList"];
+                if (list == null)
+                {
+                    list = new SearchToolList();
+                    list.AddDefaults();
+                    SearchToolList = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[@"SearchToolList"] = value;
+            }
+        }
+
+        [UserScopedSetting]
         public RemoteAccountList RemoteAccountList
         {
             get 
@@ -1620,6 +1638,58 @@ namespace pwiz.Skyline.Properties
             return new Server(item.URI, item.Username, item.Password);
         }
     }
+
+    public sealed class SearchToolList : SettingsList<SearchTool>
+    {
+        public override IEnumerable<SearchTool> GetDefaults(int revisionIndex)
+        {
+            yield break;
+        }
+
+        public override string Title => PropertiesResources.SearchToolList_Title_Edit_Search_Tools;
+        public override string Label => PropertiesResources.SearchToolList_Label_Search__Tools;
+        public override SearchTool EditItem(Control owner, SearchTool item, IEnumerable<SearchTool> existing, object tag)
+        {
+            using (var editTool = new EditSearchToolDlg(existing ?? this))
+            {
+                editTool.SearchTool = item;
+                if (editTool.ShowDialog(owner) == DialogResult.OK)
+                    return editTool.SearchTool;
+
+                return null;
+            }
+        }
+
+        public override SearchTool CopyItem(SearchTool item)
+        {
+            return new SearchTool(item.Name, item.Path, item.ExtraCommandlineArgs, item.InstallPath, item.AutoInstalled);
+        }
+        
+        public static SearchToolList CopyTools(IEnumerable<SearchTool> list)
+        {
+            var listCopy = new SearchToolList();
+            listCopy.AddRange(list.Select(t => new SearchTool(t.Name, t.Path, t.ExtraCommandlineArgs, t.InstallPath, t.AutoInstalled)));
+            return listCopy;
+        }
+
+        public bool ContainsKey(SearchToolType toolType) => ContainsKey(toolType.ToString());
+        public SearchTool this[SearchToolType toolType] => this[toolType.ToString()];
+
+        public string GetToolPathOrDefault(SearchToolType toolType, string defaultPath)
+        {
+            if (ContainsKey(toolType.ToString()))
+                return this[toolType.ToString()].Path;
+            return defaultPath;
+        }
+
+        public string GetToolArgsOrDefault(SearchToolType toolType, string defaultArgs)
+        {
+            if (ContainsKey(toolType.ToString()))
+                return this[toolType.ToString()].ExtraCommandlineArgs;
+            return defaultArgs;
+        }
+    }
+
 
     public sealed class SpectralLibraryList : SettingsListNotifying<LibrarySpec>
     {
@@ -3415,9 +3485,9 @@ namespace pwiz.Skyline.Properties
             return (ReportSpec) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return Resources.ReportSpecList_Title_Edit_Reports; } }
+        public override string Title { get { return PropertiesResources.ReportSpecList_Title_Edit_Reports; } }
 
-        public override string Label { get { return Resources.ReportSpecList_Label_Report; } }
+        public override string Label { get { return PropertiesResources.ReportSpecList_Label_Report; } }
 
         public override Type SerialType { get { return typeof(ReportSpecList); } }
 

@@ -194,10 +194,6 @@
   </data>
   <data name="AverageMassErrorPPM">
     <value>所有离子对的预期与实测质荷比值（以百万分之几 (PPM) 表示）之差的面积加权平均值</value>
-    <comment>Needs Review:English text changed
-Old English:Average Mass Error PPM
-Current English:The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)
-Old Localized:平均质量误差 PPM</comment>
   </data>
   <data name="AverageMasses">
     <value>用其平均质量指定修饰的修饰序列，例如："C[+57.05162]"。</value>
@@ -324,16 +320,6 @@ Old Localized:平均质量误差 PPM</comment>
     <value>峰积分
 边界触及采集时间范围任意一端、末端强度
 超过背景校正峰高 25% 且明显超出另一侧范围的母离子的离子对数量。</value>
-    <comment>Needs Review:English text changed
-Old English:The number of transitions for a precursor that integrate a peak with a
-boundary at either end of the acquisition time range, where intensity at the end is
-greater than 1% of the entire peak height higher than the other extent.
-Current English:The number of transitions for a precursor that integrate a peak with a
-boundary at either end of the acquisition time range, where intensity at the end is
-greater than 25% of the background-subtracted peak height higher than the other extent.
-Old Localized:在采集时间区间的任意一端
-（即该端的强度大于高于其他范围的整个峰高的 1%），
-集成峰与边界的母离子的离子对数量。</comment>
   </data>
   <data name="Cv">
     <value>变异系数</value>
@@ -601,8 +587,15 @@ Old Localized:在采集时间区间的任意一端
     <value>若是诱饵母离子，则成立。</value>
   </data>
   <data name="IsolationWindowWidth">
-    <value>母离子隔离时的质荷比窗口宽度。
-如果隔离了多个母离子，则隔离窗口宽度为各母离子周围窗口宽度之和。</value>
+    <value>Width of the m/z window in which the precursor was isolated. 
+If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.</value>
+    <comment>Needs Review:English text changed
+Old English:With of the m/z window in which the precursor was isolated. 
+If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.
+Current English:Width of the m/z window in which the precursor was isolated. 
+If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.
+Old Localized:母离子隔离时的质荷比窗口宽度。
+如果隔离了多个母离子，则隔离窗口宽度为各母离子周围窗口宽度之和。</comment>
   </data>
   <data name="IsotopeDistIndex">
     <value>单一同位素峰为零，M+1 为 1、M+2 为 2 等。</value>
@@ -890,7 +883,11 @@ Old Localized:在采集时间区间的任意一端
 时间和日期</value>
   </data>
   <data name="Molecule">
-    <value>分子属于分子列表并包含母离子。</value>
+    <value>Molecules belong to Molecule Lists and contain Precursors.</value>
+    <comment>Needs Review:English text changed
+Old English:Molecules belong to Molecule Lists and contain Percursors.
+Current English:Molecules belong to Molecule Lists and contain Precursors.
+Old Localized:分子属于分子列表并包含母离子。</comment>
   </data>
   <data name="MoleculeFormula">
     <value>用于在质谱仪中测量的中性未标记分子的原子化学式。</value>
@@ -899,19 +896,44 @@ Old Localized:在采集时间区间的任意一端
     <value>Skyline 文档中的一组分子。</value>
   </data>
   <data name="MoleculeListAbundance">
-    <value>代表分子列表丰度的数值，该数值根据分子定量设置中指定的“归一化方法”计算得出</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings
+Current English:A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Old Localized:代表分子列表丰度的数值，该数值根据分子定量设置中指定的“归一化方法”计算得出</comment>
   </data>
   <data name="MoleculeListAbundanceMessage">
     <value>如果缺失的数据影响到比较重复测定之间的“分子列表丰度”，则发出警告</value>
   </data>
   <data name="MoleculeListAbundanceStrict">
-    <value>代表分子列表丰度的数值，该数值根据分子定量设置中指定的“归一化方法”计算得出。在缺失的数据影响到重复测定之间的比较时不可获取</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.
+Current English:A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.
+Old Localized:代表分子列表丰度的数值，该数值根据分子定量设置中指定的“归一化方法”计算得出。在缺失的数据影响到重复测定之间的比较时不可获取</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>分子列表下的离子对面积归一化的平均值。这些面积根据“分子定量”设置中指定的“归一化方法”进行归一化。</value>
+    <value>Obsolete: Use Molecule List Abundance Raw instead.</value>
+    <comment>Needs Review:English text changed
+Old English:Average of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
+Current English:Obsolete: Use Molecule List Abundance Raw instead.
+Old Localized:分子列表下的离子对面积归一化的平均值。这些面积根据“分子定量”设置中指定的“归一化方法”进行归一化。</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>分子列表下的离子对面积归一化总和。这些面积根据“分子定量”设置中指定的“归一化方法”进行归一化</value>
+    <value>Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.</value>
+    <comment>Needs Review:English text changed
+Old English:Sum of the normalized areas of the transitions under the Molecule List.
+The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings
+Current English:Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.
+Old Localized:分子列表下的离子对面积归一化总和。这些面积根据“分子定量”设置中指定的“归一化方法”进行归一化</comment>
   </data>
   <data name="MoleculeListLocator">
     <value>文档内的分子列表特殊标识符。以“MoleculeGroup：”开头。</value>
@@ -1251,19 +1273,44 @@ Old Localized:在采集时间区间的任意一端
     <value>蛋白质</value>
   </data>
   <data name="ProteinAbundance">
-    <value>代表蛋白质列表丰度的数值，该数值根据肽段定量设置中指定的“归一化方法”计算得出。</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Current English:A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Old Localized:代表蛋白质列表丰度的数值，该数值根据肽段定量设置中指定的“归一化方法”计算得出。</comment>
   </data>
   <data name="ProteinAbundanceMessage">
     <value>如果缺失的数据影响到比较重复测定之间的“蛋白质丰度”，则发出警告</value>
   </data>
   <data name="ProteinAbundanceStrict">
-    <value>代表蛋白质列表丰度的数值，该数值根据肽段定量设置中指定的“归一化方法”计算得出。在缺失的数据影响到重复测定之间的比较时不可获取。</value>
+    <value>A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</value>
+    <comment>Needs Review:English text changed
+Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.
+Current English:A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.
+Old Localized:代表蛋白质列表丰度的数值，该数值根据肽段定量设置中指定的“归一化方法”计算得出。在缺失的数据影响到重复测定之间的比较时不可获取。</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>“蛋白质”下的离子对面积归一化的平均值。这些面积根据“肽段定量”设置中指定的“归一化方法”进行归一化。</value>
+    <value>Obsolete: Use Protein Abundance Raw instead.</value>
+    <comment>Needs Review:English text changed
+Old English:Average of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+Current English:Obsolete: Use Protein Abundance Raw instead.
+Old Localized:“蛋白质”下的离子对面积归一化的平均值。这些面积根据“肽段定量”设置中指定的“归一化方法”进行归一化。</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>“蛋白质”下的离子对面积归一化总和。这些面积根据“肽段定量”设置中指定的“归一化方法”进行归一化。</value>
+    <value>Obsolete: Equal to Protein Abundance Raw times the number of transitions.</value>
+    <comment>Needs Review:English text changed
+Old English:Sum of the normalized areas of the transitions under the Protein.
+The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
+Current English:Obsolete: Equal to Protein Abundance Raw times the number of transitions.
+Old Localized:“蛋白质”下的离子对面积归一化总和。这些面积根据“肽段定量”设置中指定的“归一化方法”进行归一化。</comment>
   </data>
   <data name="ProteinAccession">
     <value>蛋白质检索号</value>
@@ -1552,10 +1599,6 @@ Old Localized:在采集时间区间的任意一端
   </data>
   <data name="Strict">
     <value>如果缺少数据可能影响重复测定的比较，则计算值不可用。</value>
-    <comment>Needs Review:English text changed
-Old English:Calculated value unavailable when missing data could comparisons between replicates.
-Current English:Calculated value unavailable when missing data could impact comparisons between replicates.
-Old Localized:缺失的数据影响到重复测定之间的比较时，不可获取计算值。</comment>
   </data>
   <data name="SummaryMessage">
     <value>更改的描述</value>
@@ -1657,16 +1700,6 @@ Old Localized:缺失的数据影响到重复测定之间的比较时，不可获
     <value>如果峰积分边界触及采集
 时间范围任意一端、末端强度超过背景校正峰高
 25% 且明显超出另一侧范围，则为真。</value>
-    <comment>Needs Review:English text changed
-Old English:True if the integrated a peak has a boundary at either end of the acquisition
-time range, where intensity at the end is greater than 1% of the entire peak height
-higher than the other extent.
-Current English:True if the integrate peak has a boundary at either end of the acquisition
-time range, where intensity at the end is greater than 25% of the background-subtracted peak height
-higher than the other extent.
-Old Localized:若集成峰在采集时间区间的任一一端有边界，
-即该端的强度大于高于其他范围的整个峰高的 1%，
-则成立。</comment>
   </data>
   <data name="TurningPoint">
     <value>对于双线性回归，两条线相交的 X 坐标。</value>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,9 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
@@ -31,6 +29,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
@@ -70,20 +69,26 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     MessageDlg.Show(parent, ToolsUIResources.ConfigureToolsDlg_AddFromWeb_Unknown_error_connecting_to_the_tool_store);
                 }
-                using (var dlg = new ToolStoreDlg(ToolStoreUtil.ToolStoreClient, toolStoreItems))
+                using (var dlg = new ToolStoreDlg(ToolStoreUtil.ToolStoreClient, toolStoreItems, install))
                 {
-                    if (dlg.ShowDialog(parent) == DialogResult.OK)
-                        InstallZipTool(parent, dlg.DownloadPath, install);
+                    // Dialog handles download > extract > install > cleanup as atomic operation
+                    dlg.ShowDialog(parent);
                 }
             }
-            catch (TargetInvocationException x)
+            catch (Exception x)
             {
-                if (x.InnerException is ToolExecutionException || x.InnerException is WebException)
-                    MessageDlg.Show(parent, String.Format(Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store___0_, x.Message));
-                else if (x.InnerException is JsonReaderException)
-                    MessageDlg.Show(parent, ToolsUIResources.ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_);
-                else
-                    throw;
+                // Handle specific user-actionable exceptions that might be wrapped in TargetInvocationException
+                if (x is TargetInvocationException targetEx)
+                {
+                    // JsonReaderException from web service is user-actionable (server maintenance issue)
+                    if (targetEx.InnerException is JsonReaderException)
+                    {
+                        MessageDlg.Show(parent, ToolsUIResources.ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_);
+                        return;
+                    }
+                }
+                
+                ExceptionUtil.DisplayOrReportException(parent, x, Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_);
             }
         }
 
@@ -148,7 +153,8 @@ namespace pwiz.Skyline.ToolsUI
             }
             if (xFailure != null)
             {
-                MessageDlg.ShowWithException(parent, TextUtil.LineSeparate(String.Format(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool_from__0_, Path.GetFileName(fullpath)), xFailure.Message), xFailure);                
+                // Don't show temp filename (~SK*.tmp) in error message - use complete message
+                MessageDlg.ShowWithException(parent, TextUtil.LineSeparate(Resources.ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool, xFailure.Message), xFailure);                
             }
 
             if (result != null)
