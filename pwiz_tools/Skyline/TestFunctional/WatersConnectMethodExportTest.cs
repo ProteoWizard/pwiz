@@ -25,7 +25,6 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using pwiz.Common.Mock;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline;
@@ -220,7 +219,7 @@ namespace pwiz.SkylineTestFunctional
             // Since we do not need to connect to the actual server a dummy account suffices
             Settings.Default.RemoteAccountList.Add(RemoteAccountType.WATERS_CONNECT.GetEmptyAccount());
 
-            var wcHandler = Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.HANDLER_NAME);
+            var wcHandler = new MockHttpMessageHandler();  
             // ReSharper disable StringIndexOfIsCultureSpecific.1
             // Folders enumeration request
             wcHandler.AddMatcher(new RequestMatcherFile(
@@ -244,9 +243,10 @@ namespace pwiz.SkylineTestFunctional
                     var description = jObject["description"]?.ToString() ?? string.Empty;
                     return string.Format(format, id, name, description);
                 }));
+            Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.HANDLER_NAME, wcHandler);
 
 
-            var authHandler = Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.AUTH_HANDLER_NAME);
+            var authHandler = new MockHttpMessageHandler(); 
             authHandler.AddMatcher(new RequestMatcherFunction(req => true,  // req.RequestUri.ToString().IndexOf(@"/connect/token") >=0, 
                 req =>
                 {
@@ -254,6 +254,7 @@ namespace pwiz.SkylineTestFunctional
                     return "{\"access_token\":\"qqq\",\"expires_in\":3,\"token_type\":\"Bearer\",\"scope\":\"webapi\"}";
                 }
             ));
+            Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.AUTH_HANDLER_NAME, authHandler);
             // ReSharper enable StringIndexOfIsCultureSpecific.1
         }
     }
