@@ -382,32 +382,14 @@ namespace pwiz.SkylineTestUtil
 
         private static void SkylineInvoke(Action act)
         {
-            if (null != SkylineWindow)
+            var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
+            if (form.InvokeRequired)
             {
-
-                if (SkylineWindow.InvokeRequired)
-                {
-                    SkylineWindow.Invoke(act);
-                }
-                else
-                {
-                    Console.WriteLine(@"# SkylineInvoke() called on UI thread (SkylineWindow)"); // CONSIDER:(bspratt) remove before merge?
-                    act();
-                }
+                form.Invoke(act);
             }
             else
             {
-                var startPage = FindOpenForm<StartPage>();
-
-                if (startPage.InvokeRequired)
-                {
-                    startPage.Invoke(act);
-                }
-                else
-                {
-                    Console.WriteLine(@"# SkylineInvoke() called on UI thread (StartPage)"); // CONSIDER:(bspratt) remove before merge?
-                    act();
-                }
+                act(); // Already on the UI thread
             }
         }
 
@@ -415,20 +397,11 @@ namespace pwiz.SkylineTestUtil
         {
             if (null != SkylineWindow)
             {
-                if (!SkylineWindow.InvokeRequired)
-                {
-                    Console.WriteLine(@"# SkylineBeginInvoke called on UI thread (SkylineWindow)"); // CONSIDER:(bspratt) remove before merge?
-                }
                 SkylineWindow.BeginInvoke(act);
             }
             else
             {
-                var startPage = FindOpenForm<StartPage>();
-                if (!startPage.InvokeRequired)
-                {
-                    Console.WriteLine(@"# SkylineBeginInvoke called on UI thread (StartPage)"); // CONSIDER:(bspratt) remove before merge?
-                }
-                startPage.BeginInvoke(act);
+                FindOpenForm<StartPage>().BeginInvoke(act);
             }
         }
 
