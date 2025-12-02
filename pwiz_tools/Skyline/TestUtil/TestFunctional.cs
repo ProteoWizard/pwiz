@@ -382,13 +382,14 @@ namespace pwiz.SkylineTestUtil
 
         private static void SkylineInvoke(Action act)
         {
-            if (null != SkylineWindow)
+            var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
+            if (form.InvokeRequired)
             {
-                SkylineWindow.Invoke(act);
+                form.Invoke(act);
             }
             else
             {
-                FindOpenForm<StartPage>().Invoke(act);
+                act(); // Already on the UI thread
             }
         }
 
