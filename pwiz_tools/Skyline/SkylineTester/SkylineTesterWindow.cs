@@ -123,6 +123,7 @@ namespace SkylineTester
 
         private int _findPosition;
         private string _findText;
+        private Dictionary<string, string> _treeViewStateFromSettings = new Dictionary<string, string>();
 
         private ZedGraphControl graphMemory;
 
@@ -445,6 +446,14 @@ namespace SkylineTester
                     // tutorialsTree.Nodes[0].Checked = true;
                     // TabTests.CheckAllChildNodes(tutorialsTree.Nodes[0], true);
 
+                    // Restore checked tutorials from settings after tree is populated
+                    if (_treeViewStateFromSettings.TryGetValue(tutorialsTree.Name, out var tutorialNames) &&
+                        !string.IsNullOrEmpty(tutorialNames))
+                    {
+                        CheckNodes(tutorialsTree, tutorialNames.Split(','));
+                        UpdateAllParentNodeCheckStates(tutorialsTree);
+                    }
+
                     // Add forms to forms tree view.
                     _tabForms.CreateFormsGrid();
                 });
@@ -612,9 +621,12 @@ namespace SkylineTester
         }
 
         private int _previousTab;
+        private int _lastActiveActionTabIndex; // Tab to restore on startup (not Output tab)
 
         private void TabChanged(object sender, EventArgs e)
         {
+            StoreLastActiveTab();
+
             if (_tabs == null)
                 return;
 
@@ -624,6 +636,13 @@ namespace SkylineTester
             _findPosition = 0;
 
             RunUI(() => _tabs[_previousTab].Enter(), 500);
+        }
+
+        private void StoreLastActiveTab()
+        {
+            // Track workflow tab (not Output tab) for smart tab restoration
+            if (tabs.SelectedTab != tabOutput)
+                _lastActiveActionTabIndex = tabs.SelectedIndex;
         }
 
         public void ShowOutput()
@@ -1111,6 +1130,7 @@ namespace SkylineTester
                 modeTutorialsCoverShots,
                 pauseTutorialsDelay,
                 pauseTutorialsSeconds,
+                pauseStartingScreenshot,
                 tutorialsDemoMode,
                 tutorialsLanguage,
                 showFormNamesTutorial,
@@ -1129,7 +1149,8 @@ namespace SkylineTester
                 testsFrench,
                 testsJapanese,
                 testsTurkish,
-                testsTree,
+                // testsTree,  // Don't save testsTree to settings - prefer "SkylineTester test list.txt" file
+                                // to avoid confusion between two sources of truth for checked tests
                 runCheckedTests,
                 skipCheckedTests,
                 testSet,
@@ -1261,6 +1282,7 @@ namespace SkylineTester
                 if (tab != null)
                 {
                     tab.SelectTab(element.Value);
+                    StoreLastActiveTab();
                     continue;
                 }
 
@@ -1296,7 +1318,8 @@ namespace SkylineTester
                 var treeView = control as TreeView;
                 if (treeView != null)
                 {
-                    CheckNodes(treeView, element.Value.Split(','));
+                    // Trees may not be populated yet during LoadSettings, save names for later
+                    _treeViewStateFromSettings[treeView.Name] = element.Value;
                     continue;
                 }
 
@@ -1340,7 +1363,10 @@ namespace SkylineTester
                 var tab = child as TabControl;
                 if (tab != null)
                 {
-                    element.Add(new XElement(tab.Name, tab.SelectedTab.Name));
+                    // Save workflow tab (not Output tab) for smart tab restoration
+                    var tabIndexToSave = _lastActiveActionTabIndex;
+                    var tabNameToSave = tab.TabPages[tabIndexToSave].Name;
+                    element.Add(new XElement(tab.Name, tabNameToSave));
                     continue;
                 }
 

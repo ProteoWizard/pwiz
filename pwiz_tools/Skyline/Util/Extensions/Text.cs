@@ -772,27 +772,6 @@ namespace pwiz.Skyline.Util.Extensions
             }
         }
 
-        // Try to read a string as a double in InvariantCulture, failing that try to read it as a double using "," as the decimal separator
-        public static bool TryParseDoubleUncertainCulture(string valString, out double dval)
-        {
-            if (!double.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out dval) &&
-                !double.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out dval))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        // Try to read a string as a float in InvariantCulture, failing that try to read it as a float using "," as the decimal separator
-        public static bool TryParseFloatUncertainCulture(string valString, out float fval)
-        {
-            if (!float.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out fval) &&
-                !float.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out fval))
-            {
-                return false;
-            }
-            return true;
-        }
 
         /// <summary>
         /// Insert spaces if necessary to ensure that the string has no regions with

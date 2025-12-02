@@ -12,6 +12,9 @@
 .PARAMETER RunTests
     Run SkylineBatchTest.dll tests after building
 
+.PARAMETER TestName
+    Specific test method name to run (optional, runs all tests if not specified)
+
 .PARAMETER RunInspection
     Run ReSharper code inspection after building
 
@@ -25,6 +28,10 @@
 .EXAMPLE
     .\Build-SkylineBatch.ps1 -RunTests
     Build and run all tests
+
+.EXAMPLE
+    .\Build-SkylineBatch.ps1 -RunTests -TestName DataDownloadTest
+    Build and run only the DataDownloadTest
 
 .EXAMPLE
     .\Build-SkylineBatch.ps1 -RunInspection -RunTests
@@ -44,6 +51,9 @@ param(
     [switch]$RunTests = $false,
     
     [Parameter(Mandatory=$false)]
+    [string]$TestName = $null,
+    
+    [Parameter(Mandatory=$false)]
     [switch]$RunInspection = $false,
     
     [Parameter(Mandatory=$false)]
@@ -53,6 +63,25 @@ param(
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Auto-change to script's parent directory (SkylineBatch root) so script works from any PWD
+$scriptRoot = Split-Path -Parent $PSCommandPath
+$skylineBatchRoot = Split-Path -Parent $scriptRoot
+$initialLocation = Get-Location
+
+try {
+    Set-Location $skylineBatchRoot
+
+    # Synchronize ReSharper DotSettings from Skyline baseline
+    # Path: SkylineBatch -> Executables -> Skyline -> ai/scripts
+    $skylineRoot = Split-Path -Parent (Split-Path -Parent $skylineBatchRoot)
+    $syncScript = Join-Path $skylineRoot 'ai/scripts/Sync-DotSettings.ps1'
+    if (Test-Path $syncScript) {
+        Write-Host 'Synchronizing DotSettings...' -ForegroundColor Cyan
+        & $syncScript
+    } else {
+        Write-Host "Sync-DotSettings.ps1 not found at: $syncScript" -ForegroundColor Yellow
+    }
 
 $Platform = "Any CPU"
 
@@ -102,13 +131,19 @@ try {
 # Run ReSharper inspection if requested
 if ($RunInspection) {
     Write-Host ""
-    Write-Host "Running ReSharper code inspection..." -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "Running ReSharper code inspection" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
     
     # Check if ReSharper CLI tools are installed
     $jbPath = $null
     try {
-        $jbPath = Get-Command jb -ErrorAction Stop | Select-Object -ExpandProperty Source
+        $jbPath = & where.exe jb 2>$null
+        if (-not $jbPath) {
+            throw "jb command not found"
+        }
     } catch {
+        Write-Host ""
         Write-Host "❌ ReSharper command-line tools not installed" -ForegroundColor Red
         Write-Host ""
         Write-Host "To enable code inspection, install ReSharper CLI tools:" -ForegroundColor Yellow
@@ -121,26 +156,40 @@ if ($RunInspection) {
     }
     
     if ($jbPath) {
-        Write-Host "Using: jb inspectcode (version $(& jb --version))" -ForegroundColor Cyan
-        
         $inspectionOutput = "bin\$Configuration\InspectCodeOutput.xml"
+        $dotSettings = "SkylineBatch.sln.DotSettings"
+        
+        # Set up persistent cache directory for faster subsequent runs
+        $cacheDir = "bin\.inspectcode-cache"
+        if (-not (Test-Path $cacheDir)) {
+            New-Item -ItemType Directory -Path $cacheDir | Out-Null
+            Write-Host "Created inspection cache directory: $cacheDir" -ForegroundColor Gray
+        }
         
         $inspectStart = Get-Date
         Write-Host ""
         Write-Host "Running ReSharper code inspection (typically 2-5 minutes for SkylineBatch)..." -ForegroundColor Cyan
         
-        & jb inspectcode SkylineBatch.sln `
-            --output=$inspectionOutput `
-            --format=Xml `
-            --severity=WARNING `
-            --no-swea `
-            --properties=Configuration=$Configuration `
-            --verbosity=WARN
+        # Build inspectcode command matching Skyline/TeamCity configuration
+        $inspectArgs = @(
+            "inspectcode", "SkylineBatch.sln",
+            "--profile=$dotSettings",
+            "--output=$inspectionOutput",
+            "--format=Xml",
+            "--severity=WARNING",
+            "--no-swea",
+            "--no-build",
+            "--caches-home=$cacheDir",
+            "--properties=Configuration=$Configuration",
+            "--verbosity=WARN"
+        )
+        
+        & jb $inspectArgs
         
         $inspectExitCode = $LASTEXITCODE
         $inspectDuration = (Get-Date) - $inspectStart
         
-        # Parse results (simplified - no OutputParser.exe for SkylineBatch yet)
+        # Parse results
         if (Test-Path $inspectionOutput) {
             try {
                 [xml]$xml = Get-Content $inspectionOutput
@@ -150,37 +199,45 @@ if ($RunInspection) {
                     $severities[$issueType.Id] = $issueType.Severity
                 }
                 
-                $warnings = @()
-                $errors = @()
+                $allIssues = @()
                 $projects = $xml.GetElementsByTagName("Project")
                 foreach ($project in $projects) {
                     foreach ($issue in $project.ChildNodes) {
                         if ($issue.Name -eq "Issue") {
                             $severity = $severities[$issue.TypeId]
-                            if ($severity -eq "WARNING") {
-                                $warnings += $issue
-                            } elseif ($severity -eq "ERROR") {
-                                $errors += $issue
+                            if ($severity -eq "WARNING" -or $severity -eq "ERROR") {
+                                $allIssues += [PSCustomObject]@{
+                                    File = $issue.File
+                                    Line = $issue.Line
+                                    TypeId = $issue.TypeId
+                                    Message = $issue.Message
+                                    Severity = $severity
+                                }
                             }
                         }
                     }
                 }
                 
+                $errors = @($allIssues | Where-Object { $_.Severity -eq "ERROR" })
+                $warnings = @($allIssues | Where-Object { $_.Severity -eq "WARNING" })
+                
                 Write-Host ""
                 Write-Host "Inspection Results:" -ForegroundColor Cyan
-                Write-Host "  Errors: $($errors.Count)" -ForegroundColor $(if ($errors.Count -gt 0) { "Red" } else { "Green" })
-                Write-Host "  Warnings: $($warnings.Count)" -ForegroundColor $(if ($warnings.Count -gt 0) { "Yellow" } else { "Green" })
+                Write-Host "  Errors: $($errors.Count), Warnings: $($warnings.Count)" -ForegroundColor Gray
                 
                 if ($errors.Count -gt 0 -or $warnings.Count -gt 0) {
                     Write-Host ""
-                    foreach ($error in $errors) {
-                        Write-Host "  ERROR: $($error.File):$($error.Line) - $($error.Message)" -ForegroundColor Red
+                    ($allIssues | Select-Object -First 20) | ForEach-Object {
+                        $loc = if ($_.Line) { "$($_.File):$($_.Line)" } else { $_.File }
+                        $color = if ($_.Severity -eq "ERROR") { "Red" } else { "Yellow" }
+                        Write-Host "  [$($_.Severity)] $loc - $($_.Message)" -ForegroundColor $color
                     }
-                    foreach ($warning in $warnings) {
-                        Write-Host "  WARNING: $($warning.File):$($warning.Line) - $($warning.Message)" -ForegroundColor Yellow
+                    if ($allIssues.Count -gt 20) {
+                        Write-Host "  ... and $($allIssues.Count - 20) more issue(s)" -ForegroundColor Gray
                     }
                     Write-Host ""
-                    Write-Host "❌ Code inspection FAILED in $($inspectDuration.TotalSeconds.ToString('F1'))s" -ForegroundColor Red
+                    Write-Host "❌ Code inspection FAILED in $($inspectDuration.TotalSeconds.ToString('F1'))s - $($errors.Count + $warnings.Count) issue(s) found" -ForegroundColor Red
+                    Write-Host "Fix all warnings and errors before committing" -ForegroundColor Red
                     exit 1
                 } else {
                     Write-Host ""
@@ -223,7 +280,12 @@ if ($RunTests) {
     Write-Host ""
     
     $testStart = Get-Date
-    & $vstestPath $testDll /Logger:console
+    if ($TestName) {
+        Write-Host "Running specific test: $TestName" -ForegroundColor Cyan
+        & $vstestPath $testDll /Logger:console /Tests:$TestName
+    } else {
+        & $vstestPath $testDll /Logger:console
+    }
     $testExitCode = $LASTEXITCODE
     $testDuration = (Get-Date) - $testStart
     
@@ -238,4 +300,7 @@ if ($RunTests) {
 
 Write-Host ""
 Write-Host "✅ All operations completed successfully" -ForegroundColor Green
-
+}
+finally {
+    Set-Location $initialLocation
+}
