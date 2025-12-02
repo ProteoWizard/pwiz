@@ -1,4 +1,12 @@
-# TODO: SkylineTester Saved State Improvements
+# TODO-20251201_skyline_tester_saved_state.md
+
+## Branch Information
+- **Branch**: `Skyline/work/20251201_skyline_tester_saved_state`
+- **Created**: 2025-12-01
+- **Completed**: (pending)
+- **Status**: 🚧 In Progress
+- **PR**: (pending)
+- **Objective**: Restore tutorial selections, screenshot settings, and smart tab navigation to streamline edit-build-test workflow
 
 ## Objective
 
