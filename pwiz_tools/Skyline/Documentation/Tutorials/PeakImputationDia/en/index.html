@@ -10,24 +10,77 @@
     <h1 class="document-title">Peak Boundary Imputation for DIA</h1>
     <h1>Getting Started</h1>
     <p>
-        To start this tutorial, download the following ZIP file: 
+        To start this tutorial, download the following ZIP file:
     </p>
     <p>
         <a href="https://skyline.ms/tutorials/PeakImputationDia.zip">https://skyline.ms/tutorials/PeakImputationDia.zip</a>
     </p>
     <p>
-        Extract the files in it to a folder on your computer, like: 
+        Extract the files in it to a folder on your computer, like:
     </p>
     <p>
-        C:\Users\brendanx\Documents 
+        C:\Users\brendanx\Documents
     </p>
     <p>
-        This will create a new folder: 
+        This will create a new folder:
     </p>
     <p>
         C:\Users\brendanx\Documents\PeakImputationDia
     </p>
-    >
+    <ul>
+        <li>Open the file "2025-DIA-Webinar-MagNet.sky" in the "PeakImptutationDia" folder.</li>
+        <li>On the <b>View</b> menu, click <b>Live Reports</b> and then click <b>Document Grid</b></li>
+        <li>On the <b>Reports</b> menu int the upper-left corner of the Document Grid, click <b>Protein Areas</b></li>
+    </ul>
+    <p>
+        The "Protein Areas" is a report definition which is included in the 2025-DIA-Webinar-MagNet document.
+        The report has one row per Protein in the document, and the Protein Abundance values for each replicate are displayed in different columns.
+        Many of the Protein Abundance cells in the grid have a red exclamation mark which indicates that the abundance value for that replicate cannot
+        be reliably compared between replicates because the peaks for some of the peptides have not been chosen.
+    </p>
+    <p>
+        <img src="s-01.png" />
+    </p>
+    <ul>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, then <b>Group Comparisons</b>, and click <b>EV-Enrich</b></li>
+    </ul>
+    <p><img src="s-02.png" /></p>
+    <p>This displays the results of the "EV-Enrich" group comparison. The number of rows in the grid is much less than the
+        total number of proteins in the document because the replicates where a protein had peptides with missing peaks are
+        excluded from that protein's group comparison. To display the volcano plot, do the following:
+    </p>
+    <ul>
+        <li>Click the <b>Volcano Plot</b> button at the top left of the <b>EV-Enrich:Grid</b> window</li>
+        <li>The volcano plot appears in the right half of the space where the EV-Enruch grid was. You can make the window wider so that you can see all of the columns of the group comparison grid as well as the volcano plot</li>
+    </ul>
+    <p><img src="s-03.png"/></p>
+    <p>
+        The missing peptide peaks are in replicates where the DIA-NN peptide search engine was unable to confidentally identify a peak.
+        In general, the replicates with lower abundance will tend to be the ones where the peak was not confidentally identified, but certainly not in all cases.
+        You can modify the group comparison to tell Skyline to treat the replicates with missing peaks as if the peak had zero area.
+    </p>
+    <ul>
+        <li>Click the <b>Settings</b> button at the top of the <b>EV-Enrich:Grid</b> window.</li>
+        <li>Click the <b>Advanced</b> button in the <b>Edit Group Comparison: EV-Enrich</b> window</li>
+        <li>Check the <b>Use zero for missing peaks</b> checkbox</li>
+    </ul>
+    <p><img src="s-04.png"/></p>
+    <p>After you make that change to the group comparison definition, the grid will have one row for each protein in the document and the volcano plot will have more points.</p>
+    <p><img src="S-05.png"/></p>
+    <p>The volcano plot remains zoomed in on the subset of data that existed before the change to the group comparison settings. Closing and reopening the volcano plot will reset its display to the default amount of zoom for the data that is displaying.</p>
+    <ul><li>Click the <b>X</b> button in the top right corner of the volcano plot</li>
+    <li>Click the <b>Volcano Plot</b> button at the top of the <b>EV-Enrich:Grid</b> window</li></ul>
+    <p><img src="s-06.png"/></p>
+    <p>The distinct sections in the volcano plot come from the unnaturalness of treating missing valuse as zero.</p>
+    <p>It would be better to tell Skyline to integrate whatever signal is in the expected location on the chromatogram instead of always using the value zero.</p>
+    <ul>
+        <li>On the <b>Settings</b> menu click <p>Peptide Settings</p></li>
+        <li>Click the <p>Prediction</p> tab.</li>
+        <li>Check the <b>Missing peaks</b> checkbox inside of the</li>
+    </ul>
+    <p><img src="S-07.png"/></p>
+    <ul><li>Click the <b>OK</b> button.</li></ul>
+    <p><img src="s-08.png"/></p>
 </body>
 
 </html>
