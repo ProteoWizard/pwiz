@@ -1,10 +1,17 @@
-# TODO: Batch Tools CI Integration (SkylineBatch + AutoQC)
+# TODO-20251201_batch_tools_ci_integration.md
 
-**Status**: Backlog  
-**Priority**: High  
-**Complexity**: Medium  
-**Created**: 2025-11-24  
-**Last Updated**: 2025-11-24
+## Branch Information
+- **Branch**: `Skyline/work/20251201_batch_tools_ci_integration`
+- **Created**: 2025-12-01
+- **Completed**: (pending)
+- **Status**: 🚧 In Progress
+- **PR**: (pending)
+- **Objective**: Enable CI to reliably build and test SkylineBatch and AutoQC with graceful skipping of Panorama-auth tests
+
+## Summary
+**Priority**: High
+**Complexity**: Medium
+**Original Planning Date**: 2025-11-24
 
 ## Goal (Sprint Scope)
 Enable Skyline master/PR TeamCity config to reliably build SkylineBatch and AutoQC and run their test suites, with Panorama-dependent AutoQC tests skipped gracefully when credentials are absent.
