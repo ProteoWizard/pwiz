@@ -1160,6 +1160,7 @@ namespace pwiz.Skyline
             _autoTrainManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
+            DestroyFilesTreeForm(); // Stop FileSystemWatchers and their threads
             base.OnClosing(e);
 
             foreach (var control in new IMenuControlImplementer[] { _graphFullScan, _graphSpectrum, ViewMenu })
@@ -3064,6 +3065,7 @@ namespace pwiz.Skyline
             if (_immediateWindow != null)
             {
                 _immediateWindow.Cleanup();
+                _immediateWindow.HideOnClose = false;
                 _immediateWindow.Close();
                 _immediateWindow = null;
             }
@@ -3236,6 +3238,7 @@ namespace pwiz.Skyline
         {
             if (_filesTreeForm != null)
             {
+                _filesTreeForm.HideOnClose = false;
                 _filesTreeForm.Close();
                 _filesTreeForm = null;
             }
@@ -3339,6 +3342,7 @@ namespace pwiz.Skyline
                 _sequenceTreeForm.SequenceTree.DragOver -= sequenceTree_DragOver;
                 _sequenceTreeForm.SequenceTree.DragEnter -= sequenceTree_DragDrop;
                 _sequenceTreeForm.ComboResults.SelectedIndexChanged -= comboResults_SelectedIndexChanged;
+                _sequenceTreeForm.HideOnClose = false;
                 _sequenceTreeForm.Close();
                 _sequenceTreeForm = null;
                 _shouldShowFilesTree = false;

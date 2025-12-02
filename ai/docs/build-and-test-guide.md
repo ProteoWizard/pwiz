@@ -220,6 +220,83 @@ TestProteomeDb
 
 Lines starting with `#` are comments. When `-UpdateTestList` is used, the existing file is backed up with a timestamp before being overwritten.
 
+## Code Coverage Analysis
+
+Skyline uses JetBrains dotCover for code coverage tool integrated with ReSharper, to measure test coverage.
+
+### Running Tests with Coverage
+
+```powershell
+# Run tests with code coverage enabled
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFilesTreeForm -Coverage
+
+# Coverage output defaults to: ai\.tmp\coverage-{timestamp}.json
+# Custom output path:
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFilesTreeForm -Coverage -CoverageOutputPath ".\coverage.json"
+```
+
+**Coverage Output**:
+- Coverage snapshot (`.dcvr`) is created in the test output directory (`bin\x64\Debug\`)
+- JSON report is exported to `ai\.tmp\coverage-{timestamp}.json` by default
+- JSON can be analyzed programmatically or opened in Visual Studio (ReSharper > Unit Tests > Coverage)
+
+### dotCover Installation
+
+**Setup**: See `ai/docs/developer-setup-guide.md` for installation instructions.
+
+The `Run-Tests.ps1` script automatically searches for `dotCover.exe` in these locations:
+
+1. **Libraries directory** (recommended):
+   ```
+   libraries\jetbrains.dotcover.commandlinetools\{version}\tools\dotCover.exe
+   ```
+
+2. **.NET global tools** (if installed via `dotnet tool install --global JetBrains.dotCover.CommandLineTools`):
+   ```
+   %USERPROFILE%\.dotnet\tools\dotCover.exe
+   ```
+
+3. **Other common locations**: Downloads folder, user tools directory, etc.
+
+**Note**: dotCover 2025.3.0.2 has a known bug with JSON export. If JSON export fails, use version 2025.1.7 or earlier.
+
+### Analyzing Coverage Results
+
+Coverage JSON files contain detailed information about which code was executed during tests:
+
+- **Overall coverage percentage** by module/namespace
+- **Line-by-line coverage** for each file
+- **Coverage by type** (classes, methods, properties)
+
+**Example workflow**:
+1. Run tests with `-Coverage` flag
+2. Review JSON output in `ai\.tmp\coverage-{timestamp}.json`
+3. Identify uncovered code paths
+4. Add tests to improve coverage
+5. Re-run with coverage to verify improvement
+
+**Visual Studio Integration**: Open the `.dcvr` snapshot file in Visual Studio:
+- ReSharper > Unit Tests > Coverage
+- View coverage highlights in source code
+- Export to HTML or JSON reports
+
+### Coverage Best Practices
+
+- **Run coverage on feature-specific tests** to focus analysis on new code
+- **Aim for >80% coverage** on new features (higher for critical paths)
+- **Review zero-coverage items** - these indicate untested code paths
+- **Use coverage to identify** missing edge case tests
+- **Don't obsess over 100%** - some code paths may be impractical to test
+
+**Example**: Analyzing Files view feature coverage:
+```powershell
+# Run Files view tests with coverage
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName "TestFilesTreeForm,TestFilesModel,TestFilesTreeFileSystem" -Coverage
+
+# Coverage JSON saved to: ai\.tmp\coverage-{timestamp}.json
+# Review coverage for FilesTree, FilesModel, and related types
+```
+
 ## ReSharper Code Inspection
 
 **Using ReSharper Command Line Tools (if installed)**:
