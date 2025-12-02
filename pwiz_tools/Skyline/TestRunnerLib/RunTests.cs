@@ -64,8 +64,9 @@ namespace TestRunnerLib
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
 
-            var noUnicodeTestAttr = RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute");
-            DoNotUseUnicode = !ProcessEx.CanConvertUnicodePaths() || noUnicodeTestAttr != null; // If true, don't add unicode to TMP environment variable etc
+            // Explicitly disable unicode path conversion for tests marked with NoUnicodeTestingAttribute
+            ProcessEx.CanConvertUnicodePaths = (RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute") != null) ? false : (bool?)null;
+            DoNotUseUnicode = !ProcessEx.CanConvertUnicodePaths.Value; // If true, don't add unicode to TMP environment variable etc
             
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
