@@ -70,11 +70,19 @@ namespace pwiz.Common.SystemUtil
             {
                 return result; // Already tested this volume
             }
-            var fileName = Path.Combine(baseDir, Path.GetRandomFileName() + @".test试验.txt");
-            File.WriteAllText(fileName, @"test data");
-            var converted = PathEx.GetNonUnicodePath(fileName);
-            File.Delete(fileName);
-            result = !Equals(converted, fileName);
+            try
+            {
+                var fileName = Path.Combine(baseDir, Path.GetRandomFileName() + @".test试验.txt");
+                File.WriteAllText(fileName, @"test data");
+                var converted = PathEx.GetNonUnicodePath(fileName);
+                File.Delete(fileName);
+                result = !Equals(converted, fileName);
+            }
+            catch
+            {
+                result = false; // Not writable?
+            }
+
             _volumesTested[volume] = result;
             return result;
         }
