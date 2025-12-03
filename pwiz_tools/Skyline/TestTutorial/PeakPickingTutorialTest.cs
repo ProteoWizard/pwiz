@@ -229,9 +229,6 @@ namespace pwiz.SkylineTestTutorial
                 editDlg.FindMissingValues(2);   // Retention time
                 editDlg.PeakScoringModelName = "test1";
             });
-            // TODO(nicksh): remove this screenshot since the find missing scores button is always visible
-            PauseForScreenShot(editDlg.GraphsControl, "Edit Peak Scoring Model form find missing scores", null, bmp =>
-                DrawLArrowCursorOnBitmap(bmp, 0.88, 0.7));
 
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);

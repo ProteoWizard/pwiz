@@ -74,7 +74,7 @@
         <li>In the <b>Decoy generation method</b> drop down list, select ‘Reverse Sequence<b>’</b>.</li>
     </ul>
     <p>
-        The <b>Add Decoy Peptides</b> form should now look like this: 
+        The <b>Add Decoy Peptides</b> form should now look like this:
     </p>
     <p>
          <img src="s-01.png" />
@@ -310,15 +310,15 @@
         <li>Click on the <b>Library intensity dot-product</b> row in the <b>Available feature scores</b> grid.</li>
     </ul>
     <p>
-        The graph should change to the following: 
+        The graph should change to the following:
     </p>
     <p>
-        <img src="s-09.png" /> 
+        <img src="s-09.png" />
     </p>
     <p>
         Note that the library dot-product is “unknown” for several of the target values, and for this reason the score is grayed and not used in the
         model. This is also the case for several other scores – some are missing values for every peptide, while others are missing values for only a
-        few peptides. 
+        few peptides.
     </p>
     <h1>Handling Missing Values</h1>
     <p>
@@ -346,7 +346,7 @@
         On the <b>Find Results</b> dialog, there should be 6 peptides in the list.
     </p>
     <p>
-        <b><img src="s-11.png" /></b> 
+        <b><img src="s-10.png" /></b>
     </p>
     <ul>
         <li>Double-click on the first peptide in the list, LGGNEQVTR.</li>
@@ -386,7 +386,7 @@
         <li>Right-click in the selection, choose <b>Set Standard Type</b> and click <b>QC</b>.</li>
     </ul>
     <p>
-        Now delete the last two peptides GGYAGMLVGSVGETVAQLA<b><span class="blue">R</span></b> and its corresponding decoy: 
+        Now delete the last two peptides GGYAGMLVGSVGETVAQLA<b><span class="blue">R</span></b> and its corresponding decoy:
     </p>
     <ul>
         <li>Double-click on each of the last 2 peptides in the <b>Find Results</b> window, and delete each.</li>
@@ -420,7 +420,7 @@
         improved. The <b>Edit Peak Scoring Model</b> form should look like this:
     </p>
     <p>
-         <img src="s-12.png" /> 
+         <img src="s-11.png" />
     </p>
     <p>
         The <b>Q Values</b> plot will now be improved as well:
@@ -432,7 +432,7 @@
         You should see a graph like the following:
     </p>
     <p>
-         <b><img src="s-13.png" /></b>
+         <b><img src="s-12.png" /></b>
     </p>
     <p>
         As you can see, most of the q values are now smaller after adding the new scores, indicating higher confidence in the picked peaks.
@@ -480,7 +480,7 @@
         The graphs should now update and the scores that were unchecked should be removed. The model should look like this:
     </p>
     <p>
-         <img src="s-14.png" />
+         <img src="s-13.png" />
     </p>
     <p>
         You will not use this modified model. To return to the original model, simply cancel the form:
@@ -505,7 +505,7 @@
         The <b>Reintegrate</b> dialog box should look like this:
     </p>
     <p>
-         <img src="s-15.png" /> 
+         <img src="s-14.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -520,10 +520,10 @@
             view.</li>
     </ul>
     <p>
-        Note that after reintegration, the chosen peak for this peptide/replicate is now at the correct position of 18.0 minutes. 
+        Note that after reintegration, the chosen peak for this peptide/replicate is now at the correct position of 18.0 minutes.
     </p>
     <p>
-         <img src="s-16.png" />
+         <img src="s-15.png" />
     </p>
     <p>
         Now try reintegrating in a slightly different way by doing the following:
@@ -542,14 +542,14 @@
         <b>Targets</b> view, a peptide with no chosen peak will have a red circle with a white X icon left of its sequence:
     </p>
     <p>
-        <img src="s-17.png" />
+        <img src="s-16.png" />
     </p>
     <p>
         This is now the case for the peptide LPDGNGIEL<b><u>C</u><span class="blue">R</span></b> in the replicate 006_StC-DosR_B2. You will
         also see that the chromatogram graph now lacks the right-pointing arrowheads, indicating the chosen peak:
     </p>
     <p>
-         <img src="s-18.png" />
+         <img src="s-17.png" />
     </p>
     <p>
         This can be different for each replicate, however, and if you use the <b>Replicates</b> dropdown list at the top of the
@@ -558,7 +558,7 @@
         precursor, which you can see better, if you select it (622.3086++) in the <b>Targets</b> view and zoom in a little:
     </p>
     <p>
-         <img src="s-19.png" />
+         <img src="s-18.png" />
     </p>
     <p>
         Any peak picking algorithm might do better with this peak, if the y10 ion were removed.
@@ -568,7 +568,7 @@
         To directly see the scores and false discovery rates of each peptide, you can export this information to a text file. There are two options for
         doing this. The first is to export into mProphet format, which shows all the individual feature scores for each peptide, as well as the
         composite score, the p value, and the q value. The second is to use a skyline report, which can attach a q value to any data columns available
-        in the report form. You will start with the first method: 
+        in the report form. You will start with the first method:
     </p>
     <ul>
         <li>From the <b>File</b> menu, choose <b>Export</b> and click on <b>mProphet Features</b>.</li>
@@ -578,7 +578,7 @@
         The <b>Export mProphet Features</b> form should look like this:
     </p>
     <p>
-         <img src="s-20.png" /><u> </u>
+         <img src="s-19.png" /><u> </u>
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -603,7 +603,7 @@
     <p>
         You can also obtain q-value information from a Skyline report, if you have checked the <b>Add q value annotation</b> check box in the
         <b>Reintegrate</b> form. This method does not show individual feature scores, but has the advantage that you can combine it with any
-        other columns available in a Skyline report. 
+        other columns available in a Skyline report.
     </p>
     <ul>
         <li>From the <b>File</b> menu, choose <b>Export</b> and click on <b>Report</b>.</li>
@@ -614,7 +614,7 @@
         The form should look like this:
     </p>
     <p>
-         <img src="s-21.png" />
+         <img src="s-20.png" />
     </p>
     <ul>
         <li>Click the <b>Edit</b> button.</li>
@@ -623,7 +623,7 @@
         The <b>Edit Report</b> form should appear as follows:
     </p>
     <p>
-         <img src="s-22.png" />
+         <img src="s-21.png" />
     </p>
     <ul>
         <li>On the left side of the form, click on the plus icon by <b>Peptides</b> to expand the list.</li>
@@ -635,7 +635,7 @@
         The <b>Edit Report</b> form should now look like this:
     </p>
     <p>
-        <img src="s-23.png" />
+        <img src="s-22.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -661,7 +661,7 @@
     <p>
         The Skyline development team is working to make this info about peptide ID confidence available within Skyline (perhaps visible on the
         chromatogram graph), so that the text export step described above is not necessary. However, for now, exporting to text (via either method) is
-        the only way to directly obtain information on peptide ID confidence. 
+        the only way to directly obtain information on peptide ID confidence.
     </p>
     <h1>Training a Peak Scoring Model for DIA Data</h1>
     <p>
@@ -690,7 +690,7 @@
     <p>
         The DIA files you will be opening contain peaks that were manually picked for the purpose of comparison with the automated OpenSWATH algorithm.
         In a real workflow all peptides/files would contain full chromatograms, but in this tutorial the chromatograms have been artificially
-        restricted to a 10 minute window around the predicted peak in order to keep the file sizes small. 
+        restricted to a 10 minute window around the predicted peak in order to keep the file sizes small.
     </p>
     <p>
         This DIA data was loaded into Skyline before advanced peak scoring was available, so the first step will be to re-score the document so that
@@ -704,7 +704,7 @@
         A form like the following should appear:
     </p>
     <p>
-         <img src="s-24.png" />
+         <img src="s-23.png" />
     </p>
     <ul>
         <li>Click the <b>Re-score</b> button</li>
@@ -713,7 +713,7 @@
         The following form should appear:
     </p>
     <p>
-         <img src="s-25.png" />
+         <img src="s-24.png" />
     </p>
     <ul>
         <li>Click the <b>Re-score in place</b> button.</li>
@@ -731,10 +731,10 @@
         <li>Select <b>&lt;Edit current…&gt;</b>.</li>
     </ul>
     <p>
-        This will show the model from the previous dataset, applied to the peptides in the present dataset. 
+        This will show the model from the previous dataset, applied to the peptides in the present dataset.
     </p>
     <p>
-         <img src="s-26.png" />
+         <img src="s-25.png" />
     </p>
     <p>
         A model trained on one dataset can be applied to another, or you can train a new model for each dataset, provided your dataset contains enough
@@ -757,7 +757,7 @@
         The model should look like this:
     </p>
     <p>
-        <img src="s-27.png" /> 
+        <img src="s-26.png" />
     </p>
     <p>
         Note that some of the scores that were unavailable in the SRM model are available here, such as <b>Product mass error</b>. This is
