@@ -1004,7 +1004,7 @@ void BlibMaker::transferPeakAnnotations(const char* schemaTmp,
     while (rc == SQLITE_ROW) {
         snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectraPeakAnnotations(%s) "
-            "VALUES(%d, %s,  %s,  %s, %s, %s, %d, %s,  %s,  %f,  %f)",
+            "VALUES(%d, %d,  %s,  %s, %s, %s, %d, %s,  %s,  %f,  %f)",
             cols,
             spectraID,
             sqlite3_column_int(pStmt, 1),
