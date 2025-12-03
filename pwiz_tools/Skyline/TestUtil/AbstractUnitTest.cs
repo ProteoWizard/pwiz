@@ -251,7 +251,7 @@ namespace pwiz.SkylineTestUtil
                 for (int i = 0; i < TestFilesZipPaths.Length; i++)
                 {
                     TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                        TestFilesPersistent, IsExtractHere(i));
+                        TestFilesPersistent, IsExtractHere(i), TestFilesZipSuffix);
                 }
                 CleanupPersistentDir(); // Clean up before recording metrics
                 foreach (var dir in TestFilesDirs)
@@ -326,6 +326,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         public string TestDirectoryName { get; set; }
+        /// <summary>
+        /// Optional suffix to append to ZIP file base name to differentiate tests using the same ZIP file.
+        /// For example, if two tests use "ImportDocTest.zip", one could use suffix "-functional" and the other "-unit".
+        /// </summary>
+        public string TestFilesZipSuffix { get; set; }
         public TestFilesDir TestFilesDir
         {
             get

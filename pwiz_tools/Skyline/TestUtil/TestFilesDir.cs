@@ -47,8 +47,9 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         /// <param name="testContext">The test context for the test creating the directory</param>
         /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip)
-            : this(testContext, relativePathZip, null)
+        /// <param name="suffix">Optional suffix to append to the directory name to differentiate tests using the same ZIP file</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string suffix = null)
+            : this(testContext, relativePathZip, null, suffix)
         {
             
         }
@@ -60,8 +61,9 @@ namespace pwiz.SkylineTestUtil
         /// <param name="testContext">The test context for the test creating the directory</param>
         /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
         /// <param name="directoryName">Name of directory to create in the test results</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName)
-            : this(testContext, relativePathZip, directoryName, null)
+        /// <param name="suffix">Optional suffix to append to the directory name to differentiate tests using the same ZIP file</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string suffix = null)
+            : this(testContext, relativePathZip, directoryName, null, false, suffix)
         {
 
         }
@@ -75,12 +77,18 @@ namespace pwiz.SkylineTestUtil
         /// <param name="directoryName">Name of directory to create in the test results</param>
         /// <param name="persistentFiles">List of files we'd like to extract in the ZIP file's directory for (re)use</param>
         /// <param name="isExtractHere">If false then the zip base name is used as the destination directory</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string[] persistentFiles, bool isExtractHere = false)
+        /// <param name="suffix">Optional suffix to append to the directory name to differentiate tests using the same ZIP file</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string[] persistentFiles, bool isExtractHere = false, string suffix = null)
         {
             TestContext = testContext;
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
             if (zipBaseName == null)
                 Assert.Fail("Null zip base name");  // Resharper
+            // Append suffix to zipBaseName if provided
+            if (!string.IsNullOrEmpty(suffix))
+            {
+                zipBaseName = zipBaseName + suffix;
+            }
             DirectoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
             FullPath = TestContext.GetTestPath(DirectoryName);
             if (Directory.Exists(FullPath))
