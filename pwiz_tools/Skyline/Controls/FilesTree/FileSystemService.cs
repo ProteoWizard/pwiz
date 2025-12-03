@@ -37,7 +37,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         IList<string> MonitoredDirectories();
         bool IsMonitoringDirectory(string fullPath);
         bool IsFileAvailable(string fullPath);
-
+        bool IsFileSystemWatchingComplete();
+        bool IsWatching();
         void StartWatching(CancellationToken cancellationToken);
         void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback);
         void StopWatching();
@@ -69,6 +70,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public bool IsMonitoringDirectory(string fullPath) => Delegate.IsMonitoringDirectory(fullPath);
         public bool IsFileAvailable(string fullPath) => Delegate.IsFileAvailable(fullPath);
+        public bool IsFileSystemWatchingComplete() => Delegate.IsFileSystemWatchingComplete();
+        public bool IsWatching() => Delegate.IsWatching();
 
         public IList<string> MonitoredDirectories()
         {
@@ -122,6 +125,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         public IList<string> MonitoredDirectories() => ImmutableList.Empty<string>();
         public bool IsMonitoringDirectory(string fullPath) => false;
         public bool IsFileAvailable(string fullPath) => false;
+        public bool IsFileSystemWatchingComplete() => true; // NoOpService never watches anything
+        public bool IsWatching() => false; // NoOpService never watches anything
         public void StartWatching(CancellationToken cancellationToken) { }
         public void LoadFile(string localFilePath, string filePath, string fileName, string documentPath, Action<string, CancellationToken> callback) { }
         public void StopWatching() { }
@@ -137,6 +142,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         private static readonly HashSet<string> FILE_EXTENSION_IGNORE_LIST = new HashSet<string> { @".tmp", @".bak" };
 
         private readonly object _fswLock = new object();
+        private bool _isStopped;
 
         public LocalFileSystemService(Control synchronizingObject, BackgroundActionService backgroundActionService)
         {
@@ -214,6 +220,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             CancellationToken = cancellationToken;
             HealthMonitor.Start();
+            _isStopped = false;
+        }
+
+        public bool IsWatching()
+        {
+            return !_isStopped;
         }
 
         /// <summary>
@@ -372,6 +384,31 @@ namespace pwiz.Skyline.Controls.FilesTree
             HealthMonitor.Dispose();
 
             Cache?.Clear();
+
+            _isStopped = true;
+        }
+
+        /// <summary>
+        /// Returns true if file system watching is completely shut down:
+        /// - All FileSystemWatchers are disposed
+        /// - HealthMonitor thread is stopped
+        /// - BackgroundActionService tasks are complete
+        /// </summary>
+        public bool IsFileSystemWatchingComplete()
+        {
+            if (!_isStopped)
+                return false;
+
+            lock (_fswLock)
+            {
+                if (FileSystemWatchers.Count > 0)
+                    return false;
+            }
+
+            if (HealthMonitor != null && !HealthMonitor.IsStopped())
+                return false;
+
+            return BackgroundActionService.IsComplete;
         }
 
         public void Dispose()

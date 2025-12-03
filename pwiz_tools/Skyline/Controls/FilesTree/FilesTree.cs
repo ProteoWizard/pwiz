@@ -104,6 +104,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         private BackgroundActionService BackgroundActionService { get; }
         public bool IsComplete() => BackgroundActionService.IsComplete;
 
+        /// <summary>
+        /// Returns true if file system watching is completely shut down.
+        /// Useful for tests to wait for FileSystemWatchers to be fully disposed before cleanup.
+        /// </summary>
+        public bool IsFileSystemWatchingComplete() => FileSystemService.IsFileSystemWatchingComplete();
+
         #endregion
 
         /// <summary>
@@ -120,7 +126,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         /// <summary>
-        /// Selects a node without triggering the event <see cref="TreeView.OnAfterSelect"/>. Used to re-select nodes after drag-and-drop.
+        /// Selects a node without triggering the event <see cref="TreeView.AfterSelect"/>. Used to re-select nodes after drag-and-drop.
         /// </summary>
         /// <param name="node">Node to select.</param>
         internal void SelectNodeWithoutResettingSelection(FilesTreeNode node)
@@ -183,17 +189,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             var document = DocumentContainer.Document;
             var documentFilePath = DocumentContainer.DocumentFilePath;
 
-            // Reset the FileSystemService if it's not monitoring the directory containing this document
+            // Stop watching if the document path changed (Save As) or if we're currently watching a different directory
             var documentDirectory = Path.GetDirectoryName(documentFilePath);
-            if (isSaveAs || !FileSystemService.IsMonitoringDirectory(documentDirectory))
+            var documentPathChanged = isSaveAs || (documentDirectory != null && !FileSystemService.IsMonitoringDirectory(documentDirectory));
+            
+            if (documentPathChanged && FileSystemService.IsWatching())
             {
                 // Stop the out-of-date monitoring service, first triggering the CancellationToken
                 _cancellationTokenSource.Cancel();
                 FileSystemService.StopWatching();
-
-                // Start watching the current directory using a new CancellationToken. 
-                _cancellationTokenSource = new CancellationTokenSource();
-                FileSystemService.StartWatching(_cancellationTokenSource.Token);
             }
 
             BeginUpdateMS();
@@ -202,6 +206,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             var savedSelectedNodeId = ((FilesTreeNode)SelectedNode)?.Model.IdentityPath;
             try
             {
+                // Create a new CancellationToken if we stopped watching or if we're not watching yet
+                if (!FileSystemService.IsWatching())
+                {
+                    _cancellationTokenSource = new CancellationTokenSource();
+                }
                 var cancellationToken = _cancellationTokenSource.Token;
 
                 // Remove existing nodes from FilesTree if the document has changed completely
@@ -211,6 +220,24 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
 
                 var files = SkylineFile.Create(document, documentFilePath).AsList();
+
+                // Only start watching if there are files with actual file paths to watch.
+                // Files like audit logs may have null FilePath and don't need file system watching.
+                // IMPORTANT: StartWatching() must be called BEFORE MergeNodes() because MergeNodes()
+                // calls LoadFile() which calls WatchDirectory(), and WatchDirectory() requires the
+                // FileSystemService to have a LocalFileSystemService delegate (not NoOpService).
+                var filesWithPaths = files.Count(f => !string.IsNullOrEmpty(f.FilePath));
+                if (filesWithPaths > 0 && !FileSystemService.IsWatching())
+                {
+                    FileSystemService.StartWatching(cancellationToken);
+                }
+                else if (filesWithPaths == 0 && FileSystemService.IsWatching())
+                {
+                    // Stop watching if document has no files with paths
+                    _cancellationTokenSource.Cancel();
+                    FileSystemService.StopWatching();
+                }
+
                 MergeNodes(files, Nodes, cancellationToken);
 
                 BackgroundActionService.RunUI(() => 
@@ -239,11 +266,15 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
 
                 // Set TopNode *after* the BeginUpdateMS / EndUpdateMS block. Otherwise, TreeView will not correctly set TopNode.
-                var foundNode = FindNodeByIdentityPath(savedTopNodeId);
-                if (foundNode != null)
+                // Only try to restore TopNode if the tree has nodes (MergeNodes may result in empty tree if document is invalid)
+                if (Nodes.Count > 0)
                 {
-                    foundNode.EnsureVisible();
-                    TopNode = foundNode;
+                    var foundNode = FindNodeByIdentityPath(savedTopNodeId);
+                    if (foundNode != null)
+                    {
+                        foundNode.EnsureVisible();
+                        TopNode = foundNode;
+                    }
                 }
             }
         }

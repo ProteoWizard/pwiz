@@ -499,6 +499,15 @@ namespace pwiz.Skyline
             get { return _filesTreeForm != null ? _filesTreeForm.FilesTree : null; }
         }
 
+        /// <summary>
+        /// Returns true if file system watching is completely shut down.
+        /// Useful for tests to wait for FileSystemWatchers to be fully disposed before cleanup.
+        /// </summary>
+        public bool IsFileSystemWatchingComplete()
+        {
+            return FilesTree?.IsFileSystemWatchingComplete() ?? true;
+        }
+
         public ToolStripComboBox ComboResults
         {
             get { return _sequenceTreeForm != null ? _sequenceTreeForm.ComboResults : null; }

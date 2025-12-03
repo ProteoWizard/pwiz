@@ -2582,6 +2582,11 @@ namespace pwiz.SkylineTestUtil
                 WaitForGraphs(false);
                 // Wait for any background loaders to notice the change and stop what they're doing
                 WaitForBackgroundLoaders();
+                // Wait for FileSystemWatchers to be completely shut down before test cleanup
+                // This prevents race conditions where watchers might access directories during cleanup
+                // Note: FilesTree may be null if already destroyed, in which case watching is already complete
+                WaitForConditionUI(5000, () => SkylineWindow.IsFileSystemWatchingComplete(), 
+                    () => "FileSystemWatchers should be shut down before test cleanup", false);
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
 

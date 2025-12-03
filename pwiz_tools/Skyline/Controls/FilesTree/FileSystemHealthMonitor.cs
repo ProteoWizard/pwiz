@@ -18,13 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.FilesTree
 {
     internal class FileSystemHealthMonitor : IDisposable
     {
         private readonly TimeSpan _checkInterval;
-        private readonly ManualResetEvent _manualTriggerEvent = new ManualResetEvent(false);
+        private ManualResetEvent _manualTriggerEvent = new ManualResetEvent(false);
         private readonly object _lock = new object();
 
         private Thread _workerThread;
@@ -43,19 +45,30 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void Start()
         {
+            // If already started, stop the existing thread first to prevent multiple threads
+            // from accessing the same _paths and _manualTriggerEvent
+            if (_workerThread != null)
+            {
+                Stop();
+            }
+
+            // Reset stopping/stopped flags so AddPath() can be called again
+            _isStopped = _isStopping = false;
+
             _cancellationTokenSource = new CancellationTokenSource();
 
-            _workerThread = new Thread(() => MonitorLoop(_cancellationTokenSource.Token))
-            {
-                Name = @"FilesTree => FileSystemAvailabilityMonitor",
-                IsBackground = true
-            };
-
-            _workerThread.Start();
+            // ActionUtil.RunAsync() already starts the thread, so don't call Start() again
+            _workerThread = ActionUtil.RunAsync(() => MonitorLoop(_cancellationTokenSource.Token),
+                @"FilesTree => FileSystemAvailabilityMonitor");
         }
 
         public void AddPath(string newPath)
         {
+            // Enforce usage sequence: Start() -> AddPath() -> Stop()
+            // AddPath() should not be called after Stop() has been called
+            Assume.IsFalse(_isStopping || IsStopped(),
+                @"AddPath() called after Stop(). Expected sequence: Start() -> AddPath() -> Stop()");
+
             lock (_lock)
             {
                 if (!_paths.ContainsKey(newPath))
@@ -108,27 +121,71 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 SpinWait.SpinUntil(() => !cancellationToken.IsCancellationRequested, _checkInterval.Milliseconds);
 
-                _manualTriggerEvent.WaitOne(_checkInterval);
-                _manualTriggerEvent.Reset();
+                // Check cancellation before accessing the event
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Capture reference to avoid race with disposal
+                var manualEvent = _manualTriggerEvent;
+                if (manualEvent == null)
+                    break; // Event was disposed, exit the loop
+
+                manualEvent.WaitOne(_checkInterval);
+                
+                // Check cancellation again after WaitOne returns
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Reset the event (may throw ObjectDisposedException if disposed during WaitOne, but that's fine)
+                manualEvent.Reset();
             }
         }
 
         public void Trigger()
         {
-            _manualTriggerEvent.Set();
+            // No lock needed - if null, monitor is stopped anyway
+            _manualTriggerEvent?.Set();
         }
+
+        private bool _isStopped;
+        private bool _isStopping;
 
         public void Stop()
         {
+            // Mark as stopping immediately to prevent AddPath() calls after Stop() starts
+            // This enforces the usage sequence: Start() -> AddPath() -> Stop()
+            _isStopping = true;
+
             _cancellationTokenSource?.Cancel();
+            
+            // Signal the manual trigger event so WaitOne() returns immediately
+            // This allows the worker thread to check the cancellation token and exit
+            _manualTriggerEvent?.Set();
+            
+            // Wait for the worker thread to exit completely
+            // After Join() returns, we know the thread is gone and won't access _paths or _manualTriggerEvent
             _workerThread?.Join();
 
-            lock (_lock)
+            // No lock needed here - Join() guarantees the worker thread is gone, and AddPath() 
+            // will throw if called after Stop() starts (enforcing Start() -> AddPath() -> Stop() sequence)
+            lock (_lock)    // For ReSharper
             {
                 _paths?.Clear();
             }
 
-            _manualTriggerEvent?.Dispose();
+            // Now that the thread has exited, it's safe to dispose the event
+            // No thread protection needed here - Join() guarantees the worker thread is gone
+            // Use Interlocked.Exchange only to prevent double-disposal if Stop() is called multiple times
+            var manualTriggerEvent = Interlocked.Exchange(ref _manualTriggerEvent, null);
+            manualTriggerEvent?.Dispose();
+
+            _isStopped = true;
+            _isStopping = false;
+        }
+
+        public bool IsStopped()
+        {
+            return _isStopped && (_workerThread == null || !_workerThread.IsAlive);
         }
 
         public void Dispose()

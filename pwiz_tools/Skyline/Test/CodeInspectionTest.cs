@@ -132,6 +132,26 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"This appears to be temporary debugging code that should not be checked in. PerfTests are normally enabled/disabled by the automated test framework."); // Explanation for prohibition, appears in report
 
+            // TODO: Standardize thread use throughout the project (see ai/todos/backlog/TODO-standardize_thread_use.md)
+            // Looking for bare use of "new Thread()" which should use ActionUtil.RunAsync() instead
+            // ActionUtil.RunAsync() provides proper exception handling and localization initialization
+            // This inspection was added but commented out pending review of all existing uses.
+            // We need to accept legitimate uses (e.g., ActionUtil, CommonActionUtil, BackgroundEventThreads, tests)
+            // and establish proper thresholds before enabling this inspection.
+            /*
+            const string newThreadExemptionComment = @"// Purposely using new Thread() here";
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonSkylineDirectories().Append(@"ActionUtil.cs").Append(@"CommonActionUtil.cs").Append(@"BackgroundEventThreads.cs").ToArray(), // Exclude ActionUtil itself and other infrastructure
+                string.Empty, // No file content required for inspection
+                @"new Thread\(", // Forbidden pattern - match "new Thread("
+                true, // Pattern is a regular expression
+                @"use ActionUtil.RunAsync() instead - this ensures proper exception handling (exceptions are reported via Program.ReportException) and localization initialization (LocalizationHelper.InitThread). If this really is a legitimate use (e.g., in ActionUtil itself) add this comment to the offending line: '" + newThreadExemptionComment + @"'", // Explanation for prohibition, appears in report
+                newThreadExemptionComment, // Exemption comment to look for
+                21); // Tolerate 21 existing incidents (legitimate uses in infrastructure, tests, and other components)
+            */
+
             // Looking for non-standard image scaling
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files

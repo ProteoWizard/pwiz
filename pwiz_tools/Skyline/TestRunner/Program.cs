@@ -943,7 +943,9 @@ namespace TestRunner
 
             if (testQueue.Count < dockerWorkerCount)
             {
-                Console.WriteLine($"There are fewer parallelizable test/language pairs ({testQueue.Count}) than the number of specified parallel workers; reducing workercount to {testQueue.Count + 1}.");
+                Console.WriteLine($"There are fewer parallelizable test/language pairs ({testQueue.Count}) than the number of specified parallel workers ({dockerWorkerCount}); reducing workercount to {testQueue.Count + 1}.");
+                Console.WriteLine($"  Parallelizable: {testQueue.Count} test/language pairs");
+                Console.WriteLine($"  Non-parallelizable: {nonParallelTestQueue.Count} test/language pairs (will run serially on hostWorker)");
                 workerCount = testQueue.Count + 1;
                 dockerWorkerCount = testQueue.Count;
             }
