@@ -97,6 +97,9 @@ param(
     [switch]$EnableInternet = $false,
 
     [Parameter(Mandatory=$false)]
+    [switch]$TeamCityCleanup = $false,  # Use TeamCity-style cleanup (DesiredCleanupLevel=all) for local testing/debugging
+
+    [Parameter(Mandatory=$false)]
     [int]$Loop = 0,  # Number of iterations (0 = run forever, 1 = run once, 20 = run 20 times)
 
     [Parameter(Mandatory=$false)]
@@ -313,6 +316,7 @@ Write-Host "  Internet: $(if ($EnableInternet) { 'Enabled' } else { 'Disabled' }
 Write-Host "  Loop: $(if ($Loop -eq 0) { 'Forever' } else { "$Loop iterations" })" -ForegroundColor Gray
 Write-Host "  Diagnostics: Handles=$(if ($ReportHandles) { 'on' } else { 'off' }), Heaps=$(if ($ReportHeaps) { 'on' } else { 'off' })" -ForegroundColor Gray
 Write-Host "  Coverage: $(if ($Coverage) { 'Enabled' } else { 'Disabled' })" -ForegroundColor Gray
+Write-Host "  TeamCity Cleanup: $(if ($TeamCityCleanup) { 'Enabled (DesiredCleanupLevel=all)' } else { 'Disabled' })" -ForegroundColor Gray
 Write-Host "  Log: $outputDir\$logFile`n" -ForegroundColor Gray
 
 # Build TestRunner command line
@@ -365,6 +369,10 @@ try {
         
         if ($ReportHeaps) {
             $runnerArgs += "reportheaps=on"
+        }
+        
+        if ($TeamCityCleanup) {
+            $runnerArgs += "teamcitycleanup=on"
         }
 
         # Build dotCover command if coverage is enabled

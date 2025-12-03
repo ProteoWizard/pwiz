@@ -339,6 +339,9 @@ namespace pwiz.SkylineTestUtil
 
         public static void CheckForFileLocks(string path, bool useDeletion = false)
         {
+            if (string.IsNullOrEmpty(path))
+                return;
+
             // Do a garbage collection in case any finalizer is supposed to release a file handle
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -434,8 +437,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static void RemoveReadonlyFlags(string path)
         {
-            string[] files = Directory.GetFiles(path);
-            string[] dirs = Directory.GetDirectories(path);
+            string[] files = GetSafeArray(() => Directory.GetFiles(path));
+            string[] dirs = GetSafeArray(() => Directory.GetDirectories(path));
 
             foreach (string file in files)
             {
@@ -445,6 +448,19 @@ namespace pwiz.SkylineTestUtil
             foreach (string dir in dirs)
             {
                 RemoveReadonlyFlags(dir);
+            }
+        }
+
+        private static string[] GetSafeArray(Func<string[]> getArray)
+        {
+            try
+            {
+                return getArray();
+            }
+            catch (Exception)
+            {
+                // Just skip anything that throws an exception
+                return Array.Empty<string>();
             }
         }
     }

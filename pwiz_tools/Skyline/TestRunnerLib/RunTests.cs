@@ -176,6 +176,7 @@ namespace TestRunnerLib
             bool runsmallmoleculeversions,
             bool recordauditlogs,
             bool teamcityTestDecoration,
+            bool teamcityCleanup,
             bool retrydatadownloads,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
@@ -201,7 +202,13 @@ namespace TestRunnerLib
 
             // Minimize disk use on TeamCity VMs by removing downloaded files
             // during test clean-up
-            if (teamcityTestDecoration)
+            if (teamcityCleanup)
+            {
+                // teamcity-cleanup=on flag forces cleanup level to "all" for local testing/debugging
+                _cleanupLevelAll = true;
+                TestContext.Properties["DesiredCleanupLevel"] = "all"; // Must match DesiredCleanupLevel value
+            }
+            else if (teamcityTestDecoration)
             {
                 var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
                 if (isTeamCity)
