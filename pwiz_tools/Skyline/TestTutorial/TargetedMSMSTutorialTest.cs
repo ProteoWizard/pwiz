@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.CommonMsData;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -516,7 +517,8 @@ namespace pwiz.SkylineTestTutorial
 
             ValidatePeakRanks(1, 176, true);
             WaitForGraphs();
-            ValidatePeakTooltips();
+            if (!Program.SkylineOffscreen)  // Tooltips are not rendered in offscreen mode
+                ValidatePeakTooltips();
 
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
                 TestLibraryMatchPropertySheet();
