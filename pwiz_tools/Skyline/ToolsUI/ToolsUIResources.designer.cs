@@ -425,6 +425,19 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings are correct, but this waters_connect instance does not support method development. Method upload will be disabled.
+        ///To enable, install the following items:
+        ///      - waters_connect TQ Skyline Adapter 1.0.0 or later
+        ///      - Relevant MS drivers version 2.0 or later.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_instance_does_not_support_method_development__Method_upload_will_be_disabled_ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_in" +
+                        "stance_does_not_support_method_development__Method_upload_will_be_disabled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Testing remote account connection.
         /// </summary>
         public static string EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection {
@@ -477,6 +490,17 @@ namespace pwiz.Skyline.ToolsUI {
             get {
                 return ResourceManager.GetString("EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch" +
                         "_the_directory_listing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not connect to a waters_connect instance.
+        ///Exporting and importing to waters_connect is disabled.
+        ///Ensure waters_connect V4.2 or later, TQ Skyline Adapter V1.0 or later and relevant MS drivers V2.0 or later are installed..
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret", resourceCulture);
             }
         }
         

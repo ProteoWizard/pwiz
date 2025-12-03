@@ -60,6 +60,8 @@ namespace pwiz.Skyline.ToolsUI
             this.label3 = new System.Windows.Forms.Label();
             this.textArdiaServerURL = new System.Windows.Forms.TextBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.lblAlias = new System.Windows.Forms.Label();
+            this.textAlias = new System.Windows.Forms.TextBox();
             this.groupBoxUnifi.SuspendLayout();
             this.wizardPagesByAccountType.SuspendLayout();
             this.tabUnifiSettings.SuspendLayout();
@@ -89,12 +91,14 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.textServerURL, "textServerURL");
             this.textServerURL.Name = "textServerURL";
+            this.textServerURL.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // textPassword
             // 
             resources.ApplyResources(this.textPassword, "textPassword");
             this.textPassword.Name = "textPassword";
             this.textPassword.UseSystemPasswordChar = true;
+            this.textPassword.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblPassword
             // 
@@ -110,6 +114,21 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.textUsername, "textUsername");
             this.textUsername.Name = "textUsername";
+            this.textUsername.TextChanged += new System.EventHandler(this.text_TextChanged);
+
+            // 
+            // textAlias
+            // 
+            resources.ApplyResources(this.textAlias, "textAlias");
+            this.textAlias.Name = "textAlias";
+            this.toolTip1.SetToolTip(this.textAlias, resources.GetString("btnLogoutArdia.ToolTip"));
+
+            // 
+            // lblAlias
+            // 
+            resources.ApplyResources(this.lblAlias, "lblAlias");
+            this.lblAlias.Name = "lblAlias";
+
             // 
             // btnTest
             // 
@@ -149,6 +168,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.tbxClientId, "tbxClientId");
             this.tbxClientId.Name = "tbxClientId";
+            this.tbxClientId.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblClientId
             // 
@@ -159,6 +179,8 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.tbxClientSecret, "tbxClientSecret");
             this.tbxClientSecret.Name = "tbxClientSecret";
+            this.tbxClientSecret.UseSystemPasswordChar = true;
+            this.tbxClientSecret.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblClientSecret
             // 
@@ -169,6 +191,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.tbxClientScope, "tbxClientScope");
             this.tbxClientScope.Name = "tbxClientScope";
+            this.tbxClientScope.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblClientScope
             // 
@@ -179,6 +202,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.tbxIdentityServer, "tbxIdentityServer");
             this.tbxIdentityServer.Name = "tbxIdentityServer";
+            this.tbxIdentityServer.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // lblIdentityServer
             // 
@@ -238,6 +262,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.textArdiaAlias_Username, "textArdiaAlias_Username");
             this.textArdiaAlias_Username.Name = "textArdiaAlias_Username";
+            this.textArdiaAlias_Username.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // label2
             // 
@@ -253,6 +278,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.textArdiaServerURL, "textArdiaServerURL");
             this.textArdiaServerURL.Name = "textArdiaServerURL";
+            this.textArdiaServerURL.TextChanged += new System.EventHandler(this.text_TextChanged);
             // 
             // EditRemoteAccountDlg
             // 
@@ -266,6 +292,8 @@ namespace pwiz.Skyline.ToolsUI
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboAccountType);
+            this.Controls.Add(this.textAlias);
+            this.Controls.Add(this.lblAlias);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "EditRemoteAccountDlg";
@@ -296,6 +324,10 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Button btnTest;
         private System.Windows.Forms.ComboBox comboAccountType;
         private System.Windows.Forms.Label label1;
+
+        internal System.Windows.Forms.TextBox textAlias;
+        private System.Windows.Forms.Label lblAlias;
+
         private System.Windows.Forms.GroupBox groupBoxUnifi;
         private System.Windows.Forms.Label lblIdentityServer;
         private System.Windows.Forms.TextBox tbxClientSecret;
