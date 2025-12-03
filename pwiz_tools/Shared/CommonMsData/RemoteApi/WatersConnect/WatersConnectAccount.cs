@@ -37,6 +37,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public static readonly string HANDLER_NAME = @"WatersConnect.Handler.Main";
         public static readonly string AUTH_HANDLER_NAME = @"WatersConnect.Handler.Authentication";
         public static readonly string TOKEN_DATA = @"token";
+        public static readonly string GET_FOLDERS = @"/waters_connect/v2.0/folders";
 
         public class TokenCacheEntry
         {
@@ -158,7 +159,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 
         public string GetFoldersUrl()
         {
-            return ServerUrl + @"/waters_connect/v1.0/folders";
+            return ServerUrl + GET_FOLDERS;
         }
 
         private string IdentityConnectEndpoint => @"/connect/token";

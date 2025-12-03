@@ -223,7 +223,7 @@ namespace pwiz.SkylineTestFunctional
             // ReSharper disable StringIndexOfIsCultureSpecific.1
             // Folders enumeration request
             wcHandler.AddMatcher(new RequestMatcherFile(
-                req => req.RequestUri.ToString().IndexOf(WatersConnectSession.GET_FOLDERS) >= 0,
+                req => req.RequestUri.ToString().IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0,
                 TestFilesDir.GetTestPath("MockHttpData\\WCFolders.json")));
             // Methods enumeration request
             wcHandler.AddMatcher(new RequestMatcherFile(
