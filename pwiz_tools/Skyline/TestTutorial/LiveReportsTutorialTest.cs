@@ -783,38 +783,5 @@ namespace pwiz.SkylineTestTutorial
             var peptide = (pwiz.Skyline.Model.Peptide)selectedPath.Child;
             Assert.AreEqual(expectedSequence, peptide.Sequence);
         }
-
-        /// <summary>
-        /// Moves all the FloatingWindow's off the screen so they are not in the way of the
-        /// main Skyline window's screenshots.
-        /// </summary>
-        /// <returns>A list of the original locations of the windows that were moved</returns>
-        private List<Tuple<FloatingWindow, Rectangle>> HideFloatingWindows()
-        {
-            var list = new List<Tuple<FloatingWindow, Rectangle>>();
-            RunUI(() =>
-            {
-                foreach (var floatingWindow in FormUtil.OpenForms.OfType<FloatingWindow>())
-                {
-                    list.Add(Tuple.Create(floatingWindow, floatingWindow.Bounds));
-                    floatingWindow.Location = FormEx.GetOffscreenPoint();
-                }
-            });
-            return list;
-        }
-
-        /// <summary>
-        /// Move the windows back to their original locations
-        /// </summary>
-        private void RestoreFloatingWindows(List<Tuple<FloatingWindow, Rectangle>> list)
-        {
-            RunUI(() =>
-            {
-                foreach (var tuple in list)
-                {
-                    tuple.Item1.Bounds = tuple.Item2;
-                }
-            });
-        }
     }
 }

@@ -242,6 +242,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public ImputedPeak ExemplaryPeak
+        {
+            get { return _imputedPeak; }
+        }
+
 
         public string NameSet
         {
