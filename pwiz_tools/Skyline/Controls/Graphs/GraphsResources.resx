@@ -541,6 +541,18 @@ Here are the last 3 errors:
   <data name="GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted" xml:space="preserve">
     <value>Failure loading spectrum. Library may be corrupted.</value>
   </data>
+  <data name="GraphSpectrum_ToolTip_mz">
+    <value>Observed m/z:</value>
+  </data>
+  <data name="GraphSpectrum_ToolTip_Intensity">
+    <value>Intensity:</value>
+  </data>
+  <data name="GraphSpectrum_ToolTip_MatchedIons">
+    <value>Matched Ions</value>
+  </data>
+  <data name="GraphSpectrum_ToolTip_Rank">
+    <value>Rank:</value>
+  </data>
   <data name="GraphValues_Log_AxisTitle" xml:space="preserve">
     <value>Log {0}</value>
   </data>
@@ -735,6 +747,9 @@ Here are the last 3 errors:
   </data>
   <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
     <value>No quantitative chromatograms found</value>
+  </data>
+  <data name="ToolTipImplementation_RenderTip_Calculated_Mass" xml:space="preserve">
+    <value>Ion m/z (calculated)</value>
   </data>
   <data name="GraphChromatogram_SetRetentionTimeIdIndicators_Libraries_are_still_loading" xml:space="preserve">
     <value>Libraries are still loading</value>
