@@ -274,6 +274,9 @@ namespace TestRunner
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
+            // Add ConsoleTraceListener so DetailedTrace.WriteLine() output appears in Console (and TeamCity logs)
+            Trace.Listeners.Add(new ConsoleTraceListener());
+
             _testRunStartTime = DateTime.UtcNow;
 
             // Parse command line args and initialize default values.
