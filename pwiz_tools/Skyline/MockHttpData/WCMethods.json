@@ -1,0 +1,58 @@
+[
+	{
+	"name":"Test Method 37",
+	"description":"From Skyline",
+	"readOnlyProperties":{
+		"methodVersionId":"93b20227-832b-4b26-a816-1d9b7826d086",
+		"methodId":"93b20227-832b-4b26-a816-1d9b7826d086",
+		"dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b",
+		"typeName":"Acquisition Method",
+		"folderId":"318e082c-cb86-4927-b6a4-4c74484c555f",
+		"createdDateTime":"2025-04-22T13:19:23.022+01:00",
+		"modifiedDateTime":null,
+		"version":1,
+		"modVersion":1,
+		"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd",
+		"createdByUsername":"skyline",
+		"createdByUserFullName":"line, sky",
+		"modifiedById":null,
+		"modifiedByUsername":null,
+		"modifiedByUserFullName":null,
+		"state":"PUBLISHED",
+		"locked":false
+		}
+	},
+	{
+		"name":"Test name - 638723814339757309","description":"Test description","readOnlyProperties":{"methodVersionId":"21c0d4e1-06d7-46af-a499-528377eaabb6","methodId":"21c0d4e1-06d7-46af-a499-528377eaabb6","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2025-01-13T16:10:17.67+00:00","modifiedDateTime":null,"version":1,"modVersion":1,"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd","createdByUsername":"skyline","createdByUserFullName":"line, sky","modifiedById":null,"modifiedByUsername":null,"modifiedByUserFullName":null,"state":"PUBLISHED","locked":false}},
+{"name":"Test name - 638723651784981870","description":"Test description","readOnlyProperties":{"methodVersionId":"945fca2b-298a-4bfd-a2e7-f6b1cdf97caa","methodId":"945fca2b-298a-4bfd-a2e7-f6b1cdf97caa","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2025-01-13T11:39:26.354+00:00","modifiedDateTime":null,"version":1,"modVersion":1,"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd","createdByUsername":"skyline","createdByUserFullName":"line, sky","modifiedById":null,"modifiedByUsername":null,"modifiedByUserFullName":null,"state":"PUBLISHED","locked":false}},
+{"name":"Test method 11 -monday","description":"from skyline 4","readOnlyProperties":{"methodVersionId":"11046613-54f0-4c4a-b78a-6436bc3666d6","methodId":"11046613-54f0-4c4a-b78a-6436bc3666d6","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2025-01-13T11:32:44.566+00:00","modifiedDateTime":null,"version":1,"modVersion":1,"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd","createdByUsername":"skyline","createdByUserFullName":"line, sky","modifiedById":null,"modifiedByUsername":null,"modifiedByUserFullName":null,"state":"PUBLISHED","locked":false}},
+{"name":"Test method 10 -monday","description":"from skyline 4","readOnlyProperties":{"methodVersionId":"8978e38a-13a3-4a28-a990-5465fae33145","methodId":"8978e38a-13a3-4a28-a990-5465fae33145","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2025-01-13T10:17:45.989+00:00","modifiedDateTime":null,"version":1,"modVersion":1,"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd","createdByUsername":"skyline","createdByUserFullName":"line, sky","modifiedById":null,"modifiedByUsername":null,"modifiedByUserFullName":null,"state":"PUBLISHED","locked":false}},
+{"name":"SkylineGrp ExpMthd 002","description":"from skyline","readOnlyProperties":{"methodVersionId":"50d9c900-e3ce-482e-94f5-e1db2fe2abc0","methodId":"50d9c900-e3ce-482e-94f5-e1db2fe2abc0","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2025-01-08T23:28:40.873+00:00","modifiedDateTime":null,"version":1,"modVersion":1,"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd","createdByUsername":"skyline","createdByUserFullName":"line, sky","modifiedById":null,"modifiedByUsername":null,"modifiedByUserFullName":null,"state":"PUBLISHED","locked":false}},
+{"name":"Skyline Group Export Method 001","description":"from skyline","readOnlyProperties":{"methodVersionId":"3bd22729-48c9-413b-abdd-2d4734e0f8c2","methodId":"3bd22729-48c9-413b-abdd-2d4734e0f8c2","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2025-01-08T23:07:11.337+00:00","modifiedDateTime":null,"version":1,"modVersion":1,"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd","createdByUsername":"skyline","createdByUserFullName":"line, sky","modifiedById":null,"modifiedByUsername":null,"modifiedByUserFullName":null,"state":"PUBLISHED","locked":false}},
+{"name":"Test method 9 -weds","description":"from skyline 4","readOnlyProperties":{"methodVersionId":"a2617867-571c-43b2-8c30-3795bcbfc7ee","methodId":"a2617867-571c-43b2-8c30-3795bcbfc7ee","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2025-01-08T17:13:20.664+00:00","modifiedDateTime":null,"version":1,"modVersion":1,"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd","createdByUsername":"skyline","createdByUserFullName":"line, sky","modifiedById":null,"modifiedByUsername":null,"modifiedByUserFullName":null,"state":"PUBLISHED","locked":false}},
+{
+	"name":"Test method 5 -tues",
+	"description":"from skyline 4",
+	"readOnlyProperties":{
+		"methodVersionId":"13cede55-fbc8-4e12-a904-e61483cecbf5",
+		"methodId":"13cede55-fbc8-4e12-a904-e61483cecbf5",
+		"dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b",
+		"typeName":"Acquisition Method",
+		"folderId":"318e082c-cb86-4927-b6a4-4c74484c555f",
+		"createdDateTime":"2024-10-29T14:38:01.951+00:00",
+		"modifiedDateTime":null,
+		"version":1,
+		"modVersion":1,
+		"createdById":"12613233-2b75-4f28-8cba-73b1cb57b8dd",
+		"createdByUsername":"skyline",
+		"createdByUserFullName":"line, sky",
+		"modifiedById":null,
+		"modifiedByUsername":null,
+		"modifiedByUserFullName":null,
+		"state":"PUBLISHED",
+		"locked":false
+	}
+},
+		
+{"name":"TQSMicroMeth1","description":null,"readOnlyProperties":{"methodVersionId":"0d18be18-fdb7-4a3b-9154-e180ea2d813f","methodId":"0d18be18-fdb7-4a3b-9154-e180ea2d813f","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2024-10-22T13:49:58.21+01:00","modifiedDateTime":"2024-10-16T09:37:28.133+01:00","version":1,"modVersion":1,"createdById":"4501a006-1d2d-4ce3-aab6-360a81048593","createdByUsername":"administrator","createdByUserFullName":"Administrator, waters_connect","modifiedById":"4501a006-1d2d-4ce3-aab6-360a81048593","modifiedByUsername":"administrator","modifiedByUserFullName":"Administrator, waters_connect","state":"PUBLISHED","locked":false}},
+{"name":"Precursor Optimization","description":null,"readOnlyProperties":{"methodVersionId":"3b3c2fc8-f98b-4a50-bf9b-6a6e95e390c5","methodId":"e736891a-1980-42f2-8f63-659c3851fecc","dataRecordTypeId":"17c19ce9-3bba-488a-975b-1e14aaaa0b9b","typeName":"Acquisition Method","folderId":"318e082c-cb86-4927-b6a4-4c74484c555f","createdDateTime":"2024-08-22T10:34:06.307+01:00","modifiedDateTime":"2023-01-27T15:13:19.787+00:00","version":2,"modVersion":2,"createdById":"c2c000f5-725f-4398-9edb-2a9a4dd733ca","createdByUsername":"admin","createdByUserFullName":"admin, admin","modifiedById":"4501a006-1d2d-4ce3-aab6-360a81048593","modifiedByUsername":"administrator","modifiedByUserFullName":"Administrator, waters_connect","state":"PUBLISHED","locked":false}}]

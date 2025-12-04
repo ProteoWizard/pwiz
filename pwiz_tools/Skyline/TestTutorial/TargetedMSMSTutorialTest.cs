@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.CommonMsData;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -519,8 +520,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.Height -= 15);    // Subsequent screenshots are graphs only
 
             ValidatePeakRanks(1, 176, true);
+            WaitForGraphs();
+            if (!Program.SkylineOffscreen)  // Tooltips are not rendered in offscreen mode
+                ValidatePeakTooltips();
 
-            if(AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
                 TestLibraryMatchPropertySheet();
 
             if (!AsSmallMoleculeMasses)
@@ -1257,7 +1261,9 @@ namespace pwiz.SkylineTestTutorial
                 { "RetentionTime", 46.81 },
                 { "Score", 0.0 },
                 { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
-                { "SpectrumCount", 118 }
+                { "SpectrumCount", 118 },
+                { "PeakCount", 425 },
+                { "TotalIC",(2.0977E+7).ToString("0.0000E+0",  CultureInfo.CurrentCulture) }
             };
             if (isSmallMolecules)
             {
@@ -1361,6 +1367,59 @@ namespace pwiz.SkylineTestTutorial
             var score = GetProperties(pg).Find("Score", true).GetValue(pg.SelectedObject);
             Assert.AreEqual(expectedScore.ToString(CultureInfo.CurrentCulture), score?.ToString());
             Assert.AreEqual(expectedScore, dlg.GraphItem.SpectrumInfo.Score);
+        }
+
+        private void ValidatePeakTooltips()
+        {
+            // Initializing localized expected values
+            var mzObserved = (951.6229f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
+            var mzMatched = (951.4782f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
+            var massError = -152.1f;
+            var massErrorString = string.Format(CultureInfo.CurrentCulture, Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError);
+            var testString = $"{GraphsResources.GraphSpectrum_ToolTip_mz}\t{mzObserved}\n" +
+                             $"{GraphsResources.GraphSpectrum_ToolTip_Intensity}\t3814516\n"+
+                             $"{GraphsResources.GraphSpectrum_ToolTip_Rank}\t1\n"+
+                             $"{GraphsResources.GraphSpectrum_ToolTip_MatchedIons}\t{GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass}\n"+
+                             $"y8\t{mzMatched}  {massErrorString}";
+            var testData = new Dictionary<Point, string>()
+            {
+                {new Point(191, 95), testString},
+                {new Point(169, 175), testString},
+                {new Point(190, 5), null}, // No peak here
+            };
+
+            foreach (var testPoint in testData)
+            {
+                RunUI(() =>
+                {
+                    SkylineWindow.GraphSpectrum.DisplayTooltip(
+                        new MouseEventArgs(MouseButtons.Left, 1, testPoint.Key.X, testPoint.Key.Y, 0));
+                });
+                if (testPoint.Value == null)
+                {
+                    // Make sure the tooltip is hidden if there is no peak under the mouse
+                    WaitForConditionUI(() => SkylineWindow.GraphSpectrum.ToolTip == null);
+                    continue;
+                }
+                // Wait for the tooltip to render
+                WaitForConditionUI(() =>
+                {
+                    if (SkylineWindow.GraphSpectrum.ToolTip?.Provider is GraphSpectrum.ToolTipImplementation provider)
+                    {
+                        return !string.IsNullOrEmpty(provider.ToolTipText);
+                    }
+                    return false;
+                });
+                RunUI(() =>
+                {
+                    if (SkylineWindow.GraphSpectrum.ToolTip?.Provider is GraphSpectrum.ToolTipImplementation provider)
+                    {
+                        // Uncomment to get updated expected values
+                        //Trace.WriteLine(provider.ToolTipText);
+                        Assert.AreEqual(testPoint.Value, provider.ToolTipText);
+                    }
+                });
+            }
         }
     }
 }

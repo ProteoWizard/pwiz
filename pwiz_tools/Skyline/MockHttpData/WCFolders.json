@@ -1,0 +1,60 @@
+{"name":"DataRoot","description":"Root data directory node","path":"DataRoot",
+"id":"00000000-0000-0000-0000-000000000001",
+"accessType":{"read":false,"write":false},
+"children":[
+	{
+	"name":"Company",
+	"description":"Company",
+	"path":"Company",
+	"id":"7c3a0fc7-3805-4c14-ab68-8da3e115702e",
+	"accessType":{"read":false,"write":false},
+	"children":[
+	{
+		"name":"Skyline",
+		"description":"Skyline",
+		"path":"Company/Skyline",
+		"id":"318e082c-cb86-4927-b6a4-4c74484c555f",
+		"accessType":{"read":true,"write":true},
+		"children":[
+		{
+			"name":"ExampleReadOnly",
+			"description":"ExampleReadOnly",
+			"path":"Company/Skyline/ExampleReadOnly",
+			"id":"b7508747-8633-4ec5-9f83-19c2b942970f",
+			"accessType":{"read":true,"write":false},
+			"children":[]
+		},
+		{
+			"name":"FolderA",
+			"description":"FolderA",
+			"path":"Company/Skyline/FolderA",
+			"id":"79c84651-7899-4c17-91d9-299757e52ed2",
+			"accessType":{"read":true,"write":true},
+			"children":[]
+		},
+		{
+			"name":"LargeInjections","description":
+			"LargeInjections",
+			"path":"Company/Skyline/LargeInjections",
+			"id":"c48d1a4d-ef4e-4d59-a6e8-a27066df5f89",
+			"accessType":{"read":true,"write":true},
+			"children":[]
+		},
+		{
+			"name":"reader_waters_testdata",
+			"description":"reader_waters_testdata",
+			"path":"Company/Skyline/reader_waters_testdata",
+			"id":"35ef4944-54d7-4c65-9125-2f08d933548c",
+			"accessType":{"read":true,"write":true},
+			"children":[]
+		},
+		{
+			"name":"SmallMolOptimization",
+			"description":"SmallMolOptimization",
+			"path":"Company/Skyline/SmallMolOptimization",
+			"id":"3616abca-1c42-4cf6-bc88-2931046c2165",
+			"accessType":{"read":true,"write":true},
+			"children":[]
+		}
+	]}]}]}
+

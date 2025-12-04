@@ -512,6 +512,9 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
+    <Compile Include="FileUI\WatersConnectSelectMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\OpenFileDialogNE.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -544,6 +547,12 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\WatersConnectSaveMethodFileDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\WatersConnectMethodFileDialog.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="FileUI\PublishDocumentDlgArdia.cs">
       <SubType>Form</SubType>
@@ -646,6 +655,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\WatersConnect\MethodModel.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
@@ -765,7 +775,7 @@
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
-  <Compile Include="Model\Databinding\SublistPaths.cs" />
+    <Compile Include="Model\Databinding\SublistPaths.cs" />
     <Compile Include="Controls\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Controls\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\NormalizationMethodDataGridViewColumn.cs" />

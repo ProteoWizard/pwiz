@@ -70,5 +70,20 @@ namespace pwiz.Skyline.Properties
                 new XmlElementHelper<WatersConnectAccount>(),
             };
         }
+
+        /// <summary>
+        /// Retrieves the remote account for the given url.
+        /// </summary>
+        /// <param name="remoteUrl">Server and username from this url are used to search for the account in the list.</param>
+        /// <returns>Matching account or null if nothing is matching.</returns>
+        public RemoteAccount GetRemoteAccount(RemoteUrl remoteUrl)
+        {
+            return
+                this.FirstOrDefault(
+                    remoteAccount =>
+                        Equals(remoteAccount.ServerUrl, remoteUrl.ServerUrl) &&
+                        Equals(remoteAccount.Username, remoteUrl.Username));
+        }
+
     }
 }

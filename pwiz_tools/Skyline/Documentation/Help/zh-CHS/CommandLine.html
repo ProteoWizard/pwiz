@@ -252,13 +252,13 @@ td {
 </table>
 <div class="RowType">正在导出本机仪器方法</div>
 <table>
-<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Waters Xevo TQ | Waters Quattro Premier&gt;</td><td>导出方法。导出方法时必须选择此选项，并且没有默认值。此选项不能与“<nobr>--exp-isolationlist-instrument</nobr>”或“<nobr>--exp-translist-instrument</nobr>”参数一起使用，因为您无法同时导出方法和分离/离子对列表。</td></tr>
+<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Thermo Quantiva | Thermo Altis | Thermo Stellar | Thermo Exploris | Thermo Eclipse | Thermo Fusion | Thermo Fusion Lumos | Waters TQ (MassLynx) | Waters TQ (waters_connect) | Waters Quattro Premier&gt;</td><td>导出方法。导出方法时必须选择此选项，并且没有默认值。此选项不能与“<nobr>--exp-isolationlist-instrument</nobr>”或“<nobr>--exp-translist-instrument</nobr>”参数一起使用，因为您无法同时导出方法和分离/离子对列表。</td></tr>
 <tr><td><nobr>--exp-template</nobr>=路径/到/文件</td><td>方法模板的路径。可以是文件或目录，具体取决于您的仪器。导出方法时必须选择此选项。</td></tr>
 </table>
 <div class="RowType">方法和离子对列表选项</div>
 <table>
 <tr><td><nobr>--exp-file</nobr>=路径/到/文件</td><td>导出方法或离子对列表文件的路径（或目录）。导出方法和离子对列表时必须选择此选项。</td></tr>
-<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets&gt;</td><td>将单个方法划分为多次进样所用的策略。默认为“单个”。默认为“单个”。</td></tr>
+<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets | WcDecide&gt;</td><td>将单个方法划分为多次进样所用的策略。默认为“单个”。默认为“单个”。</td></tr>
 <tr><td><nobr>--exp-method-type</nobr>=<br/>&lt;Standard | Scheduled | Triggered&gt;</td><td>设置标准、预定或触发方法。默认为“标准”。</td></tr>
 <tr><td><nobr>--exp-max-trans</nobr>=&lt;名称&gt;</td><td>导出策略“蛋白质”和“存储桶”的每次进样的最大离子对数目，或预定方法的最大同时离子对数目。默认为 100。</td></tr>
 <tr><td><nobr>--exp-optimizing</nobr>=&lt;CE | DP&gt;</td><td>导出包含额外离子对的方法，以查找最优碰撞能量或去簇电压。</td></tr>
