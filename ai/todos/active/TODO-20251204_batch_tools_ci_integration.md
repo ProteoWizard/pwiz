@@ -87,3 +87,37 @@ Guidelines:
 ## Related TODOs
 - `TODO-batch_tools_consolidate_test_util.md` (shared skip helpers).
 - `TODO-panorama_json_typed_models.md` (typed models reduce fragile auth-related parsing).
+
+## Progress Log
+
+### 2025-12-04: Initial Setup and Jamfile Integration
+
+**Branch Setup**
+- Created feature branch `Skyline/work/20251204_batch_tools_ci_integration` from master
+- Copied TODO from ai-context branch to active directory
+- Updated TODO header with branch information
+
+**Jamfile.jam Changes** - [Jamfile.jam:85,213-239,562-585](pwiz_tools/Skyline/Jamfile.jam)
+- ✅ Added AssemblyInfo generation for AutoQC (line 85)
+- ✅ Added `do_auto_qc` rule and actions (lines 213-225)
+- ✅ Added `do_auto_qc_test` rule and actions (lines 227-239)
+- ✅ Added `AutoQC.exe` make target (lines 562-572)
+- ✅ Added `AutoQCTest` make target (lines 574-585)
+
+**Key Findings**:
+- SkylineBatch already integrated in Jamfile (confirmed)
+- AutoQC now follows identical pattern to SkylineBatch
+- Both use `vstest.console.exe` for test execution
+- Targets marked `explicit` - only build when requested (no impact on default Skyline build)
+- PANORAMAWEB_PASSWORD environment variable will be configured by TeamCity admin
+
+**Revised Scope** (per discussion with developer):
+- ❌ Skip mechanism NOT needed - TeamCity will have PANORAMAWEB_PASSWORD configured
+- ✅ Focus on Jamfile targets and TeamCity execution script
+- ✅ Tests will run with full credentials once environment variable is set
+
+**Next Steps**:
+1. Test AutoQC build locally: `bjam AutoQC.exe`
+2. Test AutoQCTest locally: `bjam AutoQCTest` (requires PANORAMAWEB_PASSWORD)
+3. Document TeamCity execution script for batch tools
+4. Investigate TestEnableInvalid issue if time permits
