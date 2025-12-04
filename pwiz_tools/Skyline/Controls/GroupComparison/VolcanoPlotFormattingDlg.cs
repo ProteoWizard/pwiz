@@ -25,7 +25,6 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;

@@ -31,6 +31,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             IsotopeLabelType labelType,
             int? msLevel, IDictionary<Replicate, ReplicateRow> replicateResults)
         {
+            _groupComparisonDef = groupComparisonDef;
             Protein = protein;
             Peptide = peptide;
             IsotopeLabelType = labelType;

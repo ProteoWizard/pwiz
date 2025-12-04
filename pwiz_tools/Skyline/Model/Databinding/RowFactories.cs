@@ -147,17 +147,17 @@ namespace pwiz.Skyline.Model.Databinding
         {
             if (Equals(viewName.GroupId, ViewGroup.BUILT_IN.Id))
             {
-                throw new ArgumentException("Built in reports cannot be exported here");
+                throw new ArgumentException(DatabindingResources.RowFactories_ExportReport_Built_in_reports_cannot_be_exported_here);
             }
             var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(viewName.GroupId);
             var viewSpec = viewSpecList.GetView(viewName.Name);
             if (viewSpec == null)
             {
-                throw new ArgumentException(string.Format("There is no report named '{0}' in the group '{1}'", viewName.Name, viewName.GroupId));
+                throw new ArgumentException(string.Format(DatabindingResources.RowFactories_ExportReport_There_is_no_report_named___0___in_the_group___1__, viewName.Name, viewName.GroupId));
             }
             if (!_factoriesByName.TryGetValue(viewSpec.RowSource, out var factory))
             {
-                throw new ArgumentException(string.Format("The row type '{0}' cannot be exported",
+                throw new ArgumentException(string.Format(DatabindingResources.RowFactories_ExportReport_The_row_type___0___cannot_be_exported_,
                     viewSpec.RowSource));
             }
 

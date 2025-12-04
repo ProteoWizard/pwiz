@@ -21,7 +21,6 @@ using System;
 using System.Drawing;
 using System.Globalization;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Proteome;
