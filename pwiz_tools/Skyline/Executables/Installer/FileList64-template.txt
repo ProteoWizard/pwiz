@@ -1,4 +1,4 @@
-﻿This list of files was copied from
+This list of files was copied from
 Skyline project properties > Publish > Application Files
 You can manually copy this list again and if it's changed you will know that you need to update the files in "Product.wxs"
 

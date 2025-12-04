@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -16,7 +16,6 @@ namespace AutoQC
         // Allows users to correct file paths, R versions, and Skyline types of an invalid configuration.
 
         private readonly AutoQcConfig _invalidConfig;
-        private readonly AutoQcConfigManager _configManager;
         private readonly IMainUiControl _mainControl;
 
         private string _lastInputPath; // the last user-entered file or folder path
@@ -30,7 +29,6 @@ namespace AutoQC
             InitializeComponent();
             State = state;
             _invalidConfig = invalidConfig;
-            _configManager = configManager;
             _mainControl = mainControl;
             _oldRoot = string.Empty;
             _newRoot = string.Empty; 

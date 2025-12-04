@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,8 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1154,6 +1152,12 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             ShowAnimate(X, Y, animate); // Not really animated anymore, because of GDI handle leak on Windows 10
         }
+
+        #region Test Support
+
+        public ITipProvider Provider => _tipProvider;
+
+        #endregion
     }
 
     internal class RenderTools : IDisposable
@@ -1199,20 +1203,20 @@ namespace pwiz.Skyline.Controls.SeqNode
         public const int COL_SPACING = 2;
         public const int TABLE_SPACING = 6;
 
-        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign)
+        public void AddDetailRow(string name, string value, RenderTools rt, StringAlignment dataAlign, bool allBold = false)
         {
             var row = new RowDesc
                 {
                     new CellDesc(name, rt) { Font = rt.FontBold },
-                    new CellDesc(value, rt) { Align = dataAlign }
+                    new CellDesc(value, rt) { Align = dataAlign, Font = allBold ? rt.FontBold : rt.FontNormal}
                 };
             row.ColumnSpacing = COL_SPACING;
             Add(row);
         }
 
-        public void AddDetailRow(string name, string value, RenderTools rt)
+        public void AddDetailRow(string name, string value, RenderTools rt, bool allBold = false)
         {
-            AddDetailRow(name, value, rt, StringAlignment.Near);
+            AddDetailRow(name, value, rt, StringAlignment.Near, allBold);
         }
 
         private const string X80 =
@@ -1360,50 +1364,5 @@ namespace pwiz.Skyline.Controls.SeqNode
             get { return _sizeF.Height; }
             set { _sizeF.Height = value; }
         }
-    }
-
-    public class DisplaySettings
-    {
-        internal readonly bool _showBestReplicate;
-        internal readonly int _resultsIndex;
-
-        public DisplaySettings(NormalizedValueCalculator normalizedValueCalculator, PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, NormalizeOption normalizeOption)
-        {
-            NormalizedValueCalculator = normalizedValueCalculator;
-            _showBestReplicate = showBestReplicate;
-            _resultsIndex = resultsIndex;
-            NormalizeOption = normalizeOption;
-            NodePep = nodePep;
-        }
-         
-        public DisplaySettings(DisplaySettings settings, PeptideDocNode nodePep) 
-        {
-            _showBestReplicate = settings._showBestReplicate;
-            _resultsIndex = settings._resultsIndex;
-            NormalizeOption = settings.NormalizeOption;
-            NodePep = nodePep;
-        }
-
-        public PeptideDocNode NodePep { get; private set; }
-
-        public int ResultsIndex
-        {
-            get
-            {
-                return _showBestReplicate && NodePep != null && NodePep.BestResult != -1 ? NodePep.BestResult : _resultsIndex;
-            }
-        }
-
-        public NormalizeOption NormalizeOption { get; private set; }
-
-        public NormalizationMethod NormalizationMethod
-        {
-            get
-            {
-                return NormalizedValueCalculator.NormalizationMethodForMolecule(NodePep, NormalizeOption);
-            }
-        }
-
-        public NormalizedValueCalculator NormalizedValueCalculator { get; private set; }
     }
 }

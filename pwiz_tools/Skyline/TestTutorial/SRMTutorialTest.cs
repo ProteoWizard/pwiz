@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -258,10 +258,10 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg.DwellTime = 20;
             });
             PauseForScreenShot("Export Transition List");
-            var declusteringWarningDlg = ShowDialog<MultiButtonMsgDlg>(
+            var declusteringWarningDlg = ShowDialog<MessageDlg>(
                 () => exportDlg.OkDialog(GetTestPath("Tutorial-2_TransitionList\\SRMcourse_20140210_MtbProteomeLib_TransList.csv")));
             PauseForScreenShot("Decluster Window");
-            OkDialog(declusteringWarningDlg, declusteringWarningDlg.Btn1Click);
+            OkDialog(declusteringWarningDlg, declusteringWarningDlg.ClickYes);
             WaitForClosedForm(exportDlg);
 
             //Tutorial 3
@@ -312,9 +312,9 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg2.DwellTime = 20;
                 exportDlg2.IgnoreProteins = true;
             });
-            var declusteringWarningDlg2 = ShowDialog<MultiButtonMsgDlg>(() =>
+            var declusteringWarningDlg2 = ShowDialog<MessageDlg>(() =>
                 exportDlg2.OkDialog(GetTestPath("Tutorial-3_Library\\SRMcourse_20140210_MtbProteomeLib_hDP_TransList.csv")));
-            OkDialog(declusteringWarningDlg2, declusteringWarningDlg2.Btn1Click);
+            OkDialog(declusteringWarningDlg2, declusteringWarningDlg2.ClickYes);
             WaitForClosedForm(exportDlg2);
 
             //Tutorial 4-A
@@ -367,9 +367,9 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg2.DwellTime = 20;
             });
             PauseForScreenShot("Export Transition List");
-            var defaultWaringDlg = ShowDialog<MultiButtonMsgDlg>(
+            var defaultWaringDlg = ShowDialog<MessageDlg>(
                 () => exportDlg3.OkDialog(GetTestPath("Tutorial-4_Parameters\\SRMcourse_20140211_Parameters_CEO.csv")));
-            OkDialog(defaultWaringDlg, defaultWaringDlg.Btn1Click);
+            OkDialog(defaultWaringDlg, defaultWaringDlg.ClickYes);
             WaitForClosedForm(exportDlg3);
 
             var paths = new string[4];

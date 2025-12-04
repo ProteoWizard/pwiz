@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -90,11 +90,6 @@ namespace pwiz.Skyline.Util
         bool IsDocumentChanged(SrmDocument docOrig);
 
         /// <summary>
-        /// Shows a dialog box on the right thread, parented to the progress form
-        /// </summary>
-        DialogResult ShowDialog(Func<IWin32Window, DialogResult> show);
-
-        /// <summary>
         /// Convenience function which calculates progress percentage and throws
         /// an OperationCanceledOperation if the user has canceled.
         /// </summary>
@@ -104,10 +99,11 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
-    /// Exposes <see cref="IProgressMonitor"/> for an action that requires the interface,
+    /// Exposes <see cref="IProgressMonitorWithCancellationToken"/> for an action that requires the
+    /// <see cref="IProgressMonitor" /> interface but may benefit from having access to a CancellationToken,
     /// given a <see cref="ILongWaitBroker"/>.
     /// </summary>
-    public sealed class ProgressWaitBroker : IProgressMonitor
+    public sealed class ProgressWaitBroker : IProgressMonitorWithCancellationToken
     {
         private readonly Action<IProgressMonitor> _performWork;
         private ILongWaitBroker _broker;

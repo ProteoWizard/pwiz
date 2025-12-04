@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,12 +32,27 @@ namespace pwiz.CommonMsData.RemoteApi
         {
             username,
             password,
-            server_url
+            server_url,
+            alias
         }
 
         public abstract RemoteSession CreateSession();
         public abstract RemoteUrl GetRootUrl();
 
+        private string _accountAlias;
+        public string AccountAlias {
+            get
+            {
+                if (string.IsNullOrEmpty(_accountAlias))
+                    return ServerUrl;
+                return _accountAlias;
+            }
+            set
+            {
+                _accountAlias = value;
+            }
+        } 
+        public bool HasAlias => !string.IsNullOrEmpty(_accountAlias);
         public bool CanHandleUrl(RemoteUrl remoteUrl)
         {
             if (remoteUrl.AccountType != AccountType)
@@ -105,12 +120,14 @@ namespace pwiz.CommonMsData.RemoteApi
             }
 
             ServerUrl = (string) xElement.Attribute(ATTR.server_url.ToString());
+            AccountAlias = (string)xElement.Attribute(ATTR.alias.ToString()) ?? string.Empty;
         }
 
         public virtual void WriteXml(XmlWriter writer)
         {
             writer.WriteAttributeIfString2(ATTR.server_url, ServerUrl);
             writer.WriteAttributeIfString2(ATTR.username, Username);
+            writer.WriteAttributeIfString2(ATTR.alias, AccountAlias);
             if (!string.IsNullOrEmpty(Password))
             {
                 writer.WriteAttributeString2(ATTR.password, CommonTextUtil.EncryptString(Password));

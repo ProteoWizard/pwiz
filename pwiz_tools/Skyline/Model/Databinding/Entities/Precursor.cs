@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -498,7 +498,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             // Consider: maybe change TransitionGroupDocNode.ToString() to be this as well:
-            return DocNode.TransitionGroup.GetLabel(DocNode.PrecursorMz, string.Empty);
+            return TransitionGroupDocNode.GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz, string.Empty);
         }
 
         [Obsolete]

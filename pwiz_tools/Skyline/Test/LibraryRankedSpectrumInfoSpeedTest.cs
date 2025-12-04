@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -104,12 +104,12 @@ namespace pwiz.SkylineTest
                 }
                 var endTime = DateTime.UtcNow;
 
-                Console.Out.WriteLine("Time to get LibraryRankedSpectrumInfo for {0} {1} times: {2}", tuple.Item2, repeatCount, endTime.Subtract(startTime));
+                // Console.Out.WriteLine("Time to get LibraryRankedSpectrumInfo for {0} {1} times: {2}", tuple.Item2, repeatCount, endTime.Subtract(startTime));
                 Assert.IsNotNull(libraryRankedSpectrum);
                 var rankedMzs = libraryRankedSpectrum.PeaksRanked.Select(peak=>Math.Round(peak.ObservedMz, 4)).Take(3).ToArray();
-                Console.Out.WriteLine("{0} matched peaks. First {1}/{2} ranked peaks: {{ {3} }}",
-                    libraryRankedSpectrum.PeaksMatched.Count(), rankedMzs.Length,
-                    libraryRankedSpectrum.PeaksRanked.Count(), string.Join(",", rankedMzs));
+                // Console.Out.WriteLine("{0} matched peaks. First {1}/{2} ranked peaks: {{ {3} }}",
+                //     libraryRankedSpectrum.PeaksMatched.Count(), rankedMzs.Length,
+                //     libraryRankedSpectrum.PeaksRanked.Count(), string.Join(",", rankedMzs));
                 if (!IsRecording)
                 {
                     CollectionAssert.AreEqual(tuple.Item4, rankedMzs);

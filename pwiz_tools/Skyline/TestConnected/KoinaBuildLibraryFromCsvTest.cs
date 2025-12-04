@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
@@ -21,6 +21,12 @@ namespace pwiz.SkylineTestConnected
     public class KoinaBuildLibraryFromCsvTest : AbstractUnitTestEx
     {
         const string TEST_ZIP_PATH = @"Test\PredictionBuildLibraryFromCsvTest.zip";
+
+        // Tolerance values for comparing prediction results
+        private const double TOLERANCE_PRECURSOR_MZ = 1e-8;
+        private const double TOLERANCE_RETENTION_TIME = 2.5e-2; // 1e-2; Adjusted upwards due to Prosit RT model changes
+        private const double TOLERANCE_PEAK_MZ = 1e-5;
+        private const double TOLERANCE_PEAK_INTENSITY = 1e-2;
 
         [TestMethod, NoParallelTesting(TestExclusionReason.DOCKER_ROOT_CERTS)]
         public void TestKoinaBuildLibraryFromCsv()
@@ -262,9 +268,9 @@ namespace pwiz.SkylineTestConnected
                             string testTag = $"Testing model {modelsSuffix} for peptide {key.ModifiedSequence}+{key.Charge}";
 
                             var expected = predictionTests.First(t => t.PeptideModSeq == key.ModifiedSequence);
-                            Assert.AreEqual(expected.PrecursorMz, precursorMz, 1e-8, $"{testTag}: PrecursorMz not equal");
+                            Assert.AreEqual(expected.PrecursorMz, precursorMz, TOLERANCE_PRECURSOR_MZ, $"{testTag}: PrecursorMz not equal");
                             Assert.AreEqual(expected.PrecursorCharge, key.Charge, $"{testTag}: PrecursorCharge not equal");
-                            Assert.AreEqual(expected.RetentionTime, spectrum.RetentionTime.Value, 1e-2, $"{testTag}: RetentionTime not equal");
+                            Assert.AreEqual(expected.RetentionTime, spectrum.RetentionTime.Value, TOLERANCE_RETENTION_TIME, $"{testTag}: RetentionTime not equal");
 
                             if (!comparePeaks)
                                 continue;
@@ -275,8 +281,8 @@ namespace pwiz.SkylineTestConnected
                             {
                                 var expectedPeak = expected.Peaks[i];
                                 var actualPeak = actualPeaks[i];
-                                Assert.AreEqual(expectedPeak.Mz, actualPeak.Mz, 1e-5, $"{testTag}: peak[{i}].Mz not equal");
-                                Assert.AreEqual(expectedPeak.Intensity, actualPeak.Intensity, 1e-2, $"{testTag}: peak[{i}].Intensity not equal");
+                                Assert.AreEqual(expectedPeak.Mz, actualPeak.Mz, TOLERANCE_PEAK_MZ, $"{testTag}: peak[{i}].Mz not equal");
+                                Assert.AreEqual(expectedPeak.Intensity, actualPeak.Intensity, TOLERANCE_PEAK_INTENSITY, $"{testTag}: peak[{i}].Intensity not equal");
                             }
                         }
                     }

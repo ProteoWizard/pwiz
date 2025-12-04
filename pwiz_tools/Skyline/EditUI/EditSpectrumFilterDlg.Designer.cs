@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.EditUI
+namespace pwiz.Skyline.EditUI
 {
     partial class EditSpectrumFilterDlg
     {

@@ -1,3 +1,5 @@
+using System;
+
 namespace pwiz.Skyline.FileUI
 {
     partial class BaseFileDialogNE
@@ -120,6 +122,8 @@ namespace pwiz.Skyline.FileUI
             this.sourcePathTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.sourcePathTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.sourcePathTextBox.Name = "sourcePathTextBox";
+            this.sourcePathTextBox.TextChanged += new System.EventHandler(this.sourcePathTextBox_TextChanged);
+            this.sourcePathTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.sourcePathTextBox_KeyPress);
             this.sourcePathTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.sourcePathTextBox_KeyUp);
             // 
             // labelSourcePath
@@ -245,8 +249,14 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageList.Images.SetKeyName(6, "OpticalDrive.png");
             this.lookInImageList.Images.SetKeyName(7, "NetworkDrive.png");
             this.lookInImageList.Images.SetKeyName(8, "folder.png");
-            this.lookInImageList.Images.SetKeyName(9, "DataProcessing.png");
+            this.lookInImageList.Images.SetKeyName(9, "MassSpecFile.png");
             this.lookInImageList.Images.SetKeyName(10, "File.png");
+            this.lookInImageList.Images.SetKeyName(11, "MethodFile.png");
+            this.lookInImageList.Images.SetKeyName(12, "noAccessFolder.png");
+            this.lookInImageList.Images.SetKeyName(13, "ReadOnlyFolder.png");
+            this.lookInImageList.Images.SetKeyName(14, "ReadWriteFolder.png");
+            this.lookInImageList.Images.SetKeyName(15, "Blank.bmp");
+            this.lookInImageList.Images.SetKeyName(16, "FolderSampleSet.png");
             // 
             // recentDocumentsButton
             // 
@@ -297,9 +307,14 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageListSmall.Images.SetKeyName(6, "OpticalDrive.png");
             this.lookInImageListSmall.Images.SetKeyName(7, "NetworkDrive.png");
             this.lookInImageListSmall.Images.SetKeyName(8, "Folder.png");
-            this.lookInImageListSmall.Images.SetKeyName(9, "FolderSampleSet.png");
-            this.lookInImageListSmall.Images.SetKeyName(10, "MassSpecFile.png");
-            this.lookInImageListSmall.Images.SetKeyName(11, "UnknownFile.png");
+            this.lookInImageListSmall.Images.SetKeyName(9, "MassSpecFile.png");
+            this.lookInImageListSmall.Images.SetKeyName(10, "UnknownFile.png");
+            this.lookInImageListSmall.Images.SetKeyName(11, "MethodFile.png");
+            this.lookInImageListSmall.Images.SetKeyName(12, "noAccessFolder.png");
+            this.lookInImageListSmall.Images.SetKeyName(13, "ReadOnlyFolder.png");
+            this.lookInImageListSmall.Images.SetKeyName(14, "ReadWriteFolder.png");
+            this.lookInImageListSmall.Images.SetKeyName(15, "Blank.bmp");
+            this.lookInImageListSmall.Images.SetKeyName(16, "FolderSampleSet.png");
             // 
             // BaseFileDialogNE
             // 
@@ -325,6 +340,7 @@ namespace pwiz.Skyline.FileUI
             this.Name = "BaseFileDialogNE";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.this_KeyDown);
             this.navToolStrip.ResumeLayout(false);
             this.navToolStrip.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
@@ -336,7 +352,7 @@ namespace pwiz.Skyline.FileUI
         #endregion
         private System.Windows.Forms.ComboBox lookInComboBox;
         private System.Windows.Forms.Label labelLookIn;
-        private System.Windows.Forms.Label labelSourcePath;
+        protected System.Windows.Forms.Label labelSourcePath;
         private System.Windows.Forms.ComboBox sourceTypeComboBox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button cancelButton;

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 using System.Resources;
 
@@ -28,6 +28,10 @@ namespace pwiz.Skyline.Model
         [Category("MatchInfo")] public double? Score { get; set; }
         [Category("MatchInfo")] public string ScoreType { get; set; }
         [Category("MatchInfo")] public int? SpectrumCount { get; set; }
+        [Category("SpectrumInfo")] public string PeakCount { get; set; }
+        [Category("SpectrumInfo")] public string MirrorPeakCount { get; set; }
+        [Category("SpectrumInfo")] public string TotalIC { get; set; }
+        [Category("SpectrumInfo")] public string MirrorTotalIC { get; set; }
         [Category("MatchInfo")] public string KoinaDotpMatch { get; set; }
         [Category("MatchInfo")] public string KoinaDotpMatchFull { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -8,7 +8,7 @@ namespace SkylineBatchTest
 
 
     [TestClass]
-    public class ConfigManagerThreadingTest
+    public class ConfigManagerThreadingTest : AbstractSkylineBatchUnitTest
     {
         
         [TestMethod]
@@ -20,7 +20,7 @@ namespace SkylineBatchTest
         
         public void ThreadingAdd()
         {
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             var addingConfig = TestUtils.GetTestConfig("new");
             Exception firstThreadException = null;
             var threadStart = new ThreadStart(() =>
@@ -52,7 +52,7 @@ namespace SkylineBatchTest
         
         public void ThreadingMove()
         {
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             configManager.SelectConfig(2);
             Exception firstThreadException = null;
             bool movedBoth = true;
@@ -96,7 +96,7 @@ namespace SkylineBatchTest
         
         public void ThreadingRemove()
         {
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             configManager.SelectConfig(2);
             Exception firstThreadException = null;
             bool deletedBoth = true;
@@ -140,7 +140,7 @@ namespace SkylineBatchTest
         
         public void ThreadingReplace()
         {
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             configManager.SelectConfig(0);
             var random = new Random();
             var newConfig = TestUtils.GetTestConfig("new");

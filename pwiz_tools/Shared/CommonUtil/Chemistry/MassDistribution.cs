@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -70,21 +70,22 @@ namespace pwiz.Common.Chemistry
         public MassDistribution Add(MassDistribution rhs)
         {
             var arrayCount = PartialAdd(0, Count, rhs);
-            return ApplyBinning(arrayCount.Item1, arrayCount.Item2);
+            return ApplyBinning(arrayCount);
         }
 
-        private Tuple<KeyValuePair<double, double>[], int> PartialAdd(int start, int end, MassDistribution rhs)
+        private MassFrequencyCount PartialAdd(int start, int end, MassDistribution rhs)
         {
             if (end == start + 1)
             {
                 var myMass = _masses[start];
                 var myFrequency = _frequencies[start];
-                var array = new KeyValuePair<double, double>[rhs.Count];
+                var array = new (double mass, double frequency)[rhs.Count];
                 for (int i = 0; i < rhs.Count; i++)
                 {
-                    array[i] = new KeyValuePair<double, double>(myMass + rhs._masses[i], myFrequency * rhs._frequencies[i]);
+                    array[i] = (myMass + rhs._masses[i], myFrequency * rhs._frequencies[i]);
                 }
-                return Tuple.Create(array, array.Length);
+
+                return new MassFrequencyCount(array);
             }
             var mid = (start + end) / 2;
             var left = PartialAdd(start, mid, rhs);
@@ -92,21 +93,20 @@ namespace pwiz.Common.Chemistry
             return Merge(left, right);
         }
 
-        private static Tuple<KeyValuePair<double, double>[], int> Merge(Tuple<KeyValuePair<double, double>[], int> list1,
-            Tuple<KeyValuePair<double, double>[], int> list2)
+        private static MassFrequencyCount Merge(MassFrequencyCount list1, MassFrequencyCount list2)
         {
             int resultCount = 0;
-            var resultArray = new KeyValuePair<double, double>[list1.Item2 + list2.Item2];
+            var resultArray = new(double mass, double frequency)[list1.Count + list2.Count];
             int index1 = 0;
             int index2 = 0;
             while (true)
             {
                 int compare;
-                if (index1 < list1.Item2)
+                if (index1 < list1.Count)
                 {
-                    if (index2 < list2.Item2)
+                    if (index2 < list2.Count)
                     {
-                        compare = list1.Item1[index1].Key.CompareTo(list2.Item1[index2].Key);
+                        compare = list1.MassFrequencies[index1].mass.CompareTo(list2.MassFrequencies[index2].mass);
                     }
                     else
                     {
@@ -115,7 +115,7 @@ namespace pwiz.Common.Chemistry
                 }
                 else
                 {
-                    if (index2 < list2.Item2)
+                    if (index2 < list2.Count)
                     {
                         compare = 1;
                     }
@@ -126,15 +126,16 @@ namespace pwiz.Common.Chemistry
                 }
                 if (compare < 0)
                 {
-                    resultArray[resultCount] = list1.Item1[index1];
+                    resultArray[resultCount] = list1.MassFrequencies[index1];
                 }
                 else if (compare > 0)
                 {
-                    resultArray[resultCount] = list2.Item1[index2];
+                    resultArray[resultCount] = list2.MassFrequencies[index2];
                 }
                 else
                 {
-                    resultArray[resultCount] = new KeyValuePair<double, double>(list1.Item1[index1].Key, list1.Item1[index1].Value + list2.Item1[index2].Value);
+                    resultArray[resultCount] = (list1.MassFrequencies[index1].mass,
+                        list1.MassFrequencies[index1].frequency + list2.MassFrequencies[index2].frequency);
                 }
                 resultCount++;
                 if (compare <= 0)
@@ -146,7 +147,7 @@ namespace pwiz.Common.Chemistry
                     index2++;
                 }
             }
-            return Tuple.Create(resultArray, resultCount);
+            return new MassFrequencyCount(resultArray, resultCount);
         }
 
         public Dictionary<double, double> ToDictionary()
@@ -188,8 +189,10 @@ namespace pwiz.Common.Chemistry
             return result;
         }
 
-        private MassDistribution ApplyBinning(KeyValuePair<double, double>[] array, int count)
+        private MassDistribution ApplyBinning(MassFrequencyCount massFrequencyCount)
         {
+            int count = massFrequencyCount.Count;
+            var array = massFrequencyCount.MassFrequencies;
             List<double> newMasses = new List<double>(count);
             List<double> newFrequencies = new List<double>(count);
             // Filter masses by resolution and abundance
@@ -198,11 +201,11 @@ namespace pwiz.Common.Chemistry
             double totalAbundance = 0;
             for (int i = 0; i < count; i++)
             {
-                var frequency = array[i].Value;
+                var frequency = array[i].frequency;
                 if (frequency.Equals(0.0))
                     continue;
 
-                var mass = array[i].Key;
+                var mass = array[i].mass;
 
                 // If the delta between the next mass and the current center of mass is
                 // greater than the mass resolution
@@ -402,10 +405,25 @@ namespace pwiz.Common.Chemistry
         public static MassDistribution NewInstance(IEnumerable<KeyValuePair<double,double>> values, 
             double massResolution, double minimumAbundance)
         {
-            var array = values.ToArray();
-            Array.Sort(array, (kvp1, kvp2)=>kvp1.Key.CompareTo(kvp2.Key));
+            var array = new MassFrequencyCount(values.OrderBy(value=>value.Key).Select(value=>(value.Key, value.Value)).ToArray());
             return new MassDistribution(massResolution, minimumAbundance)
-                .ApplyBinning(array, array.Length);
+                .ApplyBinning(array);
+        }
+
+        private class MassFrequencyCount
+        {
+            public MassFrequencyCount((double mass, double frequency)[] massFrequencies) : this(massFrequencies, massFrequencies.Length)
+            {
+            }
+
+            public MassFrequencyCount((double mass, double frequency)[] massFrequencies, int count)
+            {
+                MassFrequencies = massFrequencies;
+                Count = count;
+            }
+
+            public readonly (double mass, double frequency)[] MassFrequencies;
+            public readonly int Count;
         }
     }
 }

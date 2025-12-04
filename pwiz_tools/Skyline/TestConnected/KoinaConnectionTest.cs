@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,6 +36,8 @@ namespace pwiz.SkylineTestConnected
     [TestClass]
     public class KoinaConfigTest : AbstractUnitTestEx
     {
+        private const int RETRY_COUNT = 3;
+
         /// <summary>
         /// Tests that a connection can successfully be made to the server specified in KoinaConfig.GetKoinaConfig().
         /// </summary>
@@ -54,21 +56,29 @@ namespace pwiz.SkylineTestConnected
 
         public bool TestClient(KoinaPredictionClient client)
         {
-            var pingPep = new Peptide(@"PING");
-            var peptide = new PeptideDocNode(pingPep);
-            var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
-                new TransitionDocNode[0]);
-            var input = new KoinaIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
-            var intensityModel = KoinaIntensityModel.GetInstance(KoinaIntensityModel.Models.First());
-            try
+            for(int i=0; i < RETRY_COUNT; i++)
             {
-                intensityModel.PredictSingle(client, SrmSettingsList.GetDefault(), input, CancellationToken.None);
-                return true;
+                var pingPep = new Peptide(@"PING");
+                var peptide = new PeptideDocNode(pingPep);
+                var precursor = new TransitionGroupDocNode(new TransitionGroup(pingPep, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
+                    new TransitionDocNode[0]);
+                var input = new KoinaIntensityModel.PeptidePrecursorNCE(peptide, precursor, IsotopeLabelType.light, 32);
+                var intensityModel = KoinaIntensityModel.GetInstance(KoinaIntensityModel.Models.First());
+                try
+                {
+                    intensityModel.PredictSingle(client, SrmSettingsList.GetDefault(), input, CancellationToken.None);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex.ToString());
+                }
+
+                // Wait a bit and try again
+                Thread.Sleep(1000);
             }
-            catch (Exception)
-            {
-                return false;
-            }
+
+            return false;
         }
 
         /// <summary>

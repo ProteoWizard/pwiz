@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -74,7 +74,7 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Creates a <see cref="object.MemberwiseClone"/> of a supplied
+        /// Creates an <see cref="ImmutableClone"/> of a supplied
         /// <see cref="Immutable"/> and casts it to its original type.  For use in
         /// creating brief readable property setters for <see cref="Immutable"/> objects.
         /// </summary>

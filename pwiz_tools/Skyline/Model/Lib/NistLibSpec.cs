@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -775,7 +775,7 @@ namespace pwiz.Skyline.Model.Lib
 // ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
         private static readonly RegexOptions NOCASE = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
-        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
+        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16]
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks):\s*(\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
         private static readonly string COMMENT = "Comment:";
         private static readonly string COMMENTS = "Comments:";
@@ -807,10 +807,10 @@ namespace pwiz.Skyline.Model.Lib
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
-        private static readonly Regex REGEX_PRECURSORMZ_COMMENT = new Regex(@"Precursor Mz=([^ ,""]+)", NOCASE);
+        private static readonly Regex REGEX_PRECURSORMZ_COMMENT = new Regex(@"(Precursor Mz|Mz_exact)=([^ ,""]+)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT_COMMENT = new Regex(@"ExactMass=([^ ,""]+)", NOCASE);
-        private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass[:=]\s*(.*)", NOCASE);
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INDICATOR = @"Positive scan";
@@ -866,7 +866,7 @@ namespace pwiz.Skyline.Model.Lib
                     line = HandleMzVaultLineVariant(line, out _);
 
                     // Read until name line
-                    if (!ParseName(line, out var isPeptide, out var sequence, out var charge))
+                    if (!ParseName(line, lineCount, out var isPeptide, out var sequence, out var charge))
                     {
                         continue;
                     }
@@ -1003,6 +1003,20 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
 
+                    if (adduct.IsEmpty && precursorMz.HasValue && massMol.HasValue)
+                    {
+                        var implied = Adduct.InferFromMassAndMz(massMol.Value, new SignedMz(precursorMz.Value));
+                        if (!Adduct.IsNullOrEmpty(implied) && (charge == 0 || charge == implied.AdductCharge))
+                        {
+                            adduct = implied;
+                            charge = implied.AdductCharge;
+                            if (string.IsNullOrEmpty(formula))
+                            {
+                                formula = MoleculeMassOffset.FormatMassModification(massMol.Value, massMol.Value, BioMassCalc.MassPrecision);
+                            }
+                        }
+                    }
+
                     if (isGC)
                     {
                         if (adduct.IsEmpty)
@@ -1118,11 +1132,11 @@ namespace pwiz.Skyline.Model.Lib
                             string mzField = linePeak.Substring(0, iSeperator1++);
                             string intensityField = linePeak.Substring(iSeperator1, iSeperator2 - iSeperator1);
 
-                            if (!TextUtil.TryParseFloatUncertainCulture(mzField, out var mz))
+                            if (!CommonTextUtil.TryParseFloatUncertainCulture(mzField, out var mz))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(i, sequence);
                             }
-                            if (!TextUtil.TryParseFloatUncertainCulture(intensityField, out var intensity))
+                            if (!CommonTextUtil.TryParseFloatUncertainCulture(intensityField, out var intensity))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(i, sequence);
                             }
@@ -1195,7 +1209,7 @@ namespace pwiz.Skyline.Model.Lib
                     libraryEntries.Add(info);
                 }
 
-                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
+                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries, Path.GetFileName(FilePath));
 
                 long locationHeaders = outStream.Position;
                 foreach (var info in libraryEntries)
@@ -1271,7 +1285,7 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        private static bool ParseName(string line, out bool isPeptide, out string sequence, out int charge)
+        private static bool ParseName(string line, long lineCount, out bool isPeptide, out string sequence, out int charge)
         {
             isPeptide = true;
             charge = 0;
@@ -1280,15 +1294,30 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return false;
             }
-            Match match = REGEX_NAME.Match(line);
+            // Watch out for n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
+            // Skyline should treat this as "A[43]LAVLALLSLSGLEAIQR" or AACDEFGHIK[17]
+            var scrubbed = line.Replace(@"c[", @"["); // Deal with c-term
+            var nterm = scrubbed.IndexOf(@"n[", StringComparison.Ordinal);
+            if (nterm > 0) // Deal with n-term
+            { 
+                var closeBracket = line.IndexOf(']');
+                scrubbed = scrubbed.Substring(0, nterm) + // "Name: "
+                           scrubbed.Substring(closeBracket+1, 1) + // "A"
+                           line.Substring(nterm+1, closeBracket - nterm) + // [43]
+                           scrubbed.Substring(closeBracket + 2); // LAVLALLSLSGLEAIQR
+            }
+            Match match = REGEX_NAME.Match(scrubbed);
             if (!match.Success)
             {
+                // Try to recognize as small molecule
                 isPeptide = false;
                 match = REGEX_NAME_SMALLMOL.Match(line);
             }
 
             if (!match.Success)
             {
+                // Formerly silent, now we at least put up a non-blocking message
+                Messages.WriteAsyncUserMessage(LibResources.NistLibraryBase_ParseName_Failed_to_understand_entry___0___starting_at_line__1_, line, lineCount);
                 return false;
             }
 
@@ -1331,7 +1360,7 @@ namespace pwiz.Skyline.Model.Lib
                 var match = REGEX_CCS.Match(line);
                 if (match.Success)
                 {
-                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var ccs))
+                    if (!CommonTextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var ccs))
                     {
                         ThrowIOException(lineCount,
                             string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__,
@@ -1409,7 +1438,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         try
                         {
-                            precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                            precursorMz = double.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
                         }
                         catch
                         {
@@ -1540,7 +1569,7 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_MOLWEIGHT.Match(line);
                 if (match.Success)
                 {
-                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
+                    if (!CommonTextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
                     {
                         ThrowIOException(lineCount,
                             string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
@@ -1556,7 +1585,7 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_EXACTMASS.Match(line);
                 if (match.Success)
                 {
-                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var em))
+                    if (!CommonTextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var em))
                     {
                         ThrowIOException(lineCount,
                             string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
@@ -1664,28 +1693,22 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 annot = annot.Trim();
                 var space = annot.IndexOf(" ", StringComparison.Ordinal); 
-                if (space < 0)
+                var name = (space > 0 ? annot.Substring(0, space) : annot).Trim();
+                // Avoid uninteresting annotations e.g. blank, "?", or numeric crud like "85/86"
+                if (string.IsNullOrEmpty(name) || name.StartsWith("?") || !name.Any(char.IsLetter)) 
                 {
-                    annotations.Add(null); // Interesting annotations have more than one part
+                    annotations.Add(null);
                 }
                 else
                 {
-                    var name = annot.Substring(0, space).Trim();
-                    if (string.IsNullOrEmpty(name) || name.StartsWith("?")) 
-                    {
-                        annotations.Add(null);
-                    }
-                    else
-                    {
-                        var note = annot.Substring(space + 1).Trim();
-                        var z = Adduct.IsNullOrEmpty(adduct) ? charge : adduct.AdductCharge;
-                        var fragment_adduct = z > 0 ? Adduct.M_PLUS : Adduct.M_MINUS;
-                        var ion = new CustomIon(null, fragment_adduct,
-                            fragment_adduct.MassFromMz(mz, MassType.Monoisotopic),
-                            fragment_adduct.MassFromMz(mz, MassType.Average),
-                            name);
-                        annotations.Add(new List<SpectrumPeakAnnotation> {SpectrumPeakAnnotation.Create(ion, note)});
-                    }
+                    var note = space > 0 ? annot.Substring(space + 1).Trim() : string.Empty;
+                    var z = Adduct.IsNullOrEmpty(adduct) ? charge : adduct.AdductCharge;
+                    var fragment_adduct = z > 0 ? Adduct.M_PLUS : Adduct.M_MINUS;
+                    var ion = new CustomIon(null, fragment_adduct,
+                        fragment_adduct.MassFromMz(mz, MassType.Monoisotopic),
+                        fragment_adduct.MassFromMz(mz, MassType.Average),
+                        name);
+                    annotations.Add(new List<SpectrumPeakAnnotation> {SpectrumPeakAnnotation.Create(ion, note)});
                 }
                 // ReSharper restore LocalizableElement
             }
@@ -1794,7 +1817,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             double rt;
             var valString = rtString.Split(MINOR_SEP).First();
-            if (!TextUtil.TryParseDoubleUncertainCulture(valString, out rt))
+            if (!CommonTextUtil.TryParseDoubleUncertainCulture(valString, out rt))
                 return null;
             return isMinutes ? rt : rt / 60;
         }

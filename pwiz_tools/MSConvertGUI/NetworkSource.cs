@@ -1,4 +1,4 @@
-﻿//
+//
 // Original author: Matt Chambers <matt.chambers42 .@. gmail.com>
 //
 // Copyright 2018 Matt Chambers - Nashville, TN 37221

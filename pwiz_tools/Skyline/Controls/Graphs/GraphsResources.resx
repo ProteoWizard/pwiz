@@ -169,9 +169,6 @@
   <data name="AllChromatogramsGraph_UpdateStatus_Hide" xml:space="preserve">
     <value>Hide</value>
   </data>
-  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
-    <value>Annotation: </value>
-  </data>
   <data name="AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1" xml:space="preserve">
     <value>{0} cutoff value must be greater or equal than 0. and lesser or equal than 1.</value>
   </data>
@@ -544,6 +541,18 @@ Here are the last 3 errors:
   <data name="GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted" xml:space="preserve">
     <value>Failure loading spectrum. Library may be corrupted.</value>
   </data>
+  <data name="GraphSpectrum_ToolTip_mz">
+    <value>Observed m/z:</value>
+  </data>
+  <data name="GraphSpectrum_ToolTip_Intensity">
+    <value>Intensity:</value>
+  </data>
+  <data name="GraphSpectrum_ToolTip_MatchedIons">
+    <value>Matched Ions</value>
+  </data>
+  <data name="GraphSpectrum_ToolTip_Rank">
+    <value>Rank:</value>
+  </data>
   <data name="GraphValues_Log_AxisTitle" xml:space="preserve">
     <value>Log {0}</value>
   </data>
@@ -585,9 +594,6 @@ Here are the last 3 errors:
   </data>
   <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
     <value>Peptide</value>
-  </data>
-  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
-    <value>Property: </value>
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0} (at {1} points minimum)</value>
@@ -741,6 +747,9 @@ Here are the last 3 errors:
   </data>
   <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
     <value>No quantitative chromatograms found</value>
+  </data>
+  <data name="ToolTipImplementation_RenderTip_Calculated_Mass" xml:space="preserve">
+    <value>Ion m/z (calculated)</value>
   </data>
   <data name="GraphChromatogram_SetRetentionTimeIdIndicators_Libraries_are_still_loading" xml:space="preserve">
     <value>Libraries are still loading</value>

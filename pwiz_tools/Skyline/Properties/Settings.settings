@@ -18,7 +18,8 @@
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
     <Setting Name="MainWindowMaximized" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value></Setting>
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="SrmSettings" Type="System.String" Scope="User">
       <Value Profile="(Default)">Default</Value>
     </Setting>
@@ -431,6 +432,9 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="PanoramaServerExpansion" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ArdiaServerExpansion" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="FractionOfRtWindowAtWhichVariableSizeIsTriggered" Type="System.Double" Scope="Application">
@@ -889,12 +893,12 @@
     <Setting Name="RtRegressionSegmentCount" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">25</Value>
     </Setting>
-	<Setting Name="PythonEmbeddableVersion" Type="System.String" Scope="Application">
-	  <Value Profile="(Default)">3.9.13</Value>
-	</Setting>
-	<Setting Name="PythonEmbeddableHash" Type="System.String" Scope="Application">
-	  <Value Profile="(Default)">57731cf80b1c429a0be7133266d7d7cf</Value>
-	</Setting>
+    <Setting Name="PythonEmbeddableVersion" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">3.9.13</Value>
+    </Setting>
+    <Setting Name="PythonEmbeddableHash" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">57731cf80b1c429a0be7133266d7d7cf</Value>
+    </Setting>
     <Setting Name="MsFraggerLicenseUrl" Type="System.String" Scope="Application">
       <Value Profile="(Default)">https://msfragger-upgrader.nesvilab.org/upgrader/LICENSE-ACADEMIC.pdf</Value>
     </Setting>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -30,15 +30,14 @@ using SkylineBatch;
 namespace SkylineBatchTest
 {
     [TestClass]
-    public class ConfigManagerTest
+    public class ConfigManagerTest : AbstractSkylineBatchUnitTest
     {
-
         #region ConfigList Operations
 
         [TestMethod]
         public void TestSelectConfig()
         {
-            var testConfigManager = TestUtils.GetTestConfigManager();
+            var testConfigManager = GetTestConfigManager();
             try
             {
                 testConfigManager.SelectConfig(0);
@@ -84,7 +83,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestAddInsertConfig()
         {
-            var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
             var addedConfig = TestUtils.GetTestConfig("one");
             testConfigManager.UserAddConfig(addedConfig);
             var oneConfig = TestUtils.ConfigListFromNames(new List<string> { "one" });
@@ -113,7 +112,7 @@ namespace SkylineBatchTest
         [TestMethod]
         public void TestRemoveConfig()
         {
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.UserRemoveSelected();
             Assert.IsTrue(configManager.State.BaseState.Selected == 0);
@@ -137,9 +136,9 @@ namespace SkylineBatchTest
         }
 
         [TestMethod]
-        public void TestMoveConfig()
+        public void TestCopyConfig()
         {
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.MoveSelectedConfig(false);
             var expectedMovedForward = TestUtils.ConfigListFromNames(new List<string> { "two", "one", "three" });
@@ -156,7 +155,7 @@ namespace SkylineBatchTest
         public void TestReplaceConfig()
         {
             TestUtils.InitializeRInstallation();
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             configManager.SelectConfig(0);
             configManager.UserReplaceSelected(TestUtils.GetTestConfig("oneReplaced"));
             var expectedOneReplaced = TestUtils.ConfigListFromNames(new List<string> { "oneReplaced", "two", "three" });
@@ -192,7 +191,7 @@ namespace SkylineBatchTest
             TestUtils.InitializeRInstallation();
             TestUtils.InitializeSettingsImportExport();
             var configsXmlPath = TestUtils.GetTestFilePath("configs.xml");
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             configManager.State.BaseState.ExportConfigs(configsXmlPath, SkylineBatch.Properties.Settings.Default.XmlVersion, new [] {0,1,2});
             int i = 0;
             while (configManager.State.BaseState.HasConfigs() && i < 4)
@@ -222,12 +221,12 @@ namespace SkylineBatchTest
         {
             TestUtils.InitializeRInstallation();
             TestUtils.InitializeSettingsImportExport();
-            var configManager = TestUtils.GetTestConfigManager();
+            var configManager = GetTestConfigManager();
             configManager.UserAddConfig(TestUtils.GetTestConfig("four"));
             var testingConfigs = TestUtils.ConfigListFromNames(new List<string> { "one", "two", "three", "four" });
             configManager.Close();
             configManager.GetSelectedLogger().Delete();
-            var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
             // Simulate loading saved configs from file
             configManager.Import(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath, null);
             Assert.IsTrue(configManager.ConfigListEquals(testingConfigs));

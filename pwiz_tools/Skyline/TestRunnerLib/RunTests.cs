@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -150,6 +150,8 @@ namespace TestRunnerLib
         public bool RunsSmallMoleculeVersions { get; set; }
         public bool TeamCityTestDecoration { get; set; }
         public bool Verbose { get; set; }
+        public bool ReportHeaps { get; set; }
+        public bool ReportHandles { get; set; }
         public bool IsParallelClient { get; private set; }
         public string ParallelClientId { get; private set; }
 
@@ -183,7 +185,9 @@ namespace TestRunnerLib
             string results = null,
             StreamWriter log = null,
             bool verbose = false,
-            bool isParallelClient = false)
+            bool isParallelClient = false,
+            bool reportHeaps = false,
+            bool reportHandles = false)
         {
             _buildMode = buildMode;
             _log = log;
@@ -191,6 +195,8 @@ namespace TestRunnerLib
             _showStatus = showStatus;
             TestContext = new TestRunnerContext();
             IsParallelClient = isParallelClient;
+            ReportHeaps = reportHeaps;
+            ReportHandles = reportHandles;
             SetTestDir(TestContext, results);
 
             // Minimize disk use on TeamCity VMs by removing downloaded files
@@ -512,9 +518,6 @@ namespace TestRunnerLib
                 }
             }
 
-//            var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
-//            var handleCounts = handleInfos.GroupBy(h => h.Type).OrderBy(g => g.Key);
-
             if (exception == null)
             {
                 // Test succeeded.
@@ -528,8 +531,21 @@ namespace TestRunnerLib
                     LastUserHandleCount + LastGdiHandleCount,
                     LastTotalHandleCount,
                     LastTestDuration/1000);
-//                Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
-//                Log("# Handles " + string.Join("\t", handleCounts.Where(c => c.Count() > 14).Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
+                
+                // Report heap counts if requested (usually only useful when handles are not leaking)
+                if (ReportHeaps && ReportSystemHeaps)
+                {
+                    Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
+                }
+                
+                // Report handle counts if requested (useful for debugging handle leaks)
+                if (ReportHandles)
+                {
+                    var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
+                    var handleCounts = handleInfos.GroupBy(h => h.Type).OrderBy(g => g.Key);
+
+                    Log("# Handles " + string.Join("\t", handleCounts.Where(c => c.Count() > 14).Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
+                }
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
 

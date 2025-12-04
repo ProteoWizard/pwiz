@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Eduardo Armendariz <wardough .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.SkylineTestUtil;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util.Extensions;
 

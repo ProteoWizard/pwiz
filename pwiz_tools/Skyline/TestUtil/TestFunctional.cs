@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -382,13 +382,14 @@ namespace pwiz.SkylineTestUtil
 
         private static void SkylineInvoke(Action act)
         {
-            if (null != SkylineWindow)
+            var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
+            if (form.InvokeRequired)
             {
-                SkylineWindow.Invoke(act);
+                form.Invoke(act);
             }
             else
             {
-                FindOpenForm<StartPage>().Invoke(act);
+                act(); // Already on the UI thread
             }
         }
 
@@ -2049,11 +2050,10 @@ namespace pwiz.SkylineTestUtil
             {
                 //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
                 const string errorSeparator = "------------------------------------------------------";
-                Assert.Fail("{0}{1}{2}{3}",
-                    Environment.NewLine + Environment.NewLine,
-                    errorSeparator + Environment.NewLine,
-                    Program.TestExceptions[0],
-                    Environment.NewLine + errorSeparator + Environment.NewLine);
+                Assert.Fail(new StringBuilder().AppendLine().AppendLine()
+                    .AppendLine(errorSeparator)
+                    .AppendLine(Program.TestExceptions[0].ToString())
+                    .AppendLine(errorSeparator).ToString());
             }
 
             if (!_testCompleted)
@@ -2527,7 +2527,7 @@ namespace pwiz.SkylineTestUtil
 
             DoTest();
 
-            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
+            CheckRecordMode();
 
             if (null != SkylineWindow)
             {

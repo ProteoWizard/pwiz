@@ -1,4 +1,4 @@
-﻿using pwiz.Common.Collections;
+using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Skyline.Model.Databinding;

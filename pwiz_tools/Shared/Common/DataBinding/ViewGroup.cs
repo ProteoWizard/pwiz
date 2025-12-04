@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 

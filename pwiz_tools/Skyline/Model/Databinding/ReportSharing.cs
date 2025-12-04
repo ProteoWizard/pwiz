@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Layout;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -73,9 +72,9 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static IDictionary<ViewName, ReportOrViewSpec> GetExistingReports()
         {
-            var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(GetDefaultDocument(), DataSchemaLocalizer.INVARIANT));
-            var items = documentGridViewContext.ViewGroups
-                .SelectMany(group => documentGridViewContext.GetViewSpecList(group.Id).ViewSpecLayouts
+            var persistedViews = Settings.Default.PersistedViews;
+            var items = new[]{PersistedViews.MainGroup, PersistedViews.ExternalToolsGroup }
+                .SelectMany(group => persistedViews.GetViewSpecList(group.Id).ViewSpecLayouts
                     .Select(viewSpec => new KeyValuePair<ViewName, ReportOrViewSpec>(
                         new ViewName(group.Id, viewSpec.Name), new ReportOrViewSpec(viewSpec))));
             return SafeToDictionary(items);
@@ -84,8 +83,10 @@ namespace pwiz.Skyline.Model.Databinding
         public static void SaveReport(ViewGroup viewGroup, ReportOrViewSpec reportOrViewSpec)
         {
             var srmDocument = GetDefaultDocument();
-            var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(srmDocument, DataSchemaLocalizer.INVARIANT));
-            documentGridViewContext.AddOrReplaceViews(viewGroup.Id, ConvertAll(new[] {reportOrViewSpec}, srmDocument));
+            var persistedViews = Settings.Default.PersistedViews;
+            var viewSpecList = persistedViews.GetViewSpecList(viewGroup.Id);
+            viewSpecList = viewSpecList.AddOrReplaceViews(ConvertAll(new[] { reportOrViewSpec }, srmDocument));
+            persistedViews.SetViewSpecList(viewGroup.Id, viewSpecList);
         }
 
         public static void SaveReportAs(ViewGroup viewPath, ReportOrViewSpec reportOrViewSpec, string newName)

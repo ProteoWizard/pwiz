@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,6 +22,9 @@ using System.IO;
 
 namespace pwiz.Common.SystemUtil
 {
+    /// <summary>
+    /// A stream that shows progress while it is being read.
+    /// </summary>
     public class ProgressStream : Stream
     {
         private Stream _input;

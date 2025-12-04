@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.GUI;
@@ -48,10 +48,11 @@ namespace SkylineBatchTest
         public void TestZipFiles(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var zipPathFile = Path.Combine(TEST_FOLDER, "zip_path_test_config.bcfg");
+            var zipPathFileOrig = Path.Combine(TEST_FOLDER, "zip_path_test_config.bcfg");
+            using var fileSaver = TestUtils.CreateBcfgWithCurrentRVersion(zipPathFileOrig);
             RunUI(() =>
             {
-                mainForm.DoImport(zipPathFile);
+                mainForm.DoImport(fileSaver.SafeName);
                 FunctionalTestUtil.CheckConfigs(1, 0, mainForm);
             });
 
@@ -87,10 +88,11 @@ namespace SkylineBatchTest
         public void TestEditInvalidDownloadingFolderPath(MainForm mainForm)
         {
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
-            var invalidConfigFile = Path.Combine(TEST_FOLDER, "InvalidPathDownloadingConfigurations.bcfg");
+            var invalidConfigFileOrig = Path.Combine(TEST_FOLDER, "InvalidPathDownloadingConfigurations.bcfg");
+            using var fileSaver = TestUtils.CreateBcfgWithCurrentRVersion(invalidConfigFileOrig);
             RunUI(() =>
             {
-                mainForm.DoImport(invalidConfigFile);
+                mainForm.DoImport(fileSaver.SafeName);
                 FunctionalTestUtil.CheckConfigs(1, 1, mainForm);
             });
 
@@ -220,11 +222,12 @@ namespace SkylineBatchTest
             });
             WaitForClosedForm(configForm);
 
-            var invalidConfigFile = Path.Combine(TEST_FOLDER, "AnalysisFileNameConfigurations.bcfg");
+            var invalidConfigFileOrig = Path.Combine(TEST_FOLDER, "AnalysisFileNameConfigurations.bcfg");
+            using var fileSaver2 = TestUtils.CreateBcfgWithCurrentRVersion(invalidConfigFileOrig);
             RunUI(() =>
             {
                 FunctionalTestUtil.ClearConfigs(mainForm);
-                mainForm.DoImport(invalidConfigFile);
+                mainForm.DoImport(fileSaver2.SafeName);
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
                 mainForm.ClickConfig(0);
             });

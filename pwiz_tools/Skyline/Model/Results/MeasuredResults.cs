@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -785,6 +785,16 @@ namespace pwiz.Skyline.Model.Results
         {
             return ChangeChromatograms(Chromatograms.Select(chrom => chrom.ChangeMSDataFileInfos(
                 chrom.MSDataFileInfos.Select(info => info.ChangeImportTime(null)).ToList())).ToList());
+        }
+
+        /// <summary>
+        /// Sets the FileWriteTimes on all of the ChromFileInfo's to null so that they will not
+        /// interfere with comparisons in tests.
+        /// </summary>
+        public MeasuredResults ClearFileWriteTimes()
+        {
+            return ChangeChromatograms(Chromatograms.Select(chrom => chrom.ChangeMSDataFileInfos(
+                chrom.MSDataFileInfos.Select(info => info.ChangeFileWriteTime(null)).ToList())).ToList());
         }
 
         public IEnumerable<string> QcTraceNames

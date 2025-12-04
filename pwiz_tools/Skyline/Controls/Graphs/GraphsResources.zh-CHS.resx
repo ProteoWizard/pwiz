@@ -169,9 +169,6 @@
   <data name="AllChromatogramsGraph_UpdateStatus_Hide" xml:space="preserve">
     <value>隐藏</value>
   </data>
-  <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
-    <value>注解：</value>
-  </data>
   <data name="AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1" xml:space="preserve">
     <value>{0} 截止值必须大于或等于 0 且小于或等于 1。</value>
   </data>
@@ -585,9 +582,6 @@
   </data>
   <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
     <value>肽段</value>
-  </data>
-  <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
-    <value>属性：</value>
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0}（至少 {1} 点）</value>

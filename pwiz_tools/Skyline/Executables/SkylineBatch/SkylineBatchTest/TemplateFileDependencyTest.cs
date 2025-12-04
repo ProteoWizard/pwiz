@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -28,16 +28,15 @@ using SkylineBatch;
 namespace SkylineBatchTest
 {
     [TestClass]
-    public class TemplateFileDependencyTest
+    public class TemplateFileDependencyTest : AbstractSkylineBatchUnitTest
     {
-
         #region ConfigList Operations
 
         [TestMethod]
-        public void TestChangeDependent()
+        public void TestRemoveDependency()
         {
             TestUtils.InitializeRInstallation();
-            var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
 
             int baseIndex = 0;
             testConfigManager.UserAddConfig(TestUtils.GetFullyPopulatedConfig());
@@ -78,7 +77,7 @@ namespace SkylineBatchTest
         public void TestDeleteStoppedDependent()
         {
             TestUtils.InitializeRInstallation();
-            var testConfigManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
 
             int baseIndex = 0;
             testConfigManager.UserAddConfig(TestUtils.GetFullyPopulatedConfig());

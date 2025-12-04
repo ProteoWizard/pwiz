@@ -1,4 +1,4 @@
-﻿namespace SProCoP
+namespace SProCoP
 {
     partial class SProCoPUI
     {

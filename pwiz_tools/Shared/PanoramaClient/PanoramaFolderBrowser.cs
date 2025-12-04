@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Sophie Pallanck <srpall .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,8 +21,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -51,7 +51,12 @@ namespace pwiz.PanoramaClient
 
         protected List<PanoramaServer> ServerList { get; }
         protected string InitialPath { get; }
-
+        /// <summary>
+        /// Root folder to limit the scope of the folder tree request.
+        /// If set, only this folder (and its subfolders) will be requested from the server,
+        /// significantly reducing response size for tests that only need a specific project folder.
+        /// For example, "SkylineTest" or "Panorama Public".
+        /// </summary>
         public event EventHandler NodeClick;
         public event EventHandler AddFiles;
 
@@ -67,13 +72,17 @@ namespace pwiz.PanoramaClient
         }
 
         public abstract void InitializeTreeView(TreeView treeView);
+        public abstract void LoadServerData(IProgressMonitor progressMonitor);
         public abstract void DynamicLoad(TreeNode node);
 
         /// <summary>
-        /// Builds the TreeView of folders and restores any
-        /// previous state of the TreeView
+        /// Populates the TreeView with data after server data has been loaded.
+        /// Must be called on the UI thread.
+        /// Note: This is no longer called automatically from FolderBrowser_Load.
+        /// It should be called explicitly from the parent form's Load event (e.g., FilePicker_Load)
+        /// after server data has been loaded.
         /// </summary>
-        private void FolderBrowser_Load(object sender, EventArgs e)
+        public void PopulateTreeView()
         {
             InitializeTreeView(treeView);
             InitializeTreeState(treeView);
@@ -81,22 +90,67 @@ namespace pwiz.PanoramaClient
 
         private void InitializeTreeState(TreeView tree)
         {
-            if (!string.IsNullOrEmpty(TreeState))
+            // Get the server from the root tree node (if it exists) or fallback to first server
+            var rootNode = tree.TopNode;
+            if (rootNode != null)
             {
+                var rootFolderInfo = GetFolderInformation(rootNode);
+                if (rootFolderInfo != null)
+                {
+                    ActiveServer = rootFolderInfo.Server;
+                }
+            }
+            
+            // Fallback to first server if we couldn't get it from the tree
+            ActiveServer ??= ServerList.FirstOrDefault();
+            
+            // Determine which path to use for initial selection
+            // Use InitialPath if provided, otherwise use FolderPath from the first server
+            string initialPath = InitialPath;
+            if (string.IsNullOrEmpty(initialPath) && GetType() != typeof(WebDavBrowser) && ActiveServer != null)
+            {
+                initialPath = ActiveServer.FolderPath;
+            }
+            
+            // Check if existing TreeState is compatible with the current tree structure
+            bool shouldUseTreeState = !string.IsNullOrEmpty(TreeState);
+            if (shouldUseTreeState)
+            {
+                // Validate TreeState compatibility by checking all node indices are within bounds
+                shouldUseTreeState = _restorer.IsTreeStateCompatible(TreeState);
+            }
+            
+            if (shouldUseTreeState)
+            {
+                // Use existing TreeState
                 _restorer.RestoreExpansionAndSelection(TreeState);
                 _restorer.UpdateTopNode();
                 AddFilesForSelectedNode(treeView.SelectedNode, EventArgs.Empty);
             }
+            else if (!string.IsNullOrEmpty(initialPath) && GetType() != typeof(WebDavBrowser) && rootNode != null)
+            {
+                // Generate new TreeState for the initial path by finding actual nodes in the tree
+                var segments = initialPath.Split('/').Where(s => !string.IsNullOrEmpty(s)).ToArray();
+                string newTreeState = _restorer.GenerateTreeStateForPath(segments, rootNode);
+                
+                if (newTreeState != null)
+                {
+                    _restorer.RestoreExpansionAndSelection(newTreeState);
+                    _restorer.UpdateTopNode();
+                    AddFilesForSelectedNode(treeView.SelectedNode, EventArgs.Empty);
+                }
+                else
+                {
+                    // Path not found - just expand root
+                    tree.TopNode?.Expand();
+                }
+            }
             else
             {
-                ActiveServer = ServerList.FirstOrDefault();
+                // No path and no TreeState - just expand root
                 tree.TopNode?.Expand();
             }
-
-            if (string.IsNullOrEmpty(InitialPath) || GetType() == typeof(WebDavBrowser))
-                return;
-            var uriFolderTokens = InitialPath.Split('/');
-            SelectNode(uriFolderTokens.LastOrDefault());
+            UpdateNavButtons(_selectedNode);
         }
 
         /// <summary>
@@ -143,10 +197,11 @@ namespace pwiz.PanoramaClient
         public static string GetSelectedUri(PanoramaFolderBrowser browser, bool webdav)
         {
             var folderInfo = browser.GetFolderInformation(browser._selectedNode);
-            return folderInfo != null
-                ? string.Concat(folderInfo.Server.URI,
-                    webdav ? PanoramaUtil.WEBDAV_W_SLASH : string.Empty, folderInfo.FolderPath.TrimStart('/'))
-                : string.Empty;
+            if (folderInfo == null)
+                return string.Empty;
+            
+            // Use PanoramaServer.GetUri() to handle path normalization and avoid double slashes
+            return folderInfo.Server.GetUri(folderInfo.FolderPath, webdav);
         }
 
         public void UpButtonClick()
@@ -255,7 +310,7 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        private void UpdateNavButtons(TreeNode node)
+        protected void UpdateNavButtons(TreeNode node)
         {
             treeView.SelectedNode = node;
             var folderInfo = GetFolderInformation(node);
@@ -313,6 +368,11 @@ namespace pwiz.PanoramaClient
             var node = SearchTree(treeView.Nodes, nodeName);
             if (node?.Tag is FolderInformation)
             {
+                // Expand the node if it's not already expanded, so its children are loaded (for lazy-loaded nodes like WebDav folders)
+                if (!node.IsExpanded)
+                {
+                    node.Expand();
+                }
                 UpdateNavButtons(node);
                 return true;
             }
@@ -352,13 +412,38 @@ namespace pwiz.PanoramaClient
 
 public class LKContainerBrowser : PanoramaFolderBrowser
 {
+    // JSON property name constants for folder structure
+    private const string JSON_PROP_CHILDREN = @"children";
+    private const string JSON_PROP_NAME = @"name";
+    private const string JSON_PROP_PATH = @"path";
+    private const string JSON_PROP_TITLE = @"title";
+    private const string JSON_PROP_PARENT_PATH = @"parentPath";
+    private const string JSON_PROP_PARENT_ID = @"parentId";
+    private const string JSON_PROP_MODULE_PROPERTIES = @"moduleProperties";
+    private const string JSON_PROP_EFFECTIVE_VALUE = @"effectiveValue";
+    private const string JSON_PROP_LIBRARY = @"Library";
+    private const string JSON_PROP_LIBRARY_PROTEIN = @"LibraryProtein";
+
+    // Properties that should not be copied when wrapping folder responses
+    private static readonly string[] DO_NOT_COPY_PROPERTIES =
+    {
+        JSON_PROP_NAME,
+        JSON_PROP_PATH,
+        JSON_PROP_TITLE,
+        JSON_PROP_CHILDREN,
+        JSON_PROP_PARENT_PATH,
+        JSON_PROP_PARENT_ID
+    };
+
     private readonly bool _uploadPerms;
     private readonly List<KeyValuePair<PanoramaServer, JToken>> _listServerFolders = new List<KeyValuePair<PanoramaServer, JToken>>();
 
-    public LKContainerBrowser(List<PanoramaServer> servers, string state, bool uploadPerms, string initialPath) : base(servers, state, initialPath)
+    public LKContainerBrowser(List<PanoramaServer> servers, string state, bool uploadPerms, string initialPath) 
+        : base(servers, state, initialPath)
     {
         _uploadPerms = uploadPerms;
-        InitializeServers();
+        // Note: InitializeServers() must be called explicitly on a background thread after control creation
+        // Control creation must happen on the UI thread to avoid thread handle leaks
     }
 
     public override void DynamicLoad(TreeNode node)
@@ -367,10 +452,20 @@ public class LKContainerBrowser : PanoramaFolderBrowser
     }
 
     /// <summary>
+    /// Fetches server folder data from the web on a background thread.
+    /// Must be called after control creation on the UI thread.
+    /// This method should NOT create any UI controls.
+    /// </summary>
+    public override void LoadServerData(IProgressMonitor progressMonitor)
+    {
+        InitializeServers(progressMonitor);
+    }
+
+    /// <summary>
     /// Initializes the JSON that will be
     /// used to build the TreeView of folders
     /// </summary>
-    private void InitializeServers()
+    private void InitializeServers(IProgressMonitor progressMonitor)
     {
         if (ServerList == null)
         {
@@ -378,24 +473,39 @@ public class LKContainerBrowser : PanoramaFolderBrowser
         }
 
         var listErrorServers = new List<Tuple<PanoramaServer, string>>();
-        foreach (var server in ServerList)
+        IProgressStatus progressStatus = new ProgressStatus(Resources.PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders);
+        
+        for (int i = 0; i < ServerList.Count; i++)
         {
+            var server = ServerList[i];
+            
+            // Update progress for multiple servers after the first server
+            if (i > 0)
+            {
+                progressStatus = progressStatus.ChangePercentComplete(i * 100 / ServerList.Count);
+                progressMonitor.UpdateProgress(progressStatus);
+            }
+            
+            // Check for cancellation
+            if (progressMonitor is { IsCanceled: true })
+                throw new OperationCanceledException();
+            
             try
             {
-                InitializeTreeServers(server, _listServerFolders);
+                InitializeTreeServers(server, _listServerFolders, progressMonitor, progressStatus);
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                if (ex is WebException || ex is PanoramaServerException)
-                {
-
-                    listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
-                }
+                // Network errors are expected when servers are unreachable
+                // NetworkRequestException extends IOException
+                listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
             }
+            // Let all other exceptions propagate (ArgumentException, NullReferenceException, etc. are programming defects)
         }
         if (listErrorServers.Count > 0)
         {
-            throw new Exception(CommonTextUtil.LineSeparate(Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers,
+            throw new IOException(CommonTextUtil.LineSeparate(
+                Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers_,
                 string.Empty,
                 ServersToString(listErrorServers)));
         }
@@ -407,12 +517,216 @@ public class LKContainerBrowser : PanoramaFolderBrowser
     }
 
     /// <summary>
-    /// Generates JSON containing the folder structure for the given server
+    /// Generates JSON containing the folder structure for the given server.
+    /// If server.FolderPath is set, the server returns only that folder's children (much faster).
+    /// We then wrap the response to include the FolderPath as the root node so the TreeView displays it correctly.
     /// </summary>
-    public virtual void InitializeTreeServers(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
+    public virtual void InitializeTreeServers(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers, 
+        IProgressMonitor progressMonitor, IProgressStatus progressStatus)
     {
         IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI, server.Username, server.Password);
-        listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(null)));
+        
+        // Request folders from server, using its FolderPath which may be null for the entire server
+        JToken folderJson = panoramaClient.GetInfoForFolders(server.FolderPath, progressMonitor, progressStatus);
+        
+        // If FolderPath is set, wrap the response to include the folder path as the root node
+        // This ensures the TreeView displays the folder (e.g., "SkylineTest") even though
+        // the server only returned its children
+        if (!string.IsNullOrEmpty(server.FolderPath) && folderJson != null)
+        {
+            folderJson = WrapFolderResponse(folderJson, server.FolderPath, server.URI);
+        }
+        
+        listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, folderJson));
+    }
+
+    /// <summary>
+    /// Wraps a folder response JSON to include the specified folder path as a nested tree structure.
+    /// This is needed when requesting a specific folder, as the server returns only that folder's children,
+    /// not the folder itself or its parent folders.
+    /// 
+    /// For example, if folderPath = "SkylineTest/Part1/Part2", this builds:
+    ///   SkylineTest (path: "/SkylineTest", parentPath: "/")
+    ///     Part1 (path: "/SkylineTest/Part1", parentPath: "/SkylineTest")
+    ///       Part2 (path: "/SkylineTest/Part1/Part2", parentPath: "/SkylineTest/Part1")
+    ///         [actual response children]
+    /// 
+    /// Note: folderPath is assumed to be URL-encoded (e.g., "Panorama%20Public"). Each segment
+    /// is decoded before being used in the JSON structure.
+    /// </summary>
+    public static JToken WrapFolderResponse(JToken folderJson, string folderPath, Uri baseServerUri)
+    {
+        if (folderJson == null)
+            return null;
+
+        // Build the folder tree structure
+        var (rootFolder, leafFolder) = BuildFolderTree(folderPath);
+        
+        if (rootFolder == null || leafFolder == null)
+            return folderJson;
+        
+        // Copy moduleProperties and other properties from the first child if available
+        // This ensures the leaf folder (and all parent folders) have the same properties as their children
+        // This is critical for effectivePermissions - synthetic folders need this to pass HasReadPermissions check
+        if (folderJson[JSON_PROP_CHILDREN] is JArray childrenArray && childrenArray.Count > 0)
+        {
+            if (childrenArray[0] is JObject firstChild)
+            {
+                // Propagate properties from first child to all folders in the path (root to leaf)
+                // This ensures all synthetic folders have effectivePermissions and other required properties
+                PropagatePropertiesToAllFolders(rootFolder, leafFolder, firstChild);
+            }
+        }
+        
+        // The children of the leaf folder are the children returned by the server
+        leafFolder[JSON_PROP_CHILDREN] = folderJson[JSON_PROP_CHILDREN]?.DeepClone() ?? new JArray();
+
+        return WrapFolderResponse(folderJson, rootFolder);
+    }
+
+    /// <summary>
+    /// Builds a nested folder tree structure from a folder path.
+    /// 
+    /// For example, if folderPath = "SkylineTest/Part1/Part2", this builds:
+    ///   SkylineTest (path: "/SkylineTest", parentPath: "/")
+    ///     Part1 (path: "/SkylineTest/Part1", parentPath: "/SkylineTest")
+    ///       Part2 (path: "/SkylineTest/Part1/Part2", parentPath: "/SkylineTest/Part1")
+    /// 
+    /// Note: folderPath is assumed to be URL-encoded (e.g., "Panorama%20Public"). Each segment
+    /// is decoded before being used in the JSON structure.
+    /// </summary>
+    /// <param name="folderPath">The folder path (URL-encoded, e.g., "Panorama%20Public" or "SkylineTest/Part1/Part2")</param>
+    /// <returns>A tuple of (rootFolder, leafFolder) where rootFolder is the top-level folder node
+    /// and leafFolder is the deepest folder node in the tree</returns>
+    private static (JObject rootFolder, JObject leafFolder) BuildFolderTree(string folderPath)
+    {
+        // Split folderPath into segments and decode each one
+        // folderPath is server.FolderPath which is URL-encoded (e.g., "Panorama%20Public" or "SkylineTest/Part1/Part2")
+        var encodedSegments = folderPath.Split('/');
+        var decodedSegments = encodedSegments.Select(Uri.UnescapeDataString).ToArray();
+
+        if (decodedSegments.Length == 0)
+            return (null, null);
+
+        JObject rootFolder = null;
+        JObject currentFolder = null;
+        string currentPath = string.Empty;
+
+        // Build nested structure from root to leaf
+        foreach (var segmentName in decodedSegments)
+        {
+            var segmentPath = currentPath.Length == 0 ? @"/" + segmentName : currentPath + @"/" + segmentName;
+
+            var folderNode = new JObject();
+            folderNode[JSON_PROP_NAME] = segmentName;
+            folderNode[JSON_PROP_PATH] = segmentPath;
+            folderNode[JSON_PROP_TITLE] = segmentName;
+            folderNode[JSON_PROP_PARENT_PATH] = currentPath.Length == 0 ? @"/" : currentPath;
+            folderNode[JSON_PROP_CHILDREN] = new JArray(); // Will be populated with children
+
+            // Add this folder as a child of the previous folder (or track as root if first iteration)
+            if (currentFolder == null)
+            {
+                // This is the root segment - track it separately
+                rootFolder = folderNode;
+            }
+            else
+            {
+                // Add as child of previous folder
+                var childrenArray = currentFolder[JSON_PROP_CHILDREN] as JArray;
+                childrenArray?.Add(folderNode);
+            }
+
+            // Move to next level
+            currentFolder = folderNode;
+            currentPath = segmentPath;
+        }
+
+        return (rootFolder, currentFolder);
+    }
+
+    private static JToken WrapFolderResponse(JToken folderJson, JObject rootFolder)
+    {
+        // Copy top-level properties from the original response (formats, etc.)
+        var wrappedResponse = new JObject();
+        if (folderJson is JObject originalObj)
+        {
+            CopyProperties(originalObj, wrappedResponse,
+                prop => prop.Name != JSON_PROP_CHILDREN);
+        }
+
+        // Wrap the root folder in a children array (the structure expected by InitializeFolder)
+        wrappedResponse[JSON_PROP_CHILDREN] = new JArray { rootFolder };
+        
+        return wrappedResponse;
+    }
+
+    /// <summary>
+    /// Propagates properties (especially effectivePermissions) from a source folder to all folders
+    /// in the tree path from root to leaf. Traverses down from root to leaf, copying properties
+    /// to each folder along the path.
+    /// This ensures all synthetic folders created by BuildFolderTree have the required permission properties.
+    /// </summary>
+    private static void PropagatePropertiesToAllFolders(JObject rootFolder, JObject leafFolder, JObject sourceFolder)
+    {
+        // Traverse from root down to leaf, copying properties to each folder along the path
+        var targetPath = (string)leafFolder[JSON_PROP_PATH];
+        var rootPath = (string)rootFolder[JSON_PROP_PATH];
+        if (targetPath == null || rootPath == null)
+            return; // Should not happen, but to be safe and avoid ReShaper warnings
+
+        // Split paths into segments (filter out empty segments from leading/trailing slashes)
+        var targetSegments = targetPath.Split('/').Where(s => !string.IsNullOrEmpty(s)).ToList();
+        var rootSegments = rootPath.Split('/').Where(s => !string.IsNullOrEmpty(s)).ToList();
+        
+        // Get segments from root to leaf (skip root segments since we start there)
+        var pathSegments = targetSegments.Skip(rootSegments.Count).ToList();
+        
+        // Start from root folder - copy properties to it
+        CopyProperties(sourceFolder, rootFolder,
+            prop => DO_NOT_COPY_PROPERTIES.All(p => prop.Name != p));
+        
+        // Traverse down from root to leaf, copying properties to each folder
+        var currentFolder = rootFolder;
+        foreach (var segment in pathSegments)
+        {
+            // Move to next folder in path (find child with matching name)
+            if (currentFolder[JSON_PROP_CHILDREN] is JArray children)
+            {
+                var nextFolder = children.FirstOrDefault(child => 
+                    child is JObject childObj && 
+                    (string)childObj[JSON_PROP_NAME] == segment) as JObject;
+                
+                if (nextFolder != null)
+                {
+                    // Copy properties to this folder
+                    CopyProperties(sourceFolder, nextFolder,
+                        prop => DO_NOT_COPY_PROPERTIES.All(p => prop.Name != p));
+                    
+                    currentFolder = nextFolder;
+                }
+                else
+                {
+                    // Should not happen - we built the tree with all segments
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+    
+    private static void CopyProperties(JObject sourceObj, JObject destinationObj, Func<JProperty, bool> includeProp)
+    {
+        foreach (var property in sourceObj.Properties())
+        {
+            if (includeProp(property))
+            {
+                destinationObj[property.Name] = property.Value.DeepClone();
+            }
+        }
     }
 
     public override void InitializeTreeView(TreeView tree)
@@ -444,7 +758,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
     /// </summary>
     public static void AddChildContainers(TreeNode node, JToken folder, bool requireUploadPerms, bool showFiles, PanoramaServer server)
     {
-        var subFolders = folder[@"children"].Children();
+        var subFolders = folder[JSON_PROP_CHILDREN].Children();
         foreach (var subFolder in subFolders)
         {
             if (!PanoramaUtil.HasReadPermissions(subFolder))
@@ -454,7 +768,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
                 continue;
             }
 
-            var folderName = (string)subFolder[@"name"];
+            var folderName = (string)subFolder[JSON_PROP_NAME];
 
             var folderNode = new TreeNode(folderName);
             AddChildContainers(folderNode, subFolder, requireUploadPerms, showFiles, server);
@@ -484,16 +798,16 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             }
             else
             {
-                var moduleProperties = subFolder[@"moduleProperties"];
+                var moduleProperties = subFolder[JSON_PROP_MODULE_PROPERTIES];
                 if (moduleProperties == null)
                     folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                 else
                 {
-                    var effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+                    var effectiveValue = (string)moduleProperties[0]![JSON_PROP_EFFECTIVE_VALUE];
 
                     folderNode.ImageIndex =
                         folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
+                            (effectiveValue!.Equals(JSON_PROP_LIBRARY) || effectiveValue.Equals(JSON_PROP_LIBRARY_PROTEIN))
                                 ? (int)ImageId.chrom_lib
                                 : (int)ImageId.labkey;
                 }
@@ -501,7 +815,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
 
             if (showFiles)
             {
-                folderNode.Tag = new FolderInformation(server, (string)subFolder[@"path"], hasTargetedMsModule);
+                folderNode.Tag = new FolderInformation(server, (string)subFolder[JSON_PROP_PATH], hasTargetedMsModule);
             }
             else
             {
@@ -520,14 +834,31 @@ public class WebDavBrowser : PanoramaFolderBrowser
 
     }
 
+    /// <summary>
+    /// Fetches server folder data from the web on a background thread.
+    /// Must be called after control creation on the UI thread.
+    /// This method should NOT create any UI controls.
+    /// </summary>
+    public override void LoadServerData(IProgressMonitor progressMonitor)
+    {
+        // For WebDavBrowser, the tree structure is built from InitialPath in InitializeTreeView (no HTTP needed)
+        // Folder data is loaded lazily via DynamicLoad when nodes are expanded
+        // Files are loaded when nodes are selected via AddFilesForSelectedNode
+        // So there's no bulk data loading needed here - just mark as loaded so PopulateTreeView knows to proceed
+    }
+
     public override void InitializeTreeView(TreeView treeView)
     {
         if (InitialPath != null)
         {
             ActiveServer = ServerList.FirstOrDefault();
+            // Build the tree structure from the path (no HTTP requests - this is fast)
             InitializeTreeFromPath(treeView, ActiveServer);
-            AddWebDavFolders(treeView.SelectedNode);
-            AddFilesForSelectedNode(treeView.SelectedNode, EventArgs.Empty);
+            
+            // Don't call AddWebDavFolders or AddFilesForSelectedNode here - they make HTTP requests
+            // AddWebDavFolders will be called lazily via DynamicLoad when nodes are expanded
+            // AddFilesForSelectedNode will be called when the node is actually selected/clicked
+            // This avoids blocking the UI thread during form load
         }
     }
 
@@ -540,20 +871,24 @@ public class WebDavBrowser : PanoramaFolderBrowser
             Uri query = null;
             try
             {
-                query = new Uri(string.Concat(folderInfo.Server.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, "?method=json"));
-                using var requestHelper = new PanoramaRequestHelper(new LabkeySessionWebClient(folderInfo.Server));
+                // Use GetUri() to construct the webdav URI properly, handling slashes and server.FolderPath
+                // GetFullPath() returns path with leading slash, but GetUri() handles that
+                string folderPath = folderInfo.Server.GetFullPath(folderInfo.FolderPath);
+                string uriString = folderInfo.Server.GetUri(folderPath, webdav: true);
+                query = new Uri(uriString + @"?method=json");
+                using var requestHelper = new HttpPanoramaRequestHelper(folderInfo.Server);
                 JToken json = requestHelper.Get(query);
                 if ((int)json[@"fileCount"] != 0)
                 {
                     var files = json[@"files"];
-                    foreach (var file in files)
+                    foreach (var file in files!)
                     {
                         var fileName = (string)file[@"text"];
                         var isFile = (bool)file[@"leaf"];
                         if (!isFile)
                         {
                             var canRead = (bool)file[@"canRead"];
-                            if (!canRead || fileName.Equals("assaydata"))
+                            if (!canRead || fileName!.Equals(@"assaydata"))
                             {
                                 continue;
                             }
@@ -630,9 +965,19 @@ public class WebDavBrowser : PanoramaFolderBrowser
             treeViewFolders.SelectedNode = fileNode;
             if (selectedFolder.Tag is FolderInformation folderInfo)
                 fileNode.Tag = new FolderInformation(server, string.Concat(folderInfo.FolderPath, PanoramaUtil.FILES_W_SLASH), false);
+            // Create a dummy node so that DynamicLoad will be called when @files is expanded
+            // This follows the same lazy-loading pattern used for other WebDav folders created by AddWebDavFolders
+            CreateDummyNode(fileNode);
         }
         treeViewFolders.SelectedImageIndex = treeViewFolders.ImageIndex = (int)ImageId.folder;
         selectedFolder.Expand();
+        
+        // After setting the selected node, ensure the selection is properly handled
+        // This triggers UpdateNavButtons which sets _selectedNode and fires AddFiles event
+        if (treeViewFolders.SelectedNode != null)
+        {
+            UpdateNavButtons(treeViewFolders.SelectedNode);
+        }
     }
 
     /// <summary>
@@ -692,8 +1037,9 @@ public class TestPanoramaFolderBrowser : LKContainerBrowser
     }
 
     public override void InitializeTreeServers(PanoramaServer server,
-        List<KeyValuePair<PanoramaServer, JToken>> listServers)
+        List<KeyValuePair<PanoramaServer, JToken>> listServers,
+        IProgressMonitor progressMonitor, IProgressStatus progressStatus)
     {
-        // Do nothing
+        // Do nothing - test class uses pre-loaded JSON
     }
 }

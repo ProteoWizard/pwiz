@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
             
             // We assume that the first component of the path element is the context path where LabKey Server is deployed.
             // Both VALID_PANORAMA_Server and VALID_PANORAMA_SERVER/libkey will be saved as two different servers.
-            CheckServerInfoSuccess(new TestPanoramaClient(VALID_PANORAMA_SERVER + "/libkey", VALID_USER_NAME, VALID_PASSWORD), 2);
+            CheckServerInfoSuccess(new TestPanoramaClient(VALID_PANORAMA_SERVER + "libkey", VALID_USER_NAME, VALID_PASSWORD), 2);
             
             // Non-existent server
             CheckServerInfoFailure(new TestPanoramaClient(NON_EXISTENT_SERVER, VALID_USER_NAME, VALID_PASSWORD), 2);
@@ -500,11 +500,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
-                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException").ToString());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri)).Uri(ServerUri).ErrorDetail($"Test {nameof(PanoramaServerException)}").ToString());
                 }
 
                 else if (string.Equals(Server, NON_EXISTENT_SERVER))
-                    throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.missing.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - NameResolutionFailure").ToString());
+                    throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.missing.Error(ServerUri)).Uri(ServerUri).ErrorDetail($"Test {nameof(PanoramaServerException)} - NameResolutionFailure").ToString());
 
                 else if (Server.Contains(VALID_PANORAMA_SERVER))
                 {
@@ -516,10 +516,10 @@ namespace pwiz.SkylineTestFunctional
                     else
                     {
                         throw new PanoramaServerException(new ErrorMessageBuilder(UserStateEnum.nonvalid.Error(ServerUri))
-                            .Uri(PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password))).ErrorDetail("Test WebException").ToString());
+                            .Uri(PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password))).ErrorDetail($"Test {nameof(PanoramaServerException)}").ToString());
                     }
                 }
-                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - unknown failure").ToString());
+                throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail($"Test {nameof(PanoramaServerException)} - unknown failure").ToString());
             }
 
             public override void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true)
@@ -532,7 +532,8 @@ namespace pwiz.SkylineTestFunctional
                 set { _serverSkydVersion = value; }
             }
 
-            public override JToken GetInfoForFolders(string folder)
+            public override JToken GetInfoForFolders(string folder,
+                IProgressMonitor progressMonitor, IProgressStatus progressStatus)
             {
                 // this addition is hacky but necessary as far as I can tell to get PanoramaSavedUri testing to work
                 // basically adds a WRITE_TARGET type folder in the root because the new code to deal with publishing to a 
@@ -553,7 +554,8 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            public override Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+            public override Uri SendZipFile(string folderPath, string zipFilePath,
+                IProgressMonitor progressMonitor, IProgressStatus progressStatus)
             {
                 return null;
             }

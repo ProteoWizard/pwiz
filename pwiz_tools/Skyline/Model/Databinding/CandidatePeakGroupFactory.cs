@@ -1,4 +1,4 @@
-﻿using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Results;
 using System;
 using System.Collections.Generic;

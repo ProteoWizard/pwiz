@@ -1,4 +1,4 @@
-﻿using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;

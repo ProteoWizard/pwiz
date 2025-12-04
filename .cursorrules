@@ -1,8 +1,28 @@
 # Cursor project orientation for ProteoWizard (pwiz)
-# 
+#
 # This file provides Cursor-specific behavior guidance.
 # For detailed coding conventions, style guidelines, and testing patterns,
-# see STYLEGUIDE.md - the comprehensive style guide used by all AI tools.
+# see ai/STYLEGUIDE.md - the comprehensive style guide used by all AI tools.
+# For project context, common gotchas, and architectural patterns,
+# see ai/MEMORY.md - essential context for AI tools working on this project.
+
+[CRITICAL_FOR_AI_TOOLS]
+# READ THESE FILES AT THE START OF EVERY CONVERSATION AND AFTER ANY CONTEXT RESET/SUMMARY:
+# 
+# 1. MEMORY.md - DRY principle, common patterns, architectural decisions, project gotchas
+# 2. STYLEGUIDE.md - Code style, file headers, testing patterns, localization, file I/O (FileSaver)
+# 3. TESTING.md - Test structure, AbstractFunctionalTestEx helpers, translation-proof testing
+# 4. WORKFLOW.md - Git workflow, TODO lifecycle, branch management
+#
+# These files contain essential context that MUST be maintained across conversation summaries.
+# When writing code or tests, actively apply the principles documented in these files:
+# - DRY: Extract common patterns into parameterized helpers (see MEMORY.md examples)
+# - Use AbstractFunctionalTestEx helpers (TestMessageDlgShownContaining, TestHttpClientCancellation, etc.)
+# - Always use resource strings for assertions (never hardcoded English)
+# - Always use FileSaver for atomic file writes (see STYLEGUIDE.md)
+# - Follow established patterns in similar existing code
+#
+# If you notice yourself writing repetitive code or tests, STOP and refactor to be DRY.
 
 [project]
 name = "ProteoWizard (pwiz)"
@@ -38,6 +58,7 @@ entry_points = [
 - When adding sources, update the appropriate Jamfile or Visual Studio project.
 - Use existing vendor libraries from `libraries/`; do not fetch replacements.
 - For documentation, add concise notes to `README.md` and `doc/`.
+- Project conventions: See ai/MEMORY.md for essential project context and common gotchas.
 
 [skyline]
 primary_solution = "pwiz_tools/Skyline/Skyline.sln"
@@ -54,6 +75,14 @@ docs = [
 - Provide minimal, actionable explanations.
 - Use fenced code blocks only for relevant snippets or commands.
 - Default to read-only discovery before edits; then apply focused edits.
+- When referring to the person working with the AI, use "the developer" not "the user".
+  - "The user" refers to end-users of Skyline software.
+  - "The developer" refers to the person pair-programming with the AI.
+  - This avoids confusion when discussing both developers and end-users in the same conversation.
+
+[async_patterns]
+# See ai/STYLEGUIDE.md for comprehensive async/await guidelines
+reference = "ai/STYLEGUIDE.md"
 
 [build_and_testing]
 - LLM agents CANNOT build or run this project directly.
@@ -63,53 +92,27 @@ docs = [
 - Do not attempt to run tests or execute the application.
 
 [file_headers]
-standard_header = """
-/*
- * Original author: [Author Name] <[email] .at. [domain]>,
- *                  [Affiliation]
- * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
- *
- * Copyright [Year] University of Washington - Seattle, WA
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-"""
-ai_attribution = {
-  required = "Always include AI assistance line when code is created or significantly modified with AI tools"
-  format = "Cursor ([model names]) <cursor .at. anysphere.co>"
-  position = "After original author, before copyright"
-  email_format = "Use .at. format to avoid spam harvesting"
-  multiple_models = "List all models used if multiple AI systems contributed significantly"
-}
+# See ai/STYLEGUIDE.md for file header format and AI attribution guidelines
+reference = "ai/STYLEGUIDE.md"
 
 [testing]
-# See STYLEGUIDE.md for comprehensive testing guidelines
-reference = "STYLEGUIDE.md"
+# See ai/TESTING.md for comprehensive testing guidelines
+reference = "ai/TESTING.md"
 
 [style_skyline_csharp]
-# See STYLEGUIDE.md for comprehensive C# coding conventions
-reference = "STYLEGUIDE.md"
+# See ai/STYLEGUIDE.md for comprehensive C# coding conventions
+reference = "ai/STYLEGUIDE.md"
 docs = [
-  "STYLEGUIDE.md"
+  "ai/STYLEGUIDE.md"
 ]
 
 [localization]
-# See STYLEGUIDE.md for detailed localization guidelines
-reference = "STYLEGUIDE.md"
+# See ai/STYLEGUIDE.md for detailed localization guidelines
+reference = "ai/STYLEGUIDE.md"
 
 [ui_guidelines]
-# See STYLEGUIDE.md for detailed UI guidelines
-reference = "STYLEGUIDE.md"
+# See ai/STYLEGUIDE.md for detailed UI guidelines
+reference = "ai/STYLEGUIDE.md"
 
 [executables]
 note = "Projects under pwiz_tools/Skyline/Executables are separate solutions (stand-alone tools and utilities). Not built by Skyline.sln; prefer Skyline conventions unless local overrides are required."

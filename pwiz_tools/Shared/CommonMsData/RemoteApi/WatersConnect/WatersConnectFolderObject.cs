@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -16,32 +16,45 @@
  * limitations under the License.
  */
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
 {
     public class WatersConnectFolderObject : WatersConnectObject
     {
         public string Path { get; private set; }
-        public bool HasSampleSets { get; private set; }
+        public bool CanRead { get; private set; }
+        public bool CanWrite { get; private set; }
         public string ParentId { get; private set; }
 
         public WatersConnectFolderObject(JObject jobject, string parentId, bool isSampleSet)
         {
+            Assume.IsNotNull(jobject);
             // ReSharper disable LocalizableElement
             Name = GetProperty(jobject, "name");
             if (isSampleSet)
             {
                 Id = GetProperty(jobject, "sampleSetId");
-                HasSampleSets = true;
+                CanRead = true;
+                CanWrite = false;
             }
             else
             {
                 Id = GetProperty(jobject, "id");
                 Path = GetProperty(jobject, "path");
-                HasSampleSets = jobject["accessType"]["read"].Value<bool>();
+                CanRead = jobject["accessType"]["read"]?.Value<bool>() ?? false;
+                CanWrite = jobject["accessType"]["write"]?.Value<bool>() ?? false;
             }
             // ReSharper restore LocalizableElement
             ParentId = parentId;
+        }
+
+        public override WatersConnectUrl ToUrl(WatersConnectUrl currentConnectUrl)
+        {
+            return (WatersConnectUrl) currentConnectUrl
+                .ChangeType(WatersConnectUrl.ItemType.folder)
+                .ChangeFolderOrSampleSetId(Id)
+                .ChangePathPartsOnly(Path.Split('/'));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,7 +38,7 @@ namespace pwiz.CommonMsData.RemoteApi
     public abstract class RemoteUrl : MsDataFileUri
     {
         public static readonly RemoteUrl EMPTY = new Empty();
-        private enum Attr
+        public enum Attr
         {
             centroid_ms1,   // Legacy
             centroid_ms2,   // Legacy
@@ -50,6 +50,7 @@ namespace pwiz.CommonMsData.RemoteApi
             username,
             modified_time,
         }
+        public const string PATH_SEPARATOR = "/";
 
         public abstract RemoteAccountType AccountType { get; }
 
@@ -95,6 +96,32 @@ namespace pwiz.CommonMsData.RemoteApi
         public string ServerUrl { get; private set; }
         public string Username { get; private set; }
         public DateTime? ModifiedTime { get; private set; }
+
+        public bool BelongsToAccount(RemoteAccount account)
+        {
+            if (account == null)
+            {
+                return false;
+            }
+            if (account.AccountType != AccountType)
+            {
+                return false;
+            }
+            return account.ServerUrl == ServerUrl && account.Username == Username;
+        }
+
+        public bool SameAccountAs(RemoteUrl url)
+        {
+            if (url == null)
+            {
+                return false;
+            }
+            if (url.AccountType != AccountType)
+            {
+                return false;
+            }
+            return url.ServerUrl == ServerUrl && url.Username == Username;
+        }
 
         public RemoteUrl ChangeModifiedTime(DateTime? modifiedTime)
         {
@@ -168,6 +195,12 @@ namespace pwiz.CommonMsData.RemoteApi
             return AccountType.Name + @":" + GetParameters();
         }
 
+        public virtual string FormattedString()
+        {
+            var nameValuePairs = GetParameters();
+            return string.Join(@"\n", nameValuePairs.GetEnumerable().Select(pair => pair.Key + @":\t" + pair.Value));
+        }
+
         public override int GetSampleIndex()
         {
             return -1;
@@ -191,6 +224,12 @@ namespace pwiz.CommonMsData.RemoteApi
         public string EncodedPath { get; private set; }
 
         public virtual RemoteUrl ChangePathParts(IEnumerable<string> parts)
+        {
+            return ChangeProp(ImClone(this),
+                im => im.EncodedPath = parts == null ? null : string.Join(@"/", parts.Select(Uri.EscapeDataString)));
+        }
+
+        public RemoteUrl ChangePathPartsOnly(IEnumerable<string> parts)
         {
             return ChangeProp(ImClone(this),
                 im => im.EncodedPath = parts == null ? null : string.Join(@"/", parts.Select(Uri.EscapeDataString)));

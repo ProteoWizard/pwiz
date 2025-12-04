@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -61,9 +61,9 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
-                    textServerURL.Text = _server.URI.ToString();
+                    textServerURL.Text = _server.GetFullUri();
                     string labelText = lblProjectInfo.Text;
-                    if (labelText.Contains(textServerURL.Text))
+                    if (labelText.Contains(_server.URI.ToString()))
                         lblProjectInfo.Text = labelText.Substring(0, labelText.IndexOf(' ')) + ':';
                     if (!_server.HasUserAccount() && _existing.Contains(server => ReferenceEquals(server, _server)))
                     {
@@ -132,18 +132,20 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception x)
                 {
-                    helper.ShowTextBoxError(textServerURL, x.Message);
+                    // Message may contain braces ({}) that will cause an exception if passed as a format string
+                    helper.ShowTextBoxError(textServerURL, @"{0}", x.Message);
                     return;
                 }
             }
 
-            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(validatedServer.URI, server.URI)))
+            string finalUri = validatedServer.GetFullUri(); // URI with FolderPath
+            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(finalUri, server.GetFullUri())))
             {
-                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, validatedServer.URI);
+                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, finalUri);
                 return;
             }
 
-            _server = new Server(validatedServer.URI, Username, Password);
+            _server = new Server(finalUri, Username, Password);
             DialogResult = DialogResult.OK;
         }
 

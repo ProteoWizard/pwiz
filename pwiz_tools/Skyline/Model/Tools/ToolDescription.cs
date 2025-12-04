@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -383,13 +383,13 @@ namespace pwiz.Skyline.Model.Tools
     /// <summary>
     /// An exception to be thrown when a WebTool fails to open.
     /// </summary>
-    public class WebToolException : Exception
+    public class WebToolException : UserMessageException
     {
         /// <summary>
         /// Returns an instance of WebToolException.
         /// An exception to be thrown when a WebTool fails to open.
         /// </summary>
-        public WebToolException (string errorMessage, string link)
+        public WebToolException (string errorMessage, string link) : base(errorMessage)
         {
             _link = link;
             _errorMessage = errorMessage;
@@ -409,14 +409,14 @@ namespace pwiz.Skyline.Model.Tools
         }
     }
 
-    public class ToolExecutionException : Exception
+    public class ToolExecutionException : UserMessageException
     {
         public ToolExecutionException(string message) : base(message){}
 
         public ToolExecutionException(string message, Exception innerException) : base(message, innerException){}
     }
 
-    public class ToolDeprecatedException : Exception
+    public class ToolDeprecatedException : UserMessageException
     {
         public ToolDeprecatedException(string message) : base(message) { }
 

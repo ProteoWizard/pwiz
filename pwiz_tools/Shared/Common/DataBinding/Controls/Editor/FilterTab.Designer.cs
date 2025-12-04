@@ -1,4 +1,4 @@
-﻿namespace pwiz.Common.DataBinding.Controls.Editor
+namespace pwiz.Common.DataBinding.Controls.Editor
 {
     partial class FilterTab
     {

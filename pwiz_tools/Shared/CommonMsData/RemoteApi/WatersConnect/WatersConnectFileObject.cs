@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -26,7 +26,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             // ReSharper disable LocalizableElement
             Id = GetProperty(jobject, "id");
-            Name = GetProperty(jobject, "name");
+            Name = GetProperty(jobject, "skylineName");
             //Type = GetProperty(jobject, "type");
             CreatedAt = GetDateProperty(jobject, "dateCreated");
             ModifiedAt = GetDateProperty(jobject, "dateModified");

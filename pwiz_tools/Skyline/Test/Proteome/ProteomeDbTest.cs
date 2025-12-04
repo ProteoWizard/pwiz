@@ -32,7 +32,7 @@ namespace pwiz.SkylineTest.Proteome
     /// Summary description for ProteomeDbTest
     /// </summary>
     [TestClass]
-    public class ProteomeDbTest : AbstractUnitTest
+    public class ProteomeDbTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"Test\Proteome\ProteomeDbTest.zip";
 
@@ -61,27 +61,34 @@ namespace pwiz.SkylineTest.Proteome
             }
         }
 
+        protected override bool IsRecordMode => false; // Set to true for recording
+
         /// <summary>
         /// Tests reading an older-version proteome database, adding a FASTA file to it.
         /// </summary>
         [TestMethod]
         public void TestOlderProteomeDb()
         {
-            DoTestOlderProteomeDb(TestContext, false); // don't actually go to the web for protein metadata
+            DoActualWebAccess = false; // Use recorded playback
+            DoTestOlderProteomeDb();
         }
 
         [TestMethod]
-        public void TestWebProteomeDb()
+        public void TestOlderProteomeDbWeb()
         {
-            if (!AllowInternetAccess)
-                return; // Not really a success, but certainly not a failure CONSIDER can we have a new attribure for tests like these?
-            DoTestOlderProteomeDb(TestContext, true); // actually go to the web for protein metadata
+            // Only run this if SkylineTester has enabled web access or web responses are being recorded
+            if (AllowInternetAccess || IsRecordMode)
+            {
+                DoActualWebAccess = true; // Actually go to the web
+                DoTestOlderProteomeDb();
+            }
+
+            CheckRecordMode();
         }
 
-
-        public void DoTestOlderProteomeDb(TestContext testContext,  bool doActualWebAccess)
+        private void DoTestOlderProteomeDb()
         {
-            TestFilesDir = new TestFilesDir(testContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string fastaPath = TestFilesDir.GetTestPath("tiny.fasta");
             string protDbPath = TestFilesDir.GetTestPath("celegans_mini.protdb"); // a version 0 protdb file
@@ -93,53 +100,51 @@ namespace pwiz.SkylineTest.Proteome
             // What happens when you try to open a non-protdb database file as a protdb file?
             AssertEx.ThrowsException<FileLoadException>(() => ProteomeDb.OpenProteomeDb(blibPath));
 
-            using (ProteomeDb proteomeDb = ProteomeDb.OpenProteomeDb(protDbPath))
+            using var scope = GetHttpRecordingScope();
+            using var proteomeDb = ProteomeDb.OpenProteomeDb(protDbPath);
+
+            Assert.IsTrue(proteomeDb.GetSchemaVersionMajor() == 0); // the initial db from our zip file should be ancient
+            Assert.IsTrue(proteomeDb.GetSchemaVersionMinor() == 0); // the initial db from our zip file should be ancient
+            Assert.AreEqual(9, proteomeDb.GetProteinCount());
+
+            var protein = proteomeDb.GetProteinByName("Y18D10A.20");
+            Assert.IsNotNull(protein);
+            Assert.IsTrue(String.IsNullOrEmpty(protein.Accession)); // old db won't have this populated
+
+            var searcher = new WebEnabledFastaImporter();
+            bool searchComplete;
+            IProgressStatus status = new ProgressStatus(string.Empty);
+            Assert.IsTrue(proteomeDb.LookupProteinMetadata(new SilentProgressMonitor(), ref status, searcher, false, out searchComplete)); // add any missing protein metadata
+            Assert.IsTrue(searchComplete);
+
+            protein = proteomeDb.GetProteinByName("Y18D10A.20");
+            Assert.IsNotNull(protein);
+            Assert.AreEqual("Q9XW16", protein.Accession);
+
+            using (var reader = new StreamReader(fastaPath))
             {
-                Assert.IsTrue(proteomeDb.GetSchemaVersionMajor() == 0); // the initial db from our zipfile should be ancient
-                Assert.IsTrue(proteomeDb.GetSchemaVersionMinor() == 0); // the initial db from our zipfile should be ancient
-                Assert.AreEqual(9, proteomeDb.GetProteinCount());
-
-                var protein = proteomeDb.GetProteinByName("Y18D10A.20");
-                Assert.IsNotNull(protein);
-                Assert.IsTrue(String.IsNullOrEmpty(protein.Accession)); // old db won't have this populated
-
-                WebEnabledFastaImporter searcher = new WebEnabledFastaImporter(doActualWebAccess ? null :new WebEnabledFastaImporter.FakeWebSearchProvider());
-                bool searchComplete;
-                IProgressStatus status = new ProgressStatus(string.Empty);
-                Assert.IsTrue(proteomeDb.LookupProteinMetadata(new SilentProgressMonitor(), ref status, searcher, false, out searchComplete)); // add any missing protein metadata
-                Assert.IsTrue(searchComplete);
-
-                protein = proteomeDb.GetProteinByName("Y18D10A.20");
-                Assert.IsNotNull(protein);
-                if (doActualWebAccess) // We can actually go to the web for metadata
-                    Assert.AreEqual( "Q9XW16", protein.Accession);
-
-                using (var reader = new StreamReader(fastaPath))
-                {
-                    proteomeDb.AddFastaFile(reader, new SilentProgressMonitor(), ref status, false);
-                }
-                // the act of writing should update to the current version
-                Assert.AreEqual(ProteomeDb.SCHEMA_VERSION_MAJOR_CURRENT, proteomeDb.GetSchemaVersionMajor());
-                Assert.AreEqual(ProteomeDb.SCHEMA_VERSION_MINOR_CURRENT, proteomeDb.GetSchemaVersionMinor());
-                Assert.AreEqual(19, proteomeDb.GetProteinCount());
-
-                // check for propery processed protein metadata
-                Assert.IsTrue(proteomeDb.LookupProteinMetadata(new SilentProgressMonitor(), ref status, searcher, false, out searchComplete));
-                Assert.IsTrue(searchComplete);
-                protein = proteomeDb.GetProteinByName("IPI00000044");
-                Assert.IsNotNull(protein);
-                Assert.AreEqual("P01127", protein.Accession); // We get this offline with our ipi->uniprot mapper
-                if (doActualWebAccess) 
-                    Assert.AreEqual("PDGFB_HUMAN", protein.PreferredName); // But this we get only with web access
-/*
-                // TODO(bspratt): fix  "GetDigestion has no notion of a Db that has been added to, doesn't digest the new proteins and returns immediately (issue #304)"
-                Enzyme trypsin = EnzymeList.GetDefault();
-                proteomeDb.Digest(trypsin,  new SilentProgressMonitor());
-                Digestion digestion = proteomeDb.GetDigestion(trypsin.Name);
-                var digestedProteins0 = digestion.GetProteinsWithSequencePrefix("EDGWVK", 100);
-                Assert.IsTrue(digestedProteins0.Count >= 1);
-//*/
+                proteomeDb.AddFastaFile(reader, new SilentProgressMonitor(), ref status, false);
             }
+            // the act of writing should update to the current version
+            Assert.AreEqual(ProteomeDb.SCHEMA_VERSION_MAJOR_CURRENT, proteomeDb.GetSchemaVersionMajor());
+            Assert.AreEqual(ProteomeDb.SCHEMA_VERSION_MINOR_CURRENT, proteomeDb.GetSchemaVersionMinor());
+            Assert.AreEqual(19, proteomeDb.GetProteinCount());
+
+            // check for propery processed protein metadata
+            Assert.IsTrue(proteomeDb.LookupProteinMetadata(new SilentProgressMonitor(), ref status, searcher, false, out searchComplete));
+            Assert.IsTrue(searchComplete);
+            protein = proteomeDb.GetProteinByName("IPI00000044");
+            Assert.IsNotNull(protein);
+            Assert.AreEqual("P01127", protein.Accession); // We get this offline with our ipi->uniprot mapper
+            Assert.AreEqual("PDGFB_HUMAN", protein.PreferredName); // But this we get only with web access
+/*
+            // CONSIDER(bspratt): fix  "GetDigestion has no notion of a Db that has been added to, doesn't digest the new proteins and returns immediately (issue #304)"
+            Enzyme trypsin = EnzymeList.GetDefault();
+            proteomeDb.Digest(trypsin,  new SilentProgressMonitor());
+            Digestion digestion = proteomeDb.GetDigestion(trypsin.Name);
+            var digestedProteins0 = digestion.GetProteinsWithSequencePrefix("EDGWVK", 100);
+            Assert.IsTrue(digestedProteins0.Count >= 1);
+//*/
         }
 
         /// <summary>
@@ -165,5 +170,6 @@ namespace pwiz.SkylineTest.Proteome
             {
             }
         }
+
     }
 }

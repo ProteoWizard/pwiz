@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -176,7 +176,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
         [Importable(Formatter = typeof(StandardType.PropertyFormatter))]
         public StandardType StandardType
         {
@@ -330,7 +329,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DataGridViewColumnType(typeof(NormalizationMethodDataGridViewColumn))]
         [Importable(Formatter = typeof(NormalizationMethod.PropertyFormatter))]
         public NormalizationMethod NormalizationMethod
         {
@@ -343,7 +341,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
 
-        [DataGridViewColumnType(typeof(SurrogateStandardDataGridViewColumn))]
+        [DataTypeSpecifier(typeof(SurrogateStandardName))]
         [Importable]
         public string SurrogateExternalStandard
         {
@@ -577,5 +575,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return owner.MakeResults();
             }
         }
+    }
+
+    /// <summary>
+    /// Marker type used with DataTypeSpecifierAttribute to indicate that a string property
+    /// represents a surrogate standard name and should use SurrogateStandardDataGridViewColumn
+    /// in the UI without creating a compile-time dependency from Model to UI.
+    /// </summary>
+    public class SurrogateStandardName
+    {
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -487,27 +486,7 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
-            var columnTypeAttribute = columnDescriptor.GetAttributes().OfType<DataGridViewColumnTypeAttribute>().FirstOrDefault();
-
-            if (columnTypeAttribute == null || columnTypeAttribute.ColumnType == null)
-            {
-                return null;
-            }
-            try
-            {
-                var constructor = columnTypeAttribute.ColumnType.GetConstructor(Array.Empty<Type>());
-                Debug.Assert(null != constructor);
-                // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                // ReSharper disable ConstantConditionalAccessQualifier
-                return (DataGridViewColumn) constructor?.Invoke(Array.Empty<object>());
-                // ReSharper restore ConstantConditionalAccessQualifier
-                // ReSharper restore ConditionIsAlwaysTrueOrFalse
-            }
-            catch (Exception exception)
-            {
-                Messages.WriteAsyncDebugMessage(@"Exception constructing column of type {0}:{1}", columnTypeAttribute.ColumnType, exception);
-                return null;
-            }
+            return null;
         }
 
         protected DataGridViewLinkColumn CreateLinkColumn(PropertyDescriptor propertyDescriptor)
