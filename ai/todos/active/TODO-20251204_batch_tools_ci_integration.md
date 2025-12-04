@@ -230,6 +230,21 @@ Or use vswhere to find it dynamically (see `Build-AutoQC.ps1:251-255` for exampl
 - `pwiz_tools/Skyline/Jamfile.jam` - Added AutoQC build/test targets
 - `ai/todos/active/TODO-20251204_batch_tools_ci_integration.md` - This file
 
+## Important Discovery: AssemblyInfo Generation Behavior
+
+**Issue Found**: TeamCity reported AutoQC/Properties/AssemblyInfo.cs as an uncommitted file, even though AutoQC.exe target is marked `explicit`.
+
+**Root Cause**: The `generate-skyline-AssemblyInfo.cs` call in Jamfile.jam (line 85) runs whenever bjam processes the Jamfile, **regardless of whether the target is built**. This is intentional - it ensures version information is always up-to-date.
+
+**Solution**: Added AutoQC's AssemblyInfo.cs to .gitignore (following SkylineBatch pattern):
+```
+/pwiz_tools/Skyline/Executables/AutoQC/AutoQC/Properties/AssemblyInfo.cs
+```
+
+**Why AutoQC Builds in TeamCity**: TeamCity likely runs `bjam` without specific targets, which processes all non-explicit Jam rules including AssemblyInfo generation. The AutoQC.exe build target itself is still `explicit` and won't build unless requested, but the AssemblyInfo generation happens unconditionally.
+
+**No Action Required**: This is expected behavior. The .gitignore addition resolves the uncommitted file issue.
+
 ## When TeamCity Admin Returns
 
 1. Review this TODO document
