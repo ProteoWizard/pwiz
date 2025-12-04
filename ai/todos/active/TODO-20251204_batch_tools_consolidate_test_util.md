@@ -1,10 +1,17 @@
-# TODO: Normalize and Consolidate Batch Tools Test Utilities
+# TODO-20251204_batch_tools_consolidate_test_util.md
 
-**Status**: Backlog  
-**Priority**: Medium  
-**Complexity**: Medium  
-**Created**: 2025-11-24  
-**Last Updated**: 2025-11-24
+## Branch Information
+- **Branch**: `Skyline/work/20251204_batch_tools_consolidate_test_util`
+- **Created**: 2025-12-04
+- **Completed**: (pending)
+- **Status**: 🚧 In Progress
+- **PR**: (pending)
+- **Objective**: Consolidate duplicated test utilities from SkylineBatch and AutoQC into SharedBatchTest
+
+## Summary
+**Priority**: Medium
+**Complexity**: Medium
+**Original Planning Date**: 2025-11-24
 
 ## Scope
 
