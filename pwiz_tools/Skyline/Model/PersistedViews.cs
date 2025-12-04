@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model
         public int RevisionIndex { get; private set; }
         // v12 adds small mol peak boundaries report
         // v13 adds small mol transitions report and small mol RT Results report
-        public int RevisionIndexCurrent { get { return 14; } } 
+        public int RevisionIndexCurrent { get { return 15; } } 
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -204,6 +204,11 @@ namespace pwiz.Skyline.Model
             if (revisionIndex >= 14)
             {
                 reportStrings.Add(REPORTS_V14);
+            }
+
+            if (revisionIndex >= 15)
+            {
+                reportStrings.Add(REPORTS_V15);
             }
 
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
@@ -554,6 +559,25 @@ namespace pwiz.Skyline.Model
     <column name='Reason' />
     <column name='User' />
     <column name='SkylineVersion' />
+  </view>
+</views>";
+
+        private const string REPORTS_V15 = @"<?xml version='1.0'?>
+<views>
+  <view name='Peptide Areas' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='' uimode='proteomic'>
+    <column name='' />
+    <column name='ModifiedSequence' />
+    <column name='Protein' />
+    <column name='Protein.Name' />
+    <column name='Protein.Description' />
+    <column name='Protein.Accession' />
+    <column name='Results!*.Value.Quantification.NormalizedArea' />
+  </view>
+  <view name='Protein Areas' rowsource='pwiz.Skyline.Model.Databinding.Entities.Protein' sublist='' uimode='proteomic'>
+    <column name='' />
+    <column name='Description' />
+    <column name='Gene' />
+    <column name='Results!*.Value.Abundance' />
   </view>
 </views>";
 
