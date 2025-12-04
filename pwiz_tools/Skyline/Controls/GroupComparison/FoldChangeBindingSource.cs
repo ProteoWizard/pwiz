@@ -35,6 +35,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public class FoldChangeBindingSource
     {
+        public const string FoldChangeRowSourceName =
+            @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeRow";
+
+        public const string FoldChangeDetailRowSourceName =
+            @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeDetailRow";
         private int _referenceCount;
         private Container _container;
         private EventTaskScheduler _taskScheduler;
@@ -170,10 +175,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var rowSourceInfos = new List<RowSourceInfo>
             {
                 new RowSourceInfo(typeof(FoldChangeRow), fcRowsSource, new[] { fcView },
-                    @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeRow",
+                    FoldChangeRowSourceName,
                     nameof(FoldChangeRow)),
                 new RowSourceInfo(typeof(FoldChangeDetailRow), fcDetailRowsSource, new[] { fcDetailView },
-                    @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeDetailRow",
+                    FoldChangeDetailRowSourceName,
                     nameof(FoldChangeDetailRow))
             };
             return rowSourceInfos;
@@ -259,14 +264,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             var viewSpec = new ViewSpec()
                 .SetName(AbstractViewContext.DefaultViewName)
-                .SetRowType(typeof (FoldChangeRow))
+                .SetRowSource(FoldChangeRowSourceName)
                 .SetColumns(columns.Select(col => new ColumnSpec(col)));
             return viewSpec;
         }
 
         private ViewSpec GetClusteredViewSpec(ViewSpec defaultViewSpec)
         {
-            var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME).SetRowType(typeof(FoldChangeDetailRow));
+            var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME).SetRowSource(FoldChangeDetailRowSourceName);
 
             PropertyPath ppRunAbundance = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.ReplicateAbundances)).DictionaryValues();
             PropertyPath ppFoldChange = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.FoldChangeResults))
