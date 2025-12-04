@@ -16,7 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.FileUI;
@@ -152,14 +152,15 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            { // Rename subdirectory 
+            { // Rename subdirectory
                 var dirName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory01");
+                var filesTreeNodes = FindNodesForDir(dirName);
+
                 Directory.Move(dirName, dirName + @"RENAME");
                 ((LocalFileSystemService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
-                Thread.Sleep(250); // Wait briefly for the availability monitor to trigger
+                WaitForConditionUI(() => filesTreeNodes.All(node => node.FileState == FileState.missing));
                 WaitForFilesTree();
 
-                var filesTreeNodes = FindNodesForDir(dirName);
                 foreach (var node in filesTreeNodes)
                 {
                     Assert.IsFalse(fileSystemService.IsFileAvailable(node.LocalFilePath));
@@ -168,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
 
                 Directory.Move(dirName + @"RENAME", dirName);
                 ((LocalFileSystemService)SkylineWindow.FilesTree.FileSystemService.Delegate).TriggerAvailabilityMonitor();
-                Thread.Sleep(250); // Wait briefly for the availability monitor to trigger
+                WaitForConditionUI(() => filesTreeNodes.All(node => node.FileState == FileState.available));
                 WaitForFilesTree();
 
                 foreach (var node in filesTreeNodes)
@@ -226,12 +227,12 @@ namespace pwiz.SkylineTestFunctional
 
         private static FilesTreeNode FindNodeForPath(string filePath)
         {
-            return SkylineWindow.FilesTree.FindNodesByFilePath(filePath)[0];
+            return RunUIFunc(() => SkylineWindow.FilesTree.FindNodesByFilePath(filePath)[0]);
         }
 
         private static IList<FilesTreeNode> FindNodesForDir(string dirPath)
         {
-            return SkylineWindow.FilesTree.FindNodesByFilePath(dirPath);
+            return RunUIFunc(() => SkylineWindow.FilesTree.FindNodesByFilePath(dirPath));
         }
     }
 }

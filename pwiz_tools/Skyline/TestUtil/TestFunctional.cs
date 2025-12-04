@@ -366,6 +366,23 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        public static T RunUIFunc<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            SkylineInvoke(() =>
+            {
+                try
+                {
+                    result = func();
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail(e.ToString());
+                }
+            });
+            return result;
+        }
+
         /// <summary>
         /// Convenience function for getting a value from the UI thread
         /// e.g. var value = CallUI(() => control.Value);

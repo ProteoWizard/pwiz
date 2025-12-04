@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pwsh.exe -ExecutionPolicy Bypass -File \"pwiz_tools\\Skyline\\ai\\Run-Tests.ps1\" -TestName TestFilesTreeFileSystem)",
+      "Bash(pwsh.exe -ExecutionPolicy Bypass -File \"pwiz_tools\\Skyline\\ai\\Build-Skyline.ps1\" -Target TestFunctional)",
+      "Bash(pwsh.exe -ExecutionPolicy Bypass -File \"pwiz_tools\\Skyline\\ai\\Run-Tests.ps1\" -UseTestList)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

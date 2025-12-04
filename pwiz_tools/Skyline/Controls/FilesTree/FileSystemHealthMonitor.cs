@@ -23,17 +23,23 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.FilesTree
 {
+    /// <summary>
+    /// Monitors directory availability on a background thread, checking periodically or on demand.
+    ///
+    /// DESIGN: Single-threaded monitor. Only one background thread runs at a time, captured in _workerThread.
+    /// The Start() method ensures any existing thread is stopped before starting a new one.
+    /// This class is NOT designed to support multiple concurrent monitor threads.
+    /// </summary>
     internal class FileSystemHealthMonitor : IDisposable
     {
         private readonly TimeSpan _checkInterval;
-        private ManualResetEvent _manualTriggerEvent = new ManualResetEvent(false);
+        private AutoResetEvent _manualTriggerEvent = new AutoResetEvent(false);
         private readonly object _lock = new object();
 
+        // Single background worker thread - only one runs at a time
         private Thread _workerThread;
         private CancellationTokenSource _cancellationTokenSource;
         private Dictionary<string, PathAvailability> _paths;
-
-        private bool _isWorking;
 
         internal event Action<string, PathAvailability> PathAvailabilityChanged;
 
@@ -45,8 +51,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void Start()
         {
-            // If already started, stop the existing thread first to prevent multiple threads
-            // from accessing the same _paths and _manualTriggerEvent
+            // If already started, stop the existing thread first to prevent multiple threads.
+            // This class is designed for a single background thread at a time.
             if (_workerThread != null)
             {
                 Stop();
@@ -57,7 +63,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            // ActionUtil.RunAsync() already starts the thread, so don't call Start() again
+            // Start the single background worker thread
+            // ActionUtil.RunAsync() creates and starts the thread
             _workerThread = ActionUtil.RunAsync(() => MonitorLoop(_cancellationTokenSource.Token),
                 @"FilesTree => FileSystemAvailabilityMonitor");
         }
@@ -78,31 +85,27 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        /// <summary>
+        /// Background monitoring loop. This runs on the single worker thread created by Start().
+        /// Periodically checks path availability and fires events when state changes.
+        /// </summary>
         private void MonitorLoop(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (_isWorking)
-                {
-                    // Wait up to 200ms, but exit early if cancellation is requested
-                    SpinWait.SpinUntil(() => cancellationToken.IsCancellationRequested, 200);
-                    continue;
-                }
-                
-                _isWorking = true;
-                
+                // Check all monitored paths
                 Dictionary<string, PathAvailability> snapshot;
                 lock (_lock)
                 {
                     snapshot = new Dictionary<string, PathAvailability>(_paths);
                 }
-                
+
                 foreach (var kvPair in snapshot)
                 {
                     var path = kvPair.Key;
                     var oldState = kvPair.Value;
                     var newState = CheckPathAvailability(path);
-                
+
                     if (newState != oldState)
                     {
                         lock (_lock)
@@ -110,42 +113,25 @@ namespace pwiz.Skyline.Controls.FilesTree
                             _paths[path] = newState;
                         }
 
-                        // Ignore these events because they only happen at startup
+                        // Ignore initial state transitions from unknown
                         if (oldState != PathAvailability.unknown)
                         {
                             PathAvailabilityChanged?.Invoke(path, newState);
                         }
                     }
                 }
-                
-                _isWorking = false;
 
-                // Wait up to checkInterval, but exit early if cancellation is requested
-                SpinWait.SpinUntil(() => cancellationToken.IsCancellationRequested, _checkInterval.Milliseconds);
-
-                // Check cancellation before accessing the event
-                if (cancellationToken.IsCancellationRequested)
-                    break;
-
-                // Capture reference to avoid race with disposal
-                var manualEvent = _manualTriggerEvent;
-                if (manualEvent == null)
-                    break; // Event was disposed, exit the loop
-
-                manualEvent.WaitOne(_checkInterval);
-                
-                // Check cancellation again after WaitOne returns
-                if (cancellationToken.IsCancellationRequested)
-                    break;
-
-                // Reset the event (may throw ObjectDisposedException if disposed during WaitOne, but that's fine)
-                manualEvent.Reset();
+                // Wait for next check cycle
+                // AutoResetEvent automatically resets when WaitAny returns due to the trigger
+                // Exits when: (1) manual trigger via Trigger(), (2) timeout after _checkInterval, or (3) cancellation
+                WaitHandle.WaitAny(new[] { _manualTriggerEvent, cancellationToken.WaitHandle }, _checkInterval);
             }
         }
 
         public void Trigger()
         {
-            // No lock needed - if null, monitor is stopped anyway
+            // Manually trigger an immediate check
+            // AutoResetEvent will automatically reset when the worker thread wakes
             _manualTriggerEvent?.Set();
         }
 
@@ -159,25 +145,23 @@ namespace pwiz.Skyline.Controls.FilesTree
             _isStopping = true;
 
             _cancellationTokenSource?.Cancel();
-            
-            // Signal the manual trigger event so WaitOne() returns immediately
+
+            // Signal the manual trigger event so WaitAny() returns immediately
             // This allows the worker thread to check the cancellation token and exit
             _manualTriggerEvent?.Set();
-            
-            // Wait for the worker thread to exit completely
+
+            // Wait for the single worker thread to exit completely
             // After Join() returns, we know the thread is gone and won't access _paths or _manualTriggerEvent
             _workerThread?.Join();
 
-            // No lock needed here - Join() guarantees the worker thread is gone, and AddPath() 
-            // will throw if called after Stop() starts (enforcing Start() -> AddPath() -> Stop() sequence)
+            // Clear paths - safe because Join() guarantees the worker thread has exited
             lock (_lock)    // For ReSharper
             {
                 _paths?.Clear();
             }
 
-            // Now that the thread has exited, it's safe to dispose the event
-            // No thread protection needed here - Join() guarantees the worker thread is gone
-            // Use Interlocked.Exchange only to prevent double-disposal if Stop() is called multiple times
+            // Dispose the event - safe because the worker thread has exited
+            // Use Interlocked.Exchange to prevent double-disposal if Stop() is called multiple times
             var manualTriggerEvent = Interlocked.Exchange(ref _manualTriggerEvent, null);
             manualTriggerEvent?.Dispose();
 
@@ -195,8 +179,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             Stop();
         }
 
-        // CONSIDER: Directory.Exists(path) is good for testing whether a directory is accessible but does not 
-        //           catch whether a path exists but is inaccessible (for example, due to ACLs). A check that 
+        // CONSIDER: Directory.Exists(path) is good for testing whether a directory is accessible but does not
+        //           catch whether a path exists but is inaccessible (for example, due to ACLs). A check that
         //           does check for authorization is possible but much more expensive, especially on network
         //           drives. So just use Exists(...) for now.
         private static PathAvailability CheckPathAvailability(string path)
