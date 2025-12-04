@@ -158,19 +158,19 @@ namespace pwiz.Skyline.Model.Results
 
         public delegate PeakBounds ExplicitPeakBoundsFunc(TransitionGroup transitionGroup, Transition transition);
 
-        public void PickChromatogramPeaks(ExplicitPeakBounds explicitPeakBounds)
+        public void PickChromatogramPeaks()
         {
             ExplicitPeakBoundsFunc explicitPeakBoundsFunc = null;
+            var explicitPeakBounds = _settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
             if (explicitPeakBounds != null)
             {
                 var peakBounds = explicitPeakBounds.IsEmpty
                     ? null
                     : new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime);
-                explicitPeakBoundsFunc = (transitionGroup, transition)=>peakBounds;
+                explicitPeakBoundsFunc = (transitionGroup, transition) => peakBounds;
             }
             PickChromatogramPeaks(explicitPeakBoundsFunc);
         }
-
         public void PickChromatogramPeaks(ExplicitPeakBoundsFunc explicitPeakBoundsFunc)
         {
             TimeIntervals intersectedTimeIntervals = null;

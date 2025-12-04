@@ -97,20 +97,13 @@ namespace pwiz.Skyline.Model.Results
             }
             DetailedPeakFeatureCalculators = new DetailedFeatureCalculators(calcEnum.Cast<DetailedPeakFeatureCalculator>());
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
-
-            _peakBoundaryImputer = new PeakBoundaryImputer(document);
-            _chromatogramSet =
-                document.Settings.MeasuredResults?.Chromatograms.FirstOrDefault(chromSet =>
-                    chromSet.IndexOfPath(msDataFilePath) >= 0);
         }
 
         private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
         {
             // Score peaks.
             GetPeptideRetentionTimes(chromDataSets);
-            var explicitPeakBounds = _peakBoundaryImputer.GetExplicitPeakBounds(
-                chromDataSets.NodePep, _chromatogramSet, chromDataSets.FileInfo.FilePath);
-            chromDataSets.PickChromatogramPeaks(explicitPeakBounds);
+            chromDataSets.PickChromatogramPeaks();
             StorePeptideRetentionTime(chromDataSets);
 
             if (chromDataSets.IsDelayedWrite)
