@@ -512,10 +512,9 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private Dictionary<MsDataFileUri, SourcedPeak> GetScoredPeaks(PeptideDocNode peptideDocNode)
         {
-            var result = new Dictionary<MsDataFileUri, SourcedPeak>();
             if (peptideDocNode == null)
             {
-                return result;
+                return null;
             }
 
             bool anyReintegrated = peptideDocNode.AnyReintegratedPeaks();
@@ -523,9 +522,9 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             var measuredResults = Settings.MeasuredResults;
             if (measuredResults == null)
             {
-                return result;
+                return null;
             }
-
+            var result = new Dictionary<MsDataFileUri, SourcedPeak>();
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
                 var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
@@ -546,19 +545,22 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                         }
 
                         var fileInfo = chromatogramSet.GetFileInfo(transitionGroupChromInfo.FileId);
+                        if (fileInfo == null)
+                        {
+                            return null;
+                        }
                         if (result.ContainsKey(fileInfo.FilePath))
                         {
                             continue;
                         }
-
                         result[fileInfo.FilePath] =
                             new SourcedPeak(PeakSource.FromChromFile(chromatogramSet, fileInfo.FilePath), scoredPeak);
                     }
                 }
             }
-
             return result;
         }
+
         private Dictionary<MsDataFileUri, SourcedPeak> GetReintegratedPeaks(PeptideDocNode peptideDocNode)
         {
             var result = new Dictionary<MsDataFileUri, SourcedPeak>();
