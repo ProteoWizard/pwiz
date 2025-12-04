@@ -135,12 +135,15 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (tryToCancel)
                 {
-                    var longWaitDlg = FindOpenForm<LongWaitDlg>();
-                    if (longWaitDlg != null)
+                    RunUI(() =>
                     {
-                        RunUI(longWaitDlg.Close);
-                        triedToCancel = true;
-                    }
+                        var longWaitDlg = FindOpenForm<LongWaitDlg>();
+                        if (longWaitDlg != null)
+                        {
+                            longWaitDlg.Close();
+                            triedToCancel = true;
+                        }
+                    });
                 }
                 Thread.Sleep(0);
             }
