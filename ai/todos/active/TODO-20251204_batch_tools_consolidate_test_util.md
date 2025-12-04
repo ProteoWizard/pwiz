@@ -119,6 +119,118 @@ void WaitForCondition(Func<bool> condition) { /* implementation B */ }
 ## References
 
 - `SharedBatchTest` project: AbstractBaseFunctionalTest, AbstractUnitTest, AssertEx, ExtensionTestContext, Helpers, TestFilesDir.
-- `SkylineBatchTest/TestUtils.cs` (~527 lines)
+- `SkylineBatchTest/TestUtils.cs` (~535 lines)
 - `AutoQCTest/TestUtils.cs` (~326 lines)
 - `SkylineBatchTest/AbstractSkylineBatchFunctionalTest.cs`, `AbstractSkylineBatchUnitTest.cs`
+
+## Audit Results (2025-12-04)
+
+### Duplicated Utilities (Candidates for SharedBatchTest)
+
+#### 1. `WaitForCondition` - **EXACT DUPLICATE** ✅
+**SkylineBatchTest** (lines 426-435):
+```csharp
+public static void WaitForCondition(ConditionDelegate condition, TimeSpan timeout, int timestep, string errorMessage)
+```
+**AutoQCTest** (lines 215-224):
+```csharp
+public static void WaitForCondition(Func<bool> condition, TimeSpan timeout, int timestep, string errorMessage)
+```
+- Identical logic, identical signature (just different delegate typedef vs Func<bool>)
+- **Action**: Move to SharedBatchTest.TestUtils (static method)
+
+#### 2. `GetTestFilePath` - **SEMANTICALLY SIMILAR** ⚠️
+**SkylineBatchTest** (lines 79-93):
+- Navigates from current directory or bin directory
+- Uses fixed path: "Test" subfolder
+**AutoQCTest** (lines 70-84):
+- Uses ExtensionTestContext.GetProjectDirectory(@"Executables\AutoQC")
+- Uses fixed path: "TestData" subfolder
+- **Different test data locations**: SkylineBatch uses "Test/", AutoQC uses "TestData/"
+- **Action**: Keep project-specific (path differences intentional)
+
+#### 3. `InitializeSettingsImportExport` - **SEMANTICALLY SIMILAR** ⚠️
+**SkylineBatchTest** (lines 403-407):
+```csharp
+ConfigList.Importer = SkylineBatchConfig.ReadXml;
+ConfigList.XmlVersion = SkylineBatch.Properties.Settings.Default.XmlVersion;
+```
+**AutoQCTest** (lines 226-230):
+```csharp
+ConfigList.Importer = AutoQcConfig.ReadXml;
+ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
+```
+- Same pattern, different config types
+- **Action**: Keep project-specific (uses project-specific config types)
+
+#### 4. `GetTestConfig` - **PROJECT-SPECIFIC** 🔸
+- Both create test configs, but use different config types (SkylineBatchConfig vs AutoQcConfig)
+- **Action**: Keep project-specific
+
+#### 5. `ConfigListFromNames` - **SEMANTICALLY IDENTICAL** ✅
+**SkylineBatchTest** (lines 342-350):
+```csharp
+public static List<IConfig> ConfigListFromNames(List<string> names)
+{
+    var configList = new List<IConfig>();
+    foreach (var name in names)
+        configList.Add(GetTestConfig(name));
+    return configList;
+}
+```
+**AutoQCTest** (lines 184-192):
+```csharp
+public static List<AutoQcConfig> ConfigListFromNames(string[] names)
+{
+    var configList = new List<AutoQcConfig>();
+    foreach (var name in names)
+        configList.Add(GetTestConfig(name));
+    return configList;
+}
+```
+- Same logic, different types (IConfig vs AutoQcConfig, List vs array)
+- **Action**: Keep project-specific (type differences make consolidation awkward)
+
+### SkylineBatch-Specific Utilities (KEEP LOCAL)
+
+- **Mock R Installations** (lines 57-77): `SetupMockRInstallations`, `ClearMockRInstallations`
+- **R Version Handling** (lines 255-293): `ReplaceRVersionWithCurrent`, `CreateBcfgWithCurrentRVersion`
+- **Config Builders** (lines 95-340): `GetChangedConfig`, `GetChangedMainSettings`, etc.
+- **File Utilities** (lines 437-531): `CompareFiles`, `CopyFileFindReplace`, `CopyFileWithLineTransform`
+- **Test Results Path** (lines 374-396): `GetTestResultsPath`, `GetTestLogger` (uses TestContext)
+
+### AutoQC-Specific Utilities (KEEP LOCAL)
+
+- **Panorama Credentials** (lines 33-284): `GetPanoramaWebUsername`, `GetPanoramaWebPassword`, environment variable handling
+- **Panorama Test Folder Management** (lines 286-304): `CreatePanoramaWebTestFolder`, `DeletePanoramaWebTestFolder`
+- **Skyline Bin Resolution** (lines 86-117): `GetSkylineBinDirectory` (finds Debug/Release based on modification time)
+- **Config Manager** (lines 194-213): `GetTestConfigManager`
+- **Text Assertion** (lines 232-251): `AssertTextsInThisOrder`
+
+### Shared Infrastructure Already in SharedBatchTest
+
+- ✅ `ExtensionTestContext` - Used by AutoQC for `GetProjectDirectory`
+- ✅ `AssertEx` - Used by AutoQC for `NoExceptionThrown`
+- ✅ Abstract base classes - `AbstractBaseFunctionalTest`, `AbstractUnitTest`
+
+### Consolidation Plan
+
+#### Phase 1: Move Clear Duplicates
+1. **WaitForCondition** → `SharedBatchTest.TestUtils.WaitForCondition`
+   - Identical implementation
+   - Update both projects to use shared version
+
+#### Phase 2: Consider Enhancing SharedBatchTest (Future)
+- `AssertTextsInThisOrder` (AutoQC) - useful assertion, could move to SharedBatchTest.AssertEx
+- File comparison utilities (SkylineBatch) - if AutoQC needs them
+
+#### Phase 3: Document Patterns
+- Update test coding guidelines with where to add utilities
+- Document why certain utilities remain project-specific
+
+### Abstract Base Class Review (Pending)
+
+Need to audit:
+- Why `AbstractSkylineBatchUnitTest` doesn't extend `SharedBatchTest.AbstractUnitTest`
+- Whether AutoQC has equivalent abstract classes
+- Whether `WaitForCondition` should be instance method vs static
