@@ -149,7 +149,6 @@ namespace pwiz.Skyline.Controls.Databinding
                 return false;
             }
 
-            bool success = false;
             using (var writer = new StreamWriter(fileSaver.Stream))
             {
                 using var longWaitDlg = new LongWaitDlg();
@@ -161,15 +160,16 @@ namespace pwiz.Skyline.Controls.Databinding
                     progressMonitor.UpdateProgress(status);
                     var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
 
-                    success = rowFactories.ExportReport(writer, viewName.Value, separator, progressMonitor, ref status);
+                    rowFactories.ExportReport(writer, viewName.Value, separator, progressMonitor, ref status);
                 });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return false;
+                }
             }
 
-            if (success)
-            {
-                fileSaver.Commit();
-            }
-            return success;
+            fileSaver.Commit();
+            return true;
         }
 
         private void Repopulate()
