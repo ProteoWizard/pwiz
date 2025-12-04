@@ -4,8 +4,8 @@
 - **Branch**: `Skyline/work/20251204_batch_tools_ci_integration`
 - **Created**: 2025-12-04
 - **Completed**: (pending)
-- **Status**: 🚧 In Progress
-- **PR**: (pending)
+- **Status**: ⏸️ ON HOLD - Waiting for TeamCity Admin
+- **PR**: [#3697](https://github.com/ProteoWizard/pwiz/pull/3697) (DRAFT)
 - **Objective**: Enable CI to build and test SkylineBatch and AutoQC with proper Jamfile targets
 
 ## Summary
