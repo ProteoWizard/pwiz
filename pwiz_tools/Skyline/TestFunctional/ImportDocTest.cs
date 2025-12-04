@@ -47,6 +47,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\ImportDocTest.zip";
             TestFilesZipSuffix = "-functional";
+            EnableTraceOutputDuringCleanup = true; // Enable trace output during cleanup to debug TeamCity failures
             RunFunctionalTest();
         }
 

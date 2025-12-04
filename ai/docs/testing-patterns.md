@@ -403,6 +403,79 @@ using (var client = new TestToolStoreClient(toolDirPath))
 
 ---
 
+### Using IDisposable: Modern `using var` Syntax (C# 8.0+)
+
+**Prefer `using var` declaration syntax** over `using` blocks or try-finally patterns. It automatically disposes at the end of the enclosing scope without requiring indentation changes, resulting in smaller, cleaner diffs.
+
+#### ✅ GOOD - Modern `using var` (Preferred)
+```csharp
+// Single-line declaration - no indentation changes needed
+using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
+
+// Rest of method code stays at same indentation level
+if (TestFilesDirs != null)
+{
+    CleanupPersistentDir();
+    // ... rest of cleanup code
+}
+// traceListener automatically disposed here at end of method scope
+```
+
+#### ✅ GOOD - Conditional with null handling
+```csharp
+// Works correctly with null - Dispose() is only called if not null
+using var listener = condition ? new ScopedConsoleTraceListener() : null;
+// Code here...
+// listener?.Dispose() called automatically (handles null gracefully)
+```
+
+#### ❌ AVOID - Old `using` block syntax (unless you need explicit scope)
+```csharp
+// Requires indenting all code inside the block - larger diff
+using (var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null)
+{
+    // All code must be indented here
+    if (TestFilesDirs != null)
+    {
+        CleanupPersistentDir();
+    }
+}
+```
+
+#### ❌ AVOID - try-finally pattern (unnecessary verbosity)
+```csharp
+// More verbose and error-prone - avoid this pattern
+ScopedConsoleTraceListener traceListener = null;
+if (EnableTraceOutputDuringCleanup)
+    traceListener = new ScopedConsoleTraceListener();
+try
+{
+    // Code here...
+}
+finally
+{
+    traceListener?.Dispose();
+}
+```
+
+**When to use `using var`:**
+- ✅ Scoping IDisposable resources for the entire method/function scope
+- ✅ Conditional creation (can be null - Dispose handles null gracefully)
+- ✅ Testing seams that need automatic cleanup
+- ✅ When you want minimal diff impact (no indentation changes)
+
+**When to use `using` block:**
+- When you need explicit scope boundaries (dispose before end of method)
+- When you need multiple using statements in sequence with different scopes
+
+**Examples from codebase:**
+- `AbstractUnitTest.CleanupFiles()` - Conditional trace listener
+- `TestFunctional.cs` - MemoryStream cleanup  
+- `ProteomeDbTest.cs` - HTTP client helper (line 1017)
+- `HttpClientTestHelper` - HTTP client test seams
+
+---
+
 ### Decision Heuristic
 
 ```

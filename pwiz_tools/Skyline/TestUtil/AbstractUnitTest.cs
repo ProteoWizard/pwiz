@@ -89,6 +89,18 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// When true, enables ConsoleTraceListener during test cleanup to capture
+        /// DetailedTrace.WriteLine() output in Console (and TeamCity logs).
+        /// This is useful for debugging cleanup issues but should be used sparingly
+        /// as it can make logs harder to read.
+        /// </summary>
+        protected bool EnableTraceOutputDuringCleanup
+        {
+            get { return TestContext.GetBoolValue("EnableTraceOutputDuringCleanup", false); }  // Return false if unspecified
+            set { TestContext.Properties["EnableTraceOutputDuringCleanup"] = value.ToString(CultureInfo.InvariantCulture); }
+        }
+
+        /// <summary>
         /// When true, re-download data sets on test failure in case it's due to stale data.
         /// </summary>
         protected bool RetryDataDownloads
@@ -463,6 +475,8 @@ namespace pwiz.SkylineTestUtil
 
         private void CleanupFiles()
         {
+            using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
+
             // If test passed, dispose the working directories to make sure file handles are not still open.
             // Note: Normally this has no impact on the directory contents, because the directory is
             // simply renamed and then renamed back. If the rename fails, the directory gets
@@ -534,6 +548,31 @@ namespace pwiz.SkylineTestUtil
                 return true;
             }
             return false;
+        }
+    }
+
+    /// <summary>
+    /// IDisposable wrapper for ConsoleTraceListener that adds it to Trace.Listeners
+    /// on construction and removes it on disposal. This ensures trace output appears
+    /// in Console (and TeamCity logs) only for the scope where it's used.
+    /// </summary>
+    internal class ScopedConsoleTraceListener : IDisposable
+    {
+        private readonly ConsoleTraceListener _listener;
+
+        public ScopedConsoleTraceListener()
+        {
+            _listener = new ConsoleTraceListener();
+            Trace.Listeners.Add(_listener);
+        }
+
+        public void Dispose()
+        {
+            if (_listener != null)
+            {
+                Trace.Listeners.Remove(_listener);
+                _listener.Dispose();
+            }
         }
     }
 }

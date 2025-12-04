@@ -2079,6 +2079,8 @@ namespace pwiz.SkylineTestUtil
             // Delete unzipped test files.
             if (TestFilesDirs != null)
             {
+                using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
+
                 CleanupPersistentDir(); // Clean before checking for modifications
 
                 foreach (var dir in TestFilesDirs.Where(d => d != null))
