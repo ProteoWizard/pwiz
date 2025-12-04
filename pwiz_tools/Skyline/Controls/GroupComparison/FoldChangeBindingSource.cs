@@ -104,7 +104,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var defaultViewSpec = GetDefaultViewSpec(foldChangeRows);
             var clusteredViewSpec = GetClusteredViewSpec(defaultViewSpec);
 
-            // Build canonical row sources and views for the new Model types
             var fcRowsSource = new FixedSkylineObjectList<FoldChangeRow>(_skylineDataSchema, foldChangeRows);
             var fcView = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec)
                 .ChangeViewGroup(ViewGroup.BUILT_IN);
@@ -115,15 +114,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             var rowSourceInfos = new List<RowSourceInfo>()
             {
-                // Canonical (current) row sources
-                new RowSourceInfo(fcRowsSource, fcView),
-                new RowSourceInfo(fcDetailRowsSource, fcDetailView),
-
-                // Legacy aliases: preserve compatibility with saved .sky/.skyr using old rowsource names
                 new RowSourceInfo(typeof(FoldChangeRow), fcRowsSource, new[] { fcView }),
-                new RowSourceInfo(typeof(FoldChangeDetailRow), fcDetailRowsSource, new[] { fcDetailView },
-                    @"pwiz.Skyline.Controls.GroupComparison.FoldChangeBindingSource+FoldChangeDetailRow",
-                    nameof(FoldChangeDetailRow))
+                new RowSourceInfo(typeof(FoldChangeDetailRow), fcDetailRowsSource, new[] { fcDetailView })
             };
             return rowSourceInfos;
         }
