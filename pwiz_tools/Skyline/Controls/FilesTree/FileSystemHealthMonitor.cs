@@ -84,7 +84,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 if (_isWorking)
                 {
-                    SpinWait.SpinUntil(() => !cancellationToken.IsCancellationRequested, 200);
+                    // Wait up to 200ms, but exit early if cancellation is requested
+                    SpinWait.SpinUntil(() => cancellationToken.IsCancellationRequested, 200);
                     continue;
                 }
                 
@@ -119,7 +120,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 
                 _isWorking = false;
 
-                SpinWait.SpinUntil(() => !cancellationToken.IsCancellationRequested, _checkInterval.Milliseconds);
+                // Wait up to checkInterval, but exit early if cancellation is requested
+                SpinWait.SpinUntil(() => cancellationToken.IsCancellationRequested, _checkInterval.Milliseconds);
 
                 // Check cancellation before accessing the event
                 if (cancellationToken.IsCancellationRequested)
