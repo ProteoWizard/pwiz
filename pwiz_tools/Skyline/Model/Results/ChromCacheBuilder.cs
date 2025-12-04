@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -63,7 +62,6 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
 
-        private readonly PeakBoundaryImputer _peakBoundaryImputer;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
@@ -97,6 +95,9 @@ namespace pwiz.Skyline.Model.Results
             }
             DetailedPeakFeatureCalculators = new DetailedFeatureCalculators(calcEnum.Cast<DetailedPeakFeatureCalculator>());
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
+            _chromatogramSet =
+                document.Settings.MeasuredResults?.Chromatograms.FirstOrDefault(chromSet =>
+                    chromSet.IndexOfPath(msDataFilePath) >= 0);
         }
 
         private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
