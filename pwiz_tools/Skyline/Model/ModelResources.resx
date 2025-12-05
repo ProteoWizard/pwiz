@@ -957,4 +957,10 @@ Would you like to continue?
   <data name="TransitionDocNode_Titles" xml:space="preserve">
     <value>Transitions</value>
   </data>
+  <data name="PersistedViews_GetLocalizedReportNames_Protein_Abundances" xml:space="preserve">
+	  <value>Protein Abundances</value>
+  </data>
+  <data name="PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas" xml:space="preserve">
+	  <value>Peptide Normalized Areas</value>
+  </data>
 </root>
