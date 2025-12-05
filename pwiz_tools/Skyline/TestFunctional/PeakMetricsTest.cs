@@ -174,12 +174,16 @@ namespace pwiz.SkylineTestFunctional
                         lcPeakValues.Add(GetDouble(row, colLcPeak));
                     }
 
-                    var apexValue = apexValues.Distinct().Single();
                     var lcPeakValue = lcPeakValues.Distinct().Single();
-                    var sumApex = transitionApexValues.Sum();
                     var sumLcPeak = transitionLcPeakValues.Sum();
-                    Assert.AreEqual(apexValue, sumApex);
-                    Assert.AreEqual(lcPeakValue, sumLcPeak);
+                    AssertEx.AreEqual(lcPeakValue, sumLcPeak, .01);
+
+                    // The individual transition metrics were calculated at the apex for that transition.
+                    // The sum of them will be greater than the value that was calculated from looking at
+                    // the apex of the sum of the transitions
+                    var apexValue = apexValues.Distinct().Single();
+                    var sumApex = transitionApexValues.Sum();
+                    AssertEx.IsGreaterThanOrEqual(sumApex, apexValue);
                 }
             });
         }
