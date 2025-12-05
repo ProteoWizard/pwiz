@@ -454,20 +454,65 @@ at AutoQCTest.AutoQcFileSystemWatcherTest.<TestGetNewFilesForInstrument>d__5.Mov
 
 **Results**: Test now passes reliably! No more unhandled exceptions. ✅
 
-#### 🔸 PRE-EXISTING: log4net Configuration Warnings
+#### ✅ FIXED: log4net Configuration Warnings (2025-12-05)
 **Problem**: `log4net:ERROR Failed to find configuration section 'log4net' in application's .config file`
 - Shows in test output: "Test Run deployment issue: Failed to get the file for deployment item 'SkylineLog4Net.config'"
 - Missing file: `AutoQCTest\bin\Debug\SkylineLog4Net.config`
 
-**Impact**: Confusing test output but doesn't affect test results
+**Root Cause**: Test projects lacked App.config files with log4net configuration. Tests inherited obsolete references to non-existent `SkylineLog4Net.config` from Skyline test infrastructure.
 
-**Status**: Identified in original testing goals, not yet addressed
+**Solution Implemented**:
+1. Created minimal `App.config` files for both test projects:
+   - `AutoQCTest/App.config` - Basic log4net configuration section
+   - `SkylineBatchTest/App.config` - Basic log4net configuration section
+2. Added `<None Include="App.config" />` to both .csproj files
+3. Removed obsolete `SkylineLog4Net.config` references from `AbstractAutoQcUnitTest.cs`:
+   - Removed assembly-level `[assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]`
+   - Removed `[DeploymentItem("SkylineLog4Net.config")]` attribute
+
+**Results**:
+- ✅ AutoQC: All 18 tests pass, **zero log4net warnings**
+- ✅ SkylineBatch: 37/38 tests pass, **zero log4net warnings**
+- ✅ Clean test output for both projects
+
+#### ⚠️ INTERMITTENT: SkylineBatch DataDownloadTest Network Dependency (2025-12-05)
+**Problem**: `DataDownloadTest` exhibits intermittent failure due to external FTP server dependency
+- Test downloads real data from `ftp://ftp.peptideatlas.org/` (PeptideAtlas public FTP server)
+- Credentials: username=PASS00589, password=WF6554orn
+
+**Observed Behaviors**:
+1. **Run 1**: Failed quickly with `Assert.Inconclusive("Skipping test due to ConnectionErrorForm (network or server unavailable)")`
+   - Test properly detected connection error and marked itself inconclusive
+2. **Run 2**: Hung indefinitely during test execution
+   - Test appears to be waiting for FTP connection that neither fails fast nor succeeds
+   - Network timeout longer than test's 30-second timeout
+
+**Analysis**:
+- Failure location: `TestSmallDataDownload()` line 62 in `DataDownloadFunctionalTest.cs`
+- Uses `FunctionalTestUtil.WaitForCondition()` which checks for `ConnectionErrorForm` to bail out early
+- When ConnectionErrorForm doesn't appear quickly enough, test can hang
+
+**Impact**: Pre-existing intermittent issue, not introduced by our changes. Test has built-in detection mechanism but it's not always triggered promptly.
+
+**Root Cause**: External dependency on PeptideAtlas FTP server availability and network conditions beyond our control.
+
+**Next Steps**:
+- [ ] Investigate whether test needs more robust timeout/retry logic
+- [ ] Consider mocking FTP server or using local test data
+- [ ] Test FTP server availability independently to understand if source is flaky or test needs improvement
+- [ ] Related to ongoing work to reduce network dependencies in tests
+
+**Status**: Documented for future improvement. Not blocking current work since:
+- Pre-existing issue (37/38 tests passed in Phase 1, same ratio now)
+- Test has `Assert.Inconclusive()` mechanism to skip when network unavailable
+- Our log4net fixes did not make this consistently fail
 
 ### Next Steps
 - [x] Fix Logger NRE from FileSystemWatcher events (COMPLETED 2025-12-05)
 - [x] Improve AutoQcFileSystemWatcherTest timing reliability (COMPLETED 2025-12-05)
 - [x] Fix async/await anti-pattern in tests (COMPLETED 2025-12-05)
-- [x] Verify all tests pass reliably (COMPLETED 2025-12-05 - 18/18 pass)
-- [ ] Fix log4net configuration deployment (deferred - cosmetic warning only)
+- [x] Verify all tests pass reliably (COMPLETED 2025-12-05 - 18/18 AutoQC pass)
+- [x] Fix log4net configuration warnings (COMPLETED 2025-12-05)
 - [ ] Monitor Logger.DisplayLogFromFile() for recurrence (deferred - appears fixed by timing improvements)
+- [ ] Investigate DataDownloadTest FTP dependency and improve reliability (future work)
 - [ ] Consider additional consolidation opportunities identified in audit (future work)

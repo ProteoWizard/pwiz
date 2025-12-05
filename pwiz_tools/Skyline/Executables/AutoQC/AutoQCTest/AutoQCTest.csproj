@@ -75,6 +75,9 @@
     <Compile Include="PanoramaTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Test\" />
   </ItemGroup>
   <ItemGroup>

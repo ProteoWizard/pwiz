@@ -23,9 +23,6 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatchTest;
 
-// Once-per-application setup information to perform logging with log4net.
-[assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
-
 namespace AutoQCTest
 {
     /// <summary>
@@ -35,9 +32,10 @@ namespace AutoQCTest
     ///
     /// This class provides the test properties that were originally in
     /// SharedBatchTest.AbstractUnitTest but are actually AutoQC-specific.
+    ///
+    /// Note: log4net configuration is now handled by App.config in the test project.
     /// </summary>
     [TestClass]
-    [DeploymentItem("SkylineLog4Net.config")]
     public class AbstractAutoQcUnitTest : AbstractUnitTest
     {
         // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
