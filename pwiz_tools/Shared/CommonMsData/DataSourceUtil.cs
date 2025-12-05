@@ -63,6 +63,8 @@ namespace pwiz.CommonMsData
         public const string FOLDER_TYPE = "File Folder";
         public const string SAMPLE_SET_TYPE = "Sample Set";
         public const string UNKNOWN_TYPE = "unknown";
+        public const string EDIT_ACCOUNT = "edit account";
+        public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters Acquisition Method";
         // ReSharper restore LocalizableElement
 
         public static bool IsDataSource(string path)
@@ -189,6 +191,11 @@ namespace pwiz.CommonMsData
         public static bool IsFolderType(string type)
         {
             return Equals(type, FOLDER_TYPE);
+        }
+
+        public static bool IsEditAccount(string type)
+        {
+            return Equals(type, EDIT_ACCOUNT);
         }
 
         public static bool IsSampleSetType(string type)

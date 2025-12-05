@@ -581,7 +581,7 @@ namespace pwiz.SkylineTestFunctional
                 exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT_MASSHUNTER_12;
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
             });
-            RunDlg<MultiButtonMsgDlg>(
+            RunDlg<MessageDlg>(
                 () => exportMethodDlg.OkDialog(csvPath),
                 messageDlg =>
                 {
