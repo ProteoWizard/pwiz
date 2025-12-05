@@ -642,19 +642,18 @@ namespace pwiz.Skyline.Model.Results
         {
             timeIntensities = TimeIntensities.EMPTY;
             extra = null;
+            bool isTicChromatogram;
             if (id >= _collectors.ChromKeys.Count)
             {
                 int indexFirstGlobalChromatogram =
                     _collectors.ChromKeys.Count;
                 int indexInGlobalChromatogramExtractor = id - indexFirstGlobalChromatogram;
+                isTicChromatogram = indexInGlobalChromatogramExtractor ==
+                                    _globalChromatogramExtractor.TicChromatogramIndex;
                 if (_globalChromatogramExtractor.GetChromatogramAt(indexInGlobalChromatogramExtractor, out float[] times, out float[] intensities))
                 {
                     timeIntensities = new TimeIntensities(times, intensities, null, null);
                     extra = new ChromExtra(0, 0);
-                    if (indexInGlobalChromatogramExtractor == _globalChromatogramExtractor.TicChromatogramIndex)
-                    {
-                        _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
-                    }
                 }
             }
             else
@@ -663,6 +662,14 @@ namespace pwiz.Skyline.Model.Results
                 extra = new ChromExtra(statusId, 0);
                 // Each chromatogram will be read only once!
                 _readChromatograms++;
+                var chromKey = _collectors.ChromKeys[id];
+                isTicChromatogram = SignedMz.ZERO.Equals(chromKey.Precursor) &&
+                                    ChromExtractor.summed == chromKey.Extractor;
+            }
+
+            if (isTicChromatogram && timeIntensities.NumPoints > 0)
+            {
+                _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
             }
 
             UpdatePercentComplete();

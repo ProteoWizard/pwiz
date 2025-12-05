@@ -36,6 +36,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 
@@ -1360,9 +1361,7 @@ namespace pwiz.Skyline.Model
             {
                 iResultOld = chromIndex;
             }
-            else if (dictChromIdIndex == null
-                     || !dictChromIdIndex.TryGetValue(chromatograms.Id.GlobalIndex, out iResultOld)
-                     || Results != null && iResultOld >= Results.Count)
+            else if (true != dictChromIdIndex?.TryGetValue(chromatograms.Id.GlobalIndex, out iResultOld))
             {
                 iResultOld = -1;
             }
@@ -3507,6 +3506,29 @@ namespace pwiz.Skyline.Model
         public override string AuditLogText
         {
             get { return GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
+        }
+
+        public bool SameScoredPeaks(TransitionGroupDocNode other)
+        {
+            if (ReferenceEquals(Results, other.Results))
+            {
+                return true;
+            }
+            return GetScoredPeaks().SequenceEqual(other.GetScoredPeaks());
+        }
+
+        private IEnumerable<IEnumerable<(ReferenceValue<ChromFileInfoId> FileId, ScoredPeakBounds OriginalPeak, ScoredPeakBounds ReintegratedPeak)>> GetScoredPeaks()
+        {
+            if (Results == null)
+            {
+                yield break;
+            }
+
+            foreach (var chromInfoList in Results)
+            {
+                yield return chromInfoList.Select(chromInfo =>
+                    (ReferenceValue.Of(chromInfo.FileId), chromInfo.OriginalPeak, chromInfo.ReintegratedPeak));
+            }
         }
     }
 }

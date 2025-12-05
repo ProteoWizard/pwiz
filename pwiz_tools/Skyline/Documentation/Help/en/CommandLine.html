@@ -252,13 +252,13 @@ Red &lt; 0.5</td></tr>
 </table>
 <div class="RowType">Exporting native instrument methods</div>
 <table>
-<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Waters Xevo TQ | Waters Quattro Premier&gt;</td><td>Export a method. This option is required for exporting a method and has no default. This option cannot be used with <nobr>--exp-isolationlist-instrument</nobr> or <nobr>--exp-translist-instrument</nobr>, because you cannot export a method and an isolation/transition list simultaneously.</td></tr>
+<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Thermo Quantiva | Thermo Altis | Thermo Stellar | Thermo Exploris | Thermo Eclipse | Thermo Fusion | Thermo Fusion Lumos | Waters TQ (MassLynx) | Waters TQ (waters_connect) | Waters Quattro Premier&gt;</td><td>Export a method. This option is required for exporting a method and has no default. This option cannot be used with <nobr>--exp-isolationlist-instrument</nobr> or <nobr>--exp-translist-instrument</nobr>, because you cannot export a method and an isolation/transition list simultaneously.</td></tr>
 <tr><td><nobr>--exp-template</nobr>=path/to/file</td><td>Path of the method template. This can be a file or a directory depending on your instrument. This option is required for method export.</td></tr>
 </table>
 <div class="RowType">Method and transition list options</div>
 <table>
 <tr><td><nobr>--exp-file</nobr>=path/to/file</td><td>Path to the method or transition list file (or directory) to export to. This option is required for method and transition list export.</td></tr>
-<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets&gt;</td><td>Strategy for dividing a method into injections. The default is “single”.</td></tr>
+<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets | WcDecide&gt;</td><td>Strategy for dividing a method into injections. The default is “single”.</td></tr>
 <tr><td><nobr>--exp-method-type</nobr>=<br/>&lt;Standard | Scheduled | Triggered&gt;</td><td>Sets a standard, scheduled or triggered method. The default is “standard”.</td></tr>
 <tr><td><nobr>--exp-max-trans</nobr>=&lt;name&gt;</td><td>Maximum number of transitions per injection for export strategies “protein” and “buckets” OR maximum number of simultaneous transitions for scheduled methods. The default is 100.</td></tr>
 <tr><td><nobr>--exp-optimizing</nobr>=&lt;CE | DP&gt;</td><td>Export a method with extra transitions for finding optimal collision energy or declustering potential.</td></tr>

@@ -36,16 +36,24 @@ namespace pwiz.Common.SystemUtil
     /// HttpClient wrapper that provides progress reporting and cancellation support
     /// using IProgressMonitor. Replaces WebClient functionality with modern HttpClient.
     /// Use with LongWaitDlg.PerformWork(Action&lt;IProgressMonitor&gt;) for UI progress.
+    /// 
+    /// This class uses a singleton HttpClient internally to avoid thread handle leaks from
+    /// repeated creation/disposal. Each instance stores per-request state (headers, cookies)
+    /// and applies it to HttpRequestMessage objects when making requests.
     /// </summary>
     public class HttpClientWithProgress : IDisposable
     {
-        private readonly HttpClient _httpClient;
+        private static readonly HttpClient _sharedHttpClient = HttpClientSingleton.Instance;
         private readonly CookieContainer _cookieContainer;
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
         private string _progressMessageWithoutSize; // Base message before download size is appended
         private const int ReadTimeoutMilliseconds = 15000; // timeout per chunk to avoid long hangs when network drops
         private TimeSpan? _requestTimeout;
+
+        // Per-request state (stored in instance, applied to HttpRequestMessage)
+        private string _authHeader;
+        private readonly Dictionary<string, string> _customHeaders = new Dictionary<string, string>();
 
         /// <summary>
         /// Gets or sets whether to show transfer size in progress messages.
@@ -55,8 +63,9 @@ namespace pwiz.Common.SystemUtil
         public bool ShowTransferSize { get; set; } = true;
 
         /// <summary>
-        /// Optional request timeout to apply to the underlying HttpClient instance.
-        /// If null, uses Timeout.InfiniteTimeSpan (default). Set per HttpClientWithProgress instance.
+        /// Optional request timeout. This property is retained for API compatibility but does not
+        /// affect the underlying HttpClient (which uses infinite timeout). Timeouts are handled
+        /// per-chunk via ReadTimeoutMilliseconds to detect stalled transfers.
         /// </summary>
         public TimeSpan? RequestTimeout
         {
@@ -67,48 +76,22 @@ namespace pwiz.Common.SystemUtil
                     throw new ArgumentOutOfRangeException(nameof(value), @"Timeout must be positive.");
 
                 _requestTimeout = value;
-                _httpClient.Timeout = value ?? Timeout.InfiniteTimeSpan;
+                // Note: We don't set _sharedHttpClient.Timeout because it's shared across all instances
+                // and uses infinite timeout. Per-chunk timeouts are handled in ReadChunk().
             }
         }
 
         /// <summary>
         /// Creates an HttpClient wrapper with optional progress reporting.
+        /// Uses a singleton HttpClient internally to avoid thread handle leaks.
         /// </summary>
         /// <param name="progressMonitor">Progress monitor for reporting download progress and handling cancellation</param>
         /// <param name="status">Initial progress status to update with an ID tracked by the progress monitor. If null, creates a new ProgressStatus.</param>
         /// <param name="cookieContainer">Optional cookie container for session management (e.g., Panorama authentication). If null, cookies are not persisted.</param>
         public HttpClientWithProgress(IProgressMonitor progressMonitor = null, IProgressStatus status = null, CookieContainer cookieContainer = null)
         {
-            // Ensure HttpClient respects system proxy (including PAC) and supports gzip/deflate
-            var handler = new HttpClientHandler
-            {
-                UseProxy = true,
-                Proxy = WebRequest.DefaultWebProxy,
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                UseDefaultCredentials = true,
-                PreAuthenticate = true
-            };
-            if (handler.Proxy != null)
-            {
-                handler.Proxy.Credentials = CredentialCache.DefaultCredentials;
-            }
-
-            // Configure cookie container for session management (Panorama, authenticated sites)
-            if (cookieContainer != null)
-            {
-                handler.CookieContainer = cookieContainer;
-                handler.UseCookies = true;
-                _cookieContainer = cookieContainer;
-            }
-            else
-            {
-                // Even without explicit cookie container, enable automatic cookie handling
-                // HttpClientHandler will create its own CookieContainer for this request
-                // This is important for servers like Panorama that require session cookies
-                handler.UseCookies = true;
-            }
-
-            _httpClient = new HttpClient(handler);
+            // Store cookie container reference for per-request cookie handling
+            _cookieContainer = cookieContainer;
             
             // Set infinite timeout for large file uploads/downloads
             // We have per-chunk timeouts (ReadTimeoutMilliseconds) for detecting stalled transfers
@@ -122,31 +105,27 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Adds an Authorization header to all requests made by this HttpClient instance.
+        /// Adds an Authorization header to requests made by this HttpClientWithProgress instance.
         /// Use this for authenticated downloads (e.g., Basic auth, Bearer tokens).
+        /// The header is stored in instance state and applied per-request.
         /// </summary>
         /// <param name="authHeaderValue">The authorization header value (e.g., "Basic base64credentials" or "Bearer token")</param>
         public void AddAuthorizationHeader(string authHeaderValue)
         {
-            _httpClient.DefaultRequestHeaders.Add(@"Authorization", authHeaderValue);
+            _authHeader = authHeaderValue;
         }
 
         /// <summary>
-        /// Adds a custom header to all requests made by this HttpClient instance.
+        /// Adds a custom header to requests made by this HttpClientWithProgress instance.
         /// Use this for CSRF tokens, API keys, or other custom headers required by the server.
         /// If the header already exists, it will be removed and replaced with the new value.
+        /// The header is stored in instance state and applied per-request.
         /// </summary>
         /// <param name="name">The header name (e.g., "X-LABKEY-CSRF", "X-API-Key")</param>
         /// <param name="value">The header value</param>
         public void AddHeader(string name, string value)
         {
-            // Remove existing header if present
-            if (_httpClient.DefaultRequestHeaders.Contains(name))
-            {
-                _httpClient.DefaultRequestHeaders.Remove(name);
-            }
-            // Add new header
-            _httpClient.DefaultRequestHeaders.Add(name, value);
+            _customHeaders[name] = value;
         }
 
         /// <summary>
@@ -239,7 +218,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public bool Head(Uri uri)
         {
-            var request = new HttpRequestMessage(HttpMethod.Head, uri);
+            using var request = CreateRequest(HttpMethod.Head, uri);
             var response = SendRequest(request);
             return response.IsSuccessStatusCode;
         }
@@ -269,7 +248,8 @@ namespace pwiz.Common.SystemUtil
         public string UploadString(Uri uri, string method, string data, string contentType)
         {
             var content = new StringContent(data, Encoding.UTF8, contentType);
-            var request = new HttpRequestMessage(new HttpMethod(method), uri) { Content = content };
+            using var request = CreateRequest(new HttpMethod(method), uri);
+            request.Content = content;
 
             var response = SendRequest(request);
             return WithExceptionHandling(uri, () => response.Content.ReadAsStringAsync().Result);
@@ -293,7 +273,8 @@ namespace pwiz.Common.SystemUtil
             var formContent = new FormUrlEncodedContent(
                 data.AllKeys.Select(key => new KeyValuePair<string, string>(key, data[key])));
 
-            var request = new HttpRequestMessage(new HttpMethod(method), uri) { Content = formContent };
+            using var request = CreateRequest(new HttpMethod(method), uri);
+            request.Content = formContent;
 
             var response = SendRequest(request);
             return WithExceptionHandling(uri, () => response.Content.ReadAsByteArrayAsync().Result);
@@ -314,6 +295,39 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
+        /// Creates an HttpRequestMessage with per-request headers and cookies applied.
+        /// This ensures that each request uses the correct headers/cookies for this instance,
+        /// even though we're using a shared HttpClient.
+        /// </summary>
+        private HttpRequestMessage CreateRequest(HttpMethod method, Uri uri)
+        {
+            var request = new HttpRequestMessage(method, uri);
+            ApplyHeadersToRequest(request);
+            return request;
+        }
+
+        /// <summary>
+        /// Processes Set-Cookie headers from the response and adds them to the cookie container.
+        /// This ensures cookies are persisted for subsequent requests in the same session.
+        /// </summary>
+        private void ProcessResponseCookies(HttpResponseMessage response, Uri uri)
+        {
+            if (_cookieContainer == null)
+                return;
+
+            // Extract Set-Cookie headers from response
+            if (response.Headers.TryGetValues(@"Set-Cookie", out var setCookieHeaders))
+            {
+                foreach (var setCookieHeader in setCookieHeaders)
+                {
+                    // Parse and add cookie to container
+                    // CookieContainer.SetCookies handles parsing the Set-Cookie header format
+                    _cookieContainer.SetCookies(uri, setCookieHeader);
+                }
+            }
+        }
+
+        /// <summary>
         /// Downloads content from the specified URI to the provided stream with progress reporting and cancellation support.
         /// </summary>
         /// <param name="uri">The URI to download from</param>
@@ -325,8 +339,24 @@ namespace pwiz.Common.SystemUtil
             Stream contentStream;
             long totalBytes;
             
+            // Normal path: create request first (needed for authorization-aware playback)
+            using var request = CreateRequest(HttpMethod.Get, uri);
+            
             if (TestBehavior != null)
             {
+                // Try GetMockResponseStreamFromRequest first (supports authorization header lookup)
+                contentStream = TestBehavior.GetMockResponseStreamFromRequest(request);
+                if (contentStream != null)
+                {
+                    totalBytes = contentStream.CanSeek ? contentStream.Length : 0;
+                    // Use mock stream for testing (prefer mock's total bytes over known size)
+                    using (contentStream)
+                    {
+                        DownloadFromStream(contentStream, outputStream, totalBytes, uri);
+                    }
+                    return;
+                }
+
                 contentStream = TestBehavior.GetMockResponseStream(uri, out totalBytes);
                 if (contentStream != null)
                 {
@@ -340,8 +370,11 @@ namespace pwiz.Common.SystemUtil
             }
 
             // Normal path: get response from network
-            var response = GetResponseHeadersRead(uri);
-            
+            var response = GetResponseHeadersRead(request);
+
+            // Process cookies from response
+            ProcessResponseCookies(response, uri);
+
             // Use known size if provided, otherwise try Content-Length header, fallback to 0 (indeterminate)
             totalBytes = knownTotalBytes ?? response.Content.Headers.ContentLength ?? 0;
             // totalBytes = 0; // TEST: Uncomment to force marquee progress for unknown file sizes
@@ -419,20 +452,80 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Sends an HTTP request with cancellation support.
         /// Used for custom HTTP methods like HEAD, DELETE, MOVE that aren't covered by standard download/upload methods.
+        /// Applies per-instance headers (Authorization, custom headers) and cookies to the request.
         /// </summary>
         public HttpResponseMessage SendRequest(HttpRequestMessage request)
         {
-            return WithExceptionHandling(request.RequestUri,
-                () => _httpClient.SendAsync(request, CancellationToken).Result);
+            // Apply per-instance headers and cookies to the request
+            ApplyHeadersToRequest(request);
+            
+            var response = WithExceptionHandling(request.RequestUri,
+                () => _sharedHttpClient.SendAsync(request, CancellationToken).Result);
+            
+            // Process cookies from response
+            ProcessResponseCookies(response, request.RequestUri);
+            
+            return response;
+        }
+
+        /// <summary>
+        /// Applies per-instance headers and cookies to an HttpRequestMessage.
+        /// Used when requests are created externally (e.g., via SendRequest()).
+        /// </summary>
+        private void ApplyHeadersToRequest(HttpRequestMessage request)
+        {
+            const string authHeaderName = "Authorization";
+            const string cookieHeaderName = "Cookie";
+            // Add Authorization header if set
+            if (!string.IsNullOrEmpty(_authHeader) && !request.Headers.Contains(authHeaderName))
+            {
+                request.Headers.Add(authHeaderName, _authHeader);
+            }
+
+            // Add custom headers
+            foreach (var header in _customHeaders.Where(header =>
+                         !request.Headers.Contains(header.Key)))
+            {
+                request.Headers.Add(header.Key, header.Value);
+            }
+
+            // Add cookies from cookie container
+            if (_cookieContainer != null && !request.Headers.Contains(cookieHeaderName))
+            {
+                var cookies = _cookieContainer.GetCookies(request.RequestUri);
+                if (cookies.Count > 0)
+                {
+                    var cookieHeader = string.Join(@"; ", 
+                        cookies.Cast<Cookie>().Select(c => $@"{c.Name}={c.Value}"));
+                    request.Headers.Add(cookieHeaderName, cookieHeader);
+                }
+            }
         }
 
         /// <summary>
         /// Gets a response from the specified URI with ResponseHeadersRead completion option for streaming.
+        /// Useful for getting response headers (like ContentLength) without downloading the full content.
         /// </summary>
+        /// <param name="uri">The URI to request</param>
+        /// <returns>The HTTP response message with headers read</returns>
         public HttpResponseMessage GetResponseHeadersRead(Uri uri)
         {
-            return WithExceptionHandling(uri,
-                () => _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
+            using var request = CreateRequest(HttpMethod.Get, uri);
+            return GetResponseHeadersRead(request);
+        }
+
+        /// <summary>
+        /// Gets a response from the specified request with ResponseHeadersRead completion option for streaming.
+        /// </summary>
+        private HttpResponseMessage GetResponseHeadersRead(HttpRequestMessage request)
+        {
+            // Process cookies from response
+            var response = WithExceptionHandling(request.RequestUri,
+                () => _sharedHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
+            
+            ProcessResponseCookies(response, request.RequestUri);
+            
+            return response;
         }
 
         /// <summary>
@@ -514,7 +607,7 @@ namespace pwiz.Common.SystemUtil
             });
 
             // Build the HTTP request (exercises request building code in tests)
-            var request = new HttpRequestMessage(new HttpMethod(method), uri);
+            using var request = CreateRequest(new HttpMethod(method), uri);
             request.Content = new StreamContent(progressStream);
 
             if (!string.IsNullOrEmpty(fileName))
@@ -551,8 +644,11 @@ namespace pwiz.Common.SystemUtil
 
                 // Normal path: send the request - HttpClient reads from progressStream during upload
                 // Progress is reported during the NETWORK operation, not during file read
-                var response = _httpClient.SendAsync(request, CancellationToken).Result;
+                var response = _sharedHttpClient.SendAsync(request, CancellationToken).Result;
                 
+                // Process cookies from response
+                ProcessResponseCookies(response, uri);
+
                 // Check status code - but don't call EnsureSuccessStatusCode() yet
                 // We need to return the response so caller can read the body
                 if (!response.IsSuccessStatusCode)
@@ -709,6 +805,15 @@ namespace pwiz.Common.SystemUtil
             /// <param name="contentLength">Output parameter for the content length (for progress reporting)</param>
             /// <returns>A stream containing mock response data, or null to use actual network</returns>
             Stream GetMockResponseStream(Uri uri, out long contentLength);
+
+            /// <summary>
+            /// Gets a mock response stream for testing download operations using the full request message.
+            /// This allows behaviors to access request headers (e.g., Authorization) for lookup.
+            /// Returns null to fall back to GetMockResponseStream or actual network response.
+            /// </summary>
+            /// <param name="request">The HTTP request message (includes headers like Authorization)</param>
+            /// <returns>A stream containing mock response data, or null to fall back to other methods</returns>
+            Stream GetMockResponseStreamFromRequest(HttpRequestMessage request);
 
             /// <summary>
             /// Gets a destination stream for testing upload operations.
@@ -1020,9 +1125,87 @@ namespace pwiz.Common.SystemUtil
             return false;
         }
 
+        /// <summary>
+        /// Disposes this HttpClientWithProgress instance.
+        /// Note: The underlying HttpClient is a singleton and is never disposed.
+        /// This method clears instance state but does not dispose the shared HttpClient.
+        /// </summary>
         public void Dispose()
         {
-            _httpClient?.Dispose();
+            // Clear per-request state
+            _authHeader = null;
+            _customHeaders.Clear();
+            // Note: _cookieContainer is managed by the caller (e.g., HttpPanoramaRequestHelper)
+            // and should not be disposed here. The shared HttpClient is never disposed.
+        }
+    }
+
+    /// <summary>
+    /// Provides a singleton HttpClient instance that is shared across all HttpClientWithProgress instances.
+    /// The HttpClient is created on first use and lives until process termination to avoid thread handle leaks.
+    /// </summary>
+    internal static class HttpClientSingleton
+    {
+        private static HttpClient _instance = CreateHttpClient();
+        private static HttpClientHandler _handler;
+        private static bool _disposed;
+
+        public static HttpClient Instance => _instance;
+
+        private static HttpClient CreateHttpClient()
+        {
+            // Register for process exit to dispose HttpClient cleanly
+            // This prevents background threads from blocking process shutdown
+            AppDomain.CurrentDomain.ProcessExit += (sender, e) => DisposeInstance();
+
+            // Use HttpClientHandler (SocketsHttpHandler is not available in .NET Framework 4.7.2)
+            // Note: Connection pooling and DNS refresh are handled automatically by HttpClient
+            _handler = new HttpClientHandler
+            {
+                UseProxy = true,
+                Proxy = WebRequest.DefaultWebProxy,
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                UseDefaultCredentials = true,
+                PreAuthenticate = true,
+                UseCookies = false  // We handle cookies per-request via HttpRequestMessage
+            };
+            if (_handler.Proxy != null)
+            {
+                _handler.Proxy.Credentials = CredentialCache.DefaultCredentials;
+            }
+
+            // Create HttpClient with disposeHandler: false so we manually dispose the handler on process exit
+            // The HttpClient and handler are disposed on process exit to allow background threads to shut down cleanly
+            // This prevents thread handle leaks from repeated creation/disposal during process lifetime
+            return new HttpClient(_handler, disposeHandler: false)
+            {
+                Timeout = Timeout.InfiniteTimeSpan  // We handle timeouts per-chunk, not per-request
+            };
+        }
+
+        /// <summary>
+        /// Disposes the singleton HttpClient and its handler to allow background threads to shut down cleanly.
+        /// Called automatically on process exit to prevent process shutdown from hanging.
+        /// </summary>
+        private static void DisposeInstance()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
+            try
+            {
+                // Dispose HttpClient to close connections and stop background threads
+                _instance?.Dispose();
+
+                // Dispose handler to release resources
+                _handler?.Dispose();
+            }
+            catch (Exception)
+            {
+                // Ignore exceptions during shutdown - process is exiting anyway
+            }
         }
     }
 
