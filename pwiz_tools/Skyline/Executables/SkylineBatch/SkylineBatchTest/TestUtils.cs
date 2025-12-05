@@ -423,15 +423,19 @@ namespace SkylineBatchTest
 
         public delegate bool ConditionDelegate();
 
+        /// <summary>
+        /// Waits for a condition to become true, polling at regular intervals.
+        /// DEPRECATED: Use WaitForCondition() instance method from your test base class instead.
+        /// All test classes should extend AbstractSkylineBatchUnitTest or AbstractSkylineBatchFunctionalTest,
+        /// which provide WaitForCondition() as a protected instance method.
+        /// </summary>
+        [Obsolete("Use WaitForCondition() instance method from your test base class (AbstractSkylineBatchUnitTest or AbstractSkylineBatchFunctionalTest) instead")]
         public static void WaitForCondition(ConditionDelegate condition, TimeSpan timeout, int timestep, string errorMessage)
         {
-            var startTime = DateTime.Now;
-            while (DateTime.Now - startTime < timeout)
-            {
-                if (condition()) return;
-                Thread.Sleep(timestep);
-            }
-            throw new Exception(errorMessage);
+            throw new NotImplementedException(
+                "WaitForCondition has been moved to test base classes. " +
+                "Use 'WaitForCondition(...)' directly from your test method (inherited from AbstractSkylineBatchUnitTest or AbstractSkylineBatchFunctionalTest). " +
+                "Remove 'TestUtils.' prefix from the call.");
         }
 
         public static void CompareFiles(string expectedFilePath, string actualFilePath, List<Regex> skipLines = null)

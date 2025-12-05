@@ -228,9 +228,94 @@ public static List<AutoQcConfig> ConfigListFromNames(string[] names)
 - Update test coding guidelines with where to add utilities
 - Document why certain utilities remain project-specific
 
-### Abstract Base Class Review (Pending)
+### Abstract Base Class Review (COMPLETED 2025-12-04)
 
-Need to audit:
-- Why `AbstractSkylineBatchUnitTest` doesn't extend `SharedBatchTest.AbstractUnitTest`
-- Whether AutoQC has equivalent abstract classes
-- Whether `WaitForCondition` should be instance method vs static
+#### Current Hierarchy Analysis
+
+**SharedBatch:**
+- `AbstractUnitTest` (standalone)
+  - Properties: TestContext, AllowInternetAccess, RunPerfTests, etc.
+  - Used by: AutoQC only (NOT used by SkylineBatch)
+  - **Problem**: Name suggests "shared" but only one project uses it
+
+- `AbstractBaseFunctionalTest` (standalone)
+  - Complex functional test infrastructure
+  - Has: WaitForConditionUI, RunUI, test file management
+  - Missing: Plain `WaitForCondition`
+  - Used by: Both projects' functional tests
+
+**SkylineBatch:**
+- `AbstractSkylineBatchUnitTest` (standalone, does NOT extend SharedBatch.AbstractUnitTest)
+  - Simple: TestContext + GetTestResultsPath/GetTestLogger helpers
+  - Used by: SkylineBatchTest unit tests
+  - **Better candidate for root base class** (simpler, more fundamental)
+
+- `AbstractSkylineBatchFunctionalTest` : SharedBatch.AbstractBaseFunctionalTest ✅
+
+**AutoQC:**
+- Unit tests extend SharedBatch.AbstractUnitTest directly
+- Functional tests extend SharedBatch.AbstractBaseFunctionalTest
+
+#### Skyline's Pattern (for comparison)
+
+```
+AbstractUnitTest (root - simple base)
+  └─ AbstractUnitTestEx : AbstractUnitTest (adds optional features)
+      └─ AbstractFunctionalTestEx : AbstractUnitTestEx
+          └─ Has WaitForCondition as INSTANCE METHOD (not static)
+```
+
+#### Design Decision: Create Symmetry Between Projects
+
+**Approved Approach**: Move project-specific extensions to their respective projects, keep SharedBatch truly minimal.
+
+**New Hierarchy:**
+
+```
+SharedBatch:
+  AbstractUnitTest (moved/renamed from SkylineBatchTest.AbstractSkylineBatchUnitTest)
+    ├── TestContext
+    ├── GetTestResultsPath()
+    ├── GetTestLogger()
+    └── Simple, focused, truly reusable ROOT base class
+
+  AbstractBaseFunctionalTest : AbstractUnitTest (changed to extend root)
+    ├── WaitForCondition(Func<bool>) - instance method (NEW)
+    ├── WaitForConditionUI, RunUI, etc.
+    └── Used by both projects' functional tests
+
+SkylineBatch:
+  AbstractSkylineBatchUnitTest : SharedBatch.AbstractUnitTest
+    ├── GetTestConfigRunner, GetTestConfigManager
+    └── SkylineBatch-specific helpers
+
+  AbstractSkylineBatchFunctionalTest : SharedBatch.AbstractBaseFunctionalTest
+    └── (unchanged)
+
+AutoQC:
+  AbstractAutoQcUnitTest : SharedBatch.AbstractUnitTest (moved from SharedBatch.AbstractUnitTestEx)
+    ├── AllowInternetAccess, RunPerfTests, etc.
+    └── AutoQC-specific properties
+
+  AutoQC functional tests : SharedBatch.AbstractBaseFunctionalTest
+```
+
+#### Design Rationale
+
+1. **Symmetry**: Both projects now have `Abstract[Project]UnitTest` extending shared root
+2. **Organic growth**: SharedBatch contains only proven-shared code
+3. **Natural migration**: When SkylineBatch needs something from AutoQC's base, push it down to SharedBatch.AbstractUnitTest
+4. **Follows Skyline pattern**: Simple root → extended variants → functional tests
+5. **WaitForCondition as instance method**: Aligns with Skyline's AbstractFunctionalTestEx pattern
+
+#### Implementation Steps
+
+1. Create new `SharedBatch.AbstractUnitTest` (content from `AbstractSkylineBatchUnitTest`)
+2. Rename current `SharedBatch.AbstractUnitTest` → move to `AutoQC.AbstractAutoQcUnitTest`
+3. Update `SharedBatch.AbstractBaseFunctionalTest`:
+   - Change base class from standalone to `: AbstractUnitTest`
+   - Add `WaitForCondition(Func<bool>)` as protected instance method
+4. Update `SkylineBatch.AbstractSkylineBatchUnitTest` to extend `SharedBatch.AbstractUnitTest`
+5. Update AutoQC unit test files to use `AbstractAutoQcUnitTest`
+6. Remove `WaitForCondition` from both `TestUtils.cs` files
+7. Remove incorrect static `WaitForCondition` from `SharedBatchTest/Helpers.cs`

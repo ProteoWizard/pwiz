@@ -32,7 +32,7 @@ using SharedBatchTest;
 namespace AutoQCTest
 {
     [TestClass]
-    public class ConfigManagerTest: AbstractUnitTest
+    public class ConfigManagerTest: AbstractAutoQcUnitTest
     {
 
         #region ConfigList Operations

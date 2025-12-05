@@ -18,25 +18,20 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
+using SharedBatchTest;
 using SkylineBatch;
 
 namespace SkylineBatchTest
 {
     /// <summary>
-    /// Base class for SkylineBatch unit tests. Provides TestContext and helper methods
-    /// for creating test files in the TestResults directory (not source tree).
-    /// 
-    /// All unit tests SHOULD derive from this base class to ensure consistent
-    /// test file management and avoid source tree pollution.
+    /// Base class for SkylineBatch unit tests. Extends SharedBatchTest.AbstractUnitTest
+    /// and adds SkylineBatch-specific helper methods for config runners and managers.
+    ///
+    /// All SkylineBatch unit tests SHOULD derive from this base class to ensure
+    /// consistent test file management and access to SkylineBatch-specific helpers.
     /// </summary>
-    public abstract class AbstractSkylineBatchUnitTest
+    public abstract class AbstractSkylineBatchUnitTest : AbstractUnitTest
     {
-        /// <summary>
-        /// MSTest TestContext - provides access to test name and TestResults directory.
-        /// Automatically set by MSTest framework before each test method runs.
-        /// </summary>
-        public TestContext TestContext { get; set; }
-
         /// <summary>
         /// Gets a test-specific path in the TestResults directory.
         /// Creates path like: TestResults/&lt;TestName&gt;/&lt;relativePath&gt;
@@ -48,6 +43,7 @@ namespace SkylineBatchTest
 
         /// <summary>
         /// Creates a Logger that writes to the TestResults directory for this test.
+        /// Returns SkylineBatch Logger instance.
         /// </summary>
         protected Logger GetTestLogger(string logSubfolder = "")
         {

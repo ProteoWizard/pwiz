@@ -63,6 +63,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="AbstractAutoQcUnitTest.cs" />
     <Compile Include="AutoQcBaseFunctionalTest.cs" />
     <Compile Include="AutoQcFunctionalTest.cs" />
     <Compile Include="ConfigManagerTest.cs" />
