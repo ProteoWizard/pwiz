@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -175,7 +176,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(12, methodModel["compounds"]?.Children().Count());
             Assert.IsTrue(methodModel["compounds"] != null && methodModel["compounds"].Children().All(item =>
             {
-                if (double.TryParse(item["startTime"]?.Value<string>(), out var startTime))
+                if (double.TryParse(item["startTime"]?.Value<string>(), NumberStyles.Any, CultureInfo.InvariantCulture, out var startTime))
                     return startTime >= 0;
                 return false;
             }), "Negative start time in the method");

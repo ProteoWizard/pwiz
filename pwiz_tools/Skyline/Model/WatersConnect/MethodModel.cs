@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
@@ -82,8 +83,8 @@ namespace pwiz.Skyline.Model.WatersConnect
                     if (TryParseType(field.PropertyType, reader.GetFieldByName(columnAttribute.ColumnName), out var result))
                         field.SetValue(this, result);
                     else
-                        throw new FormatException(string.Format(@"Cannot parse value {0} of type {1}",
-                            reader.GetFieldByName(columnAttribute.ColumnName), field.PropertyType.FullName));
+                        throw new FormatException(string.Format(@"Cannot parse value {0} of type {1}, field {2}",
+                            reader.GetFieldByName(columnAttribute.ColumnName), field.PropertyType.FullName, columnAttribute.ColumnName));
                 }
             }
         }
@@ -124,6 +125,29 @@ namespace pwiz.Skyline.Model.WatersConnect
                 {
                     result = parameters[1];
                     return true;
+                }
+                else  // try invariant culture if cannot parse with current culture
+                {
+                    tryParseMethod = propertyType.GetMethod(
+                        "TryParse",
+                        BindingFlags.Public | BindingFlags.Static,
+                        null,
+                        new[] { typeof(string), typeof(NumberStyles), typeof(CultureInfo), propertyType.MakeByRefType() },
+                        null);
+                    if (tryParseMethod != null)
+                    {
+                        parameters = new[]
+                        {
+                            fieldValue, NumberStyles.Any, CultureInfo.InvariantCulture,
+                            Activator.CreateInstance(propertyType)
+                        };
+                        success = (bool)tryParseMethod.Invoke(null, parameters);
+                        if (success)
+                        {
+                            result = parameters[3];
+                            return true;
+                        }
+                    }
                 }
             }
             return false;
