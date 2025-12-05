@@ -53,5 +53,11 @@ namespace pwiz.SkylineTest.Reporting
                 }
             }
         }
+
+        [TestMethod]
+        public void TestPersistedViewsCurrentVersion()
+        {
+            Assert.AreEqual(PersistedViews.ReportListsByVersion.Count, Settings.Default.PersistedViews.RevisionIndexCurrent, "Number of elements in PersistedViews.ReportListsByVersion must be equal to RevisionIndexCurrent");
+        }
     }
 }
