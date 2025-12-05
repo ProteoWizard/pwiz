@@ -212,21 +212,6 @@ namespace AutoQCTest
             return testConfigManager;
         }
 
-        /// <summary>
-        /// Waits for a condition to become true, polling at regular intervals.
-        /// DEPRECATED: Use WaitForCondition() instance method from your test base class instead.
-        /// All test classes should extend AbstractAutoQcUnitTest or AutoQcBaseFunctionalTest,
-        /// which provide WaitForCondition() as a protected instance method.
-        /// </summary>
-        [Obsolete("Use WaitForCondition() instance method from your test base class (AbstractAutoQcUnitTest or AutoQcBaseFunctionalTest) instead")]
-        public static void WaitForCondition(Func<bool> condition, TimeSpan timeout, int timestep, string errorMessage)
-        {
-            throw new NotImplementedException(
-                "WaitForCondition has been moved to test base classes. " +
-                "Use 'WaitForCondition(...)' directly from your test method (inherited from AbstractAutoQcUnitTest or AutoQcBaseFunctionalTest). " +
-                "Remove 'TestUtils.' prefix from the call.");
-        }
-
         public static void InitializeSettingsImportExport()
         {
             ConfigList.Importer = AutoQcConfig.ReadXml;
