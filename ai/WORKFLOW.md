@@ -140,6 +140,15 @@ git stash pop
 
 ## LLM Tool Guidelines
 
+### GitHub CLI (gh) for PR Workflows
+
+The GitHub CLI (`gh`) enables LLM agents to review PRs, fetch issues, and check CI status directly. If `gh` commands fail with "command not found" or similar:
+
+> **Do not silently try another approach.** Instead, inform the user:
+> "It looks like GitHub CLI isn't set up yet. Would you like help installing it, or should I try another approach?"
+
+See [ai/docs/developer-setup-guide.md](docs/developer-setup-guide.md#github-cli-gh) for installation and authentication steps. Note that `gh auth login` requires an interactive terminal outside the IDE.
+
 ### Starting a Session
 1. Read `ai/todos/active/TODO-YYYYMMDD_feature.md` - understand current state
 2. Review recent commits - see what's been done

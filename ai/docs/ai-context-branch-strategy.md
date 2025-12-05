@@ -1,5 +1,23 @@
 # AI Context Branch Strategy
 
+## Quick Reference for LLM Agents
+
+When a user asks to "sync ai-context" or "merge ai-context to master", use the automation script:
+
+```powershell
+# IMPORTANT: All .ps1 scripts require PowerShell 7+ (pwsh.exe)
+# Sync FROM master (pull latest code into ai-context):
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
+
+# Sync TO master (create PR with ai/ documentation updates):
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -DryRun
+# Then create PR via: gh pr create --base master --head ai-context ...
+```
+
+See [Automation: sync-ai-context.ps1 Script](#automation-sync-ai-contextps1-script) for full details.
+
+---
+
 ## Problem Statement
 
 Frequent commits to `ai/todos/` on master are causing friction for team members:
@@ -161,20 +179,22 @@ git push origin ai-context
 
 Located at `ai/scripts/sync-ai-context.ps1`, this script automates bidirectional synchronization.
 
+> **Important:** This script requires PowerShell 7+ (`pwsh.exe`). Windows PowerShell 5.1 will fail with syntax errors. Run with `pwsh -File ./ai/scripts/sync-ai-context.ps1 ...`
+
 ### Command Reference
 
 ```powershell
 # Preview what would be merged FROM master into ai-context
-.\ai\scripts\sync-ai-context.ps1 -Direction FromMaster -DryRun
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -DryRun
 
 # Sync FROM master (daily maintenance)
-.\ai\scripts\sync-ai-context.ps1 -Direction FromMaster -Push
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
 
 # Preview what would be merged TO master from ai-context
-.\ai\scripts\sync-ai-context.ps1 -Direction ToMaster -DryRun
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -DryRun
 
 # Sync TO master (batch update)
-.\ai\scripts\sync-ai-context.ps1 -Direction ToMaster -Push
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -Push
 ```
 
 ### Features
