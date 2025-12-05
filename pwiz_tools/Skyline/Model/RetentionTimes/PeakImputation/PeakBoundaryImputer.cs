@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
@@ -163,53 +162,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 }
             }
         }
-
-        public class ImputedBoundsParameter : Immutable
-        {
-            public ImputedBoundsParameter(SrmDocument document, IdentityPath identityPath, MsDataFileUri filePath)
-            {
-                Document = document;
-                IdentityPath = identityPath;
-                AlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
-                FilePath = filePath;
-            }
-            
-            public SrmDocument Document { get; }
-            public IdentityPath IdentityPath { get; }
-            public AlignmentTarget AlignmentTarget { get; private set; }
-            public MsDataFileUri FilePath { get; private set; }
-
-            public ImputedBoundsParameter ChangeAlignmentTarget(AlignmentTarget value)
-            {
-                return ChangeProp(ImClone(this), im => im.AlignmentTarget = value);
-            }
-
-            protected bool Equals(ImputedBoundsParameter other)
-            {
-                return ReferenceEquals(Document, other.Document) && Equals(IdentityPath, other.IdentityPath) && Equals(AlignmentTarget, other.AlignmentTarget) && Equals(FilePath, other.FilePath);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj is null) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((ImputedBoundsParameter)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    var hashCode = RuntimeHelpers.GetHashCode(Document);
-                    hashCode = (hashCode * 397) ^ IdentityPath.GetHashCode();
-                    hashCode = (hashCode * 397) ^ (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (FilePath?.GetHashCode() ?? 0);
-                    return hashCode;
-                }
-            }
-        }
-
         private LibraryInfo GetLibraryInfo(Library library, string batchName)
         {
             lock (_libraryInfos)
@@ -350,38 +302,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return new ImputedPeak(imputedBounds, exemplaryPeak);
         }
 
-        public ExplicitPeakBounds GetExplicitPeakBounds(PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet, MsDataFileUri filePath)
-        {
-            var explicitPeakBounds = Settings.GetExplicitPeakBounds(peptideDocNode, filePath);
-            if (explicitPeakBounds == null)
-            {
-                return null;
-            }
-            var imputationSettings = Settings.PeptideSettings.Imputation;
-            if (Equals(imputationSettings, ImputationSettings.DEFAULT))
-            {
-                return explicitPeakBounds;
-            }
-
-            if (!(imputationSettings.MaxPeakWidthVariation.HasValue || imputationSettings.MaxRtShift.HasValue) &&
-                !explicitPeakBounds.IsEmpty)
-            {
-                return explicitPeakBounds;
-            }
-
-            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, peptideDocNode, chromatogramSet, filePath, true);
-            if (imputedPeak == null)
-            {
-                return explicitPeakBounds;
-            }
-            if (!explicitPeakBounds.IsEmpty && IsAcceptable(imputationSettings, new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime), imputedPeak))
-            {
-                return explicitPeakBounds;
-            }
-
-            return new ExplicitPeakBounds(imputedPeak.PeakBounds.StartTime, imputedPeak.PeakBounds.EndTime, ExplicitPeakBounds.UNKNOWN_SCORE);
-        }
-
         private bool IsAcceptable(ImputationSettings imputationSettings, PeakBounds peakBounds, ImputedPeak imputedPeak)
         {
             if (peakBounds == null)
@@ -512,10 +432,9 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private Dictionary<MsDataFileUri, SourcedPeak> GetScoredPeaks(PeptideDocNode peptideDocNode)
         {
-            var result = new Dictionary<MsDataFileUri, SourcedPeak>();
             if (peptideDocNode == null)
             {
-                return result;
+                return null;
             }
 
             bool anyReintegrated = peptideDocNode.AnyReintegratedPeaks();
@@ -523,9 +442,9 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             var measuredResults = Settings.MeasuredResults;
             if (measuredResults == null)
             {
-                return result;
+                return null;
             }
-
+            var result = new Dictionary<MsDataFileUri, SourcedPeak>();
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
                 var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
@@ -546,19 +465,22 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                         }
 
                         var fileInfo = chromatogramSet.GetFileInfo(transitionGroupChromInfo.FileId);
+                        if (fileInfo == null)
+                        {
+                            return null;
+                        }
                         if (result.ContainsKey(fileInfo.FilePath))
                         {
                             continue;
                         }
-
                         result[fileInfo.FilePath] =
                             new SourcedPeak(PeakSource.FromChromFile(chromatogramSet, fileInfo.FilePath), scoredPeak);
                     }
                 }
             }
-
             return result;
         }
+
         private Dictionary<MsDataFileUri, SourcedPeak> GetReintegratedPeaks(PeptideDocNode peptideDocNode)
         {
             var result = new Dictionary<MsDataFileUri, SourcedPeak>();
