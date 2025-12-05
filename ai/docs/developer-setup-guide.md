@@ -114,9 +114,10 @@ Follow the interactive prompts:
 5. Copy the one-time code displayed, then press Enter to open the browser
 6. In the browser, click **Continue** to sign in with your active GitHub account
 7. Paste the one-time code (Ctrl+V) and click **Continue**
-8. Click **Authorize github**
-9. Complete your 2FA (authenticator app, security key, etc.)
-10. Browser shows "Congratulations, you're all set!"
+8. Click **Continue** again if asked
+9. Click **Authorize github**
+10. Complete your 2FA (authenticator app, security key, etc.)
+11. Browser shows "Congratulations, you're all set!"
 
 **Verify:**
 ```powershell
