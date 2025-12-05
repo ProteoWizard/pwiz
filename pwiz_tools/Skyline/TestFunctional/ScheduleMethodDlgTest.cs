@@ -182,8 +182,8 @@ namespace pwiz.SkylineTestFunctional
             // With only a single replicate scheduling options should not be presented
             Assert.IsNull(FindOpenForm<SchedulingOptionsDlg>());
 
-            var csv3 = new DsvFileReader(csvPath3, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
-            var csv4 = new DsvFileReader(csvPath4, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
+            var csv3 = new DsvFileReader(csvPath3, TextUtil.SEPARATOR_CSV);
+            var csv4 = new DsvFileReader(csvPath4, TextUtil.SEPARATOR_CSV);
             var startHeaderIndex = csv3.GetFieldIndex("protein.name");
             Assert.AreEqual(startHeaderIndex, csv4.GetFieldIndex("protein.name"));
             var endHeaderIndex = csv3.GetFieldIndex("cone_voltage");
