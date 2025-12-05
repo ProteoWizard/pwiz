@@ -1109,21 +1109,24 @@ namespace pwiz.Skyline.Model
             if (diff.DiffResults || ChangedResults(nodeResult))
                 nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
 
-            if (settingsNew.PeptideSettings.Imputation.HasImputation &&
-                nodeResult.CountOriginalPeaks() > CountOriginalPeaks())
+            if (settingsNew.PeptideSettings.Imputation.HasImputation && !SameScoredPeaks(nodeResult))
             {
-                // If the resulting peptide had more original peaks, then update the results again so that peak imputation
-                // can operate on the complete set of data
+                // If the resulting peptide had different original peaks, then update the results again so that peak imputation
+                // can operate on the new set of data
                 return nodeResult.ChangeSettings(settingsNew, new SrmSettingsDiff(settingsNew, true));
             }
 
             return nodeResult;
         }
 
-        public int CountOriginalPeaks()
+        private bool SameScoredPeaks(PeptideDocNode other)
         {
-            return TransitionGroups.Sum(tg=>tg.Results?.SelectMany(chromInfoList => chromInfoList)
-                .Count(chromInfo => chromInfo.OriginalPeak != null) ?? 0);
+            if (Children.Count != other.Children.Count)
+            {
+                return false;
+            }
+            return TransitionGroups.Zip(other.TransitionGroups, Tuple.Create)
+                .All(tuple => tuple.Item1.SameScoredPeaks(tuple.Item2));
         }
 
         public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods explicitMods, bool useFilter)
