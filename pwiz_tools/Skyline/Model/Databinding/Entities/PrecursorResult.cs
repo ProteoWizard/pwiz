@@ -526,7 +526,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return lcPeakIonMetrics;
-
         }
 
         private double? CalculateProportionTruncated()
