@@ -107,12 +107,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var fcRowsSource = new FixedSkylineObjectList<FoldChangeRow>(_skylineDataSchema, foldChangeRows);
             var fcView = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec)
                 .ChangeViewGroup(ViewGroup.BUILT_IN);
-
             var fcDetailRowsSource = new FixedSkylineObjectList<FoldChangeDetailRow>(_skylineDataSchema, detailRows);
             var fcDetailView = new ViewInfo(_skylineDataSchema, typeof(FoldChangeDetailRow), clusteredViewSpec)
                 .ChangeViewGroup(ViewGroup.BUILT_IN);
 
-            var rowSourceInfos = new List<RowSourceInfo>()
+            // Create row sources. Note that the row source names that start with "pwiz.Skyline.Controls" no longer match
+            // the current name of the row classes in "pwiz.Skyline.Model.GroupComparison".
+            var rowSourceInfos = new List<RowSourceInfo>
             {
                 new RowSourceInfo(typeof(FoldChangeRow), fcRowsSource, new[] { fcView }),
                 new RowSourceInfo(typeof(FoldChangeDetailRow), fcDetailRowsSource, new[] { fcDetailView })
@@ -207,7 +208,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private ViewSpec GetClusteredViewSpec(ViewSpec defaultViewSpec)
         {
-            var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME).SetRowSource(FoldChangeDetailRow.ROW_SOURCE_NAME);
+            var clusteredViewSpec = defaultViewSpec.SetName(CLUSTERED_VIEW_NAME).SetRowType(typeof(FoldChangeDetailRow));
 
             PropertyPath ppRunAbundance = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.ReplicateAbundances)).DictionaryValues();
             PropertyPath ppFoldChange = PropertyPath.Root.Property(nameof(FoldChangeDetailRow.FoldChangeResults))
