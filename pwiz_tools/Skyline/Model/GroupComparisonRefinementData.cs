@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 
