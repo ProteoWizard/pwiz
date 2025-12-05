@@ -173,6 +173,7 @@
     <Compile Include="GitFileHelper.cs" />
     <Compile Include="HttpClientTestHelper.cs" />
     <Compile Include="KoinaTestUtil.cs" />
+    <Compile Include="MockHttpMessageHandler.cs" />
     <Compile Include="MultiFormActivator.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

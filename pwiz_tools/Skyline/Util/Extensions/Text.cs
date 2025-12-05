@@ -955,7 +955,6 @@ namespace pwiz.Skyline.Util.Extensions
             return _currentFields;
         }
 
-
         /// <summary>
         /// For the current line, outputs the field corresponding to the column name fieldName, or null if
         /// there is no such field name.
