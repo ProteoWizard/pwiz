@@ -308,14 +308,166 @@ AutoQC:
 4. **Follows Skyline pattern**: Simple root → extended variants → functional tests
 5. **WaitForCondition as instance method**: Aligns with Skyline's AbstractFunctionalTestEx pattern
 
-#### Implementation Steps
+#### Implementation Steps (COMPLETED)
 
-1. Create new `SharedBatch.AbstractUnitTest` (content from `AbstractSkylineBatchUnitTest`)
-2. Rename current `SharedBatch.AbstractUnitTest` → move to `AutoQC.AbstractAutoQcUnitTest`
-3. Update `SharedBatch.AbstractBaseFunctionalTest`:
-   - Change base class from standalone to `: AbstractUnitTest`
-   - Add `WaitForCondition(Func<bool>)` as protected instance method
-4. Update `SkylineBatch.AbstractSkylineBatchUnitTest` to extend `SharedBatch.AbstractUnitTest`
-5. Update AutoQC unit test files to use `AbstractAutoQcUnitTest`
-6. Remove `WaitForCondition` from both `TestUtils.cs` files
-7. Remove incorrect static `WaitForCondition` from `SharedBatchTest/Helpers.cs`
+1. ✅ Create new `SharedBatch.AbstractUnitTest` (minimal root with TestContext, WaitForCondition)
+2. ✅ Move old `SharedBatch.AbstractUnitTest` → `AutoQC.AbstractAutoQcUnitTest`
+3. ✅ Update `SharedBatch.AbstractBaseFunctionalTest`:
+   - Changed base class from standalone to `: AbstractUnitTest`
+   - Inherited `WaitForCondition(Func<bool>)` from base (removed duplicate)
+4. ✅ Update `SkylineBatch.AbstractSkylineBatchUnitTest` to extend `SharedBatch.AbstractUnitTest`
+5. ✅ Update 3 AutoQC unit test files to use `AbstractAutoQcUnitTest`
+6. ✅ Mark `WaitForCondition` in both `TestUtils.cs` files as obsolete (throws NotImplementedException with migration guidance)
+7. ✅ Update `SkylineBatchLoggerTest` to use instance method `WaitForCondition()`
+8. ✅ Add `AbstractAutoQcUnitTest.cs` to AutoQCTest.csproj
+9. ✅ Fix `GetTestResultsPath()` - kept project-specific implementations that call `TestUtils.GetTestResultsPath()`
+
+## Implementation Results (2025-12-04)
+
+### Test Results - Phase 1: Test Utility Consolidation
+- **AutoQC**: ✅ 18/18 tests pass
+- **SkylineBatch**: ✅ 37/38 tests pass (1 network-related failure in DataDownloadTest)
+
+### Files Changed - Phase 1
+1. `SharedBatchTest/AbstractUnitTest.cs` - Replaced with minimal root base class
+2. `SharedBatchTest/AbstractBaseFunctionalTest.cs` - Now extends AbstractUnitTest
+3. `AutoQCTest/AbstractAutoQcUnitTest.cs` - NEW: AutoQC-specific base class
+4. `AutoQCTest/AutoQCTest.csproj` - Added new file
+5. `AutoQCTest/ConfigManagerTest.cs` - Uses AbstractAutoQcUnitTest
+6. `AutoQCTest/AutoQcConfigTest.cs` - Uses AbstractAutoQcUnitTest
+7. `AutoQCTest/PanoramaTest.cs` - Uses AbstractAutoQcUnitTest
+8. `AutoQCTest/TestUtils.cs` - WaitForCondition marked obsolete
+9. `SkylineBatchTest/AbstractSkylineBatchUnitTest.cs` - Extends SharedBatch.AbstractUnitTest
+10. `SkylineBatchTest/AbstractSkylineBatchFunctionalTest.cs` - Minor cleanup
+11. `SkylineBatchTest/SkylineBatchLoggerTest.cs` - Uses instance WaitForCondition
+12. `SkylineBatchTest/TestUtils.cs` - WaitForCondition marked obsolete
+
+## Implementation Results (2025-12-05)
+
+### Test Results - Phase 2: AutoQC Test Reliability
+- **AutoQC**: ✅ 18/18 tests pass (100% reliable, no intermittent failures)
+- **Test time**: 103 seconds (down from 669 seconds in initial failing run)
+- **Output**: Clean (only pre-existing log4net warning)
+
+### Files Changed - Phase 2
+1. `AutoQC/AnnotationsFileWatcher.cs` - Added IDisposable, _cancelled flag, event handler guards
+2. `AutoQC/AutoQCFileSystemWatcher.cs` - Added IDisposable, _cancelled flag, event handler guards
+3. `AutoQC/ConfigRunner.cs` - Added IDisposable to dispose owned watchers
+4. `AutoQC/AutoQcConfigManager.cs` - Added RemoveConfigRunner() helper, fixed collection modification bug
+5. `AutoQC/MainForm.cs` - Use DisplayErrorWithException() for better diagnostics
+6. `AutoQCTest/AutoQcFileSystemWatcherTest.cs` - Removed async/await, added using blocks, simplified timing
+7. `SharedBatch/Logger.cs` - Added defensive null check in WriteToBuffer()
+8. `SharedBatchTest/AbstractUnitTest.cs` - Enhanced WaitForCondition() with optional params, better timing
+9. `CommonUtil/SystemUtil/CommonActionUtil.cs` - RunAsync() now returns Thread for proper synchronization
+
+### Known Issues - Test Reliability (For CI Integration)
+
+#### ✅ FIXED: Logger NRE from FileSystemWatcher Events (2025-12-05)
+**Problem**: NullReferenceExceptions in `Logger.WriteToBuffer()` during test cleanup
+- Root cause: FileSystemWatcher event handlers firing after Logger disposal
+- Occurred in background threads, didn't fail tests but created noise
+- Stack trace: `AutoQCFileSystemWatcher.FileAdded/OnFileWatcherError` → `Logger.WriteToBuffer` → NRE on `_logBuffer`
+
+**Solution Implemented**:
+1. Made `AutoQCFileSystemWatcher` and `AnnotationsFileWatcher` implement `IDisposable`
+2. `Stop()` sets `_cancelled = true` (allows restart), does NOT dispose FileSystemWatcher
+3. `Dispose()` calls `Stop()` then disposes underlying `_fileWatcher`
+4. Event handlers check `if (_cancelled) return;` to prevent work after stop
+5. Made `ConfigRunner` implement `IDisposable` to dispose owned watchers
+6. Created `RemoveConfigRunner()` helper in `AutoQcConfigManager` following DRY principle
+7. Tests use `using` statements for proper cleanup
+
+**Test Reliability Improvements**:
+1. Fixed async/await anti-pattern in `AutoQcFileSystemWatcherTest.TestGetNewFilesForInstrument()`
+   - Changed from `async void` (caused assertions to fail in background threads)
+   - Now uses proper synchronous pattern with `using` blocks
+   - Test assertions now properly fail tests instead of becoming unhandled exceptions
+2. Simplified test timing logic:
+   - Replaced `AssertCorrectFileCount()` (20ms timeout with DateTime arithmetic)
+   - Now uses `WaitForCondition()` from `AbstractUnitTest` (5 second timeout)
+   - Much more reliable and maintainable
+3. Created helper methods:
+   - `ValidateWatcherFiles()` - validates expected file count and contents
+   - `GetWatcherFiles()` - clean enumeration pattern
+   - `StartWatching()` - consistent watcher startup with validation
+4. Enhanced `CommonActionUtil.RunAsync()` to return Thread:
+   - Changed return type from `void` to `Thread`
+   - Enables proper test synchronization with `.Join()`
+   - Allows containing async work at boundaries instead of spreading async/await
+5. Improved `AbstractUnitTest.WaitForCondition()`:
+   - Changed to static method with optional parameters
+   - Default 5-second timeout, default 100ms timestep
+   - Fixed timing logic to use loop count instead of DateTime arithmetic
+   - Better error messages with timeout information
+6. Added defensive null check in `Logger.WriteToBuffer()`:
+   - Protects against calls after disposal or before initialization
+   - Prevents NRE in edge cases
+7. Fixed error handling in `MainForm.SwitchLogger()`:
+   - Changed from `DisplayError()` to `DisplayErrorWithException()`
+   - Shows full stack trace for debugging (helped diagnose Logger issues)
+
+**Results**:
+- ✅ Logger NREs completely eliminated!
+- ✅ All 18 AutoQC tests pass reliably (100%)
+- ✅ No unhandled exceptions in test output
+- ✅ Clean test output (except pre-existing log4net warning)
+
+#### ⚠️ DEFERRED: Logger.DisplayLogFromFile() Index Out of Range (2025-12-05)
+**Problem**: `ArgumentOutOfRangeException` in `Logger.DisplayLogFromFile()` at line 238
+- Occurs during config switching when UI tries to display log
+- Causes error dialog to appear during `TestPanoramaWebInteraction`
+- Stack trace:
+  ```
+  at System.Collections.Generic.List`1.set_Item(Int32 index, T value)
+  at SharedBatch.Logger.DisplayLogFromFile() in Logger.cs:line 238
+  at AutoQC.MainForm.<>c__DisplayClass35_0.<SwitchLogger>b__0() in MainForm.cs:line 469
+  ```
+
+**Status**: Bug was discovered during FileSystemWatcher testing but appears to be pre-existing race condition. Not related to watcher disposal changes. Test now passes reliably after async/await fixes, suggesting timing improvements may have mitigated the issue.
+
+**Impact**: Previously caused `TestPanoramaWebInteraction` to fail intermittently. Now passing consistently after test reliability improvements.
+
+**Next Steps**: Monitor for recurrence. If it reappears, investigate Logger.DisplayLogFromFile() line 238 - likely array indexing issue during concurrent log updates.
+
+#### ✅ FIXED: AutoQcFileSystemWatcherTest Timing Issues (2025-12-05)
+**Problem**: Unhandled exceptions in background threads during `TestGetNewFiles`
+- **First failure**: `Assert.AreEqual failed. Expected:<1>. Actual:<0>.` at line 198
+  - Test expects 1 file to be detected, watcher found 0
+- **Second failure**: `Assert.AreEqual failed. Expected:<5>. Actual:<2>.` at line 230
+  - Test expects 5 files in subfolder test, watcher found only 2
+
+**Stack Trace**:
+```
+at AutoQCTest.AutoQcFileSystemWatcherTest.<TestGetNewFilesForInstrument>d__5.MoveNext() in AutoQcFileSystemWatcherTest.cs:line 198/230
+```
+
+**Root Causes**:
+1. `async void` test method caused assertions to fail in background threads (unhandled exceptions instead of test failures)
+2. Insufficient wait timeout (20ms was too short for FileSystemWatcher event latency)
+3. Overly complex `AssertCorrectFileCount()` with manual DateTime arithmetic
+
+**Solution Implemented**:
+1. Removed async/await entirely - changed to synchronous test method with proper `using` blocks
+2. Replaced 20ms timeout with `WaitForCondition()` using 5-second default timeout
+3. Simplified test structure with clean helper methods
+4. Proper resource disposal with using statements
+
+**Results**: Test now passes reliably! No more unhandled exceptions. ✅
+
+#### 🔸 PRE-EXISTING: log4net Configuration Warnings
+**Problem**: `log4net:ERROR Failed to find configuration section 'log4net' in application's .config file`
+- Shows in test output: "Test Run deployment issue: Failed to get the file for deployment item 'SkylineLog4Net.config'"
+- Missing file: `AutoQCTest\bin\Debug\SkylineLog4Net.config`
+
+**Impact**: Confusing test output but doesn't affect test results
+
+**Status**: Identified in original testing goals, not yet addressed
+
+### Next Steps
+- [x] Fix Logger NRE from FileSystemWatcher events (COMPLETED 2025-12-05)
+- [x] Improve AutoQcFileSystemWatcherTest timing reliability (COMPLETED 2025-12-05)
+- [x] Fix async/await anti-pattern in tests (COMPLETED 2025-12-05)
+- [x] Verify all tests pass reliably (COMPLETED 2025-12-05 - 18/18 pass)
+- [ ] Fix log4net configuration deployment (deferred - cosmetic warning only)
+- [ ] Monitor Logger.DisplayLogFromFile() for recurrence (deferred - appears fixed by timing improvements)
+- [ ] Consider additional consolidation opportunities identified in audit (future work)

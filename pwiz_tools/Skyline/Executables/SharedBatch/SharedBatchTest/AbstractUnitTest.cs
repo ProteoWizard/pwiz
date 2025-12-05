@@ -17,7 +17,8 @@
  * limitations under the License.
  */
 
-using System.IO;
+using System;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SharedBatchTest
@@ -51,15 +52,18 @@ namespace SharedBatchTest
         /// <param name="timeout">Maximum time to wait for the condition</param>
         /// <param name="timestep">Interval between condition checks (in milliseconds)</param>
         /// <param name="errorMessage">Message to include in the assertion failure if timeout is exceeded</param>
-        protected void WaitForCondition(System.Func<bool> condition, System.TimeSpan timeout, int timestep, string errorMessage)
+        protected static void WaitForCondition(Func<bool> condition, TimeSpan? timeout = null, int timestep = 100, string errorMessage = null)
         {
-            var startTime = System.DateTime.Now;
-            while (System.DateTime.Now - startTime < timeout)
+            timeout ??= TimeSpan.FromSeconds(5);
+            // Too hard to debug when this is based on actual time. So just do a fixed number of loops.
+            int timeLoops = (int)(timeout.Value.TotalMilliseconds / timestep);
+            for (int i = 0; i < timeLoops; i++)
             {
-                if (condition()) return;
-                System.Threading.Thread.Sleep(timestep);
+                if (condition())
+                    return;
+                Thread.Sleep(timestep);
             }
-            Assert.Fail(errorMessage);
+            Assert.Fail($"Timeout waiting for condition after {timeout}: {errorMessage}");
         }
     }
 }
