@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Drawing;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -24,6 +25,8 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -71,6 +74,21 @@ namespace pwiz.SkylineTestConnected
             _selectItem = "Molecule:/Nucleotide metabolism/UDP";
             _chromatogramPoint = null;
             RunFunctionalTest();
+
+            // test duplicate run renaming
+            _dataPath = new[] { "Company", "Skyline", "Replicates - five injections - all Same - 06NOV25" };
+            _filenames = new[] { "Sample 1 (1)", "Sample 1 (2)", "Sample 1 (3)" };
+            _selectItem = null;
+            RunFunctionalTest();
+        }
+
+        private void AssertAlertDlgContainsMessage(Action showDlgAction, string expectedMessage)
+        {
+            RunDlg<AlertDlg>(showDlgAction, dlg =>
+            {
+                StringAssert.Contains(dlg.DetailedMessage, expectedMessage);
+                dlg.OkDialog();
+            });
         }
 
         protected override void DoTest()
@@ -80,11 +98,30 @@ namespace pwiz.SkylineTestConnected
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
-            RunUI(()=>editAccountDlg.SetRemoteAccount(_testAccount));
+
+            // Test invalid server URLs
+            RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("localhost")));
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_);
+            RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://localhost:12345"))); // resolves, but no server there
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "Unable to connect to the remote server");
+            RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://asdfdsafads.local"))); // non-resolving hostname
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "The remote name could not be resolved");
+
+            // Test invalid client id, scope, and secret
+            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientId("foobar")));
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
+            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientSecret("foobar")));
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
+            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientScope("foobar")));
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "invalid_scope"); // not L10N
+
+            // Test invalid password, the error message tested is a non-L10N string from Waters server
+            RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangePassword("wrongpassword")));
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "password entered for this user is incorrect");
+
+            RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount));
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
-            //WaitForConditionUI(() => openDataSourceDialog.ListItemNames.Contains(_dataPath[0]));
-            //foreach(var pathSegment in _dataPath)
-                //OpenFile(openDataSourceDialog, pathSegment);
+
             RunUI(() =>
             {
                 openDataSourceDialog.CurrentDirectory = (openDataSourceDialog.CurrentDirectory as RemoteUrl)!.ChangePathParts(_dataPath);
@@ -100,6 +137,9 @@ namespace pwiz.SkylineTestConnected
                 OkDialog(removeSuffix, () => removeSuffix.YesDialog());
             }
             WaitForDocumentLoaded();
+
+            if (_selectItem == null)
+                return;
 
             RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse(_selectItem))));
 

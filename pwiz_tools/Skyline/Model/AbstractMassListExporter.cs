@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model
         public bool InclusionList { get; set; }
         public string MsAnalyzer { get; set; }
         public string MsMsAnalyzer { get; set; }
-
+        public string SkylineDocumentFileName { get; set; }
         // CONSIDER: Should transition lists ever be exported with local culture
         //           CSV format?  This would allow them to be opened directly into
         //           Excel on the same system, but multiple vendors do not support
