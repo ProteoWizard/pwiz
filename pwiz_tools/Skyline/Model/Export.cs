@@ -4713,7 +4713,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(nodeTranGroup.PrecursorAdduct.AdductCharge);
             writer.Write(FieldSeparator);
-            writer.Write(RTWindow);
+            writer.WriteDsvField(RTWindow.ToString(CultureInfo), FieldSeparator);
             writer.Write(FieldSeparator);
             if (nodeTran.ResultsRank.HasValue)
                 writer.Write((nodeTran.ResultsRank == 1).ToString());
@@ -5153,7 +5153,7 @@ namespace pwiz.Skyline.Model
         // Using fully-qualified names of the Waters Connect method model for clarity.
         public MethodModel ParseMethod(string outputLines)
         {
-            var linesReader = new DsvFileReader(new StringReader(outputLines), ',');
+            var linesReader = new DsvFileReader(new StringReader(outputLines), TextUtil.SEPARATOR_CSV);
             var targets = new List<WatersConnect.Compound>();
             WatersConnect.Compound currentTarget = null;
             WatersConnect.AdductInfo currentAdduct = null;
