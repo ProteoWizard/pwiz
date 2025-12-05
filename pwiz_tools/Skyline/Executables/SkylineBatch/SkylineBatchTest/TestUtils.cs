@@ -23,7 +23,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
 using System.Linq;
-using System.Threading;
 using SharedBatch.Properties;
 using System.Text.RegularExpressions;
 

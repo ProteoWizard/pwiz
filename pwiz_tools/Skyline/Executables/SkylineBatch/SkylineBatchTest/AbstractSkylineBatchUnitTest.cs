@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SharedBatchTest;
 using SkylineBatch;

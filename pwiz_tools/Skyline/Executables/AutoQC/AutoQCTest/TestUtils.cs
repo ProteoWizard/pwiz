@@ -18,7 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.PanoramaClient;
