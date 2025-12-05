@@ -23,7 +23,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
 using System.Linq;
-using System.Threading;
 using SharedBatch.Properties;
 using System.Text.RegularExpressions;
 
@@ -419,19 +418,6 @@ namespace SkylineBatchTest
                     logFiles.Add(fullName);
             }
             return logFiles;
-        }
-
-        public delegate bool ConditionDelegate();
-
-        public static void WaitForCondition(ConditionDelegate condition, TimeSpan timeout, int timestep, string errorMessage)
-        {
-            var startTime = DateTime.Now;
-            while (DateTime.Now - startTime < timeout)
-            {
-                if (condition()) return;
-                Thread.Sleep(timestep);
-            }
-            throw new Exception(errorMessage);
         }
 
         public static void CompareFiles(string expectedFilePath, string actualFilePath, List<Regex> skipLines = null)

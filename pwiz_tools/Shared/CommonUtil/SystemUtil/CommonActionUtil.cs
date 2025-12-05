@@ -24,14 +24,11 @@ namespace pwiz.Common.SystemUtil
 {
     public static class CommonActionUtil
     {
-        public static void RunAsync(Action action)
+        public static Thread RunAsync(Action action)
         {
-            // ReSharper disable ObjectCreationAsStatement
-            new Thread(() =>
-            {
-                RunNow(action);
-            }).Start();
-            // ReSharper restore ObjectCreationAsStatement
+            var thread = new Thread(() => RunNow(action));
+            thread.Start();
+            return thread;
         }
 
         public static void RunNow(Action action)

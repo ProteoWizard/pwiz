@@ -13,7 +13,7 @@ using SharedBatchTest;
 namespace AutoQCTest
 {
     [TestClass]
-   public class PanoramaTest: AbstractUnitTest
+   public class PanoramaTest: AbstractAutoQcUnitTest
     {
         public const string PANORAMA_FOLDER_PREFIX = "AutoQcTest";
         private const int WAIT_3SEC = 3000;

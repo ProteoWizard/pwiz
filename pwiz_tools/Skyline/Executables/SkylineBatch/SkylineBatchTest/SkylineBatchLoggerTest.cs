@@ -96,15 +96,15 @@ namespace SkylineBatchTest
                     Assert.IsTrue(success);
                     completed = true;
                 });
-                TestUtils.WaitForCondition(() =>
+                WaitForCondition(() =>
                 {
                     return completed;
                 }, new TimeSpan(0, 0, 10), 100, "Could not start run");
                 testConfigManager.StartBatchRun();
-                TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
+                WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
                 Thread.Sleep(1000);
                 testConfigManager.State.CancelRunners();
-                TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
+                WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
 
             }
 

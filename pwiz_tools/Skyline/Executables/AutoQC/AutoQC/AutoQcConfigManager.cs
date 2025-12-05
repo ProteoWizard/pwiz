@@ -682,6 +682,13 @@ namespace AutoQC
             return this;
         }
 
+        // Helper to dispose and remove a ConfigRunner from the dictionary
+        private ImmutableDictionary<string, IConfigRunner> RemoveConfigRunner(string name)
+        {
+            (ConfigRunners[name] as IDisposable)?.Dispose();
+            return ConfigRunners.Remove(name);
+        }
+
         // ReSharper disable once UnusedMethodReturnValue.Local
         private AutoQcConfigManagerState RemoveConfig(IConfig iconfig)
         {
@@ -697,7 +704,7 @@ namespace AutoQC
             LogList = LogList.RemoveAt(i);
             // TODO: what happens here?
             //_uiControl?.ClearLog();
-            ConfigRunners = ConfigRunners.Remove(config.Name);
+            ConfigRunners = RemoveConfigRunner(config.Name);
             return this;
         }
 
@@ -736,8 +743,10 @@ namespace AutoQC
                 if (ConfigRunners.ContainsKey(name))
                 {
                     if (!ConfigRunners[name].GetConfig().Equals(iconfig))
-                        ConfigRunners = ConfigRunners.Remove(name).Add(name,
+                    {
+                        ConfigRunners = RemoveConfigRunner(name).Add(name,
                             new ConfigRunner((AutoQcConfig)iconfig, newLogger, uiControl));
+                    }
                 }
                 else
                 {
@@ -748,7 +757,7 @@ namespace AutoQC
             foreach (var config in ConfigRunners.Keys)
             {
                 if (BaseState.GetConfigIndex(config) < 0)
-                    ConfigRunners = ConfigRunners.Remove(config);
+                    ConfigRunners = RemoveConfigRunner(config);
             }
 
             var deletingLoggerIndicies = new List<int>();

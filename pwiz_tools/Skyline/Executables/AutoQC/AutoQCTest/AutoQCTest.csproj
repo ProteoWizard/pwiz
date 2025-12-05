@@ -63,6 +63,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="AbstractAutoQcUnitTest.cs" />
     <Compile Include="AutoQcBaseFunctionalTest.cs" />
     <Compile Include="AutoQcFunctionalTest.cs" />
     <Compile Include="ConfigManagerTest.cs" />
@@ -72,6 +73,9 @@
     <Compile Include="TestUtils.cs" />
     <Compile Include="AutoQcFileSystemWatcherTest.cs" />
     <Compile Include="PanoramaTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Test\" />

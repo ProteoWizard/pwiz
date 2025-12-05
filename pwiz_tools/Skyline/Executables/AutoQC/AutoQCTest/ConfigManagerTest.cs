@@ -27,12 +27,11 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoQC;
 using SharedBatch.Properties;
-using SharedBatchTest;
 
 namespace AutoQCTest
 {
     [TestClass]
-    public class ConfigManagerTest: AbstractUnitTest
+    public class ConfigManagerTest: AbstractAutoQcUnitTest
     {
 
         #region ConfigList Operations
@@ -208,9 +207,9 @@ namespace AutoQCTest
             configManager.SelectConfig(3);
             configManager.UpdateSelectedEnabled(true);
 
-            TestUtils.WaitForCondition(() => !configManager.AutoQcState.GetSelectedConfig().IsEnabled,
-                new TimeSpan(0, 0, 1), 100,
-                "Configuration started when it should have had an error because it was invalid");
+            WaitForCondition(() => !configManager.AutoQcState.GetSelectedConfig().IsEnabled,
+                timeout: TimeSpan.FromSeconds(1), timestep: 100,
+                errorMessage: "Configuration started when it should have had an error because it was invalid");
         }
 
         #endregion
