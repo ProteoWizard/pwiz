@@ -17,6 +17,9 @@ if errorlevel 1 goto :no-vswhere
 set VSWHERE_REQ=-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
 set VSWHERE_PRP=-property installationPath
 
+REM Skyline 25.1 release branch expects nothing newer than VS2022
+goto :no-vs2026
+
 REM Visual Studio Unknown Version, Beyond 2022
 set VSWHERE_LMT=-version "[18.0,19.0)"
 set VSWHERE_PRERELEASE=-prerelease
@@ -30,6 +33,7 @@ for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
     exit /B 0
 )
 
+:no-vs2026
 REM Visual Studio 2022
 set VSWHERE_LMT=-version "[17.0,18.0)"
 set VSWHERE_PRERELEASE=-prerelease
