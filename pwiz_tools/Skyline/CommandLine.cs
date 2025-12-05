@@ -33,7 +33,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -3378,14 +3377,15 @@ namespace pwiz.Skyline
         private bool ExportLiveReport(CommandArgs commandArgs)
         {
             char reportColSeparator = commandArgs.ReportColumnSeparator;
-            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, commandArgs.IsReportInvariant
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, commandArgs.IsReportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
             // Make sure invariant report format uses a true comma if a tab separator was not specified.
             if (commandArgs.IsReportInvariant && commandArgs.ReportColumnSeparator != TextUtil.SEPARATOR_TSV)
                 reportColSeparator = TextUtil.SEPARATOR_CSV;
-            var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName));
-            if (null == viewInfo)
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
+            if (null == viewSpecList.GetView(commandArgs.ReportName))
             {
                 _out.WriteLine(SkylineResources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, commandArgs.ReportName);
                 return false;
@@ -3409,8 +3409,7 @@ namespace pwiz.Skyline
 
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
-                        viewContext.Export(CancellationToken.None, broker, ref status, viewInfo, writer,
-                            reportColSeparator);
+                        rowFactories.ExportReport(writer, PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName), reportColSeparator, broker, ref status);
                     }
 
                     broker.UpdateProgress(status.Complete());

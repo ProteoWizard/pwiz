@@ -428,21 +428,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var calibrationCurve = curveFitter.GetCalibrationCurveMetrics();
                 return new LinkValue<CalibrationCurveMetrics>(calibrationCurve, (sender, args) =>
                 {
-                    if (null == DataSchema.SkylineWindow)
-                    {
-                        return;
-                    }
-                    DataSchema.SkylineWindow.SelectedPath = IdentityPath;
-                    var calibrationForm = DataSchema.SkylineWindow.ShowCalibrationForm();
-                    if (calibrationForm != null)
-                    {
-                        if (DocNode.HasPrecursorConcentrations &&
-                            Settings.Default.CalibrationCurveOptions.SingleBatch)
-                        {
-                            Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(false);
-                            calibrationForm.UpdateUI(false);
-                        }
-                    }
+                    DataSchema.ShowCalibrationCurve(this);
                 });
             }
         }
