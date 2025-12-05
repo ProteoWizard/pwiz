@@ -154,7 +154,7 @@ If more than one analyzer was used, the names of the analyzers will be separated
     <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
   </data>
   <data name="ApexTransitionIonCount">
-    <value>Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity</value>
+    <value>Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition</value>
   </data>
   <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
