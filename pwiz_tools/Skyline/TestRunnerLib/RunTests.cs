@@ -53,7 +53,6 @@ namespace TestRunnerLib
         public readonly bool DoNotRunInNightly;
         public bool DoNotLeakTest; // If true, test is too lengthy to run multiple iterations for leak checks (we invert this in perftest runs)
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
-        public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
@@ -65,12 +64,10 @@ namespace TestRunnerLib
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
 
-            var noUnicodeTestAttr = RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute");
-            DoNotUseUnicode = ProcessEx.IsRunningOnWine || noUnicodeTestAttr != null; // If true, don't add unicode to TMP environment variable
-
-            var noOddTmpPathTestAttr = RunTests.GetAttribute(testMethod, "NoOddTmpPathTestingAttribute");
-            DoNotTestOddTmpPath = ProcessEx.IsRunningOnWine || noOddTmpPathTestAttr != null; // If true, don't add odd characters to TMP environment variable
-
+            // Explicitly disable unicode path conversion for tests marked with NoUnicodeTestingAttribute
+            ProcessEx.CanConvertUnicodePaths = (RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute") != null) ? false : (bool?)null;
+            DoNotUseUnicode = !ProcessEx.CanConvertUnicodePaths.Value; // If true, don't add unicode to TMP environment variable etc
+            
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
 
@@ -128,6 +125,8 @@ namespace TestRunnerLib
         private readonly bool _showStatus;
         private readonly bool _buildMode;
         private readonly bool _cleanupLevelAll;
+
+        private const string _unicodeSubdirName = @"Ütest"; // We may introduce a subdir into the test path to test unicode support
 
         public readonly TestRunnerContext TestContext;
         public CultureInfo Language = new CultureInfo("en-US");
@@ -359,6 +358,7 @@ namespace TestRunnerLib
                 TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
+                TestContext.Properties["UnicodeDecoration"] = test.DoNotUseUnicode ? null : _unicodeSubdirName; // N.B. "UnicodeDecoration" must agree with ExtensionTestContext.cs
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
                 TestContext.Properties["TestPass"] = pass.ToString();
                 if (IsParallelClient)
@@ -376,16 +376,13 @@ namespace TestRunnerLib
                 LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
                 LocalizationHelper.InitThread();
 
-                // Tests in Test.DLL normally don't create files in TMP, so don't mess around with temp dir creation for those
-                var assemblyName = test.TestClassType?.Assembly.ManifestModule.Name;
-                if (!Equals(assemblyName, "Test.dll"))
-                {
-                    // Set the TMP file path to something peculiar - helps guarantee support for
-                    // unusual user names since temp file path is usually in the user directory
-                    // Also helps detect 3rd party tools that leave temp files behind
-                    tmpTestDir = SetTMP(test);
-                    CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
-                }
+
+                // Set the TMP file path to something peculiar - helps guarantee support for
+                // unusual user names since temp file path is usually in the user directory
+                // Also helps detect 3rd party tools that leave temp files behind
+                tmpTestDir = SetTMP(test);
+                CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
+
 
                 if (test.SkipTestUntil == null || DateTime.UtcNow >= test.SkipTestUntil)
                 {
@@ -615,41 +612,76 @@ namespace TestRunnerLib
 
         private string SetTMP(TestInfo test)
         {
+
             // Set the temp file path to something peculiar - helps guarantee support for
-            // unusual user names since temp file path is usually in the user directory
+            // unusual usernames since temp file path is usually in the user directory
             //
             // But adding Unicode characters (e.g. 试验, means "test") breaks many 3rd party tools
             // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
-            // attribute that turns that off per test
-            var testDir = TestContext.Properties["TestDir"].ToString();
-            var testTmp = test.DoNotTestOddTmpPath ? @"T M P" : @"~&TMP ^";
-            if (TeamCityTestDecoration)
+            // attribute that turns that off per test in cases where we were not able to work around it
+            //
+            // N.B as of Oct 2025 we have successfully worked around Unicode issues with msFragger et al
+            // using Windows 8.3 filename conversion where available. So test.DoNotUseUnicode is usually
+            // false on a windows system, but true under Wine or in Docker instances.
+            var doNotUseUnicode = test.DoNotUseUnicode;
+            var tmpTestDir = string.Empty;
+            var unicodeDecoration = string.Empty;
+            for (var retry = 0; retry < 2; retry++)
             {
-                testTmp = Path.Combine(@"..", testTmp); // TeamCity path length concerns, don't worry as much about tidy nesting
-            }
-            var unicode = test.DoNotUseUnicode ? string.Empty : @"试验";
-            var tmpTestDir =
-                Path.GetFullPath(Path.Combine(testDir, testTmp, test.TestMethod.Name + unicode));
-            if (tmpTestDir.Length > 100)
-            {
-                // Avoid pushing the 260 character limit for windows paths - remember that there will be subdirs below this
-                // e.g. in case of a long root path, use
-                //      c:\crazy long username\massive subdir name\wacky installation dirname\pwiz_tools\Skyline\~test &tmp^\TMMENF910 试验"
-                // instead of
-                //      c:\crazy long username\massive subdir name\wacky installation dirname\pwiz_tools\Skyline\~test &tmp^\TestMyMostExcellentNebulousFunction 试验"
-                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, testTmp,
-                    $"{string.Concat(test.TestMethod.Name.Where(char.IsUpper))}{test.TestMethod.Name.Sum(c => c)}{unicode}"));
+                var testDir = TestContext.Properties["TestDir"].ToString();
+                var testTmp = @"~&TMP ^";
+                if (TeamCityTestDecoration)
+                {
+                    testTmp = Path.Combine(@"..", testTmp); // TeamCity path length concerns, don't worry as much about tidy nesting
+                }
+                unicodeDecoration = doNotUseUnicode ? string.Empty : @"试验";
+                tmpTestDir =
+                    Path.GetFullPath(Path.Combine(testDir, testTmp, test.TestMethod.Name + unicodeDecoration));
+                if (tmpTestDir.Length > 100)
+                {
+                    // Avoid pushing the 260 character limit for windows paths - remember that there will be subdirs below this
+                    // e.g. in case of a long root path, use
+                    //      c:\crazy long username\massive subdir name\wacky installation dirname\pwiz_tools\Skyline\~test &tmp^\TMMENF910 试验"
+                    // instead of
+                    //      c:\crazy long username\massive subdir name\wacky installation dirname\pwiz_tools\Skyline\~test &tmp^\TestMyMostExcellentNebulousFunction 试验"
+                    tmpTestDir = Path.GetFullPath(Path.Combine(testDir, testTmp,
+                        $"{string.Concat(test.TestMethod.Name.Where(char.IsUpper))}{test.TestMethod.Name.Sum(c => c)}{unicodeDecoration}"));
+                }
+
+                if (!Directory.Exists(tmpTestDir))
+                {
+                    Directory.CreateDirectory(tmpTestDir);
+                }
+
+                Environment.SetEnvironmentVariable(@"TMP", tmpTestDir);
+
+                if (doNotUseUnicode)
+                {
+                    break;
+                }
+
+                // Verify that the filesystem supports 8.3 conversion of unicode in paths
+                var shortPath = PathEx.GetNonUnicodePath(tmpTestDir);
+                if (shortPath.IndexOf(unicodeDecoration, StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    break; // Successfully translated to non-unicode path
+                }
+                // Filesystem does not support 8.3 unicode conversion, so retry without unicode
+                doNotUseUnicode = true;
             }
 
-            if (!Directory.Exists(tmpTestDir))
+            if (!doNotUseUnicode)
             {
-                Directory.CreateDirectory(tmpTestDir);
+                // This is an optional symlink (e.g. on bspratt's dev machine) to actual downloads area
+                var unicodeSymlink = @"c:\täst-dätä";
+                if (Directory.Exists(unicodeSymlink))
+                {
+                    Environment.SetEnvironmentVariable(PathEx.SKYLINE_DOWNLOAD_PATH, unicodeSymlink);
+                }
             }
-
-            Environment.SetEnvironmentVariable(@"TMP", tmpTestDir);
 
             // Decorate tempfile names with peculiar characters
-            PathEx.RandomFileNameDecoration = test.DoNotTestOddTmpPath ? @$"t m p{unicode}" : @$"t^m&p{unicode} ";
+            PathEx.RandomFileNameDecoration = @$"t^m&p{unicodeDecoration} ";
             return tmpTestDir;
         }
 
@@ -686,6 +718,13 @@ namespace TestRunnerLib
                 CleanupAbandonedFiles(TestContext.TestDir, !final, abandonedFilesList);
             }
             CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
+
+            // If we added a subdir for unicode testing, it's ok to leave that behind as long as it's empty
+            var unicodeSubDir = abandonedFilesList.Find(entry => entry.EndsWith(_unicodeSubdirName));
+            if (!string.IsNullOrEmpty(unicodeSubDir))
+            {
+                abandonedFilesList.Remove(unicodeSubDir);
+            }
 
             return abandonedFilesList;
         }

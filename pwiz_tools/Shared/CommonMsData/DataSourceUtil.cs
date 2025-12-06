@@ -74,6 +74,10 @@ namespace pwiz.CommonMsData
 
         public static bool IsDataSource(DirectoryInfo dirInfo)
         {
+            if (File.Exists(dirInfo.FullName))
+            {
+                return false; // It's a file, not a directory.
+            }
             return !Equals(GetSourceType(dirInfo), FOLDER_TYPE);
         }
 
@@ -122,6 +126,10 @@ namespace pwiz.CommonMsData
 
         public static bool IsDataSource(FileInfo fileInfo)
         {
+            if (Directory.Exists(fileInfo.FullName))
+            {
+                return false; // It's a directory, not a file.
+            }
             return !Equals(GetSourceType(fileInfo), UNKNOWN_TYPE);
         }
 

@@ -22,6 +22,7 @@
 
 
 #include "Connection_mzMLb.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -36,11 +37,12 @@ namespace pwiz {
 namespace msdata {
 namespace mzmlb {
 
-Connection_mzMLb::Connection_mzMLb(const std::string& id, bool identifyOnly)
+Connection_mzMLb::Connection_mzMLb(const std::string& idIn, bool identifyOnly)
 {
     H5Eset_auto(H5E_DEFAULT, NULL, NULL);
 
     // open HDF5 file for reading
+    std::string id = util::get_non_unicode_path(idIn); // Try to convert to Windows short path if necessary - mz5 library doesn't like Unicode in filenames
     file_ = H5Fopen(id.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     if (file_ < 0)
         throw std::runtime_error("[Connection_mzMLb::open()] Could not open mzMLb file for reading.");
