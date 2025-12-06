@@ -60,6 +60,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestLiveReportsTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             CoverShotName = "LiveReports";
             TestFilesZipPaths = new []
             {

@@ -203,6 +203,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab"); // Not L10N
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", null,
                 bmp => ClipTargets(bmp)); // Not L10N
 
@@ -399,6 +400,7 @@ namespace pwiz.SkylineTestTutorial
             var peptides = new List<PeptideDocNode>(Program.ActiveDocument.Peptides);
             Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [770, 785]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
             RestoreViewOnScreen(21);
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             PauseForScreenShot<SequenceTreeForm>("(fig. 1) - Added targets", null,
                 bmp => ClipTargets(bmp, 10, true, true)); // Not L10N
 

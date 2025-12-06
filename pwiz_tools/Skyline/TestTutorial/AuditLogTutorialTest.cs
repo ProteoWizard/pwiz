@@ -184,6 +184,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI( () =>
             {
+                SkylineWindow.ShowFilesTreeForm(false); // Hide files tab
                 SkylineWindow.ExpandPrecursors();
                 SkylineWindow.Height = 390;
             });

@@ -27,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
@@ -87,6 +88,7 @@ namespace pwiz.Skyline
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private bool _alignToPrediction;
+        private bool _shouldShowFilesTree;
 
         public RTGraphController RTGraphController
         {
@@ -499,6 +501,7 @@ namespace pwiz.Skyline
             // deserialization has problems using existing windows.
             DestroySequenceTreeForm();
             DestroyGraphSpectrum();
+            DestroyFilesTreeForm();
 
             var type = RTGraphController.GraphType;
             _listGraphRetentionTime.ToList().ForEach(DestroyGraphRetentionTime);
@@ -530,15 +533,71 @@ namespace pwiz.Skyline
                 DestroyGraphChrom(graphChrom);
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
-            // SequenceTree resizes often prior to display, so we must restore its scrolling after
+
+            InsertFilesViewIntoLegacyLayout();
+
+            // TreeViews resizes often prior to display, so we must restore horizontal scrolling after
             // all resizing has occurred
-            if (SequenceTree != null)
-            {
-                SequenceTree.UpdateTopNode();
-                SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
-            }
+            ResetHorizontalScroll(SequenceTree);
+            ResetHorizontalScroll(FilesTree);
 
             EnsureFloatingWindowsVisible();
+        }
+
+        private static void ResetHorizontalScroll(TreeViewMS treeView)
+        {
+            if (treeView == null)
+                return;
+            treeView.UpdateTopNode();
+            treeView.SetScrollPos(Orientation.Horizontal, 0);
+        }
+
+        private void InsertFilesViewIntoLegacyLayout()
+        {
+            if (_filesTreeForm == null && _shouldShowFilesTree)
+            {
+                // Store whatever is active now
+                var activeForm = dockPanel.ActiveContent as DockableForm;
+
+                // First time displaying FilesTree so no view state to restore
+                _filesTreeForm = CreateFilesTreeForm(null);
+            
+                // If SequenceTree exists, put FilesTree in a tab behind SequenceTree
+                if (_sequenceTreeForm != null) 
+                {
+                    var sequenceTreeDockState = _sequenceTreeForm.DockState;
+                    if (sequenceTreeDockState != DockState.Hidden)
+                    {
+                        var sequencePane = _sequenceTreeForm.Pane;
+                        // Show FilesTree in the same pane as SequenceTree - note that it is not
+                        // possible to show after the SequenceTree. So, we activate it after showing.
+                        if (sequencePane != null)
+                        {
+                            // Add as a tab in the same pane
+                            _filesTreeForm.Show(sequencePane, null);
+                        }
+                        else
+                        {
+                            // Hacky fallback that often works if pane is null
+                            _filesTreeForm.Show(dockPanel, sequenceTreeDockState);
+                        }
+
+                        // Activate SequenceTree again to keep it on top but re-activate whatever was active before
+                        _sequenceTreeForm.Activate();
+                    }
+                    // If SequenceTree is hidden, skip.
+                    // CONSIDER: if SequenceTree exists but is hidden, FilesTree cannot be added. Ignoring that case for now.
+
+                    activeForm?.Activate();
+                }
+                else
+                {
+                    // Could not find SequenceTree so put Files in its default location
+                    _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+                }
+            
+                _shouldShowFilesTree = false;
+            }
         }
 
         /// <summary>
@@ -629,6 +688,11 @@ namespace pwiz.Skyline
             else if (Equals(persistentString, typeof(GraphSpectrum).ToString()))
             {
                 return _graphSpectrum ?? CreateGraphSpectrum();                
+            }
+            else if (persistentString.StartsWith(typeof(FilesTreeForm).ToString()))
+            {
+                // show FilesTree if it has serialized state in the .view file
+                return FilesTreeForm ?? CreateFilesTreeForm(persistentString);
             }
 
             var split = persistentString.Split('|');

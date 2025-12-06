@@ -497,7 +497,6 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(SkylineWindow.IsGraphSpectrumVisible);
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.CollapsePrecursors();
-                SkylineWindow.Width = 1070;
             });
 
             // Select the first precursor. 
@@ -507,13 +506,18 @@ namespace pwiz.SkylineTestTutorial
                 FindNode(SkylineWindow.Document.MoleculeTransitionGroups.First().CustomMolecule.DisplayName);
             // Ensure Graphs look like p20. (checked)
             WaitForGraphs();
-            RunUI(() => SkylineWindow.Width = 1050);
+            RunUI(() =>
+            {
+                SkylineWindow.Width = 1050;
+                SkylineWindow.Height += 15; // Account for Targets and Files tabs
+            });
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported");
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
             {
                 TestPropertySheet();
             }
+            RunUI(() => SkylineWindow.Height -= 15);    // Subsequent screenshots are graphs only
 
             ValidatePeakRanks(1, 176, true);
             WaitForGraphs();
@@ -902,6 +906,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(31);
             RunUI(() =>
             {
+                SkylineWindow.ActivateReplicate("6-BSA-500fmol");
                 SkylineWindow.FocusDocument();
             });
             PauseForScreenShot("Main window");
