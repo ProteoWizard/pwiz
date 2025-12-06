@@ -419,8 +419,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
 
             // Select true target peaks using a q-value cutoff filter.
-            var truePeaks = targetTransitionGroups.SelectTruePeaks(decoyTransitionGroups, qValueCutoff, Lambda, nonParametricPValues);
-            var decoyPeaks = decoyTransitionGroups.SelectMaxPeaks();
+            var truePeaks = SkipMissingScores(weights, targetTransitionGroups.SelectTruePeaks(decoyTransitionGroups, qValueCutoff, Lambda, nonParametricPValues)).ToList();
+            var decoyPeaks = SkipMissingScores(weights, decoyTransitionGroups.SelectMaxPeaks()).ToList();
 
             WriteDistributionInfo(documentPath, targetTransitionGroups, decoyTransitionGroups); // Only if asked to do so in command-line arguments
 
@@ -434,7 +434,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             // Copy target and decoy peaks to training data array.
             int totalTrainingPeaks = truePeaks.Count + decoyTransitionGroups.Count;
-            // Calculate the maximum number of training peaks (8 bytes per score - double, featurCount + 1 scores per peak)
+            // Calculate the maximum number of training peaks (8 bytes per score - double, featureCount + 1 scores per peak)
             int maxTrainingPeaks = MAX_TRAINING_MEMORY/8/(featureCount + 1);
 
             var trainData = new double[Math.Min(totalTrainingPeaks, maxTrainingPeaks), featureCount + 1];
@@ -514,6 +514,27 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return truePeaks.Count;
         }
 
+        private IEnumerable<ScoredPeak> SkipMissingScores(IList<double> weights, IEnumerable<ScoredPeak> peaks)
+        {
+            foreach (var peak in peaks)
+            {
+                bool skip = false;
+                for (int i = 0; i < weights.Count; i++)
+                {
+                    if (!double.IsNaN(weights[i]) && TargetDecoyGenerator.IsUnknown(peak.FeatureScores.Values[i]))
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+
+                if (!skip)
+                {
+                    yield return peak;
+                }
+            }
+        }
+
         private void WriteDistributionInfo(string documentPath, ScoredGroupPeaksSet targetTransitionGroups, ScoredGroupPeaksSet decoyTransitionGroups)
         {
             string documentDir = Path.GetDirectoryName(documentPath);
@@ -536,11 +557,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
             for (int i = 0; i < features.Count; i++)
             {
                 if (!double.IsNaN(weights[i]))
+                {
                     trainData[row, j++] = features.Values[i];
+                }
             }
             trainData[row, j] = category;
         }
-        public override bool ReplaceUnknownFeatureScores => false;
 
         #region object overrides
         public bool Equals(MProphetPeakScoringModel other)
