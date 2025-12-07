@@ -518,8 +518,9 @@ struct CompassDataImpl : public CompassData
 
             if (format_ != Reader_Bruker_Format_U2)
             {
+                string rawpath83 = get_non_unicode_path(rawpath); // Try to convert to Windows 8.3 short path if necessary - Bruker reader doesn't like Unicode in filenames
                 msAnalysis_ = gcnew EDAL::MSAnalysisClass();
-                msAnalysis_->Open(ToSystemString(rawpath));
+                msAnalysis_->Open(ToSystemString(rawpath83));
                 msSpectrumCollection_ = msAnalysis_->MSSpectrumCollection;
                 hasMSData_ = msSpectrumCollection_->Count > 0;
             }
