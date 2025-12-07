@@ -29,6 +29,9 @@
     </p>
     <ul>
         <li>Open the file "ExtracellularVesicalMagNet.sky" in the "PeakImptutationDia" folder.</li>
+    </ul>
+    <h1>Peak Areas Relative Abundance graph</h1>
+    <ul>
         <li>In the <b>Targets</b> view <b>Replicates</b> dropdown list, select the fourth item which is the “Total04_HydN_12mz_42” replicate.</li>
         <li>On the <b>View</b> menu, click <b>Peak Areas</b> and then click <b>Relative Abundance</b></li>
         <li>Right-click on the <b>Peak Area - Relative Abundance</b> graph, click <b>Targets</b> and then click <b>Proteins</b></li>
@@ -45,6 +48,7 @@
     </ul>
     <p><img src="s-02.png"/></p>
     <p>The replicates whose names begin with "EV" measured samples which used the MagNet protocol to enrich for EV proteins. In these samples, the abundance of the EV proteins is increased in these samples.</p>
+    <h1>Finding an interesting protein</h1>
     <ul>
         <li>On the <b>Edit</b> menu, click <b>Find</b> (Ctrl-F).</li>
         <li>Enter "CD9_HUMAN" in the <b>Find what</b> box.</li>
@@ -56,6 +60,7 @@
     </ul>
     <p><img src="s-04.png"/></p>
     <p>The CD9 protein has been selected. It is one of the EV proteins with medium abundance and will serve as a good example of how the peak boundary imputation feature works in replicates where signal from peptides is difficult to detect.</p>
+    <h1>Group comparison</h1>
     <ul>
         <li>On the <b>View</b> menu, choose <b>Live Reports</b>, then <b>Group Comparisons</b>, and click <b>EV-Enrich</b></li>
     </ul>
@@ -76,6 +81,7 @@
         In general, the replicates with lower abundance will tend to be the ones where the peak was not confidentally identified, but certainly not in all cases.
         You can modify the group comparison to tell Skyline to treat the replicates with missing peaks as if the peak had zero area.
     </p>
+    <h1>"Use zero for missing peaks"</h1>
     <ul>
         <li>Click the <b>Settings</b> button at the top of the <b>EV-Enrich:Grid</b> window.</li>
         <li>Click the <b>Advanced</b> button in the <b>Edit Group Comparison: EV-Enrich</b> window</li>
@@ -107,11 +113,13 @@
         <li>Move the floating windows out of the way so that you can see the main Skyline window</li>
     </ul>
     <p><img src="s-12.png"/></p>
+    <h1>Showing the Exemplary Peak</h1>
     <p>No peak has been chosen for this peptide in this replicate. Skyline has the ability to tell you where on this chromatogram the peak from the best-scoring replicate could be found.</p>
     <ul><li>Right-click on the chromatogram graph and click <b>Exemplary Peak</b></li></ul>
     <p><img src="s-13.png"/></p>
     <ul><li>Right-click on the chromaotgram graph, click <b>Transitions</b> and then click <b>Products</b>.</li></ul>
     <p><img src="s-14.png"/></p>
+    <h1>Imputing boundaries for missing peaks</h1>
     <p>Now we are going to tell Skyline to set the peak boundaries for all missing peaks based on the peak boundaries of the best-scoring replicate.</p>
     <ul>
         <li>On the <b>Settings</b> menu click <b>Peptide Settings</b></li>
@@ -124,6 +132,7 @@
     <p><img src="s-16.png"/></p>
     <p>The Retention Times graph shows peak boundaries all replicates.</p>
     <p><img src="s-17.png"/></p>
+    <h1>Imputing peaks in the document from Webinar 26 ("DIA with Fragpipe")</h1>
     <ul>
         <li>Open the file "Webinar26.sky" in the "PeakImptutationDia" folder</li>
         <li>Select the first peptide under the first protein in the Targets tree</li>
@@ -136,11 +145,13 @@
     <li>Click the <b>OK</b> button.</li>
     </ul>
     <p><img src="s-19.png"/></p>
+    <h1>Showing aligned retention times</h1>
     <ul><li>Right-click on the chromatogram graph and click <b>Align to library 'Webinar26'</b></li></ul>
     <p><img src="s-20.png"/></p>
     <p>Skyline changes the scaling on Y-axis of the Retention Times graph so that instead of showing the actual retention
         times of the peak boundaries, it shows where those peak boundaries correspond to when compared to the average retention
         times from the spectral library in this document.</p>
+    <h1>Showing library retention times in linear regression graph pane</h1>
     <ul><li>On the <b>View</b> menu, choose <b>Retention Times</b> then <b>Regression</b>, and click <b>Score to Run</b></li></ul>
     <p>Initially, Skyline chooses to display the retention time calculator which most closely matches the data in the document.
         When Skyline is first installed, the only retention time calculator it knows about is called "SSRCalc", which is
@@ -152,8 +163,6 @@
         <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Regression Method</b> and click <b>Loess</b></li>
     </ul>
     <p><img src="s-21.png"/></p>
-
-
 </body>
 
 </html>
