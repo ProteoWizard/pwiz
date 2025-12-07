@@ -1,11 +1,9 @@
-using System;
-using System.Linq;
+using System.Globalization;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
-using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -30,15 +28,34 @@ namespace pwiz.SkylineTestTutorial
         {
             RunUI(() =>
             {
-                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("PeakImputationDemo.sky"));
-                SkylineWindow.ShowDocumentGrid(true);
+                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("ExtracellularVesicalMagNet.sky"));
+                SkylineWindow.SelectedResultsIndex = 3;
             });
-            var documentGrid = FindOpenForm<DocumentGridForm>();
-            RunUI(()=>documentGrid.ChooseView("Peptide Areas"));
             WaitForDocumentLoaded();
-            WaitForConditionUI(() => documentGrid.IsComplete);
-            PauseForScreenShot(documentGrid);
-            RunUI(()=>SkylineWindow.ShowGroupComparisonWindow("EV-Enrich-Peptide"));
+            RunUI(()=>SkylineWindow.ShowPeakAreaRelativeAbundanceGraph());
+            var relativeAbundanceForm = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
+            Assert.IsNotNull(relativeAbundanceForm);
+            RunUI(() =>
+            {
+                SkylineWindow.SetAreaProteinTargets(true);
+                SkylineWindow.ShowSingleReplicate();
+            });
+            WaitForGraphs();
+            PauseForScreenShot(relativeAbundanceForm);
+            RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
+            WaitForGraphs();
+            PauseForScreenShot(relativeAbundanceForm);
+            RunLongDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findNodeDlg =>
+            {
+                RunUI(() => {
+                    findNodeDlg.SearchString = "CD9_HUMAN";
+                });
+                PauseForScreenShot(findNodeDlg);
+                RunUI(findNodeDlg.FindNext);
+            }, findNodeDlg=>findNodeDlg.Close());
+            WaitForGraphs();
+            PauseForScreenShot(relativeAbundanceForm);
+            RunUI(()=>SkylineWindow.ShowGroupComparisonWindow("EV-Enrich"));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
             WaitForConditionUI(() => foldChangeGrid.IsComplete);
             PauseForScreenShot(foldChangeGrid);
@@ -72,26 +89,28 @@ namespace pwiz.SkylineTestTutorial
             foldChangeVolcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
             WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
             PauseForScreenShot(floatingWindow);
-            RunUI(() =>
+            var rtReplicateGraphSummary = ShowNestedDlg<GraphSummary>(SkylineWindow.ShowRTReplicateGraph);
+            PauseForScreenShot(rtReplicateGraphSummary);
+            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findNodeDlg =>
             {
-                var biggestFoldChange = foldChangeVolcanoPlot.CurveList
-                    .SelectMany(curve => Enumerable.Range(0, curve.NPts).Select(i => curve.Points[i]))
-                    .Where(pointPair => pointPair.Tag is FoldChangeRow).OrderByDescending(pointPair => pointPair.X)
-                    .First();
-                var foldChangeRow = (FoldChangeRow)biggestFoldChange.Tag;
-                foldChangeRow.Peptide.LinkValueOnClick(null, EventArgs.Empty);
+                findNodeDlg.SearchString = 441.24.ToString("F04", CultureInfo.CurrentCulture);
+                findNodeDlg.FindNext();
+                findNodeDlg.Close();
             });
-            PauseForScreenShot(foldChangeVolcanoPlot, processShot:ClipControl(foldChangeVolcanoPlot));
-            var rtReplicateGraphSummary = ShowDialog<GraphSummary>(SkylineWindow.ShowRTReplicateGraph);
             PauseForScreenShot(rtReplicateGraphSummary);
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
             var windowPositions = HideFloatingWindows();
             PauseForScreenShot(SkylineWindow);
-            RunUI(()=>SkylineWindow.ShowExemplaryPeak(true));
             var graphChromatogram = SkylineWindow.GetGraphChrom("Total04_HydN_12mz_42");
+            PauseForScreenShot(graphChromatogram);
+            RunUI(()=>SkylineWindow.ShowExemplaryPeak(true));
             WaitForConditionUI(() => graphChromatogram.ExemplaryPeak != null);
             PauseForScreenShot(graphChromatogram);
-
+            RunUI(() =>
+            {
+                SkylineWindow.ShowProductTransitions();
+            });
+            PauseForScreenShot(graphChromatogram);
             RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
                 RunUI(()=>
