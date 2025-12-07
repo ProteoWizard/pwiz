@@ -37,7 +37,7 @@ namespace TestPerf
             return TestFilesDir.GetTestPath(path);
         }
 
-        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestBullseyeSharp()
         {
             if (!RunPerfTests)
