@@ -11,12 +11,13 @@ This guide helps Skyline developers configure a Windows workstation so that AI-a
 
 > **Quick checklist**
 >
-> 1. Install PowerShell 7 (UTF-8 terminal support)  
-> 2. Update Cursor/VS Code terminal settings to use PowerShell 7 + UTF-8  
-> 3. Install ReSharper command-line tools (`jb inspectcode`)  
-> 4. Configure Git and global line ending settings  
-> 5. Install a Markdown viewer for browser-based docs  
-> 6. Optional: Install additional helpers (Everything Search, Diff tools)
+> 1. Install PowerShell 7 (UTF-8 terminal support)
+> 2. Update Cursor/VS Code terminal settings to use PowerShell 7 + UTF-8
+> 3. Install ReSharper command-line tools (`jb inspectcode`)
+> 4. Install GitHub CLI (`gh`) for agentic PR workflows
+> 5. Configure Git and global line ending settings
+> 6. Install a Markdown viewer for browser-based docs
+> 7. Optional: Install additional helpers (Everything Search, Diff tools)
 
 ---
 
@@ -87,6 +88,44 @@ jb tool list
 ```
 
 > Recommended: match the version running on TeamCity (`2023.1.1`). Our scripts use the latest stable (`2025.2.4`) and produce zero-warning output.
+
+### GitHub CLI (gh)
+
+The GitHub CLI enables AI agents (Claude Code, Copilot, etc.) to interact with GitHub directly—reviewing PRs, fetching issue details, and checking CI status without leaving the IDE terminal.
+
+**Install:**
+```powershell
+winget install GitHub.cli --accept-source-agreements --accept-package-agreements
+```
+
+**Authenticate (must run in interactive PowerShell 7 terminal outside VS Code/Cursor):**
+
+> **Important:** The `gh auth login` command requires an interactive terminal. It will not work inside an AI agent's shell context. Open a separate PowerShell 7 window to run this.
+
+```powershell
+gh auth login
+```
+
+Follow the interactive prompts:
+1. Select **GitHub.com** as the account
+2. Select **SSH** as your preferred protocol for Git operations
+3. Answer **No** to generating a new SSH key (you should already have SSH configured via Git/TortoiseGit)
+4. Select **Login with a web browser**
+5. Copy the one-time code displayed, then press Enter to open the browser
+6. In the browser, click **Continue** to sign in with your active GitHub account
+7. Paste the one-time code (Ctrl+V) and click **Continue**
+8. Click **Continue** again if asked
+9. Click **Authorize github**
+10. Complete your 2FA (authenticator app, security key, etc.)
+11. Browser shows "Congratulations, you're all set!"
+
+**Verify:**
+```powershell
+gh auth status
+gh pr view 3700   # Test with any open PR
+```
+
+Expected output shows your logged-in account, protocol (ssh), and token scopes (gist, read:org, repo).
 
 ### Git Configuration (line endings)
 
@@ -165,6 +204,8 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 |---------|-------|-----|
 | Emoji/Unicode characters render as `âœ…` | Terminal using CP1252 | Install PowerShell 7, ensure Cursor uses it |
 | `jb` not found | ReSharper CLI tools missing | `dotnet tool install -g JetBrains.ReSharper.GlobalTools` |
+| `gh` not found | GitHub CLI not installed | `winget install GitHub.cli` |
+| `gh auth login` hangs in agent terminal | Requires interactive terminal | Run `gh auth login` in separate PowerShell 7 window outside IDE |
 | CRLF/LF diffs everywhere | `core.autocrlf` not set | `git config --global core.autocrlf true` |
 | `TestRunner.exe` missing | Build not run | `.\ai\Build-Skyline.ps1` |
 | `inspectcode` builds solution again | `--no-build` flag missing | Use latest script (already includes `--no-build`) |
