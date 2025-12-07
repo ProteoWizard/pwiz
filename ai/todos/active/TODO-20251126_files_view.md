@@ -27,79 +27,78 @@ This is a cleanup and consolidation effort for the Files view feature that was o
 ### Phase 1: Create New Branch and Apply Changes
 
 #### Step 1: Prepare New Branch from Master
-- [ ] Ensure we're on master and up to date: `git checkout master && git pull origin master`
-- [ ] Create new branch: `git checkout -b Skyline/work/20251126_files_view`
-- [ ] Verify branch is clean and based on latest master
+- [x] Ensure we're on master and up to date: `git checkout master && git pull origin master`
+- [x] Create new branch: `git checkout -b Skyline/work/20251126_files_view`
+- [x] Verify branch is clean and based on latest master
 
 #### Step 2: Apply All Changes from Old Branch
-- [ ] Get diff of all changes from old branch: `git diff master..Skyline/work/20250102_FilesView > /tmp/files_view_changes.patch`
-- [ ] Apply changes as uncommitted: `git apply /tmp/files_view_changes.patch` (or use `git diff` and `git apply`)
-- [ ] Alternative approach: Use `git checkout Skyline/work/20250102_FilesView -- .` then reset to uncommitted state
-- [ ] Verify all changes are present and uncommitted: `git status`
+- [x] Get diff of all changes from old branch: `git diff master..Skyline/work/20250102_FilesView > /tmp/files_view_changes.patch`
+- [x] Apply changes as uncommitted: `git apply /tmp/files_view_changes.patch` (or use `git diff` and `git apply`)
+- [x] Alternative approach: Use `git checkout Skyline/work/20250102_FilesView -- .` then reset to uncommitted state
+- [x] Verify all changes are present and uncommitted: `git status`
 
 #### Step 3: Rename TODO File
-- [ ] Rename TODO file: `git mv ai/todos/active/TODO-20250102_FilesView.md ai/todos/active/TODO-20251126_files_view.md`
-- [ ] Update TODO file header with new branch name and date
-- [ ] Update references to old PR (#3334) with note about migration
+- [x] Rename TODO file: `git mv ai/todos/active/TODO-20250102_FilesView.md ai/todos/active/TODO-20251126_files_view.md`
+- [x] Update TODO file header with new branch name and date
+- [x] Update references to old PR (#3334) with note about migration
 
 ### Phase 2: Review and Clean Up Changes
 
 #### Step 4: Categorize and Review Changes
-- [ ] List all modified files: `git status --short`
-- [ ] Identify designer files (.Designer.cs, .resx, .settings) that may have unintended changes
-- [ ] Identify core feature files (Files view implementation)
-- [ ] Identify test files
-- [ ] Identify documentation/configuration files
+- [x] List all modified files: `git status --short`
+- [x] Identify designer files (.Designer.cs, .resx, .settings) that may have unintended changes
+- [x] Identify core feature files (Files view implementation)
+- [x] Identify test files
+- [x] Identify documentation/configuration files
 
 #### Step 5: Review Designer and Resource Files
-- [ ] Review each .Designer.cs file change - revert if unintended
-- [ ] Review each .resx file change - verify only intentional string additions
-- [ ] Review .settings files - revert if unintended
-- [ ] Use `git diff` to inspect each file carefully
+- [x] Review each .Designer.cs file change - revert if unintended
+- [x] Review each .resx file change - verify only intentional string additions
+- [x] Review .settings files - revert if unintended
+- [x] Use `git diff` to inspect each file carefully
 
 #### Step 6: Review Core Feature Files
-- [ ] Review Files view implementation files
-- [ ] Verify all changes are intentional and necessary
-- [ ] Check for commented-out code or debug code that should be removed
-- [ ] Verify code follows project conventions (CRITICAL-RULES.md, STYLEGUIDE.md)
+- [x] Review Files view implementation files
+- [x] Verify all changes are intentional and necessary
+- [x] Check for commented-out code or debug code that should be removed
+- [x] Verify code follows project conventions (CRITICAL-RULES.md, STYLEGUIDE.md)
 
 #### Step 7: Review Test Files
-- [ ] Verify test changes are intentional
-- [ ] Check for test code that was added and later should have been removed
-- [ ] Verify tests follow TESTING.md guidelines
+- [x] Verify test changes are intentional
+- [x] Check for test code that was added and later should have been removed
+- [x] Verify tests follow TESTING.md guidelines
 
 #### Step 8: Review Documentation and Configuration
-- [ ] Review any documentation changes
-- [ ] Review project file changes (.csproj, .sln)
-- [ ] Verify only necessary files are included
+- [x] Review any documentation changes - update tutorial screenshots
+- [x] Review project file changes (.csproj, .sln)
+- [x] Verify only necessary files are included
 
 ### Phase 3: Create Clean Commit and PR
 
 #### Step 9: Organize Changes for Commit
-- [ ] Group related changes logically
-- [ ] Ensure all unintended changes are reverted
-- [ ] Verify build succeeds: Request developer to build and test
-- [ ] Final review of `git diff` to ensure only intended changes remain
+- [x] Ensure all unintended changes are reverted
+- [x] Verify build succeeds: Request developer to build and test
+- [x] Final review of `git diff` to ensure only intended changes remain
 
 #### Step 10: Create Initial Commit
-- [ ] Stage all reviewed changes: `git add .`
-- [ ] Create comprehensive commit message describing the Files view feature
-- [ ] Commit: `git commit -m "Files view feature: [detailed description]"`
-- [ ] Verify commit looks good: `git show HEAD`
+- [x] Stage all reviewed changes: `git add .`
+- [x] Create comprehensive commit message describing the Files view feature
+- [x] Commit: `git commit -m "Files view feature: [detailed description]"`
+- [x] Verify commit looks good: `git show HEAD`
 
 #### Step 11: Push and Create New PR
-- [ ] Push branch to origin: `git push -u origin Skyline/work/20251126_files_view`
-- [ ] Create new PR on GitHub with:
+- [x] Push branch to origin: `git push -u origin Skyline/work/20251126_files_view`
+- [x] Create new PR on GitHub with:
   - Title: "Files view feature (cleanup from PR #3334)"
   - Description explaining the migration from old branch
   - Reference to old PR #3334
   - List of key changes
-- [ ] Link new PR in TODO file
+- [x] Link new PR in TODO file
 
 #### Step 12: Close Old PR
-- [ ] Add comment to old PR #3334 explaining migration to new PR
-- [ ] Close old PR #3334 with reference to new PR
-- [ ] Update TODO file to mark old PR as superseded
+- [x] Add comment to old PR #3334 explaining migration to new PR
+- [x] Close old PR #3334 with reference to new PR
+- [x] Update TODO file to mark old PR as superseded
 
 ## Key Files to Review Carefully
 

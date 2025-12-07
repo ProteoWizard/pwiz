@@ -57,7 +57,11 @@ namespace pwiz.Skyline.Model.Files
         skyline,
         audit_log,
         cache_file,
-        view_file
+        view_file,
+        prot_db,
+        ims_db,
+        opt_db,
+        irt_calculator
     }
 
     internal class StaticFolderId : Identity { }

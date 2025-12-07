@@ -16,6 +16,8 @@
 
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -29,7 +31,7 @@ namespace pwiz.Skyline.Model.Files
             return ImmutableList<OptimizationLibrary>.Singleton(model);
         }
 
-        private OptimizationLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath) : 
+        private OptimizationLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
             base(documentFilePath, identityPath)
         {
             Name = name;
@@ -39,5 +41,14 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
+        public override ImageId ImageAvailable => ImageId.opt_db;
+
+        public static ModifiedDocument Edit(SrmDocument doc, Optimization.OptimizationLibrary newLib)
+        {
+            var newDocument = doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(prediction =>
+                prediction.ChangeOptimizationLibrary(newLib)));
+            var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_optimization_library_update, doc.DocumentType, newLib.Name);
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
     }
 }

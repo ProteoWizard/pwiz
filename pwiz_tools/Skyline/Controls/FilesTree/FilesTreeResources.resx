@@ -193,4 +193,13 @@
   <data name="FilesTreeForm_Update_BackgroundProteome" xml:space="preserve">
     <value>Update background proteome</value>
   </data>
+  <data name="FilesTreeForm_Update_IonMobilityLibrary" xml:space="preserve">
+    <value>Update ion mobility library</value>
+  </data>
+  <data name="FilesTreeForm_Update_OptimizationLibrary" xml:space="preserve">
+    <value>Update optimization library</value>
+  </data>
+  <data name="FilesTreeForm_Update_RTCalculator" xml:space="preserve">
+    <value>Update retention time calculator</value>
+  </data>
 </root>

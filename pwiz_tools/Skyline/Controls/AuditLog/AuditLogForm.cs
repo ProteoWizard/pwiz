@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.AuditLog
 {
@@ -43,6 +44,8 @@ namespace pwiz.Skyline.Controls.AuditLog
             : base(viewContext, AuditLogStrings.AuditLogForm_AuditLogForm_Audit_Log)
         {
             InitializeComponent();
+
+            Icon = Resources.AuditLog.ToIcon();
 
             _skylineWindow = viewContext.SkylineDataSchema.SkylineWindow;
 

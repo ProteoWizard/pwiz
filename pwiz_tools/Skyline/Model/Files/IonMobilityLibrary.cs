@@ -16,6 +16,8 @@
 
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -40,5 +42,14 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
+        public override ImageId ImageAvailable => ImageId.ims_db;
+
+        public static ModifiedDocument Edit(SrmDocument doc, IonMobility.IonMobilityLibrary newLib)
+        {
+            var newDocument = doc.ChangeSettings(doc.Settings.ChangeTransitionIonMobilityFiltering(filtering =>
+                filtering.ChangeLibrary(newLib)));
+            var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_ion_mobility_library_update, doc.DocumentType, newLib.Name);
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
     }
 }

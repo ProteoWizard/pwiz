@@ -221,7 +221,34 @@ namespace pwiz.Skyline.Controls.FilesTree {
                 return ResourceManager.GetString("FilesTreeForm_Update_BackgroundProteome", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Update ion mobility library.
+        /// </summary>
+        public static string FilesTreeForm_Update_IonMobilityLibrary {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_Update_IonMobilityLibrary", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Update optimization library.
+        /// </summary>
+        public static string FilesTreeForm_Update_OptimizationLibrary {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_Update_OptimizationLibrary", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Update retention time calculator.
+        /// </summary>
+        public static string FilesTreeForm_Update_RTCalculator {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_Update_RTCalculator", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Replicates.
         /// </summary>

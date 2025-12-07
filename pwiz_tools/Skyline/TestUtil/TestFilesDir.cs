@@ -392,10 +392,10 @@ namespace pwiz.SkylineTestUtil
                     // If the directory doesn't exist, it may have been deleted by another test/process.
                     // This can happen when multiple tests use the same ZIP file and run in parallel.
                     // Allow the test to continue in this case.
-                    // if (!Directory.Exists(path))
-                    // {
-                    //     return;
-                    // }
+                    if (!Directory.Exists(path))
+                    {
+                        return;
+                    }
                     throw new IOException($@"Directory.Delete(""{path}"",true) failed with ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
                 return;

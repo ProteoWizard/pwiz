@@ -27,7 +27,11 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
+using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.IonMobility;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileModel;
 using Debugger = System.Diagnostics.Debugger;
@@ -207,6 +211,81 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var modifier = DocumentModifier.Create(doc => BackgroundProteome.Edit(doc, newBgProteome));
 
                 SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_BackgroundProteome, modifier);
+
+                // Update the settings list to persist the change
+                Settings.Default.BackgroundProteomeList.ReplaceValue(docBgProteome, newBgProteome);
+            }
+        }
+
+        public void OpenEditRTCalculatorDialog(FilesTreeNode filesTreeNode)
+        {
+            var docCalc = SkylineWindow.DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator as RCalcIrt;
+            if (docCalc == null)
+                return;
+
+            if (!filesTreeNode.Model.IdentityPath.GetIdentity(0).GlobalIndex.Equals(docCalc.Id.GlobalIndex))
+                return;
+
+            var existingCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => !ReferenceEquals(calc, docCalc));
+            using var editIrtCalcDlg = new EditIrtCalcDlg(docCalc, existingCalcs);
+            if (editIrtCalcDlg.ShowDialog(this) == DialogResult.OK)
+            {
+                var newCalc = editIrtCalcDlg.Calculator;
+                var modifier = DocumentModifier.Create(doc => RTCalc.Edit(doc, newCalc));
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_RTCalculator, modifier);
+
+                // Update the settings list to persist the change
+                Settings.Default.RTScoreCalculatorList.ReplaceValue(docCalc, newCalc);
+            }
+        }
+
+        public void OpenEditOptimizationLibraryDialog(FilesTreeNode filesTreeNode)
+        {
+            var docSettings = SkylineWindow.DocumentUI.Settings;
+            var docOptLib = docSettings.TransitionSettings.Prediction.OptimizedLibrary;
+            if (docOptLib == null || docOptLib.IsNone)
+                return;
+
+            if (!filesTreeNode.Model.IdentityPath.GetIdentity(0).GlobalIndex.Equals(docOptLib.Id.GlobalIndex))
+                return;
+
+            var existingLibs = Settings.Default.OptimizationLibraryList.Where(lib => !ReferenceEquals(lib, docOptLib));
+            using var editOptLibDlg = new EditOptimizationLibraryDlg(SkylineWindow.DocumentUI, docOptLib, existingLibs);
+            if (editOptLibDlg.ShowDialog(this) == DialogResult.OK)
+            {
+                var newLib = editOptLibDlg.Library;
+                var modifier = DocumentModifier.Create(doc => OptimizationLibrary.Edit(doc, newLib));
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_OptimizationLibrary, modifier);
+
+                // Update the settings list to persist the change
+                Settings.Default.OptimizationLibraryList.ReplaceValue(docOptLib, newLib);
+            }
+        }
+
+        public void OpenEditIonMobilityLibraryDialog(FilesTreeNode filesTreeNode)
+        {
+            var docSettings = SkylineWindow.DocumentUI.Settings;
+            var docIonMobilityLib = docSettings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
+            if (docIonMobilityLib == null || docIonMobilityLib.IsNone)
+                return;
+
+            if (!filesTreeNode.Model.IdentityPath.GetIdentity(0).GlobalIndex.Equals(docIonMobilityLib.Id.GlobalIndex))
+                return;
+
+            var existingLibs = Settings.Default.IonMobilityLibraryList.Where(lib => !ReferenceEquals(lib, docIonMobilityLib));
+            var ionMobilityWindowWidthCalculator = docSettings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator;
+            using var editIonMobilityLibDlg = new EditIonMobilityLibraryDlg(docIonMobilityLib, existingLibs, ionMobilityWindowWidthCalculator);
+            if (editIonMobilityLibDlg.ShowDialog(this) == DialogResult.OK)
+            {
+                var newLib = editIonMobilityLibDlg.IonMobilityLibrary;
+                var modifier = DocumentModifier.Create(doc => IonMobilityLibrary.Edit(doc, newLib));
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_IonMobilityLibrary, modifier);
+
+                // Update the settings list to persist the change
+                Settings.Default.IonMobilityLibraryList.ReplaceValue(docIonMobilityLib, newLib);
             }
         }
 
@@ -514,6 +593,15 @@ namespace pwiz.Skyline.Controls.FilesTree
                     break;
                 case BackgroundProteome _:
                     OpenEditBackgroundProteomeDialog(filesTreeNode);
+                    break;
+                case RTCalc _:
+                    OpenEditRTCalculatorDialog(filesTreeNode);
+                    break;
+                case OptimizationLibrary _:
+                    OpenEditOptimizationLibraryDialog(filesTreeNode);
+                    break;
+                case IonMobilityLibrary _:
+                    OpenEditIonMobilityLibraryDialog(filesTreeNode);
                     break;
             }
         }

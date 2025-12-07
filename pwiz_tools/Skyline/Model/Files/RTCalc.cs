@@ -16,7 +16,9 @@
 
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -28,7 +30,7 @@ namespace pwiz.Skyline.Model.Files
             return ImmutableList<RTCalc>.Singleton(new RTCalc(documentFilePath, identityPath, irtDb.Name, irtDb.FilePath));
         }
 
-        private RTCalc(string documentFilePath, IdentityPath identityPath, string name, string filePath) : 
+        private RTCalc(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
             base(documentFilePath, identityPath)
         {
             Name = name;
@@ -38,5 +40,14 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
+        public override ImageId ImageAvailable => ImageId.irt_calculator;
+
+        public static ModifiedDocument Edit(SrmDocument doc, RetentionScoreCalculatorSpec newCalc)
+        {
+            var newDocument = doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(prediction =>
+                prediction.ChangeRetentionTime(prediction.RetentionTime.ChangeCalculator(newCalc))));
+            var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_rt_calculator_update, doc.DocumentType, newCalc.Name);
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
     }
 }

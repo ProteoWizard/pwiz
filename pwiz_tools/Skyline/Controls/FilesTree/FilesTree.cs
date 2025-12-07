@@ -80,6 +80,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList.Images.Add(Resources.AuditLog);           // 32bpp
             ImageList.Images.Add(Resources.CacheFile);          // 32bpp
             ImageList.Images.Add(Resources.ViewFile);           // 32bpp
+            ImageList.Images.Add(Resources.ProtDB);             // Placeholder
+            ImageList.Images.Add(Resources.ImsDB);              // Placeholder
+            ImageList.Images.Add(Resources.OptDB);              // Placeholder
+            ImageList.Images.Add(Resources.IrtCalculator);      // Placeholder
         }
 
         [Browsable(false)]

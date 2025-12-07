@@ -335,6 +335,7 @@ namespace pwiz.Skyline.Menus
             // 
             // auditLogMenuItem
             // 
+            this.auditLogMenuItem.Image = global::pwiz.Skyline.Properties.Resources.AuditLog;
             this.auditLogMenuItem.Name = "auditLogMenuItem";
             resources.ApplyResources(this.auditLogMenuItem, "auditLogMenuItem");
             this.auditLogMenuItem.Click += new System.EventHandler(this.auditLogMenuItem_Click);

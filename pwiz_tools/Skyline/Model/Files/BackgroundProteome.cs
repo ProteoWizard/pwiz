@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Proteome;
 
 namespace pwiz.Skyline.Model.Files
@@ -43,17 +44,13 @@ namespace pwiz.Skyline.Model.Files
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
+        public override ImageId ImageAvailable => ImageId.prot_db;
 
         public static ModifiedDocument Edit(SrmDocument doc, BackgroundProteomeSpec bgProteomeSpec)
         {
-            var newBgProteome = new Proteome.BackgroundProteome(bgProteomeSpec);
-
-            var newPeptideSettings = doc.Settings.PeptideSettings.ChangeBackgroundProteome(newBgProteome);
-            var newSettings = doc.Settings.ChangePeptideSettings(newPeptideSettings);
-            var newDocument = doc.ChangeSettings(newSettings);
-
+            var newDocument = doc.ChangeSettings(doc.Settings.ChangePeptideSettings(ps =>
+                ps.ChangeBackgroundProteome(new Proteome.BackgroundProteome(bgProteomeSpec))));
             var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_background_proteome_update, doc.DocumentType, bgProteomeSpec.Name);
-
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
     }

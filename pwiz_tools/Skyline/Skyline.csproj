@@ -4354,6 +4354,19 @@
     <None Include="Resources\prosit_logo_dark_blue.png" />
     <None Include="Resources\Skyline_Daily.bmp" />
     <None Include="Resources\FolderSampleSet.png" />
+    <None Include="Resources\AuditLog.png" />
+    <None Include="Resources\CacheFile.png" />
+    <None Include="Resources\FileMissing.png" />
+    <None Include="Resources\FolderMissing.png" />
+    <None Include="Resources\MethodFile.png" />
+    <None Include="Resources\ReplicateMissing.png" />
+    <None Include="Resources\Skyline_FilesTree.bmp" />
+    <None Include="Resources\Trash.png" />
+    <None Include="Resources\ViewFile.png" />
+    <None Include="Resources\ImsDB.png" />
+    <None Include="Resources\IrtCalculator.png" />
+    <None Include="Resources\OptDB.png" />
+    <None Include="Resources\ProtDB.png" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

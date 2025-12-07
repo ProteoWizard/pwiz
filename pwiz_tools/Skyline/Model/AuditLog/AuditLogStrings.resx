@@ -714,4 +714,13 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="files_tree_background_proteome_update" xml:space="preserve">
     <value>Edited background proteome named {0} from the Files window</value>
   </data>
+  <data name="files_tree_rt_calculator_update" xml:space="preserve">
+    <value>Edited retention time calculator named {0} from the Files window</value>
+  </data>
+  <data name="files_tree_optimization_library_update" xml:space="preserve">
+    <value>Edited optimization library named {0} from the Files window</value>
+  </data>
+  <data name="files_tree_ion_mobility_library_update" xml:space="preserve">
+    <value>Edited ion mobility library named {0} from the Files window</value>
+  </data>
 </root>
