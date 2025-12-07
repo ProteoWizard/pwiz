@@ -1,9 +1,13 @@
 using System.Globalization;
+using System.Linq;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -15,6 +19,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestPeakImputationDiaTutorial()
         {
+            if (IsTranslationRequired)
+            {
+                return;
+            }
             CoverShotName = "PeakImputationDia";
             TestFilesZipPaths = new[]
             {
@@ -102,7 +110,6 @@ namespace pwiz.SkylineTestTutorial
             var windowPositions = HideFloatingWindows();
             PauseForScreenShot(SkylineWindow);
             var graphChromatogram = SkylineWindow.GetGraphChrom("Total04_HydN_12mz_42");
-            PauseForScreenShot(graphChromatogram);
             RunUI(()=>SkylineWindow.ShowExemplaryPeak(true));
             WaitForConditionUI(() => graphChromatogram.ExemplaryPeak != null);
             PauseForScreenShot(graphChromatogram);
@@ -125,12 +132,37 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot(graphChromatogram);
             RestoreFloatingWindows(windowPositions);
             PauseForScreenShot(rtReplicateGraphSummary);
+            RunUI(() =>
+            {
+                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("Webinar26.sky"));
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                SkylineWindow.ShowRTReplicateGraph();
+            });
+            WaitForDocumentLoaded();
+            WaitForGraphs();
+            rtReplicateGraphSummary = SkylineWindow.GraphRetentionTime;
+            PauseForScreenShot(rtReplicateGraphSummary);
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
+            {
+                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Prediction;
+                peptideSettingsUi.ImputeMissingPeaks = true;
+                peptideSettingsUi.OkDialog();
+            });
+            WaitForGraphs();
+            PauseForScreenShot(rtReplicateGraphSummary);
             RunUI(()=>SkylineWindow.AlignToRtPrediction = true);
             WaitForGraphs();
-            windowPositions = HideFloatingWindows();
-            PauseForScreenShot(graphChromatogram);
-            RestoreFloatingWindows(windowPositions);
             PauseForScreenShot(rtReplicateGraphSummary);
+            RunUI(()=>SkylineWindow.ShowRTRegressionGraphScoreToRun());
+            var rtLinearRegressionGraphSummary = FormUtil.OpenForms.OfType<GraphSummary>()
+                .Single(graph => graph.TryGetGraphPane(out RTLinearRegressionGraphPane _));
+            RunUI(() =>
+            {
+                SkylineWindow.ChooseCalculator(new RtCalculatorOption.Library("Webinar26"));
+                SkylineWindow.ShowRegressionMethod(RegressionMethodRT.loess);
+            });
+            WaitForGraphs();
+            PauseForScreenShot(rtLinearRegressionGraphSummary);
         }
     }
 }

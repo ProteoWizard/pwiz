@@ -108,23 +108,52 @@
     </ul>
     <p><img src="s-12.png"/></p>
     <p>No peak has been chosen for this peptide in this replicate. Skyline has the ability to tell you where on this chromatogram the peak from the best-scoring replicate could be found.</p>
-    <ul><li>Right-click on the chromatogram graph and choose the menu item <b>Exemplary Peak</b></li></ul>
+    <ul><li>Right-click on the chromatogram graph and click <b>Exemplary Peak</b></li></ul>
     <p><img src="s-13.png"/></p>
+    <ul><li>Right-click on the chromaotgram graph, click <b>Transitions</b> and then click <b>Products</b>.</li></ul>
+    <p><img src="s-14.png"/></p>
     <p>Now we are going to tell Skyline to set the peak boundaries for all missing peaks based on the peak boundaries of the best-scoring replicate.</p>
     <ul>
         <li>On the <b>Settings</b> menu click <b>Peptide Settings</b></li>
         <li>Click the <b>Prediction</b> tab.</li>
         <li>Check the <b>Missing peaks</b> checkbox inside of the "Impute boundaries for" box.</li>
     </ul>
-    <p><img src="S-14.png"/></p>
+    <p><img src="S-15.png"/></p>
     <ul><li>Click the <b>OK</b> button.</li></ul>
     <p>Skyline has now set the integration boundaries to coincide with the green rectangle.</p>
-    <p><img src="s-15.png"/></p>
-    <p>The Retention Times graph shows peak boundaries all replicates.</p>
     <p><img src="s-16.png"/></p>
-    <p>Right-click on the chromatogram graph and choose <b>Align to Library 'ExtracellularVesicalMagNet'</b></p>
+    <p>The Retention Times graph shows peak boundaries all replicates.</p>
     <p><img src="s-17.png"/></p>
+    <ul>
+        <li>Open the file "Webinar26.sky" in the "PeakImptutationDia" folder</li>
+        <li>Select the first peptide under the first protein in the Targets tree</li>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
+    </ul>
     <p><img src="s-18.png"/></p>
+    <li>On the <b>Settings</b> menu click <b>Peptide Settings</b></li>
+    <li>Click the <b>Prediction</b> tab.</li>
+    <li>Check the <b>Missing peaks</b> checkbox inside of the "Impute boundaries for" box.</li>
+    <li>Click the <b>OK</b> button.</li>
+    </ul>
+    <p><img src="s-19.png"/></p>
+    <ul><li>Right-click on the chromatogram graph and click <b>Align to library 'Webinar26'</b></li></ul>
+    <p><img src="s-20.png"/></p>
+    <p>Skyline changes the scaling on Y-axis of the Retention Times graph so that instead of showing the actual retention
+        times of the peak boundaries, it shows where those peak boundaries correspond to when compared to the average retention
+        times from the spectral library in this document.</p>
+    <ul><li>On the <b>View</b> menu, choose <b>Retention Times</b> then <b>Regression</b>, and click <b>Score to Run</b></li></ul>
+    <p>Initially, Skyline chooses to display the retention time calculator which most closely matches the data in the document.
+        When Skyline is first installed, the only retention time calculator it knows about is called "SSRCalc", which is
+        what it often ends up being displaying. It can sometimes take a long while for Skyline to do all the linear regressions
+        necessary to choose the best calculator.
+    </p>
+    <ul>
+        <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Calculator</b> and click <b>Library Webinar26</b></li>
+        <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Regression Method</b> and click <b>Loess</b></li>
+    </ul>
+    <p><img src="s-21.png"/></p>
+
+
 </body>
 
 </html>
