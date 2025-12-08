@@ -1713,6 +1713,8 @@ Code coverage validation using JetBrains dotCover is a critical methodology for 
 - **Catch gaps** before merge that could lead to production bugs
 - **Document testing rigor** for code reviews and pull requests
 
+> **For new feature branches**: Use the **file-based coverage workflow** documented in [build-and-test-guide.md](build-and-test-guide.md#analyzing-coverage-results---file-based-workflow-recommended) which provides accurate coverage measurement of new .cs files without false matches from pre-existing types. This methodology creates a `TODO-{branch}-coverage.txt` file listing all new production files and analyzes coverage using exact type matching. The approach below (Visual Studio dotCover) is best for visual inspection and ad-hoc analysis.
+
 ### dotCover Setup and Configuration
 
 #### Prerequisites

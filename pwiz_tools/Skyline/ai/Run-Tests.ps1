@@ -518,11 +518,11 @@ try {
                 Write-Host "✅ Coverage exported to:" -ForegroundColor Green
                 Write-Host "   JSON:     $CoverageOutputPath" -ForegroundColor Gray
                 Write-Host "   Snapshot: $coverageSnapshot" -ForegroundColor Gray
-                Write-Host "`n   Analyze Files view coverage:" -ForegroundColor Cyan
-                Write-Host "     pwsh -File ai\scripts\Analyze-Coverage.ps1 ``" -ForegroundColor Cyan
-                Write-Host "       -CoverageJsonPath `"$CoverageOutputPath`" ``" -ForegroundColor Cyan
-                Write-Host "       -PatternsFile ai\.tmp\coverage-patterns-filesview.txt ``" -ForegroundColor Cyan
-                Write-Host "       -ReportTitle `"FILES VIEW CODE COVERAGE`"" -ForegroundColor Cyan
+                Write-Host "`n   Analyze coverage with ai\scripts\Analyze-Coverage.ps1:" -ForegroundColor Cyan
+                Write-Host "     -CoverageJsonPath `"$CoverageOutputPath`"" -ForegroundColor Gray
+                Write-Host "     -PatternsFile <path-to-patterns-file>" -ForegroundColor Gray
+                Write-Host "     -ReportTitle <report-title>" -ForegroundColor Gray
+                Write-Host "   (See ai\docs\build-and-test-guide.md for examples)" -ForegroundColor Gray
                 Write-Host "`n   Or open snapshot in Visual Studio: ReSharper > Unit Tests > Coverage > Import from Snapshot" -ForegroundColor Gray
             } else {
                 Write-Host "⚠️ Failed to export coverage to JSON (exit code: $($exportProcess.ExitCode))" -ForegroundColor Yellow

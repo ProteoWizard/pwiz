@@ -41,13 +41,38 @@ if ($PatternsFile) {
         exit 1
     }
 
-    $typePatterns = Get-Content $PatternsFile -Encoding UTF8 |
+    # Check if the patterns file contains .cs file paths (coverage file) or type name patterns
+    $firstNonCommentLine = Get-Content $PatternsFile -Encoding UTF8 |
         Where-Object { $_ -and $_ -notmatch '^\s*#' -and $_.Trim() } |
-        ForEach-Object { $_.Trim() }
+        Select-Object -First 1
 
-    if ($typePatterns.Count -eq 0) {
-        Write-Host "Error: No patterns found in file: $PatternsFile" -ForegroundColor Red
-        exit 1
+    if ($firstNonCommentLine -and $firstNonCommentLine -match '\.cs$') {
+        # Patterns file contains .cs file paths - use Extract-TypeNames.ps1 to get fully-qualified type names
+        $extractScript = Join-Path (Split-Path $PSCommandPath -Parent) "Extract-TypeNames.ps1"
+        if (-not (Test-Path $extractScript)) {
+            Write-Host "Error: Extract-TypeNames.ps1 not found at: $extractScript" -ForegroundColor Red
+            exit 1
+        }
+
+        $extractedTypes = & $extractScript -CoverageFile $PatternsFile -Format FullyQualified
+        if ($extractedTypes) {
+            $typePatterns = $extractedTypes | Select-Object -ExpandProperty Output | Sort-Object -Unique
+        }
+
+        if ($typePatterns.Count -eq 0) {
+            Write-Host "Error: No types extracted from .cs files in: $PatternsFile" -ForegroundColor Red
+            exit 1
+        }
+    } else {
+        # Patterns file contains type name patterns directly
+        $typePatterns = Get-Content $PatternsFile -Encoding UTF8 |
+            Where-Object { $_ -and $_ -notmatch '^\s*#' -and $_.Trim() } |
+            ForEach-Object { $_.Trim() }
+
+        if ($typePatterns.Count -eq 0) {
+            Write-Host "Error: No patterns found in file: $PatternsFile" -ForegroundColor Red
+            exit 1
+        }
     }
 }
 elseif ($Patterns) {
@@ -75,9 +100,21 @@ function FindCoverageForType {
     $results = @()
 
     if ($node.Kind -eq "Type") {
+        $fullPath = if ($path) { "$path.$($node.Name)" } else { $node.Name }
+
         foreach ($pattern in $patterns) {
-            if ($node.Name -like "*$pattern*") {
-                $fullPath = if ($path) { "$path.$($node.Name)" } else { $node.Name }
+            $matched = $false
+
+            # Check for exact match (fully-qualified type name) or wildcard match
+            if ($pattern.Contains('.')) {
+                # Pattern looks like a fully-qualified name - use exact match
+                $matched = ($fullPath -eq $pattern)
+            } else {
+                # Pattern is a simple name - use wildcard match
+                $matched = ($node.Name -like "*$pattern*")
+            }
+
+            if ($matched) {
                 $coveragePercent = 0
                 if ($node.TotalStatements -gt 0) {
                     $coveragePercent = [math]::Round(($node.CoveredStatements / $node.TotalStatements) * 100, 1)

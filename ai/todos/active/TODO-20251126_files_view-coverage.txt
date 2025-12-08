@@ -1,0 +1,86 @@
+# Coverage File Paths for Files View Feature (Branch: Skyline/work/20251126_files_view)
+#
+# This file lists ALL .cs files added by this branch for coverage analysis.
+# Files excluded from coverage (tests, auto-generated, dev tools) are commented out.
+# This file is located with TODO-20251126_files_view.md and moves with it through
+# the TODO lifecycle (active → completed → archive).
+#
+# The Analyze-Coverage.ps1 script uses Extract-TypeNames.ps1 to extract fully-qualified
+# type names (Namespace.ClassName) from the uncommented .cs files listed below, then
+# measures coverage for those exact types in the coverage JSON.
+#
+# Total files added by branch: 35
+# Included in coverage: 28 production code files
+# Excluded: 4 test files, 2 auto-generated resources, 1 designer file
+
+# ============================================================================
+# PRODUCTION CODE - INCLUDED IN COVERAGE ANALYSIS (28 files)
+# ============================================================================
+
+# Core Files view UI components
+pwiz_tools/Skyline/Controls/FilesTree/FilesTree.cs
+pwiz_tools/Skyline/Controls/FilesTree/FilesTreeNode.cs
+pwiz_tools/Skyline/Controls/FilesTree/FilesTreeForm.cs
+# pwiz_tools/Skyline/Controls/FilesTree/FilesTreeForm.Designer.cs  # Auto-generated designer file
+
+# File system services
+pwiz_tools/Skyline/Controls/FilesTree/FileSystemService.cs
+pwiz_tools/Skyline/Controls/FilesTree/FileSystemHealthMonitor.cs
+pwiz_tools/Skyline/Controls/FilesTree/ManagedFileSystemWatcher.cs
+pwiz_tools/Skyline/Controls/FilesTree/FileSystemUtil.cs
+
+# Background services
+pwiz_tools/Skyline/Controls/FilesTree/BackgroundActionService.cs
+
+# Interfaces
+pwiz_tools/Skyline/Model/DocSettings/IFile.cs
+
+# File model layer - Folder implementations
+pwiz_tools/Skyline/Model/Files/FileModel.cs
+pwiz_tools/Skyline/Model/Files/BackgroundProteomeFolder.cs
+pwiz_tools/Skyline/Model/Files/IonMobilityLibraryFolder.cs
+pwiz_tools/Skyline/Model/Files/OptimizationLibraryFolder.cs
+pwiz_tools/Skyline/Model/Files/ReplicatesFolder.cs
+pwiz_tools/Skyline/Model/Files/RTCalcFolder.cs
+pwiz_tools/Skyline/Model/Files/SpectralLibrariesFolder.cs
+
+# File model layer - File implementations
+pwiz_tools/Skyline/Model/Files/BackgroundProteome.cs
+pwiz_tools/Skyline/Model/Files/IonMobilityLibrary.cs
+pwiz_tools/Skyline/Model/Files/OptimizationLibrary.cs
+pwiz_tools/Skyline/Model/Files/Replicate.cs
+pwiz_tools/Skyline/Model/Files/ReplicateSampleFile.cs
+pwiz_tools/Skyline/Model/Files/RTCalc.cs
+pwiz_tools/Skyline/Model/Files/SkylineAuditLog.cs
+pwiz_tools/Skyline/Model/Files/SkylineChromatogramCache.cs
+pwiz_tools/Skyline/Model/Files/SkylineFile.cs
+pwiz_tools/Skyline/Model/Files/SkylineViewFile.cs
+pwiz_tools/Skyline/Model/Files/SpectralLibrary.cs
+
+# ============================================================================
+# EXCLUDED FROM COVERAGE ANALYSIS (7 files)
+# ============================================================================
+
+# Auto-generated resource files (2 files) - simple property getters
+# pwiz_tools/Skyline/Controls/FilesTree/FilesTreeResources.Designer.cs
+# pwiz_tools/Skyline/Model/Files/FileResources.Designer.cs
+
+# Developer tools (1 file) - not part of Skyline runtime
+# pwiz_tools/Skyline/Executables/DevTools/ImageExtractor/Program.cs
+
+# Test files (4 files) - validated by test execution, not coverage metrics
+# pwiz_tools/Skyline/TestFunctional/FilesModelTest.cs
+# pwiz_tools/Skyline/TestFunctional/FilesTreeFileSystemTest.cs
+# pwiz_tools/Skyline/TestFunctional/FilesTreeFormTest.cs
+# pwiz_tools/Skyline/TestFunctional/SkylineWindowEventsTest.cs
+
+# ============================================================================
+# SUMMARY
+# ============================================================================
+# Total files added by branch: 35
+# Included in coverage: 28 production code files
+# Excluded from coverage:
+#   - 4 test files (functional tests)
+#   - 1 developer tool (ImageExtractor)
+#   - 2 auto-generated resource files (.Designer.cs from .resx)
+#   - 1 auto-generated designer file (FilesTreeForm.Designer.cs)
