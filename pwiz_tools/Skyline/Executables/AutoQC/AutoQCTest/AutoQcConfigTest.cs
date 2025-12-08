@@ -28,7 +28,7 @@ namespace AutoQCTest
 {
 
     [TestClass]
-    public class AutoQcConfigTest: AbstractAutoQcUnitTest
+    public class AutoQcConfigTest: AbstractUnitTest
     {
 
         
