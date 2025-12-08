@@ -381,7 +381,11 @@ try {
         $coverageSnapshot = $null
         
         if ($Coverage) {
-            $coverageSnapshot = Join-Path (Get-Location) "coverage.dcvr"
+            # Save .dcvr snapshot to ai\.tmp directory (same location as JSON output)
+            # Extract timestamp from JSON path to ensure matching filenames
+            $coverageBaseName = [System.IO.Path]::GetFileNameWithoutExtension($CoverageOutputPath)
+            $aiTmpDir = Split-Path -Parent $CoverageOutputPath
+            $coverageSnapshot = Join-Path $aiTmpDir "$coverageBaseName.dcvr"
             $testRunnerFullPath = (Resolve-Path ".\TestRunner.exe").Path
             $testExecutable = $dotCoverExe
             
@@ -511,13 +515,20 @@ try {
             
             $exportProcess = Start-Process -FilePath $dotCoverExe -ArgumentList $exportArgs -Wait -NoNewWindow -PassThru
             if ($exportProcess.ExitCode -eq 0 -and (Test-Path $CoverageOutputPath)) {
-                Write-Host "✅ Coverage exported to: $CoverageOutputPath" -ForegroundColor Green
-                Write-Host "   Analyze with: .\ai\.tmp\analyze-coverage.ps1 -CoverageJsonPath `"$CoverageOutputPath`"" -ForegroundColor Gray
+                Write-Host "✅ Coverage exported to:" -ForegroundColor Green
+                Write-Host "   JSON:     $CoverageOutputPath" -ForegroundColor Gray
+                Write-Host "   Snapshot: $coverageSnapshot" -ForegroundColor Gray
+                Write-Host "`n   Analyze Files view coverage:" -ForegroundColor Cyan
+                Write-Host "     pwsh -File ai\scripts\Analyze-Coverage.ps1 ``" -ForegroundColor Cyan
+                Write-Host "       -CoverageJsonPath `"$CoverageOutputPath`" ``" -ForegroundColor Cyan
+                Write-Host "       -PatternsFile ai\.tmp\coverage-patterns-filesview.txt ``" -ForegroundColor Cyan
+                Write-Host "       -ReportTitle `"FILES VIEW CODE COVERAGE`"" -ForegroundColor Cyan
+                Write-Host "`n   Or open snapshot in Visual Studio: ReSharper > Unit Tests > Coverage > Import from Snapshot" -ForegroundColor Gray
             } else {
                 Write-Host "⚠️ Failed to export coverage to JSON (exit code: $($exportProcess.ExitCode))" -ForegroundColor Yellow
                 Write-Host "   Coverage snapshot saved at: $coverageSnapshot" -ForegroundColor Gray
                 Write-Host "   Note: You can open the snapshot in Visual Studio (ReSharper > Unit Tests > Coverage) to export JSON" -ForegroundColor Gray
-                Write-Host "   Or try manual export: dotCover report --snapshot-source `"$coverageSnapshot`" --json-report-output `"$CoverageOutputPath`"" -ForegroundColor Gray
+                Write-Host "   Or try manual export: dotCover report --Source `"$coverageSnapshot`" --Output `"$CoverageOutputPath`" --ReportType JSON" -ForegroundColor Gray
             }
         }
         

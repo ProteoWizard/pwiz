@@ -262,21 +262,46 @@ The `Run-Tests.ps1` script automatically searches for `dotCover.exe` in these lo
 
 ### Analyzing Coverage Results
 
-Coverage JSON files contain detailed information about which code was executed during tests:
+Use the `Analyze-Coverage.ps1` script to analyze coverage for specific code patterns:
 
-- **Overall coverage percentage** by module/namespace
-- **Line-by-line coverage** for each file
-- **Coverage by type** (classes, methods, properties)
+```powershell
+# Analyze coverage for Files view feature
+pwsh -File pwiz_tools/Skyline/ai/scripts/Analyze-Coverage.ps1 `
+  -CoverageJsonPath "ai/.tmp/coverage-20251207-224957.json" `
+  -PatternsFile "ai/.tmp/coverage-patterns-filesview.txt" `
+  -ReportTitle "FILES VIEW CODE COVERAGE"
+
+# Or use an array of patterns directly
+pwsh -File pwiz_tools/Skyline/ai/scripts/Analyze-Coverage.ps1 `
+  -CoverageJsonPath "ai/.tmp/coverage-20251207-224957.json" `
+  -Patterns "FilesTree","FileModel","FileSystemService" `
+  -ReportTitle "CUSTOM COVERAGE ANALYSIS"
+```
+
+The script produces a summary report showing:
+- **Overall coverage percentage** for matched types
+- **Coverage by type** (covered/total statements, percentage)
+- **Low coverage warnings** (types < 50%)
+- **Uncovered items** (types with 0% coverage)
+
+**Pattern Files**: Create a text file in `ai\.tmp` with one type name pattern per line (wildcards supported):
+```
+# Coverage patterns for Files view feature
+FilesTree
+FilesTreeNode
+FilesTreeForm
+FileModel
+FileSystemService
+```
 
 **Example workflow**:
 1. Run tests with `-Coverage` flag
-2. Review JSON output in `ai\.tmp\coverage-{timestamp}.json`
-3. Identify uncovered code paths
-4. Add tests to improve coverage
-5. Re-run with coverage to verify improvement
+2. Analyze with `Analyze-Coverage.ps1` to identify gaps
+3. Add tests to improve coverage
+4. Re-run with coverage to verify improvement
 
 **Visual Studio Integration**: Open the `.dcvr` snapshot file in Visual Studio:
-- ReSharper > Unit Tests > Coverage
+- ReSharper > Unit Tests > Coverage > Import from Snapshot
 - View coverage highlights in source code
 - Export to HTML or JSON reports
 

@@ -190,6 +190,8 @@ Based on the old branch, key areas to review:
   - Created ImageExtractor tool in `pwiz_tools/Skyline/Executables/DevTools/ImageExtractor` to extract 4,048 icons from Visual Studio ImageCatalog
   - Added `BitmapExtensions.ToIcon()` helper method for converting Bitmap resources to Icon format
   - All tests passing with improved coverage of Files view file type interactions
+  - Updated Run-Tests.ps1 to save both .dcvr snapshot and .json coverage to ai\.tmp directory with matching timestamps
+  - Re-ran coverage analysis: improved from 64.8% to 65.6% overall coverage
 
 ## Review Findings (2025-11-26)
 
@@ -231,37 +233,45 @@ Based on the old branch, key areas to review:
 ### Summary
 Overall, the changes are very clean and intentional. The only questionable change is the removal of the assembly alias line in ControlsResources.resx, but this is likely harmless Visual Studio cleanup. All other changes are clearly related to the Files view feature implementation.
 
-## Code Coverage Analysis (2025-11-26)
+## Code Coverage Analysis
 
-### Overall Coverage
-- **Total Statements**: 2,383
-- **Covered Statements**: 1,543
-- **Coverage Percentage**: 64.8%
+### Latest Coverage (2025-12-07)
+- **Total Statements**: 2,403
+- **Covered Statements**: 1,577
+- **Coverage Percentage**: 65.6% ⬆️ (+0.8% from baseline)
 
 ### Coverage by Component
 
 **Excellent Coverage (80%+):**
 - `BackgroundActionService`: 100% (54/54 statements)
 - `ManagedFileSystemWatcher`: 100% (70/70 statements)
-- `FileSystemService`: 100% (34/34 statements)
+- `FileSystemService`: 100% (36/36 statements)
 - `FileModel`: 92.6% (25/27 statements)
 - `FileSystemUtil`: 88.6% (31/35 statements)
-- `FileSystemHealthMonitor`: 84.6% (77/91 statements)
-- `LocalFileSystemService`: 82.7% (263/318 statements)
+- `FileSystemHealthMonitor`: 86.2% (81/94 statements) ⬆️
+- `LocalFileSystemService`: 83.3% (279/335 statements) ⬆️
 
 **Good Coverage (50-80%):**
-- `FilesTree`: 75.6% (409/541 statements)
-- `FilesTreeResources`: 54.8% (51/93 statements)
-- `FilesTreeForm`: 51.4% (341/664 statements)
+- `FilesTree`: 76.4% (430/563 statements) ⬆️
+- `FilesTreeForm`: 57.4% (421/733 statements) ⬆️
 
 **Needs Improvement (<50%):**
-- `FilesTreeNode`: 41.2% (188/456 statements)
+- `FilesTreeNode`: 32.9% (150/456 statements)
+
+### Coverage Improvements (2025-12-07)
+- Added `TestOtherFileTypes()` method testing 4 additional file types
+- Improved coverage for:
+  - Background Proteome file type (.protdb)
+  - iRT Calculator file type (.irtdb)
+  - Ion Mobility Library file type (.imsdb)
+  - Optimization Library file type (.optdb)
+- All file types tested with add → verify → rename pattern
+- Overall coverage increased from 64.8% to 65.6%
 
 ### Coverage Gaps
 The main areas with lower coverage are:
-1. **FilesTreeNode** (41.2%) - Tree node implementation, likely includes edge cases and error handling
-2. **FilesTreeForm** (51.4%) - UI form, likely includes less-tested UI interactions and edge cases
-3. **FilesTreeResources** (54.8%) - Resource management
+1. **FilesTreeNode** (32.9%) - Tree node implementation, likely includes edge cases and error handling
+2. **FilesTreeForm** (57.4%) - UI form, likely includes less-tested UI interactions and edge cases
 
 ### Recommendations
 - Consider adding tests for edge cases in FilesTreeNode (drag-and-drop scenarios, error conditions)
@@ -270,8 +280,20 @@ The main areas with lower coverage are:
 
 ### Coverage Tooling
 - Added `-Coverage` parameter to `Run-Tests.ps1` to enable dotCover code coverage
-- Coverage results are exported to JSON format in `ai\.tmp\coverage-{timestamp}.json`
-- Use `ai\.tmp\analyze-coverage.ps1` to analyze coverage results for Files view code
+- Coverage results are exported to both JSON and .dcvr snapshot in `ai\.tmp\` directory
+  - JSON: `ai\.tmp\coverage-{timestamp}.json`
+  - Snapshot: `ai\.tmp\coverage-{timestamp}.dcvr` (can be opened in Visual Studio via ReSharper > Unit Tests > Coverage > Import from Snapshot)
+- Created generalized `pwiz_tools\Skyline\ai\scripts\Analyze-Coverage.ps1` for coverage analysis
+  - Supports custom type patterns via file or array parameter
+  - Default Files view patterns in `ai\.tmp\coverage-patterns-filesview.txt` (not committed to git)
+  - Example usage:
+    ```powershell
+    pwsh -File pwiz_tools/Skyline/ai/scripts/Analyze-Coverage.ps1 `
+      -CoverageJsonPath "ai/.tmp/coverage-20251207-224957.json" `
+      -PatternsFile "ai/.tmp/coverage-patterns-filesview.txt" `
+      -ReportTitle "FILES VIEW CODE COVERAGE"
+    ```
+- **Important**: Use dotCover 2025.1.7 or earlier (versions 2025.3.0+ have a JSON export bug)
 
 ## Test Coverage
 
@@ -404,8 +426,8 @@ The `TreeViewStateRestorer` is not correctly saving the state of the FilesView t
 
 These items were identified during development but deferred for future phases:
 
-1. ✅ ~~**Additional file type testing**~~ - COMPLETED (2025-12-07): Test additional file types: imsdb, irtdb, protdb - Implemented in `TestOtherFileTypes()` method
-2. ✅ ~~**Background Proteome dialog**~~ - COMPLETED (2025-12-07): Verify double-click on a Background Proteome opens the correct dialog - Tested in `AddBackgroundProteome()`, `AddIrtCalculator()`, `AddIonMobilityLibrary()`, `AddOptimizationLibrary()`
+1. ✅ ~~**Additional file type testing**~~ - COMPLETED (2025-12-07): Test additional file types: imsdb, irtdb, protdb, optdb - Implemented in `TestOtherFileTypes()` method
+2. ✅ ~~**Settings dialog verification**~~ - COMPLETED (2025-12-07): Verify double-click on file types opens the correct settings dialog - Tested in `AddBackgroundProteome()`, `AddIrtCalculator()`, `AddIonMobilityLibrary()`, `AddOptimizationLibrary()`
 3. **Right-click menu** - Verify right-click menu includes "open containing folder" only for files found locally
 4. **Tooltip testing** - Test tooltips (see example in MethodEditTutorialTest.ShowNodeTip)
 5. **Drag-and-drop expansion** - Expand drag-and-drop tests with scenarios:
