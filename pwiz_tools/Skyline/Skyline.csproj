@@ -615,6 +615,7 @@
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\TransitionIonMetrics.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
     <Compile Include="Model\Results\ReplicateValue.cs" />
     <Compile Include="Model\Results\ScoredPeakBounds.cs" />
