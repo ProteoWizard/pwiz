@@ -215,6 +215,348 @@ Skyline provides several tools for running tests outside Visual Studio/ReSharper
 
 **Recommendation**: Prefer `AbstractFunctionalTestEx` unless you need only the low-level primitives from `AbstractFunctionalTest`. The `Ex` helpers save significant code duplication and make tests more readable.
 
+### Thread Safety in Functional Tests
+
+**CRITICAL**: All functional tests run on at least **two threads**:
+
+1. **Functional test thread** - Executes your test code (`DoTest()`, helper methods)
+2. **UI thread** - Runs SkylineWindow and all UI controls
+
+**Any direct access to SkylineWindow or UI controls from the test thread will cause cross-thread exceptions and test failures.**
+
+#### The Problem
+
+```csharp
+// ❌ DANGEROUS - Direct access to SkylineWindow from test thread
+protected void TestBadExample()
+{
+    var folder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();  // CROSS-THREAD ERROR!
+    Assert.AreEqual("expected", folder.Name);  // May fail or crash
+}
+```
+
+This code accesses `SkylineWindow.FilesTree` directly from the test thread, but `FilesTree` is a UI control that lives on the UI thread. This causes:
+- Cross-thread operation exceptions
+- Unpredictable test behavior
+- Random test failures
+
+#### The Solution: RunUI, ShowDialog, and WaitForConditionUI
+
+**All UI access must be marshaled to the UI thread** using these helper methods:
+
+**1. `RunUI(Action)` - Execute code on UI thread**
+
+```csharp
+// ✅ CORRECT - Wrapped in RunUI()
+protected void TestGoodExample()
+{
+    FilesFolder folder = null;
+    RunUI(() =>
+    {
+        // This code runs on UI thread - safe to access SkylineWindow
+        folder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+    });
+
+    // Back on test thread - safe to access local variable
+    Assert.AreEqual("expected", folder.Name);
+}
+```
+
+**2. `ShowDialog<T>(Action)` - Show dialog and return reference**
+
+```csharp
+// ✅ CORRECT - ShowDialog marshals to UI thread automatically
+var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+// Now safe to configure the dialog (ShowDialog returns when dialog is visible)
+RunUI(() =>
+{
+    peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+});
+```
+
+**3. `RunDlg<T>(Action, Action<T>)` - Show, configure, and dismiss dialog**
+
+```csharp
+// ✅ CORRECT - All in one call
+RunDlg<EditIrtCalcDlg>(peptideSettings.AddCalculator, editIrtCalc =>
+{
+    // This lambda runs on UI thread
+    editIrtCalc.CalcName = "My Calculator";
+    editIrtCalc.OkDialog();
+});
+```
+
+**4. `WaitForConditionUI(Func<bool>)` - Poll UI state from UI thread**
+
+```csharp
+// ✅ CORRECT - Predicate executes on UI thread
+WaitForConditionUI(() =>
+{
+    // This runs on UI thread - safe to access SkylineWindow
+    return SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete();
+});
+```
+
+**5. `OkDialog(Form, Action)` - Dismiss dialog on UI thread**
+
+```csharp
+// ✅ CORRECT - OkDialog dismisses on UI thread
+var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+RunUI(() =>
+{
+    peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+});
+OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+```
+
+#### Thread-Safe Document Access
+
+**`SkylineWindow.Document` vs `SkylineWindow.DocumentUI`:**
+
+```csharp
+// ✅ THREAD-SAFE - SkylineWindow.Document can be accessed from test thread
+var doc = SkylineWindow.Document;  // OK - this property is thread-safe
+Assert.AreEqual(5, doc.PeptideCount);
+
+// ⚠️ BUT - Document may not be the latest UI version!
+// Use Document for quick checks after operations that should have changed it
+// Use DocumentUI for accurate representation of what UI is showing
+
+// ✅ FOR UI STATE - Use DocumentUI with RunUI()
+int uiPeptideCount = 0;
+RunUI(() =>
+{
+    uiPeptideCount = SkylineWindow.DocumentUI.PeptideCount;  // Latest UI document
+});
+```
+
+**Key difference:**
+- `SkylineWindow.Document` - Thread-safe, but may be slightly stale
+- `SkylineWindow.DocumentUI` - Requires `RunUI()`, always current UI state
+
+#### Common Patterns
+
+**Pattern 1: Reading UI state**
+
+```csharp
+// ❌ BAD
+var docCount = SkylineWindow.Document.PeptideCount;  // Cross-thread error!
+
+// ✅ GOOD
+int docCount = 0;
+RunUI(() =>
+{
+    docCount = SkylineWindow.Document.PeptideCount;
+});
+```
+
+**Pattern 2: Configuring dialogs**
+
+```csharp
+// ❌ BAD
+var dlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+dlg.SelectedTab = PeptideSettingsUI.TABS.Library;  // Cross-thread error!
+
+// ✅ GOOD
+var dlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+RunUI(() =>
+{
+    dlg.SelectedTab = PeptideSettingsUI.TABS.Library;
+});
+```
+
+**Pattern 3: Retrieving and asserting**
+
+```csharp
+// ❌ BAD
+Assert.AreEqual("expected", SkylineWindow.Document.Settings.Name);  // Cross-thread error!
+
+// ✅ GOOD
+RunUI(() =>
+{
+    // Assertion runs on UI thread
+    Assert.AreEqual("expected", SkylineWindow.Document.Settings.Name);
+});
+
+// ✅ ALSO GOOD - Capture then assert
+string settingsName = null;
+RunUI(() =>
+{
+    settingsName = SkylineWindow.Document.Settings.Name;
+});
+Assert.AreEqual("expected", settingsName);
+```
+
+#### Dialog Race Conditions and How to Avoid Them
+
+**CRITICAL**: The `ShowDialog-RunUI-OkDialog` pattern has an **inherent race condition** that test writers must understand.
+
+**The Problem:**
+
+When you show a modal dialog, the UI code typically looks like this:
+
+```csharp
+// UI code that shows the dialog
+using (var dlg = new PeptideSettingsUI())
+{
+    if (dlg.ShowDialog(parent) == DialogResult.OK)
+    {
+        // Process settings changes
+        // Update document
+        // Trigger background loaders
+        // ... more processing ...
+    }
+}
+```
+
+**What happens during test:**
+
+1. Test calls `ShowDialog<T>()` - Dialog becomes visible
+2. Test calls `RunUI()` - Configure dialog properties
+3. Test calls `OkDialog()` - Dialog is dismissed
+4. **`OkDialog()` returns as soon as form is no longer visible**
+5. **BUT** - The `if (dlg.ShowDialog() == DialogResult.OK) { }` block may still be executing!
+
+**The race:** Test thread continues before the dialog's calling function completes all its work (document updates, background loader starts, etc.).
+
+**Solution 1: Use `RunDlg<T>()` or `RunLongDlg<T>()` (PREFERRED)**
+
+These methods solve the race condition by waiting for the entire calling function to complete:
+
+```csharp
+// ✅ BEST - RunDlg waits for function to complete
+RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUI =>
+{
+    // Configure dialog
+    peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+    peptideSettingsUI.OkDialog();
+});
+// Function completes before test continues
+```
+
+**Solution 2: Wait for document change and loading**
+
+```csharp
+// ✅ GOOD - Capture document, then wait for change and load
+var doc = SkylineWindow.Document;
+
+var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+RunUI(() =>
+{
+    peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+});
+OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+
+// Wait for document to actually change (solves OkDialog race)
+WaitForDocumentChange(doc);
+
+// Wait for all background loaders to complete
+WaitForDocumentLoaded();
+```
+
+**Why this pattern works:**
+
+1. `WaitForDocumentChange(doc)` - Ensures document changed (dialog processing completed)
+2. `WaitForDocumentLoaded()` - Waits for all `BackgroundLoader` tasks to finish
+3. Without `WaitForDocumentChange(doc)`, `WaitForDocumentLoaded()` might succeed immediately on the old document!
+
+**Solution 3: Wait for specific conditions**
+
+```csharp
+// ✅ GOOD - Wait for expected UI state
+var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+RunUI(() =>
+{
+    peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+});
+OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+
+// Wait for specific condition that indicates processing completed
+WaitForConditionUI(() => SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded);
+```
+
+**When to use each pattern:**
+
+| Pattern | Use When | Thread Safety | Handles Race |
+|---------|----------|---------------|--------------|
+| `RunDlg<T>()` | Dialog does quick work | ✅ | ✅ |
+| `RunLongDlg<T>()` | Dialog does long work (imports, etc.) | ✅ | ✅ |
+| `ShowDialog-RunUI-OkDialog + WaitForDocumentChange` | Need flexible control + document changes | ✅ | ✅ |
+| `ShowDialog-RunUI-OkDialog + WaitForConditionUI` | Need to wait for specific UI state | ✅ | ✅ |
+| `ShowDialog-RunUI-OkDialog` alone | ⚠️ Rarely safe - high risk of race | ✅ | ❌ |
+
+#### Methods That Automatically Handle Threading
+
+These helper methods internally use `RunUI` or similar mechanisms, so you don't need to wrap them:
+
+- `ShowDialog<T>(Action)` - Shows dialog on UI thread
+- `RunDlg<T>(Action, Action<T>)` - Shows, configures, dismisses, **waits for completion**
+- `RunLongDlg<T>(Action, Action<T>)` - Like `RunDlg` but with longer timeout
+- `OkDialog(Form, Action)` - Dismisses dialog on UI thread (**does not wait for processing**)
+- `WaitForConditionUI(Func<bool>)` - Polls condition on UI thread
+- `WaitForDocumentChange(SrmDocument)` - Waits until document reference changes
+- `WaitForDocumentLoaded()` - Waits for all `BackgroundLoader` tasks
+- `WaitForOpenForm<T>()` - Waits for form on UI thread
+- `FindOpenForm<T>()` - Finds form (executes on UI thread internally)
+
+#### Debugging Thread Issues
+
+**Symptoms of cross-thread errors:**
+- `InvalidOperationException`: "Cross-thread operation not valid"
+- Random test failures that don't reproduce consistently
+- Null reference exceptions when accessing UI properties
+- Tests pass in debugger but fail in test runner
+
+**Quick fix checklist:**
+1. ✅ Wrap all `SkylineWindow.*` access in `RunUI()`
+2. ✅ Wrap all dialog property access in `RunUI()`
+3. ✅ Use `WaitForConditionUI()` instead of `WaitForCondition()` for UI predicates
+4. ✅ Use `ShowDialog<T>()` and `RunDlg<T>()` for dialog management
+5. ✅ Capture UI values into local variables before asserting (if not using `RunUI` around assertion)
+
+#### Example: Complete Test Method
+
+```csharp
+protected void TestFilesView()
+{
+    // Continue with already-open document - no direct SkylineWindow access yet
+    WaitForFilesTree();  // This method internally uses WaitForConditionUI
+
+    // Show and configure PeptideSettingsUI
+    var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+    RunUI(() =>
+    {
+        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
+    });
+
+    // Show and configure nested dialog with RunDlg
+    RunDlg<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(
+        peptideSettingsUI.EditLibraryList,
+        editListUI =>
+        {
+            // Safe - this lambda runs on UI thread
+            editListUI.SelectLastItem();
+        });
+
+    OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+
+    // Wait for UI to update (condition runs on UI thread)
+    WaitForConditionUI(() => SkylineWindow.FilesTree.IsComplete());
+
+    // Read UI state safely
+    FilesFolder folder = null;
+    RunUI(() =>
+    {
+        folder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+    });
+
+    // Assert on local variable (safe on test thread)
+    Assert.IsNotNull(folder);
+    Assert.AreEqual(3, folder.Nodes.Count);
+}
+```
+
 ### Test Structure Best Practices
 
 **Use `RunFunctionalTest()` pattern for functional tests:**

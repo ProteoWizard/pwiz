@@ -180,6 +180,16 @@ Based on the old branch, key areas to review:
   - Added guard for empty tree access in `FindNodeByIdentityPath()` to prevent `ArgumentOutOfRangeException`
   - Improved thread lifecycle management with `_isStopping`/`_isStopped` flags and proper disposal patterns
   - All fixes validated with `TestFilesTreeFileSystem` and `TestFilesTreeForm` tests passing
+- 2025-12-07: Enhanced FilesTreeFormTest.cs test coverage:
+  - Added `TestOtherFileTypes()` method testing Background Proteome, iRT Calculator, Ion Mobility Library, and Optimization Library
+  - Created `ValidateSingleEntry<TFileModel, TSettings>()` helper for DRY validation of both Settings list and FilesTree
+  - Added icon infrastructure for all four file types (.protdb, .irtdb, .imsdb, .optdb) with placeholder icons
+  - All four file types tested for: adding via settings dialogs, verification in FilesTree, and double-click rename functionality
+  - Added comprehensive threading documentation to `ai/docs/testing-patterns.md` covering RunUI(), ShowDialog(), dialog race conditions
+  - Enhanced `ai/CRITICAL-RULES.md` and `ai/STYLEGUIDE.md` with clearer guidance on method ordering (helpers AFTER main methods)
+  - Created ImageExtractor tool in `pwiz_tools/Skyline/Executables/DevTools/ImageExtractor` to extract 4,048 icons from Visual Studio ImageCatalog
+  - Added `BitmapExtensions.ToIcon()` helper method for converting Bitmap resources to Icon format
+  - All tests passing with improved coverage of Files view file type interactions
 
 ## Review Findings (2025-11-26)
 
@@ -394,8 +404,8 @@ The `TreeViewStateRestorer` is not correctly saving the state of the FilesView t
 
 These items were identified during development but deferred for future phases:
 
-1. **Additional file type testing** - Test additional file types: imsdb, irtdb, protdb
-2. **Background Proteome dialog** - Verify double-click on a Background Proteome opens the correct dialog
+1. ✅ ~~**Additional file type testing**~~ - COMPLETED (2025-12-07): Test additional file types: imsdb, irtdb, protdb - Implemented in `TestOtherFileTypes()` method
+2. ✅ ~~**Background Proteome dialog**~~ - COMPLETED (2025-12-07): Verify double-click on a Background Proteome opens the correct dialog - Tested in `AddBackgroundProteome()`, `AddIrtCalculator()`, `AddIonMobilityLibrary()`, `AddOptimizationLibrary()`
 3. **Right-click menu** - Verify right-click menu includes "open containing folder" only for files found locally
 4. **Tooltip testing** - Test tooltips (see example in MethodEditTutorialTest.ShowNodeTip)
 5. **Drag-and-drop expansion** - Expand drag-and-drop tests with scenarios:
@@ -409,5 +419,5 @@ These items were identified during development but deferred for future phases:
 
 ### From FilesTreeFormTest.cs TODO Comments
 
-1. **Test readability improvement** - Improve test readability with a helper that gets node by model type
+1. ✅ ~~**Test readability improvement**~~ - COMPLETED (2025-12-07): Improve test readability with a helper that gets node by model type - Implemented `ValidateSingleEntry<TFileModel, TSettings>()` helper method
 

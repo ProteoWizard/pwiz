@@ -19,8 +19,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -28,20 +31,23 @@ using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
+using pwiz.Skyline.Model.IonMobility;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Optimization;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.IonMobility;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.SkylineTestUtil;
 using static pwiz.Skyline.Model.Files.FileModel;
 
-// CONSIDER: test additional file types - imsdb, irtdb, protdb
-// CONSIDER: double-click on a Background Proteome opens the correct dialog
 // CONSIDER: verify right-click menu includes open containing folder only for files found locally
 // CONSIDER: test tooltips, see example in MethodEditTutorialTest.ShowNodeTip
 // CONSIDER: expand drag-and-drop tests - scenarios: disjoint selection, tree disallows dragging un-draggable nodes
 // CONSIDER: handling of non-local paths from SrmSettings (ex: replicate sample file paths cannot be found locally)
 // CONSIDER: new test making sure clicking 'x' upper RHC of confirm dialog does not delete Replicate / Spectral Library
-
-// TODO: improve test readability with a helper that gets node by model type
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -64,6 +70,11 @@ namespace pwiz.SkylineTestFunctional
                 @"https://skyline.ms/tutorials/GroupedStudies.zip"  // Rat_plasma.sky
             };
             RunFunctionalTest();
+        }
+
+        private string GetTestPath(string relativePath)
+        {
+            return TestFilesDirs[0].GetTestPath(relativePath);
         }
 
         protected override void DoTest()
@@ -168,7 +179,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(0, SkylineWindow.FilesTree.MonitoredDirectories().Count);
             }
 
-            var monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSave", fileName);
+            var monitoredPath = GetTestPath(Path.Combine(@"TestSave", fileName));
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
             WaitForFilesTree();
 
@@ -209,7 +220,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(SkylineWindow.FilesTree.Root.NodeAt(0).LocalFilePath);
 
             // Save document for the first time
-            var monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSaveAs", origFileName);
+            var monitoredPath = GetTestPath(Path.Combine(@"TestSaveAs", origFileName));
             {
                 RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
                 WaitForFilesTree();
@@ -225,7 +236,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Save the document to a new location - to test "Save As"
             {
-                monitoredPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestSaveAs", saveAsFileName);
+                monitoredPath = GetTestPath(Path.Combine(@"TestSaveAs", saveAsFileName));
                 RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
                 WaitForFilesTree();
             }
@@ -253,7 +264,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestUpgradeExistingDocumentWithFilesTree()
         {
-            var documentPath = Path.Combine(TestFilesDirs[0].FullPath, @"TestUpgradeExistingDocumentWithFilesTree", @"UpgradeWithFilesTree.sky");
+            var documentPath = GetTestPath(Path.Combine(@"TestUpgradeExistingDocumentWithFilesTree", @"UpgradeWithFilesTree.sky"));
 
             RunUI(() => SkylineWindow.OpenFile(documentPath));
             WaitForDocumentLoaded();
@@ -312,7 +323,7 @@ namespace pwiz.SkylineTestFunctional
         protected void TestRatPlasmaDocument()
         {
             PrepareRatPlasmaFile(TestFilesDirs[0], TestFilesDirs[1]);
-            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
+            var documentPath = GetTestPath(RAT_PLASMA_FILE_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             // Wait until SequenceTree is visible - does not wait on FilesTree because it's not visible yet
@@ -498,6 +509,215 @@ namespace pwiz.SkylineTestFunctional
             TestDragAndDropOnParentNode();
 
             TestReplicateLabelEdit();
+
+            TestOtherFileTypes();
+        }
+
+        /// <summary>
+        /// Test adding and renaming other file types: Background Proteome, iRT Calculator, Ion Mobility Library, Optimization Library
+        /// </summary>
+        protected void TestOtherFileTypes()
+        {
+            // Add Background Proteome (.protdb), verify it appears, and test rename
+            AddBackgroundProteome("Rat_mini" + ProteomeDb.EXT_PROTDB);
+
+            // Add iRT Calculator (Rat_Prosit.blib - a .blib file with embedded iRT table), verify it appears, and test rename
+            AddIrtCalculator("Rat_Prosit" + BiblioSpecLiteSpec.EXT);
+
+            // Add Ion Mobility Library (.imsdb), verify it appears, and test rename
+            AddIonMobilityLibrary("Rat_ims" + IonMobilityLibrarySpec.EXT);
+
+            // Add Optimization Library (.optdb), verify it appears, and test rename
+            AddOptimizationLibrary("Rat_settings" + OptimizationDb.EXT);
+        }
+
+        /// <summary>
+        /// Add a background proteome from an existing .protdb file, verify it appears in FilesTree, and test renaming
+        /// </summary>
+        private void AddBackgroundProteome(string fileName)
+        {
+            string name = Path.GetFileNameWithoutExtension(fileName);
+            using (new WaitDocumentChange())
+            {
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunDlg<BuildBackgroundProteomeDlg>(peptideSettingsUI.AddBackgroundProteome,
+                    dlg =>
+                    {
+                        dlg.BackgroundProteomeName = name;
+                        dlg.OpenBackgroundProteome(GetTestPath(fileName));
+                        dlg.OkDialog();
+                    });
+                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            }
+
+            // Verify background proteome was added
+            var node = ValidateSingleEntry<BackgroundProteomeFolder, BackgroundProteomeSpec>(
+                name, Settings.Default.BackgroundProteomeList);
+
+            // Test double-click rename
+            string rename = name + "_renamed";
+            using (new WaitDocumentChange())
+            {
+                RunDlg<BuildBackgroundProteomeDlg>(() => SkylineWindow.FilesTreeForm.DoubleClickNode(node),
+                    dlg =>
+                    {
+                        dlg.BackgroundProteomeName = rename;
+                        dlg.OkDialog();
+                    });
+            }
+
+            // Verify background proteome was renamed
+            ValidateSingleEntry<BackgroundProteomeFolder, BackgroundProteomeSpec>(
+                rename, Settings.Default.BackgroundProteomeList);
+        }
+
+        /// <summary>
+        /// Add an iRT calculator from an existing .blib file with embedded iRT table, verify it appears in FilesTree, and test renaming
+        /// </summary>
+        private void AddIrtCalculator(string fileName)
+        {
+            string name = Path.GetFileNameWithoutExtension(fileName);
+            using (new WaitDocumentChange())
+            {
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                RunDlg<EditIrtCalcDlg>(peptideSettingsUI.AddCalculator, dlg =>
+                {
+                    dlg.CalcName = name;
+                    dlg.OpenDatabase(GetTestPath(fileName));
+                    dlg.OkDialog();
+                });
+                var createRegressionDlg = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettingsUI.OkDialog);
+                OkDialog(createRegressionDlg, createRegressionDlg.BtnNoClick);
+            }
+
+            // Verify iRT calculator was added
+            var node = ValidateSingleEntry<RTCalcFolder, RetentionScoreCalculatorSpec>(
+                name, Settings.Default.RTScoreCalculatorList);
+
+            // Test double-click rename
+            string rename = name + "_renamed";
+            using (new WaitDocumentChange())
+            {
+                RunDlg<EditIrtCalcDlg>(() => SkylineWindow.FilesTreeForm.DoubleClickNode(node),
+                    dlg =>
+                    {
+                        dlg.CalcName = rename;
+                        dlg.OkDialog();
+                    });
+            }
+
+            // Verify iRT calculator was renamed
+            ValidateSingleEntry<RTCalcFolder, RetentionScoreCalculatorSpec>(
+                rename, Settings.Default.RTScoreCalculatorList);
+        }
+
+        /// <summary>
+        /// Add an ion mobility library from an existing .imsdb file, verify it appears in FilesTree, and test renaming
+        /// </summary>
+        private void AddIonMobilityLibrary(string fileName)
+        {
+            string name = Path.GetFileNameWithoutExtension(fileName);
+            using (new WaitDocumentChange())
+            {
+                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunDlg<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.AddIonMobilityLibrary,
+                    dlg =>
+                    {
+                        dlg.LibraryName = name;
+                        dlg.OpenDatabase(GetTestPath(fileName));
+                        dlg.OkDialog();
+                    });
+                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+            }
+
+            // Verify ion mobility library was added
+            var node = ValidateSingleEntry<IonMobilityLibraryFolder, Skyline.Model.IonMobility.IonMobilityLibrary>(
+                name, Settings.Default.IonMobilityLibraryList);
+
+            // Test double-click rename
+            string rename = name + "_renamed";
+            using (new WaitDocumentChange())
+            {
+                RunDlg<EditIonMobilityLibraryDlg>(() => SkylineWindow.FilesTreeForm.DoubleClickNode(node),
+                    dlg =>
+                    {
+                        dlg.LibraryName = rename;
+                        dlg.OkDialog();
+                    });
+            }
+
+            // Verify ion mobility library was renamed
+            ValidateSingleEntry<IonMobilityLibraryFolder, Skyline.Model.IonMobility.IonMobilityLibrary>(
+                rename, Settings.Default.IonMobilityLibraryList);
+        }
+
+        /// <summary>
+        /// Add an optimization library from an existing .optdb file, verify it appears in FilesTree, and test renaming
+        /// </summary>
+        private void AddOptimizationLibrary(string fileName)
+        {
+            string name = Path.GetFileNameWithoutExtension(fileName);
+            using (new WaitDocumentChange())
+            {
+                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+                RunDlg<EditOptimizationLibraryDlg>(transitionSettingsUI.AddToOptimizationLibraryList,
+                    dlg =>
+                    {
+                        dlg.LibName = name;
+                        dlg.OpenDatabase(GetTestPath(fileName));
+                        dlg.OkDialog();
+                    });
+                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+            }
+
+            // Verify optimization library was added
+            var node = ValidateSingleEntry<OptimizationLibraryFolder, Skyline.Model.Optimization.OptimizationLibrary>(
+                name, Settings.Default.OptimizationLibraryList);
+
+            // Test double-click rename
+            string rename = name + "_renamed";
+            using (new WaitDocumentChange())
+            {
+                RunDlg<EditOptimizationLibraryDlg>(() => SkylineWindow.FilesTreeForm.DoubleClickNode(node),
+                    dlg =>
+                    {
+                        dlg.LibName = rename;
+                        dlg.OkDialog();
+                    });
+            }
+
+            // Verify optimization library was renamed
+            ValidateSingleEntry<OptimizationLibraryFolder, Skyline.Model.Optimization.OptimizationLibrary>(
+                rename, Settings.Default.OptimizationLibraryList);
+        }
+
+        /// <summary>
+        /// Validate that a settings list and corresponding FilesTree folder both contain exactly one entry with the expected name
+        /// And return the single FilesTreeNode for the folder that contains the entry.
+        /// </summary>
+        private FilesTreeNode ValidateSingleEntry<TFolderModel, TSettings>(string expectedName, SettingsList<TSettings> settingsList)
+            where TFolderModel : FileModel
+            where TSettings : IKeyContainer<string>, IXmlSerializable
+        {
+            WaitForFilesTree();
+            FilesTreeNode fileNode = null;
+            RunUI(() =>
+            {
+                // Validate settings list
+                var defaults = settingsList.GetDefaults();
+                int countDefaults = defaults.Count();
+                Assert.AreEqual(1, settingsList.Count - countDefaults,
+                    $"Settings list should contain exactly one {typeof(TSettings).Name}");
+                Assert.AreEqual(expectedName, settingsList[countDefaults].GetKey(), $"Settings list entry should be named '{expectedName}'");
+
+                // Validate FilesTree folder
+                var folder = SkylineWindow.FilesTree.Folder<TFolderModel>();
+                Assert.IsNotNull(folder, $"{typeof(TFolderModel).Name} folder should exist in FilesTree");
+                Assert.AreEqual(1, folder.Nodes.Count, $"FilesTree folder should contain exactly one {typeof(TFolderModel).Name}");
+                fileNode = (FilesTreeNode)folder.Nodes[0];
+                Assert.AreEqual(expectedName, fileNode.Name, $"FilesTree node should be named '{expectedName}'");
+            });
+            return fileNode;
         }
 
         /// <summary>

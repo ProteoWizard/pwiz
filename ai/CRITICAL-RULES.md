@@ -68,7 +68,11 @@ Bare constraints only - no explanations. See ai/MEMORY.md, ai/STYLEGUIDE.md, and
 3. private instance fields
 4. constructor(s)
 5. public methods/properties
-6. private helper methods (after methods that use them)
+6. **private helper methods AFTER public methods that use them**
+
+**CRITICAL**: Helpers go LAST, not first. C# is not C/C++ - no forward declarations needed.
+- ✅ Main method first → helper methods below
+- ❌ Helper methods first → main method last (old C style)
 
 ## Tools and Quality
 - Aim for zero warnings in Visual Studio 2022 + ReSharper

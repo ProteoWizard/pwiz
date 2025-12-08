@@ -578,8 +578,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            var filesTreeNode = e.Node as FilesTreeNode;
+            DoubleClickNode(e.Node as FilesTreeNode);
+        }
 
+        public void DoubleClickNode(FilesTreeNode filesTreeNode)
+        {
             switch (filesTreeNode?.Model)
             {
                 case SkylineAuditLog _:
