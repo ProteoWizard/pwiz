@@ -1,7 +1,28 @@
 # Phase 2: UI‑free Model and report export backlog
 
-Status: Planned (merge Phase 1 first)
-Scope: Finish eliminating Model→UI references and strengthen static checks so new violations can’t sneak in. Defer risky refactors until after merge to master.
+Status: Partially complete (see PR #3700)
+Scope: Finish eliminating Model→UI references and strengthen static checks so new violations can't sneak in. Defer risky refactors until after merge to master.
+
+## Progress Update (2025-12-05)
+
+**[PR #3700](https://github.com/ProteoWizard/pwiz/pull/3700)** - "Allow exporting reports beyond what can be seen in the Document Grid" (nickshulman)
+
+This PR accomplishes the core headless export objectives:
+- ✅ Eliminates the last UI class usages from Model namespaces
+- ✅ Adds `Model/Databinding/RowItemExporter.cs` for headless report export
+- ✅ Adds `Model/Databinding/RowFactories.cs` with factory pattern for row sources
+- ✅ Major refactor of `Model/Tools/ToolDescription.cs` (+486/-499) to remove UI dependencies
+- ✅ Updates `Model/Databinding/ReportSharing.cs` to use headless export
+- ✅ Updates `CommandLine.cs` for CLI export support
+- ✅ Adds `Common/DataBinding/Attributes/RowSourceAttribute.cs` for declarative row sources
+- ✅ Enables export of reports not visible in Document Grid (Candidate Peaks, Group Comparisons, etc.)
+
+**Remaining items for future sprint:**
+- T1: Add folder-based Model scan (path-based, not just namespace-based) in CodeInspectionTest
+- T2: Util split guardrails (Model/Util vs Skyline/UtilUI separation)
+- T6: Audit Common for WinForms usage that could be transitively pulled by Model
+
+These remaining items focus on static analysis guardrails to prevent future regressions, rather than functional changes.
 
 ## Objectives
 - Zero Model→UI dependencies reported by CodeInspectionTest
@@ -80,13 +101,13 @@ Loopholes and proposals:
 - Keep CLI tolerance at 0 after CommandLine paths are moved to headless export
 
 ## Tasks and milestones
-- T0 (post‑merge): Set Model UI‑dependency tolerance to 0 in CodeInspectionTest
-- T1: Add folder‑based Model scan (same forbidden patterns) in CodeInspectionTest
-- T2: Add Util split guardrails (forbid pwiz.Skyline.UtilUI in Model)
-- T3: Implement ReportExporter + ReplicatePivotWriter in Model; refactor SkylineViewContext to use shared writer
-- T4: Replace DocumentGridViewContext usage in ReportSharing and ToolDescription with ReportExporter
-- T5: Add CLI export via ReportExporter; drop CLI tolerance to 0
-- T6: Audit Common for any WinForms usage that could be pulled by Model; if needed, move UI bits to Common.GUI and ensure tests forbid Model from referencing it
+- ✅ T0 (post‑merge): Set Model UI‑dependency tolerance to 0 in CodeInspectionTest — *Achieved by PR #3700*
+- T1: Add folder‑based Model scan (same forbidden patterns) in CodeInspectionTest — *Remaining*
+- T2: Add Util split guardrails (forbid pwiz.Skyline.UtilUI in Model) — *Remaining*
+- ✅ T3: Implement ReportExporter + ReplicatePivotWriter in Model; refactor SkylineViewContext to use shared writer — *PR #3700: RowItemExporter.cs, RowFactories.cs*
+- ✅ T4: Replace DocumentGridViewContext usage in ReportSharing and ToolDescription with ReportExporter — *PR #3700: Major ToolDescription refactor*
+- ✅ T5: Add CLI export via ReportExporter; drop CLI tolerance to 0 — *PR #3700: CommandLine.cs updates*
+- T6: Audit Common for any WinForms usage that could be pulled by Model; if needed, move UI bits to Common.GUI and ensure tests forbid Model from referencing it — *Remaining*
 
 ## Acceptance criteria
 - CodeInspectionTest: PASS with 0 Model violations and 0 CLI violations

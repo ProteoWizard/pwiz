@@ -56,6 +56,12 @@ Bare constraints only - no explanations. See ai/MEMORY.md, ai/STYLEGUIDE.md, and
 - **DO NOT** reformat unrelated code
 - Update Jamfile or Visual Studio project when adding sources
 
+## PowerShell Scripts
+- **ALL** `.ps1` scripts require PowerShell 7+ (`pwsh.exe`)
+- Windows PowerShell 5.1 (`powershell.exe`) will fail on modern syntax
+- Run scripts with: `pwsh -File ./path/to/script.ps1`
+- See `ai/docs/developer-setup-guide.md` for PowerShell 7 installation
+
 ## File and Member Ordering
 1. static variables/fields
 2. static public methods
