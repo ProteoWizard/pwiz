@@ -1515,6 +1515,7 @@
       <DependentUpon>GraphChromatogram.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\CustomTip.cs" />
+    <Compile Include="Controls\NodeTip.cs" />
     <Compile Include="Controls\Graphs\GraphSpectrum.cs">
       <SubType>Form</SubType>
     </Compile>

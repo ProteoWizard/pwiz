@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -511,6 +512,8 @@ namespace pwiz.SkylineTestFunctional
             TestReplicateLabelEdit();
 
             TestOtherFileTypes();
+
+            TestToolTips();
         }
 
         /// <summary>
@@ -718,6 +721,74 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(expectedName, fileNode.Name, $"FilesTree node should be named '{expectedName}'");
             });
             return fileNode;
+        }
+
+        /// <summary>
+        /// Test tooltips in FilesTree for various node types
+        /// </summary>
+        protected void TestToolTips()
+        {
+            // Test tooltip for replicate node
+            var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicateNode = (FilesTreeNode)replicatesFolder.Nodes[0];
+            ShowFilesTreeNodeTip(replicateNode);
+
+            // Test tooltip for replicate sample file node
+            var sampleFileNode = (FilesTreeNode)replicateNode.Nodes[0];
+            ShowFilesTreeNodeTip(sampleFileNode);
+
+            // Test tooltip for spectral library node
+            var librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+            var libraryNode = (FilesTreeNode)librariesFolder.Nodes[0];
+            ShowFilesTreeNodeTip(libraryNode);
+
+            // Test tooltip for the root .sky file node
+            ShowFilesTreeNodeTip(SkylineWindow.FilesTree.Root);
+
+            // Clear tooltip at the end
+            ShowFilesTreeNodeTip(null);
+        }
+
+        /// <summary>
+        /// Helper method to test tooltips for FilesTree nodes, adapted from MethodEditTutorialTest.ShowNodeTip
+        /// Uses the existing FilesTreeForm tooltip infrastructure
+        /// </summary>
+        private void ShowFilesTreeNodeTip(FilesTreeNode node)
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.MoveMouseOnTree(new Point(-1, -1));
+                Assert.IsFalse(SkylineWindow.FilesTreeForm.IsTipVisible);
+            });
+
+            if (node == null)
+                return;
+
+            SkylineWindow.FilesTreeForm.IgnoreFocus = true;
+            RunUI(() =>
+            {
+                Point GetNodeCenter(FilesTreeNode n)
+                {
+                    var rect = n.Bounds;
+                    return new Point((rect.Left + rect.Right) / 2, (rect.Top + rect.Bottom) / 2);
+                }
+
+                var pt = GetNodeCenter(node);
+
+                // Check if the point is within the FilesTree client rectangle
+                // If not, set TopNode to ensure the node is visible and recalculate the point
+                if (!SkylineWindow.FilesTree.ClientRectangle.Contains(pt))
+                {
+                    SkylineWindow.FilesTree.TopNode = node;
+                    pt = GetNodeCenter(node);
+                }
+
+                SkylineWindow.FilesTreeForm.MoveMouseOnTree(pt);
+            });
+
+            WaitForConditionUI(NodeTip.TipDelayMs * 10, () => SkylineWindow.FilesTreeForm.IsTipVisible);
+
+            SkylineWindow.FilesTreeForm.IgnoreFocus = false;
         }
 
         /// <summary>

@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
@@ -491,11 +490,35 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public Rectangle ScreenRect => Screen.GetBounds(FilesTree);
 
-        public bool AllowDisplayTip => FilesTree.Focused;
+        public bool AllowDisplayTip => IgnoreFocus || FilesTree.Focused;
 
         public Rectangle RectToScreen(Rectangle r)
         {
             return FilesTree.RectangleToScreen(r);
+        }
+
+        #endregion
+
+        #region Test helpers for tooltip testing
+
+        /// <summary>
+        /// Test helper property to determine if tooltip is visible
+        /// </summary>
+        public bool IsTipVisible => _nodeTip.Visible;
+
+        /// <summary>
+        /// Test helper property to control focus behavior during tooltip testing
+        /// </summary>
+        public bool IgnoreFocus { get; set; }
+
+        /// <summary>
+        /// Test helper method to simulate mouse movement for tooltip testing.
+        /// Takes a point in FilesTree coordinates and transforms it appropriately.
+        /// </summary>
+        public void MoveMouseOnTree(Point pt)
+        {
+            // Point is already in FilesTree coordinates, which is what FilesTree_MouseMove expects
+            FilesTree_MouseMove(pt, MouseButtons.None);
         }
 
         #endregion
