@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ColumnToolTips {
@@ -221,6 +221,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ApexTotalIonCountMS1 {
             get {
                 return ResourceManager.GetString("ApexTotalIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition.
+        /// </summary>
+        public static string ApexTransitionIonCount {
+            get {
+                return ResourceManager.GetString("ApexTransitionIonCount", resourceCulture);
             }
         }
         
@@ -1789,6 +1798,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LcPeakTotalIonCurrentAreaMS1 {
             get {
                 return ResourceManager.GetString("LcPeakTotalIonCurrentAreaMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTransitionIonCount {
+            get {
+                return ResourceManager.GetString("LcPeakTransitionIonCount", resourceCulture);
             }
         }
         
@@ -4552,6 +4570,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string TransitionCount {
             get {
                 return ResourceManager.GetString("TransitionCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values related to the number of ions in the mass spectrometer.
+        /// </summary>
+        public static string TransitionIonMetrics {
+            get {
+                return ResourceManager.GetString("TransitionIonMetrics", resourceCulture);
             }
         }
         

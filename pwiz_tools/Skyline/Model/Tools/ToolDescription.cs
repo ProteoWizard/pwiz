@@ -465,10 +465,15 @@ namespace pwiz.Skyline.Model.Tools
         public static string GetToolsDirectory()
         {
             var skylineDirPath = GetSkylineInstallationPath();
-
             // Use a unique tools path when running tests to allow tests to run in parallel
             // ReSharper disable once AssignNullToNotNullAttribute
-            return Path.Combine(skylineDirPath, Program.UnitTest ? $@"Tools_{LimitDirectoryNameLength()}" : @"Tools");
+            var tools = GetToolsDirectoryBasis(); // Helps catch Unicode path issues on Windows
+            return Path.Combine(skylineDirPath, Program.UnitTest ? $@"{tools}_{LimitDirectoryNameLength()}" : $@"{tools}");
+        }
+
+        public static string GetToolsDirectoryBasis()
+        {
+            return (Program.UnitTest && ProcessEx.CanConvertUnicodePaths.Value) ? @"Tööls" : @"Tools"; // Helps catch Unicode path issues on Windows
         }
 
         /// <summary>
