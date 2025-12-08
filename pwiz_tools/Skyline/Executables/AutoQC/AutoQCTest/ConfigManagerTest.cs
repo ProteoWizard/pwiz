@@ -208,9 +208,9 @@ namespace AutoQCTest
             configManager.SelectConfig(3);
             configManager.UpdateSelectedEnabled(true);
 
-            TestUtils.WaitForCondition(() => !configManager.AutoQcState.GetSelectedConfig().IsEnabled,
-                new TimeSpan(0, 0, 1), 100,
-                "Configuration started when it should have had an error because it was invalid");
+            WaitForCondition(() => !configManager.AutoQcState.GetSelectedConfig().IsEnabled,
+                timeout: TimeSpan.FromSeconds(1), timestep: 100,
+                errorMessage: "Configuration started when it should have had an error because it was invalid");
         }
 
         #endregion
