@@ -16,18 +16,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -40,6 +43,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private const int indexFirstImage = 2;
         private readonly SkylineWindow _skylineWindow;
         private DocumentGridViewContext _viewContext;
+        private RowFactories _rowFactories;
 
         public ExportLiveReportDlg(SkylineWindow skylineWindow)
         {
@@ -55,7 +59,27 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void OkDialog()
         {
-            if (!ExportReport(null, ','))
+            var viewName = SelectedViewName;
+            if (viewName == null)
+            {
+                return;
+            }
+            using var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = Settings.Default.ExportDirectory;
+            saveFileDialog.OverwritePrompt = true;
+            saveFileDialog.DefaultExt = TextUtil.EXT_CSV;
+            saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV);
+            saveFileDialog.FileName = SelectedViewName.Value.Name;
+            // TODO: If document has been saved, initial directory should be document directory
+            if (saveFileDialog.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            var separator = saveFileDialog.FilterIndex == 2
+                ? TextUtil.SEPARATOR_TSV
+                : TextUtil.GetCsvSeparator(_viewContext.DataSchema.DataSchemaLocalizer.FormatProvider);
+            var fileName = saveFileDialog.FileName;
+            if (!ExportReport(fileName, separator))
                 return;
 
             DialogResult = DialogResult.OK;
@@ -85,6 +109,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 imageList1.Images.Add(Resources.Folder);
                 imageList1.Images.Add(Resources.Blank);
                 imageList1.Images.AddRange(_viewContext.GetImageList());
+                _rowFactories = RowFactories.GetRowFactories(CancellationToken.None, _viewContext.SkylineDataSchema);
                 Repopulate();
             }
         }
@@ -113,17 +138,38 @@ namespace pwiz.Skyline.Controls.Databinding
        
         private bool ExportReport(string filename, char separator)
         {
-            var viewContext = GetViewContext(true);
-            var viewInfo = viewContext.GetViewInfo(SelectedViewName);
-            if (null == viewInfo)
+            var viewName = SelectedViewName;
+            if (!viewName.HasValue)
             {
                 return false;
             }
-            if (null == filename)
+            using var fileSaver = new FileSaver(filename, true);
+            if (!fileSaver.CanSave(this))
             {
-                return viewContext.Export(this, viewInfo);
+                return false;
             }
-            return viewContext.ExportToFile(this, viewInfo, filename, separator);
+
+            using (var writer = new StreamWriter(fileSaver.Stream))
+            {
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
+                IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
+                var dataSchema = GetSkylineDataSchema(true);
+                longWaitDlg.PerformWork(this, 1500, progressMonitor =>
+                {
+                    progressMonitor.UpdateProgress(status);
+                    var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
+
+                    rowFactories.ExportReport(writer, viewName.Value, separator, progressMonitor, ref status);
+                });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return false;
+                }
+            }
+
+            fileSaver.Commit();
+            return true;
         }
 
         private void Repopulate()
@@ -140,17 +186,19 @@ namespace pwiz.Skyline.Controls.Databinding
                 groupNode.SelectedImageIndex = groupNode.ImageIndex = indexImageFolder;
                 foreach (var viewSpec in _viewContext.GetViewSpecList(group.Id).ViewSpecs)
                 {
-                    if (!_viewContext.CanDisplayView(viewSpec))
+                    if (!_rowFactories.HasFactory(viewSpec.RowSource))
                     {
                         continue;
                     }
-                    if (null == _viewContext.GetViewInfo(group, viewSpec))
+
+                    if (!_viewContext.IsUiModeSupported(viewSpec))
                     {
                         continue;
                     }
                     var viewNode = new TreeNode(viewSpec.Name)
                     {
-                        Name = viewSpec.Name
+                        Name = viewSpec.Name,
+                        Tag = viewSpec
                     };
                     int imageIndex = _viewContext.GetImageIndex(viewSpec);
                     if (imageIndex >= 0)
@@ -174,19 +222,24 @@ namespace pwiz.Skyline.Controls.Databinding
             UpdateButtons();
         }
 
-        private SkylineViewContext GetViewContext(bool clone)
+        private SkylineDataSchema GetSkylineDataSchema(bool clone)
         {
-            SkylineDataSchema dataSchema;
             if (clone)
             {
                 var documentContainer = new MemoryDocumentContainer();
                 documentContainer.SetDocument(_skylineWindow.DocumentUI, documentContainer.Document);
-                dataSchema = new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer());
+                return new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer());
             }
             else
             {
-                dataSchema = new SkylineWindowDataSchema(_skylineWindow, GetDataSchemaLocalizer());
+                return new SkylineWindowDataSchema(_skylineWindow, GetDataSchemaLocalizer());
             }
+
+        }
+
+        private SkylineViewContext GetViewContext()
+        {
+            SkylineDataSchema dataSchema = GetSkylineDataSchema(false);
             return new DocumentGridViewContext(dataSchema) {EnablePreview = true};
         }
 
@@ -212,7 +265,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void ShowPreview()
         {
-            var viewContext = GetViewContext(false);
+            var viewContext = GetViewContext();
             var viewInfo = viewContext.GetViewInfo(SelectedViewName);
             var form = new DocumentGridForm(viewContext)
             {
@@ -231,7 +284,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void EditList()
         {
-            using (var manageViewsForm = new ManageViewsForm(GetViewContext(false)))
+            using (var manageViewsForm = new ManageViewsForm(GetViewContext()))
             {
                 manageViewsForm.ShowDialog(this);
             } 
@@ -279,7 +332,9 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void UpdateButtons()
         {
-            btnExport.Enabled = btnPreview.Enabled = null != SelectedViewName;
+            btnExport.Enabled = null != SelectedViewName;
+            var selectedViewSpec = treeView1.SelectedNode?.Tag as ViewSpec;
+            btnPreview.Enabled = selectedViewSpec != null && _viewContext.CanDisplayView(selectedViewSpec);
         }
 
         private void treeView1_BeforeSelect(object sender, TreeViewCancelEventArgs e)

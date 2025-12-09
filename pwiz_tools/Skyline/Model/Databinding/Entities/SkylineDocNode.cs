@@ -42,12 +42,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public void LinkValueOnClick(object sender, EventArgs args)
         {
-            var skylineWindow = DataSchema.SkylineWindow;
-            if (null == skylineWindow)
-            {
-                return;
-            }
-            skylineWindow.SelectedPath = IdentityPath;
+            DataSchema.SelectDocNode(IdentityPath);
         }
 
         EventHandler ILinkValue.ClickEventHandler
