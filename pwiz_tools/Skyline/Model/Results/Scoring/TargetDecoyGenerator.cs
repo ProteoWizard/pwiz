@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     /// </summary>
     public class TargetDecoyGenerator
     {
-        public bool[] EligibleScores { get; private set; }
+        public ScoreEligibility[] EligibleScores { get; private set; }
 
         public FeatureCalculators FeatureCalculators { get; private set; }
 
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             _peakTransitionGroupFeaturesList = featureScores;
             PopulateDictionary();
 
-            EligibleScores = new bool[FeatureCalculators.Count];
+            EligibleScores = new ScoreEligibility[FeatureCalculators.Count];
             // Disable calculators that have only a single score value or any unknown scores.
             ParallelEx.For(0, FeatureCalculators.Count, i => EligibleScores[i] = IsValidCalculator(i));
         }
@@ -222,7 +222,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 }
                 // If the score is not eligible (e.g. has unknown values), definitely don't enable it
                 // If it is eligible, enable if untrained or if trained and not nan
-                bool enabled = EligibleScores[i] &&
+                var eligibility = EligibleScores[i];
+                bool enabled = !eligibility.AllSameValue && eligibility.MissingCount == 0 &&
                                (!peakScoringModel.IsTrained || !double.IsNaN(peakScoringModel.Parameters.Weights[i]));
                 peakCalculatorWeights[i] = new PeakCalculatorWeight(peakScoringModel.PeakFeatureCalculators[i], weight, normalWeight, enabled);
             });
@@ -298,30 +299,44 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <summary>
         ///  Is the specified calculator valid for this dataset (has no unknown values and not all the same value)?
         /// </summary>
-        private bool IsValidCalculator(int calculatorIndex)
+        private ScoreEligibility IsValidCalculator(int calculatorIndex)
         {
             if (ReplaceUnknownFeatureScores)
             {
-                return true;
+                return new ScoreEligibility(false, 0);
             }
+
+            int missingCount = 0;
             double maxValue = Double.MinValue;
             double minValue = Double.MaxValue;
 
             foreach (var peakTransitionGroupFeatures in _peakTransitionGroupFeaturesList.Features)
             {
+                double transitionGroupMax = double.MinValue;
+                double transitionGroupMin = double.MaxValue;
+                bool skipTransitionGroup = false;
                 // Find the highest and second highest scores among the transitions in this group.
                 foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
                 {
                     double value = peakGroupFeatures.Features[calculatorIndex];
                     if (IsUnknown(value))
                     {
-                        return false;
+                        skipTransitionGroup = true;
+                        missingCount++;
+                        break;
                     }
-                    maxValue = Math.Max(value, maxValue);
-                    minValue = Math.Min(value, minValue);
+                    transitionGroupMax = Math.Max(value, transitionGroupMax);
+                    transitionGroupMin = Math.Min(value, transitionGroupMin);
+                }
+
+                if (!skipTransitionGroup)
+                {
+                    maxValue = Math.Max(maxValue, transitionGroupMax);
+                    minValue = Math.Min(minValue, transitionGroupMin);
                 }
             }
-            return maxValue > minValue;
+
+            return new ScoreEligibility(maxValue <= minValue, missingCount);
         }
 
         private double GetScore(LinearModelParams parameters, PeakGroupFeatures peakGroupFeatures, bool replaceUnknownFeatureScores)
@@ -337,6 +352,30 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public static bool IsUnknown(double d)
         {
             return (double.IsNaN(d) || double.IsInfinity(d));
+        }
+
+        public class ScoreEligibility
+        {
+            public ScoreEligibility(bool allSameValue, int missingCount)
+            {
+                AllSameValue = allSameValue;
+                MissingCount = missingCount;
+            }
+            public bool AllSameValue { get; }
+            public int MissingCount { get; }
+
+            public bool Eligible
+            {
+                get
+                {
+                    return !AllSameValue;
+                }
+            }
+
+            public bool EnabledByDefault
+            {
+                get { return Eligible && MissingCount == 0; }
+            }
         }
     }
 

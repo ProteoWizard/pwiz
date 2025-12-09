@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Util.Extensions {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ExtensionsResources {
@@ -111,6 +111,15 @@ namespace pwiz.Skyline.Util.Extensions {
         public static string LineColNumberedIoException_FormatMessage__0___line__1___col__2__ {
             get {
                 return ResourceManager.GetString("LineColNumberedIoException_FormatMessage__0___line__1___col__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to , .
+        /// </summary>
+        public static string ListItemSeparator {
+            get {
+                return ResourceManager.GetString("ListItemSeparator", resourceCulture);
             }
         }
         
