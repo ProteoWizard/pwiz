@@ -107,19 +107,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="lambda">Optional p-value cutoff for calculating Pi-zero.</param>
         /// <param name="nonParametric">Non-parametric p value calculation if true and based on normal distribution if false</param>
         /// <returns>List of peaks the meet the criteria.</returns>
-        public List<ScoredPeak> SelectTruePeaks(ScoredGroupPeaksSet decoyScoredGroupPeaks, double qValueCutoff, double? lambda, bool nonParametric)
+        public IEnumerable<ScoredPeak> SelectTruePeaks(ScoredGroupPeaksSet decoyScoredGroupPeaks, double qValueCutoff, double? lambda, bool nonParametric)
         {
             var pvalues = CalcPValues(decoyScoredGroupPeaks, nonParametric);
             var qvalues = new Statistics(pvalues).Qvalues(lambda, MProphetPeakScoringModel.PI_ZERO_MIN);
 
             // Select max peak with q value less than the cutoff from each target group.
-            var truePeaks = new List<ScoredPeak>(_scoredGroupPeaksList.Count/5);
             for (int i = 0; i < _scoredGroupPeaksList.Count; i++)
             {
                 if (qvalues[i] <= qValueCutoff)
-                    truePeaks.Add(_scoredGroupPeaksList[i].MaxPeak);
+                    yield return _scoredGroupPeaksList[i].MaxPeak;
             }
-            return truePeaks;
         }
 
         private double[] CalcPValues(ScoredGroupPeaksSet decoyScoredGroupPeaks, bool nonParametric = false)
@@ -141,9 +139,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Return a list of peaks that have the highest score in each transition group.
         /// </summary>
         /// <returns>List of highest scoring peaks.</returns>
-        public List<ScoredPeak> SelectMaxPeaks()
+        public IEnumerable<ScoredPeak> SelectMaxPeaks()
         {
-            return _scoredGroupPeaksList.Select(t => t.MaxPeak).ToList();
+            return _scoredGroupPeaksList.Select(t => t.MaxPeak);
         }
 
         public void SelectTargetsAndDecoys(out ScoredGroupPeaksSet targetScoredGroupPeaksSet, out ScoredGroupPeaksSet decoyScoredGroupPeaksSet)
