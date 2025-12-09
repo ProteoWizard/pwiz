@@ -41,11 +41,11 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.SettingsUI.Irt;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using static pwiz.Skyline.Model.Files.FileModel;
 
 // CONSIDER: verify right-click menu includes open containing folder only for files found locally
-// CONSIDER: test tooltips, see example in MethodEditTutorialTest.ShowNodeTip
 // CONSIDER: expand drag-and-drop tests - scenarios: disjoint selection, tree disallows dragging un-draggable nodes
 // CONSIDER: handling of non-local paths from SrmSettings (ex: replicate sample file paths cannot be found locally)
 // CONSIDER: new test making sure clicking 'x' upper RHC of confirm dialog does not delete Replicate / Spectral Library
@@ -514,6 +514,8 @@ namespace pwiz.SkylineTestFunctional
             TestOtherFileTypes();
 
             TestToolTips();
+
+            TestRightClickMenus();
         }
 
         /// <summary>
@@ -797,6 +799,79 @@ namespace pwiz.SkylineTestFunctional
             });
             FilesTreeNode.ShowDebugTipText = false;
             SkylineWindow.FilesTreeForm.IgnoreFocus = false;
+        }
+
+        /// <summary>
+        /// Test right-click context menus for various node types in FilesTree
+        /// </summary>
+        protected void TestRightClickMenus()
+        {
+            var tree = SkylineWindow.FilesTree;
+            var menu = SkylineWindow.FilesTreeForm;
+            var emptyMenu = Array.Empty<ToolStripMenuItem>();
+            var minimumFileMenu = new[] { menu.OpenContainingFolderMenuItem };
+
+            // First test nodes with non-empty menus
+            var replicatesFolder = tree.Folder<ReplicatesFolder>();
+            ShowFilesTreeNodeMenu(replicatesFolder, new[]
+                { menu.ManageResultsMenuItem, menu.RemoveAllMenuItem });
+
+            var replicateNode = (FilesTreeNode)replicatesFolder.Nodes[0];
+            ShowFilesTreeNodeMenu(replicateNode, new[]
+                { menu.SelectReplicateMenuItem, menu.RemoveMenuItem });
+
+            var librariesFolder = tree.Folder<SpectralLibrariesFolder>();
+            ShowFilesTreeNodeMenu(librariesFolder, new[]
+                { menu.LibraryExplorerMenuItem, menu.RemoveAllMenuItem });
+
+            var libraryNode = (FilesTreeNode)librariesFolder.Nodes[0];
+            ShowFilesTreeNodeMenu(libraryNode, new[]
+                { menu.OpenContainingFolderMenuItem, menu.OpenLibraryInLibraryExplorerMenuItem, menu.RemoveMenuItem });
+
+            // Test a folder with no visible items  - should cancel and not show menu (no items visible)
+            // CONSIDER: Should it show "Manage Libraries" and bring up the PeptideSettingsUI - Library tab?
+            var backgroundProteomeFolder = tree.Folder<BackgroundProteomeFolder>();
+            ShowFilesTreeNodeMenu(backgroundProteomeFolder, emptyMenu);
+            // And the background proteome file node
+            var backgroundProteomeNode = (FilesTreeNode)backgroundProteomeFolder.Nodes[0];
+            ShowFilesTreeNodeMenu(backgroundProteomeNode, minimumFileMenu);
+
+            // Finally test the root .sky file node
+            ShowFilesTreeNodeMenu(tree.Root, minimumFileMenu);
+        }
+
+        /// <summary>
+        /// Helper method to test context menus for FilesTree nodes.
+        /// Shows the context menu for a node and validates the visible menu items.
+        /// </summary>
+        private void ShowFilesTreeNodeMenu(FilesTreeNode node, IList<ToolStripMenuItem> visibleItems)
+        {
+            var filesTreeForm = SkylineWindow.FilesTreeForm;
+            using var scope = new ScopedAction(
+                initAction: () => RunUI(() => filesTreeForm.TreeContextMenu.Closing += DenyMenuClosing),
+                disposeAction: () =>
+                {
+                    RunUI(() => filesTreeForm.TreeContextMenu.Closing -= DenyMenuClosing);
+                    if (visibleItems.Count != 0)
+                        RunUI(filesTreeForm.TreeContextMenu.Close);
+                });
+
+            RunUI(() => filesTreeForm.ShowContextMenuForNode(node));
+
+            // Wait for the context menu Opening event to complete
+            WaitForConditionUI(() => filesTreeForm.ContextMenuShown.HasValue);
+
+            RunUI(() =>
+            {
+                var menu = filesTreeForm.TreeContextMenu;
+                var actualVisibleItems = menu.Items.OfType<ToolStripMenuItem>()
+                    .Where(item => item.Visible).ToArray();
+                Assert.IsTrue(actualVisibleItems.SequenceEqual(visibleItems),
+                    string.Format("Unexpected menu items: Expected<{0}>, Actual<{1}>",
+                        TextUtil.LineSeparate(visibleItems.Select(item => item.Text)),
+                        TextUtil.LineSeparate(actualVisibleItems.Select(item => item.Text))));
+                Assert.AreEqual(!visibleItems.IsNullOrEmpty(), filesTreeForm.ContextMenuShown.Value);
+            });
         }
 
         /// <summary>

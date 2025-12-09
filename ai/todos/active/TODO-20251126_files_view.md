@@ -200,6 +200,16 @@ Based on the old branch, key areas to review:
   - Documented coverage methodology: 27 files → 38 types → precise measurement
   - Model layer achieved 100% coverage across all file type implementations
   - Service layer achieved 83-100% coverage
+- 2025-12-09: Added context menu testing and ScopedAction utility (coverage improved from 77.7% to 79.6%):
+  - Created `ScopedAction.cs` - general-purpose RAII helper for test cleanup patterns
+  - Added context menu testing infrastructure to FilesTreeForm (test helper properties and methods)
+  - Implemented `TestRightClickMenus()` method testing 7 different node types
+  - Fixed empty menu bug (cancel when no items visible) using tracked visibility list
+  - Refactored menu visibility code using local `SetMenuItemVisible()` function (DRY)
+  - Changed `ContextMenuShown` from `bool` to `bool?` for tri-state semantics (null/true/false)
+  - Used `ScopedAction` with `DenyMenuClosing` pattern for reliable menu testing
+  - Coverage increased 1.9% (79.6% overall, FilesTreeForm improved from 66.4% to TBD)
+  - All 4 Files view tests passing with new menu tests
 
 ## Review Findings (2025-11-26)
 

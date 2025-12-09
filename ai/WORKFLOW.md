@@ -198,23 +198,35 @@ When switching LLM tools/sessions:
 
 ## Commit Messages
 
-**Keep commit messages concise (<10 lines)** - digestible in TortoiseGit's multi-line textbox view.
+**Keep commit messages concise (≤10 lines)** - digestible in TortoiseGit's multi-line textbox view.
 
 **Pattern:**
 ```
-Brief summary of change (imperative mood)
+Brief summary of change (report mood - what was done)
 
 Optional 2-3 line explanation if needed.
 Details belong in TODO file, not commit message.
+
+See ai/todos/active/TODO-YYYYMMDD_feature.md for complete details.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+**Rules:**
+- **Maximum 10 lines total** including blank lines and attribution
+- **Single line for AI attribution** - Use "Co-Authored-By: Claude <noreply@anthropic.com>" (not "Generated with")
+- **Reference TODO file** for detailed context and decisions
+- **Report mood** - "Added feature" not "Add feature" (like research paper methods section)
 
 **Examples:**
 ```bash
 # Good
-git commit -m "Balance documentation tone and restore TODO-20251105 goals
+git commit -m "Balanced documentation tone and restored TODO-20251105 goals
 
 Moved BUILD-TEST.md to ai/docs/, created documentation-maintenance.md.
-See TODO-20251105_improve_tool_support_for_ai_dev.md Phase 5 for details."
+See TODO-20251105_improve_tool_support_for_ai_dev.md Phase 5 for details.
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
 
 # Bad - too verbose
 git commit -m "This commit addresses documentation violations...
@@ -231,7 +243,7 @@ See [ai/CRITICAL-RULES.md](CRITICAL-RULES.md) for full list. Key workflow rules:
 - **Update TODO every commit** - Track progress, decisions, files modified
 - **Never modify completed TODOs** - They document merged PRs (historical record)
 - **All TODOs must have PR reference** - Before moving to completed/
-- **Commit messages <10 lines** - Details go in TODO files
+- **Commit messages ≤10 lines** - Single line for AI attribution, reference TODO for details
 
 ## See Also
 

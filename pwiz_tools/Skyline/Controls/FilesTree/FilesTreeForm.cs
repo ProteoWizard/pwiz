@@ -525,6 +525,53 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #endregion
 
+        #region Test helpers for context menu testing
+
+        /// <summary>
+        /// Test helper property to access the context menu for validation
+        /// </summary>
+        public ContextMenuStrip TreeContextMenu => filesTreeContextMenu;
+
+        /// <summary>
+        /// Test helper properties to access menu items for localization-safe validation
+        /// </summary>
+        public ToolStripMenuItem LibraryExplorerMenuItem => libraryExplorerMenuItem;
+        public ToolStripMenuItem ManageResultsMenuItem => manageResultsMenuItem;
+        public ToolStripMenuItem OpenAuditLogMenuItem => openAuditLogMenuItem;
+        public ToolStripMenuItem OpenLibraryInLibraryExplorerMenuItem => openLibraryInLibraryExplorerMenuItem;
+        public ToolStripMenuItem OpenContainingFolderMenuItem => openContainingFolderMenuItem;
+        public ToolStripMenuItem SelectReplicateMenuItem => selectReplicateMenuItem;
+        public ToolStripMenuItem RemoveAllMenuItem => removeAllMenuItem;
+        public ToolStripMenuItem RemoveMenuItem => removeMenuItem;
+        public ToolStripMenuItem DebugRefreshTreeMenuItem => debugRefreshTreeMenuItem;
+
+        /// <summary>
+        /// Test helper flag to signal when the context menu Opening event has completed
+        /// </summary>
+        public bool? ContextMenuShown { get; set; }
+
+        /// <summary>
+        /// Test helper method to programmatically open the context menu for a node.
+        /// This triggers the Opening event which populates the menu items based on the node type.
+        /// </summary>
+        public void ShowContextMenuForNode(FilesTreeNode node)
+        {
+            if (node == null)
+                return;
+
+            ContextMenuShown = null;
+
+            // Select the node first (required by FilesTree_ContextMenuStrip_Opening)
+            FilesTree.SelectedNode = node;
+
+            // Show the context menu - triggers the Opening event naturally
+            var rect = node.Bounds;
+            var pt = new Point((rect.Left + rect.Right) / 2, (rect.Top + rect.Bottom) / 2);
+            filesTreeContextMenu.Show(FilesTree, pt);
+        }
+
+        #endregion
+
         // TreeNode => Open Context Menu
         private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
@@ -542,52 +589,58 @@ namespace pwiz.Skyline.Controls.FilesTree
             removeMenuItem.Visible = false;
             debugRefreshTreeMenuItem.Visible = false;
 
+            // Track which items we make visible for debugging and to determine if menu should show
+            var visibleItems = new List<ToolStripMenuItem>();
+
+            // Local function to make menu item visible and track it
+            void SetMenuItemVisible(ToolStripMenuItem item, bool enabled = true)
+            {
+                item.Visible = true;
+                item.Enabled = enabled;
+                visibleItems.Add(item);
+            }
+
             // Only offer "Open Containing Folder" if (1) supported by this tree node
             // and (2) the file's state is "available"
             if (filesTreeNode.SupportsOpenContainingFolder())
-            {
-                openContainingFolderMenuItem.Visible = true;
-                openContainingFolderMenuItem.Enabled = filesTreeNode.LocalFileIsAvailable();
-            }
+                SetMenuItemVisible(openContainingFolderMenuItem, filesTreeNode.LocalFileIsAvailable());
 
-            // Show Remove and Remove All options if supported by the selected node. But only enable them if 
+            // Show Remove and Remove All options if supported by the selected node. But only enable them if
             // all selected nodes are of the same type.
             var allSameType = FilesTree.SelectedNodes.Cast<FilesTreeNode>().Select(node => node.Model.GetType()).Distinct().Count() == 1;
             if (filesTreeNode.SupportsRemoveItem())
-            {
-                removeMenuItem.Visible = true;
-                removeMenuItem.Enabled = allSameType;
-            }
+                SetMenuItemVisible(removeMenuItem, allSameType);
 
             if (filesTreeNode.SupportsRemoveAllItems())
-            {
-                removeAllMenuItem.Visible = true;
-                removeAllMenuItem.Enabled = allSameType;
-            }
+                SetMenuItemVisible(removeAllMenuItem, allSameType);
 
             switch (filesTreeNode.Model)
             {
                 case ReplicatesFolder _:
-                    manageResultsMenuItem.Visible = true;
-                    return;
+                    SetMenuItemVisible(manageResultsMenuItem);
+                    break;
                 case Replicate _:
                 case ReplicateSampleFile _:
-                    selectReplicateMenuItem.Visible = true;
+                    SetMenuItemVisible(selectReplicateMenuItem);
                     break;
                 case SpectralLibrariesFolder _:
-                    libraryExplorerMenuItem.Visible = true;
-                    return;
+                    SetMenuItemVisible(libraryExplorerMenuItem);
+                    break;
                 case SpectralLibrary _:
-                    openLibraryInLibraryExplorerMenuItem.Visible = true;
+                    SetMenuItemVisible(openLibraryInLibraryExplorerMenuItem);
                     break;
                 case SkylineAuditLog _:
-                    openAuditLogMenuItem.Visible = true;
+                    SetMenuItemVisible(openAuditLogMenuItem);
                     break;
                 case SkylineFile _:
                     if(Debugger.IsAttached)
-                        debugRefreshTreeMenuItem.Visible = true;
+                        SetMenuItemVisible(debugRefreshTreeMenuItem);
                     break;
             }
+
+            ContextMenuShown = visibleItems.Count > 0;
+            // Cancel menu opening if no items were made visible
+            e.Cancel = !ContextMenuShown.Value;
         }
 
         /// <summary>
