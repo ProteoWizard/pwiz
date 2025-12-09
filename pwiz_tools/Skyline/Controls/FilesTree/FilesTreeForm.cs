@@ -506,6 +506,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// </summary>
         public bool IsTipVisible => _nodeTip.Visible;
 
+        public string NodeTipText => _nodeTip?.TipText;
+
         /// <summary>
         /// Test helper property to control focus behavior during tooltip testing
         /// </summary>

@@ -740,10 +740,10 @@ namespace pwiz.SkylineTestFunctional
             // Test tooltip for spectral library node
             var librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
             var libraryNode = (FilesTreeNode)librariesFolder.Nodes[0];
-            ShowFilesTreeNodeTip(libraryNode);
+            ShowFilesTreeNodeTip(libraryNode, true);
 
             // Test tooltip for the root .sky file node
-            ShowFilesTreeNodeTip(SkylineWindow.FilesTree.Root);
+            ShowFilesTreeNodeTip(SkylineWindow.FilesTree.Root, true);
 
             // Clear tooltip at the end
             ShowFilesTreeNodeTip(null);
@@ -753,7 +753,7 @@ namespace pwiz.SkylineTestFunctional
         /// Helper method to test tooltips for FilesTree nodes, adapted from MethodEditTutorialTest.ShowNodeTip
         /// Uses the existing FilesTreeForm tooltip infrastructure
         /// </summary>
-        private void ShowFilesTreeNodeTip(FilesTreeNode node)
+        private void ShowFilesTreeNodeTip(FilesTreeNode node, bool debugTip = false)
         {
             RunUI(() =>
             {
@@ -765,6 +765,7 @@ namespace pwiz.SkylineTestFunctional
                 return;
 
             SkylineWindow.FilesTreeForm.IgnoreFocus = true;
+            FilesTreeNode.ShowDebugTipText = debugTip;
             RunUI(() =>
             {
                 Point GetNodeCenter(FilesTreeNode n)
@@ -787,7 +788,14 @@ namespace pwiz.SkylineTestFunctional
             });
 
             WaitForConditionUI(NodeTip.TipDelayMs * 10, () => SkylineWindow.FilesTreeForm.IsTipVisible);
-
+            RunUI(() =>
+            {
+                string tipText = SkylineWindow.FilesTreeForm.NodeTipText;
+                AssertEx.Contains(tipText, node.Text, node.FilePath);
+                if (debugTip)
+                    AssertEx.Contains(tipText, "Debug Info");
+            });
+            FilesTreeNode.ShowDebugTipText = false;
             SkylineWindow.FilesTreeForm.IgnoreFocus = false;
         }
 

@@ -21,7 +21,6 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Files;
 
@@ -31,7 +30,7 @@ namespace pwiz.Skyline.Controls.FilesTree
     public enum FileState { available, missing, not_initialized, in_memory }
 
     // CONSIDER: customize behavior in subclasses. Overloading FilesTreeNode won't scale long-term.
-    public class FilesTreeNode : TreeNodeMS, ITipProvider
+    public class FilesTreeNode : TreeNodeMS, ITipProviderWithText
     {
         private FileModel _model;
 
@@ -199,9 +198,28 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        private static bool? _showDebugTipText;
+
+        /// <summary>
+        /// Testing hook to force showing debug tip text even when debugger is not attached.
+        /// </summary>
+        public static bool ShowDebugTipText
         {
-            using var rt = new RenderTools();
+            get => _showDebugTipText ?? Debugger.IsAttached;
+            set => _showDebugTipText = value;
+        }
+
+        public string TipText
+        {
+            get
+            {
+                using var rt = new RenderTools();
+                return GetTipTable(rt).ToString();
+            }
+        }
+
+        private TableDesc GetTipTable(RenderTools rt)
+        {
             var customTable = new TableDesc();
 
             customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_Tooltip_Name, Name, rt);
@@ -241,7 +259,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
 
             // When debugging, add more info to each node's tooltip. 
-            if (Debugger.IsAttached)
+            if (ShowDebugTipText)
             {
                 TooltipNewRowWithText(@"     ", customTable, rt);
                 TooltipNewRowWithText(@"====================", customTable, rt);
@@ -301,8 +319,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // customTable.AddDetailRow(@"Document revision", $@"{Model.DocumentRevisionIndex}", rt);
             }
 
+            return customTable;
+        }
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            using var rt = new RenderTools();
+            var customTable = GetTipTable(rt);
             var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
+            if (draw)
+                customTable.Draw(g);
 
             return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
