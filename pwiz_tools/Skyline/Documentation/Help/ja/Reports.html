@@ -654,6 +654,7 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 <tr><td class="ColumnCaption">トランジション結果はMS1</td><td class="ColumnDescription">この結果がMS1スキャンから取得されたかどうかです。</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">プリカーサー結果</td><td class="ColumnDescription">プリカーサー結果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">プリカーサー結果</a></td></tr>
 <tr><td class="ColumnCaption">トランジション結果ロケーター</td><td class="ColumnDescription">ドキュメント内のトランジション結果の一意の識別子です。これは「TransitionResult:」で始まり、通常繰り返し測定の名前で終わりますが、最適化ステップと結果ファイルのための追加属性が含まれる場合があります。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Transition Ion Metrics</td><td class="ColumnDescription">Values related to the number of ions in the mass spectrometer</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">Transition Ion Metrics</a></td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult"><span class="RowType">PrecursorQuantificationResult</span>
@@ -724,6 +725,13 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 </table>
 
 </td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">Transition Ion Metrics</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LC Peak Transition Ion Count</td><td class="ColumnDescription">Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Transition Ion Count</td><td class="ColumnDescription">Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition</td><td class="ColumnType">Double</td></tr>
 </table>
 
 
