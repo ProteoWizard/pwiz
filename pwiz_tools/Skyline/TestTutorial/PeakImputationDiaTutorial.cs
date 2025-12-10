@@ -1,10 +1,14 @@
-using System.Globalization;
+using System;
+using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -36,32 +40,35 @@ namespace pwiz.SkylineTestTutorial
         {
             RunUI(() =>
             {
+                if (!Program.SkylineOffscreen)
+                {
+                    var screen = Screen.FromControl(SkylineWindow);
+                    var width = Math.Min(screen.Bounds.Width, 1680);
+                    var height = Math.Min(screen.Bounds.Height, 1050);
+                    SkylineWindow.Bounds = new Rectangle(screen.Bounds.Left + (screen.Bounds.Width - width) / 2,
+                        screen.Bounds.Top + (screen.Bounds.Height - height) / 2, width, height);
+                }
                 SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("ExtracellularVesicalMagNet.sky"));
-                SkylineWindow.SelectedResultsIndex = 3;
+                var selectedNode = SkylineWindow.SelectedNode;
+                Assert.IsInstanceOfType(selectedNode, typeof(PeptideTreeNode));
+                Assert.AreEqual("FYNELTEILVR", GetSelectedPeptide());
             });
             WaitForDocumentLoaded();
-            RunUI(()=>SkylineWindow.ShowPeakAreaRelativeAbundanceGraph());
             var relativeAbundanceForm = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
             Assert.IsNotNull(relativeAbundanceForm);
             RunUI(() =>
             {
                 SkylineWindow.SetAreaProteinTargets(true);
                 SkylineWindow.ShowSingleReplicate();
+                SkylineWindow.ShowProductTransitions();
             });
-            WaitForGraphs();
-            PauseForScreenShot(relativeAbundanceForm);
+            WaitComplete(relativeAbundanceForm);
+            PauseForScreenShot(SkylineWindow);
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
-            WaitForGraphs();
+            WaitComplete(relativeAbundanceForm);
             PauseForScreenShot(relativeAbundanceForm);
-            RunLongDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findNodeDlg =>
-            {
-                RunUI(() => {
-                    findNodeDlg.SearchString = "CD9_HUMAN";
-                });
-                PauseForScreenShot(findNodeDlg);
-                RunUI(findNodeDlg.FindNext);
-            }, findNodeDlg=>findNodeDlg.Close());
-            WaitForGraphs();
+            RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
+            WaitComplete(relativeAbundanceForm);
             PauseForScreenShot(relativeAbundanceForm);
             RunUI(()=>SkylineWindow.ShowGroupComparisonWindow("EV-Enrich"));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
@@ -97,27 +104,16 @@ namespace pwiz.SkylineTestTutorial
             foldChangeVolcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
             WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
             PauseForScreenShot(floatingWindow);
-            var rtReplicateGraphSummary = ShowNestedDlg<GraphSummary>(SkylineWindow.ShowRTReplicateGraph);
-            PauseForScreenShot(rtReplicateGraphSummary);
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findNodeDlg =>
-            {
-                findNodeDlg.SearchString = 441.24.ToString("F04", CultureInfo.CurrentCulture);
-                findNodeDlg.FindNext();
-                findNodeDlg.Close();
-            });
-            PauseForScreenShot(rtReplicateGraphSummary);
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
             var windowPositions = HideFloatingWindows();
-            PauseForScreenShot(SkylineWindow);
+            Assert.AreEqual("FYNELTEILVR", CallUI(GetSelectedPeptide));
+            var rtReplicateGraphSummary = SkylineWindow.GraphRetentionTime;
+            Assert.IsNotNull(rtReplicateGraphSummary);
+            PauseForScreenShot(rtReplicateGraphSummary);
             var graphChromatogram = SkylineWindow.GetGraphChrom("Total04_HydN_12mz_42");
             RunUI(()=>SkylineWindow.ShowExemplaryPeak(true));
             WaitForConditionUI(() => graphChromatogram.ExemplaryPeak != null);
-            PauseForScreenShot(graphChromatogram);
-            RunUI(() =>
-            {
-                SkylineWindow.ShowProductTransitions();
-            });
-            PauseForScreenShot(graphChromatogram);
+            PauseForScreenShot(SkylineWindow);
             RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
                 RunUI(()=>
@@ -128,10 +124,13 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot(peptideSettingsUi);
             }, peptideSettingsUi=>peptideSettingsUi.OkDialog());
             WaitForGraphs();
-            WaitForConditionUI(() => graphChromatogram.ExemplaryPeak != null);
-            PauseForScreenShot(graphChromatogram);
+            WaitForConditionUI(() => SkylineWindow.GraphChromatograms.All(chrom => chrom.ExemplaryPeak != null));
+            PauseForScreenShot(SkylineWindow);
             RestoreFloatingWindows(windowPositions);
-            PauseForScreenShot(rtReplicateGraphSummary);
+            WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
+            PauseForScreenShot(floatingWindow);
+
+
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("Webinar26.sky"));
@@ -163,6 +162,26 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForGraphs();
             PauseForScreenShot(rtLinearRegressionGraphSummary);
+        }
+
+        private void WaitComplete(GraphSummary graphSummary)
+        {
+            WaitForGraphs();
+            WaitForConditionUI(() =>
+            {
+                var pane = graphSummary.GraphControl.GraphPane;
+                if (pane is SummaryRelativeAbundanceGraphPane relativeAbundance)
+                {
+                    return relativeAbundance.IsComplete;
+                }
+
+                return true;
+            });
+        }
+
+        private string GetSelectedPeptide()
+        {
+            return SkylineWindow.SequenceTree.GetNodeOfType<PeptideTreeNode>()?.DocNode.Peptide.Sequence;
         }
     }
 }
