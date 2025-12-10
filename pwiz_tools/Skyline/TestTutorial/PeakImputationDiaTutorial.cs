@@ -183,38 +183,6 @@ namespace pwiz.SkylineTestTutorial
             RestoreFloatingWindows(windowPositions);
             WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
             PauseForScreenShot(floatingWindow);
-            return;
-            RunUI(() =>
-            {
-                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("Webinar26.sky"));
-                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
-                SkylineWindow.ShowRTReplicateGraph();
-            });
-            WaitForDocumentLoaded();
-            WaitForGraphs();
-            rtReplicateGraphSummary = SkylineWindow.GraphRetentionTime;
-            PauseForScreenShot(rtReplicateGraphSummary);
-            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
-            {
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Prediction;
-                peptideSettingsUi.ImputeMissingPeaks = true;
-                peptideSettingsUi.OkDialog();
-            });
-            WaitForGraphs();
-            PauseForScreenShot(rtReplicateGraphSummary);
-            RunUI(()=>SkylineWindow.AlignToRtPrediction = true);
-            WaitForGraphs();
-            PauseForScreenShot(rtReplicateGraphSummary);
-            RunUI(()=>SkylineWindow.ShowRTRegressionGraphScoreToRun());
-            var rtLinearRegressionGraphSummary = FormUtil.OpenForms.OfType<GraphSummary>()
-                .Single(graph => graph.TryGetGraphPane(out RTLinearRegressionGraphPane _));
-            RunUI(() =>
-            {
-                SkylineWindow.ChooseCalculator(new RtCalculatorOption.Library("Webinar26"));
-                SkylineWindow.ShowRegressionMethod(RegressionMethodRT.loess);
-            });
-            WaitForGraphs();
-            PauseForScreenShot(rtLinearRegressionGraphSummary);
         }
 
         private void WaitForComplete(GraphSummary graphSummary)

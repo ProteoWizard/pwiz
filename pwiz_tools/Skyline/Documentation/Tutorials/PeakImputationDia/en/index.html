@@ -130,7 +130,7 @@
         Run</b>. </li></ul>
     <p>The retention time regression window appears in the same place as the retention time replicate comparison window, on a different tab.</p>
     <ul>
-        <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Calculator</b> and click <b>Library Webinar26</b></li>
+        <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Calculator</b> and click <b>Library ExtracellularVesicalMagNet</b></li>
         <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Regression Method</b> and click <b>Loess</b></li>
     </ul>
     <p><img src="s-13.png"/></p>
@@ -142,6 +142,12 @@
     <p><img src="s-14.png"/></p>
     <ul><li>In the <b>Targets</b> view <b>Replicates</b> dropdown list, select the first item which is the “EV13_SAXN_12mz_10” replicate.</li></ul>
     <p><img src="s-15.png"/></p>
+    <p>To go return to what was displayed before:</p>
+    <ul>
+        <li>Click on the peptide <b>FYNELTEILVR</b> in the Targets tree</li>
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
+    </ul>
+    <p><img src="s-16.png"/></p>
     <h1>Imputing boundaries for missing peaks</h1>
     <p>Now we are going to tell Skyline to set the peak boundaries for all missing peaks based on the peak boundaries of the best-scoring replicate.</p>
     <ul>
@@ -149,16 +155,11 @@
         <li>Click the <b>Prediction</b> tab.</li>
         <li>Check the <b>Missing peaks</b> checkbox inside of the "Impute boundaries for" box.</li>
     </ul>
-    <p><img src="s-16.png"/></p>
+    <p><img src="s-17.png"/></p>
     <ul><li>Click the <b>OK</b> button.</li></ul>
     <p>Skyline has now set the integration boundaries to coincide with the green rectangle in the replicates where the peak had been missing.</p>
-    <p><img src="s-17.png"/></p>
-    <p>The fold change values are less extreme when the imputed peak areas are used instead of using zero for all missing peaks.</p>
     <p><img src="s-18.png"/></p>
-    <ul>
-        <li>In the Targets tree, click on the peptide that had been selected before ("FYNELTEILVR")</li>
-        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
-    </ul>
+    <p>The fold change values are less extreme when the imputed peak areas are used instead of using zero for all missing peaks.</p>
     <p><img src="s-19.png"/></p>
     <!--<h1>Imputing peaks in the document from Webinar 26 ("DIA with Fragpipe")</h1>
     <ul>
