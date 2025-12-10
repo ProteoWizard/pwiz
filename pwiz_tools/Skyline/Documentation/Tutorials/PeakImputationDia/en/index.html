@@ -134,11 +134,15 @@
         <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Regression Method</b> and click <b>Loess</b></li>
     </ul>
     <p><img src="s-13.png"/></p>
-    <p>In order to understand why Skyline is putting the imputed peak boundaries in the wrong place for that replicate, zoom in on the red point on the regression graph. One way to do that is:</p>
-    <ul><li>Position the mouse cursor over the red dot on the Retention Time regression plot</li>
-    <li>While holding the <b>Ctrl</b> key on the keyboard, roll the scroll wheel on the mouse upwards.</li>
-    </ul>
-    <p>If your mouse does not have a wheel, there are other gestures which could be used to zoom in on that point such as clicking on the graph and dragging a small rectangle around that point.</p>
+    <p>This graph shows all the peptides which can be found in the Skyline document or in the spectral library.
+    The X-coordinate of each point is the median retention time for the peptide across all of the data files in the spectral library.
+    The Y-coordinate is the retention time of the peptide in the currently selected replicate.
+    The purple points plotted in a horizontal line across the bottom the chart area are the peptides which do not have a peak in the current replicate.
+        The points are plotted there so that you can have something to click on to select peptides with missing peaks.
+        It is hard to see exactly where the red dot relative to the regression line which goes through all of the points.
+        There is another view of this graph which makes it easier to see.
+    </p>
+    <ul><li>Right-click the graph, choose <b>Plot</b>, and click <b>Residuals</b>.</li></ul>
     <p><img src="s-14.png"/></p>
     <ul><li>In the <b>Targets</b> view <b>Replicates</b> dropdown list, select the first item which is the “EV13_SAXN_12mz_10” replicate.</li></ul>
     <p><img src="s-15.png"/></p>

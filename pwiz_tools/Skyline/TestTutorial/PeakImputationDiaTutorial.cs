@@ -192,7 +192,7 @@ namespace pwiz.SkylineTestTutorial
 
         private void WaitForComplete(GraphSummary graphSummary)
         {
-            WaitForGraphs();
+            //WaitForGraphs();
             WaitForConditionUI(() =>
             {
                 var pane = graphSummary.GraphControl.GraphPane;
