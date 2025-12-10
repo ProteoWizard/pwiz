@@ -661,6 +661,12 @@ namespace SkylineTester
         private bool _buildDebug;
 #endif
 
+        public bool BuildDebug
+        {
+            get => _buildDebug;
+            set => _buildDebug = value;
+        }
+
         public enum BuildDirs
         {
             bin32,
