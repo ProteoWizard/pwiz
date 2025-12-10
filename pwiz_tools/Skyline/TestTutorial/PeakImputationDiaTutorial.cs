@@ -1,16 +1,31 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -140,23 +155,13 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ChooseCalculator(new RtCalculatorOption.Library("ExtracellularVesicalMagNet"));
                 SkylineWindow.ShowRegressionMethod(RegressionMethodRT.loess);
             });
-            VerboseWait = true;
+            WaitForComplete(scoreToRunGraphSummary);
             PauseForScreenShot(scoreToRunGraphSummary);
-            VerboseWait = false;
-            RunUI(() =>
-            {
-                var graphPane = scoreToRunGraphSummary.GraphControl.GraphPane;
-                graphPane.XAxis.Scale.Min = 18.6;
-                graphPane.XAxis.Scale.Max = 19.8;
-                graphPane.YAxis.Scale.Min = 18.3;
-                graphPane.YAxis.Scale.Max = 19.4;
-                scoreToRunGraphSummary.GraphControl.Invalidate();
-            });
+            RunUI(()=> SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
+            WaitForComplete(scoreToRunGraphSummary);
             PauseForScreenShot(scoreToRunGraphSummary);
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
-            VerboseWait = true;
             WaitForComplete(scoreToRunGraphSummary);
-            VerboseWait = false;
             PauseForScreenShot(scoreToRunGraphSummary);
             RunUI(() =>
             {

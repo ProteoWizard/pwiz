@@ -3312,6 +3312,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            if (ModifierKeys != Keys.None)
+            {
+                return false;
+            }
             if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);
