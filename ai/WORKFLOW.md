@@ -119,6 +119,37 @@ git pull origin master
 git branch -d Skyline/work/YYYYMMDD_feature  # Delete local branch
 ```
 
+### Workflow 3a: Bug Fix for Completed Work
+
+When fixing bugs in recently completed features (still in `ai/todos/completed/`):
+
+**Create bug-fix branch:**
+```bash
+git checkout master
+git pull origin master
+git checkout -b Skyline/work/YYYYMMDD_original-feature-name-fix
+```
+
+**Branch naming pattern:** Use original feature name + `-fix` suffix with today's date
+
+**Update the original TODO (don't create new one):**
+```bash
+# Add "Bug Fixes" section at end of ai/todos/completed/TODO-YYYYMMDD_original.md
+# Document: issue found, root cause, fix applied, testing notes
+git add ai/todos/completed/TODO-YYYYMMDD_original.md
+git commit -m "Document bug fix for original feature"
+```
+
+**After PR merge:**
+- Original TODO stays in `completed/` with bug fix documented
+- Delete bug-fix branch as usual
+- Bug fix becomes part of original feature's history
+
+**Use this workflow when:**
+- Bug is discovered shortly after feature completion
+- Fix is small and clearly related to original feature
+- Original TODO is still in `completed/` (not yet archived)
+
 ### Workflow 4: Create Backlog TODO During Active Work
 
 When inspiration strikes during development:

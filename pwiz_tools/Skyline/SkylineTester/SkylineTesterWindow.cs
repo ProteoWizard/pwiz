@@ -1551,7 +1551,7 @@ namespace SkylineTester
         /// Updates all parent nodes in a tree to reflect their children's check states.
         /// Call this after programmatically checking/unchecking child nodes.
         /// </summary>
-        private void UpdateAllParentNodeCheckStates(TreeView treeView)
+        public void UpdateAllParentNodeCheckStates(TreeView treeView)
         {
             foreach (TreeNode rootNode in treeView.Nodes)
             {
