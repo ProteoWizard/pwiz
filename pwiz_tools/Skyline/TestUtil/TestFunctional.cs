@@ -1172,7 +1172,26 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                Program.MainWindow.Invoke(new Action(() => isCondition = func()));
+                if (VerboseWait)
+                {
+                    Console.Out.WriteLine("Before invoke {0}", i);
+                }
+                Program.MainWindow.Invoke(new Action(() =>
+                {
+                    if (VerboseWait)
+                    {
+                        Console.Out.WriteLine("Before call func {0}", i);
+                    }
+                    isCondition = func();
+                    if (VerboseWait)
+                    {
+                        Console.Out.WriteLine("Func returned {0} for {1}", isCondition, i);
+                    }
+                }));
+                if (VerboseWait)
+                {
+                    Console.Out.WriteLine("After invoke {0} isCondition {1}", i, isCondition);
+                }
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -1207,9 +1226,15 @@ namespace pwiz.SkylineTestUtil
             WaitForGraphs();
         }
 
+        public static bool VerboseWait;
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
+            WaitForConditionUI(WAIT_TIME, NoGraphUpdatePending, null, true, false);
+        }
+
+        private static bool NoGraphUpdatePending()
+        {
+            return !SkylineWindow.IsGraphUpdatePending;
         }
 
         public static void WaitForRegression()
