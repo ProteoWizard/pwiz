@@ -132,8 +132,8 @@ Based on the old branch, key areas to review:
 - [x] Tests pass (request developer to verify)
 - [x] Clean, well-organized commit created
 - [x] New PR created and linked in TODO (PR #3867)
-- [ ] **TreeViewStateRestorer bug fixed** (BLOCKER - must fix before merge)
-- [ ] Old PR #3334 closed with explanation
+- [x] **TreeViewStateRestorer bug fixed** - Files view state now properly restored
+- [x] Old PR #3334 closed with explanation
 
 ## Notes
 
@@ -148,7 +148,7 @@ Based on the old branch, key areas to review:
 - [x] Phase 1: New branch creation - ✅ Complete
 - [x] Phase 2: Review and cleanup - ✅ Complete  
 - [x] Phase 3: Commit and PR creation - ✅ Complete (PR #3867 created)
-- [ ] Phase 4: Bug fixes - 🚧 In Progress (TreeViewStateRestorer bug must be fixed before merge)
+- [x] Phase 4: Bug fixes - ✅ Complete (TreeViewStateRestorer bug fixed)
 
 ### Recent Work
 - 2025-11-26: Created migration plan TODO
@@ -210,6 +210,25 @@ Based on the old branch, key areas to review:
   - Used `ScopedAction` with `DenyMenuClosing` pattern for reliable menu testing
   - Coverage increased 1.9% (79.6% overall, FilesTreeForm improved from 66.4% to TBD)
   - All 4 Files view tests passing with new menu tests
+- 2025-12-09: Major refactoring - removed single-item folder wrappers and added "Show File Names" toggle (coverage: 79.7%):
+  - **Removed 4 single-item folder classes**: BackgroundProteomeFolder, IonMobilityLibraryFolder, OptimizationLibraryFolder, RTCalcFolder
+  - **Show File Names feature**: Added context menu toggle to switch between resource names and file names
+    - Added `Settings.Default.FilesViewShowFileNames` user setting (persisted preference)
+    - Added `SkylineFile.ShowFileNames` static property for global display control
+    - Implemented `DisplayText` property in FileModel base class with dynamic name resolution
+    - Added `FileTypeText` protected property for type-specific prefixes (e.g., "Background Proteome - ")
+    - All file types now use consistent "Type - Name" format when shown directly
+  - **Spectral Libraries**: Single library now shows without folder (same format as other library types)
+  - **Chromatograms node**: Now created proactively when `HasResults` is true, even if .skyd file doesn't exist yet
+    - Ensures consistent tree indices for state restoration
+    - Shows as missing file until ChromatogramManager loads the .skyd
+  - **Fixed TreeViewStateRestorer bug**: Files view tree state (expansion, selection, scroll) now properly saved/restored from .sky.view file
+  - **Fixed BaseFileModel.DisplayText**: Now checks `ShowFileName` FIRST before checking `FileTypeText`, so files without type prefix still respect the toggle
+  - **Updated FilesTreeFormTest**: Refactored tests to work with new file structure (removed folder type references, updated `ValidateSingleEntry` helper)
+  - **Updated FilesModelTest**: Fixed array indices after Chromatograms node reordering (Replicates moved from index 2 to 3)
+  - **Added context menu item**: "Show File Names" checkbox appears on all context menus, dynamically updates tree on toggle
+  - **Test coverage**: 79.7% (2216/2779 statements) - All 4 tests passing (TestFilesModel, TestFilesTreeFileSystem, TestFilesTreeForm, TestSkylineWindowEvents)
+  - **Cleaner architecture**: Fewer folder classes (7 → 3), more consistent file display, better user control over naming
 
 ## Review Findings (2025-11-26)
 
@@ -253,11 +272,11 @@ Overall, the changes are very clean and intentional. The only questionable chang
 
 ## Code Coverage Analysis
 
-### Latest Coverage (2025-12-07) - File-Based Analysis
-- **Files Analyzed**: 27 production .cs files → 38 types
-- **Total Statements**: 2,736
-- **Covered Statements**: 2,030
-- **Coverage Percentage**: **74.2%** ⬆️ (+9.4% from initial baseline)
+### Latest Coverage (2025-12-09) - File-Based Analysis
+- **Files Analyzed**: 23 production .cs files → 34 types (reduced after removing 4 single-item folder classes)
+- **Total Statements**: 2,779
+- **Covered Statements**: 2,216
+- **Coverage Percentage**: **79.7%** ⬆️ (+14.9% from initial baseline, +5.5% from previous)
 
 ### Coverage by Layer
 
@@ -432,31 +451,34 @@ These changes attempt to address the TeamCity failures by:
 
 ## Known Issues / Blockers (Must Fix Before Merge)
 
-### TreeViewStateRestorer Not Saving/Restoring FilesView Tree State
+### ~~TreeViewStateRestorer Not Saving/Restoring FilesView Tree State~~ ✅ FIXED
 
-**Status**: 🔴 **BLOCKER** - Must be fixed before PR #3867 can be merged
+**Status**: ✅ **RESOLVED** (2025-12-09)
 
-**Description**: 
-The `TreeViewStateRestorer` is not correctly saving the state of the FilesView tree so that it can be restored from the `.sky.view` file. This means that when a document is reopened, the Files view tree state (expanded nodes, selected nodes, scroll position) is not preserved.
+**Original Problem**:
+The `TreeViewStateRestorer` could not correctly restore the FilesView tree state from the `.sky.view` file because the Chromatograms node was added asynchronously by ChromatogramManager after state restoration, causing index mismatches.
 
-**Discovered**: 2025-11-26 while reducing the 87 MB `FilesTreeFormTest.zip` file
+**Root Cause**:
+Tree structure changed between state save and state restore:
+- At save time: Root → Window Layout → Spectral Libraries → **Chromatograms** → Replicates (Chromatograms at index 2)
+- At restore time: Root → Window Layout → Spectral Libraries → Replicates (no Chromatograms yet, Replicates at index 2)
+- Later: ChromatogramManager loads .skyd and adds Chromatograms node (now Replicates at index 3)
+- Result: State tried to expand index 3 before Chromatograms existed, causing restoration to fail
 
-**Impact**: 
-- Users will lose their Files view tree state when reopening documents
-- Poor user experience - users must manually re-expand nodes and navigate to their previous position
-- May affect test reliability if tests depend on tree state persistence
+**Solution Implemented**:
+Modified `SkylineFile.Create()` to proactively create the Chromatograms node when `document.Settings.HasResults` is true, even if the .skyd file doesn't exist yet:
+- Creates node with expected .skyd path using `ChromatogramCache.FinalPathForName()`
+- Shows as "missing" file until ChromatogramManager loads the actual .skyd
+- Ensures consistent tree indices at state restoration time
+- Node updates to "available" status when .skyd loads
 
-**Next Steps**:
-1. Investigate how `TreeViewStateRestorer` is integrated with `FilesTreeForm`
-2. Verify that tree state is being saved to the `.sky.view` file
-3. Verify that tree state is being restored when the document is loaded
-4. Add test coverage for tree state persistence
-5. Fix the issue and verify with tests
+**Files Modified**:
+- `pwiz_tools/Skyline/Model/Files/SkylineFile.cs` - Proactive Chromatograms node creation
+- `pwiz_tools/Skyline/TestFunctional/FilesModelTest.cs` - Updated array indices (Replicates: index 2 → 3)
 
-**Related Files** (to investigate):
-- `pwiz_tools/Skyline/Controls/FilesTree/FilesTreeForm.cs`
-- `pwiz_tools/Shared/CommonUtil/SystemUtil/TreeViewStateRestorer.cs`
-- `pwiz_tools/Skyline/Controls/SequenceTreeForm.cs` (reference implementation)
+**Test Verification**:
+- ✅ `TestRestoreViewState()` in FilesTreeFormTest.cs - Now passing
+- ✅ All 4 Files view tests passing with correct state restoration
 
 ## Future Work Items (Deferred to Post-Merge Phase)
 

@@ -615,7 +615,6 @@
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\Files\BackgroundProteome.cs" />
-    <Compile Include="Model\Files\BackgroundProteomeFolder.cs" />
     <Compile Include="Model\Files\FileModel.cs" />
     <Compile Include="Controls\FilesTree\FilesTreeResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -623,14 +622,11 @@
       <DependentUpon>FilesTreeResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Files\IonMobilityLibrary.cs" />
-    <Compile Include="Model\Files\IonMobilityLibraryFolder.cs" />
-    <Compile Include="Model\Files\OptimizationLibraryFolder.cs" />
     <Compile Include="Model\Files\OptimizationLibrary.cs" />
     <Compile Include="Model\Files\Replicate.cs" />
     <Compile Include="Model\Files\ReplicateSampleFile.cs" />
     <Compile Include="Model\Files\ReplicatesFolder.cs" />
     <Compile Include="Model\Files\SkylineFile.cs" />
-    <Compile Include="Model\Files\RTCalcFolder.cs" />
     <Compile Include="Model\Files\RTCalc.cs" />
     <Compile Include="Model\Files\SkylineAuditLog.cs" />
     <Compile Include="Model\Files\SkylineChromatogramCache.cs" />

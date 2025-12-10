@@ -57,6 +57,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             SkylineWindow = skylineWindow;
 
+            // Initialize ShowFileNames from settings
+            SkylineFile.ShowFileNames = Settings.Default.FilesViewShowFileNames;
+
             // FilesTree
             filesTree.LabelEdit = true;
             filesTree.AllowDrop = true;
@@ -535,6 +538,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <summary>
         /// Test helper properties to access menu items for localization-safe validation
         /// </summary>
+        public ToolStripMenuItem ShowFileNamesMenuItem => showFileNamesMenuItem;
         public ToolStripMenuItem LibraryExplorerMenuItem => libraryExplorerMenuItem;
         public ToolStripMenuItem ManageResultsMenuItem => manageResultsMenuItem;
         public ToolStripMenuItem OpenAuditLogMenuItem => openAuditLogMenuItem;
@@ -579,6 +583,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             _nodeTip.HideTip();
 
+            // Node-specific options - start hidden
             libraryExplorerMenuItem.Visible = false;
             manageResultsMenuItem.Visible = false;
             openAuditLogMenuItem.Visible = false;
@@ -589,7 +594,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             removeMenuItem.Visible = false;
             debugRefreshTreeMenuItem.Visible = false;
 
-            // Track which items we make visible for debugging and to determine if menu should show
+            // Track which items we make visible for debugging and to determine if separator should show
             var visibleItems = new List<ToolStripMenuItem>();
 
             // Local function to make menu item visible and track it
@@ -638,9 +643,28 @@ namespace pwiz.Skyline.Controls.FilesTree
                     break;
             }
 
-            ContextMenuShown = visibleItems.Count > 0;
-            // Cancel menu opening if no items were made visible
-            e.Cancel = !ContextMenuShown.Value;
+            // Show separator only if there are node-specific items
+            contextMenuSeparator.Visible = visibleItems.Count > 0;
+
+            // Form-wide options - always visible at the bottom
+            showFileNamesMenuItem.Visible = true;
+            showFileNamesMenuItem.Checked = SkylineFile.ShowFileNames;
+
+            // Always show the menu since we have at least the form-wide "Show File Names" option
+            ContextMenuShown = true;
+            e.Cancel = false;
+        }
+
+        private void FilesTree_ShowFileNamesMenuItem(object sender, EventArgs e)
+        {
+            // Toggle the setting
+            SkylineFile.ShowFileNames = !SkylineFile.ShowFileNames;
+
+            // Save to settings
+            Settings.Default.FilesViewShowFileNames = SkylineFile.ShowFileNames;
+
+            // Refresh all nodes to recompute their DisplayText
+            FilesTree.UpdateNodeStates();
         }
 
         /// <summary>

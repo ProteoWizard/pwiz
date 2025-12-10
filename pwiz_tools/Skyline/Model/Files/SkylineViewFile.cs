@@ -26,17 +26,18 @@ namespace pwiz.Skyline.Model.Files
             return new SkylineViewFile(documentFilePath, filePath);
         }
 
-        internal SkylineViewFile(string documentFilePath, string filePath) : 
+        internal SkylineViewFile(string documentFilePath, string filePath) :
             base(documentFilePath, IDENTITY_PATH)
-        { 
+        {
             FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
         public override bool RequiresSavedDocument => true;
 
-        public override string Name => FileResources.FileModel_ViewFile;
+        public override string Name => string.Empty; // No resource name
         public override string FilePath { get; }
+        protected override string FileTypeText => FileResources.FileModel_ViewFile;
         public override ImageId ImageAvailable => ImageId.view_file;
     }
 }

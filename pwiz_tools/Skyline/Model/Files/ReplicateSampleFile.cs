@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Model.Files
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
+        protected override string FileTypeText => string.Empty; // Replicate sample files don't use type prefix
         public override ImageId ImageAvailable => ImageId.replicate_sample_file;
     }
 }

@@ -9,12 +9,12 @@
 # type names (Namespace.ClassName) from the uncommented .cs files listed below, then
 # measures coverage for those exact types in the coverage JSON.
 #
-# Total files added by branch: 35
-# Included in coverage: 28 production code files
+# Total files added by branch: 31
+# Included in coverage: 24 production code files
 # Excluded: 4 test files, 2 auto-generated resources, 1 designer file
 
 # ============================================================================
-# PRODUCTION CODE - INCLUDED IN COVERAGE ANALYSIS (28 files)
+# PRODUCTION CODE - INCLUDED IN COVERAGE ANALYSIS (24 files)
 # ============================================================================
 
 # Core Files view UI components
@@ -35,13 +35,9 @@ pwiz_tools/Skyline/Controls/FilesTree/BackgroundActionService.cs
 # Interfaces
 pwiz_tools/Skyline/Model/DocSettings/IFile.cs
 
-# File model layer - Folder implementations
+# File model layer - Folder implementations (removed single-item folders)
 pwiz_tools/Skyline/Model/Files/FileModel.cs
-pwiz_tools/Skyline/Model/Files/BackgroundProteomeFolder.cs
-pwiz_tools/Skyline/Model/Files/IonMobilityLibraryFolder.cs
-pwiz_tools/Skyline/Model/Files/OptimizationLibraryFolder.cs
 pwiz_tools/Skyline/Model/Files/ReplicatesFolder.cs
-pwiz_tools/Skyline/Model/Files/RTCalcFolder.cs
 pwiz_tools/Skyline/Model/Files/SpectralLibrariesFolder.cs
 
 # File model layer - File implementations
@@ -77,10 +73,14 @@ pwiz_tools/Skyline/Model/Files/SpectralLibrary.cs
 # ============================================================================
 # SUMMARY
 # ============================================================================
-# Total files added by branch: 35
-# Included in coverage: 28 production code files
+# Total files added by branch: 31
+# Included in coverage: 24 production code files
 # Excluded from coverage:
 #   - 4 test files (functional tests)
 #   - 1 developer tool (ImageExtractor)
 #   - 2 auto-generated resource files (.Designer.cs from .resx)
 #   - 1 auto-generated designer file (FilesTreeForm.Designer.cs)
+#
+# Removed files (no longer in branch):
+#   - 4 single-item folder classes (BackgroundProteomeFolder, IonMobilityLibraryFolder,
+#     OptimizationLibraryFolder, RTCalcFolder) - replaced with direct file display

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -27,25 +28,29 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SpectralLibrary : FileModel, IFileRenameable
     {
-        public static SpectralLibrary Create(string documentFilePath, LibrarySpec librarySpec)
+        private readonly bool _includeTypePrefix;
+
+        public static SpectralLibrary Create(string documentFilePath, LibrarySpec librarySpec, bool includeTypePrefix = false)
         {
             var identityPath = new IdentityPath(librarySpec.Id);
-            var name = librarySpec.Name ?? string.Empty;
+            var libraryName = librarySpec.Name ?? string.Empty;
             var filePath = librarySpec.FilePath ?? string.Empty;
 
-            return new SpectralLibrary(documentFilePath, identityPath, name, filePath);
+            return new SpectralLibrary(documentFilePath, identityPath, libraryName, filePath, includeTypePrefix);
         }
 
-        internal SpectralLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
+        internal SpectralLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath, bool includeTypePrefix) :
             base(documentFilePath, identityPath)
         {
             Name = name;
             FilePath = filePath;
+            _includeTypePrefix = includeTypePrefix;
         }
 
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
+        protected override string FileTypeText => _includeTypePrefix ? FileResources.FileModel_Libraries : string.Empty;
         public override ImageId ImageAvailable => ImageId.peptide_library;
 
         public static LibrarySpec LoadLibrarySpecFromDocument(SrmDocument document, SpectralLibrary library)

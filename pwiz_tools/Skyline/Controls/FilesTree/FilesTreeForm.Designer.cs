@@ -70,6 +70,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.filesTree = new pwiz.Skyline.Controls.FilesTree.FilesTree();
             this.panel1 = new System.Windows.Forms.Panel();
             this.filesTreeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.showFileNamesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.libraryExplorerMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openContainingFolderMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -99,9 +101,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.panel1.Controls.Add(this.filesTree);
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Name = "panel1";
-            // 
+            //
             // filesTreeContextMenu
-            // 
+            //
             this.filesTreeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.libraryExplorerMenuItem,
             this.manageResultsMenuItem,
@@ -111,9 +113,23 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.openAuditLogMenuItem,
             this.removeAllMenuItem,
             this.removeMenuItem,
-            this.debugRefreshTreeMenuItem});
+            this.debugRefreshTreeMenuItem,
+            this.contextMenuSeparator,
+            this.showFileNamesMenuItem});
             this.filesTreeContextMenu.Name = "contextMenuStrip1";
             resources.ApplyResources(this.filesTreeContextMenu, "filesTreeContextMenu");
+            //
+            // showFileNamesMenuItem
+            //
+            this.showFileNamesMenuItem.CheckOnClick = true;
+            this.showFileNamesMenuItem.Name = "showFileNamesMenuItem";
+            resources.ApplyResources(this.showFileNamesMenuItem, "showFileNamesMenuItem");
+            this.showFileNamesMenuItem.Click += new System.EventHandler(this.FilesTree_ShowFileNamesMenuItem);
+            //
+            // contextMenuSeparator
+            //
+            this.contextMenuSeparator.Name = "contextMenuSeparator";
+            resources.ApplyResources(this.contextMenuSeparator, "contextMenuSeparator");
             // 
             // libraryExplorerMenuItem
             // 
@@ -191,6 +207,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         private FilesTree filesTree;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ContextMenuStrip filesTreeContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem showFileNamesMenuItem;
+        private System.Windows.Forms.ToolStripSeparator contextMenuSeparator;
         private System.Windows.Forms.ToolStripMenuItem openContainingFolderMenuItem;
         private System.Windows.Forms.ToolStripMenuItem manageResultsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem libraryExplorerMenuItem;

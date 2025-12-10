@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -24,26 +25,23 @@ namespace pwiz.Skyline.Model.Files
 {
     public class BackgroundProteome : FileModel
     {
-        public static IList<BackgroundProteome> Create(string documentFilePath, Proteome.BackgroundProteome proteome)
+        public static BackgroundProteome Create(string documentFilePath, Proteome.BackgroundProteome proteome)
         {
             var identityPath = new IdentityPath(proteome.Id);
-            var model = new BackgroundProteome(documentFilePath, identityPath, proteome.Name, proteome.Name, proteome.FilePath);
-
-            return ImmutableList.Singleton(model);
+            return new BackgroundProteome(documentFilePath, identityPath, proteome.Name, proteome.FilePath);
         }
 
-        private BackgroundProteome(string documentFilePath, IdentityPath identityPath, string name, string fileName, string filePath) : 
+        private BackgroundProteome(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
             base(documentFilePath, identityPath)
         {
             Name = name;
-            FileName = fileName;
             FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
-        public override string FileName { get; }
+        protected override string FileTypeText => FileResources.FileModel_BackgroundProteome;
         public override ImageId ImageAvailable => ImageId.prot_db;
 
         public static ModifiedDocument Edit(SrmDocument doc, BackgroundProteomeSpec bgProteomeSpec)

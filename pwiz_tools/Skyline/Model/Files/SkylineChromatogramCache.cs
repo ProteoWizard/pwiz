@@ -22,22 +22,20 @@ namespace pwiz.Skyline.Model.Files
     {
         public static SkylineChromatogramCache Create(string documentFilePath, ChromatogramCache chromatogramCache)
         {
-            var name = FileResources.FileModel_ChromatogramCache;
             var filePath = chromatogramCache.FilePath;
-
-            return new SkylineChromatogramCache(documentFilePath, chromatogramCache.Id,name, filePath);
+            return new SkylineChromatogramCache(documentFilePath, chromatogramCache.Id, filePath);
         }
 
-        public SkylineChromatogramCache(string documentFilePath, Identity id, string name, string filePath) : 
+        internal SkylineChromatogramCache(string documentFilePath, Identity id, string filePath) :
             base(documentFilePath, new IdentityPath(id))
         {
-            Name = name;
             FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
-        public override string Name { get; }
+        public override string Name => string.Empty; // No resource name
         public override string FilePath { get; }
+        protected override string FileTypeText => FileResources.FileModel_ChromatogramCache;
         public override ImageId ImageAvailable => ImageId.cache_file;
     }
 }

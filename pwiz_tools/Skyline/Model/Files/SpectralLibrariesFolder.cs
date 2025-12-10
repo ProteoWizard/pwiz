@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Model.Files
 
         public override string Name => FileResources.FileModel_Libraries;
         public override string FilePath => string.Empty;
+        protected override string FileTypeText => string.Empty; // Folders don't use type prefix
         public override ImageId ImageAvailable => ImageId.folder;
         public override ImageId ImageMissing => ImageId.folder_missing;
         public override IList<FileModel> Files { get; }

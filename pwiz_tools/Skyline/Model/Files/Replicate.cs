@@ -48,6 +48,7 @@ namespace pwiz.Skyline.Model.Files
         public override string Name { get; }
         public override string FilePath => null;
         public override string FileName => null;
+        protected override string FileTypeText => string.Empty; // Replicates don't use type prefix
         public override ImageId ImageAvailable => ImageId.replicate;
         public override ImageId ImageMissing => ImageId.replicate_missing;
         public override IList<FileModel> Files { get; }

@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -24,10 +25,10 @@ namespace pwiz.Skyline.Model.Files
 {
     public class RTCalc : FileModel
     {
-        public static IList<RTCalc> Create(string documentFilePath, RetentionScoreCalculatorSpec irtDb)
+        public static RTCalc Create(string documentFilePath, RetentionScoreCalculatorSpec irtDb)
         {
             var identityPath = new IdentityPath(irtDb.Id);
-            return ImmutableList<RTCalc>.Singleton(new RTCalc(documentFilePath, identityPath, irtDb.Name, irtDb.FilePath));
+            return new RTCalc(documentFilePath, identityPath, irtDb.Name, irtDb.FilePath);
         }
 
         private RTCalc(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
+        protected override string FileTypeText => SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator;
         public override ImageId ImageAvailable => ImageId.irt_calculator;
 
         public static ModifiedDocument Edit(SrmDocument doc, RetentionScoreCalculatorSpec newCalc)

@@ -23,12 +23,10 @@ namespace pwiz.Skyline.Model.Files
 {
     public class OptimizationLibrary : FileModel
     {
-        public static IList<OptimizationLibrary> Create(string documentFilePath, Optimization.OptimizationLibrary predictionOptimizedLibrary)
+        public static OptimizationLibrary Create(string documentFilePath, Optimization.OptimizationLibrary predictionOptimizedLibrary)
         {
             var identityPath = new IdentityPath(predictionOptimizedLibrary.Id);
-            var model = new OptimizationLibrary(documentFilePath, identityPath, predictionOptimizedLibrary.Name, predictionOptimizedLibrary.FilePath);
-
-            return ImmutableList<OptimizationLibrary>.Singleton(model);
+            return new OptimizationLibrary(documentFilePath, identityPath, predictionOptimizedLibrary.Name, predictionOptimizedLibrary.FilePath);
         }
 
         private OptimizationLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
@@ -41,6 +39,7 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
+        protected override string FileTypeText => FileResources.FileModel_OptimizationLibrary;
         public override ImageId ImageAvailable => ImageId.opt_db;
 
         public static ModifiedDocument Edit(SrmDocument doc, Optimization.OptimizationLibrary newLib)

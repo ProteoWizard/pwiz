@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public virtual void OnModelChanged()
         {
             Name = Model.Name;
-            Text = Model.Name;
+            Text = Model.DisplayText;
 
             // Special handling for .sky file - do not change icon if child files are missing
             if (Model is SkylineFile)

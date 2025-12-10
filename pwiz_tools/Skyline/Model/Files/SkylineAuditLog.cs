@@ -22,23 +22,21 @@ namespace pwiz.Skyline.Model.Files
 
         public static SkylineAuditLog Create(SrmDocument document, string documentFilePath)
         {
-            var name = FileResources.FilesTree_AuditLog;
             var filePath = SrmDocument.GetAuditLogPath(documentFilePath);
-
-            return new SkylineAuditLog(documentFilePath, name, filePath);
+            return new SkylineAuditLog(documentFilePath, filePath);
         }
 
-        internal SkylineAuditLog(string documentFilePath, string name, string filePath) : base(documentFilePath, IDENTITY_PATH)
+        internal SkylineAuditLog(string documentFilePath, string filePath) : base(documentFilePath, IDENTITY_PATH)
         {
-            Name = name;
             FilePath = filePath;
         }
 
         public override bool IsBackedByFile => true;
         public override bool RequiresSavedDocument => false;
 
-        public override string Name { get; }
+        public override string Name => string.Empty; // No resource name
         public override string FilePath { get; }
+        protected override string FileTypeText => FileResources.FilesTree_AuditLog;
         public override ImageId ImageAvailable => ImageId.audit_log;
     }
 }

@@ -99,6 +99,13 @@ namespace pwiz.Skyline.Model.Files
     {
         public enum MoveType { move_to, move_last }
 
+        /// <summary>
+        /// Format string for combining a file type description with its resource name.
+        /// Example: "Background Proteome" + "Rat mini" → "Background Proteome - Rat mini"
+        /// This creates a display name that shows both what type of resource it is and its specific name.
+        /// </summary>
+        public const string FOLDER_FILE_NAME_FORMAT = "{0} - {1}";
+
         protected FileModel(string documentFilePath, IdentityPath identityPath)
         {
             IdentityPath = identityPath;
@@ -115,7 +122,42 @@ namespace pwiz.Skyline.Model.Files
         public abstract string FilePath { get; }
         public virtual string FileName => Path.GetFileName(FilePath);
 
-        public virtual ImageId ImageAvailable => ImageId.file; 
+        /// <summary>
+        /// Gets the file type text to display as a prefix (e.g., "Background Proteome", "iRT Calculator").
+        /// Override in derived classes to provide the type-specific text.
+        /// Returns empty string by default for files without a type prefix.
+        /// </summary>
+        protected virtual string FileTypeText => string.Empty;
+
+        /// <summary>
+        /// Gets whether to show file names instead of resource names in the display text.
+        /// By default, uses the global SkylineFile.ShowFileNames setting.
+        /// Can be overridden for custom behavior.
+        /// </summary>
+        protected bool ShowFileName => SkylineFile.ShowFileNames;
+
+        /// <summary>
+        /// Gets the formatted display text for this file model shown in the tree view.
+        /// Combines FileTypeText with either the resource name or file name based on ShowFileName setting.
+        /// Can be overridden for custom formatting behavior.
+        /// </summary>
+        public string DisplayText
+        {
+            get
+            {
+                var displayName = ShowFileName ? Path.GetFileName(FilePath) : Name;
+                // If type text is empty, just return the display name
+                if (string.IsNullOrEmpty(FileTypeText))
+                    return string.IsNullOrEmpty(displayName) ? Name : displayName;
+
+                // If display name is empty, just return the type prefix alone
+                return string.IsNullOrEmpty(displayName)
+                    ? FileTypeText
+                    : string.Format(FOLDER_FILE_NAME_FORMAT, FileTypeText, displayName);
+            }
+        }
+
+        public virtual ImageId ImageAvailable => ImageId.file;
         public virtual ImageId ImageMissing => ImageId.file_missing;
 
         public virtual IList<FileModel> Files => ImmutableList.Empty<FileModel>();

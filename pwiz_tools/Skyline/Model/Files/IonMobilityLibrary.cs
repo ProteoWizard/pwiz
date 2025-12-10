@@ -24,12 +24,10 @@ namespace pwiz.Skyline.Model.Files
     // .imsdb
     public class IonMobilityLibrary : FileModel
     {
-        public static IList<IonMobilityLibrary> Create(string documentFilePath, IonMobility.IonMobilityLibrary imsDb)
+        public static IonMobilityLibrary Create(string documentFilePath, IonMobility.IonMobilityLibrary imsDb)
         {
             var identityPath = new IdentityPath(imsDb.Id);
-            var model = new IonMobilityLibrary(documentFilePath, identityPath, imsDb.Name, imsDb.FilePath);
-
-            return ImmutableList<IonMobilityLibrary>.Singleton(model);
+            return new IonMobilityLibrary(documentFilePath, identityPath, imsDb.Name, imsDb.FilePath);
         }
 
         private IonMobilityLibrary(string documentFilePath, IdentityPath identityPath, string name, string filePath) :
@@ -42,6 +40,7 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
+        protected override string FileTypeText => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
         public override ImageId ImageAvailable => ImageId.ims_db;
 
         public static ModifiedDocument Edit(SrmDocument doc, IonMobility.IonMobilityLibrary newLib)

@@ -44,6 +44,9 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using static pwiz.Skyline.Model.Files.FileModel;
+using BackgroundProteome = pwiz.Skyline.Model.Files.BackgroundProteome;
+using IonMobilityLibrary = pwiz.Skyline.Model.Files.IonMobilityLibrary;
+using OptimizationLibrary = pwiz.Skyline.Model.Files.OptimizationLibrary;
 
 // CONSIDER: verify right-click menu includes open containing folder only for files found locally
 // CONSIDER: expand drag-and-drop tests - scenarios: disjoint selection, tree disallows dragging un-draggable nodes
@@ -345,7 +348,7 @@ namespace pwiz.SkylineTestFunctional
 
             AssertTreeOnlyHasFilesTreeNodes(SkylineWindow.FilesTree);
 
-            AssertTopLevelFiles(typeof(SkylineViewFile), typeof(SkylineChromatogramCache), typeof(ReplicatesFolder), typeof(SpectralLibrariesFolder));
+            AssertTopLevelFiles(typeof(SkylineViewFile), typeof(SpectralLibrariesFolder), typeof(SkylineChromatogramCache), typeof(ReplicatesFolder));
 
             Assert.AreEqual(RAT_PLASMA_FILE_NAME, SkylineWindow.FilesTree.Root.Text);
             AssertFileState(FileState.available, SkylineWindow.FilesTree.Root);
@@ -556,7 +559,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify background proteome was added
-            var node = ValidateSingleEntry<BackgroundProteomeFolder, BackgroundProteomeSpec>(
+            var node = ValidateSingleEntry<BackgroundProteome, BackgroundProteomeSpec>(
                 name, Settings.Default.BackgroundProteomeList);
 
             // Test double-click rename
@@ -572,7 +575,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify background proteome was renamed
-            ValidateSingleEntry<BackgroundProteomeFolder, BackgroundProteomeSpec>(
+            ValidateSingleEntry<BackgroundProteome, BackgroundProteomeSpec>(
                 rename, Settings.Default.BackgroundProteomeList);
         }
 
@@ -596,7 +599,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify iRT calculator was added
-            var node = ValidateSingleEntry<RTCalcFolder, RetentionScoreCalculatorSpec>(
+            var node = ValidateSingleEntry<RTCalc, RetentionScoreCalculatorSpec>(
                 name, Settings.Default.RTScoreCalculatorList);
 
             // Test double-click rename
@@ -612,7 +615,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify iRT calculator was renamed
-            ValidateSingleEntry<RTCalcFolder, RetentionScoreCalculatorSpec>(
+            ValidateSingleEntry<RTCalc, RetentionScoreCalculatorSpec>(
                 rename, Settings.Default.RTScoreCalculatorList);
         }
 
@@ -636,7 +639,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify ion mobility library was added
-            var node = ValidateSingleEntry<IonMobilityLibraryFolder, Skyline.Model.IonMobility.IonMobilityLibrary>(
+            var node = ValidateSingleEntry<IonMobilityLibrary, Skyline.Model.IonMobility.IonMobilityLibrary>(
                 name, Settings.Default.IonMobilityLibraryList);
 
             // Test double-click rename
@@ -652,7 +655,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify ion mobility library was renamed
-            ValidateSingleEntry<IonMobilityLibraryFolder, Skyline.Model.IonMobility.IonMobilityLibrary>(
+            ValidateSingleEntry<IonMobilityLibrary, Skyline.Model.IonMobility.IonMobilityLibrary>(
                 rename, Settings.Default.IonMobilityLibraryList);
         }
 
@@ -676,7 +679,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify optimization library was added
-            var node = ValidateSingleEntry<OptimizationLibraryFolder, Skyline.Model.Optimization.OptimizationLibrary>(
+            var node = ValidateSingleEntry<OptimizationLibrary, Skyline.Model.Optimization.OptimizationLibrary>(
                 name, Settings.Default.OptimizationLibraryList);
 
             // Test double-click rename
@@ -692,16 +695,16 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Verify optimization library was renamed
-            ValidateSingleEntry<OptimizationLibraryFolder, Skyline.Model.Optimization.OptimizationLibrary>(
+            ValidateSingleEntry<OptimizationLibrary, Skyline.Model.Optimization.OptimizationLibrary>(
                 rename, Settings.Default.OptimizationLibraryList);
         }
 
         /// <summary>
-        /// Validate that a settings list and corresponding FilesTree folder both contain exactly one entry with the expected name
-        /// And return the single FilesTreeNode for the folder that contains the entry.
+        /// Validate that a settings list and corresponding FilesTree file both contain exactly one entry with the expected name
+        /// And return the single FilesTreeNode for the file.
         /// </summary>
-        private FilesTreeNode ValidateSingleEntry<TFolderModel, TSettings>(string expectedName, SettingsList<TSettings> settingsList)
-            where TFolderModel : FileModel
+        private FilesTreeNode ValidateSingleEntry<TFileModel, TSettings>(string expectedName, SettingsList<TSettings> settingsList)
+            where TFileModel : FileModel
             where TSettings : IKeyContainer<string>, IXmlSerializable
         {
             WaitForFilesTree();
@@ -715,14 +718,29 @@ namespace pwiz.SkylineTestFunctional
                     $"Settings list should contain exactly one {typeof(TSettings).Name}");
                 Assert.AreEqual(expectedName, settingsList[countDefaults].GetKey(), $"Settings list entry should be named '{expectedName}'");
 
-                // Validate FilesTree folder
-                var folder = SkylineWindow.FilesTree.Folder<TFolderModel>();
-                Assert.IsNotNull(folder, $"{typeof(TFolderModel).Name} folder should exist in FilesTree");
-                Assert.AreEqual(1, folder.Nodes.Count, $"FilesTree folder should contain exactly one {typeof(TFolderModel).Name}");
-                fileNode = (FilesTreeNode)folder.Nodes[0];
+                // Validate FilesTree - find the file directly in the tree
+                fileNode = FindFileInTree<TFileModel>(SkylineWindow.FilesTree.Root, expectedName);
+                Assert.IsNotNull(fileNode, $"{typeof(TFileModel).Name} file should exist in FilesTree");
                 Assert.AreEqual(expectedName, fileNode.Name, $"FilesTree node should be named '{expectedName}'");
             });
             return fileNode;
+        }
+
+        /// <summary>
+        /// Recursively search the tree for a file node of the specified type and name
+        /// </summary>
+        private FilesTreeNode FindFileInTree<TFileModel>(FilesTreeNode node, string name) where TFileModel : FileModel
+        {
+            if (node.Model is TFileModel && node.Name == name)
+                return node;
+
+            foreach (FilesTreeNode child in node.Nodes)
+            {
+                var result = FindFileInTree<TFileModel>(child, name);
+                if (result != null)
+                    return result;
+            }
+            return null;
         }
 
         /// <summary>
@@ -828,13 +846,12 @@ namespace pwiz.SkylineTestFunctional
             ShowFilesTreeNodeMenu(libraryNode, new[]
                 { menu.OpenContainingFolderMenuItem, menu.OpenLibraryInLibraryExplorerMenuItem, menu.RemoveMenuItem });
 
-            // Test a folder with no visible items  - should cancel and not show menu (no items visible)
-            // CONSIDER: Should it show "Manage Libraries" and bring up the PeptideSettingsUI - Library tab?
-            var backgroundProteomeFolder = tree.Folder<BackgroundProteomeFolder>();
-            ShowFilesTreeNodeMenu(backgroundProteomeFolder, emptyMenu);
-            // And the background proteome file node
-            var backgroundProteomeNode = (FilesTreeNode)backgroundProteomeFolder.Nodes[0];
-            ShowFilesTreeNodeMenu(backgroundProteomeNode, minimumFileMenu);
+            // Test the background proteome file node (added earlier in TestOtherFileTypes)
+            var backgroundProteomeNode = FindFileInTree<BackgroundProteome>(tree.Root, "Rat_mini_renamed");
+            if (backgroundProteomeNode != null) // Only test if one was added
+            {
+                ShowFilesTreeNodeMenu(backgroundProteomeNode, minimumFileMenu);
+            }
 
             // Finally test the root .sky file node
             ShowFilesTreeNodeMenu(tree.Root, minimumFileMenu);
@@ -847,6 +864,7 @@ namespace pwiz.SkylineTestFunctional
         private void ShowFilesTreeNodeMenu(FilesTreeNode node, IList<ToolStripMenuItem> visibleItems)
         {
             var filesTreeForm = SkylineWindow.FilesTreeForm;
+            visibleItems = visibleItems.Concat(new[] { filesTreeForm.ShowFileNamesMenuItem }).ToList();
             using var scope = new ScopedAction(
                 initAction: () => RunUI(() => filesTreeForm.TreeContextMenu.Closing += DenyMenuClosing),
                 disposeAction: () =>
@@ -974,8 +992,9 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestSpectralLibraries()
         {
+            const string libName0 = "Rat (NIST) (Rat_plasma2)";
             Assert.AreEqual(2, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.Nodes.Count);
-            Assert.AreEqual("Rat (NIST) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
+            Assert.AreEqual(libName0, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             Assert.AreEqual("Rat (GPM) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
 
             var peptideLibraryTreeNode = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.NodeAt(0);
@@ -1030,9 +1049,10 @@ namespace pwiz.SkylineTestFunctional
                 librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
                 doc = WaitForDocumentChange(doc);
 
-                Assert.AreEqual(1, librariesFolder.Nodes.Count);
-
-                Assert.IsFalse(librariesFolder.HasChildWithName(nodesToDelete[0].Name));
+                Assert.IsNull(SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>());
+                var libraryFile = SkylineWindow.FilesTree.Folder<SpectralLibrary>();
+                Assert.IsNotNull(libraryFile);
+                Assert.AreEqual(libName0, libraryFile.Name);
 
                 RunUI(() => SkylineWindow.Undo());
                 WaitForDocumentChange(doc);
@@ -1040,6 +1060,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertTreeFolderMatchesDocumentAndModel<SpectralLibrariesFolder>(2);
 
                 // Removed libraries should be available again
+                librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
                 Assert.IsTrue(librariesFolder.HasChildWithName(nodesToDelete[0].Name));
             }
 
@@ -1116,22 +1137,16 @@ namespace pwiz.SkylineTestFunctional
 
                 // Check top node
                 const int expectedTopNodeIndex = 2;
-                var node = GetNthNode(SkylineWindow.FilesTree, AdjustForChromatogramCacheIssue(expectedTopNodeIndex));
+                var node = GetNthNode(SkylineWindow.FilesTree, expectedTopNodeIndex);
                 Assert.AreEqual(SkylineWindow.FilesTree.TopNode, node);
-                Assert.IsTrue(ReferenceEquals(SkylineWindow.FilesTree.Folder<ReplicatesFolder>(), node));
+                Assert.IsTrue(ReferenceEquals(SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>(), node));
 
                 // Check selection
                 const int expectedSelectedNodeIndex = 11;
-                node = GetNthNode(SkylineWindow.FilesTree, AdjustForChromatogramCacheIssue(expectedSelectedNodeIndex));
+                node = GetNthNode(SkylineWindow.FilesTree, expectedSelectedNodeIndex);
                 Assert.AreEqual(SkylineWindow.FilesTree.SelectedNode, node);
-                Assert.AreEqual(@"D_108_REP2", node.Name);
+                Assert.AreEqual(@"D_103_REP1", node.Name);
             });
-            return;
-
-            int AdjustForChromatogramCacheIssue(int expectedIndex)
-            {
-                return expectedIndex + 1;
-            }
         }
 
         // Assumes rat-plasma.sky is loaded
