@@ -214,6 +214,17 @@ namespace SkylineTester
             commandShell.Add("# Building Skyline...");
             commandShell.Add("cd {0}", buildRoot.Quote());
 
+            // Do a debug build if desired
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DEBUG_SKYLINE_NIGHTLY")))
+            {
+                var msg = " Environment variable DEBUG_SKYLINE_NIGHTLY is set, building with debug information. This may slow or even disable some tests.";
+                commandShell.Add($@"#@ {msg}\n");
+                commandShell.Add($@"# {msg}");
+                toolsetArg += " variant=debug debug-symbols=on iterator-debugging=off runtime-debugging=off";
+
+                MainWindow.BuildDebug = true; // So SkylineTester knows to run Debug/Skyline instead of Release/Skyline
+            }
+
             foreach (int architecture in architectures)
             {
                 commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
