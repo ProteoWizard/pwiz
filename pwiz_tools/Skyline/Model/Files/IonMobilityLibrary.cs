@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 
