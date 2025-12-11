@@ -70,20 +70,20 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList.Images.Add(Resources.Blank);              // 1bpp
             ImageList.Images.Add(Resources.Folder);             // 32bpp
             ImageList.Images.Add(Resources.FolderMissing);      // 32bpp
-            ImageList.Images.Add(Resources.File);               // 8bbb
+            ImageList.Images.Add(Resources.File);               // 8bpp
             ImageList.Images.Add(Resources.FileMissing);        // 32bpp
             ImageList.Images.Add(Resources.Replicate);          // 24bpp
-            ImageList.Images.Add(Resources.ReplicateMissing);   // 24bpp // TODO: improve icon
+            ImageList.Images.Add(Resources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
             ImageList.Images.Add(Resources.DataProcessing);     // 8bpp
             ImageList.Images.Add(Resources.PeptideLib);         // 4bpp
             ImageList.Images.Add(Resources.Skyline_FilesTree);  // 24bpp
             ImageList.Images.Add(Resources.AuditLog);           // 32bpp
             ImageList.Images.Add(Resources.CacheFile);          // 32bpp
             ImageList.Images.Add(Resources.ViewFile);           // 32bpp
-            ImageList.Images.Add(Resources.ProtDB);             // Placeholder
-            ImageList.Images.Add(Resources.ImsDB);              // Placeholder
-            ImageList.Images.Add(Resources.OptDB);              // Placeholder
-            ImageList.Images.Add(Resources.IrtCalculator);      // Placeholder
+            ImageList.Images.Add(Resources.ProtDB);             // 32bpp
+            ImageList.Images.Add(Resources.ImsDB);              // 32bpp
+            ImageList.Images.Add(Resources.OptDB);              // 32bpp
+            ImageList.Images.Add(Resources.IrtCalculator);      // 32bpp
         }
 
         [Browsable(false)]

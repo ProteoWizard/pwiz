@@ -2312,9 +2312,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this),
                 im =>
                 {
-                    // Keep the libraries array in sync - loading only new libraries
+                    // Keep the libraries array in sync
+                    // Try to preserve existing library instances where possible
+                    // Otherwise, set to null to indicate not yet loaded for LibraryManager to load
                     im.Libraries = prop.Select((spec, i) =>
                     {
+                        // Try to find existing library matching this spec by ID
                         int specIndex = im.LibrarySpecs.IndexOf(existing =>
                             ReferenceEquals(existing?.Id, spec.Id));
                         if (specIndex == -1)
