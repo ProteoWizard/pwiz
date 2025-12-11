@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
 
-        public abstract bool ReplaceUnknownFeatureScores { get; }
+        public virtual bool ReplaceUnknownFeatureScores => false;
         public abstract FeatureCalculators PeakFeatureCalculators { get; }
         public abstract IPeakScoringModel Train(IList<IList<FeatureScores>> targets, IList<IList<FeatureScores>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);

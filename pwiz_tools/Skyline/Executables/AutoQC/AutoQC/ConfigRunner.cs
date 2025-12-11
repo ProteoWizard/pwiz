@@ -33,7 +33,7 @@ using SharedBatch;
 
 namespace AutoQC
 {
-    public class ConfigRunner: IProcessControl, IConfigRunner
+    public class ConfigRunner: IProcessControl, IConfigRunner, IDisposable
     {
         private BackgroundWorker _worker;
 
@@ -1266,6 +1266,14 @@ namespace AutoQC
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            _fileWatcher?.Dispose();
+            _fileWatcher = null;
+            _annotationsFileWatcher?.Dispose();
+            _annotationsFileWatcher = null;
+        }
     }
 
     public interface IProcessControl
