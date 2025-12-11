@@ -362,8 +362,8 @@ namespace pwiz.SkylineTestFunctional
             //
 
             // Rename replicate - expand node first to make sure expanded state is preserved after update
-            RunUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Expand());
-            WaitForConditionUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded);
+            RunUI(() => SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[3].Expand());
+            WaitForConditionUI(() => SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[3].IsExpanded);
 
             // Check SrmSettings matches Model matches FilesTree UI
             var newName = "Test this name";
@@ -388,16 +388,16 @@ namespace pwiz.SkylineTestFunctional
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
 
             Assert.AreEqual(newName, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[3].Name);
-            Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Name);
+            Assert.AreEqual(newName, SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[3].Name);
 
             // Expanded folder should remain expanded after a document update
-            RunUI(() => Assert.IsTrue(SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded));
+            RunUI(() => Assert.IsTrue(SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[3].IsExpanded));
 
             //
             // Edit tree node labels
             //
             newName = "NEW REPLICATE NAME";
-            var treeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(0);
+            var treeNode = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().NodeAt(0);
             RunUI(() =>
             {
                 var auditLogSize = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
@@ -408,11 +408,11 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForFilesTree();
 
-            Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
+            Assert.AreEqual(newName, SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[0].Name);
 
             // Input validation - attempt to rename node to the same name.
             newName = @"D_138_REP1";
-            treeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(9);
+            treeNode = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().NodeAt(9);
             RunUI(() =>
             {
                 var auditLogSize = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
@@ -423,10 +423,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(auditLogSize, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
             });
             WaitForFilesTree();
-            Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[9].Name);
+            Assert.AreEqual(newName, SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[9].Name);
 
             // Input validation - attempt to rename a node to a name used by another node in the collection
-            treeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(12);
+            treeNode = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().NodeAt(12);
             var currentName = treeNode.Name;
             var cancelEvent = false;
 
@@ -438,13 +438,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(auditLogSize, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
 
             WaitForFilesTree();
-            Assert.AreEqual(currentName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[12].Name);
+            Assert.AreEqual(currentName, SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[12].Name);
 
             //
             // Activating a replicate should update selected graphs
             //
             const int selectedIndex = 4;
-            var filesTreeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(selectedIndex);
+            var filesTreeNode = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().NodeAt(selectedIndex);
             RunUI(() => { SkylineWindow.FilesTreeForm.ActivateReplicate(filesTreeNode); });
             WaitForFilesTree();
             RunUI(() => Assert.AreEqual(selectedIndex, SkylineWindow.SelectedResultsIndex));
@@ -467,7 +467,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForFilesTree();
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
-            // END
 
             //
             // Remove replicate by editing SkylineDocument directly
@@ -494,7 +493,6 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => SkylineWindow.Undo());
             WaitForFilesTree();
-            // END
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
 
@@ -602,11 +600,11 @@ namespace pwiz.SkylineTestFunctional
             var node = ValidateSingleEntry<RTCalc, RetentionScoreCalculatorSpec>(
                 name, Settings.Default.RTScoreCalculatorList);
 
-            // Test double-click rename
+            // Test Edit rename
             string rename = name + "_renamed";
             using (new WaitDocumentChange())
             {
-                RunDlg<EditIrtCalcDlg>(() => SkylineWindow.FilesTreeForm.DoubleClickNode(node),
+                RunDlg<EditIrtCalcDlg>(() => SkylineWindow.FilesTreeForm.EditNode(node),
                     dlg =>
                     {
                         dlg.CalcName = rename;
@@ -682,11 +680,11 @@ namespace pwiz.SkylineTestFunctional
             var node = ValidateSingleEntry<OptimizationLibrary, Skyline.Model.Optimization.OptimizationLibrary>(
                 name, Settings.Default.OptimizationLibraryList);
 
-            // Test double-click rename
+            // Test Edit rename
             string rename = name + "_renamed";
             using (new WaitDocumentChange())
             {
-                RunDlg<EditOptimizationLibraryDlg>(() => SkylineWindow.FilesTreeForm.DoubleClickNode(node),
+                RunDlg<EditOptimizationLibraryDlg>(() => SkylineWindow.FilesTreeForm.EditNode(node),
                     dlg =>
                     {
                         dlg.LibName = rename;
@@ -703,7 +701,7 @@ namespace pwiz.SkylineTestFunctional
         /// Validate that a settings list and corresponding FilesTree file both contain exactly one entry with the expected name
         /// And return the single FilesTreeNode for the file.
         /// </summary>
-        private FilesTreeNode ValidateSingleEntry<TFileModel, TSettings>(string expectedName, SettingsList<TSettings> settingsList)
+        private static FilesTreeNode ValidateSingleEntry<TFileModel, TSettings>(string expectedName, SettingsList<TSettings> settingsList)
             where TFileModel : FileModel
             where TSettings : IKeyContainer<string>, IXmlSerializable
         {
@@ -729,7 +727,7 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Recursively search the tree for a file node of the specified type and name
         /// </summary>
-        private FilesTreeNode FindFileInTree<TFileModel>(FilesTreeNode node, string name) where TFileModel : FileModel
+        private static FilesTreeNode FindFileInTree<TFileModel>(FilesTreeNode node, string name) where TFileModel : FileModel
         {
             if (node.Model is TFileModel && node.Name == name)
                 return node;
@@ -749,7 +747,7 @@ namespace pwiz.SkylineTestFunctional
         protected void TestToolTips()
         {
             // Test tooltip for replicate node
-            var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             var replicateNode = (FilesTreeNode)replicatesFolder.Nodes[0];
             ShowFilesTreeNodeTip(replicateNode);
 
@@ -758,7 +756,7 @@ namespace pwiz.SkylineTestFunctional
             ShowFilesTreeNodeTip(sampleFileNode);
 
             // Test tooltip for spectral library node
-            var librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+            var librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
             var libraryNode = (FilesTreeNode)librariesFolder.Nodes[0];
             ShowFilesTreeNodeTip(libraryNode, true);
 
@@ -826,11 +824,11 @@ namespace pwiz.SkylineTestFunctional
         {
             var tree = SkylineWindow.FilesTree;
             var menu = SkylineWindow.FilesTreeForm;
-            var emptyMenu = Array.Empty<ToolStripMenuItem>();
             var minimumFileMenu = new[] { menu.OpenContainingFolderMenuItem };
+            var singleObjectMenu = new[] { menu.OpenContainingFolderMenuItem, menu.EditMenuItem };
 
             // First test nodes with non-empty menus
-            var replicatesFolder = tree.Folder<ReplicatesFolder>();
+            var replicatesFolder = tree.RootChild<ReplicatesFolder>();
             ShowFilesTreeNodeMenu(replicatesFolder, new[]
                 { menu.ManageResultsMenuItem, menu.RemoveAllMenuItem });
 
@@ -838,20 +836,19 @@ namespace pwiz.SkylineTestFunctional
             ShowFilesTreeNodeMenu(replicateNode, new[]
                 { menu.SelectReplicateMenuItem, menu.RemoveMenuItem });
 
-            var librariesFolder = tree.Folder<SpectralLibrariesFolder>();
+            var librariesFolder = tree.RootChild<SpectralLibrariesFolder>();
             ShowFilesTreeNodeMenu(librariesFolder, new[]
                 { menu.LibraryExplorerMenuItem, menu.RemoveAllMenuItem });
 
             var libraryNode = (FilesTreeNode)librariesFolder.Nodes[0];
             ShowFilesTreeNodeMenu(libraryNode, new[]
-                { menu.OpenContainingFolderMenuItem, menu.OpenLibraryInLibraryExplorerMenuItem, menu.RemoveMenuItem });
+                { menu.OpenContainingFolderMenuItem, menu.OpenLibraryInLibraryExplorerMenuItem, menu.EditMenuItem, menu.RemoveMenuItem });
 
-            // Test the background proteome file node (added earlier in TestOtherFileTypes)
-            var backgroundProteomeNode = FindFileInTree<BackgroundProteome>(tree.Root, "Rat_mini_renamed");
-            if (backgroundProteomeNode != null) // Only test if one was added
-            {
-                ShowFilesTreeNodeMenu(backgroundProteomeNode, minimumFileMenu);
-            }
+            // Test types added earlier in TestOtherFileTypes
+            ShowFilesTreeNodeMenu(tree.RootChild<BackgroundProteome>(), singleObjectMenu);
+            ShowFilesTreeNodeMenu(tree.RootChild<RTCalc>(), singleObjectMenu);
+            ShowFilesTreeNodeMenu(tree.RootChild<OptimizationLibrary>(), singleObjectMenu);
+            ShowFilesTreeNodeMenu(tree.RootChild<IonMobilityLibrary>(), singleObjectMenu);
 
             // Finally test the root .sky file node
             ShowFilesTreeNodeMenu(tree.Root, minimumFileMenu);
@@ -913,12 +910,12 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document;
             var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
             {
-                var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
                 SkylineWindow.FilesTreeForm.RemoveAll(replicatesFolder);
             });
             OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-            var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             doc = WaitForDocumentChange(doc);
             Assert.IsNull(replicatesFolder);
 
@@ -930,7 +927,7 @@ namespace pwiz.SkylineTestFunctional
         private static void TestRemoveSelectedReplicates()
         {
             var doc = SkylineWindow.Document;
-            var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             var nodesToDelete = new List<FilesTreeNode>
             {
                 replicatesFolder.NodeAt(4),
@@ -941,7 +938,7 @@ namespace pwiz.SkylineTestFunctional
             var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
             OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-            replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             doc = WaitForDocumentChange(doc);
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT - 3);
@@ -967,7 +964,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.ShowFilesTreeForm(false);
 
-                var replicateNodes = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var replicateNodes = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
                 replicateNodes.Nodes[1].Expand();
                 replicateNodes.Nodes[7].Expand();
                 replicateNodes.Nodes[11].Expand();
@@ -982,7 +979,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                var replicateNodes = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var replicateNodes = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
                 Assert.IsTrue(replicateNodes.Nodes[1].IsExpanded);
                 Assert.IsTrue(replicateNodes.Nodes[7].IsExpanded);
                 Assert.IsTrue(replicateNodes.Nodes[11].IsExpanded);
@@ -993,11 +990,11 @@ namespace pwiz.SkylineTestFunctional
         private static void TestSpectralLibraries()
         {
             const string libName0 = "Rat (NIST) (Rat_plasma2)";
-            Assert.AreEqual(2, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.Nodes.Count);
+            Assert.AreEqual(2, SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>()?.Nodes.Count);
             Assert.AreEqual(libName0, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             Assert.AreEqual("Rat (GPM) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
 
-            var peptideLibraryTreeNode = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.NodeAt(0);
+            var peptideLibraryTreeNode = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>()?.NodeAt(0);
             var peptideLibraryModel = (SpectralLibrary)peptideLibraryTreeNode?.Model;
             Assert.AreEqual(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name, peptideLibraryModel?.Name);
 
@@ -1014,18 +1011,53 @@ namespace pwiz.SkylineTestFunctional
                 WaitForConditionUI(() => !libraryDlg.Visible);
             }
 
+            // Test Edit rename of a library
+            {
+                // Test Edit rename
+                string rename = libName0 + "_renamed";
+                int librariesInSettings = Settings.Default.SpectralLibraryList.Count;
+                using (new WaitDocumentChange())
+                {
+                    RunDlg<EditLibraryDlg>(() =>
+                        {
+                            var node = FindFileInTree<SpectralLibrary>(SkylineWindow.FilesTree.Root, libName0);
+                            SkylineWindow.FilesTreeForm.EditNode(node);
+                        },
+                        dlg =>
+                        {
+                            dlg.LibraryName = rename;
+                            dlg.OkDialog();
+                        });
+                }
+
+                // Verify optimization library was renamed
+                WaitForFilesTree();
+                RunUI(() =>
+                {
+                    // The number of libraries in settings should remain the same and contain the renamed library
+                    Assert.AreEqual(librariesInSettings, Settings.Default.SpectralLibraryList.Count,
+                        $"Settings list should contain exactly one {nameof(SpectralLibraryList)}");
+                    Assert.IsNotNull(Settings.Default.SpectralLibraryList[rename]);
+
+                    // Validate FilesTree - make sure the renamed library appears in its original position
+                    var libraryFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
+                    Assert.AreEqual(rename, ((FilesTreeNode)libraryFolder.Nodes[0]).Name);
+                });
+                RunUI(SkylineWindow.Undo);
+            }
+
             // Remove All
             FilesTreeNode librariesFolder;
             {
                 var doc = SkylineWindow.Document;
                 var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
                 {
-                    librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                    librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                     SkylineWindow.FilesTreeForm.RemoveAll(librariesFolder);
                 });
                 OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-                librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 doc = WaitForDocumentChange(doc);
                 Assert.IsNull(librariesFolder);
 
@@ -1037,7 +1069,7 @@ namespace pwiz.SkylineTestFunctional
             // Remove selected
             {
                 var doc = SkylineWindow.Document;
-                librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 var nodesToDelete = new List<FilesTreeNode>
                 {
                     librariesFolder.NodeAt(1),
@@ -1046,11 +1078,11 @@ namespace pwiz.SkylineTestFunctional
                 var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
                 OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-                librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 doc = WaitForDocumentChange(doc);
 
-                Assert.IsNull(SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>());
-                var libraryFile = SkylineWindow.FilesTree.Folder<SpectralLibrary>();
+                Assert.IsNull(SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>());
+                var libraryFile = SkylineWindow.FilesTree.RootChild<SpectralLibrary>();
                 Assert.IsNotNull(libraryFile);
                 Assert.AreEqual(libName0, libraryFile.Name);
 
@@ -1060,13 +1092,13 @@ namespace pwiz.SkylineTestFunctional
                 AssertTreeFolderMatchesDocumentAndModel<SpectralLibrariesFolder>(2);
 
                 // Removed libraries should be available again
-                librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 Assert.IsTrue(librariesFolder.HasChildWithName(nodesToDelete[0].Name));
             }
 
             // Rename spectral library
             {
-                librariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 var treeNode = librariesFolder.NodeAt(0);
                 var originalName = treeNode.Name;
                 var newName = "Renamed Library";
@@ -1080,7 +1112,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 WaitForFilesTree();
 
-                Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[0].Name);
+                Assert.AreEqual(newName, SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>().Nodes[0].Name);
                 Assert.AreEqual(newName, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
 
                 // Input validation - attempt to rename to the same name
@@ -1092,10 +1124,10 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(auditLogSize, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
                 });
                 WaitForFilesTree();
-                Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[0].Name);
+                Assert.AreEqual(newName, SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>().Nodes[0].Name);
 
                 // Input validation - attempt to rename to a name used by another library
-                var secondLibraryName = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[1].Name;
+                var secondLibraryName = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>().Nodes[1].Name;
                 var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
                 {
                     var cancelEvent = SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, secondLibraryName);
@@ -1103,13 +1135,13 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(confirmDlg, confirmDlg.ClickOk);
                 WaitForFilesTree();
-                Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[0].Name);
+                Assert.AreEqual(newName, SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>().Nodes[0].Name);
 
                 // Undo rename
                 var doc = SkylineWindow.Document;
                 RunUI(() => SkylineWindow.Undo());
                 WaitForDocumentChange(doc);
-                Assert.AreEqual(originalName, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes[0].Name);
+                Assert.AreEqual(originalName, SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>().Nodes[0].Name);
                 Assert.AreEqual(originalName, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             }
         }
@@ -1122,12 +1154,12 @@ namespace pwiz.SkylineTestFunctional
                 // Check expansion
                 Assert.IsTrue(SkylineWindow.FilesTree.Root.IsExpanded);
 
-                var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
                 Assert.IsTrue(replicatesFolder.IsExpanded);
                 Assert.IsTrue(replicatesFolder.Nodes[0].IsExpanded);
                 Assert.IsTrue(replicatesFolder.Nodes[10].IsExpanded);
 
-                var spectralLibrariesFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                var spectralLibrariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 Assert.IsTrue(spectralLibrariesFolder.IsExpanded);
 
                 // These checks fail due to the ChromatogramCache which was present when the indices for TopNode / SelectedNode
@@ -1139,7 +1171,7 @@ namespace pwiz.SkylineTestFunctional
                 const int expectedTopNodeIndex = 2;
                 var node = GetNthNode(SkylineWindow.FilesTree, expectedTopNodeIndex);
                 Assert.AreEqual(SkylineWindow.FilesTree.TopNode, node);
-                Assert.IsTrue(ReferenceEquals(SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>(), node));
+                Assert.IsTrue(ReferenceEquals(SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>(), node));
 
                 // Check selection
                 const int expectedSelectedNodeIndex = 11;
@@ -1161,7 +1193,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(47, matchingNodes.Count);
             }
 
-            var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicateFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             var replicate = replicateFolder.NodeAt(0);
             var replicateSample = replicate.NodeAt(0);
 
@@ -1238,7 +1270,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForDocumentLoaded();
                 WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
-                var indexOfLastReplicate = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes.Count - 1;
+                var indexOfLastReplicate = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes.Count - 1;
 
                 // A,B,C,D => Drag A to B => A,B,C,D
                 var dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 1, DragAndDropDirection.down);
@@ -1288,10 +1320,10 @@ namespace pwiz.SkylineTestFunctional
 
             // Drag-and-drop internals 
             {
-                var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var replicateFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
                 var replicateNode = replicateFolder.NodeAt(0);
 
-                var libraryFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                var libraryFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 var libraryNode = libraryFolder.NodeAt(0);
 
                 // Replicate can be dropped on another replicate or parent folder but not on spectral library or library folder
@@ -1339,7 +1371,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
-            var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             Assert.AreEqual(@"D_102_REP1", replicatesFolder.Nodes[0].Name);
 
             RunUI(() =>
@@ -1350,7 +1382,7 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(@"NEW NAME", replicatesFolder.Nodes[0].Name);
             Assert.AreEqual(@"NEW NAME", SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name);
-            Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
+            Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[0].Name);
 
             RunUI(() =>
             {
@@ -1360,12 +1392,12 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(@"ANOTHER NEW NAME", replicatesFolder.Nodes[1].Name);
             Assert.AreEqual(@"ANOTHER NEW NAME", SkylineWindow.Document.MeasuredResults.Chromatograms[1].Name);
-            Assert.AreEqual(@"ANOTHER NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[1].Name);
+            Assert.AreEqual(@"ANOTHER NEW NAME", SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[1].Name);
 
             // Make sure the first name remains intact
             Assert.AreEqual(@"NEW NAME", replicatesFolder.Nodes[0].Name);
             Assert.AreEqual(@"NEW NAME", SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name);
-            Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
+            Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[0].Name);
         }
 
         /// <summary>
@@ -1384,7 +1416,7 @@ namespace pwiz.SkylineTestFunctional
                                                         MoveType moveType = MoveType.move_to)
             where T : FileModel
         {
-            var folder = SkylineWindow.FilesTree.Folder<T>();
+            var folder = SkylineWindow.FilesTree.RootChild<T>();
 
             var dragNodes = dragNodeIndexes.Select(index => folder.Nodes[index]).Cast<FilesTreeNode>().ToList();
 
@@ -1398,7 +1430,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var newDoc = WaitForDocumentChangeLoaded(oldDoc);
 
-            folder = SkylineWindow.FilesTree.Folder<T>();
+            folder = SkylineWindow.FilesTree.RootChild<T>();
 
             return new DragAndDropParams
             {
@@ -1526,7 +1558,7 @@ namespace pwiz.SkylineTestFunctional
             };
         
             var modelNodes = filesModel.Folder<T>().Files;
-            var treeNodes = SkylineWindow.FilesTree.Folder<T>().Nodes;
+            var treeNodes = SkylineWindow.FilesTree.RootChild<T>().Nodes;
         
             Assert.IsNotNull(docNodes);
             Assert.IsNotNull(modelNodes);

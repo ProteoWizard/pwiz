@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public void OpenEditBackgroundProteomeDialog(FilesTreeNode treeNode)
         {
             var docBgProteome = SkylineWindow.DocumentUI.Settings.PeptideSettings.BackgroundProteome;
-            if (!treeNode.Model.IdentityPath.GetIdentity(0).GlobalIndex.Equals(docBgProteome.Id.GlobalIndex))
+            if (!ReferenceEquals(docBgProteome.Id, treeNode.Model.IdentityPath.GetIdentity(0)))
                 return;
 
             using var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(new[] {docBgProteome});
@@ -224,8 +224,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             var docCalc = SkylineWindow.DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator as RCalcIrt;
             if (docCalc == null)
                 return;
-
-            if (!filesTreeNode.Model.IdentityPath.GetIdentity(0).GlobalIndex.Equals(docCalc.Id.GlobalIndex))
+            if (!ReferenceEquals(docCalc.Id, filesTreeNode.Model.IdentityPath.GetIdentity(0)))
                 return;
 
             var existingCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => !ReferenceEquals(calc, docCalc));
@@ -248,8 +247,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             var docOptLib = docSettings.TransitionSettings.Prediction.OptimizedLibrary;
             if (docOptLib == null || docOptLib.IsNone)
                 return;
-
-            if (!filesTreeNode.Model.IdentityPath.GetIdentity(0).GlobalIndex.Equals(docOptLib.Id.GlobalIndex))
+            if (!ReferenceEquals(docOptLib.Id, filesTreeNode.Model.IdentityPath.GetIdentity(0)))
                 return;
 
             var existingLibs = Settings.Default.OptimizationLibraryList.Where(lib => !ReferenceEquals(lib, docOptLib));
@@ -272,8 +270,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             var docIonMobilityLib = docSettings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
             if (docIonMobilityLib == null || docIonMobilityLib.IsNone)
                 return;
-
-            if (!filesTreeNode.Model.IdentityPath.GetIdentity(0).GlobalIndex.Equals(docIonMobilityLib.Id.GlobalIndex))
+            if (!ReferenceEquals(docIonMobilityLib.Id, filesTreeNode.Model.IdentityPath.GetIdentity(0)))
                 return;
 
             var existingLibs = Settings.Default.IonMobilityLibraryList.Where(lib => !ReferenceEquals(lib, docIonMobilityLib));
@@ -288,6 +285,27 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 // Update the settings list to persist the change
                 Settings.Default.IonMobilityLibraryList.ReplaceValue(docIonMobilityLib, newLib);
+            }
+        }
+
+        public void OpenEditSpectralLibraryDialog(FilesTreeNode filesTreeNode)
+        {
+            var docSettings = SkylineWindow.DocumentUI.Settings;
+            var docLibSpec = docSettings.PeptideSettings.Libraries.FindLibrarySpec(filesTreeNode.Model.IdentityPath.GetIdentity(0));
+            if (docLibSpec == null)
+                return;
+
+            using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
+            editLibDlg.LibrarySpec = docLibSpec;
+            if (editLibDlg.ShowDialog(this) == DialogResult.OK)
+            {
+                var newLibSpec = editLibDlg.LibrarySpec;
+                var modifier = DocumentModifier.Create(doc => SpectralLibrary.Edit(doc, docLibSpec, newLibSpec));
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_SpectralLibrary, modifier);
+
+                // Update the settings list to persist the change
+                Settings.Default.SpectralLibraryList.ReplaceValue(docLibSpec, newLibSpec);
             }
         }
 
@@ -542,6 +560,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public ToolStripMenuItem LibraryExplorerMenuItem => libraryExplorerMenuItem;
         public ToolStripMenuItem ManageResultsMenuItem => manageResultsMenuItem;
         public ToolStripMenuItem OpenAuditLogMenuItem => openAuditLogMenuItem;
+        public ToolStripMenuItem EditMenuItem => editMenuItem;
         public ToolStripMenuItem OpenLibraryInLibraryExplorerMenuItem => openLibraryInLibraryExplorerMenuItem;
         public ToolStripMenuItem OpenContainingFolderMenuItem => openContainingFolderMenuItem;
         public ToolStripMenuItem SelectReplicateMenuItem => selectReplicateMenuItem;
@@ -587,6 +606,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             libraryExplorerMenuItem.Visible = false;
             manageResultsMenuItem.Visible = false;
             openAuditLogMenuItem.Visible = false;
+            editMenuItem.Visible = false;
             openLibraryInLibraryExplorerMenuItem.Visible = false;
             openContainingFolderMenuItem.Visible = false;
             selectReplicateMenuItem.Visible = false;
@@ -633,9 +653,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                     break;
                 case SpectralLibrary _:
                     SetMenuItemVisible(openLibraryInLibraryExplorerMenuItem);
+                    SetMenuItemVisible(editMenuItem);
                     break;
                 case SkylineAuditLog _:
                     SetMenuItemVisible(openAuditLogMenuItem);
+                    break;
+                case BackgroundProteome _:
+                case RTCalc _:
+                case OptimizationLibrary _:
+                case IonMobilityLibrary _:
+                    SetMenuItemVisible(editMenuItem);
                     break;
                 case SkylineFile _:
                     if(Debugger.IsAttached)
@@ -762,6 +789,33 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             var selection = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
             RemoveSelected(selection);
+        }
+
+        private void FilesTree_EditMenuItem(object sender, EventArgs e)
+        {
+            EditNode(FilesTree.SelectedNode as FilesTreeNode);
+        }
+
+        public void EditNode(FilesTreeNode filesTreeNode)
+        {
+            switch (filesTreeNode?.Model)
+            {
+                case BackgroundProteome _:
+                    OpenEditBackgroundProteomeDialog(filesTreeNode);
+                    break;
+                case RTCalc _:
+                    OpenEditRTCalculatorDialog(filesTreeNode);
+                    break;
+                case OptimizationLibrary _:
+                    OpenEditOptimizationLibraryDialog(filesTreeNode);
+                    break;
+                case IonMobilityLibrary _:
+                    OpenEditIonMobilityLibraryDialog(filesTreeNode);
+                    break;
+                case SpectralLibrary _:
+                    OpenEditSpectralLibraryDialog(filesTreeNode);
+                    break;
+            }
         }
 
         // FilesTree => initiate drag-and-drop, hide tooltips 

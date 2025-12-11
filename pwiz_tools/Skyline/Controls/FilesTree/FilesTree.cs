@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <typeparam name="T">The model type</typeparam>
         /// <returns></returns>
         // CONSIDER: does the model need a way to distinguish "folders" from other node types? Ex: with a marker interface?
-        public FilesTreeNode Folder<T>() where T : FileModel
+        public FilesTreeNode RootChild<T>() where T : FileModel
         {
             return Root.Model is T ? 
                 Root : 

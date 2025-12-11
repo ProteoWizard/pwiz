@@ -250,6 +250,15 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Update spectral library.
+        /// </summary>
+        public static string FilesTreeForm_Update_SpectralLibrary {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_Update_SpectralLibrary", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Replicates.
         /// </summary>
         public static string FilesTreeNode_TreeNode_Tooltip_ReplicateCount {

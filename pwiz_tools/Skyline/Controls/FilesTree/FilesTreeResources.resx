@@ -202,4 +202,7 @@
   <data name="FilesTreeForm_Update_RTCalculator" xml:space="preserve">
     <value>Update retention time calculator</value>
   </data>
+  <data name="FilesTreeForm_Update_SpectralLibrary" xml:space="preserve">
+    <value>Update spectral library</value>
+  </data>
 </root>

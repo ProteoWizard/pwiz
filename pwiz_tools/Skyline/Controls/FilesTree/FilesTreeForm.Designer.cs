@@ -78,6 +78,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.openLibraryInLibraryExplorerMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openAuditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debugRefreshTreeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -111,6 +112,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.openLibraryInLibraryExplorerMenuItem,
             this.selectReplicateMenuItem,
             this.openAuditLogMenuItem,
+            this.editMenuItem,
             this.removeAllMenuItem,
             this.removeMenuItem,
             this.debugRefreshTreeMenuItem,
@@ -163,11 +165,17 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.selectReplicateMenuItem.Click += new System.EventHandler(this.FilesTree_ActivateReplicateMenuItem);
             // 
             // openAuditLogMenuItem
-            // 
+            //
             this.openAuditLogMenuItem.Name = "openAuditLogMenuItem";
             resources.ApplyResources(this.openAuditLogMenuItem, "openAuditLogMenuItem");
             this.openAuditLogMenuItem.Click += new System.EventHandler(this.FilesTree_OpenAuditLogMenuItem);
-            // 
+            //
+            // editMenuItem
+            //
+            this.editMenuItem.Name = "editMenuItem";
+            resources.ApplyResources(this.editMenuItem, "editMenuItem");
+            this.editMenuItem.Click += new System.EventHandler(this.FilesTree_EditMenuItem);
+            //
             // removeAllMenuItem
             // 
             this.removeAllMenuItem.Name = "removeAllMenuItem";
@@ -215,6 +223,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         private System.Windows.Forms.ToolStripMenuItem openLibraryInLibraryExplorerMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectReplicateMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openAuditLogMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem editMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeAllMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem debugRefreshTreeMenuItem;

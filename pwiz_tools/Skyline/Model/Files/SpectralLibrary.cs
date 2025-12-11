@@ -21,7 +21,9 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -55,6 +57,25 @@ namespace pwiz.Skyline.Model.Files
         public static LibrarySpec LoadLibrarySpecFromDocument(SrmDocument document, SpectralLibrary library)
         {
             return document.Settings.PeptideSettings.Libraries.FindLibrarySpec(library.IdentityPath.GetIdentity(0));
+        }
+
+        public static ModifiedDocument Edit(SrmDocument doc, LibrarySpec oldLibrarySpec, LibrarySpec newLibrarySpec)
+        {
+            var libraries = doc.Settings.PeptideSettings.Libraries;
+            // Update the library specs and LibraryManager will handle reloading the libraries as needed
+            // Maintaining the order of the libraries is important
+            var librarySpecs = libraries.LibrarySpecs.ToArray();
+            int libraryIndex = librarySpecs.IndexOf(l => ReferenceEquals(l.Id, oldLibrarySpec.Id));
+            if (libraryIndex == -1)
+            {
+                throw new InvalidOperationException(string.Format(FileResources.SpectralLibrary_Edit_Library___0___not_found_in_the_document_, newLibrarySpec.Name));
+            }
+            librarySpecs[libraryIndex] = newLibrarySpec;
+
+            var newDocument = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(l =>
+                l.ChangeLibrarySpecs(librarySpecs)));
+            var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_spectral_library_update, doc.DocumentType, newLibrarySpec.Name);
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
         public static ModifiedDocument Delete(SrmDocument document, SrmSettingsChangeMonitor monitor, List<FileModel> models)

@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
             // Import replicate in Main\
             var sampleFilePath = Path.Combine(TestFilesDirs[0].FullPath, @"Main", @"small-01-main-directory.mzml");
             ImportResultsFile(sampleFilePath);
-            RunUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Expand());
+            RunUI(() => SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Expand());
             WaitForFilesTree();
 
             Assert.AreEqual(FileSystemType.local_file_system, fileSystemService.FileSystemType);

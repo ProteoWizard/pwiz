@@ -723,4 +723,7 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="files_tree_ion_mobility_library_update" xml:space="preserve">
     <value>Edited ion mobility library named {0} from the Files window</value>
   </data>
+  <data name="files_tree_spectral_library_update" xml:space="preserve">
+    <value>Edited spectral library named {0} from the Files window</value>
+  </data>
 </root>

@@ -225,6 +225,12 @@
   <data name="openAuditLogMenuItem.Text" xml:space="preserve">
     <value>Open Audit Log</value>
   </data>
+  <data name="editMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="editMenuItem.Text" xml:space="preserve">
+    <value>Edit...</value>
+  </data>
   <data name="removeAllMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
@@ -340,6 +346,12 @@
     <value>openAuditLogMenuItem</value>
   </data>
   <data name="&gt;&gt;openAuditLogMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;editMenuItem.Name" xml:space="preserve">
+    <value>editMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;removeAllMenuItem.Name" xml:space="preserve">

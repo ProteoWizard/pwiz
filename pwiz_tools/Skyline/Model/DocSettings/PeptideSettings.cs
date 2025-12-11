@@ -2310,16 +2310,27 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideLibraries ChangeLibrarySpecs(IList<LibrarySpec> prop)
         {
             return ChangeProp(ImClone(this),
-                              im =>
-                                  {
-                                      im.LibrarySpecs = prop;
-                                      // Keep the libraries array in synch, reloading all libraries, if necessary.
-                                      // CONSIDER: Loop checking name matching?
-                                      if (im.Libraries.Count != prop.Count)
-                                      {
-                                          im.Libraries = new Library[prop.Count];
-                                      }
-                                  });
+                im =>
+                {
+                    // Keep the libraries array in sync - loading only new libraries
+                    im.Libraries = prop.Select((spec, i) =>
+                    {
+                        int specIndex = im.LibrarySpecs.IndexOf(existing =>
+                            ReferenceEquals(existing?.Id, spec.Id));
+                        if (specIndex == -1)
+                        {
+                            // If no matching spec, try finding a library with the right filename
+                            string fileName = Path.GetFileName(spec.FilePath);
+                            specIndex = im.Libraries.IndexOf(existing =>
+                                Equals(existing.FileNameHint, fileName));
+                            // Use it only if it resolves an unresolved library spec
+                            if (specIndex != -1 && im.LibrarySpecs[specIndex] != null)
+                                specIndex = -1;
+                        }
+                        return specIndex != -1 ? im.Libraries[specIndex] : null;
+                    }).ToArray();
+                    im.LibrarySpecs = prop;
+                });
         }        
 
         public PeptideLibraries ChangeLibraries(IList<Library> prop)

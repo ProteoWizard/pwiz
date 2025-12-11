@@ -228,6 +228,16 @@ Based on the old branch, key areas to review:
   - **Updated FilesModelTest**: Fixed array indices after Chromatograms node reordering (Replicates moved from index 2 to 3)
   - **Added context menu item**: "Show File Names" checkbox appears on all context menus, dynamically updates tree on toggle
   - **Test coverage**: 79.7% (2216/2779 statements) - All 4 tests passing (TestFilesModel, TestFilesTreeFileSystem, TestFilesTreeForm, TestSkylineWindowEvents)
+- 2025-12-10: Added "Edit..." context menu item for file types (coverage: 79.6%):
+  - **New "Edit..." menu item**: Shows for Background Proteome, iRT Calculator, Optimization Library, Ion Mobility Library, and Spectral Library nodes
+  - **SpectralLibrary.Edit() method**: New static method to update library spec in document (similar to BackgroundProteome.Edit())
+  - **PeptideLibraries.ChangeLibrarySpecs() improvement**: Fixed to properly maintain library associations when specs change (maps by Id, falls back to filename hint)
+  - **Renamed Folder<T>() to RootChild<T>()**: Better semantics - returns child of root node of given model type (not necessarily a folder)
+  - **Identity comparison cleanup**: Changed from `GlobalIndex.Equals()` to `ReferenceEquals()` for identity comparison (cleaner and correct)
+  - **EditNode() public method**: Factored out from FilesTree_EditMenuItem event handler for testability
+  - **Test coverage for SpectralLibrary Edit rename**: Added comprehensive test in FilesTreeFormTest.TestSpectralLibraries()
+  - **Context menu tests updated**: Tests now verify editMenuItem appears for all 5 supported types
+  - **Test coverage**: 79.6% (2258/2835 statements) - All 3 tests passing (TestFilesModel, TestFilesTreeFileSystem, TestFilesTreeForm)
   - **Cleaner architecture**: Fewer folder classes (7 → 3), more consistent file display, better user control over naming
 
 ## Review Findings (2025-11-26)
@@ -272,11 +282,11 @@ Overall, the changes are very clean and intentional. The only questionable chang
 
 ## Code Coverage Analysis
 
-### Latest Coverage (2025-12-09) - File-Based Analysis
-- **Files Analyzed**: 23 production .cs files → 34 types (reduced after removing 4 single-item folder classes)
-- **Total Statements**: 2,779
-- **Covered Statements**: 2,216
-- **Coverage Percentage**: **79.7%** ⬆️ (+14.9% from initial baseline, +5.5% from previous)
+### Latest Coverage (2025-12-10) - File-Based Analysis
+- **Files Analyzed**: 23 production .cs files → 34 types
+- **Total Statements**: 2,835
+- **Covered Statements**: 2,258
+- **Coverage Percentage**: **79.6%** (stable, +0.1% statement increase from Edit menu additions)
 
 ### Coverage by Layer
 
