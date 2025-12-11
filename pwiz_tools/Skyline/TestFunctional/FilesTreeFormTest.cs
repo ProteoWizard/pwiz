@@ -28,8 +28,10 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.IonMobility;
@@ -73,7 +75,9 @@ namespace pwiz.SkylineTestFunctional
                 @"TestFunctional\FilesTreeFormTest.zip",
                 @"https://skyline.ms/tutorials/GroupedStudies.zip"  // Rat_plasma.sky
             };
-            RunFunctionalTest();
+
+            using (new AuditLogList.IgnoreTestChecksScope())    // Keep !IgnoreTestChecks from causing confusion in audit log tests
+                RunFunctionalTest();
         }
 
         private string GetTestPath(string relativePath)
@@ -270,8 +274,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var documentPath = GetTestPath(Path.Combine(@"TestUpgradeExistingDocumentWithFilesTree", @"UpgradeWithFilesTree.sky"));
 
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
-            WaitForDocumentLoaded();
+            OpenDocument(documentPath);
 
             Assert.IsNotNull(SkylineWindow.FilesTreeForm);
             Assert.IsNotNull(SkylineWindow.FilesTree);
@@ -308,9 +311,9 @@ namespace pwiz.SkylineTestFunctional
 
                 SkylineWindow.NewDocument();
                 WaitForDocumentLoaded();
-
-                SkylineWindow.OpenFile(documentPath);
             });
+
+            OpenDocument(documentPath);
 
             // CONSIDER: Assert the .view file contains the FilesTreeShownOnce token
 
@@ -328,8 +331,7 @@ namespace pwiz.SkylineTestFunctional
         {
             PrepareRatPlasmaFile(TestFilesDirs[0], TestFilesDirs[1]);
             var documentPath = GetTestPath(RAT_PLASMA_FILE_NAME);
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
-
+            OpenDocument(documentPath);
             // Wait until SequenceTree is visible - does not wait on FilesTree because it's not visible yet
             WaitForConditionUI(() => SkylineWindow.SequenceTreeFormIsVisible);
 
@@ -353,9 +355,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(RAT_PLASMA_FILE_NAME, SkylineWindow.FilesTree.Root.Text);
             AssertFileState(FileState.available, SkylineWindow.FilesTree.Root);
 
-            TestRestoreViewState();
+            ValidateViewStateRestored();
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
+
+            // Enable audit logging and test double-click opens the audit log form
+            AddAuditLog();
+
+            AssertTopLevelFiles(typeof(SkylineAuditLog), typeof(SkylineViewFile), typeof(SpectralLibrariesFolder), typeof(SkylineChromatogramCache), typeof(ReplicatesFolder));
 
             //
             // Edit SrmDocument directly and make sure FilesTree updates correctly
@@ -403,7 +410,7 @@ namespace pwiz.SkylineTestFunctional
                 var auditLogSize = SkylineWindow.Document.AuditLog.AuditLogEntries.Count;
                 var cancelEvent = SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName);
                 Assert.IsFalse(cancelEvent);
-                // Check no new entries were added to the audit log
+                // Check one entry was added to the audit log
                 Assert.AreEqual(auditLogSize + 1, SkylineWindow.Document.AuditLog.AuditLogEntries.Count);
             });
             WaitForFilesTree();
@@ -537,6 +544,35 @@ namespace pwiz.SkylineTestFunctional
 
             // Add Optimization Library (.optdb), verify it appears, and test rename
             AddOptimizationLibrary("Rat_settings" + OptimizationDb.EXT);
+        }
+
+        /// <summary>
+        /// Enable audit logging via the AuditLogForm and verify double-click opens the audit log form.
+        /// </summary>
+        private void AddAuditLog()
+        {
+            // Enable audit logging
+            {
+                var auditLogForm = ShowDialog<AuditLogForm>(SkylineWindow.ShowAuditLog);
+
+                using (new WaitDocumentChange())
+                    RunUI(() => auditLogForm.EnableAuditLogging(true));
+                WaitForFilesTree();
+
+                Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
+
+                OkDialog(auditLogForm, auditLogForm.Close);
+            }
+
+            // Verify audit log node appears in FilesTree
+            {
+                var auditLogNode = SkylineWindow.FilesTree.RootChild<SkylineAuditLog>();
+                Assert.IsNotNull(auditLogNode, "SkylineAuditLog node should appear in FilesTree when audit logging is enabled");
+
+                // Test double-click opens the audit log form
+                var auditLogForm = ShowDialog<AuditLogForm>(() => SkylineWindow.FilesTreeForm.DoubleClickNode(auditLogNode));
+                OkDialog(auditLogForm, auditLogForm.Close);
+            }
         }
 
         /// <summary>
@@ -754,6 +790,7 @@ namespace pwiz.SkylineTestFunctional
             ShowFilesTreeNodeTip(replicateNode);
 
             // Test tooltip for replicate sample file node
+            RunUI(() => replicateNode.Expand());    // Closed during undo
             var sampleFileNode = (FilesTreeNode)replicateNode.Nodes[0];
             ShowFilesTreeNodeTip(sampleFileNode);
 
@@ -854,9 +891,9 @@ namespace pwiz.SkylineTestFunctional
 
             // Finally test the root .sky file node and its companion files
             ShowFilesTreeNodeMenu(tree.Root, minimumFileMenu);
-            // Need to enable audit logging to have it in the FilesTree to click on
-            // ShowFilesTreeNodeMenu(tree.RootChild<SkylineAuditLog>(), new[]
-            //     { menu.OpenContainingFolderMenuItem, menu.OpenAuditLogMenuItem });
+            // Audit log was enabled in AddAuditLog() so it should be in the FilesTree
+            ShowFilesTreeNodeMenu(tree.RootChild<SkylineAuditLog>(), new[]
+                { menu.OpenContainingFolderMenuItem, menu.OpenAuditLogMenuItem });
             ShowFilesTreeNodeMenu(tree.RootChild<SkylineViewFile>(), minimumFileMenu);
         }
 
@@ -1050,7 +1087,12 @@ namespace pwiz.SkylineTestFunctional
                     var libraryFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                     Assert.AreEqual(rename, ((FilesTreeNode)libraryFolder.Nodes[0]).Name);
                 });
-                RunUI(SkylineWindow.Undo);
+                RunUI(() =>
+                {
+                    SkylineWindow.Undo();
+                    // Restore Settings.Default to original state, since leaving it will cause problems for other tests
+                    Settings.Default.SpectralLibraryList[0] = SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.LibrarySpecs[0];
+                });
             }
 
             // Remove All
@@ -1154,7 +1196,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // Assumes rat-plasma.sky is loaded
-        private void TestRestoreViewState()
+        private void ValidateViewStateRestored()
         {
             RunUI(() =>
             {
@@ -1264,12 +1306,17 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SkylineWindow.FilesTree.IsMonitoringDirectory(SkylineWindow.DocumentFilePath));
         }
 
+        private void RestoreAuditLogDocument()
+        {
+            RestoreOriginalDocument(1); // Audit log is added as the first operation in the test
+        }
+
         protected void TestDragAndDrop()
         {
             {
                 // Reset to original document state instead of reopening file - much faster
-                RestoreOriginalDocument();
-                WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
+                RestoreAuditLogDocument();
+                WaitForFilesTree();
 
                 var indexOfLastReplicate = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes.Count - 1;
 
@@ -1344,8 +1391,8 @@ namespace pwiz.SkylineTestFunctional
         protected void TestDragAndDropOnParentNode()
         {
             // Reset to original document state instead of reopening file - much faster
-            RestoreOriginalDocument();
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
+            RestoreAuditLogDocument();
+            WaitForFilesTree();
 
             // A, B, C, D => Drag B, C to Parent Node => A, D, B, C
             var dndParams = DragAndDrop<ReplicatesFolder>(new[] { 1, 2, 3 }, -1, DragAndDropDirection.down, MoveType.move_last);
@@ -1357,12 +1404,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestReplicateLabelEdit()
         {
-            // Need to reopen file to get pristine replicate order - undo buffer may have reordered replicates
-            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
-            WaitForDocumentLoaded();
-            RunUI(() => SkylineWindow.ShowFilesTreeForm(true));
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
+            RestoreAuditLogDocument();
+            WaitForFilesTree();
 
             var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             Assert.AreEqual(@"D_102_REP1", replicatesFolder.Nodes[0].Name);
@@ -1400,8 +1443,8 @@ namespace pwiz.SkylineTestFunctional
         protected void TestDragSimulation()
         {
             // Reset to original document state instead of reopening file - much faster
-            RestoreOriginalDocument();
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
+            RestoreAuditLogDocument();
+            WaitForFilesTree();
 
             var filesTreeForm = SkylineWindow.FilesTreeForm;
             var simulator = new DragDropSimulator(filesTreeForm);

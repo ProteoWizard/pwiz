@@ -246,6 +246,19 @@ Based on the old branch, key areas to review:
   - **Fixed TestReplicateLabelEdit timeout**: Added `ShowFilesTreeForm(true)` after `OpenFile()` since opening a file closes all tool windows
   - **Test coverage**: 84.2% (2478/2943 statements) - All 4 tests passing (TestFilesModel, TestFilesTreeFileSystem, TestFilesTreeForm, TestSkylineWindowEvents)
   - **Key coverage improvements**: FilesTreeForm 81.8%, DragDropSimulator 89.9%, Replicate 100%
+- 2025-12-11: Added audit log testing and improved test infrastructure:
+  - **New `AuditLogList.IgnoreTestChecksScope` class**: RAII pattern for scoping `IgnoreTestChecks` flag safely (replaces try/finally patterns)
+  - **New `SkylineWindow.UndoAll()` method**: Convenience method to undo all changes back to a specific document version
+  - **Added `AddAuditLog()` test method**: Enables audit logging via AuditLogForm, verifies node appears in FilesTree, tests double-click opens audit log form
+  - **Uncommented audit log right-click menu test**: Now tests OpenContainingFolder and OpenAuditLog menu items for SkylineAuditLog node
+  - **New `RestoreAuditLogDocument()` helper**: Restores to version 1 (after audit log added) instead of reopening file (faster and exercises undo stack)
+  - **Refactored test to use undo instead of file reopen**: Replaced several `OpenFile()` calls with `RestoreAuditLogDocument()` - faster and provides additional undo stack test coverage
+  - **Fixed replicate node expansion**: Added `replicateNode.Expand()` before tooltip test (node was collapsed during undo)
+  - **Fixed Settings.Default.SpectralLibraryList**: Properly restore after rename test to avoid affecting other tests
+  - **Renamed `TestRestoreViewState` to `ValidateViewStateRestored`**: More descriptive method name
+  - **Updated other tests to use IgnoreTestChecksScope**: SrmSettingsTest, AuditLogSavingTest, ChangeDocumentGuidTest, LiveReportsTutorialTest
+  - **Improved AbstractFunctionalTestEx**: `RestoreOriginalDocument()` now accepts version parameter, `OpenDocument()` handles absolute paths
+  - **Improved ScopedAction**: Swapped constructor parameter order (initAction, disposeAction) and added single-param overload
 
 ## Review Findings (2025-11-26)
 

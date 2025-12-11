@@ -1234,6 +1234,15 @@ namespace pwiz.Skyline
             _undoManager.Undo();
         }
 
+        /// <summary>
+        /// Undoes all changes back to a specific version.
+        /// </summary>
+        /// <param name="version">Document version number starting at 0 for the original document</param>
+        public void UndoAll(int version = 0)
+        {
+            _undoManager.UndoRestore(_undoManager.UndoCount - 1 - version);
+        }
+
         public void UndoRestore(int index)
         {
             _undoManager.UndoRestore(index);

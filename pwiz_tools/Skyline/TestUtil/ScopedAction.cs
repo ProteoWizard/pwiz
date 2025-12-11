@@ -68,12 +68,17 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Creates a scoped action that will execute the dispose action when the scope exits.
         /// </summary>
-        /// <param name="disposeAction">Action to execute when Dispose() is called (required)</param>
         /// <param name="initAction">Optional action to execute immediately in the constructor</param>
-        public ScopedAction(Action disposeAction, Action initAction = null)
+        /// <param name="disposeAction">Action to execute when Dispose() is called (required)</param>
+        public ScopedAction(Action initAction, Action disposeAction)
         {
             _disposeAction = disposeAction ?? throw new ArgumentNullException(nameof(disposeAction));
             initAction?.Invoke();
+        }
+
+        public ScopedAction(Action disposeAction)
+            : this(null, disposeAction)
+        {
         }
 
         public void Dispose()

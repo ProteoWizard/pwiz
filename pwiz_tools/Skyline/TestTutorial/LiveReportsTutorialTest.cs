@@ -70,9 +70,9 @@ namespace pwiz.SkylineTestTutorial
                 "https://skyline.ms/tutorials/LiveReports.zip",
                 @"TestTutorial\LiveReportsViews.zip"
             };
-            AuditLogList.IgnoreTestChecks = true;
-            RunFunctionalTest();
-            AuditLogList.IgnoreTestChecks = false;
+
+            using (new AuditLogList.IgnoreTestChecksScope())
+                RunFunctionalTest();
         }
 
         private string GetTestPath(string relativePath)
