@@ -9,18 +9,27 @@
 # type names (Namespace.ClassName) from the uncommented .cs files listed below, then
 # measures coverage for those exact types in the coverage JSON.
 #
-# Total files added by branch: 31
-# Included in coverage: 24 production code files
+# Total files added by branch: 32
+# Included in coverage: 25 production code files
 # Excluded: 4 test files, 2 auto-generated resources, 1 designer file
+#
+# ============================================================================
+# TESTS TO RUN FOR COVERAGE (copy to SkylineTester test list.txt)
+# ============================================================================
+# TestFilesModel
+# TestFilesTreeFileSystem
+# TestFilesTreeForm
+# TestSkylineWindowEvents
 
 # ============================================================================
-# PRODUCTION CODE - INCLUDED IN COVERAGE ANALYSIS (24 files)
+# PRODUCTION CODE - INCLUDED IN COVERAGE ANALYSIS (25 files)
 # ============================================================================
 
 # Core Files view UI components
 pwiz_tools/Skyline/Controls/FilesTree/FilesTree.cs
 pwiz_tools/Skyline/Controls/FilesTree/FilesTreeNode.cs
 pwiz_tools/Skyline/Controls/FilesTree/FilesTreeForm.cs
+pwiz_tools/Skyline/Controls/FilesTree/DragDropHandler.cs
 # pwiz_tools/Skyline/Controls/FilesTree/FilesTreeForm.Designer.cs  # Auto-generated designer file
 
 # File system services
@@ -73,8 +82,8 @@ pwiz_tools/Skyline/Model/Files/SpectralLibrary.cs
 # ============================================================================
 # SUMMARY
 # ============================================================================
-# Total files added by branch: 31
-# Included in coverage: 24 production code files
+# Total files added by branch: 32
+# Included in coverage: 25 production code files
 # Excluded from coverage:
 #   - 4 test files (functional tests)
 #   - 1 developer tool (ImageExtractor)

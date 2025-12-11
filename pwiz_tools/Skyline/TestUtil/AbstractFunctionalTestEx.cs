@@ -111,6 +111,17 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.BeginInvoke((Action) (() => SkylineWindow.OpenFile(documentFile)));
         }
 
+        /// <summary>
+        /// Restore the document to its original state using the undo buffer.
+        /// Much faster than reopening from disk since it swaps in-memory immutable trees.
+        /// </summary>
+        public SrmDocument RestoreOriginalDocument()
+        {
+            using var _ = new WaitDocumentChange(null, true);
+            RunUI(() => SkylineWindow.UndoRestore(0));
+            return SkylineWindow.Document;
+        }
+
         public static void CheckConsistentLibraryInfo(SrmDocument doc = null)
         {
             foreach (var nodeGroup in (doc ?? SkylineWindow.Document).MoleculeTransitionGroups)

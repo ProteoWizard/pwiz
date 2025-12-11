@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         private NodeTip _nodeTip;
         private Panel _dropTargetRemove;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
+        private IDragDropHandler _dragDropHandler = DefaultDragDropHandler.Instance;
 
         public FilesTreeForm()
         {
@@ -568,6 +569,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         public ToolStripMenuItem RemoveMenuItem => removeMenuItem;
         public ToolStripMenuItem DebugRefreshTreeMenuItem => debugRefreshTreeMenuItem;
 
+        public bool IsDebugMenu(ToolStripMenuItem item)
+        {
+            return ReferenceEquals(item, DebugRefreshTreeMenuItem);
+        }
+
         /// <summary>
         /// Test helper flag to signal when the context menu Opening event has completed
         /// </summary>
@@ -591,6 +597,64 @@ namespace pwiz.Skyline.Controls.FilesTree
             var rect = node.Bounds;
             var pt = new Point((rect.Left + rect.Right) / 2, (rect.Top + rect.Bottom) / 2);
             filesTreeContextMenu.Show(FilesTree, pt);
+        }
+
+        #endregion
+
+        #region Test helpers for drag-drop simulation
+
+        public IDragDropHandler DragDropHandler
+        {
+            get => _dragDropHandler;
+            set => _dragDropHandler = value ?? DefaultDragDropHandler.Instance;
+        }
+
+        public bool IsRemoveDropTargetVisible => _dropTargetRemove.Visible;
+
+        public void SimulateMouseDown(Point treePoint)
+        {
+            FilesTree_MouseDown(null, new MouseEventArgs(MouseButtons.Left, 1, treePoint.X, treePoint.Y, 0));
+        }
+
+        public void SimulateMouseMoveWithLeftButton(Point treePoint)
+        {
+            FilesTree_MouseMove(treePoint, MouseButtons.Left);
+        }
+
+        public void RaiseDragEnter(DragEventArgs e)
+        {
+            FilesTree_DragEnter(filesTree, e);
+        }
+
+        public void RaiseDragOver(DragEventArgs e)
+        {
+            FilesTree_DragOver(filesTree, e);
+        }
+
+        public void RaiseDragLeave()
+        {
+            FilesTree_DragLeave(filesTree, EventArgs.Empty);
+        }
+
+        public void RaiseDragDrop(DragEventArgs e)
+        {
+            FilesTree_DragDrop(filesTree, e);
+        }
+
+        public void RaiseRemoveTargetDragEnter(DragEventArgs e)
+        {
+            DropTargetRemove_DragEnter(_dropTargetRemove, e);
+        }
+
+        public void RaiseRemoveTargetDragDrop(DragEventArgs e)
+        {
+            DropTargetRemove_DragDrop(_dropTargetRemove, e);
+        }
+
+        public void RaiseQueryContinueDrag(bool escapePressed)
+        {
+            var args = new QueryContinueDragEventArgs(0, escapePressed, DragAction.Continue);
+            FilesTree_QueryContinueDrag(filesTree, args);
         }
 
         #endregion
@@ -921,7 +985,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
                 dataObj.SetData(typeof(FilesTreeNode), draggedNodes);
             
-                filesTree.DoDragDrop(dataObj, DragDropEffects.Move);
+                _dragDropHandler.DoDragDrop(filesTree, dataObj, DragDropEffects.Move);
             }
         }
 

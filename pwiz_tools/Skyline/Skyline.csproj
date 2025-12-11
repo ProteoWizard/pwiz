@@ -409,6 +409,7 @@
     <Compile Include="Controls\FilesTree\FilesTreeForm.Designer.cs">
       <DependentUpon>FilesTreeForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\FilesTree\DragDropHandler.cs" />
     <Compile Include="Controls\FilesTree\FilesTreeNode.cs" />
     <Compile Include="Controls\FilesTree\FileSystemService.cs" />
     <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">

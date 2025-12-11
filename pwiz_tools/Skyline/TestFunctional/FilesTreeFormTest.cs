@@ -57,7 +57,7 @@ using OptimizationLibrary = pwiz.Skyline.Model.Files.OptimizationLibrary;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class FilesTreeFormTest : AbstractFunctionalTest
+    public class FilesTreeFormTest : AbstractFunctionalTestEx
     {
         internal const string RAT_PLASMA_FILE_NAME = @"Rat_plasma.sky";
         internal const int RAT_PLASMA_REPLICATE_COUNT = 42;
@@ -510,6 +510,8 @@ namespace pwiz.SkylineTestFunctional
 
             TestDragAndDropOnParentNode();
 
+            TestDragSimulation();
+
             TestReplicateLabelEdit();
 
             TestOtherFileTypes();
@@ -850,8 +852,12 @@ namespace pwiz.SkylineTestFunctional
             ShowFilesTreeNodeMenu(tree.RootChild<OptimizationLibrary>(), singleObjectMenu);
             ShowFilesTreeNodeMenu(tree.RootChild<IonMobilityLibrary>(), singleObjectMenu);
 
-            // Finally test the root .sky file node
+            // Finally test the root .sky file node and its companion files
             ShowFilesTreeNodeMenu(tree.Root, minimumFileMenu);
+            // Need to enable audit logging to have it in the FilesTree to click on
+            // ShowFilesTreeNodeMenu(tree.RootChild<SkylineAuditLog>(), new[]
+            //     { menu.OpenContainingFolderMenuItem, menu.OpenAuditLogMenuItem });
+            ShowFilesTreeNodeMenu(tree.RootChild<SkylineViewFile>(), minimumFileMenu);
         }
 
         /// <summary>
@@ -860,6 +866,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void ShowFilesTreeNodeMenu(FilesTreeNode node, IList<ToolStripMenuItem> visibleItems)
         {
+            Assert.IsNotNull(node);
             var filesTreeForm = SkylineWindow.FilesTreeForm;
             visibleItems = visibleItems.Concat(new[] { filesTreeForm.ShowFileNamesMenuItem }).ToList();
             using var scope = new ScopedAction(
@@ -880,7 +887,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var menu = filesTreeForm.TreeContextMenu;
                 var actualVisibleItems = menu.Items.OfType<ToolStripMenuItem>()
-                    .Where(item => item.Visible).ToArray();
+                    .Where(item => item.Visible && !filesTreeForm.IsDebugMenu(item)).ToArray();
                 Assert.IsTrue(actualVisibleItems.SequenceEqual(visibleItems),
                     string.Format("Unexpected menu items: Expected<{0}>, Actual<{1}>",
                         TextUtil.LineSeparate(visibleItems.Select(item => item.Text)),
@@ -1260,14 +1267,8 @@ namespace pwiz.SkylineTestFunctional
         protected void TestDragAndDrop()
         {
             {
-                // Start with a clean document
-                var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
-                RunUI(() =>
-                {
-                    SkylineWindow.OpenFile(documentPath);
-                    SkylineWindow.ShowFilesTreeForm(true);
-                });
-                WaitForDocumentLoaded();
+                // Reset to original document state instead of reopening file - much faster
+                RestoreOriginalDocument();
                 WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
                 var indexOfLastReplicate = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes.Count - 1;
@@ -1342,14 +1343,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestDragAndDropOnParentNode()
         {
-            // Start with a clean document
-            var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
-            RunUI(() =>
-            {
-                SkylineWindow.OpenFile(documentPath);
-                SkylineWindow.ShowFilesTreeForm(true);
-            });
-            WaitForDocumentLoaded();
+            // Reset to original document state instead of reopening file - much faster
+            RestoreOriginalDocument();
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
             // A, B, C, D => Drag B, C to Parent Node => A, D, B, C
@@ -1362,13 +1357,11 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestReplicateLabelEdit()
         {
-            // Start with a clean document
+            // Need to reopen file to get pristine replicate order - undo buffer may have reordered replicates
             var documentPath = TestFilesDirs[0].GetTestPath(RAT_PLASMA_FILE_NAME);
-            RunUI(() =>
-            {
-                SkylineWindow.OpenFile(documentPath);
-                SkylineWindow.ShowFilesTreeForm(true);
-            });
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForDocumentLoaded();
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(true));
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
 
             var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
@@ -1398,6 +1391,163 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(@"NEW NAME", replicatesFolder.Nodes[0].Name);
             Assert.AreEqual(@"NEW NAME", SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name);
             Assert.AreEqual(@"NEW NAME", SkylineWindow.FilesTree.RootChild<ReplicatesFolder>().Nodes[0].Name);
+        }
+
+        /// <summary>
+        /// Tests the drag-drop event handlers using DragDropSimulator to exercise code paths
+        /// that require mouse interaction in production.
+        /// </summary>
+        protected void TestDragSimulation()
+        {
+            // Reset to original document state instead of reopening file - much faster
+            RestoreOriginalDocument();
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible && SkylineWindow.FilesTree.IsComplete());
+
+            var filesTreeForm = SkylineWindow.FilesTreeForm;
+            var simulator = new DragDropSimulator(filesTreeForm);
+
+            RunUI(() => filesTreeForm.DragDropHandler = simulator);
+
+            // Test 1: Initiate drag from a replicate node
+            var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
+            var dragNode = replicatesFolder.NodeAt(0);
+
+            RunUI(() =>
+            {
+                // Select the node and simulate mouse down + move to initiate drag
+                SkylineWindow.FilesTree.SelectedNode = dragNode;
+                var nodeBounds = dragNode.Bounds;
+                var startPoint = new Point(nodeBounds.X + 10, nodeBounds.Y + nodeBounds.Height / 2);
+
+                filesTreeForm.SimulateMouseDown(startPoint);
+                // Move enough to trigger drag (past MoveThreshold)
+                var dragPoint = new Point(startPoint.X + 20, startPoint.Y + 20);
+                filesTreeForm.SimulateMouseMoveWithLeftButton(dragPoint);
+            });
+
+            // Verify drag was initiated
+            Assert.IsTrue(simulator.IsDragging);
+            Assert.IsNotNull(simulator.DragData);
+            Assert.AreEqual(DragDropEffects.Move, simulator.AllowedEffects);
+
+            RunUI(() => Assert.IsTrue(filesTreeForm.IsRemoveDropTargetVisible));
+
+            // Test 2: DragEnter event
+            var dropNode = replicatesFolder.NodeAt(2);
+            Point screenPoint = Point.Empty;
+            RunUI(() =>
+            {
+                var nodeBounds = dropNode.Bounds;
+                var clientPoint = new Point(nodeBounds.X + nodeBounds.Width / 2, nodeBounds.Y + nodeBounds.Height / 2);
+                screenPoint = SkylineWindow.FilesTree.PointToScreen(clientPoint);
+                simulator.SimulateDragEnter(screenPoint);
+            });
+
+            Assert.AreEqual(DragDropEffects.Move, simulator.LastEffect);
+
+            // Test 3: DragOver on valid target (another replicate)
+            RunUI(() => simulator.SimulateDragOver(screenPoint));
+            Assert.AreEqual(DragDropEffects.Move, simulator.LastEffect);
+
+            // Test 4: DragOver on invalid target (spectral library)
+            var librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
+            var invalidDropNode = librariesFolder.NodeAt(0);
+            RunUI(() =>
+            {
+                var nodeBounds = invalidDropNode.Bounds;
+                var clientPoint = new Point(nodeBounds.X + nodeBounds.Width / 2, nodeBounds.Y + nodeBounds.Height / 2);
+                var invalidScreenPoint = SkylineWindow.FilesTree.PointToScreen(clientPoint);
+                simulator.SimulateDragOver(invalidScreenPoint);
+            });
+
+            Assert.AreEqual(DragDropEffects.None, simulator.LastEffect);
+
+            // Test 5: DragLeave (mouse leaves the tree area)
+            RunUI(() => simulator.SimulateDragLeave());
+            // Note: DragLeave only hides effects if mouse is outside bounds
+
+            // Test 6: Cancel drag with Escape
+            simulator.EndDrag();
+            RunUI(() =>
+            {
+                // Start a new drag
+                SkylineWindow.FilesTree.SelectedNode = dragNode;
+                var nodeBounds = dragNode.Bounds;
+                var startPoint = new Point(nodeBounds.X + 10, nodeBounds.Y + nodeBounds.Height / 2);
+                filesTreeForm.SimulateMouseDown(startPoint);
+                var dragPoint = new Point(startPoint.X + 20, startPoint.Y + 20);
+                filesTreeForm.SimulateMouseMoveWithLeftButton(dragPoint);
+            });
+
+            Assert.IsTrue(simulator.IsDragging);
+            RunUI(() => simulator.SimulateEscapeCancel());
+            Assert.IsFalse(simulator.IsDragging);
+            RunUI(() => Assert.IsFalse(filesTreeForm.IsRemoveDropTargetVisible));
+
+            // Test 7: Successful drop via DragDrop event
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTree.SelectedNode = dragNode;
+                var nodeBounds = dragNode.Bounds;
+                var startPoint = new Point(nodeBounds.X + 10, nodeBounds.Y + nodeBounds.Height / 2);
+                filesTreeForm.SimulateMouseDown(startPoint);
+                var dragPoint = new Point(startPoint.X + 20, startPoint.Y + 20);
+                filesTreeForm.SimulateMouseMoveWithLeftButton(dragPoint);
+            });
+
+            Assert.IsTrue(simulator.IsDragging);
+
+            var oldDoc = SkylineWindow.Document;
+            RunUI(() =>
+            {
+                var targetNode = replicatesFolder.NodeAt(2);
+                var nodeBounds = targetNode.Bounds;
+                var clientPoint = new Point(nodeBounds.X + nodeBounds.Width / 2, nodeBounds.Y + nodeBounds.Height / 2);
+                var dropScreenPoint = SkylineWindow.FilesTree.PointToScreen(clientPoint);
+                simulator.SimulateDragEnter(dropScreenPoint);
+                simulator.SimulateDragOver(dropScreenPoint);
+                simulator.SimulateDrop(dropScreenPoint);
+            });
+
+            Assert.IsFalse(simulator.IsDragging);
+            WaitForDocumentChange(oldDoc);
+
+            // Test 8: Drop on remove target
+            replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
+            var nodeToRemove = replicatesFolder.NodeAt(0);
+            var nodeToRemoveName = nodeToRemove.Name;
+
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTree.SelectedNode = nodeToRemove;
+                var nodeBounds = nodeToRemove.Bounds;
+                var startPoint = new Point(nodeBounds.X + 10, nodeBounds.Y + nodeBounds.Height / 2);
+                filesTreeForm.SimulateMouseDown(startPoint);
+                var dragPoint = new Point(startPoint.X + 20, startPoint.Y + 20);
+                filesTreeForm.SimulateMouseMoveWithLeftButton(dragPoint);
+            });
+
+            Assert.IsTrue(simulator.IsDragging);
+            RunUI(() => Assert.IsTrue(filesTreeForm.IsRemoveDropTargetVisible));
+
+            oldDoc = SkylineWindow.Document;
+            var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
+            {
+                var removeTargetScreenPoint = Point.Empty; // Doesn't matter for remove target
+                simulator.SimulateRemoveTargetDragEnter(removeTargetScreenPoint);
+                simulator.SimulateRemoveTargetDrop(removeTargetScreenPoint);
+            });
+            OkDialog(confirmDlg, confirmDlg.ClickYes);
+
+            Assert.IsFalse(simulator.IsDragging);
+            WaitForDocumentChange(oldDoc);
+
+            // Verify the node was removed
+            replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
+            Assert.IsFalse(replicatesFolder.Nodes.Cast<TreeNode>().Any(n => n.Name == nodeToRemoveName));
+
+            // Clean up
+            RunUI(() => filesTreeForm.DragDropHandler = null);
         }
 
         /// <summary>

@@ -239,6 +239,13 @@ Based on the old branch, key areas to review:
   - **Context menu tests updated**: Tests now verify editMenuItem appears for all 5 supported types
   - **Test coverage**: 79.6% (2258/2835 statements) - All 3 tests passing (TestFilesModel, TestFilesTreeFileSystem, TestFilesTreeForm)
   - **Cleaner architecture**: Fewer folder classes (7 → 3), more consistent file display, better user control over naming
+- 2025-12-10: Added drag-drop test infrastructure (coverage increased from 79.6% to 84.2%):
+  - **New DragDropHandler.cs**: Created `IDragDropHandler` interface and `DragDropSimulator` class for testing drag-drop without mouse interaction
+  - **Test seams in FilesTreeForm**: Added `SimulateMouseDown`, `SimulateMouseMoveWithLeftButton`, `RaiseDragEnter`, `RaiseDragOver`, `RaiseDragDrop`, etc.
+  - **Comprehensive drag-drop tests**: Tests for reordering replicates, moving to remove target, escape cancellation
+  - **Fixed TestReplicateLabelEdit timeout**: Added `ShowFilesTreeForm(true)` after `OpenFile()` since opening a file closes all tool windows
+  - **Test coverage**: 84.2% (2478/2943 statements) - All 4 tests passing (TestFilesModel, TestFilesTreeFileSystem, TestFilesTreeForm, TestSkylineWindowEvents)
+  - **Key coverage improvements**: FilesTreeForm 81.8%, DragDropSimulator 89.9%, Replicate 100%
 
 ## Review Findings (2025-11-26)
 
