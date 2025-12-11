@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestTutorial
             CoverShotName = "PeakImputationDia";
             TestFilesZipPaths = new[]
             {
-                "https://proteome.gs.washington.edu/~nicksh/tutorials/PeakImputationDia.zip",
+                "https://skyline.ms/tutorials/PeakImputationDia.zip",
                 @"TestTutorial\PeakImputationDiaViews.zip"
             };
             RunFunctionalTest();
