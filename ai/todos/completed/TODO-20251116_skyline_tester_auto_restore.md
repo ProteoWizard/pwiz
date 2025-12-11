@@ -262,3 +262,56 @@ private void SkylineTesterWindow_Load(object sender, EventArgs e)
 - TODO-ai_test_list_integration.md - Future Run-Tests.ps1 enhancements (Phase 2)
 - PR #3667 - Build/test automation tooling foundation
 - TODO-20251107_httpclient_to_progress.md - Current work with script improvements
+
+---
+
+## Bug Fixes
+
+### Bug Fix 2025-12-10: Tri-State Visual Feedback Not Updated on "Select Failed Tests"
+
+**Branch**: `Skyline/work/20251210_skyline_tester_auto_restore-fix`
+**Reported**: 2025-12-10
+**Fixed**: 2025-12-10
+**PR**: (pending)
+
+#### Issue Description
+
+When clicking the "Select failed tests" button on the Output tab, tests were correctly selected but parent nodes did not immediately update their gray text state to reflect partial selection. The UI appeared unchanged (as in image 1 from issue report) until SkylineTester was restarted, at which point the tri-state visual feedback correctly displayed (as in image 2).
+
+**Expected behavior:** Parent nodes should immediately show gray text when only some children are selected.
+
+**Actual behavior:** Parent nodes remained in default text color until restart.
+
+#### Root Cause
+
+The `SetTests()` method in `TabTests.cs` (called by "Select failed tests" button) programmatically checked/unchecked child nodes but did not call `UpdateAllParentNodeCheckStates()` to refresh parent node visual state.
+
+On restart, `RestoreCheckedTestsFromFile()` correctly called `UpdateAllParentNodeCheckStates()`, which is why the UI appeared correct after restart.
+
+#### Fix Applied
+
+**Files modified:**
+1. **SkylineTesterWindow.cs:1554** - Changed `UpdateAllParentNodeCheckStates()` from `private` to `public` to allow `TabTests` to call it
+2. **TabTests.cs:199** - Added call to `MainWindow.UpdateAllParentNodeCheckStates(MainWindow.TestsTree)` after programmatically checking nodes in `SetTests()` method
+
+**Code changes:**
+```csharp
+// SkylineTesterWindow.cs - line 1554
+public void UpdateAllParentNodeCheckStates(TreeView treeView)  // Changed from private
+
+// TabTests.cs - added at line 199 in SetTests() method
+// Update parent node tri-state visual feedback (gray text for partial selection)
+MainWindow.UpdateAllParentNodeCheckStates(MainWindow.TestsTree);
+```
+
+#### Testing Notes
+
+Test the following workflow:
+1. Run some tests in SkylineTester (ensure at least one fails)
+2. Click "Select failed tests" button on Output tab
+3. Switch to Tests tab
+4. **Verify:** Parent nodes (Test.dll, TestData.dll, etc.) should immediately show gray text if only some of their children are checked
+5. Close and restart SkylineTester
+6. **Verify:** Visual state should remain consistent (no change from step 4)
+
+This fix ensures the tri-state visual feedback is updated immediately when programmatically selecting tests, matching the behavior when tests are manually checked/unchecked or restored from file on startup.

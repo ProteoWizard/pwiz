@@ -194,7 +194,9 @@ namespace SkylineTester
                 {
                     childNode.Checked = testSet.Contains(childNode.Text);
                 }
-            }            
+            }
+            // Update parent node tri-state visual feedback (gray text for partial selection)
+            MainWindow.UpdateAllParentNodeCheckStates(MainWindow.TestsTree);
             GetTestList(); // Updates the test list file contents
         }
 
