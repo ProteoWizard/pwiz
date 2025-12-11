@@ -245,7 +245,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 **Rules:**
 - **Maximum 10 lines total** including blank lines and attribution
-- **Single line for AI attribution** - Use "Co-Authored-By: Claude <noreply@anthropic.com>" (not "Generated with")
+- **Always include `Co-Authored-By` line** when an LLM agent contributed to the commit
 - **Reference TODO file** for detailed context and decisions
 - **Report mood** - "Added feature" not "Add feature" (like research paper methods section)
 
