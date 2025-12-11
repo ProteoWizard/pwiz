@@ -61,6 +61,12 @@ Quick reference for all `pw-*` project-specific slash commands.
 | `/pw-aicontext` | Begin ai-context branch documentation work. |
 | `/pw-aicontextsync` | Weekly ai-context branch sync workflow (uses sync script). |
 
+## Testing & Coverage
+
+| Command | Description |
+|---------|-------------|
+| `/pw-cover` | Run code coverage analysis for current branch. |
+
 ## Help
 
 | Command | Description |
