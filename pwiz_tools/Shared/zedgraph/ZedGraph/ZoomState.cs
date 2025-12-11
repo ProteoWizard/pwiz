@@ -68,7 +68,7 @@ namespace ZedGraph
 		/// <see cref="ScaleState"/> objects to store the state data from the axes.
 		/// </summary>
 		private ScaleState	_xAxis, _x2Axis;
-		private ScaleStateList _yAxis, _y2Axis;
+		public ScaleStateList _yAxis, _y2Axis;
 		/// <summary>
 		/// An enum value indicating the type of adjustment being made to the
 		/// scale range state.

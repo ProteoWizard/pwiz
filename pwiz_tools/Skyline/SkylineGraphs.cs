@@ -1815,11 +1815,11 @@ namespace pwiz.Skyline
 
             if (zoomAll)
             {
-                var activeForm = dockPanel.ActiveContent;
-                int iActive = _listGraphChrom.IndexOf(chrom => ReferenceEquals(chrom, activeForm));
-                ZoomState zoomState = (iActive != -1 ? _listGraphChrom[iActive].ZoomState : null);
-                if (zoomState != null)
-                    graphChromatogram_ZoomAll(null, new ZoomEventArgs(zoomState));
+                var activeForm = dockPanel.ActiveContent as GraphChromatogram;
+                if (activeForm != null)
+                {
+                    graphChromatogram_ZoomAll(activeForm, activeForm.GetZoomStates());
+                }
             }
         }
 
@@ -2451,14 +2451,18 @@ namespace pwiz.Skyline
                 _graphSpectrum.SelectSpectrum(e.SpectrumId);
         }
 
-        private void graphChromatogram_ZoomAll(object sender, ZoomEventArgs e)
+        private Dictionary<PaneKey, ZoomStateStack> _lastZoomState;
+
+        private void graphChromatogram_ZoomAll(GraphChromatogram sender, Dictionary<PaneKey, ZoomStateStack> zoomStates)
         {
-            foreach (var graphChrom in _listGraphChrom)
+            if (Settings.Default.AutoZoomAllChromatograms)
             {
-                if (!ReferenceEquals(sender, graphChrom))
+                foreach (var graphChrom in _listGraphChrom)
                 {
-                    graphChrom.ZoomTo(e.ZoomState);
-                    graphChrom.UpdateUI();
+                    if (!ReferenceEquals(sender, graphChrom))
+                    {
+                        graphChrom.ZoomTo(zoomStates);
+                    }
                 }
             }
         }

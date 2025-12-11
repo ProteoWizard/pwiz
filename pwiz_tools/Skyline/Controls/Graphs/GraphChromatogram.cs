@@ -512,12 +512,21 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         [Browsable(true)]
-        public event EventHandler<ZoomEventArgs> ZoomAll;
+        public event Action<GraphChromatogram, Dictionary<PaneKey, ZoomStateStack>> ZoomAll;
 
         private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
-            if (Settings.Default.AutoZoomAllChromatograms && ZoomAll != null)
-                ZoomAll.Invoke(this, new ZoomEventArgs(newState));
+            OnZoom();
+        }
+
+        private void OnZoom()
+        {
+            if (!Settings.Default.AutoZoomAllChromatograms || ZoomAll == null)
+            {
+                return;
+            }
+
+            ZoomAll(this, GetZoomStates());
         }
 
         /// <summary>
@@ -530,9 +539,35 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphPanes.ElementAt(paneIndex).GetAnnotationLabelStrings();
         }
 
-        public void ZoomTo(ZoomState zoomState)
+        public void ZoomTo(Dictionary<PaneKey, ZoomStateStack> states)
         {
-            zoomState.ApplyState(GraphPanes.First());
+            int count = 0;
+            foreach (var pane in GraphPanes)
+            {
+                var paneKey = _graphHelper?.GetPaneKey(pane) ?? default;
+                if (states.TryGetValue(paneKey, out var state))
+                {
+                    ApplyState(state, pane);
+                    count++;
+                }
+            }
+
+            if (count == 0)
+            {
+                ApplyState(states.Values.FirstOrDefault(), GraphPanes.First());
+            }
+            graphControl.Invalidate();
+            graphControl.Update();
+        }
+
+        private void ApplyState(ZoomStateStack state, GraphPane pane)
+        {
+            if (state != null)
+            {
+                pane.ZoomStack.Clear();
+                pane.ZoomStack.AddRange(state);
+                state.Top.ApplyState(pane);
+            }
         }
 
         /// <summary>
@@ -547,13 +582,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 pane.XAxis.Scale.Min = rtStartMeasured;
                 pane.XAxis.Scale.Max = rtEndMeasured;
                 pane.YAxis.Scale.Max = maxIntensity ?? pane.YAxis.Scale.Max;
-                var hold = graphControl.IsSynchronizeXAxes;
-                graphControl.IsSynchronizeXAxes = false; // just this one
-                ZoomState.ApplyState(pane);
-                if (ZoomAll != null)
-                    ZoomAll.Invoke(this, new ZoomEventArgs(ZoomState));
-                graphControl.IsSynchronizeXAxes = hold;
+                OnZoom();
             }
+        }
+
+        public Dictionary<PaneKey, ZoomStateStack> GetZoomStates()
+        {
+            var dict = new Dictionary<PaneKey, ZoomStateStack>();
+            foreach (var graphPane in graphControl.MasterPane.PaneList)
+            {
+                var paneKey = _graphHelper?.GetPaneKey(graphPane) ?? default;
+                dict.Add(paneKey, graphPane.ZoomStack);
+            }
+
+            return dict;
         }
 
         public void ZoomToPeak(double rtStart, double rtEnd)
@@ -568,11 +610,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             graphControl.Invalidate();
-        }
-
-        public ZoomState ZoomState
-        {
-            get { return new ZoomState(GraphPanes.First(), ZoomState.StateType.Zoom); }
         }
 
         public void LockZoom()
@@ -827,7 +864,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public void UpdateUI(bool selectionChanged = true)
-        {         
+        {
             Messages.Clear();
             IsCacheInvalidated = false;
 
@@ -3658,7 +3695,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 (PeptideDocNode) imputedBoundsParameter.Document.FindNode(imputedBoundsParameter.IdentityPath), imputedBoundsParameter.ChromatogramSet,
                 imputedBoundsParameter.FilePath);
         }
-
 
         #region Test support
 
