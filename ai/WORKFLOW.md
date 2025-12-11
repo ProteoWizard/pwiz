@@ -237,7 +237,11 @@ Brief summary of change (imperative mood)
 
 Optional 2-3 line explanation if needed.
 Details belong in TODO file, not commit message.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+**LLM Attribution:** Always include the `Co-Authored-By` line when an LLM agent contributed to the commit. This is the standard attribution format for AI-assisted development.
 
 **Examples:**
 ```bash
@@ -245,7 +249,9 @@ Details belong in TODO file, not commit message.
 git commit -m "Balance documentation tone and restore TODO-20251105 goals
 
 Moved BUILD-TEST.md to ai/docs/, created documentation-maintenance.md.
-See TODO-20251105_improve_tool_support_for_ai_dev.md Phase 5 for details."
+See TODO-20251105_improve_tool_support_for_ai_dev.md Phase 5 for details.
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
 
 # Bad - too verbose
 git commit -m "This commit addresses documentation violations...
