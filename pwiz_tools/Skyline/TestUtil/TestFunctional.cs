@@ -1166,13 +1166,27 @@ namespace pwiz.SkylineTestUtil
         public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
+            var extraNote = string.Empty;
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                Program.MainWindow.Invoke(new Action(() => isCondition = func()));
+
+                // Avoid "System.InvalidOperationException: Invoke or BeginInvoke cannot be called on a control until the window handle has been created."
+                if (Program.MainWindow.IsHandleCreated && !Program.MainWindow.IsDisposed)
+                {
+                    Program.MainWindow.Invoke(new Action(() => isCondition = func()));
+                    extraNote = string.Empty;
+                }
+                else
+                {
+                    extraNote = Program.MainWindow.IsDisposed ?
+                        @" Program.MainWindow is disposed,":
+                        @" Program.MainWindow handle not created,";
+                }
+
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -1191,7 +1205,7 @@ namespace pwiz.SkylineTestUtil
                 if (timeoutMessage != null)
                     RunUI(() => msg = " (" + timeoutMessage() + ")");
 
-                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
+                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForConditionUI{1}. {2}Open forms: {3}", waitCycles * SLEEP_INTERVAL / 1000, msg, extraNote, GetOpenFormsString());
             }
             return false;
         }
