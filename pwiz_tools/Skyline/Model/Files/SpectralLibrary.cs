@@ -51,7 +51,8 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
-        protected override string FileTypeText => _includeTypePrefix ? FileResources.FileModel_Libraries : string.Empty;
+        public static string TypeText => FileResources.FileModel_Libraries;
+        protected override string FileTypeText => _includeTypePrefix ? TypeText : string.Empty;
         public override ImageId ImageAvailable => ImageId.peptide_library;
 
         public static LibrarySpec LoadLibrarySpecFromDocument(SrmDocument document, SpectralLibrary library)

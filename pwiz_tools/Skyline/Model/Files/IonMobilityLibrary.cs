@@ -38,7 +38,8 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
-        protected override string FileTypeText => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
+        public static string TypeText => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
+        protected override string FileTypeText => TypeText;
         public override ImageId ImageAvailable => ImageId.ims_db;
 
         public static ModifiedDocument Edit(SrmDocument doc, IonMobility.IonMobilityLibrary newLib)

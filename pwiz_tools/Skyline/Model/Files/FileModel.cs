@@ -137,25 +137,33 @@ namespace pwiz.Skyline.Model.Files
         protected bool ShowFileName => SkylineFile.ShowFileNames;
 
         /// <summary>
+        /// Computes the display text for a file model from its components.
+        /// This static method allows tests to verify expected display text without depending on instance state.
+        /// </summary>
+        /// <param name="fileTypeText">The file type prefix (e.g., "Background Proteome"), or empty string for no prefix</param>
+        /// <param name="name">The resource/friendly name (e.g., "Rat mini")</param>
+        /// <param name="filePath">The full file path (e.g., "C:\data\Rat_mini.protdb")</param>
+        /// <param name="showFileName">true to show file name from path, false to show resource name</param>
+        /// <returns>The formatted display text</returns>
+        public static string GetDisplayText(string fileTypeText, string name, string filePath, bool showFileName)
+        {
+            var displayName = showFileName ? Path.GetFileName(filePath) : name;
+            // If type text is empty, just return the display name
+            if (string.IsNullOrEmpty(fileTypeText))
+                return string.IsNullOrEmpty(displayName) ? name : displayName;
+
+            // If display name is empty, just return the type prefix alone
+            return string.IsNullOrEmpty(displayName)
+                ? fileTypeText
+                : string.Format(FOLDER_FILE_NAME_FORMAT, fileTypeText, displayName);
+        }
+
+        /// <summary>
         /// Gets the formatted display text for this file model shown in the tree view.
         /// Combines FileTypeText with either the resource name or file name based on ShowFileName setting.
         /// Can be overridden for custom formatting behavior.
         /// </summary>
-        public string DisplayText
-        {
-            get
-            {
-                var displayName = ShowFileName ? Path.GetFileName(FilePath) : Name;
-                // If type text is empty, just return the display name
-                if (string.IsNullOrEmpty(FileTypeText))
-                    return string.IsNullOrEmpty(displayName) ? Name : displayName;
-
-                // If display name is empty, just return the type prefix alone
-                return string.IsNullOrEmpty(displayName)
-                    ? FileTypeText
-                    : string.Format(FOLDER_FILE_NAME_FORMAT, FileTypeText, displayName);
-            }
-        }
+        public string DisplayText => GetDisplayText(FileTypeText, Name, FilePath, ShowFileName);
 
         public virtual ImageId ImageAvailable => ImageId.file;
         public virtual ImageId ImageMissing => ImageId.file_missing;

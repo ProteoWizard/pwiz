@@ -36,7 +36,8 @@ namespace pwiz.Skyline.Model.Files
 
         public override string Name => string.Empty; // No resource name
         public override string FilePath { get; }
-        protected override string FileTypeText => FileResources.FilesTree_AuditLog;
+        public static string TypeText => FileResources.FilesTree_AuditLog;
+        protected override string FileTypeText => TypeText;
         public override ImageId ImageAvailable => ImageId.audit_log;
     }
 }

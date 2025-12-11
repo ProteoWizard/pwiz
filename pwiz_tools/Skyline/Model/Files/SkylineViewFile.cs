@@ -37,7 +37,8 @@ namespace pwiz.Skyline.Model.Files
 
         public override string Name => string.Empty; // No resource name
         public override string FilePath { get; }
-        protected override string FileTypeText => FileResources.FileModel_ViewFile;
+        public static string TypeText => FileResources.FileModel_ViewFile;
+        protected override string FileTypeText => TypeText;
         public override ImageId ImageAvailable => ImageId.view_file;
     }
 }

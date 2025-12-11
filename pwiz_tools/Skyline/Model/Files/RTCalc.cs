@@ -38,7 +38,8 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
-        protected override string FileTypeText => SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator;
+        public static string TypeText => SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator;
+        protected override string FileTypeText => TypeText;
         public override ImageId ImageAvailable => ImageId.irt_calculator;
 
         public static ModifiedDocument Edit(SrmDocument doc, RetentionScoreCalculatorSpec newCalc)

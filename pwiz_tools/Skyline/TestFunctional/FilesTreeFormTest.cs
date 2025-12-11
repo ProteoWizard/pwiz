@@ -526,6 +526,8 @@ namespace pwiz.SkylineTestFunctional
             TestToolTips();
 
             TestRightClickMenus();
+
+            TestShowFileNames();
         }
 
         /// <summary>
@@ -581,6 +583,7 @@ namespace pwiz.SkylineTestFunctional
         private void AddBackgroundProteome(string fileName)
         {
             string name = Path.GetFileNameWithoutExtension(fileName);
+            string filePath = GetTestPath(fileName);
             using (new WaitDocumentChange())
             {
                 var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -588,15 +591,15 @@ namespace pwiz.SkylineTestFunctional
                     dlg =>
                     {
                         dlg.BackgroundProteomeName = name;
-                        dlg.OpenBackgroundProteome(GetTestPath(fileName));
+                        dlg.OpenBackgroundProteome(filePath);
                         dlg.OkDialog();
                     });
                 OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             }
 
-            // Verify background proteome was added
+            // Verify background proteome was added with correct name and path
             var node = ValidateSingleEntry<BackgroundProteome, BackgroundProteomeSpec>(
-                name, Settings.Default.BackgroundProteomeList);
+                name, Settings.Default.BackgroundProteomeList, filePath);
 
             // Test double-click rename
             string rename = name + "_renamed";
@@ -610,9 +613,9 @@ namespace pwiz.SkylineTestFunctional
                     });
             }
 
-            // Verify background proteome was renamed
+            // Verify background proteome was renamed (path stays the same)
             ValidateSingleEntry<BackgroundProteome, BackgroundProteomeSpec>(
-                rename, Settings.Default.BackgroundProteomeList);
+                rename, Settings.Default.BackgroundProteomeList, filePath);
         }
 
         /// <summary>
@@ -621,22 +624,23 @@ namespace pwiz.SkylineTestFunctional
         private void AddIrtCalculator(string fileName)
         {
             string name = Path.GetFileNameWithoutExtension(fileName);
+            string filePath = GetTestPath(fileName);
             using (new WaitDocumentChange())
             {
                 var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
                 RunDlg<EditIrtCalcDlg>(peptideSettingsUI.AddCalculator, dlg =>
                 {
                     dlg.CalcName = name;
-                    dlg.OpenDatabase(GetTestPath(fileName));
+                    dlg.OpenDatabase(filePath);
                     dlg.OkDialog();
                 });
                 var createRegressionDlg = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettingsUI.OkDialog);
                 OkDialog(createRegressionDlg, createRegressionDlg.BtnNoClick);
             }
 
-            // Verify iRT calculator was added
+            // Verify iRT calculator was added with correct name and path
             var node = ValidateSingleEntry<RTCalc, RetentionScoreCalculatorSpec>(
-                name, Settings.Default.RTScoreCalculatorList);
+                name, Settings.Default.RTScoreCalculatorList, filePath);
 
             // Test Edit rename
             string rename = name + "_renamed";
@@ -650,9 +654,9 @@ namespace pwiz.SkylineTestFunctional
                     });
             }
 
-            // Verify iRT calculator was renamed
+            // Verify iRT calculator was renamed (path stays the same)
             ValidateSingleEntry<RTCalc, RetentionScoreCalculatorSpec>(
-                rename, Settings.Default.RTScoreCalculatorList);
+                rename, Settings.Default.RTScoreCalculatorList, filePath);
         }
 
         /// <summary>
@@ -661,6 +665,7 @@ namespace pwiz.SkylineTestFunctional
         private void AddIonMobilityLibrary(string fileName)
         {
             string name = Path.GetFileNameWithoutExtension(fileName);
+            string filePath = GetTestPath(fileName);
             using (new WaitDocumentChange())
             {
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -668,15 +673,15 @@ namespace pwiz.SkylineTestFunctional
                     dlg =>
                     {
                         dlg.LibraryName = name;
-                        dlg.OpenDatabase(GetTestPath(fileName));
+                        dlg.OpenDatabase(filePath);
                         dlg.OkDialog();
                     });
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
 
-            // Verify ion mobility library was added
+            // Verify ion mobility library was added with correct name and path
             var node = ValidateSingleEntry<IonMobilityLibrary, Skyline.Model.IonMobility.IonMobilityLibrary>(
-                name, Settings.Default.IonMobilityLibraryList);
+                name, Settings.Default.IonMobilityLibraryList, filePath);
 
             // Test double-click rename
             string rename = name + "_renamed";
@@ -690,9 +695,9 @@ namespace pwiz.SkylineTestFunctional
                     });
             }
 
-            // Verify ion mobility library was renamed
+            // Verify ion mobility library was renamed (path stays the same)
             ValidateSingleEntry<IonMobilityLibrary, Skyline.Model.IonMobility.IonMobilityLibrary>(
-                rename, Settings.Default.IonMobilityLibraryList);
+                rename, Settings.Default.IonMobilityLibraryList, filePath);
         }
 
         /// <summary>
@@ -701,6 +706,7 @@ namespace pwiz.SkylineTestFunctional
         private void AddOptimizationLibrary(string fileName)
         {
             string name = Path.GetFileNameWithoutExtension(fileName);
+            string filePath = GetTestPath(fileName);
             using (new WaitDocumentChange())
             {
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -708,15 +714,15 @@ namespace pwiz.SkylineTestFunctional
                     dlg =>
                     {
                         dlg.LibName = name;
-                        dlg.OpenDatabase(GetTestPath(fileName));
+                        dlg.OpenDatabase(filePath);
                         dlg.OkDialog();
                     });
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
 
-            // Verify optimization library was added
+            // Verify optimization library was added with correct name and path
             var node = ValidateSingleEntry<OptimizationLibrary, Skyline.Model.Optimization.OptimizationLibrary>(
-                name, Settings.Default.OptimizationLibraryList);
+                name, Settings.Default.OptimizationLibraryList, filePath);
 
             // Test Edit rename
             string rename = name + "_renamed";
@@ -730,16 +736,19 @@ namespace pwiz.SkylineTestFunctional
                     });
             }
 
-            // Verify optimization library was renamed
+            // Verify optimization library was renamed (path stays the same)
             ValidateSingleEntry<OptimizationLibrary, Skyline.Model.Optimization.OptimizationLibrary>(
-                rename, Settings.Default.OptimizationLibraryList);
+                rename, Settings.Default.OptimizationLibraryList, filePath);
         }
 
         /// <summary>
-        /// Validate that a settings list and corresponding FilesTree file both contain exactly one entry with the expected name
+        /// Validate that a settings list and corresponding FilesTree file both contain exactly one entry with the expected name and path.
         /// And return the single FilesTreeNode for the file.
         /// </summary>
-        private static FilesTreeNode ValidateSingleEntry<TFileModel, TSettings>(string expectedName, SettingsList<TSettings> settingsList)
+        /// <param name="expectedName">Expected resource name of the file</param>
+        /// <param name="settingsList">Settings list to check for the entry</param>
+        /// <param name="expectedFilePath">Optional expected file path; if provided, validates the node's FilePath matches</param>
+        private static FilesTreeNode ValidateSingleEntry<TFileModel, TSettings>(string expectedName, SettingsList<TSettings> settingsList, string expectedFilePath = null)
             where TFileModel : FileModel
             where TSettings : IKeyContainer<string>, IXmlSerializable
         {
@@ -758,6 +767,13 @@ namespace pwiz.SkylineTestFunctional
                 fileNode = FindFileInTree<TFileModel>(SkylineWindow.FilesTree.Root, expectedName);
                 Assert.IsNotNull(fileNode, $"{typeof(TFileModel).Name} file should exist in FilesTree");
                 Assert.AreEqual(expectedName, fileNode.Name, $"FilesTree node should be named '{expectedName}'");
+
+                // Validate file path if expected path is provided
+                if (expectedFilePath != null)
+                {
+                    Assert.AreEqual(expectedFilePath, fileNode.Model.FilePath,
+                        $"{typeof(TFileModel).Name} file path mismatch");
+                }
             });
             return fileNode;
         }
@@ -930,6 +946,88 @@ namespace pwiz.SkylineTestFunctional
                         TextUtil.LineSeparate(visibleItems.Select(item => item.Text)),
                         TextUtil.LineSeparate(actualVisibleItems.Select(item => item.Text))));
                 Assert.AreEqual(!visibleItems.IsNullOrEmpty(), filesTreeForm.ContextMenuShown.Value);
+            });
+        }
+
+        /// <summary>
+        /// Test the "Show File Names" toggle feature in the context menu.
+        /// Verifies that toggling the setting correctly changes the display text of nodes
+        /// from resource names (e.g., "Rat mini") to file names (e.g., "Rat_mini.protdb").
+        /// </summary>
+        protected void TestShowFileNames()
+        {
+            var tree = SkylineWindow.FilesTree;
+            var filesTreeForm = SkylineWindow.FilesTreeForm;
+
+            // Start with ShowFileNames = false (resource names displayed)
+            RunUI(() => filesTreeForm.DoShowFileNames(false));
+            WaitForFilesTree();
+
+            // Verify display text for types WITH FileTypeText prefix (format: "Type - Name")
+            AssertNodeDisplayText<BackgroundProteome>(tree, BackgroundProteome.TypeText, showFileName: false);
+            AssertNodeDisplayText<RTCalc>(tree, RTCalc.TypeText, showFileName: false);
+            AssertNodeDisplayText<IonMobilityLibrary>(tree, IonMobilityLibrary.TypeText, showFileName: false);
+            AssertNodeDisplayText<OptimizationLibrary>(tree, OptimizationLibrary.TypeText, showFileName: false);
+
+            // Verify display text for types WITHOUT FileTypeText prefix (just the name)
+            var replicatesFolder = tree.RootChild<ReplicatesFolder>();
+            var replicateNode = (FilesTreeNode)replicatesFolder?.Nodes[0];
+            Assert.IsNotNull(replicateNode);
+            RunUI(() =>
+            {
+                // Replicate has no type prefix, so display text should just be the name
+                var expectedText = GetDisplayText(string.Empty, replicateNode.Model.Name, replicateNode.Model.FilePath, showFileName: false);
+                Assert.AreEqual(expectedText, replicateNode.Text,
+                    $"Replicate node text should be resource name when ShowFileNames=false");
+            });
+
+            // Toggle to ShowFileNames = true (file names displayed)
+            RunUI(() => filesTreeForm.DoShowFileNames(true));
+            WaitForFilesTree();
+
+            // Verify display text changes to file names for types WITH FileTypeText prefix
+            AssertNodeDisplayText<BackgroundProteome>(tree, BackgroundProteome.TypeText, showFileName: true);
+            AssertNodeDisplayText<RTCalc>(tree, RTCalc.TypeText, showFileName: true);
+            AssertNodeDisplayText<IonMobilityLibrary>(tree, IonMobilityLibrary.TypeText, showFileName: true);
+            AssertNodeDisplayText<OptimizationLibrary>(tree, OptimizationLibrary.TypeText, showFileName: true);
+
+            // Verify replicate node also changes
+            RunUI(() =>
+            {
+                var expectedText = GetDisplayText(string.Empty, replicateNode.Model.Name, replicateNode.Model.FilePath, showFileName: true);
+                Assert.AreEqual(expectedText, replicateNode.Text,
+                    $"Replicate node text should be file name when ShowFileNames=true");
+            });
+
+            // Test special cases: nodes with empty Name (e.g., AuditLog, ViewFile, ChromatogramCache)
+            // These should show just the TypeText when ShowFileNames=false, and TypeText - FileName when ShowFileNames=true
+            AssertNodeDisplayText<SkylineAuditLog>(tree, SkylineAuditLog.TypeText, showFileName: true);
+            AssertNodeDisplayText<SkylineViewFile>(tree, SkylineViewFile.TypeText, showFileName: true);
+            AssertNodeDisplayText<SkylineChromatogramCache>(tree, SkylineChromatogramCache.TypeText, showFileName: true);
+
+            // Toggle back to ShowFileNames = false and verify
+            RunUI(() => filesTreeForm.DoShowFileNames(false));
+            WaitForFilesTree();
+
+            AssertNodeDisplayText<SkylineAuditLog>(tree, SkylineAuditLog.TypeText, showFileName: false);
+            AssertNodeDisplayText<SkylineViewFile>(tree, SkylineViewFile.TypeText, showFileName: false);
+            AssertNodeDisplayText<SkylineChromatogramCache>(tree, SkylineChromatogramCache.TypeText, showFileName: false);
+        }
+
+        /// <summary>
+        /// Helper to assert that a node's display text matches the expected format based on ShowFileNames setting.
+        /// </summary>
+        private void AssertNodeDisplayText<TFileModel>(FilesTree tree, string typeText, bool showFileName) where TFileModel : FileModel
+        {
+            var node = tree.RootChild<TFileModel>();
+            Assert.IsNotNull(node, $"{typeof(TFileModel).Name} node should exist in tree");
+
+            RunUI(() =>
+            {
+                var model = node.Model;
+                var expectedText = GetDisplayText(typeText, model.Name, model.FilePath, showFileName);
+                Assert.AreEqual(expectedText, node.Text,
+                    $"{typeof(TFileModel).Name} node text mismatch. ShowFileNames={showFileName}");
             });
         }
 

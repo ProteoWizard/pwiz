@@ -748,13 +748,17 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_ShowFileNamesMenuItem(object sender, EventArgs e)
         {
-            // Toggle the setting
-            SkylineFile.ShowFileNames = !SkylineFile.ShowFileNames;
+            DoShowFileNames(!SkylineFile.ShowFileNames);
+        }
 
-            // Save to settings
-            Settings.Default.FilesViewShowFileNames = SkylineFile.ShowFileNames;
-
-            // Refresh all nodes to recompute their DisplayText
+        /// <summary>
+        /// Sets the ShowFileNames preference and refreshes the tree to update all node display text.
+        /// </summary>
+        /// <param name="show">true to show file names (e.g., "Rat_mini.protdb"), false to show resource names (e.g., "Rat mini")</param>
+        public void DoShowFileNames(bool show)
+        {
+            SkylineFile.ShowFileNames = show;
+            Settings.Default.FilesViewShowFileNames = show;
             FilesTree.UpdateNodeStates();
         }
 

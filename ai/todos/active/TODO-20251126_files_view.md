@@ -259,6 +259,20 @@ Based on the old branch, key areas to review:
   - **Updated other tests to use IgnoreTestChecksScope**: SrmSettingsTest, AuditLogSavingTest, ChangeDocumentGuidTest, LiveReportsTutorialTest
   - **Improved AbstractFunctionalTestEx**: `RestoreOriginalDocument()` now accepts version parameter, `OpenDocument()` handles absolute paths
   - **Improved ScopedAction**: Swapped constructor parameter order (initAction, disposeAction) and added single-param overload
+- 2025-12-11: Added TestShowFileNames() test and enhanced path testing:
+  - **New `TestShowFileNames()` test method**: Tests "Show File Names" context menu toggle feature
+    - Verifies node display text changes between resource names ("Rat_mini_renamed") and file names ("Rat_mini.protdb")
+    - Tests types WITH FileTypeText prefix (Background Proteome, iRT Calculator, Ion Mobility Library, Optimization Library)
+    - Tests types WITHOUT FileTypeText prefix (Replicates)
+    - Tests special cases with empty Name (Audit Log, View File, Chromatogram Cache)
+  - **Extracted `DoShowFileNames(bool)` public method**: Allows tests to toggle the setting directly
+  - **Extracted static `FileModel.GetDisplayText()` method**: Enables tests to verify expected display text without instance state
+  - **Added `TypeText` static properties** to all FileModel subclasses: Enables localization-safe test assertions using resource strings
+    - BackgroundProteome, RTCalc, IonMobilityLibrary, OptimizationLibrary, SpectralLibrary
+    - SkylineAuditLog, SkylineViewFile, SkylineChromatogramCache
+  - **Enhanced `ValidateSingleEntry()` helper**: Added optional `expectedFilePath` parameter to validate file paths
+  - **Updated all Add* test methods**: Now pass expected file paths for verification
+  - **Documentation**: Added `-ShowUI` section to build-and-test-guide.md for running tests with visible UI
 
 ## Review Findings (2025-11-26)
 

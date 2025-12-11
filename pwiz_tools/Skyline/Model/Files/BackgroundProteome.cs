@@ -38,7 +38,8 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
-        protected override string FileTypeText => FileResources.FileModel_BackgroundProteome;
+        public static string TypeText => FileResources.FileModel_BackgroundProteome;
+        protected override string FileTypeText => TypeText;
         public override ImageId ImageAvailable => ImageId.prot_db;
 
         public static ModifiedDocument Edit(SrmDocument doc, BackgroundProteomeSpec bgProteomeSpec)

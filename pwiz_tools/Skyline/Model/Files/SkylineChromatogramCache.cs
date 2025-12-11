@@ -35,7 +35,8 @@ namespace pwiz.Skyline.Model.Files
         public override bool IsBackedByFile => true;
         public override string Name => string.Empty; // No resource name
         public override string FilePath { get; }
-        protected override string FileTypeText => FileResources.FileModel_ChromatogramCache;
+        public static string TypeText => FileResources.FileModel_ChromatogramCache;
+        protected override string FileTypeText => TypeText;
         public override ImageId ImageAvailable => ImageId.cache_file;
     }
 }

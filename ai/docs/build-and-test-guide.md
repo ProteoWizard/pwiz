@@ -153,6 +153,19 @@ pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFastaImport
 
 > ℹ️ **Tip:** If you only know the `.cs` file name, open it and search for `[TestMethod]` to get the method names. Passing the file name (e.g. `FastaImporterTest.cs`) will not work—the script passes method names through to TestRunner.
 
+### Run Tests with Visible UI
+```powershell
+# Run test with UI on-screen (for visual inspection or PauseTest() breakpoints)
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFilesTreeForm -ShowUI
+```
+
+> ℹ️ **Tip:** Use `-ShowUI` when:
+> - Tests contain `PauseTest()` calls (shows a "Continue" button to resume)
+> - You need to visually inspect the UI during test execution
+> - Debugging layout or visual issues
+>
+> Without `-ShowUI`, tests run offscreen (hidden) which is faster but invisible.
+
 ### Run Multiple Tests / Languages
 ```powershell
 # Comma-separate test method names and languages.
