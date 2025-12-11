@@ -367,20 +367,20 @@ namespace pwiz.Skyline.Model.Results
                                                                                             ResultsResources.Loader_FinishLoad_Updating_peak_statistics,
                                                                                             _container, docCurrent))
                             {
-                                settingsChangeMonitor.ChangeProgress(progress=>progress.ChangeMessage("ApplyChromatogramSetRemovals"));
+                                OutputMessage("ApplyChromatogramSetRemovals");
                                 // First remove any chromatogram sets that were removed during processing
                                 results = results.ApplyChromatogramSetRemovals(resultsLoad, resultsPrevious);
-                                settingsChangeMonitor.ChangeProgress(progress=>progress.ChangeMessage("UpdateCaches"));
+                                OutputMessage("UpdateCaches");
                                 // Then update caches
                                 if (results != null)
                                     results = results.UpdateCaches(documentPath, resultsLoad);
-                                settingsChangeMonitor.ChangeProgress(progress => progress.ChangeMessage("ChangeMeasuredResults"));
+                                OutputMessage("ChangeMeasuredResults");
                                 docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
-                                settingsChangeMonitor.ChangeProgress(progress => progress.ChangeMessage("ApplyMetadataRules"));
+                                OutputMessage("ApplyMetadataRules");
                                 docNew = _manager.ApplyMetadataRules(docNew);
-                                settingsChangeMonitor.ChangeProgress(progress=>progress.ChangeMessage("UpdateRevisionIndex"));
+                                OutputMessage("UpdateRevisionIndex");
                                 docNew = UpdateUserRevisionIndex(docCurrent, docNew);
-                                settingsChangeMonitor.ChangeProgress(progress=>progress.ChangeMessage("Updating peak statistics finished"));
+                                OutputMessage("Updating peak statistics finished");
                             }
                         }
                         catch (OperationCanceledException)
@@ -391,6 +391,11 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
+            }
+
+            private void OutputMessage(string message)
+            {
+                _manager.UpdateProgress(new ProgressStatus(message).Complete());
             }
         }
 
