@@ -60,25 +60,25 @@ Rules:
 
 ### Workflow 1: Start Work from Backlog TODO
 
-**On master - create feature branch:**
-> **Note:** Backlog TODOs live on `ai-context` branch. You'll copy (not move) to your feature branch.
+**On ai-context - move TODO from backlog to active (claims the work):**
+```bash
+git checkout ai-context
+git pull origin ai-context
+git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
+# Edit TODO: add Branch, Created, PR fields
+git add ai/todos/active/TODO-20251105_feature_name.md
+git commit -m "Start work on feature_name"
+git push origin ai-context
+```
+
+> **Why move on ai-context first?** This marks the TODO as claimed, preventing other developers from starting the same work.
+
+**On master - create feature branch and bring the TODO:**
 ```bash
 git checkout master
 git pull origin master
 git checkout -b Skyline/work/20251105_feature_name
-```
-
-**Copy TODO from ai-context to active:**
-```bash
-git checkout ai-context -- ai/todos/backlog/TODO-feature_name.md
-git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
-```
-
-**Update TODO header and commit:**
-```bash
-# Edit TODO: add Branch, Created, PR fields
-git add ai/todos/active/TODO-20251105_feature_name.md
-git commit -m "Update TODO with branch information"
+git cherry-pick <commit-hash-from-above>  # Brings the TODO move to your branch
 git push -u origin Skyline/work/20251105_feature_name
 ```
 
