@@ -60,25 +60,25 @@ Rules:
 
 ### Workflow 1: Start Work from Backlog TODO
 
-**On ai-context - move TODO from backlog to active (claims the work):**
-```bash
-git checkout ai-context
-git pull origin ai-context
-git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
-# Edit TODO: add Branch, Created, PR fields
-git add ai/todos/active/TODO-20251105_feature_name.md
-git commit -m "Start work on feature_name"
-git push origin ai-context
-```
-
-> **Why move on ai-context first?** This marks the TODO as claimed, preventing other developers from starting the same work.
-
-**On master - create feature branch and bring the TODO:**
+**On master - create feature branch:**
+> **Note:** Backlog TODOs live on `ai-context` branch. You'll copy (not move) to your feature branch.
 ```bash
 git checkout master
 git pull origin master
 git checkout -b Skyline/work/20251105_feature_name
-git cherry-pick <commit-hash-from-above>  # Brings the TODO move to your branch
+```
+
+**Copy TODO from ai-context to active:**
+```bash
+git checkout ai-context -- ai/todos/backlog/TODO-feature_name.md
+git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
+```
+
+**Update TODO header and commit:**
+```bash
+# Edit TODO: add Branch, Created, PR fields
+git add ai/todos/active/TODO-20251105_feature_name.md
+git commit -m "Update TODO with branch information"
 git push -u origin Skyline/work/20251105_feature_name
 ```
 
@@ -229,24 +229,30 @@ When switching LLM tools/sessions:
 
 ## Commit Messages
 
-**Keep commit messages concise (<10 lines)** - digestible in TortoiseGit's multi-line textbox view.
+**Keep commit messages concise (≤10 lines)** - digestible in TortoiseGit's multi-line textbox view.
 
 **Pattern:**
 ```
-Brief summary of change (imperative mood)
+Brief summary of change (report mood - what was done)
 
 Optional 2-3 line explanation if needed.
 Details belong in TODO file, not commit message.
 
+See ai/todos/active/TODO-YYYYMMDD_feature.md for complete details.
+
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-**LLM Attribution:** Always include the `Co-Authored-By` line when an LLM agent contributed to the commit. This is the standard attribution format for AI-assisted development.
+**Rules:**
+- **Maximum 10 lines total** including blank lines and attribution
+- **Always include `Co-Authored-By` line** when an LLM agent contributed to the commit
+- **Reference TODO file** for detailed context and decisions
+- **Report mood** - "Added feature" not "Add feature" (like research paper methods section)
 
 **Examples:**
 ```bash
 # Good
-git commit -m "Balance documentation tone and restore TODO-20251105 goals
+git commit -m "Balanced documentation tone and restored TODO-20251105 goals
 
 Moved BUILD-TEST.md to ai/docs/, created documentation-maintenance.md.
 See TODO-20251105_improve_tool_support_for_ai_dev.md Phase 5 for details.
@@ -268,7 +274,7 @@ See [ai/CRITICAL-RULES.md](CRITICAL-RULES.md) for full list. Key workflow rules:
 - **Update TODO every commit** - Track progress, decisions, files modified
 - **Never modify completed TODOs** - They document merged PRs (historical record)
 - **All TODOs must have PR reference** - Before moving to completed/
-- **Commit messages <10 lines** - Details go in TODO files
+- **Commit messages ≤10 lines** - Single line for AI attribution, reference TODO for details
 
 ## See Also
 
