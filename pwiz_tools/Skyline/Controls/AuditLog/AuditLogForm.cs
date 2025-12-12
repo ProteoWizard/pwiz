@@ -36,6 +36,9 @@ namespace pwiz.Skyline.Controls.AuditLog
 {
     public partial class AuditLogForm : DocumentGridForm
     {
+        // Cached icon to avoid GDI handle leak - ToIcon() creates a native handle that must be disposed
+        private static readonly Icon AUDIT_LOG_ICON = Resources.AuditLog.ToIcon();
+
         private readonly SkylineWindow _skylineWindow;
         //private readonly ToolStripButton _clearLogButton;
         private readonly CheckBox _enableAuditLogging;
@@ -45,7 +48,7 @@ namespace pwiz.Skyline.Controls.AuditLog
         {
             InitializeComponent();
 
-            Icon = Resources.AuditLog.ToIcon();
+            Icon = AUDIT_LOG_ICON;
 
             _skylineWindow = viewContext.SkylineDataSchema.SkylineWindow;
 

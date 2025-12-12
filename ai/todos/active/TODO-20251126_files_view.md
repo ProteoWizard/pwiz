@@ -288,6 +288,22 @@ Based on the old branch, key areas to review:
   - **Coverage analysis**: 84.9% coverage of new code (2509/2956 statements)
     - Priority types for future coverage work: FilesTreeForm (146 uncovered), FilesTree (133), FilesTreeNode (58), LocalFileSystemService (56)
     - Test also exercises existing code paths (EditIrtCalcDlg.OkDialog save-as flow) not measured in branch-specific coverage
+- 2025-12-12: Fixed handle leak detected by nightly integration tests:
+  - **Problem**: Nightly tests showed 30-41 handle leaks on Integration branch vs 0-1 on master
+  - **Investigation approach**: Used test bisection with handle reporting to isolate the leak
+    - Enhanced `Run-Tests.ps1` with `-SortHandlesByCount` option (leaking types rise to top)
+    - Enhanced `TestRunnerLib/RunTests.cs` to include User and GDI handles in `# Handles` output
+    - Used `-ReportHandles` with 10-run loops to establish baseline and track changes
+    - Systematically added `return;` statements to bisect TestAuditLogSaving
+  - **Root cause**: `Icon = Resources.AuditLog.ToIcon();` in `AuditLogForm.cs` constructor
+    - `ToIcon()` creates native HICON handle via `Icon.FromHandle(bitmap.GetHicon())`
+    - New Icon created each time form was instantiated, handle never properly released
+    - Leaked ~3 GDI handles and ~1-2 User handles per test run
+  - **Fix**: Cache the icon in a static field so it's only created once:
+    - `private static readonly Icon AUDIT_LOG_ICON = Resources.AuditLog.ToIcon();`
+    - `Icon = AUDIT_LOG_ICON;`
+  - **Validation**: Handle counts now stable across 10 test runs (GDI fluctuates 60-67, User 26-28, no upward trend)
+  - **Documentation**: Created `ai/docs/leak-debugging-guide.md` with methodology for future leak investigations
 
 ## Review Findings (2025-11-26)
 

@@ -106,6 +106,9 @@ param(
     [switch]$ReportHandles = $false,  # Enable handle count diagnostics
 
     [Parameter(Mandatory=$false)]
+    [switch]$SortHandlesByCount = $false,  # Sort handle types by count (descending) - leaking types rise to top
+
+    [Parameter(Mandatory=$false)]
     [switch]$ReportHeaps = $false,  # Enable heap count diagnostics (only useful when handles aren't leaking)
 
     [Parameter(Mandatory=$false)]
@@ -366,7 +369,11 @@ try {
         if ($ReportHandles) {
             $runnerArgs += "reporthandles=on"
         }
-        
+
+        if ($SortHandlesByCount) {
+            $runnerArgs += "sorthandlesbycount=on"
+        }
+
         if ($ReportHeaps) {
             $runnerArgs += "reportheaps=on"
         }

@@ -260,7 +260,7 @@ namespace TestRunner
             "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;" +
             "teamcitytestdecoration=off;teamcitytestsuite=;teamcitycleanup=off;" +
             "verbose=off;listonly;showheader=on;" +
-            "reportheaps=off;reporthandles=off";
+            "reportheaps=off;reporthandles=off;sorthandlesbycount=off";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -1402,6 +1402,7 @@ namespace TestRunner
             bool verbose = commandLineArgs.ArgAsBool("verbose");
             bool reportHeaps = commandLineArgs.ArgAsBool("reportheaps");
             bool reportHandles = commandLineArgs.ArgAsBool("reporthandles");
+            bool sortHandlesByCount = commandLineArgs.ArgAsBool("sorthandlesbycount");
             string parallelMode = commandLineArgs.ArgAsString("parallelmode");
             bool serverMode = parallelMode == "server";
             bool clientMode = parallelMode == "client";
@@ -1474,8 +1475,8 @@ namespace TestRunner
                 demoMode, buildMode, offscreen, internet, useOriginalURLs, showStatus, perftests,
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration, teamcityCleanup,
                 retrydatadownloads,
-                pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier, 
-                results, log, verbose, clientMode, reportHeaps, reportHandles);
+                pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
+                results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
 
             var timer = new Stopwatch();
             timer.Start();
