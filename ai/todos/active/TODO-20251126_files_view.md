@@ -285,6 +285,9 @@ Based on the old branch, key areas to review:
   - **BUG FIX: `RetentionTimeList` not updated when iRT calculator path changed**
     - Added `Settings.Default.RetentionTimeList.SetValue(...)` after updating RTScoreCalculatorList
     - Ensures the RetentionTimeRegression referencing the calculator stays in sync
+  - **Coverage analysis**: 84.9% coverage of new code (2509/2956 statements)
+    - Priority types for future coverage work: FilesTreeForm (146 uncovered), FilesTree (133), FilesTreeNode (58), LocalFileSystemService (56)
+    - Test also exercises existing code paths (EditIrtCalcDlg.OkDialog save-as flow) not measured in branch-specific coverage
 
 ## Review Findings (2025-11-26)
 

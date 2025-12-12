@@ -180,6 +180,7 @@ $summary = $matchedCoverage | Group-Object Type | ForEach-Object {
     $items = $_.Group
     $totalCovered = ($items | Measure-Object -Property CoveredStatements -Sum).Sum
     $totalStatements = ($items | Measure-Object -Property TotalStatements -Sum).Sum
+    $uncovered = $totalStatements - $totalCovered
     $coveragePercent = 0
     if ($totalStatements -gt 0) {
         $coveragePercent = [math]::Round(($totalCovered / $totalStatements) * 100, 1)
@@ -189,10 +190,11 @@ $summary = $matchedCoverage | Group-Object Type | ForEach-Object {
         Type = $type
         CoveredStatements = $totalCovered
         TotalStatements = $totalStatements
+        UncoveredStatements = $uncovered
         CoveragePercent = $coveragePercent
         Methods = $items.Count
     }
-} | Sort-Object CoveragePercent
+} | Sort-Object UncoveredStatements -Descending
 
 $separator = "=" * 80
 Write-Host $separator -ForegroundColor Cyan
@@ -202,16 +204,28 @@ Write-Host ""
 
 $overallCovered = ($summary | Measure-Object -Property CoveredStatements -Sum).Sum
 $overallTotal = ($summary | Measure-Object -Property TotalStatements -Sum).Sum
+$overallUncovered = $overallTotal - $overallCovered
 $overallPercent = 0
 if ($overallTotal -gt 0) {
     $overallPercent = [math]::Round(($overallCovered / $overallTotal) * 100, 1)
 }
 
-Write-Host "Overall Coverage: $overallCovered / $overallTotal statements" -ForegroundColor White
-Write-Host "Coverage Percentage: $overallPercent pct" -ForegroundColor $(if ($overallPercent -ge 80) { "Green" } elseif ($overallPercent -ge 50) { "Yellow" } else { "Red" })
+Write-Host "Overall Coverage: $overallPercent% ($overallCovered / $overallTotal statements, $overallUncovered uncovered)" -ForegroundColor $(if ($overallPercent -ge 80) { "Green" } elseif ($overallPercent -ge 50) { "Yellow" } else { "Red" })
 Write-Host ""
 
-Write-Host "Coverage by Type:" -ForegroundColor Cyan
+# Show priority section - types with most uncovered statements
+$priorityTypes = $summary | Where-Object { $_.UncoveredStatements -ge 20 }
+if ($priorityTypes.Count -gt 0) {
+    $priorityUncovered = ($priorityTypes | Measure-Object -Property UncoveredStatements -Sum).Sum
+    $priorityPercent = if ($overallUncovered -gt 0) { [math]::Round(($priorityUncovered / $overallUncovered) * 100, 0) } else { 0 }
+    Write-Host "Priority (20+ uncovered statements, accounting for $priorityPercent% of uncovered):" -ForegroundColor Yellow
+    foreach ($item in $priorityTypes) {
+        Write-Host "  $($item.Type): $($item.UncoveredStatements) uncovered ($($item.CoveragePercent)% of $($item.TotalStatements))" -ForegroundColor Yellow
+    }
+    Write-Host ""
+}
+
+Write-Host "Coverage by Type (sorted by uncovered count):" -ForegroundColor Cyan
 Write-Host ""
 
 foreach ($item in $summary) {
@@ -219,31 +233,17 @@ foreach ($item in $summary) {
              elseif ($item.CoveragePercent -ge 50) { "Yellow" }
              else { "Red" }
 
-    Write-Host "  $($item.Type)" -ForegroundColor White
-    Write-Host "    Covered: $($item.CoveredStatements) / Total: $($item.TotalStatements)" -ForegroundColor $color
-    Write-Host "    Coverage: $($item.CoveragePercent) pct" -ForegroundColor $color
-    Write-Host "    Methods: $($item.Methods)" -ForegroundColor Gray
-    Write-Host ""
+    Write-Host "  $($item.Type): $($item.CoveragePercent)% ($($item.UncoveredStatements) uncovered / $($item.TotalStatements) total)" -ForegroundColor $color
 }
 
-# Show low coverage items
-$lowCoverage = $summary | Where-Object { $_.CoveragePercent -lt 50 -and $_.TotalStatements -gt 0 }
-if ($lowCoverage.Count -gt 0) {
-    Write-Host "Types with low coverage (less than 50 pct):" -ForegroundColor Yellow
-    foreach ($item in $lowCoverage) {
-        Write-Host "  - $($item.Type): $($item.CoveragePercent) pct" -ForegroundColor Yellow
-    }
-    Write-Host ""
-}
-
-# Show uncovered items
+# Show types with no coverage (0%)
 $uncovered = $summary | Where-Object { $_.CoveragePercent -eq 0 -and $_.TotalStatements -gt 0 }
 if ($uncovered.Count -gt 0) {
+    Write-Host ""
     Write-Host "Types with no coverage:" -ForegroundColor Red
     foreach ($item in $uncovered) {
-        Write-Host "  - $($item.Type): $($item.TotalStatements) statements uncovered" -ForegroundColor Red
+        Write-Host "  - $($item.Type): $($item.TotalStatements) statements" -ForegroundColor Red
     }
-    Write-Host ""
 }
 
 Write-Host $separator -ForegroundColor Cyan
