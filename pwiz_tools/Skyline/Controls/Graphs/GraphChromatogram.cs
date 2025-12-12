@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
 
             graphControl.GraphPane = new MSGraphPane();
-            _graphHelper = GraphHelper.Attach(graphControl);
+            _graphHelper = GraphHelper.Attach(graphControl, ZoomSynchronizer.INSTANCE);
             NameSet = name;
             Icon = Resources.SkylineData;
 
@@ -511,15 +511,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 PickedSpectrum(this, new PickedSpectrumEventArgs(new SpectrumIdentifier(FilePath, retentionTime.MeasuredTime)));
         }
 
-        [Browsable(true)]
-        public event EventHandler<ZoomEventArgs> ZoomAll;
-
-        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
-        {
-            if (Settings.Default.AutoZoomAllChromatograms && ZoomAll != null)
-                ZoomAll.Invoke(this, new ZoomEventArgs(newState));
-        }
-
         /// <summary>
         /// Return the text of the annotations shown a chromatogram pane
         /// </summary>
@@ -530,9 +521,9 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphPanes.ElementAt(paneIndex).GetAnnotationLabelStrings();
         }
 
-        public void ZoomTo(ZoomState zoomState)
+        public void OnZoom()
         {
-            zoomState.ApplyState(GraphPanes.First());
+            _graphHelper.OnZoom();
         }
 
         /// <summary>
@@ -547,14 +538,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 pane.XAxis.Scale.Min = rtStartMeasured;
                 pane.XAxis.Scale.Max = rtEndMeasured;
                 pane.YAxis.Scale.Max = maxIntensity ?? pane.YAxis.Scale.Max;
-                var hold = graphControl.IsSynchronizeXAxes;
-                graphControl.IsSynchronizeXAxes = false; // just this one
-                ZoomState.ApplyState(pane);
-                if (ZoomAll != null)
-                    ZoomAll.Invoke(this, new ZoomEventArgs(ZoomState));
-                graphControl.IsSynchronizeXAxes = hold;
+                _graphHelper.OnZoom();
             }
         }
+
 
         public void ZoomToPeak(double rtStart, double rtEnd)
         {
@@ -568,11 +555,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             graphControl.Invalidate();
-        }
-
-        public ZoomState ZoomState
-        {
-            get { return new ZoomState(GraphPanes.First(), ZoomState.StateType.Zoom); }
         }
 
         public void LockZoom()
@@ -827,13 +809,13 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public void UpdateUI(bool selectionChanged = true)
-        {         
+        {
             Messages.Clear();
             IsCacheInvalidated = false;
 
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
-            if (!Visible || IsDisposed)
+            if (IsDisposed)
                 return;
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
@@ -3659,7 +3641,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 imputedBoundsParameter.FilePath);
         }
 
-
         #region Test support
 
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
@@ -3705,7 +3686,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public static class AddTransitions
     {
         /// <summary>
-        /// Add intensitites of two transitions where they overlap in time.
+        /// Add intensities of two transitions where they overlap in time.
         /// </summary>
         /// <param name="times1">Times for first transition.</param>
         /// <param name="intensities1">Intensities for first transition.</param>
