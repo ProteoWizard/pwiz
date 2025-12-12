@@ -127,6 +127,8 @@ public class TestToolStoreClient : IToolStoreClient, IDisposable
 }
 ```
 
+**Using IDisposable:** Prefer modern `using var` syntax (C# 8.0+) for minimal diffs. See [ai/docs/testing-patterns.md](docs/testing-patterns.md#using-idisposable-modern-using-var-syntax) for details.
+
 ## AssertEx Quick Reference
 
 Prefer `AssertEx` methods over custom wrappers:
