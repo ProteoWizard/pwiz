@@ -623,29 +623,18 @@ EditorConfig
 
 **For AI agents and developers working with `.ja.resx` and `.zh-CHS.resx` files:**
 
-Skyline is translated to Japanese and Chinese. When viewing or diffing localized RESX files, ensure UTF-8 encoding is configured in your terminal to display characters correctly.
+Skyline is translated to Japanese and Chinese. Git diffs of localized RESX files contain Japanese (日本語) and Chinese (中文) characters that require UTF-8 encoding to display correctly.
 
-**PowerShell configuration:**
+**Setup:** Developers who followed `ai/docs/developer-setup-guide.md` already have permanent UTF-8 configured in their PowerShell profile. No additional configuration needed.
+
+**Troubleshooting:** If characters display as garbled text (e.g., `πâçπâòπé⌐` instead of `デフォルト`):
 ```powershell
-# PowerShell 7+ (recommended - defaults to UTF-8)
+# Verify UTF-8 is configured
+[Console]::OutputEncoding   # Should show CodePage: 65001
+
+# If not, add to your $PROFILE (see developer-setup-guide.md):
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
-
-# Or use chcp for legacy compatibility
-chcp 65001
-```
-
-**Why this matters:**
-- Git diffs of `.ja.resx` and `.zh-CHS.resx` files contain Japanese (日本語) and Chinese (中文) characters
-- Without UTF-8, these characters display as garbled text (e.g., `πâçπâòπé⌐` instead of `デフォルト`)
-- PowerShell 7+ defaults to UTF-8; PowerShell 5.1 requires explicit configuration
-- See `ai/docs/developer-setup-guide.md` for full terminal setup instructions
-
-**Verification:**
-```powershell
-# Test UTF-8 display
-Write-Host "Test: ファイル (Japanese), 文件 (Chinese)"
-# Should display correctly, not as garbled characters
 ```
 
 
