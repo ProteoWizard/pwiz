@@ -396,7 +396,7 @@ namespace pwiz.Skyline.Model.Results
 
             private void OutputMessage(string message)
             {
-                Trace.TraceWarning("Chromatogram Loader status:{0}", message);
+                Messages.WriteUserMessage("Chromatogram Loader status:{0}", new[]{message});
             }
         }
 
