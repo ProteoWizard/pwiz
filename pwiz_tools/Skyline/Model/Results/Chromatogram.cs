@@ -35,6 +35,7 @@ using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
+using System.Diagnostics;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -395,7 +396,7 @@ namespace pwiz.Skyline.Model.Results
 
             private void OutputMessage(string message)
             {
-                _manager.UpdateProgress(new ProgressStatus(message).Complete());
+                Trace.TraceWarning("Chromatogram Loader status:{0}", message);
             }
         }
 
