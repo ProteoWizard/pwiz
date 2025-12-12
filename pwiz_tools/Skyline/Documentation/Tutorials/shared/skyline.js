@@ -67,6 +67,7 @@ function addTableOfContents(){
         }
 
         var headings = [].slice.call(document.body.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+        var urlWithoutFragment = window.location.href.split('#')[0];
         headings.forEach(function (heading, index) {
         if(!heading.classList.contains("document-title")){
                 var headingTextContent = heading.textContent.trim();
@@ -78,7 +79,7 @@ function addTableOfContents(){
 
                 //create toc link
                 var link = document.createElement('a');
-                link.setAttribute('href', '#' + headingId);
+                link.setAttribute('href', urlWithoutFragment + '#' + headingId);
 
                 link.textContent = headingTextContent;
 

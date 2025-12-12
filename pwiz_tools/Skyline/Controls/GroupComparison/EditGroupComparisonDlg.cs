@@ -143,7 +143,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             radioScopeProtein.Checked = groupComparisonDef.PerProtein;
             radioScopePeptide.Checked = !groupComparisonDef.PerProtein;
             cbxUseZeroForMissingPeaks.Checked = groupComparisonDef.UseZeroForMissingPeaks;
-            cbxUseZeroForMissingPeaks.Visible = GroupComparisonModel.Document.Settings.PeptideSettings.Integration.PeakScoringModel != null;
             if (GroupComparisonDef.QValueCutoff.HasValue)
             {
                 tbxQValueCutoff.Text = groupComparisonDef.QValueCutoff.Value.ToString(CultureInfo.CurrentCulture);

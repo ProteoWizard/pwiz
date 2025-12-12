@@ -719,7 +719,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
                     break;
                 case RegressionMethodRT.loess:
-                    regressionFunction = new LoessRegression(stat.CopyList(), statRT.CopyList(), true, token);
+                    regressionFunction = AlignmentTarget.CreateLoessRegression(stat.CopyList(), statRT.CopyList(), token);
                     stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));
                     break;
                 default:

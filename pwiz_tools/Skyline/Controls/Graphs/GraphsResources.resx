@@ -760,4 +760,7 @@ Here are the last 3 errors:
   <data name="RTLinearRegressionGraphPane_UpdateGraph_Calculating___" xml:space="preserve">
     <value>Calculating...</value>
   </data>
+  <data name="GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate" xml:space="preserve">
+	  <value>Exemplary Replicate</value>
+  </data>
 </root>

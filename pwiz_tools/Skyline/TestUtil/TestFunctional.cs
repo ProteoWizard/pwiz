@@ -1209,7 +1209,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
+            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, throwOnProgramException);
         }
 
         public static void WaitForRegression()
@@ -2999,6 +2999,40 @@ namespace pwiz.SkylineTestUtil
                 intercept = -intercept;
             }
         }
+
+        /// <summary>
+        /// Moves all the FloatingWindow's off the screen so they are not in the way of the
+        /// main Skyline window's screenshots.
+        /// </summary>
+        /// <returns>A list of the original locations of the windows that were moved</returns>
+        public static List<(FloatingWindow Window, Rectangle Bounds)> HideFloatingWindows()
+        {
+            var list = new List<(FloatingWindow Window, Rectangle Bounds)>();
+            RunUI(() =>
+            {
+                foreach (var floatingWindow in FormUtil.OpenForms.OfType<FloatingWindow>())
+                {
+                    list.Add((floatingWindow, floatingWindow.Bounds));
+                    floatingWindow.Location = FormEx.GetOffscreenPoint();
+                }
+            });
+            return list;
+        }
+        /// <summary>
+        /// Move the windows back to their original locations
+        /// </summary>
+        public static void RestoreFloatingWindows(List<(FloatingWindow Window, Rectangle Bounds)> list)
+        {
+            RunUI(() =>
+            {
+                foreach (var tuple in list)
+                {
+                    tuple.Window.Bounds = tuple.Bounds;
+                }
+            });
+        }
+
+
 
         #region Modification helpers
 
