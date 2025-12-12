@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
@@ -142,7 +143,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     pane.CurveList.Clear();
                     pane.GraphObjList.Clear();
                 }
-                _displayState.ZoomStateValid = true;
+                _displayState = _displayState.ChangeZoomStateValid(true);
                 return;
             }
             while (GraphControl.MasterPane.PaneList.Count > 1)
@@ -156,7 +157,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             GraphControl.GraphPane.CurveList.Clear();
             GraphControl.GraphPane.GraphObjList.Clear();
-            newDisplayState.ZoomStateValid = newDisplayState.CanUseZoomStateFrom(_displayState);
+            newDisplayState = newDisplayState.ChangeZoomStateValid(newDisplayState.CanUseZoomStateFrom(_displayState));
             newDisplayState.ApplySettingsToGraphPane(GraphControl.GraphPane);
             _displayState = newDisplayState;
         }
@@ -437,7 +438,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ZoomXAxis(bestStartTime, bestEndTime);
         }
 
-        public abstract class DisplayState
+        public abstract class DisplayState : Immutable
         {
             protected DisplayState(IEnumerable<TransitionGroup> transitionGroups)
             {
@@ -446,7 +447,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             protected TransitionGroup[] TransitionGroups { get; private set; }
             public abstract bool CanUseZoomStateFrom(DisplayState displayStatePrev);
-            public bool ZoomStateValid { get; set; }
+            public bool ZoomStateValid { get; private set; }
+
+            public DisplayState ChangeZoomStateValid(bool value)
+            {
+                return ChangeProp(ImClone(this), im => im.ZoomStateValid = value);
+            }
             public List<PaneKey> GraphPaneKeys { get; private set; }
             public bool AllowSplitPanes { get; protected set; }
             public bool ShowLegend { get; protected set; }
