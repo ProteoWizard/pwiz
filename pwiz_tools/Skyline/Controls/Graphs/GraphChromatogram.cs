@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
 
             graphControl.GraphPane = new MSGraphPane();
-            _graphHelper = GraphHelper.Attach(graphControl);
+            _graphHelper = GraphHelper.Attach(graphControl, ZoomSynchronizer.INSTANCE);
             NameSet = name;
             Icon = Resources.SkylineData;
 
@@ -511,24 +511,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 PickedSpectrum(this, new PickedSpectrumEventArgs(new SpectrumIdentifier(FilePath, retentionTime.MeasuredTime)));
         }
 
-        [Browsable(true)]
-        public event Action<GraphChromatogram, Dictionary<PaneKey, ZoomStateStack>> ZoomAll;
-
-        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
-        {
-            OnZoom();
-        }
-
-        private void OnZoom()
-        {
-            if (!Settings.Default.AutoZoomAllChromatograms || ZoomAll == null)
-            {
-                return;
-            }
-
-            ZoomAll(this, GetZoomStates());
-        }
-
         /// <summary>
         /// Return the text of the annotations shown a chromatogram pane
         /// </summary>
@@ -539,35 +521,9 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphPanes.ElementAt(paneIndex).GetAnnotationLabelStrings();
         }
 
-        public void ZoomTo(Dictionary<PaneKey, ZoomStateStack> states)
+        public void OnZoom()
         {
-            int count = 0;
-            foreach (var pane in GraphPanes)
-            {
-                var paneKey = _graphHelper?.GetPaneKey(pane) ?? default;
-                if (states.TryGetValue(paneKey, out var state))
-                {
-                    ApplyState(state, pane);
-                    count++;
-                }
-            }
-
-            if (count == 0)
-            {
-                ApplyState(states.Values.FirstOrDefault(), GraphPanes.First());
-            }
-            graphControl.Invalidate();
-            graphControl.Update();
-        }
-
-        private void ApplyState(ZoomStateStack state, GraphPane pane)
-        {
-            if (state != null)
-            {
-                pane.ZoomStack.Clear();
-                pane.ZoomStack.AddRange(state);
-                state.Top.ApplyState(pane);
-            }
+            _graphHelper.OnZoom();
         }
 
         /// <summary>
@@ -582,21 +538,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 pane.XAxis.Scale.Min = rtStartMeasured;
                 pane.XAxis.Scale.Max = rtEndMeasured;
                 pane.YAxis.Scale.Max = maxIntensity ?? pane.YAxis.Scale.Max;
-                OnZoom();
+                _graphHelper.OnZoom();
             }
         }
 
-        public Dictionary<PaneKey, ZoomStateStack> GetZoomStates()
-        {
-            var dict = new Dictionary<PaneKey, ZoomStateStack>();
-            foreach (var graphPane in graphControl.MasterPane.PaneList)
-            {
-                var paneKey = _graphHelper?.GetPaneKey(graphPane) ?? default;
-                dict.Add(paneKey, graphPane.ZoomStack);
-            }
-
-            return dict;
-        }
 
         public void ZoomToPeak(double rtStart, double rtEnd)
         {
@@ -870,7 +815,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
-            if (!Visible || IsDisposed)
+            if (IsDisposed)
                 return;
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
@@ -3741,7 +3686,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public static class AddTransitions
     {
         /// <summary>
-        /// Add intensitites of two transitions where they overlap in time.
+        /// Add intensities of two transitions where they overlap in time.
         /// </summary>
         /// <param name="times1">Times for first transition.</param>
         /// <param name="intensities1">Intensities for first transition.</param>

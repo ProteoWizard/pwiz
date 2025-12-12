@@ -1815,11 +1815,7 @@ namespace pwiz.Skyline
 
             if (zoomAll)
             {
-                var activeForm = dockPanel.ActiveContent as GraphChromatogram;
-                if (activeForm != null)
-                {
-                    graphChromatogram_ZoomAll(activeForm, activeForm.GetZoomStates());
-                }
+                (dockPanel.ActiveContent as GraphChromatogram)?.OnZoom();
             }
         }
 
@@ -1967,7 +1963,6 @@ namespace pwiz.Skyline
             graphChrom.ClickedChromatogram += graphChromatogram_ClickedChromatogram;
             graphChrom.ChangedPeakBounds += graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum += graphChromatogram_PickedSpectrum;
-            graphChrom.ZoomAll += graphChromatogram_ZoomAll;
             _listGraphChrom.Add(graphChrom);
             return graphChrom;
         }
@@ -1982,7 +1977,6 @@ namespace pwiz.Skyline
             graphChrom.ClickedChromatogram -= graphChromatogram_ClickedChromatogram;
             graphChrom.ChangedPeakBounds -= graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum -= graphChromatogram_PickedSpectrum;
-            graphChrom.ZoomAll -= graphChromatogram_ZoomAll;
             graphChrom.HideOnClose = false;
             graphChrom.Close();
         }
@@ -2449,22 +2443,6 @@ namespace pwiz.Skyline
             }
             if (_graphSpectrum != null)
                 _graphSpectrum.SelectSpectrum(e.SpectrumId);
-        }
-
-        private Dictionary<PaneKey, ZoomStateStack> _lastZoomState;
-
-        private void graphChromatogram_ZoomAll(GraphChromatogram sender, Dictionary<PaneKey, ZoomStateStack> zoomStates)
-        {
-            if (Settings.Default.AutoZoomAllChromatograms)
-            {
-                foreach (var graphChrom in _listGraphChrom)
-                {
-                    if (!ReferenceEquals(sender, graphChrom))
-                    {
-                        graphChrom.ZoomTo(zoomStates);
-                    }
-                }
-            }
         }
 
         private void UpdateChromGraphs()
