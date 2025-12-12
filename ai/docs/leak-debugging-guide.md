@@ -2,6 +2,35 @@
 
 This guide documents the methodology for identifying and fixing handle leaks in Skyline, developed during the Files view feature work (December 2025).
 
+## End-to-End Workflow
+
+The complete leak debugging workflow spans two phases:
+
+### Phase 1: Leak Detection and Test Selection (Human)
+
+The nightly test system runs tests on both the Integration branch and Master branch, reporting handle leak counts per test. A human reviews these results to:
+
+1. **Compare Integration vs Master**: Significant difference indicates a leak introduced by the Integration branch
+2. **Identify candidate tests**: Tests showing consistent handle leaks
+3. **Calculate "handles leaked per second"**: Key metric for selecting the optimal test for isolation
+   - Formula: `average_handles_leaked / test_duration_seconds`
+   - Higher values = faster feedback during bisection
+4. **Select the best test**: Balance between leak magnitude and test runtime
+   - Example: `TestAuditLogSaving` leaked ~10 handles in ~64 seconds (~0.16 handles/sec)
+   - A 10-iteration loop takes ~10 minutes and clearly shows the leak trend
+
+### Phase 2: Leak Isolation and Fix (Claude Code)
+
+Once a test is selected, Claude Code can autonomously:
+
+1. **Establish baseline**: Run 10-iteration loop with `-ReportHandles -SortHandlesByCount`
+2. **Identify leaking handle type**: User/GDI (forms/controls) vs kernel handles (threads/events)
+3. **Bisect the test**: Systematically add `return;` statements to narrow down the leak location
+4. **Analyze and fix**: Examine the isolated code, identify the leak, implement fix
+5. **Validate**: Re-run the loop test to confirm handles are stable
+
+This separation of concerns allows efficient collaboration: the human leverages server-side data to identify *what* to investigate, then hands off to Claude Code for the detailed *how* of isolation and fixing.
+
 ## Overview
 
 Handle leaks occur when Windows handles (HWNDs, GDI objects, kernel objects) are allocated but not properly released. Over time, leaked handles accumulate and can cause:
@@ -151,11 +180,22 @@ Handles should now be stable (fluctuating but not trending upward).
 
 ## Case Study: AuditLogForm Icon Leak (December 2025)
 
-### Detection
+### Detection (Human - Phase 1)
 
-Nightly tests showed 30-41 handle leaks on the Integration branch vs 0-1 on master. Per-test data indicated `TestAuditLogSaving` was leaking ~10 handles per run.
+Nightly tests showed 30-41 handle leaks on the Integration branch vs 0-1 on master. The human reviewed per-test leak data from the LabKey server:
 
-### Investigation
+| Test | Avg Handles Leaked | Duration (sec) | Handles/sec |
+|------|-------------------|----------------|-------------|
+| TestAuditLog | 2.9 | 60.49 | 0.048 |
+| TestAuditLogSaving | 10.3 | 63.87 | 0.161 |
+| TestAuditLogTutorial | 15.4 | 64.87 | 0.237 |
+
+**Test selection rationale**: `TestAuditLogSaving` was chosen because:
+- High leak rate (10.3 handles/run) - clearly detectable in 10 iterations
+- Moderate duration (~64 sec) - 10-iteration loop completes in ~10 minutes
+- Good handles/sec ratio - efficient for bisection cycles
+
+### Investigation (Claude Code - Phase 2)
 
 1. **Established reproducible case**: 10-run loop showed ~3 GDI + ~1 User handles leaked per run
 2. **Identified type**: GDI handles were the primary leak (User handles often follow)
@@ -239,3 +279,44 @@ New parameters:
 ### TestRunner/Program.cs
 
 - Added `sorthandlesbycount` command-line argument (default: off)
+
+## Future Vision: Automated Leak Detection Workflow
+
+The current workflow requires a human to review nightly test results and select the optimal test for investigation. A planned enhancement would automate Phase 1 through an MCP (Model Context Protocol) server integration.
+
+### Planned Architecture
+
+```
+┌─────────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  LabKey Server      │────▶│  MCP Server      │────▶│  Claude Code    │
+│  (Nightly Results)  │     │  (JSON API)      │     │  (Analysis)     │
+└─────────────────────┘     └──────────────────┘     └─────────────────┘
+```
+
+### Envisioned Capabilities
+
+1. **Automatic leak detection**: MCP server queries nightly results, compares Integration vs Master
+2. **Optimal test selection**: Calculates "handles leaked per second" for all leaking tests
+3. **Investigation recommendations**: Returns ranked list of tests worth investigating
+4. **New slash command**: `/pw-review-leaks` would:
+   - Fetch last night's test results via MCP
+   - Identify tests with significant handle leaks
+   - Recommend which test to investigate first
+   - Optionally begin autonomous investigation
+
+### Benefits
+
+- **Faster response**: Leaks detected and investigated within hours of nightly run
+- **Consistent methodology**: Same bisection approach applied systematically
+- **Reduced manual overhead**: Human only needed to review and approve fixes
+- **Complete audit trail**: All investigation steps documented in TODO files
+
+### Implementation Status
+
+- [x] Tooling for leak isolation (this guide)
+- [x] Handle reporting improvements (`-ReportHandles`, `-SortHandlesByCount`)
+- [ ] MCP server for LabKey integration (see `ai/todos/backlog/brendanx67/TODO-labkey_mcp_exception_triage.md` on ai-context branch)
+- [ ] `/pw-review-leaks` slash command
+- [ ] Autonomous investigation mode
+
+This represents a path toward having Claude Code proactively identify and fix handle leaks with minimal human intervention, transforming leak debugging from a reactive manual process to an automated continuous improvement system.
