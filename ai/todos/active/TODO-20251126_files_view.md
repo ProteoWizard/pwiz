@@ -273,6 +273,18 @@ Based on the old branch, key areas to review:
   - **Enhanced `ValidateSingleEntry()` helper**: Added optional `expectedFilePath` parameter to validate file paths
   - **Updated all Add* test methods**: Now pass expected file paths for verification
   - **Documentation**: Added `-ShowUI` section to build-and-test-guide.md for running tests with visible UI
+- 2025-12-11: Added AddAndEditPrositLibrary test and fixed iRT calculator settings bugs:
+  - **New `AddAndEditPrositLibrary()` test method**: Tests editing iRT calculator backed by .blib file
+    - Adds spectral library using same .blib file as iRT calculator
+    - Changes iRT standard to trigger "save as" flow (since .blib cannot be modified in place)
+    - Verifies iRT calculator path changes from .blib to .irtdb
+  - **Added `EditIrtCalcDlg.OkDialog(string saveAsPath)` overload**: Enables tests to bypass SaveFileDialog
+  - **BUG FIX: `MappedList.ReplaceValue` used reference equality instead of key-based lookup**
+    - Changed from `IndexOf(oldValue)` to `TryGetValue(oldValue.GetKey(), ...)`
+    - This fix affects all settings lists that use ReplaceValue (iRT calculators, ion mobility libraries, etc.)
+  - **BUG FIX: `RetentionTimeList` not updated when iRT calculator path changed**
+    - Added `Settings.Default.RetentionTimeList.SetValue(...)` after updating RTScoreCalculatorList
+    - Ensures the RetentionTimeRegression referencing the calculator stays in sync
 
 ## Review Findings (2025-11-26)
 

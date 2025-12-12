@@ -239,6 +239,9 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 // Update the settings list to persist the change
                 Settings.Default.RTScoreCalculatorList.ReplaceValue(docCalc, newCalc);
+                // Also need to update the RetentionTimeRegression that uses this calculator (name change impossible)
+                Settings.Default.RetentionTimeList.SetValue(
+                    SkylineWindow.DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime);
             }
         }
 

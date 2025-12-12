@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -35,6 +28,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.IonMobility;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
@@ -45,6 +39,13 @@ using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using System.Xml.Serialization;
 using static pwiz.Skyline.Model.Files.FileModel;
 using BackgroundProteome = pwiz.Skyline.Model.Files.BackgroundProteome;
 using IonMobilityLibrary = pwiz.Skyline.Model.Files.IonMobilityLibrary;
@@ -539,7 +540,11 @@ namespace pwiz.SkylineTestFunctional
             AddBackgroundProteome("Rat_mini" + ProteomeDb.EXT_PROTDB);
 
             // Add iRT Calculator (Rat_Prosit.blib - a .blib file with embedded iRT table), verify it appears, and test rename
-            AddIrtCalculator("Rat_Prosit" + BiblioSpecLiteSpec.EXT);
+            const string prositBlibName = "Rat_Prosit" + BiblioSpecLiteSpec.EXT;
+            AddIrtCalculator(prositBlibName);
+
+            // Add spectral library with same .blib file, then edit iRT calc to change standard (triggers save-as)
+            AddAndEditPrositLibrary(prositBlibName);
 
             // Add Ion Mobility Library (.imsdb), verify it appears, and test rename
             AddIonMobilityLibrary("Rat_ims" + IonMobilityLibrarySpec.EXT);
@@ -657,6 +662,57 @@ namespace pwiz.SkylineTestFunctional
             // Verify iRT calculator was renamed (path stays the same)
             ValidateSingleEntry<RTCalc, RetentionScoreCalculatorSpec>(
                 rename, Settings.Default.RTScoreCalculatorList, filePath);
+        }
+
+        /// <summary>
+        /// Add spectral library using same .blib file as iRT calculator, then edit iRT calc to change standard.
+        /// Since .blib files cannot be modified, changing the standard triggers a "save as" flow to create a new .irtdb file.
+        /// </summary>
+        private void AddAndEditPrositLibrary(string blibFileName)
+        {
+            string name = Path.GetFileNameWithoutExtension(blibFileName);
+            string blibPath = GetTestPath(blibFileName);
+            string irtDbPath = Path.ChangeExtension(blibPath, IrtDb.EXT);
+
+            // Add spectral library using the same .blib file as the iRT calculator
+            using (new WaitDocumentChange())
+            {
+                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+                var libListDlg = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
+                RunUI(libListDlg.SelectLastItem);
+                RunDlg<EditLibraryDlg>(libListDlg.AddItem, dlg =>
+                {
+                    dlg.LibraryName = name;
+                    dlg.LibraryPath = blibPath;
+                    dlg.OkDialog();
+                });
+                OkDialog(libListDlg, libListDlg.OkDialog);
+                RunUI(() => peptideSettingsUI.PickedLibraries = peptideSettingsUI.PickedLibraries.Append(name).ToArray());
+                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            }
+
+            // Verify spectral library was added
+            WaitForFilesTree();
+            RunUI(() =>
+            {
+                var libraryFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
+                Assert.AreEqual(3, libraryFolder?.Nodes.Count ?? 0);
+                var libNode = (FilesTreeNode) libraryFolder?.Nodes[2];
+                Assert.AreEqual(blibPath, libNode?.FilePath);
+            });
+
+            // Edit iRT calculator to change standard - this triggers "save as" since .blib cannot be modified
+            var irtNode = SkylineWindow.FilesTree.RootChild<RTCalc>();
+            using (new WaitDocumentChange())
+            {
+                var editDlg = ShowDialog<EditIrtCalcDlg>(() => SkylineWindow.FilesTreeForm.EditNode(irtNode));
+                RunUI(() => editDlg.IrtStandards = IrtStandard.BIOGNOSYS_10);
+                // Dismiss the message about needing to save as new file, and provide the save path
+                RunDlg<MessageDlg>(() => editDlg.OkDialog(irtDbPath), msgDlg => msgDlg.OkDialog());
+            }
+            // Verify iRT calculator path changed to .irtdb file
+            ValidateSingleEntry<RTCalc, RetentionScoreCalculatorSpec>(
+                irtNode.Name, Settings.Default.RTScoreCalculatorList, irtDbPath);
         }
 
         /// <summary>
@@ -1178,7 +1234,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     // The number of libraries in settings should remain the same and contain the renamed library
                     Assert.AreEqual(librariesInSettings, Settings.Default.SpectralLibraryList.Count,
-                        $"Settings list should contain exactly one {nameof(SpectralLibraryList)}");
+                        $"Settings list should contain exactly one {nameof(LibrarySpec)}");
                     Assert.IsNotNull(Settings.Default.SpectralLibraryList[rename]);
 
                     // Validate FilesTree - make sure the renamed library appears in its original position
