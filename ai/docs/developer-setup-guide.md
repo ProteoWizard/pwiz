@@ -89,6 +89,23 @@ jb tool list
 
 > Recommended: match the version running on TeamCity (`2023.1.1`). Our scripts use the latest stable (`2025.2.4`) and produce zero-warning output.
 
+### dotCover Command-Line Tools (code coverage)
+
+Needed for code coverage analysis (`Run-Tests.ps1 -Coverage`).
+
+```powershell
+dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7
+```
+
+Verify:
+```powershell
+dotCover --version
+```
+
+> **Important**: Use version 2025.1.7 or earlier. dotCover 2025.3.0+ has a known bug with JSON export that causes "Object reference not set to an instance of an object" errors.
+>
+> Note: dotCover Command Line Tools are separate from the ReSharper IDE extension. Install both for complete tooling support.
+
 ### GitHub CLI (gh)
 
 The GitHub CLI enables AI agents (Claude Code, Copilot, etc.) to interact with GitHub directly—reviewing PRs, fetching issue details, and checking CI status without leaving the IDE terminal.
@@ -204,6 +221,8 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 |---------|-------|-----|
 | Emoji/Unicode characters render as `âœ…` | Terminal using CP1252 | Install PowerShell 7, ensure Cursor uses it |
 | `jb` not found | ReSharper CLI tools missing | `dotnet tool install -g JetBrains.ReSharper.GlobalTools` |
+| `dotCover` not found | dotCover CLI tools missing | `dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7` |
+| dotCover JSON export fails with "Object reference not set" | dotCover 2025.3.0+ bug | Uninstall and install 2025.1.7: `dotnet tool uninstall --global JetBrains.dotCover.CommandLineTools && dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7` |
 | `gh` not found | GitHub CLI not installed | `winget install GitHub.cli` |
 | `gh auth login` hangs in agent terminal | Requires interactive terminal | Run `gh auth login` in separate PowerShell 7 window outside IDE |
 | CRLF/LF diffs everywhere | `core.autocrlf` not set | `git config --global core.autocrlf true` |
