@@ -150,6 +150,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             // This allows the worker thread to check the cancellation token and exit
             _manualTriggerEvent?.Set();
 
+            // Dispose the cancellation token source
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+
             // Wait for the single worker thread to exit completely
             // After Join() returns, we know the thread is gone and won't access _paths or _manualTriggerEvent
             _workerThread?.Join();

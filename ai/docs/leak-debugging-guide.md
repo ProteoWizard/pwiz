@@ -244,6 +244,113 @@ public partial class AuditLogForm : DocumentGridForm
 
 After fix, 10-run loop showed stable handles: GDI fluctuated 60-67, User 26-28, with no upward trend.
 
+## Case Study: FileSystemWatcher Race Condition (December 2025)
+
+### Detection
+
+After fixing the AuditLogForm icon leak, nightly tests still showed handle leaks. TestExplicitVariable was identified as a heavy leaker (~16 GDI handles per run).
+
+### Investigation - Two-Level Bisection
+
+This case demonstrated a refined bisection approach: **test-level bisection** followed by **code-level bisection**.
+
+#### Level 1: Test Bisection (narrowing to the trigger)
+
+1. **Full test**: Massive leak (~16 GDI, ~5 User, ~20 Event per run)
+2. **First half (return at line 141)**: NO leak
+3. **Second half**: Leak present - isolated to Save/Open document cycle
+4. **Further isolation**: Deleting `.sky.view` file reduced leak significantly
+
+This pointed to layout restore (which recreates `FilesTreeForm`) as the trigger.
+
+#### Level 2: Code Bisection (finding the root cause)
+
+Once we knew the *trigger* (document open with layout restore), we shifted to bisecting the *suspected code* rather than the test:
+
+1. **Commented out `HandleDocumentEvent()` calls** in FilesTree.cs → leak stopped
+2. **Uncommented `HandleDocumentEvent()`, commented out `FileSystemService.StartWatching()`** → leak stopped
+3. **Enabled watching, commented out `WatchDirectory()` call** → leak stopped
+4. **Enabled `WatchDirectory()`, commented out `managedFsw.Start()`** → leak stopped
+5. **Enabled `Start()`, commented out event subscriptions** → STILL LEAKED
+
+This narrowed it down to `FileSystemWatcher.EnableRaisingEvents = true`.
+
+### Root Cause Discovery via Debugger
+
+Breakpoints revealed the smoking gun:
+- **2 calls to `ManagedFileSystemWatcher.Start()`** for every **1 call to `StopWatching()`**
+- All 3 calls were for the **same directory path**
+- All 3 calls were on the **same `LocalFileSystemService` instance**
+
+This indicated a **race condition**: two `BackgroundActionService` worker threads were both calling `WatchDirectory()` for the same path simultaneously.
+
+### The Race Condition
+
+```
+Thread 9                              Thread 10
+────────                              ─────────
+WatchDirectory("C:\path")
+  IsMonitoringDirectory? → false
+                                      WatchDirectory("C:\path")
+                                        IsMonitoringDirectory? → false
+  Create ManagedFileSystemWatcher
+  Start()
+  FileSystemWatchers["C:\path"] = fsw1
+                                        Create ManagedFileSystemWatcher
+                                        Start()
+                                        FileSystemWatchers["C:\path"] = fsw2  ← OVERWRITES!
+```
+
+Result: `fsw1` is orphaned - never disposed, its handles leak.
+
+### Fix
+
+Move the `IsMonitoringDirectory` check inside the lock:
+
+```csharp
+// BEFORE (race condition)
+private void WatchDirectory(string directoryPath)
+{
+    if (directoryPath == null || IsMonitoringDirectory(directoryPath))
+        return;
+
+    var managedFsw = new ManagedFileSystemWatcher(...);
+    managedFsw.Start();
+
+    lock (_fswLock)
+    {
+        FileSystemWatchers[directoryPath] = managedFsw;
+    }
+}
+
+// AFTER (thread-safe)
+private void WatchDirectory(string directoryPath)
+{
+    if (directoryPath == null)
+        return;
+
+    lock (_fswLock)
+    {
+        if (IsMonitoringDirectory(directoryPath))
+            return;
+
+        var managedFsw = new ManagedFileSystemWatcher(...);
+        managedFsw.Start();
+        FileSystemWatchers[directoryPath] = managedFsw;
+    }
+}
+```
+
+### Key Lessons
+
+1. **Two-level bisection**: When test bisection identifies a trigger but not the root cause, shift to bisecting the suspected code itself by commenting out features/functionality.
+
+2. **Use the debugger strategically**: Once bisection narrows to a small area, breakpoints can reveal timing issues (like the 2:1 Start/Stop ratio) that aren't visible from handle counts alone.
+
+3. **Watch for concurrent access**: When multiple threads access shared state, check-then-act patterns are inherently racy. The check and the act must be atomic.
+
+4. **Handle counts tell the story**: The ratio of operations (2 Starts per 1 Stop) directly explained the leak rate (~16 handles per iteration = 1 orphaned watcher with ~16 handles).
+
 ## Best Practices
 
 ### Prevention

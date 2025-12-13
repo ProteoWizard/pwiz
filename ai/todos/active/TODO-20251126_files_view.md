@@ -304,6 +304,24 @@ Based on the old branch, key areas to review:
     - `Icon = AUDIT_LOG_ICON;`
   - **Validation**: Handle counts now stable across 10 test runs (GDI fluctuates 60-67, User 26-28, no upward trend)
   - **Documentation**: Created `ai/docs/leak-debugging-guide.md` with methodology for future leak investigations
+- 2025-12-12: Fixed FileSystemWatcher race condition causing additional handle leaks:
+  - **Problem**: After AuditLogForm fix, nightly tests still showed handle leaks (~16 handles/run)
+  - **Investigation**: Two-level bisection approach - test bisection followed by code bisection
+  - **Root cause**: Race condition in `LocalFileSystemService.WatchDirectory()`
+    - Two background threads could both pass `IsMonitoringDirectory()` check before either added to dictionary
+    - One `ManagedFileSystemWatcher` would be orphaned (never disposed), leaking its handles
+    - Debugger showed 2 `Start()` calls per 1 `Stop()` call for same directory path
+  - **Fix**: Moved `IsMonitoringDirectory()` check inside the lock to make check-and-add atomic
+  - **Additional fixes**:
+    - `FileSystemService`: Dispose old delegate in `StartWatching()`/`StopWatching()` to prevent leaks during switching
+    - `FileSystemHealthMonitor`: Dispose `CancellationTokenSource` in `Stop()`
+    - `FilesTree`: Dispose `CancellationTokenSource` before creating new one
+    - `ManagedFileSystemWatcher.Start()`: Removed redundant `CreateWatcher()` call that orphaned constructor-created watcher
+    - `FilesTreeForm`: Moved event subscriptions to `OnHandleCreated`/`OnHandleDestroyed` for proper WinForms lifecycle
+    - `RunTests.cs`: Filter handle types with count ≤10 to reduce noise in handle reporting
+  - **Validation**: GDI handles stable at 46 across all test iterations (TestExplicitVariable, TestAuditLogSaving)
+  - **Documentation**: Added case study to `ai/docs/leak-debugging-guide.md` documenting two-level bisection methodology
+  - **Tests**: All 4 Files view tests passing (TestFilesModel, TestFilesTreeFileSystem, TestFilesTreeForm, TestSkylineWindowEvents), CodeInspection passing
 
 ## Review Findings (2025-11-26)
 

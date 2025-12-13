@@ -25,39 +25,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 _nodeTip = null;
             }
 
-            if (FilesTree != null)
-            {
-                FilesTree.NodeMouseDoubleClick -= FilesTree_TreeNodeMouseDoubleClick;
-                FilesTree.MouseDown -= FilesTree_MouseDown;
-                FilesTree.MouseMove -= FilesTree_MouseMove;
-                FilesTree.LostFocus -= FilesTree_LostFocus;
-                FilesTree.BeforeLabelEdit -= FilesTree_BeforeLabelEdit;
-                FilesTree.AfterLabelEdit -= FilesTree_AfterLabelEdit;
-                FilesTree.AfterNodeEdit -= FilesTree_AfterLabelEdit;
-                FilesTree.DragEnter -= FilesTree_DragEnter;
-                FilesTree.DragLeave -= FilesTree_DragLeave;
-                FilesTree.DragOver -= FilesTree_DragOver;
-                FilesTree.DragDrop -= FilesTree_DragDrop;
-                FilesTree.QueryContinueDrag -= FilesTree_QueryContinueDrag;
-                FilesTree.KeyDown -= FilesTree_KeyDown;
-                FilesTree.BeforeCollapse -= FilesTree_BeforeCollapse;
-            }
-
-            SkylineWindow.DocumentSavedEvent -= OnDocumentSavedEvent;
-            SkylineWindow.DocumentUIChangedEvent -= OnDocumentUIChangedEvent;
-
-            if (filesTreeContextMenu != null)
-            {
-                filesTreeContextMenu.Opening -= FilesTree_ContextMenuStrip_Opening;
-            }
-
-            if (_dropTargetRemove != null)
-            {
-                _dropTargetRemove.DragEnter -= DropTargetRemove_DragEnter;
-                _dropTargetRemove.DragDrop -= DropTargetRemove_DragDrop;
-                _dropTargetRemove.QueryContinueDrag -= FilesTree_QueryContinueDrag;
-            }
-
             base.Dispose(disposing);
         }
 
@@ -70,8 +37,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.filesTree = new pwiz.Skyline.Controls.FilesTree.FilesTree();
             this.panel1 = new System.Windows.Forms.Panel();
             this.filesTreeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.showFileNamesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenuSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.libraryExplorerMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openContainingFolderMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -82,29 +47,46 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.removeAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debugRefreshTreeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.showFileNamesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.filesTreeContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // filesTree
             // 
+            this.filesTree.AllowDrop = true;
             resources.ApplyResources(this.filesTree, "filesTree");
             this.filesTree.AutoExpandSingleNodes = true;
             this.filesTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.filesTree.HideSelection = false;
             this.filesTree.ItemHeight = 16;
+            this.filesTree.LabelEdit = true;
             this.filesTree.Name = "filesTree";
             this.filesTree.RestoredFromPersistentString = false;
             this.filesTree.UseKeysOverride = false;
+            this.filesTree.BeforeLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.FilesTree_BeforeLabelEdit);
+            this.filesTree.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.FilesTree_AfterLabelEdit);
+            this.filesTree.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.FilesTree_BeforeCollapse);
+            this.filesTree.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.FilesTree_TreeNodeMouseDoubleClick);
+            this.filesTree.DragDrop += new System.Windows.Forms.DragEventHandler(this.FilesTree_DragDrop);
+            this.filesTree.DragEnter += new System.Windows.Forms.DragEventHandler(this.FilesTree_DragEnter);
+            this.filesTree.DragOver += new System.Windows.Forms.DragEventHandler(this.FilesTree_DragOver);
+            this.filesTree.DragLeave += new System.EventHandler(this.FilesTree_DragLeave);
+            this.filesTree.QueryContinueDrag += new System.Windows.Forms.QueryContinueDragEventHandler(this.FilesTree_QueryContinueDrag);
+            this.filesTree.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FilesTree_KeyDown);
+            this.filesTree.MouseDown += new System.Windows.Forms.MouseEventHandler(this.FilesTree_MouseDown);
+            this.filesTree.MouseLeave += new System.EventHandler(this.FilesTree_MouseLeave);
+            this.filesTree.MouseMove += new System.Windows.Forms.MouseEventHandler(this.FilesTree_MouseMove);
             // 
             // panel1
             // 
             this.panel1.Controls.Add(this.filesTree);
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Name = "panel1";
-            //
+            // 
             // filesTreeContextMenu
-            //
+            // 
             this.filesTreeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.libraryExplorerMenuItem,
             this.manageResultsMenuItem,
@@ -120,18 +102,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.showFileNamesMenuItem});
             this.filesTreeContextMenu.Name = "contextMenuStrip1";
             resources.ApplyResources(this.filesTreeContextMenu, "filesTreeContextMenu");
-            //
-            // showFileNamesMenuItem
-            //
-            this.showFileNamesMenuItem.CheckOnClick = true;
-            this.showFileNamesMenuItem.Name = "showFileNamesMenuItem";
-            resources.ApplyResources(this.showFileNamesMenuItem, "showFileNamesMenuItem");
-            this.showFileNamesMenuItem.Click += new System.EventHandler(this.FilesTree_ShowFileNamesMenuItem);
-            //
-            // contextMenuSeparator
-            //
-            this.contextMenuSeparator.Name = "contextMenuSeparator";
-            resources.ApplyResources(this.contextMenuSeparator, "contextMenuSeparator");
+            this.filesTreeContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.FilesTree_ContextMenuStrip_Opening);
             // 
             // libraryExplorerMenuItem
             // 
@@ -165,17 +136,17 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.selectReplicateMenuItem.Click += new System.EventHandler(this.FilesTree_ActivateReplicateMenuItem);
             // 
             // openAuditLogMenuItem
-            //
+            // 
             this.openAuditLogMenuItem.Name = "openAuditLogMenuItem";
             resources.ApplyResources(this.openAuditLogMenuItem, "openAuditLogMenuItem");
             this.openAuditLogMenuItem.Click += new System.EventHandler(this.FilesTree_OpenAuditLogMenuItem);
-            //
+            // 
             // editMenuItem
-            //
+            // 
             this.editMenuItem.Name = "editMenuItem";
             resources.ApplyResources(this.editMenuItem, "editMenuItem");
             this.editMenuItem.Click += new System.EventHandler(this.FilesTree_EditMenuItem);
-            //
+            // 
             // removeAllMenuItem
             // 
             this.removeAllMenuItem.Name = "removeAllMenuItem";
@@ -193,6 +164,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.debugRefreshTreeMenuItem.Name = "debugRefreshTreeMenuItem";
             resources.ApplyResources(this.debugRefreshTreeMenuItem, "debugRefreshTreeMenuItem");
             this.debugRefreshTreeMenuItem.Click += new System.EventHandler(this.FilesTree_DebugRefreshTreeMenuItem);
+            // 
+            // contextMenuSeparator
+            // 
+            this.contextMenuSeparator.Name = "contextMenuSeparator";
+            resources.ApplyResources(this.contextMenuSeparator, "contextMenuSeparator");
+            // 
+            // showFileNamesMenuItem
+            // 
+            this.showFileNamesMenuItem.CheckOnClick = true;
+            this.showFileNamesMenuItem.Name = "showFileNamesMenuItem";
+            resources.ApplyResources(this.showFileNamesMenuItem, "showFileNamesMenuItem");
+            this.showFileNamesMenuItem.Click += new System.EventHandler(this.FilesTree_ShowFileNamesMenuItem);
             // 
             // FilesTreeForm
             // 

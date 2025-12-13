@@ -144,6 +144,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             DocumentContainer = documentUIContainer;
 
+            // Force handle creation to ensure tree is populated before view state restoration.
+            // RestoreExpansionAndSelection is called from CreateFilesTreeForm immediately after
+            // FilesTreeForm construction, and requires nodes to exist.
             if (!IsHandleCreated)
                 CreateHandle();
 
@@ -213,6 +216,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // Create a new CancellationToken if we stopped watching or if we're not watching yet
                 if (!FileSystemService.IsWatching())
                 {
+                    _cancellationTokenSource?.Dispose();
                     _cancellationTokenSource = new CancellationTokenSource();
                 }
                 var cancellationToken = _cancellationTokenSource.Token;
@@ -761,7 +765,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         protected override void Dispose(bool disposing)
         {
-            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
 
             if (BackgroundActionService != null)
             {

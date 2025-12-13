@@ -554,6 +554,7 @@ namespace TestRunnerLib
                     var allHandleCounts = handleInfos
                         .GroupBy(h => h.Type)
                         .Select(g => (Type: g.Key, Count: g.Count()))
+                        .Where(hc => hc.Count > 10)
                         .Concat(new[] { (Type: "User", Count: LastUserHandleCount), (Type: "GDI", Count: LastGdiHandleCount) });
                     // Sort by count descending (leaking types rise to top) or alphabetically
                     var sortedHandleCounts = SortHandlesByCount

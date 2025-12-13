@@ -86,11 +86,17 @@ namespace pwiz.Skyline.Controls.FilesTree
         // CONSIDER: does this need to lock while updating Delegate?
         public void StartWatching(CancellationToken cancellationToken)
         {
+            // Dispose old delegate if switching from a previous LocalFileSystemService
+            var oldDelegate = Delegate;
+
             var localStorageService = new LocalFileSystemService(_synchronizingObject, _backgroundActionService);
             localStorageService.FileDeletedAction += FileDeletedAction;
             localStorageService.FileCreatedAction += FileCreatedAction;
             localStorageService.FileRenamedAction += FileRenamedAction;
             Delegate = localStorageService;
+
+            // Dispose old delegate AFTER switching to new one to prevent race conditions
+            oldDelegate?.Dispose();
 
             Delegate.StartWatching(cancellationToken);
         }
@@ -106,8 +112,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         // CONSIDER: does this need to lock while updating Delegate?
         public void StopWatching()
         {
-            Delegate.StopWatching();
+            var oldDelegate = Delegate;
             Delegate = NO_DOCUMENT;
+            oldDelegate.Dispose();  // Dispose AFTER switching to NO_DOCUMENT to prevent race conditions
         }
 
         public void Dispose()
@@ -431,22 +438,25 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <param name="directoryPath">The directory to watch.</param>
         private void WatchDirectory(string directoryPath)
         {
-            if (directoryPath == null || IsMonitoringDirectory(directoryPath))
-            {
+            if (directoryPath == null)
                 return;
-            }
 
-            var managedFsw = new ManagedFileSystemWatcher(directoryPath, SynchronizingObject);
-
-            managedFsw.Renamed += FileSystemWatcher_OnRenamed;
-            managedFsw.Deleted += FileSystemWatcher_OnDeleted;
-            managedFsw.Created += FileSystemWatcher_OnCreated;
-            managedFsw.Error   += FileSystemWatcher_OnError;
-
-            managedFsw.Start();
-
+            // Lock around the entire check-and-add operation to prevent race condition
+            // where two threads both pass IsMonitoringDirectory check before either adds to dictionary
             lock (_fswLock)
             {
+                if (IsMonitoringDirectory(directoryPath))
+                    return;
+
+                var managedFsw = new ManagedFileSystemWatcher(directoryPath, SynchronizingObject);
+
+                managedFsw.Renamed += FileSystemWatcher_OnRenamed;
+                managedFsw.Deleted += FileSystemWatcher_OnDeleted;
+                managedFsw.Created += FileSystemWatcher_OnCreated;
+                managedFsw.Error += FileSystemWatcher_OnError;
+
+                managedFsw.Start();
+
                 FileSystemWatchers[directoryPath] = managedFsw;
             }
 

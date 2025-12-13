@@ -61,32 +61,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // Initialize ShowFileNames from settings
             SkylineFile.ShowFileNames = Settings.Default.FilesViewShowFileNames;
 
-            // FilesTree
-            filesTree.LabelEdit = true;
-            filesTree.AllowDrop = true;
-            filesTree.HideSelection = false;
-            filesTree.RestoredFromPersistentString = false;
-            filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
-            filesTree.MouseDown += FilesTree_MouseDown;
-            filesTree.MouseMove += FilesTree_MouseMove;
-            filesTree.MouseLeave += FilesTree_MouseLeave;
-            filesTree.LostFocus += FilesTree_LostFocus;
-            filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
-            filesTree.AfterLabelEdit += FilesTree_AfterLabelEdit;
-            filesTree.AfterNodeEdit += FilesTree_AfterLabelEdit;
-            filesTree.DragEnter += FilesTree_DragEnter;
-            filesTree.DragLeave += FilesTree_DragLeave;
-            filesTree.DragOver += FilesTree_DragOver;
-            filesTree.DragDrop += FilesTree_DragDrop;
-            filesTree.QueryContinueDrag += FilesTree_QueryContinueDrag;
-            filesTree.KeyDown += FilesTree_KeyDown;
-            filesTree.BeforeCollapse += FilesTree_BeforeCollapse;
-
-            SkylineWindow.DocumentSavedEvent += OnDocumentSavedEvent;
-            SkylineWindow.DocumentUIChangedEvent += OnDocumentUIChangedEvent;
-
             // FilesTree => context menu
-            filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
             filesTree.ContextMenuStrip = filesTreeContextMenu;
 
             // FilesTree => tooltips
@@ -96,13 +71,46 @@ namespace pwiz.Skyline.Controls.FilesTree
             _dropTargetRemove = CreateDropTarget(FilesTreeResources.Trash, DockStyle.None);
             _dropTargetRemove.Visible = false;
             _dropTargetRemove.AllowDrop = true;
-            _dropTargetRemove.DragEnter += DropTargetRemove_DragEnter;
-            _dropTargetRemove.DragDrop += DropTargetRemove_DragDrop;
-            _dropTargetRemove.QueryContinueDrag += FilesTree_QueryContinueDrag;
 
             filesTree.Controls.Add(_dropTargetRemove);
 
             filesTree.InitializeTree(SkylineWindow);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            // FilesTree custom events (not available in designer)
+            filesTree.LostFocus += FilesTree_LostFocus;
+            filesTree.AfterNodeEdit += FilesTree_AfterLabelEdit;
+
+            // SkylineWindow events
+            SkylineWindow.DocumentSavedEvent += OnDocumentSavedEvent;
+            SkylineWindow.DocumentUIChangedEvent += OnDocumentUIChangedEvent;
+
+            // Drop target events
+            _dropTargetRemove.DragEnter += DropTargetRemove_DragEnter;
+            _dropTargetRemove.DragDrop += DropTargetRemove_DragDrop;
+            _dropTargetRemove.QueryContinueDrag += FilesTree_QueryContinueDrag;
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            // Drop target events
+            _dropTargetRemove.QueryContinueDrag -= FilesTree_QueryContinueDrag;
+            _dropTargetRemove.DragDrop -= DropTargetRemove_DragDrop;
+            _dropTargetRemove.DragEnter -= DropTargetRemove_DragEnter;
+
+            // SkylineWindow events
+            SkylineWindow.DocumentUIChangedEvent -= OnDocumentUIChangedEvent;
+            SkylineWindow.DocumentSavedEvent -= OnDocumentSavedEvent;
+
+            // FilesTree custom events
+            filesTree.AfterNodeEdit -= FilesTree_AfterLabelEdit;
+            filesTree.LostFocus -= FilesTree_LostFocus;
+
+            base.OnHandleDestroyed(e);
         }
 
         [Browsable(false)]
@@ -996,7 +1004,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        private static void FilesTree_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
+        private void FilesTree_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
             var filesTreeNode = (FilesTreeNode)e.Node;
 

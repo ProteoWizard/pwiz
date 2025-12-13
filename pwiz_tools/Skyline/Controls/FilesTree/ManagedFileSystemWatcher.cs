@@ -76,7 +76,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             if (!IsPaused)
             {
-                CreateWatcher();
                 FileSystemWatcher.EnableRaisingEvents = true;
             }
         }
