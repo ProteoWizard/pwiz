@@ -5,7 +5,7 @@
 - **Created**: 2025-12-13
 - **Completed**: (pending)
 - **Status**: 🚧 In Progress
-- **PR**: (pending)
+- **PR**: [#3713](https://github.com/ProteoWizard/pwiz/pull/3713)
 - **Objective**: Create MCP server for LabKey/Panorama access to analyze exception logs
 
 ## Overview
