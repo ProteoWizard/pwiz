@@ -151,6 +151,7 @@ namespace TestRunnerLib
         public bool Verbose { get; set; }
         public bool ReportHeaps { get; set; }
         public bool ReportHandles { get; set; }
+        public bool SortHandlesByCount { get; set; }  // Sort handle types by count (descending) instead of alphabetically
         public bool IsParallelClient { get; private set; }
         public string ParallelClientId { get; private set; }
 
@@ -175,6 +176,7 @@ namespace TestRunnerLib
             bool runsmallmoleculeversions,
             bool recordauditlogs,
             bool teamcityTestDecoration,
+            bool teamcityCleanup,
             bool retrydatadownloads,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
@@ -186,7 +188,8 @@ namespace TestRunnerLib
             bool verbose = false,
             bool isParallelClient = false,
             bool reportHeaps = false,
-            bool reportHandles = false)
+            bool reportHandles = false,
+            bool sortHandlesByCount = false)
         {
             _buildMode = buildMode;
             _log = log;
@@ -196,11 +199,18 @@ namespace TestRunnerLib
             IsParallelClient = isParallelClient;
             ReportHeaps = reportHeaps;
             ReportHandles = reportHandles;
+            SortHandlesByCount = sortHandlesByCount;
             SetTestDir(TestContext, results);
 
             // Minimize disk use on TeamCity VMs by removing downloaded files
             // during test clean-up
-            if (teamcityTestDecoration)
+            if (teamcityCleanup)
+            {
+                // teamcity-cleanup=on flag forces cleanup level to "all" for local testing/debugging
+                _cleanupLevelAll = true;
+                TestContext.Properties["DesiredCleanupLevel"] = "all"; // Must match DesiredCleanupLevel value
+            }
+            else if (teamcityTestDecoration)
             {
                 var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
                 if (isTeamCity)
@@ -539,9 +549,19 @@ namespace TestRunnerLib
                 if (ReportHandles)
                 {
                     var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
-                    var handleCounts = handleInfos.GroupBy(h => h.Type).OrderBy(g => g.Key);
+                    // Build list of (Type, Count) including User and GDI handles
+                    // (User/GDI are not returned by HandleEnumeratorWrapper)
+                    var allHandleCounts = handleInfos
+                        .GroupBy(h => h.Type)
+                        .Select(g => (Type: g.Key, Count: g.Count()))
+                        .Where(hc => hc.Count > 10)
+                        .Concat(new[] { (Type: "User", Count: LastUserHandleCount), (Type: "GDI", Count: LastGdiHandleCount) });
+                    // Sort by count descending (leaking types rise to top) or alphabetically
+                    var sortedHandleCounts = SortHandlesByCount
+                        ? allHandleCounts.OrderByDescending(c => c.Count)
+                        : allHandleCounts.OrderBy(c => c.Type);
 
-                    Log("# Handles " + string.Join("\t", handleCounts.Where(c => c.Count() > 14).Select(c => c.Key + ": " + c.Count())) + Environment.NewLine);
+                    Log("# Handles " + string.Join("\t", sortedHandleCounts.Select(c => c.Type + ": " + c.Count)) + Environment.NewLine);
                 }
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);

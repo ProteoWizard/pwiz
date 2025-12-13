@@ -99,6 +99,17 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static bool IgnoreTestChecks { get; set; }
 
+        /// <summary>
+        /// Use inside a using clause to set <see cref="IgnoreTestChecks"/> to
+        /// true for a limited scope and be assured that it gets set back to false
+        /// even if the test fails.
+        /// </summary>
+        public class IgnoreTestChecksScope : IDisposable
+        {
+            public IgnoreTestChecksScope() { IgnoreTestChecks = true; }
+            public void Dispose() { IgnoreTestChecks = false; }
+        }
+
         public AuditLogList(AuditLogEntry entries)
         {
             AuditLogEntries = entries;

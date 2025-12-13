@@ -103,6 +103,11 @@ namespace pwiz.Skyline.SettingsUI
 
                 fileName = openFileDialog.FileName;
             }
+            OpenBackgroundProteome(fileName);
+        }
+
+        public void OpenBackgroundProteome(string fileName)
+        {
             Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(fileName);
 
             if (IsFastaFile(fileName))

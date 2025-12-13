@@ -908,5 +908,8 @@
     <Setting Name="MsFraggerDownloadUrl" Type="System.String" Scope="Application">
       <Value Profile="(Default)">https://msfragger-upgrader.nesvilab.org/upgrader/download.php</Value>
     </Setting>
+    <Setting Name="FilesViewShowFileNames" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

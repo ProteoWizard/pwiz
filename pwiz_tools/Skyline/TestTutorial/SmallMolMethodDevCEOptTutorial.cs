@@ -245,7 +245,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForGraphs();
                 RunUI(() =>
                 {
-                    SkylineWindow.Size = new Size(1054, 587);
+                    SkylineWindow.Size = new Size(1054, 610);
                     AdjustSequenceTreePanelWidth(true);
                 });
 

@@ -449,7 +449,7 @@ namespace TestPerf
             DirectoryEx.SafeDelete(Path.Combine(Path.GetDirectoryName(SearchFiles.First())!, "converted"));
             foreach (var searchFile in SearchFiles)
             {
-                FileEx.SafeDelete(Path.ChangeExtension(searchFile, ".mzid.gz"));
+                FileEx.SafeDelete(Path.ChangeExtension(searchFile, ".mzid.gz"), true);
             }
         }
 

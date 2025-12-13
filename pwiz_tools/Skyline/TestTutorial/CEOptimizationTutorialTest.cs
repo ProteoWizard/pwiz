@@ -176,7 +176,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandProteins();
                 SkylineWindow.ExpandPeptides();
             });
-
+            WaitForDocumentLoaded();
             RestoreViewOnScreen(5);
             PauseForScreenShot("Main Skyline window");
 

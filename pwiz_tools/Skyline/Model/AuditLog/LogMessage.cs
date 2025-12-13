@@ -148,6 +148,7 @@ namespace pwiz.Skyline.Model.AuditLog
         removed_empty_peptides,
         removed_empty_protein,
         removed_empty_proteins,
+        removed_library,
         removed_library_run,
         removed_missing_results,
         removed_peak_from,
@@ -184,7 +185,21 @@ namespace pwiz.Skyline.Model.AuditLog
         edited_ion_mobility_library,
         permuted_isotope_label_simple,
         permuted_isotope_label_complete,
-        added_spectrum_filter
+        added_spectrum_filter,
+        files_tree_node_renamed,
+        files_tree_node_drag_and_drop,
+        files_tree_nodes_drag_and_drop,
+        files_tree_replicates_remove_one,
+        files_tree_replicates_remove_several,
+        files_tree_replicates_remove_all,
+        files_tree_libraries_remove_one,
+        files_tree_libraries_remove_several,
+        files_tree_libraries_remove_all,
+        files_tree_background_proteome_update,
+        files_tree_rt_calculator_update,
+        files_tree_optimization_library_update,
+        files_tree_ion_mobility_library_update,
+        files_tree_spectral_library_update
     } // N.B. as you add to this, consider whether or not the human-readable message may want to refuse the "peptide"->"molecule" translation for small molecule UI (see ModeUIInvariantMesdsageTypes below)
 
     /// <summary>
