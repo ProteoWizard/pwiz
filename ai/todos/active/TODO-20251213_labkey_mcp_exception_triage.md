@@ -24,7 +24,7 @@ An LLM agent with access to this data could automate triage and even propose fix
 
 ## Goals
 
-1. **Authenticated LabKey access** - MCP server that handles basic auth + CSRF tokens
+1. **Authenticated LabKey access** - MCP server using official LabKey Python API
 2. **Exception analysis** - Query and summarize exception patterns
 3. **Code correlation** - Match stack traces to current codebase
 4. **Fix proposals** - Generate fixes for clear-cut issues
@@ -36,20 +36,26 @@ An LLM agent with access to this data could automate triage and even propose fix
 
 **Objective**: Read-only authenticated access to skyline.ms LabKey data
 
+**Approach**: Use official LabKey Python API (`pip install labkey`) instead of porting C# patterns.
+The official API handles authentication, CSRF tokens, and session management internally.
+
 **Tasks**:
-- [ ] Study MCP SDK (Python recommended for quick prototyping)
-- [ ] Implement LabKey authentication flow (based on PanoramaClient/RequestHelper.cs)
-  - Basic auth header
-  - CSRF token retrieval from `/project/home/ensureLogin.view`
-  - Cookie management
-- [ ] Create initial tools:
+- [x] Study MCP Python SDK (`mcp` package)
+- [x] Create MCP server skeleton with dependencies (`mcp`, `labkey`)
+- [ ] Configure netrc authentication for skyline.ms
+- [x] Create initial MCP tools wrapping LabKey API:
   - `query_exceptions(days, folder)` - Fetch recent exceptions
   - `get_exception_details(id)` - Get full stack trace and context
-  - `list_folders()` - Browse LabKey folder structure
-- [ ] Configure MCP server in Claude Code (local scope for credentials)
+  - `list_containers()` - Browse LabKey folder structure
+  - `list_schemas()` - Discover available schemas
+  - `list_queries()` - List queries in a schema
+  - `query_table()` - Generic table query
+- [ ] Configure MCP server in Claude Code (local scope)
 - [ ] Test with simple queries
 
-**Reference**: `pwiz_tools/Shared/PanoramaClient/RequestHelper.cs` lines 371-395 for CSRF flow
+**Dependencies**:
+- `mcp` - Model Context Protocol Python SDK
+- `labkey` - Official LabKey Python API (handles auth internally)
 
 ### Phase 2: Exception Analysis Workflows
 
@@ -103,44 +109,48 @@ An LLM agent with access to this data could automate triage and even propose fix
 
 ## Technical Notes
 
-### MCP Server Architecture
+### MCP Server Location
 
 ```
-labkey-mcp-server.py
-├── auth.py          # LabKey authentication (basic + CSRF)
-├── client.py        # HTTP client with session management
-├── tools/
-│   ├── exceptions.py    # Exception query tools
-│   ├── folders.py       # Folder navigation
-│   └── analysis.py      # Aggregation/analysis tools
-└── server.py        # MCP server entry point
+pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/
+├── server.py        # MCP server with all tools
+├── pyproject.toml   # Dependencies (mcp, labkey)
+└── README.md        # Setup instructions
 ```
+
+The official `labkey` package handles all authentication internally via netrc.
 
 ### Credential Management
 
-```bash
-# Local scope - credentials stay on developer machine
-claude mcp add --transport stdio labkey \
-  --env LABKEY_URL=https://skyline.ms \
-  --env LABKEY_USER=${LABKEY_USER} \
-  --env LABKEY_API_KEY=${LABKEY_API_KEY} \
-  --scope local \
-  -- python labkey-mcp-server.py
+**Step 1**: Create `_netrc` file in user home directory (Windows) or `.netrc` (Unix):
+```
+machine skyline.ms
+login your-email@example.com
+password your-password
 ```
 
-### LabKey API Endpoints
+**Step 2**: Register MCP server in Claude Code:
+```bash
+claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+```
 
-Key endpoints for exception tracking (verify against actual skyline.ms schema):
-- `query/selectRows.api` - Query exception tables
-- `query/getSchemas.api` - Discover available schemas
-- `project/getContainers.api` - List folders
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `list_schemas` | List available schemas in a container |
+| `list_queries` | List queries/tables in a schema |
+| `list_containers` | List child folders in a container |
+| `query_table` | Query data from any LabKey table |
+| `query_exceptions` | Convenience wrapper for exception queries |
+| `get_exception_details` | Get full details for a specific exception |
 
 ## Resources
 
-- [MCP SDK Documentation](https://modelcontextprotocol.io/quickstart/server)
-- [MCP Example Servers](https://github.com/modelcontextprotocol/servers)
-- [LabKey API Documentation](https://www.labkey.org/Documentation/wiki-page.view?name=remoteAPIs)
-- Existing code: `pwiz_tools/Shared/PanoramaClient/` - Authentication patterns
+- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
+- [MCP Server Quickstart](https://modelcontextprotocol.io/quickstart/server)
+- [LabKey Python API](https://github.com/LabKey/labkey-api-python)
+- [LabKey API Documentation](https://www.labkey.org/Documentation/wiki-page.view?name=python)
 
 ## Success Criteria
 
