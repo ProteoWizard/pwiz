@@ -221,3 +221,15 @@ Requires Gmail MCP server setup (OAuth2).
   - SQL examples for `handleleaks_by_computer` and `testfails_by_computer`
 - Updated related documentation with cross-references
 - **Pending**: Create `testfails_by_computer` query on LabKey server
+
+### 2025-12-13: Parameterized Queries & Per-Pass Analysis
+- Fixed labkey 4.x API compatibility (`ServerContext` moved from `labkey.utils` to `labkey.query`)
+- Added `param_name`/`param_value` support to `query_table` for parameterized queries
+- Created `testpasses_detail` server-side query (parameterized by `RunId`) for efficient per-pass analysis
+  - Required because `testpasses` table has 700M+ rows - non-parameterized joins timeout
+- Updated `ai/docs/nightly-test-analysis.md` with:
+  - Parameterized query documentation
+  - Per-pass test data analysis section
+  - Usage examples for drilling into specific runs
+- Improved `skyline-nightlytests` skill description to trigger on investigative prompts
+- Demonstrated workflow: Query handleleaks → find run ID → drill into per-pass data

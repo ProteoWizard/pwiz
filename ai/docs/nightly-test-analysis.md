@@ -87,10 +87,11 @@ Test results data lives at:
 
 These queries are created on the LabKey server to provide pre-joined, aggregated data:
 
-| Query | Description |
-|-------|-------------|
-| `handleleaks_by_computer` | Handle leaks grouped by computer and test name |
-| `testfails_by_computer` | Test failures grouped by computer and test name |
+| Query | Description | Parameters |
+|-------|-------------|------------|
+| `handleleaks_by_computer` | Handle leaks grouped by computer and test name | (none) |
+| `testfails_by_computer` | Test failures grouped by computer and test name | (none) |
+| `testpasses_detail` | Per-pass test data with computer name | `RunId` (required) |
 
 **Example**: Query `handleleaks_by_computer` with filter `testname=TestMethodRefinementTutorial` returns:
 
@@ -100,6 +101,51 @@ These queries are created on the LabKey server to provide pre-joined, aggregated
 | BRENDANX-UW5 | TestMethodRefinementTutorial | 19 | 2.7 | 2025-12-02 |
 
 This immediately answers "which computer should I use to debug this leak?"
+
+### Parameterized Queries
+
+Some queries require parameters for efficient execution on large tables. Use `param_name` and `param_value` with `query_table`:
+
+```
+query_table(
+    schema_name="testresults",
+    query_name="testpasses_detail",
+    container_path="/home/development/Nightly x64",
+    param_name="RunId",
+    param_value="74829",
+    filter_column="testname",
+    filter_value="TestMethodRefinementTutorial"
+)
+```
+
+**Why parameterized?** The `testpasses` table has 700M+ rows. A parameterized query filters by `RunId` BEFORE joining, making it fast. Without the parameter, the query would timeout.
+
+### Per-Pass Test Data Analysis
+
+The `testpasses_detail` query returns handle/memory measurements for each pass of a test:
+
+| Column | Description |
+|--------|-------------|
+| `run_date` | When the test run occurred |
+| `computer` | Which machine ran the test |
+| `testrunid` | Run ID for correlation |
+| `testname` | Test name |
+| `passnum` | Pass number (0, 1, 2...) |
+| `handles` | Total handles at measurement |
+| `userandgdihandles` | User and GDI handles |
+| `managedmemory` | Managed heap in MB |
+| `totalmemory` | Total memory in MB |
+| `duration` | Test duration in seconds |
+
+**Example output** for TestMethodRefinementTutorial in run 74829:
+
+| Pass | Handles | User+GDI | Observation |
+|------|---------|----------|-------------|
+| 0 | 1024 | 129 | Starting baseline |
+| 1 (start) | 1141 | 139 | +117 handles after pass 0 |
+| 1 (end) | 1233 | 150 | Handles grow during pass |
+
+This reveals whether handles leak between passes or accumulate within a pass.
 
 ## Available MCP Tools
 
@@ -127,6 +173,11 @@ After MCP server setup, Claude Code can query test data directly:
 > "What computer should I use to debug TestToolService failures?"
 
 Use `query_table` with `handleleaks_by_computer` or `testfails_by_computer` filtered by test name. The first result (highest count) is the best debugging target.
+
+**Examine per-pass data for a specific run:**
+> "Show me the handle counts for TestMethodRefinementTutorial in run 74829"
+
+Use `query_table` with `testpasses_detail`, passing `param_name="RunId"` and `param_value="<run_id>"`, plus a filter on `testname`. This shows how handles/memory change across test passes.
 
 **Analyze trends:**
 > "Compare the last 14 days of test runs"

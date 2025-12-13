@@ -1,6 +1,6 @@
 ---
 name: skyline-nightlytests
-description: Use when working with Skyline nightly test results, failures, or leaks. Activate for querying test runs from skyline.ms, analyzing test failures, investigating memory/handle leaks, or identifying which computer to use for debugging.
+description: Use when investigating Skyline nightly test issues, handle leaks, memory leaks, or test failures. Activate for questions like "what's causing this leak", "why is this test failing", or "which computer shows this problem". Also use for querying test runs from skyline.ms or analyzing patterns in test results.
 ---
 
 # Skyline Nightly Test Analysis

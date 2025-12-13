@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import labkey
-from labkey.query import QueryFilter
+from labkey.query import QueryFilter, ServerContext
 from mcp.server.fastmcp import FastMCP
 
 # Configure logging to stderr (required for STDIO transport)
@@ -54,7 +54,7 @@ def get_server_context(server: str, container_path: str):
     - ~/.netrc (Unix/Windows)
     - ~/_netrc (Windows)
     """
-    return labkey.utils.create_server_context(
+    return ServerContext(
         server,
         container_path,
         use_ssl=True,
@@ -243,6 +243,8 @@ async def query_table(
     max_rows: int = 100,
     filter_column: Optional[str] = None,
     filter_value: Optional[str] = None,
+    param_name: Optional[str] = None,
+    param_value: Optional[str] = None,
 ) -> str:
     """Query data from a LabKey table.
 
@@ -254,6 +256,8 @@ async def query_table(
         max_rows: Maximum rows to return (default: 100)
         filter_column: Optional column name to filter on
         filter_value: Optional value to filter for (requires filter_column)
+        param_name: Optional query parameter name (for parameterized queries)
+        param_value: Optional query parameter value (requires param_name)
     """
     try:
         server_context = get_server_context(server, container_path)
@@ -263,12 +267,18 @@ async def query_table(
         if filter_column and filter_value:
             filter_array = [QueryFilter(filter_column, filter_value, "eq")]
 
+        # Build parameters if provided (for parameterized queries)
+        parameters = None
+        if param_name and param_value:
+            parameters = {param_name: param_value}
+
         result = labkey.query.select_rows(
             server_context=server_context,
             schema_name=schema_name,
             query_name=query_name,
             max_rows=max_rows,
             filter_array=filter_array,
+            parameters=parameters,
         )
 
         if result and "rows" in result:

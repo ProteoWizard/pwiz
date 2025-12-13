@@ -85,6 +85,55 @@ GROUP BY u.username, f.testname
 ORDER BY failure_count DESC
 ```
 
+### Parameterized Queries for Large Tables
+
+Some tables are too large for unfiltered queries. The `testpasses` table has 700M+ rows - a join without filtering would timeout. Use **parameterized queries** to filter BEFORE joining.
+
+**How to create a parameterized query:**
+
+1. Add a `PARAMETERS` clause at the top of your SQL
+2. Use the parameter in a `WHERE` clause to filter the large table
+3. The MCP server passes parameters via `param_name` and `param_value`
+
+**Example: testpasses_detail**
+```sql
+PARAMETERS (RunId INTEGER)
+
+SELECT
+    t.posttime AS run_date,
+    u.username AS computer,
+    p.testrunid,
+    p.testname,
+    p.pass AS passnum,
+    p.handles,
+    p.userandgdihandles,
+    p.managedmemory,
+    p.totalmemory,
+    p.duration
+FROM testpasses p
+JOIN testruns t ON p.testrunid = t.id
+JOIN "user" u ON t.userid = u.id
+WHERE p.testrunid = RunId
+ORDER BY p.testname, p.pass
+```
+
+**Calling from Claude Code:**
+```
+query_table(
+    schema_name="testresults",
+    query_name="testpasses_detail",
+    param_name="RunId",
+    param_value="74829",
+    filter_column="testname",
+    filter_value="TestMethodRefinementTutorial"
+)
+```
+
+**When to use parameterized queries:**
+- Table has millions of rows
+- You always filter by a specific column (like run ID)
+- Non-parameterized query times out or is slow
+
 ### Authentication
 
 LabKey authentication uses netrc files in standard locations:
