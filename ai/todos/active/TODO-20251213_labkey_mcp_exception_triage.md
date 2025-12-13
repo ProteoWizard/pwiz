@@ -169,6 +169,46 @@ claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevT
 3. Should fixes target current release branch or master?
 4. How to handle exceptions that span multiple components?
 
+## Future Data Sources (discovered during this sprint)
+
+### Nightly Test Results (`testresults` schema)
+
+Another valuable data source on skyline.ms. Container path TBD.
+
+**Tables available:**
+| Table | Description |
+|-------|-------------|
+| `testruns` | Test run summaries (passedtests, failedtests, leakedtests, duration, githash) |
+| `testfails` | Individual failed test details |
+| `testpasses` | Individual passed test details |
+| `memoryleaks` | Memory leak detections |
+| `handleleaks` | Handle leak detections |
+| `hangs` | Test hang detections |
+
+**Key columns in `testresults.testruns`:**
+- `id`, `duration`, `time`, `revision`
+- `passedtests`, `failedtests`, `leakedtests`
+- `averagemem`, `githash`, `flagged`
+- `container`, `userid`, `timestamp`
+- `xml`, `pointsummary`, `log`
+
+Would enable Claude Code to:
+- Review nightly test failures
+- Identify flaky tests
+- Track test trends over time
+- Correlate failures with code changes (via githash)
+
+*Separate documentation and MCP tools needed - not part of exception triage.*
+
+### Gmail Integration
+
+The `claude.c.skyline@gmail.com` account could receive:
+- Exception report notifications
+- Nightly test result summaries
+- Other automated alerts
+
+Requires Gmail MCP server setup (OAuth2).
+
 ## Progress Log
 
 ### 2025-12-13: Phase 1 Implementation
