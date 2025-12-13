@@ -122,6 +122,12 @@ After MCP server setup, Claude Code can query test data directly:
 **Check for leaks:**
 > "Show memory leaks for run #79450"
 
+**Which computer to debug on:**
+> "Which computer shows TestMethodRefinementTutorial handle leaks most frequently?"
+> "What computer should I use to debug TestToolService failures?"
+
+Use `query_table` with `handleleaks_by_computer` or `testfails_by_computer` filtered by test name. The first result (highest count) is the best debugging target.
+
 **Analyze trends:**
 > "Compare the last 14 days of test runs"
 
