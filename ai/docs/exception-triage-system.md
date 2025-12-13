@@ -60,7 +60,9 @@ The system uses a dedicated agent account:
 - **Group**: "Agents" on skyline.ms
 - **Permissions**: Read-only access to `/home/issues/exceptions`
 
-Credentials are stored in the user's `_netrc` file (not in the repository).
+Credentials are stored in the user's netrc file (not in the repository):
+- **Unix/macOS**: `~/.netrc`
+- **Windows**: `~/.netrc` or `~/_netrc`
 
 ## Data Schema
 
@@ -113,10 +115,10 @@ claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevT
 
 ### Credential Configuration
 
-Create `_netrc` file in your home directory:
+Create a netrc file in your home directory:
 
-**Windows**: `C:\Users\<YourName>\_netrc`
-**Unix**: `~/.netrc`
+- **Unix/macOS**: `~/.netrc`
+- **Windows**: `~/.netrc` or `~/_netrc`
 
 ```
 machine skyline.ms
@@ -165,6 +167,8 @@ After setup, Claude Code can query exceptions directly:
 
 ## Related Documentation
 
-- [TODO-20251213_labkey_mcp_exception_triage.md](../todos/active/TODO-20251213_labkey_mcp_exception_triage.md) - Implementation TODO
+- [MCP Development Guide](mcp-development-guide.md) - Patterns for extending MCP capabilities
+- [Nightly Test Analysis](nightly-test-analysis.md) - Test results data access
+- [LabKey MCP Server README](../../pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/README.md) - Setup instructions
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
 - [LabKey Python API](https://github.com/LabKey/labkey-api-python)

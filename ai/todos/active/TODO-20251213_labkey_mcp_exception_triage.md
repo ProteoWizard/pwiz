@@ -54,7 +54,7 @@ The official API handles authentication, CSRF tokens, and session management int
   - `list_queries()` - List queries in a schema
   - `query_table()` - Generic table query
 - [x] Configure MCP server in Claude Code (local scope)
-- [ ] Test MCP tools from Claude Code (requires restart)
+- [x] Test MCP tools from Claude Code
 
 **Dependencies**:
 - `mcp` - Model Context Protocol Python SDK
@@ -145,8 +145,11 @@ claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevT
 | `list_queries` | List queries/tables in a schema |
 | `list_containers` | List child folders in a container |
 | `query_table` | Query data from any LabKey table |
-| `query_exceptions` | Convenience wrapper for exception queries |
+| `query_exceptions` | Query recent exceptions |
 | `get_exception_details` | Get full details for a specific exception |
+| `query_test_runs` | Query recent nightly test runs |
+| `get_run_failures` | Get failed tests for a specific run |
+| `get_run_leaks` | Get memory/handle leaks for a specific run |
 
 ## Resources
 
@@ -169,36 +172,18 @@ claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevT
 3. Should fixes target current release branch or master?
 4. How to handle exceptions that span multiple components?
 
-## Future Data Sources (discovered during this sprint)
+## Additional Data Sources (implemented during this sprint)
 
-### Nightly Test Results (`testresults` schema)
+### Nightly Test Results (`testresults` schema) - IMPLEMENTED
 
-Another valuable data source on skyline.ms. Container path TBD.
+Located at `/home/development/Nightly x64`.
 
-**Tables available:**
-| Table | Description |
-|-------|-------------|
-| `testruns` | Test run summaries (passedtests, failedtests, leakedtests, duration, githash) |
-| `testfails` | Individual failed test details |
-| `testpasses` | Individual passed test details |
-| `memoryleaks` | Memory leak detections |
-| `handleleaks` | Handle leak detections |
-| `hangs` | Test hang detections |
+**MCP tools added:**
+- `query_test_runs(days, max_rows)` - Query recent test runs
+- `get_run_failures(run_id)` - Get failed tests with stack traces
+- `get_run_leaks(run_id)` - Get memory and handle leaks
 
-**Key columns in `testresults.testruns`:**
-- `id`, `duration`, `time`, `revision`
-- `passedtests`, `failedtests`, `leakedtests`
-- `averagemem`, `githash`, `flagged`
-- `container`, `userid`, `timestamp`
-- `xml`, `pointsummary`, `log`
-
-Would enable Claude Code to:
-- Review nightly test failures
-- Identify flaky tests
-- Track test trends over time
-- Correlate failures with code changes (via githash)
-
-*Separate documentation and MCP tools needed - not part of exception triage.*
+**Documentation:** See `ai/docs/nightly-test-analysis.md`
 
 ### Gmail Integration
 
@@ -218,4 +203,21 @@ Requires Gmail MCP server setup (OAuth2).
 - Discovered schema: `announcement.Announcement` contains 12,837 exceptions
 - Successfully queried 82 exceptions from last 30 days
 - Registered MCP server with Claude Code (local scope)
-- **Next**: Restart Claude Code and test MCP tool access
+
+### 2025-12-13: Testresults Tools & Documentation
+- Added testresults MCP tools: `query_test_runs`, `get_run_failures`, `get_run_leaks`
+- Granted "Agents" group read access to `/home/development/Nightly x64`
+- Created `ai/docs/nightly-test-analysis.md` with test folders table
+- Updated `ai/docs/exception-triage-system.md` with netrc clarifications
+- Updated `ai/docs/developer-setup-guide.md` with MCP setup details
+- **Architecture note**: Discovery APIs (list_schemas, list_queries, list_containers) use direct HTTP since the labkey SDK doesn't expose these. Data queries use the SDK.
+
+### 2025-12-13: Server-Side Query Pattern & MCP Development Guide
+- Created `handleleaks_by_computer` server-side query on LabKey for aggregating leaks by computer
+- Demonstrated pattern: Claude Code can now answer "which computers show TestMethodRefinementTutorial leaks?"
+- Created `ai/docs/mcp-development-guide.md` documenting:
+  - General principles (use official SDKs, keep MCP server simple)
+  - Server-side custom query pattern for LabKey
+  - SQL examples for `handleleaks_by_computer` and `testfails_by_computer`
+- Updated related documentation with cross-references
+- **Pending**: Create `testfails_by_computer` query on LabKey server

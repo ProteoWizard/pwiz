@@ -231,7 +231,10 @@ pip install mcp labkey
 
 **Configure credentials:**
 
-Create a `_netrc` file in your home directory (`C:\Users\<YourName>\_netrc`) with your skyline.ms credentials:
+Create a netrc file in your home directory with your skyline.ms credentials:
+
+- **Windows**: `C:\Users\<YourName>\.netrc` or `C:\Users\<YourName>\_netrc`
+- **Unix/macOS**: `~/.netrc`
 
 ```
 machine skyline.ms
@@ -239,7 +242,7 @@ login your-email@example.com
 password your-password
 ```
 
-> **Security note:** The `_netrc` file contains credentials in plain text. Ensure appropriate file permissions and never commit it to version control.
+> **Security note:** The netrc file contains credentials in plain text. Ensure appropriate file permissions and never commit it to version control.
 
 **Register MCP server with Claude Code:**
 ```powershell
@@ -255,9 +258,9 @@ Expected output shows successful connection and recent exception data.
 
 **Available data via MCP:**
 - Exception reports (`/home/issues/exceptions`)
-- Nightly test results (`testresults` schema) - *coming soon*
+- Nightly test results (`/home/development/Nightly x64`)
 
-See `ai/docs/exception-triage-system.md` for full documentation.
+See `ai/docs/exception-triage-system.md` for exception documentation.
 
 ### Git Configuration (line endings)
 
