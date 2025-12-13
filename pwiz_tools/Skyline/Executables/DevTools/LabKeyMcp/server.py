@@ -20,6 +20,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
+from labkey.query import QueryFilter
 from mcp.server.fastmcp import FastMCP
 
 # Configure logging to stderr (required for STDIO transport)
@@ -34,7 +35,11 @@ mcp = FastMCP("labkey")
 
 # Default server configuration
 DEFAULT_SERVER = "skyline.ms"
-DEFAULT_CONTAINER = "/home"  # Adjust based on actual skyline.ms structure
+DEFAULT_CONTAINER = "/home/issues/exceptions"
+
+# Exception data schema (discovered from skyline.ms)
+EXCEPTION_SCHEMA = "announcement"
+EXCEPTION_QUERY = "Announcement"
 
 
 def get_api(server: str = DEFAULT_SERVER, container_path: str = DEFAULT_CONTAINER):
@@ -176,7 +181,7 @@ async def query_table(
         filter_array = None
         if filter_column and filter_value:
             filter_array = [
-                {"fieldKey": filter_column, "op": "eq", "value": filter_value}
+                QueryFilter(filter_column, filter_value, QueryFilter.Types.EQUAL)
             ]
 
         result = api.query.select_rows(
@@ -224,63 +229,69 @@ async def query_table(
 @mcp.tool()
 async def query_exceptions(
     days: int = 7,
+    max_rows: int = 50,
     server: str = DEFAULT_SERVER,
     container_path: str = DEFAULT_CONTAINER,
-    max_rows: int = 50,
 ) -> str:
-    """Query recent exceptions from Skyline exception tracking.
+    """Query recent exceptions from Skyline exception tracking on skyline.ms.
 
-    This is a convenience wrapper for querying exception data.
-    Note: You may need to adjust schema_name and query_name based on
-    the actual skyline.ms configuration.
+    Returns exception reports submitted by Skyline users, including:
+    - Exception type and title
+    - User comments and email
+    - Stack trace (in FormattedBody)
+    - Created/Modified dates
 
     Args:
         days: Number of days back to query (default: 7)
-        server: LabKey server hostname (default: skyline.ms)
-        container_path: Container path where exceptions are stored
         max_rows: Maximum rows to return (default: 50)
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/issues/exceptions)
     """
     try:
         api = get_api(server, container_path)
 
         # Calculate date filter
         since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
-
-        # Try common exception table names
-        # These may need adjustment based on actual skyline.ms schema
-        possible_schemas = ["lists", "exp", "core"]
-        possible_queries = ["Exceptions", "ExceptionReport", "exceptions"]
-
-        for schema in possible_schemas:
-            for query in possible_queries:
-                try:
-                    result = api.query.select_rows(
-                        schema_name=schema,
-                        query_name=query,
-                        max_rows=max_rows,
-                    )
-                    if result and result.get("rows"):
-                        rows = result["rows"]
-                        lines = [
-                            f"Found {len(rows)} exceptions in {schema}.{query}:",
-                            "",
-                        ]
-                        for i, row in enumerate(rows[:max_rows], 1):
-                            lines.append(f"--- Exception {i} ---")
-                            for key, value in row.items():
-                                if not key.startswith("_"):
-                                    if isinstance(value, str) and len(value) > 300:
-                                        value = value[:300] + "..."
-                                    lines.append(f"  {key}: {value}")
-                            lines.append("")
-                        return "\n".join(lines)
-                except Exception:
-                    continue
-
-        return (
-            f"Could not find exception data. "
-            f"Use list_schemas and list_queries to discover the correct location."
+        date_filter = QueryFilter(
+            "Created", since_date, QueryFilter.Types.DATE_GREATER_THAN_OR_EQUAL
         )
+
+        # Query the announcement.Announcement table with date filter
+        result = api.query.select_rows(
+            schema_name=EXCEPTION_SCHEMA,
+            query_name=EXCEPTION_QUERY,
+            max_rows=max_rows,
+            sort="-Created",  # Most recent first
+            filter_array=[date_filter],
+        )
+
+        if result and result.get("rows"):
+            rows = result["rows"]
+            total = result.get("rowCount", len(rows))
+            lines = [
+                f"Found {total} exceptions in the last {days} days (showing {len(rows)}):",
+                "",
+            ]
+            for i, row in enumerate(rows, 1):
+                title = row.get("Title", "Unknown")
+                created = row.get("Created", "Unknown")
+                row_id = row.get("RowId", "?")
+                status = row.get("Status") or "Unassigned"
+                body = row.get("FormattedBody", "")
+
+                # Extract first few lines of body for summary
+                body_preview = body[:200] + "..." if len(body) > 200 else body
+
+                lines.append(f"--- Exception #{row_id} ---")
+                lines.append(f"  Title: {title}")
+                lines.append(f"  Created: {created}")
+                lines.append(f"  Status: {status}")
+                lines.append(f"  Preview: {body_preview}")
+                lines.append("")
+
+            return "\n".join(lines)
+        else:
+            return f"No exceptions found in the last {days} days."
 
     except Exception as e:
         logger.error(f"Error querying exceptions: {e}", exc_info=True)
@@ -289,43 +300,53 @@ async def query_exceptions(
 
 @mcp.tool()
 async def get_exception_details(
-    exception_id: str,
+    exception_id: int,
     server: str = DEFAULT_SERVER,
     container_path: str = DEFAULT_CONTAINER,
-    schema_name: str = "lists",
-    query_name: str = "Exceptions",
-    id_column: str = "RowId",
 ) -> str:
-    """Get full details for a specific exception by ID.
+    """Get full details for a specific exception by RowId.
+
+    Returns complete exception information including:
+    - Full stack trace
+    - User email and comments
+    - Skyline version
+    - Installation ID
 
     Args:
-        exception_id: The exception ID to look up
+        exception_id: The RowId of the exception to look up
         server: LabKey server hostname (default: skyline.ms)
-        container_path: Container path where exceptions are stored
-        schema_name: Schema containing exception data (default: lists)
-        query_name: Query/table name for exceptions (default: Exceptions)
-        id_column: Column name for exception ID (default: RowId)
+        container_path: Container path (default: /home/issues/exceptions)
     """
     try:
         api = get_api(server, container_path)
 
+        id_filter = QueryFilter("RowId", str(exception_id), QueryFilter.Types.EQUAL)
         result = api.query.select_rows(
-            schema_name=schema_name,
-            query_name=query_name,
-            filter_array=[{"fieldKey": id_column, "op": "eq", "value": exception_id}],
+            schema_name=EXCEPTION_SCHEMA,
+            query_name=EXCEPTION_QUERY,
+            filter_array=[id_filter],
             max_rows=1,
         )
 
         if result and result.get("rows"):
             row = result["rows"][0]
-            lines = [f"Exception {exception_id} details:", ""]
-            for key, value in row.items():
-                if not key.startswith("_"):
-                    lines.append(f"{key}:")
-                    lines.append(f"  {value}")
-                    lines.append("")
+            lines = [f"Exception #{exception_id} Full Details:", ""]
+
+            # Key fields first
+            lines.append(f"Title: {row.get('Title', 'Unknown')}")
+            lines.append(f"Created: {row.get('Created', 'Unknown')}")
+            lines.append(f"Modified: {row.get('Modified', 'Unknown')}")
+            lines.append(f"Status: {row.get('Status') or 'Unassigned'}")
+            lines.append(f"Assigned To: {row.get('AssignedTo') or 'Nobody'}")
+            lines.append("")
+
+            # Full body with stack trace
+            lines.append("=== Full Report ===")
+            lines.append(row.get("FormattedBody", "No body content"))
+            lines.append("")
+
             return "\n".join(lines)
-        return f"No exception found with {id_column}={exception_id}"
+        return f"No exception found with RowId={exception_id}"
 
     except Exception as e:
         logger.error(f"Error getting exception details: {e}", exc_info=True)

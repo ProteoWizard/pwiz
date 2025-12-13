@@ -42,7 +42,10 @@ The official API handles authentication, CSRF tokens, and session management int
 **Tasks**:
 - [x] Study MCP Python SDK (`mcp` package)
 - [x] Create MCP server skeleton with dependencies (`mcp`, `labkey`)
-- [ ] Configure netrc authentication for skyline.ms
+- [x] Configure netrc authentication for skyline.ms
+  - Created `claude.c.skyline@gmail.com` account
+  - Added to "Agents" group with read access to `/home/issues/exceptions`
+  - Configured `_netrc` with credentials
 - [x] Create initial MCP tools wrapping LabKey API:
   - `query_exceptions(days, folder)` - Fetch recent exceptions
   - `get_exception_details(id)` - Get full stack trace and context
@@ -50,8 +53,8 @@ The official API handles authentication, CSRF tokens, and session management int
   - `list_schemas()` - Discover available schemas
   - `list_queries()` - List queries in a schema
   - `query_table()` - Generic table query
-- [ ] Configure MCP server in Claude Code (local scope)
-- [ ] Test with simple queries
+- [x] Configure MCP server in Claude Code (local scope)
+- [ ] Test MCP tools from Claude Code (requires restart)
 
 **Dependencies**:
 - `mcp` - Model Context Protocol Python SDK
@@ -161,7 +164,18 @@ claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevT
 
 ## Open Questions
 
-1. What's the exact schema for exception data on skyline.ms?
+1. ~~What's the exact schema for exception data on skyline.ms?~~ **RESOLVED**: `announcement.Announcement` in `/home/issues/exceptions`
 2. Are there rate limits or access restrictions to consider?
 3. Should fixes target current release branch or master?
 4. How to handle exceptions that span multiple components?
+
+## Progress Log
+
+### 2025-12-13: Phase 1 Implementation
+- Created MCP server at `pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/`
+- Using official LabKey Python API (`labkey` package) - handles auth via netrc
+- Created `claude.c.skyline@gmail.com` account for agent access
+- Discovered schema: `announcement.Announcement` contains 12,837 exceptions
+- Successfully queried 82 exceptions from last 30 days
+- Registered MCP server with Claude Code (local scope)
+- **Next**: Restart Claude Code and test MCP tool access
