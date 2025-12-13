@@ -1113,9 +1113,8 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-            var replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             doc = WaitForDocumentChange(doc);
-            Assert.IsNull(replicatesFolder);
+            Assert.IsNull(SkylineWindow.FilesTree.RootChild<ReplicatesFolder>());
 
             RunUI(() => SkylineWindow.Undo());
             WaitForDocumentChange(doc);
@@ -1260,9 +1259,8 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-                librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 doc = WaitForDocumentChange(doc);
-                Assert.IsNull(librariesFolder);
+                Assert.IsNull(SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>());
 
                 RunUI(() => SkylineWindow.Undo());
                 WaitForDocumentChange(doc);
@@ -1281,9 +1279,7 @@ namespace pwiz.SkylineTestFunctional
                 var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
                 OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-                librariesFolder = SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>();
                 doc = WaitForDocumentChange(doc);
-
                 Assert.IsNull(SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>());
                 var libraryFile = SkylineWindow.FilesTree.RootChild<SpectralLibrary>();
                 Assert.IsNotNull(libraryFile);

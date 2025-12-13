@@ -322,6 +322,11 @@ Based on the old branch, key areas to review:
   - **Validation**: GDI handles stable at 46 across all test iterations (TestExplicitVariable, TestAuditLogSaving)
   - **Documentation**: Added case study to `ai/docs/leak-debugging-guide.md` documenting two-level bisection methodology
   - **Tests**: All 4 Files view tests passing (TestFilesModel, TestFilesTreeFileSystem, TestFilesTreeForm, TestSkylineWindowEvents), CodeInspection passing
+- 2025-12-13: Fixed intermittent TestFilesTreeForm failure in TestSpectralLibraries:
+  - **Problem**: `Assert.IsNull` failed intermittently at line 1267 (nightly test failure on 12/12)
+  - **Root cause**: Race condition - tree was queried BEFORE `WaitForDocumentChange()`, so local variable held stale reference
+  - **Fix**: Moved `WaitForDocumentChange()` before tree queries in 3 locations
+  - **Validation**: 800 iterations without failure
 
 ## Review Findings (2025-11-26)
 
