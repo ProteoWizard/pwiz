@@ -2,6 +2,8 @@
 
 This guide documents the methodology for identifying and fixing handle leaks in Skyline, developed during the Files view feature work (December 2025).
 
+> **See also:** [debugging-principles.md](debugging-principles.md) for the general debugging methodology that applies to all types of bugs, including the cycle time analysis, printf debugging techniques, and strategic instrumentation patterns that informed this guide.
+
 ## End-to-End Workflow
 
 The complete leak debugging workflow spans two phases:
@@ -142,7 +144,9 @@ protected override void DoTest()
 
 ### Step 4: Analyze the Leaking Code
 
-Once isolated to a specific operation, examine:
+Once isolated to a specific operation, use **printf debugging** to understand the runtime behavior. With a fast cycle time, add `Console.WriteLine()` statements liberally - you can answer questions about object identity, thread context, and call frequency faster than reasoning about the code statically.
+
+Examine:
 
 1. **What handles are being created?**
    - `new Thread()`
@@ -276,6 +280,8 @@ Once we knew the *trigger* (document open with layout restore), we shifted to bi
 This narrowed it down to `FileSystemWatcher.EnableRaisingEvents = true`.
 
 ### Root Cause Discovery via Debugger
+
+> **Note:** This case study used a debugger, but printf debugging would have been equally effective and faster. Adding `Console.WriteLine($"Start called for {directoryPath}, Thread: {Thread.CurrentThread.ManagedThreadId}")` would have revealed the 2:1 ratio in the test output directly. See [debugging-principles.md](debugging-principles.md) for the self-sufficiency principle: never ask the user about runtime behavior you can observe yourself.
 
 Breakpoints revealed the smoking gun:
 - **2 calls to `ManagedFileSystemWatcher.Start()`** for every **1 call to `StopWatching()`**

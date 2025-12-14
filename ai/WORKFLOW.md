@@ -23,6 +23,12 @@ ai/todos/
 ### File Naming
 - `TODO-feature_name.md` - Backlog (no date, in ai/todos/backlog/)
 - `TODO-20251105_feature_name.md` - Active (dated, in ai/todos/active/)
+- `TODO-20251105_feature_name-auxiliary.txt` - Auxiliary files (logs, data, coverage reports)
+
+**Auxiliary files** (non-markdown files associated with a TODO) must:
+1. Use the TODO filename as a prefix (e.g., `TODO-20251105_feature-coverage.txt`)
+2. Move with their TODO when transitioning between directories
+3. Be deleted or archived with their TODO
 
 ### Lifecycle
 1. **Backlog** - Planning on ai-context (`ai/todos/backlog/`)
