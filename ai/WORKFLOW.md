@@ -41,12 +41,18 @@ Each TODO (active or completed) MUST begin with the file name as a level-1 headi
 
 ## Branch Information
 - **Branch**: `Skyline/work/YYYYMMDD_feature_name`
+- **Base**: `master` | `ai-context` | `Skyline/skyline_YY_N` (optional, defaults to master)
 - **Created**: YYYY-MM-DD
 - **Completed**: YYYY-MM-DD | (pending)
 - **Status**: 🚧 In Progress | ✅ Completed
 - **PR**: [#NNNN](https://github.com/ProteoWizard/pwiz/pull/NNNN) | (pending)
 - **Objective**: Single concise sentence describing the end goal
 ```
+
+**Base branch selection:**
+- `master` (default) - Normal feature/fix work
+- `ai-context` - Documentation-only work (ai/ files, MCP tools, skills)
+- `Skyline/skyline_YY_N` - Release branch fixes
 
 Rules:
 - Before moving a TODO from `active/` to `completed/`, the **PR** field must be populated with the number (linked form preferred). If absent, automated tools / LLM must prompt the user: "Provide PR number before completion move.".
@@ -60,11 +66,17 @@ Rules:
 
 ### Workflow 1: Start Work from Backlog TODO
 
-**On master - create feature branch:**
+**Determine base branch:**
+1. Check TODO file for `**Base**:` field (if present, use that)
+2. Developer can override: "Let's work on TODO-feature.md and base it on ai-context"
+3. Default to `master` if not specified
+
+**Create feature branch from appropriate base:**
 > **Note:** Backlog TODOs live on `ai-context` branch. You'll copy (not move) to your feature branch.
 ```bash
-git checkout master
-git pull origin master
+# Use base from TODO file, developer override, or default to master
+git checkout <base-branch>  # master, ai-context, or Skyline/skyline_YY_N
+git pull origin <base-branch>
 git checkout -b Skyline/work/20251105_feature_name
 ```
 
@@ -76,7 +88,7 @@ git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_featu
 
 **Update TODO header and commit:**
 ```bash
-# Edit TODO: add Branch, Created, PR fields
+# Edit TODO: add Branch, Base, Created, PR fields
 git add ai/todos/active/TODO-20251105_feature_name.md
 git commit -m "Update TODO with branch information"
 git push -u origin Skyline/work/20251105_feature_name
