@@ -18,7 +18,6 @@
  */
 using System.Drawing;
 using System.Globalization;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Controls.Graphs

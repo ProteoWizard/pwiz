@@ -257,8 +257,10 @@ namespace TestRunner
             "runsmallmoleculeversions=off;" +
             "recordauditlogs=off;" +
             "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;teamcitytestsuite=;verbose=off;listonly;showheader=on;" +
-            "reportheaps=off;reporthandles=off";
+            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;" +
+            "teamcitytestdecoration=off;teamcitytestsuite=;teamcitycleanup=off;" +
+            "verbose=off;listonly;showheader=on;" +
+            "reportheaps=off;reporthandles=off;sorthandlesbycount=off";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -943,7 +945,9 @@ namespace TestRunner
 
             if (testQueue.Count < dockerWorkerCount)
             {
-                Console.WriteLine($"There are fewer parallelizable test/language pairs ({testQueue.Count}) than the number of specified parallel workers; reducing workercount to {testQueue.Count + 1}.");
+                Console.WriteLine($"There are fewer parallelizable test/language pairs ({testQueue.Count}) than the number of specified parallel workers ({dockerWorkerCount}); reducing workercount to {testQueue.Count + 1}.");
+                Console.WriteLine($"  Parallelizable: {testQueue.Count} test/language pairs");
+                Console.WriteLine($"  Non-parallelizable: {nonParallelTestQueue.Count} test/language pairs (will run serially on hostWorker)");
                 workerCount = testQueue.Count + 1;
                 dockerWorkerCount = testQueue.Count;
             }
@@ -1394,9 +1398,11 @@ namespace TestRunner
             var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
             var dmpDir = commandLineArgs.ArgAsString("dmpdir");
             bool teamcityTestDecoration = commandLineArgs.ArgAsBool("teamcitytestdecoration");
+            bool teamcityCleanup = commandLineArgs.ArgAsBool("teamcitycleanup");
             bool verbose = commandLineArgs.ArgAsBool("verbose");
             bool reportHeaps = commandLineArgs.ArgAsBool("reportheaps");
             bool reportHandles = commandLineArgs.ArgAsBool("reporthandles");
+            bool sortHandlesByCount = commandLineArgs.ArgAsBool("sorthandlesbycount");
             string parallelMode = commandLineArgs.ArgAsString("parallelmode");
             bool serverMode = parallelMode == "server";
             bool clientMode = parallelMode == "client";
@@ -1467,10 +1473,10 @@ namespace TestRunner
 
             var runTests = new RunTests(
                 demoMode, buildMode, offscreen, internet, useOriginalURLs, showStatus, perftests,
-                runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
+                runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration, teamcityCleanup,
                 retrydatadownloads,
-                pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier, 
-                results, log, verbose, clientMode, reportHeaps, reportHandles);
+                pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
+                results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
 
             var timer = new Stopwatch();
             timer.Start();

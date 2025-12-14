@@ -394,7 +394,7 @@ namespace TestPerf
             Assert.IsNotNull(importResults);
 
             var dataFolder = Path.GetDirectoryName(GetTestPath(Path.Combine(DIA_DATA_DIR, "DIA_100fmol.mzML")));
-            importResults.UpdateResultsFiles(new[] { dataFolder }, true);
+            RunUI(() => importResults.UpdateResultsFiles(new[] { dataFolder }, true));
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.AreEqual(4, importResults.FoundResultsFiles.Count));
