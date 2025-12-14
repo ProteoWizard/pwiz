@@ -64,8 +64,10 @@ def main():
         print("  1. Install MCP: pip install mcp")
         print("  2. Test server: python server.py")
         print("  3. Register with Claude Code:")
-        path = "C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py"
-        print(f"     claude mcp add labkey -- python {path}")
+        import os
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        server_path = os.path.join(script_dir, "server.py")
+        print(f"     claude mcp add labkey -- python {server_path}")
 
     except Exception as e:
         print(f"ERROR: {e}")

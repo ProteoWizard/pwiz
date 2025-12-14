@@ -246,12 +246,14 @@ password your-password
 
 **Register MCP server with Claude Code:**
 ```powershell
-claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+# Replace <repo-root> with your actual repository path
+claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
 ```
 
 **Verify setup:**
 ```powershell
-python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
+# Replace <repo-root> with your actual repository path
+python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
 ```
 
 Expected output shows successful connection and recent exception data.

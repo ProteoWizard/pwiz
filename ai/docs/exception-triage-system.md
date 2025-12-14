@@ -55,10 +55,12 @@ Claude Code
 
 ### Authentication
 
-The system uses a dedicated agent account:
+The system uses a dedicated agent account with minimal permissions:
 - **Email**: `claude.c.skyline@gmail.com`
 - **Group**: "Agents" on skyline.ms
-- **Permissions**: Read-only access to `/home/issues/exceptions`
+- **Permissions**: Read-only access to specific containers only
+
+> **Why a dedicated account?** All developers have at least edit access to these data folders, and some have site administrator privileges. Using personal credentials would grant the MCP server more access than needed. The agent account follows the principle of least privilege with read-only access to specific folders. Additional agent accounts can be added to the "Agents" group if needed.
 
 Credentials are stored in the user's netrc file (not in the repository):
 - **Unix/macOS**: `~/.netrc`
@@ -109,8 +111,8 @@ TargetInvocationException | RetentionTimeValues.cs:line 98 | 24.1.0.199-6a0775ef
 # Install dependencies
 pip install mcp labkey
 
-# Register MCP server with Claude Code
-claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+# Register MCP server with Claude Code (replace <repo-root> with your repository path)
+claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
 ```
 
 ### Credential Configuration
@@ -126,10 +128,13 @@ login claude.c.skyline@gmail.com
 password <password>
 ```
 
+> **Note**: Use the shared agent account credentials (available from team leads), not your personal skyline.ms login.
+
 ### Verify Setup
 
 ```bash
-python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
+# Replace <repo-root> with your repository path
+python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
 ```
 
 ## Usage

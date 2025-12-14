@@ -233,3 +233,14 @@ Requires Gmail MCP server setup (OAuth2).
   - Usage examples for drilling into specific runs
 - Improved `skyline-nightlytests` skill description to trigger on investigative prompts
 - Demonstrated workflow: Query handleleaks → find run ID → drill into per-pass data
+
+### 2025-12-13: PR Review Feedback & Workflow Enhancement
+- Addressed Copilot PR review feedback:
+  - Replaced hardcoded `C:/proj/pwiz/` paths with `<repo-root>` placeholder
+  - Added explanation for dedicated agent account (least privilege vs developer edit/admin access)
+  - Added 30-second timeout to urlopen call
+  - Made test_connection.py path detection dynamic using `__file__`
+- Enhanced WORKFLOW.md with base branch support:
+  - Added optional `**Base**:` field to TODO header standard
+  - Updated Workflow 1 to check TODO file or developer override for base branch
+  - Supports `master` (default), `ai-context`, or release branches

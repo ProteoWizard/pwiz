@@ -108,7 +108,7 @@ def _discovery_request(server: str, container_path: str, api_action: str, params
     credentials = base64.b64encode(f"{login}:{password}".encode()).decode()
     request.add_header("Authorization", f"Basic {credentials}")
 
-    with urllib.request.urlopen(request) as response:
+    with urllib.request.urlopen(request, timeout=30) as response:
         return json.loads(response.read().decode())
 
 
