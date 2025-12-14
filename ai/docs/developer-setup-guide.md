@@ -17,9 +17,10 @@ This guide helps Skyline developers configure a Windows workstation so that AI-a
 > 4. Install Claude Code CLI for agentic coding workflows
 > 5. Install ReSharper command-line tools (`jb inspectcode`)
 > 6. Install GitHub CLI (`gh`) for agentic PR workflows
-> 7. Configure Git and global line ending settings
-> 8. Install a Markdown viewer for browser-based docs
-> 9. Optional: Install additional helpers (Everything Search, Diff tools)
+> 7. Install LabKey MCP server (skyline.ms data access)
+> 8. Configure Git and global line ending settings
+> 9. Install a Markdown viewer for browser-based docs
+> 10. Optional: Install additional helpers (Everything Search, Diff tools)
 
 ---
 
@@ -215,6 +216,54 @@ gh pr view 3700   # Test with any open PR
 
 Expected output shows your logged-in account, protocol (ssh), and token scopes (gist, read:org, repo).
 
+### LabKey MCP Server (skyline.ms data access)
+
+The LabKey MCP server enables Claude Code to query data from skyline.ms directly, including exception reports and nightly test results.
+
+**Prerequisites:**
+- Python 3.10+
+- skyline.ms account with appropriate permissions
+
+**Install Python dependencies:**
+```powershell
+pip install mcp labkey
+```
+
+**Configure credentials:**
+
+Create a netrc file in your home directory with your skyline.ms credentials:
+
+- **Windows**: `C:\Users\<YourName>\.netrc` or `C:\Users\<YourName>\_netrc`
+- **Unix/macOS**: `~/.netrc`
+
+```
+machine skyline.ms
+login your-email@example.com
+password your-password
+```
+
+> **Security note:** The netrc file contains credentials in plain text. Ensure appropriate file permissions and never commit it to version control.
+
+**Register MCP server with Claude Code:**
+```powershell
+# Replace <repo-root> with your actual repository path
+claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+```
+
+**Verify setup:**
+```powershell
+# Replace <repo-root> with your actual repository path
+python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
+```
+
+Expected output shows successful connection and recent exception data.
+
+**Available data via MCP:**
+- Exception reports (`/home/issues/exceptions`)
+- Nightly test results (`/home/development/Nightly x64`)
+
+See `ai/docs/exception-triage-system.md` for exception documentation.
+
 ### Git Configuration (line endings)
 
 Skyline requires CRLF on Windows. Configure once globally:
@@ -301,6 +350,9 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 | CRLF/LF diffs everywhere | `core.autocrlf` not set | `git config --global core.autocrlf true` |
 | `TestRunner.exe` missing | Build not run | `.\ai\Build-Skyline.ps1` |
 | `inspectcode` builds solution again | `--no-build` flag missing | Use latest script (already includes `--no-build`) |
+| LabKey MCP tools not available | MCP server not registered | Run `claude mcp add labkey -- python <path>/server.py` and restart Claude Code |
+| LabKey authentication fails | Missing or incorrect `_netrc` | Create `C:\Users\<Name>\_netrc` with skyline.ms credentials |
+| `labkey` or `mcp` package not found | Python dependencies missing | `pip install mcp labkey` |
 
 ---
 
