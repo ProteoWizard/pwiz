@@ -2,6 +2,8 @@
 
 This guide documents the methodology for identifying and fixing handle leaks in Skyline, developed during the Files view feature work (December 2025).
 
+> **See also:** [debugging-principles.md](debugging-principles.md) for the general debugging methodology that applies to all types of bugs, including the cycle time analysis, printf debugging techniques, and strategic instrumentation patterns that informed this guide.
+
 ## End-to-End Workflow
 
 The complete leak debugging workflow spans two phases:
