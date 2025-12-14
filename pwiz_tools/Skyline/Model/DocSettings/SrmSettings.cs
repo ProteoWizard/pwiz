@@ -100,51 +100,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasResults { get { return MeasuredResults != null; } }
 
-        public bool HasLibraries { get { return PeptideSettings.Libraries.HasLibraries; } }
+        public bool HasLibraries { get { return PeptideSettings.HasLibraries; } }
 
-        public bool HasDocumentLibrary { get { return PeptideSettings.Libraries.HasDocumentLibrary; } }
+        public bool HasDocumentLibrary { get { return PeptideSettings.HasDocumentLibrary; } }
 
-        public bool HasRTPrediction { get { return PeptideSettings.Prediction.RetentionTime != null; } }
+        public bool HasRTPrediction { get { return PeptideSettings.HasRTPrediction; } }
 
-        public bool HasRTCalcPersisted
-        {
-            get
-            {
-                return HasRTPrediction && PeptideSettings.Prediction.RetentionTime.Calculator.PersistencePath != null;
-            }
-        }
+        public bool HasRTCalcPersisted { get { return PeptideSettings.HasRTCalcPersisted; } }
 
-        public bool HasOptimizationLibrary
-        {
-            get
-            {
-                return TransitionSettings.Prediction.OptimizedLibrary != null &&
-                       !TransitionSettings.Prediction.OptimizedLibrary.IsNone;
-            }
-        }
+        public bool HasOptimizationLibrary { get { return TransitionSettings.HasOptimizationLibrary; } }
 
-        public bool HasOptimizationLibraryPersisted
-        {
-            get
-            {
-                return HasOptimizationLibrary && TransitionSettings.Prediction.OptimizedLibrary.PersistencePath != null;
-            }
-        }
+        public bool HasOptimizationLibraryPersisted { get { return TransitionSettings.HasOptimizationLibraryPersisted; } }
 
-        public bool HasDriftTimePrediction { get { return TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null; } }
+        public bool HasDriftTimePrediction { get { return TransitionSettings.HasDriftTimePrediction; } }
 
-        public bool HasIonMobilityLibraryPersisted
-        {
-            get
-            {
-                return HasDriftTimePrediction &&
-                       TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null &&
-                    !TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsNone &&
-                       TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath != null;
-            }
-        }
+        public bool HasIonMobilityLibraryPersisted { get { return TransitionSettings.HasIonMobilityLibraryPersisted; } }
 
-        public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
+        public bool HasBackgroundProteome { get { return PeptideSettings.HasBackgroundProteome; } }
 
         public RelativeRT GetRelativeRT(IsotopeLabelType labelType, Target seq, ExplicitMods mods)
         {
