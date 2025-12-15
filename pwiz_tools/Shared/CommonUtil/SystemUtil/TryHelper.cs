@@ -72,7 +72,7 @@ namespace pwiz.Common.SystemUtil
         {
             DetailedTrace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
                 string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
-            DetailedTrace.WriteLine(x.Message);
+            DetailedTrace.WriteLine(x.ToString());
             if (RunningResharperAnalysis || IsParallelClient)
             {
                 DetailedTrace.WriteLine(IsParallelClient ?

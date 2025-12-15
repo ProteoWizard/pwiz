@@ -205,6 +205,9 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
+    <Compile Include="Controls\FilesTree\FileSystemUtil.cs" />
+    <Compile Include="Controls\FilesTree\ManagedFileSystemWatcher.cs" />
     <Compile Include="Controls\Databinding\BuiltInReports.cs" />
     <Compile Include="Controls\Graphs\ZoomSynchronizer.cs" />
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
@@ -397,6 +400,19 @@
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
     <Compile Include="Controls\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
+    <Compile Include="Controls\FilesTree\BackgroundActionService.cs" />
+    <Compile Include="Controls\FilesTree\FilesTree.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\FilesTree\FilesTreeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\FilesTree\FilesTreeForm.Designer.cs">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\FilesTree\DragDropHandler.cs" />
+    <Compile Include="Controls\FilesTree\FilesTreeNode.cs" />
+    <Compile Include="Controls\FilesTree\FileSystemService.cs" />
     <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -596,9 +612,34 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
+    <Compile Include="Model\DocSettings\IFile.cs" />
     <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
+    <Compile Include="Model\Files\BackgroundProteome.cs" />
+    <Compile Include="Model\Files\FileModel.cs" />
+    <Compile Include="Controls\FilesTree\FilesTreeResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FilesTreeResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Files\IonMobilityLibrary.cs" />
+    <Compile Include="Model\Files\OptimizationLibrary.cs" />
+    <Compile Include="Model\Files\Replicate.cs" />
+    <Compile Include="Model\Files\ReplicateSampleFile.cs" />
+    <Compile Include="Model\Files\ReplicatesFolder.cs" />
+    <Compile Include="Model\Files\SkylineFile.cs" />
+    <Compile Include="Model\Files\RTCalc.cs" />
+    <Compile Include="Model\Files\SkylineAuditLog.cs" />
+    <Compile Include="Model\Files\SkylineChromatogramCache.cs" />
+    <Compile Include="Model\Files\SkylineViewFile.cs" />
+    <Compile Include="Model\Files\SpectralLibrariesFolder.cs" />
+    <Compile Include="Model\Files\SpectralLibrary.cs" />
+    <Compile Include="Model\Files\FileResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FileResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1473,6 +1514,7 @@
       <DependentUpon>GraphChromatogram.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\CustomTip.cs" />
+    <Compile Include="Controls\NodeTip.cs" />
     <Compile Include="Controls\Graphs\GraphSpectrum.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2731,6 +2773,16 @@
     <EmbeddedResource Include="Controls\DocumentChangeLogEntryDlg.zh-CHS.resx">
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeForm.resx">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeForm.ja.resx">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeForm.zh-CHS.resx">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.ja.resx">
       <DependentUpon>AreaCVToolbar.cs</DependentUpon>
     </EmbeddedResource>
@@ -3748,6 +3800,28 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FilesTreeResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeResources.ja.resx">
+      <DependentUpon>FilesTreeResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FilesTree\FilesTreeResources.zh-CHS.resx">
+      <DependentUpon>FilesTreeResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\FileResources.resx">
+      <SubType>Designer</SubType>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FileResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\FileResources.ja.resx">
+      <DependentUpon>FileResources.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\FileResources.zh-CHS.resx">
+      <DependentUpon>FileResources.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.ja.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -4280,6 +4354,19 @@
     <None Include="Resources\prosit_logo_dark_blue.png" />
     <None Include="Resources\Skyline_Daily.bmp" />
     <None Include="Resources\FolderSampleSet.png" />
+    <None Include="Resources\AuditLog.png" />
+    <None Include="Resources\CacheFile.png" />
+    <None Include="Resources\FileMissing.png" />
+    <None Include="Resources\FolderMissing.png" />
+    <None Include="Resources\MethodFile.png" />
+    <None Include="Resources\ReplicateMissing.png" />
+    <None Include="Resources\Skyline_FilesTree.bmp" />
+    <None Include="Resources\Trash.png" />
+    <None Include="Resources\ViewFile.png" />
+    <None Include="Resources\ImsDB.png" />
+    <None Include="Resources\IrtCalculator.png" />
+    <None Include="Resources\OptDB.png" />
+    <None Include="Resources\ProtDB.png" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
