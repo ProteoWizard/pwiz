@@ -354,6 +354,6 @@
     <value>Reading retention times from {0}</value>
   </data>
   <data name="NistLibraryBase_ParseName_Failed_to_understand_entry___0___starting_at_line__1_" xml:space="preserve">
-      <value>Failed to understand entry "{0}" starting at line {1}</value>
+    <value>Failed to understand entry "{0}" starting at line {1}</value>
   </data>
 </root>

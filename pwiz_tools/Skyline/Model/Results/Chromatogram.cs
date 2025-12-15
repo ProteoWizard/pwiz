@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using System.Diagnostics;
+using Array = System.Array;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -434,7 +435,7 @@ namespace pwiz.Skyline.Model.Results
 
     [XmlRoot("replicate")]
     [XmlRootAlias("chromatogram_group")]
-    public sealed class ChromatogramSet : XmlNamedIdElement
+    public sealed class ChromatogramSet : XmlNamedIdElement, IFile
     {
         /// <summary>
         /// Info for all files contained in this replicate
@@ -466,10 +467,10 @@ namespace pwiz.Skyline.Model.Results
             
         }
 
-        public ChromatogramSet(string name, 
-                IEnumerable<MsDataFileUri> msDataFileNames,
-                Annotations annotations,
-                OptimizableRegression optimizationFunction)
+        public ChromatogramSet(string name,
+            IEnumerable<MsDataFileUri> msDataFileNames,
+            Annotations annotations,
+            OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
             MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path));
@@ -479,6 +480,8 @@ namespace pwiz.Skyline.Model.Results
             SampleType = SampleType.DEFAULT;
             SampleDilutionFactor = DEFAULT_DILUTION_FACTOR;
         }
+
+        public string FilePath { get; }
 
         public IList<ChromFileInfo> MSDataFileInfos
         {
@@ -1072,11 +1075,9 @@ namespace pwiz.Skyline.Model.Results
     /// <summary>
     /// Identity class to allow identity equality on <see cref="ChromatogramSetId"/>.
     /// </summary>
-    public sealed class ChromatogramSetId : Identity
-    {        
-    }
+    public sealed class ChromatogramSetId : Identity { }
 
-    public sealed class ChromFileInfo : DocNode, IPathContainer
+    public sealed class ChromFileInfo : DocNode, IPathContainer, IFile
     {
         public ChromFileInfo(MsDataFileUri filePath)
             : base(new ChromFileInfoId())
@@ -1295,6 +1296,9 @@ namespace pwiz.Skyline.Model.Results
                 return ChangeFilePath(filePath);
             return this;
         }
+
+        public string Name => FilePath.GetFileName();
+        string IFile.FilePath => FilePath.GetFilePath();
     }
 
     /// <summary>

@@ -373,6 +373,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void OkDialog()
         {
+            OkDialog(null);
+        }
+
+        public void OkDialog(string saveAsPath)
+        {
             if (string.IsNullOrEmpty(textCalculatorName.Text))
             {
                 MessageDlg.Show(this, IrtResources.EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator);
@@ -421,14 +426,21 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     MessageDlg.Show(this, chromLib
                         ? IrtResources.EditIrtCalcDlg_OkDialog_Chromatogram_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_
                         : IrtResources.EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_);
-                    using (var saveDlg = new SaveFileDialog())
+                    if (saveAsPath != null)
                     {
-                        saveDlg.Filter = IrtDb.FILTER_IRTDB;
-                        if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
+                        pathNew = saveAsPath;
+                    }
+                    else
+                    {
+                        using (var saveDlg = new SaveFileDialog())
                         {
-                            return;
+                            saveDlg.Filter = IrtDb.FILTER_IRTDB;
+                            if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
+                            {
+                                return;
+                            }
+                            pathNew = saveDlg.FileName;
                         }
-                        pathNew = saveDlg.FileName;
                     }
                 } while (string.Equals(path, pathNew));
                 path = pathNew;
