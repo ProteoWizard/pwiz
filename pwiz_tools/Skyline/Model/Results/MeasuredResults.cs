@@ -72,6 +72,8 @@ namespace pwiz.Skyline.Model.Results
             return Chromatograms.Count == 0 ? null : this;
         }
 
+        public ChromatogramCache CacheFinal => _cacheFinal;
+
         [TrackChildren]
         public IList<ChromatogramSet> Chromatograms
         {
@@ -548,36 +550,35 @@ namespace pwiz.Skyline.Model.Results
         public MeasuredResults UpdateCaches(string documentPath, MeasuredResults resultsCache)
         {
             // Clone the current node, and update its cache properties.
-            var results = ImClone(this);
-
-            // Make sure peaks are adjusted as chromatograms are rescored
-            if (resultsCache._cacheRecalc != null &&
-                resultsCache._listPartialCaches != null)
+            return ChangeProp(ImClone(this), results =>
             {
-                results.Chromatograms = results.GetRescoredChromatograms(resultsCache);
-            }
+                // Make sure peaks are adjusted as chromatograms are rescored
+                if (resultsCache._cacheRecalc != null &&
+                    resultsCache._listPartialCaches != null)
+                {
+                    results.Chromatograms = results.GetRescoredChromatograms(resultsCache);
+                }
 
-            results.UpdateClonedCaches(resultsCache);
+                results.UpdateClonedCaches(resultsCache);
 
-            results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
-            results.IsDeserialized = false;
+                results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
+                results.IsDeserialized = false;
 
-            string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
-            var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
-            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation()); // Ignore centroiding, combineIMS etc for key purposes
-            var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
-            var setCachedFileNames = new HashSet<string>(enumCachedNames);
-            var chromatogramSets = new List<ChromatogramSet>();
-            foreach (var chromSet in results.Chromatograms)
-            {
-                chromatogramSets.Add(chromSet.ChangeFileCacheFlags(
-                    dictCachedFiles, setCachedFileNames, cachePath));
-            }
+                string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
+                var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
+                var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation()); // Ignore centroiding, combineIMS etc for key purposes
+                var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
+                var setCachedFileNames = new HashSet<string>(enumCachedNames);
+                var chromatogramSets = new List<ChromatogramSet>();
+                foreach (var chromSet in results.Chromatograms)
+                {
+                    chromatogramSets.Add(chromSet.ChangeFileCacheFlags(
+                        dictCachedFiles, setCachedFileNames, cachePath));
+                }
 
-            if (!ArrayUtil.ReferencesEqual(chromatogramSets, results.Chromatograms))
-                results.Chromatograms = chromatogramSets;
-
-            return results;
+                if (!ArrayUtil.ReferencesEqual(chromatogramSets, results.Chromatograms))
+                    results.Chromatograms = chromatogramSets;
+            });
         }
 
         private void UpdateClonedCaches(MeasuredResults resultsCache)
@@ -1006,6 +1007,11 @@ namespace pwiz.Skyline.Model.Results
             });
         }
 
+        /// <summary>
+        /// Change the list of ChromSets. Pass null to fully reset the list. Passing a zero-length list
+        /// causes undefined behavior so throws <see cref="ArgumentException"/>.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown if caller passes a zero-length list. Pass null instead.</exception>
         public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop)
         {
             var results = ChangeProp(ImClone(this), im => im.Chromatograms = prop);

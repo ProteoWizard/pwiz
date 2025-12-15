@@ -347,6 +347,23 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        public static T RunUIFunc<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            SkylineInvoke(() =>
+            {
+                try
+                {
+                    result = func();
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail(e.ToString());
+                }
+            });
+            return result;
+        }
+
         /// <summary>
         /// Convenience function for getting a value from the UI thread
         /// e.g. var value = CallUI(() => control.Value);
@@ -2074,6 +2091,8 @@ namespace pwiz.SkylineTestUtil
             // Delete unzipped test files.
             if (TestFilesDirs != null)
             {
+                using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
+
                 CleanupPersistentDir(); // Clean before checking for modifications
 
                 foreach (var dir in TestFilesDirs.Where(d => d != null))
@@ -2577,6 +2596,11 @@ namespace pwiz.SkylineTestUtil
                 WaitForGraphs(false);
                 // Wait for any background loaders to notice the change and stop what they're doing
                 WaitForBackgroundLoaders();
+                // Wait for FileSystemWatchers to be completely shut down before test cleanup
+                // This prevents race conditions where watchers might access directories during cleanup
+                // Note: FilesTree may be null if already destroyed, in which case watching is already complete
+                WaitForConditionUI(5000, () => SkylineWindow.IsFileSystemWatchingComplete(), 
+                    () => "FileSystemWatchers should be shut down before test cleanup", false);
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
 

@@ -12,12 +12,15 @@ This guide helps Skyline developers configure a Windows workstation so that AI-a
 > **Quick checklist**
 >
 > 1. Install PowerShell 7 (UTF-8 terminal support)
-> 2. Update Cursor/VS Code terminal settings to use PowerShell 7 + UTF-8
-> 3. Install ReSharper command-line tools (`jb inspectcode`)
-> 4. Install GitHub CLI (`gh`) for agentic PR workflows
-> 5. Configure Git and global line ending settings
-> 6. Install a Markdown viewer for browser-based docs
-> 7. Optional: Install additional helpers (Everything Search, Diff tools)
+> 2. Configure PowerShell 7 profile for permanent UTF-8 encoding
+> 3. Update Cursor/VS Code terminal settings to use PowerShell 7 + UTF-8
+> 4. Install Claude Code CLI for agentic coding workflows
+> 5. Install ReSharper command-line tools (`jb inspectcode`)
+> 6. Install GitHub CLI (`gh`) for agentic PR workflows
+> 7. Install LabKey MCP server (skyline.ms data access)
+> 8. Configure Git and global line ending settings
+> 9. Install a Markdown viewer for browser-based docs
+> 10. Optional: Install additional helpers (Everything Search, Diff tools)
 
 ---
 
@@ -42,16 +45,47 @@ The assistant can then execute commands (or suggest them) directly within the ID
 
 LLM tooling expects UTF-8 output. Windows PowerShell 5.1 defaults to CP1252 and corrupts emoji/status icons.
 
-1. Install PowerShell 7 (once):
+### Install PowerShell 7
+
+```powershell
+winget install Microsoft.PowerShell
+```
+
+Restart Cursor/VS Code after install.
+
+### Configure Permanent UTF-8 Encoding
+
+PowerShell 7 may still default to OEM US (CP437) for console output. Configure your profile to permanently set UTF-8:
+
+1. Open your PowerShell 7 profile for editing:
    ```powershell
-   winget install Microsoft.PowerShell
+   notepad $PROFILE
    ```
-2. Restart Cursor/VS Code after install.
-3. Verify the integrated terminal is using PowerShell 7:
+
+2. If the file doesn't exist, create it first:
    ```powershell
-   $PSVersionTable.PSVersion      # Should show 7.x
-   [Console]::OutputEncoding      # UTF-8, CodePage 65001
+   New-Item -Path $PROFILE -ItemType File -Force
+   notepad $PROFILE
    ```
+
+3. Add these lines to the profile:
+   ```powershell
+   # Set UTF-8 encoding for console output and pipeline
+   [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+   $OutputEncoding = [System.Text.Encoding]::UTF8
+   ```
+
+4. Save and close notepad, then reload the profile:
+   ```powershell
+   . $PROFILE
+   ```
+
+### Verify Installation
+
+```powershell
+$PSVersionTable.PSVersion      # Should show 7.x
+[Console]::OutputEncoding      # Should show: BodyName: utf-8, CodePage: 65001
+```
 
 ### Cursor / VS Code settings
 
@@ -73,6 +107,44 @@ This ensures *all* terminal sessions launched inside Cursor/VS Code use PowerShe
 
 ## 2. Required Command-Line Tools
 
+### Claude Code CLI
+
+Claude Code is Anthropic's agentic coding tool that runs in the terminal. It understands your codebase and can execute commands, edit files, and handle git workflows through natural language.
+
+**Install (run in PowerShell 7 as Administrator):**
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+**Known Issue: PATH not updated**
+
+The installer may not add Claude Code to your PATH. If `claude` is not recognized after installation, add it manually:
+
+```powershell
+# Add to user PATH permanently
+$claudePath = "$env:USERPROFILE\.local\bin"
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$claudePath", "User")
+
+# Refresh current session's PATH
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+```
+
+**Verify:**
+```powershell
+claude --version
+```
+
+**Authenticate:**
+
+After installation, run `claude` and follow the prompts to authenticate with your Anthropic account (requires Claude Pro, Max, or Team subscription, or API key).
+
+**VS Code Extension:**
+
+Claude Code also has a VS Code extension that provides a visual interface. Install from the VS Code marketplace: search for "Claude Code" by Anthropic. Note that the CLI and extension are separate products with different update schedules.
+
+> **Tip:** The CLI stores conversation history in `~/.claude/projects/`. Use `claude --resume` to continue previous sessions.
+
 ### ReSharper Command-Line Tools (inspectcode)
 
 Needed for pre-commit validation (`Build-Skyline.ps1 -RunInspection` / `-QuickInspection`).
@@ -88,6 +160,23 @@ jb tool list
 ```
 
 > Recommended: match the version running on TeamCity (`2023.1.1`). Our scripts use the latest stable (`2025.2.4`) and produce zero-warning output.
+
+### dotCover Command-Line Tools (code coverage)
+
+Needed for code coverage analysis (`Run-Tests.ps1 -Coverage`).
+
+```powershell
+dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7
+```
+
+Verify:
+```powershell
+dotCover --version
+```
+
+> **Important**: Use version 2025.1.7 or earlier. dotCover 2025.3.0+ has a known bug with JSON export that causes "Object reference not set to an instance of an object" errors.
+>
+> Note: dotCover Command Line Tools are separate from the ReSharper IDE extension. Install both for complete tooling support.
 
 ### GitHub CLI (gh)
 
@@ -127,6 +216,54 @@ gh pr view 3700   # Test with any open PR
 
 Expected output shows your logged-in account, protocol (ssh), and token scopes (gist, read:org, repo).
 
+### LabKey MCP Server (skyline.ms data access)
+
+The LabKey MCP server enables Claude Code to query data from skyline.ms directly, including exception reports and nightly test results.
+
+**Prerequisites:**
+- Python 3.10+
+- skyline.ms account with appropriate permissions
+
+**Install Python dependencies:**
+```powershell
+pip install mcp labkey
+```
+
+**Configure credentials:**
+
+Create a netrc file in your home directory with your skyline.ms credentials:
+
+- **Windows**: `C:\Users\<YourName>\.netrc` or `C:\Users\<YourName>\_netrc`
+- **Unix/macOS**: `~/.netrc`
+
+```
+machine skyline.ms
+login your-email@example.com
+password your-password
+```
+
+> **Security note:** The netrc file contains credentials in plain text. Ensure appropriate file permissions and never commit it to version control.
+
+**Register MCP server with Claude Code:**
+```powershell
+# Replace <repo-root> with your actual repository path
+claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+```
+
+**Verify setup:**
+```powershell
+# Replace <repo-root> with your actual repository path
+python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
+```
+
+Expected output shows successful connection and recent exception data.
+
+**Available data via MCP:**
+- Exception reports (`/home/issues/exceptions`)
+- Nightly test results (`/home/development/Nightly x64`)
+
+See `ai/docs/exception-triage-system.md` for exception documentation.
+
 ### Git Configuration (line endings)
 
 Skyline requires CRLF on Windows. Configure once globally:
@@ -149,6 +286,7 @@ Ensure VS 2022 has the **.NET Desktop Development** and **Desktop Development wi
 - Install extensions:
   - C# Dev Kit (or official C# extension)
   - PowerShell
+  - Claude Code (for visual Claude integration)
   - Markdown All in One (for inline preview)
 - Enable EditorConfig support (`"editorconfig.enable": true`).
 - Optional (highly recommended):
@@ -172,9 +310,9 @@ LLM tooling frequently references markdown files (`ai/README.md`, `ai/docs/…`)
 
 ## 5. Optional Productivity Tools
 
-- **EverythingSearch** (voidtools) – instant file searches across pwiz (`pwiz_tools/Skyline/…` has thousands of files).
-- **Beyond Compare** or **WinMerge** – graphical diff for reviewing LLM-generated file changes.
-- **Git Credential Manager** – simplifies HTTPS authentication if SSH keys aren’t available.
+- **EverythingSearch** (voidtools) — instant file searches across pwiz (`pwiz_tools/Skyline/…` has thousands of files).
+- **Beyond Compare** or **WinMerge** — graphical diff for reviewing LLM-generated file changes.
+- **Git Credential Manager** — simplifies HTTPS authentication if SSH keys aren't available.
 
 ---
 
@@ -202,13 +340,19 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Emoji/Unicode characters render as `âœ…` | Terminal using CP1252 | Install PowerShell 7, ensure Cursor uses it |
+| Emoji/Unicode characters render as `â✓…` | Terminal using CP1252/CP437 | Install PowerShell 7, add UTF-8 config to `$PROFILE` |
+| `claude` not found after install | PATH not updated by installer | Add `$env:USERPROFILE\.local\bin` to PATH (see Claude Code section) |
 | `jb` not found | ReSharper CLI tools missing | `dotnet tool install -g JetBrains.ReSharper.GlobalTools` |
+| `dotCover` not found | dotCover CLI tools missing | `dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7` |
+| dotCover JSON export fails with "Object reference not set" | dotCover 2025.3.0+ bug | Uninstall and install 2025.1.7: `dotnet tool uninstall --global JetBrains.dotCover.CommandLineTools && dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7` |
 | `gh` not found | GitHub CLI not installed | `winget install GitHub.cli` |
 | `gh auth login` hangs in agent terminal | Requires interactive terminal | Run `gh auth login` in separate PowerShell 7 window outside IDE |
 | CRLF/LF diffs everywhere | `core.autocrlf` not set | `git config --global core.autocrlf true` |
 | `TestRunner.exe` missing | Build not run | `.\ai\Build-Skyline.ps1` |
 | `inspectcode` builds solution again | `--no-build` flag missing | Use latest script (already includes `--no-build`) |
+| LabKey MCP tools not available | MCP server not registered | Run `claude mcp add labkey -- python <path>/server.py` and restart Claude Code |
+| LabKey authentication fails | Missing or incorrect `_netrc` | Create `C:\Users\<Name>\_netrc` with skyline.ms credentials |
+| `labkey` or `mcp` package not found | Python dependencies missing | `pip install mcp labkey` |
 
 ---
 
@@ -217,11 +361,10 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 - **Public developer setup guide**: [How to Build Skyline](https://skyline.ms/home/software/Skyline/wiki-page.view?name=HowToBuildSkylineTip)
 - **LLM tooling docs**: `ai/docs/build-and-test-guide.md`
 - **Documentation maintenance system**: `ai/docs/documentation-maintenance.md`
+- **Claude Code documentation**: [code.claude.com/docs](https://code.claude.com/docs)
 
 ---
 
 ## 9. Feedback
 
 If you discover additional steps that improve the human + LLM workflow, update this document and the public site. Consistency between the two keeps every developer productive.
-
-

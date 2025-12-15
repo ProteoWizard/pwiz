@@ -153,6 +153,19 @@ pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFastaImport
 
 > ℹ️ **Tip:** If you only know the `.cs` file name, open it and search for `[TestMethod]` to get the method names. Passing the file name (e.g. `FastaImporterTest.cs`) will not work—the script passes method names through to TestRunner.
 
+### Run Tests with Visible UI
+```powershell
+# Run test with UI on-screen (for visual inspection or PauseTest() breakpoints)
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFilesTreeForm -ShowUI
+```
+
+> ℹ️ **Tip:** Use `-ShowUI` when:
+> - Tests contain `PauseTest()` calls (shows a "Continue" button to resume)
+> - You need to visually inspect the UI during test execution
+> - Debugging layout or visual issues
+>
+> Without `-ShowUI`, tests run offscreen (hidden) which is faster but invisible.
+
 ### Run Multiple Tests / Languages
 ```powershell
 # Comma-separate test method names and languages.
@@ -219,6 +232,207 @@ TestProteomeDb
 ```
 
 Lines starting with `#` are comments. When `-UpdateTestList` is used, the existing file is backed up with a timestamp before being overwritten.
+
+## Code Coverage Analysis
+
+Skyline uses JetBrains dotCover for code coverage tool integrated with ReSharper, to measure test coverage.
+
+### Running Tests with Coverage
+
+```powershell
+# Run tests with code coverage enabled
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFilesTreeForm -Coverage
+
+# Coverage output defaults to: ai\.tmp\coverage-{timestamp}.json
+# Custom output path:
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName TestFilesTreeForm -Coverage -CoverageOutputPath ".\coverage.json"
+```
+
+**Coverage Output**:
+- Coverage snapshot (`.dcvr`) is created in the test output directory (`bin\x64\Debug\`)
+- JSON report is exported to `ai\.tmp\coverage-{timestamp}.json` by default
+- JSON can be analyzed programmatically or opened in Visual Studio (ReSharper > Unit Tests > Coverage)
+
+### dotCover Installation
+
+**Setup**: See `ai/docs/developer-setup-guide.md` for installation instructions.
+
+The `Run-Tests.ps1` script automatically searches for `dotCover.exe` in these locations:
+
+1. **Libraries directory** (recommended):
+   ```
+   libraries\jetbrains.dotcover.commandlinetools\{version}\tools\dotCover.exe
+   ```
+
+2. **.NET global tools** (if installed via `dotnet tool install --global JetBrains.dotCover.CommandLineTools`):
+   ```
+   %USERPROFILE%\.dotnet\tools\dotCover.exe
+   ```
+
+3. **Other common locations**: Downloads folder, user tools directory, etc.
+
+**Note**: dotCover 2025.3.0.2 has a known bug with JSON export. If JSON export fails, use version 2025.1.7 or earlier.
+
+### Analyzing Coverage Results - File-Based Workflow (Recommended)
+
+For accurate coverage measurement of new code, use the **file-based workflow** which measures coverage for all types in new .cs files, avoiding false matches with pre-existing types.
+
+#### Step 1: Create Coverage File List
+
+Create a `TODO-{branch-name}-coverage.txt` file in `ai/todos/active/` listing all .cs files added by your branch:
+
+```bash
+# Get list of new .cs files added by this branch
+git diff --name-only --diff-filter=A $(git merge-base HEAD origin/master)..HEAD | grep '\.cs$' | sort
+```
+
+Create the file with this structure (use relative paths from repo root):
+
+```
+# Coverage File List for {Feature Name} (Branch: {branch-name})
+#
+# Total files added by branch: 35
+# Included in coverage: 27 production files
+# Excluded: 4 test files, 2 auto-generated resources, 1 designer file, 1 dev tool
+
+# ============================================================================
+# PRODUCTION CODE - INCLUDED IN COVERAGE (uncommented file paths)
+# ============================================================================
+
+# Core feature components
+pwiz_tools/Skyline/Controls/MyFeature/MyFeatureTree.cs
+pwiz_tools/Skyline/Controls/MyFeature/MyFeatureNode.cs
+
+# Services
+pwiz_tools/Skyline/Services/MyFeatureService.cs
+
+# Model layer
+pwiz_tools/Skyline/Model/MyFeatureModel.cs
+
+# ============================================================================
+# EXCLUDED FROM COVERAGE (commented out)
+# ============================================================================
+
+# Auto-generated designer files
+# pwiz_tools/Skyline/Controls/MyFeature/MyFeatureForm.Designer.cs
+
+# Auto-generated resource files
+# pwiz_tools/Skyline/Properties/MyFeatureResources.Designer.cs
+
+# Test files
+# pwiz_tools/Skyline/TestFunctional/MyFeatureTest.cs
+
+# Developer tools (not part of runtime)
+# pwiz_tools/Skyline/Executables/DevTools/MyTool/Program.cs
+```
+
+**What to exclude** (comment out with `#`):
+- Test files (`Test*.cs`, `*Test.cs`)
+- Auto-generated designer files (`*.Designer.cs`)
+- Auto-generated resource files (`*Resources.Designer.cs`)
+- Developer tools not part of the Skyline runtime
+
+#### Step 2: Run Tests with Coverage
+
+```powershell
+# Run your feature-specific tests with coverage enabled
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -UseTestList -Coverage
+
+# Or run specific tests
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -TestName "TestMyFeature,TestMyFeatureModel" -Coverage
+```
+
+Coverage files are saved to `ai\.tmp\`:
+- JSON: `coverage-{timestamp}.json`
+- Snapshot: `coverage-{timestamp}.dcvr`
+
+#### Step 3: Analyze Coverage
+
+```powershell
+# Analyze using your coverage file list
+pwsh -File pwiz_tools/Skyline/ai/scripts/Analyze-Coverage.ps1 `
+  -CoverageJsonPath "ai/.tmp/coverage-{timestamp}.json" `
+  -PatternsFile "ai/todos/active/TODO-{branch-name}-coverage.txt" `
+  -ReportTitle "MY FEATURE CODE COVERAGE"
+```
+
+**How it works**:
+1. `Extract-TypeNames.ps1` reads uncommented .cs file paths from your coverage list
+2. Parses each .cs file to extract fully-qualified type names (e.g., `pwiz.Skyline.Model.Files.Replicate`)
+3. `Analyze-Coverage.ps1` uses exact type name matching (not wildcards) for precision
+4. Reports coverage for exactly the types in your new files
+
+**Output example**:
+```
+Found 27 .cs files in coverage file
+Extracted 38 fully-qualified type names
+...
+Overall Coverage: 2030 / 2736 statements
+Coverage Percentage: 74.2 pct
+```
+
+#### Step 4: Review and Improve
+
+The analysis report shows:
+- **Overall coverage percentage** for all new types
+- **Coverage by type** with breakdown by layer (Model, Service, UI)
+- **Low coverage warnings** (types < 50%)
+- **Types with 100% coverage** (excellent test coverage)
+
+**Visual Studio Integration** for detailed line-by-line analysis:
+1. Open Visual Studio 2022
+2. ReSharper > Unit Tests > Coverage > Import from Snapshot
+3. Load `ai\.tmp\coverage-{timestamp}.dcvr`
+4. View coverage highlights in source code
+
+#### Alternative: Pattern-Based Analysis (Legacy)
+
+For backward compatibility, you can still use type name patterns:
+
+```powershell
+pwsh -File pwiz_tools/Skyline/ai/scripts/Analyze-Coverage.ps1 `
+  -CoverageJsonPath "ai/.tmp/coverage-{timestamp}.json" `
+  -Patterns "MyFeature","MyFeatureModel","MyFeatureService" `
+  -ReportTitle "CUSTOM COVERAGE"
+```
+
+**Warning**: Pattern matching can produce false positives by matching pre-existing types with similar names.
+
+### Coverage Best Practices
+
+- **Aim for ≥80% coverage** on new production code (higher for critical paths)
+- **Measure accurately** using file-based workflow to avoid false matches
+- **Review by layer**: Model (aim for 90-100%), Service (80-100%), UI (60-80%)
+- **Focus on production code** - exclude tests, auto-generated files, dev tools
+- **Use `.dcvr` files in Visual Studio** for line-by-line coverage inspection
+- **Document your coverage file list** in your TODO as a sprint artifact
+- **Don't obsess over 100%** - some defensive code paths may be impractical to test
+
+### Coverage Workflow Example
+
+Complete workflow for a new feature branch:
+
+```powershell
+# 1. Create coverage file list (one-time setup)
+git diff --name-only --diff-filter=A $(git merge-base HEAD origin/master)..HEAD | grep '\.cs$' > temp-files.txt
+# Edit temp-files.txt → ai/todos/active/TODO-myfeature-coverage.txt
+# Comment out test files and auto-generated files
+
+# 2. Run tests with coverage
+pwiz_tools\Skyline\ai\Run-Tests.ps1 -UseTestList -Coverage
+
+# 3. Analyze coverage
+pwsh -File pwiz_tools/Skyline/ai/scripts/Analyze-Coverage.ps1 `
+  -CoverageJsonPath "ai/.tmp/coverage-20251207-224957.json" `
+  -PatternsFile "ai/todos/active/TODO-myfeature-coverage.txt" `
+  -ReportTitle "MY FEATURE CODE COVERAGE"
+
+# 4. If coverage < 80%, add more tests and repeat steps 2-3
+
+# 5. Load .dcvr in Visual Studio to identify uncovered lines
+# ReSharper > Unit Tests > Coverage > Import from Snapshot
+# Load: ai/.tmp/coverage-20251207-224957.dcvr
+```
 
 ## ReSharper Code Inspection
 

@@ -2649,7 +2649,19 @@ namespace pwiz.Skyline.Properties {
                 this["FilterVolcanoPlotPoints"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FilesViewShowFileNames {
+            get {
+                return ((bool)(this["FilesViewShowFileNames"]));
+            }
+            set {
+                this["FilesViewShowFileNames"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]

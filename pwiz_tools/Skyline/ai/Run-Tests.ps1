@@ -97,13 +97,25 @@ param(
     [switch]$EnableInternet = $false,
 
     [Parameter(Mandatory=$false)]
+    [switch]$TeamCityCleanup = $false,  # Use TeamCity-style cleanup (DesiredCleanupLevel=all) for local testing/debugging
+
+    [Parameter(Mandatory=$false)]
     [int]$Loop = 0,  # Number of iterations (0 = run forever, 1 = run once, 20 = run 20 times)
 
     [Parameter(Mandatory=$false)]
     [switch]$ReportHandles = $false,  # Enable handle count diagnostics
 
     [Parameter(Mandatory=$false)]
-    [switch]$ReportHeaps = $false  # Enable heap count diagnostics (only useful when handles aren't leaking)
+    [switch]$SortHandlesByCount = $false,  # Sort handle types by count (descending) - leaking types rise to top
+
+    [Parameter(Mandatory=$false)]
+    [switch]$ReportHeaps = $false,  # Enable heap count diagnostics (only useful when handles aren't leaking)
+
+    [Parameter(Mandatory=$false)]
+    [switch]$Coverage = $false,  # Run with dotCover code coverage and export to JSON
+
+    [Parameter(Mandatory=$false)]
+    [string]$CoverageOutputPath = ""  # Path for coverage JSON output (default: ai\.tmp\coverage-{timestamp}.json)
 )
 
 $scriptRoot = Split-Path -Parent $PSCommandPath
@@ -214,6 +226,91 @@ if ($TestName -match '^@(.+)$') {
 $testNameForLog = $TestName -replace '@.*[\\/]', '' -replace '\.dll$', '' -replace '\.txt$', ''
 $logFile = "$testNameForLog.log"
 
+# Find dotCover if coverage is requested
+$dotCoverExe = $null
+if ($Coverage) {
+    $pwizRoot = Split-Path -Parent (Split-Path -Parent $skylineRoot)
+    
+    # Search for dotCover Command Line Tools (separate download from JetBrains)
+    # Expected location: libraries\jetbrains.dotcover.commandlinetools\{version}\tools\dotCover.exe
+    $searchLocations = @()
+    
+    # Check in libraries directory (most common location for command-line tools)
+    if ($pwizRoot) {
+        $libPath = Join-Path $pwizRoot "libraries"
+        if (Test-Path $libPath) {
+            # Look for any version of dotcover commandlinetools
+            $dotCoverDirs = Get-ChildItem -Path $libPath -Directory -Filter "*dotcover*commandlinetools*" -ErrorAction SilentlyContinue
+            foreach ($dir in $dotCoverDirs) {
+                $exePath = Get-ChildItem -Path $dir.FullName -Recurse -Filter "dotCover.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($exePath) {
+                    $dotCoverExe = $exePath.FullName
+                    break
+                }
+            }
+        }
+        
+        # Also check the specific path that TestRunner uses
+        if (-not $dotCoverExe) {
+            $specificPath = Join-Path $pwizRoot "libraries\jetbrains.dotcover.commandlinetools\2023.3.3\tools\dotCover.exe"
+            if (Test-Path $specificPath) {
+                $dotCoverExe = $specificPath
+            }
+        }
+    }
+    
+    # Check .NET global tools location (if installed via: dotnet tool install --global JetBrains.dotCover.CommandLineTools)
+    if (-not $dotCoverExe) {
+        $dotnetToolsPath = Join-Path $env:USERPROFILE ".dotnet\tools\dotCover.exe"
+        if (Test-Path $dotnetToolsPath) {
+            $dotCoverExe = $dotnetToolsPath
+        }
+    }
+    
+    # Check other common locations (user might have extracted it elsewhere)
+    if (-not $dotCoverExe) {
+        $otherLocations = @(
+            "${env:USERPROFILE}\Downloads\dotCover*.exe",
+            "${env:USERPROFILE}\dotCover*\dotCover.exe",
+            "C:\tools\dotCover*\dotCover.exe"
+        )
+        
+        foreach ($pattern in $otherLocations) {
+            $matches = Get-ChildItem -Path (Split-Path $pattern -Parent) -Filter (Split-Path $pattern -Leaf) -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($matches) {
+                $dotCoverExe = $matches.FullName
+                break
+            }
+        }
+    }
+    
+    if (-not $dotCoverExe) {
+        Write-Host "❌ dotCover.exe not found. Coverage requires JetBrains dotCover Command Line Tools." -ForegroundColor Red
+        Write-Host "" -ForegroundColor Yellow
+        Write-Host "   The dotCover Command Line Tools are a separate download from JetBrains." -ForegroundColor Yellow
+        Write-Host "   Download from: https://www.jetbrains.com/dotcover/download/" -ForegroundColor Cyan
+        Write-Host "" -ForegroundColor Yellow
+        Write-Host "   Expected location: libraries\jetbrains.dotcover.commandlinetools\{version}\tools\dotCover.exe" -ForegroundColor Gray
+        Write-Host "   Or extract the zip file anywhere and update the search paths in this script." -ForegroundColor Gray
+        Write-Host "" -ForegroundColor Yellow
+        Write-Host "   Run tests without -Coverage flag to skip coverage analysis." -ForegroundColor Yellow
+        exit 1
+    }
+    
+    # Determine coverage output path
+    if ([string]::IsNullOrEmpty($CoverageOutputPath)) {
+        $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+        $aiTmpDir = Join-Path (Split-Path -Parent (Split-Path -Parent $skylineRoot)) "ai\.tmp"
+        if (-not (Test-Path $aiTmpDir)) {
+            New-Item -ItemType Directory -Path $aiTmpDir -Force | Out-Null
+        }
+        $CoverageOutputPath = Join-Path $aiTmpDir "coverage-$timestamp.json"
+    }
+    
+    Write-Host "📊 Coverage enabled - dotCover: $dotCoverExe" -ForegroundColor Cyan
+    Write-Host "   Coverage output: $CoverageOutputPath" -ForegroundColor Gray
+}
+
 Write-Host "Running tests with TestRunner.exe" -ForegroundColor Cyan
 Write-Host "  Test: $TestName" -ForegroundColor Gray
 Write-Host "  Language(s): $languageParam" -ForegroundColor Gray
@@ -221,6 +318,8 @@ Write-Host "  UI Mode: $(if ($ShowUI) { 'On-screen (visible)' } else { 'Offscree
 Write-Host "  Internet: $(if ($EnableInternet) { 'Enabled' } else { 'Disabled' })" -ForegroundColor Gray
 Write-Host "  Loop: $(if ($Loop -eq 0) { 'Forever' } else { "$Loop iterations" })" -ForegroundColor Gray
 Write-Host "  Diagnostics: Handles=$(if ($ReportHandles) { 'on' } else { 'off' }), Heaps=$(if ($ReportHeaps) { 'on' } else { 'off' })" -ForegroundColor Gray
+Write-Host "  Coverage: $(if ($Coverage) { 'Enabled' } else { 'Disabled' })" -ForegroundColor Gray
+Write-Host "  TeamCity Cleanup: $(if ($TeamCityCleanup) { 'Enabled (DesiredCleanupLevel=all)' } else { 'Disabled' })" -ForegroundColor Gray
 Write-Host "  Log: $outputDir\$logFile`n" -ForegroundColor Gray
 
 # Build TestRunner command line
@@ -270,16 +369,82 @@ try {
         if ($ReportHandles) {
             $runnerArgs += "reporthandles=on"
         }
-        
+
+        if ($SortHandlesByCount) {
+            $runnerArgs += "sorthandlesbycount=on"
+        }
+
         if ($ReportHeaps) {
             $runnerArgs += "reportheaps=on"
         }
+        
+        if ($TeamCityCleanup) {
+            $runnerArgs += "teamcitycleanup=on"
+        }
 
-        $cmdLine = ".\TestRunner.exe " + ($runnerArgs -join ' ')
+        # Build dotCover command if coverage is enabled
+        $testExecutable = ".\TestRunner.exe"
+        $testArguments = $runnerArgs
+        $coverageSnapshot = $null
+        
+        if ($Coverage) {
+            # Save .dcvr snapshot to ai\.tmp directory (same location as JSON output)
+            # Extract timestamp from JSON path to ensure matching filenames
+            $coverageBaseName = [System.IO.Path]::GetFileNameWithoutExtension($CoverageOutputPath)
+            $aiTmpDir = Split-Path -Parent $CoverageOutputPath
+            $coverageSnapshot = Join-Path $aiTmpDir "$coverageBaseName.dcvr"
+            $testRunnerFullPath = (Resolve-Path ".\TestRunner.exe").Path
+            $testExecutable = $dotCoverExe
+            
+            # Check dotCover version to use appropriate syntax
+            $dotCoverVersion = & $dotCoverExe --version 2>&1 | Select-String "dotCover" | ForEach-Object { if ($_ -match '(\d+\.\d+\.\d+)') { [version]$matches[1] } }
+            $useNewSyntax = $dotCoverVersion -and $dotCoverVersion -ge [version]"2025.3.0"
+            
+            if ($useNewSyntax) {
+                # New syntax (2025.3.0+)
+                $dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
+                                   "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
+                                   "/Filters=+:module=pwiz.Common* /Filters=+:module=ProteowizardWrapper* /Filters=+:module=BullseyeSharp /Filters=+:module=PanoramaClient " +
+                                   "/Filters=-:class=alglib /Filters=-:class=Inference.*"
+                $testArguments = @(
+                    "cover",
+                    $dotCoverFilters,
+                    "--target-executable", $testRunnerFullPath,
+                    "--snapshot-output", $coverageSnapshot,
+                    "--"
+                ) + $runnerArgs
+            } else {
+                # Old syntax (pre-2025.3.0) - each filter is a separate argument
+                $testArguments = @(
+                    "cover",
+                    "/Filters=+:module=TestRunner",
+                    "/Filters=+:module=Skyline-daily",
+                    "/Filters=+:module=Skyline*",
+                    "/Filters=+:module=CommonTest",
+                    "/Filters=+:module=Test*",
+                    "/Filters=+:module=MSGraph",
+                    "/Filters=+:module=ProteomeDb",
+                    "/Filters=+:module=BiblioSpec",
+                    "/Filters=+:module=pwiz.Common*",
+                    "/Filters=+:module=ProteowizardWrapper*",
+                    "/Filters=+:module=BullseyeSharp",
+                    "/Filters=+:module=PanoramaClient",
+                    "/Filters=-:class=alglib",
+                    "/Filters=-:class=Inference.*",
+                    "/Output=$coverageSnapshot",
+                    "/ReturnTargetExitCode",
+                    "/AnalyzeTargetArguments=false",
+                    "/TargetExecutable=$testRunnerFullPath",
+                    "--"
+                ) + $runnerArgs
+            }
+        }
+        
+        $cmdLine = "$testExecutable " + ($testArguments -join ' ')
         Write-Host "Command: $cmdLine`n" -ForegroundColor Gray
 
         $testStart = Get-Date
-        & .\TestRunner.exe $runnerArgs
+        & $testExecutable $testArguments
         
         $exitCode = $LASTEXITCODE
         $duration = (Get-Date) - $testStart
@@ -329,6 +494,51 @@ try {
         
         Write-Host "`n✅ All tests PASSED in $($duration.TotalSeconds.ToString('F1'))s" -ForegroundColor Green
         Write-Host "Full log: $outputDir\$logFile" -ForegroundColor Gray
+        
+        # Export coverage to JSON if enabled
+        if ($Coverage -and $coverageSnapshot -and (Test-Path $coverageSnapshot)) {
+            Write-Host "`n📊 Exporting coverage to JSON..." -ForegroundColor Cyan
+            
+            # Check dotCover version to use appropriate syntax
+            $dotCoverVersion = & $dotCoverExe --version 2>&1 | Select-String "dotCover" | ForEach-Object { if ($_ -match '(\d+\.\d+\.\d+)') { [version]$matches[1] } }
+            $useNewSyntax = $dotCoverVersion -and $dotCoverVersion -ge [version]"2025.3.0"
+            
+            if ($useNewSyntax) {
+                # New syntax (2025.3.0+) - but has bug, so we use old version
+                $exportArgs = @(
+                    "report",
+                    "--snapshot-source", $coverageSnapshot,
+                    "--json-report-output", $CoverageOutputPath
+                )
+            } else {
+                # Old syntax (pre-2025.3.0) - uses --Source and --Output
+                $exportArgs = @(
+                    "report",
+                    "--Source", $coverageSnapshot,
+                    "--Output", $CoverageOutputPath,
+                    "--ReportType", "JSON"
+                )
+            }
+            
+            $exportProcess = Start-Process -FilePath $dotCoverExe -ArgumentList $exportArgs -Wait -NoNewWindow -PassThru
+            if ($exportProcess.ExitCode -eq 0 -and (Test-Path $CoverageOutputPath)) {
+                Write-Host "✅ Coverage exported to:" -ForegroundColor Green
+                Write-Host "   JSON:     $CoverageOutputPath" -ForegroundColor Gray
+                Write-Host "   Snapshot: $coverageSnapshot" -ForegroundColor Gray
+                Write-Host "`n   Analyze coverage with ai\scripts\Analyze-Coverage.ps1:" -ForegroundColor Cyan
+                Write-Host "     -CoverageJsonPath `"$CoverageOutputPath`"" -ForegroundColor Gray
+                Write-Host "     -PatternsFile <path-to-patterns-file>" -ForegroundColor Gray
+                Write-Host "     -ReportTitle <report-title>" -ForegroundColor Gray
+                Write-Host "   (See ai\docs\build-and-test-guide.md for examples)" -ForegroundColor Gray
+                Write-Host "`n   Or open snapshot in Visual Studio: ReSharper > Unit Tests > Coverage > Import from Snapshot" -ForegroundColor Gray
+            } else {
+                Write-Host "⚠️ Failed to export coverage to JSON (exit code: $($exportProcess.ExitCode))" -ForegroundColor Yellow
+                Write-Host "   Coverage snapshot saved at: $coverageSnapshot" -ForegroundColor Gray
+                Write-Host "   Note: You can open the snapshot in Visual Studio (ReSharper > Unit Tests > Coverage) to export JSON" -ForegroundColor Gray
+                Write-Host "   Or try manual export: dotCover report --Source `"$coverageSnapshot`" --Output `"$CoverageOutputPath`" --ReportType JSON" -ForegroundColor Gray
+            }
+        }
+        
         exit 0
     }
     finally {
