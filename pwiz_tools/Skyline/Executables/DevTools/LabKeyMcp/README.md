@@ -62,7 +62,18 @@ python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connec
 | `list_containers` | List child folders in a container |
 | `list_schemas` | List available schemas in a container |
 | `list_queries` | List queries/tables in a schema |
-| `query_table` | Query data from any LabKey table |
+| `query_table` | Query data from any LabKey table or custom query |
+
+The `query_table` tool supports a `parameters` argument (JSON object or string) for server-side parameterized queries:
+
+```
+query_table(
+    schema_name="testresults",
+    query_name="testruns_detail",
+    container_path="/home/development/Nightly x64",
+    parameters={"StartDate": "2025-12-13", "EndDate": "2025-12-14"}
+)
+```
 
 ### Exception Triage Tools
 
@@ -97,7 +108,12 @@ Once registered, Claude Code can use these tools:
 | Data Type | Container Path |
 |-----------|----------------|
 | Exceptions | `/home/issues/exceptions` |
-| Nightly Tests (x64) | `/home/development/Nightly x64` |
+| Nightly x64 | `/home/development/Nightly x64` |
+| Performance Tests | `/home/development/Performance Tests` |
+| Release Branch | `/home/development/Release Branch` |
+| Release Branch Perf | `/home/development/Release Branch Perf` |
+| Integration | `/home/development/Integration` |
+| Integration with Perf | `/home/development/Integration with Perf` |
 
 ## Discovery Workflow
 
@@ -120,5 +136,6 @@ python server.py
 
 ## Related Documentation
 
-- [Exception Triage System](../../../ai/docs/exception-triage-system.md) - Full workflow documentation
+- [Nightly Test Analysis](../../../ai/docs/nightly-test-analysis.md) - Test analysis workflow and queries
+- [Exception Triage System](../../../ai/docs/exception-triage-system.md) - Exception workflow documentation
 - [Developer Setup Guide](../../../ai/docs/developer-setup-guide.md) - Environment configuration

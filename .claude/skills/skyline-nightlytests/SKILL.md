@@ -28,7 +28,15 @@ When working with Skyline nightly test data from skyline.ms, consult these docum
 
 ## Quick Reference
 
-**Data location**: skyline.ms -> /home/development/Nightly x64 -> testresults schema
+**Data location**: skyline.ms -> /home/development/{folder} -> testresults schema
+
+**Test folders** (all accessible via `container_path` parameter):
+| Folder | Duration | Purpose |
+|--------|----------|---------|
+| Nightly x64 | 540 min | Daily dev validation (default) |
+| Performance Tests | 720 min | Extended perf testing |
+| Release Branch | 540 min | Release stability |
+| Integration | 540 min | Pre-merge validation |
 
 **MCP tools available**:
 - `query_test_runs(days, max_rows)` - Recent test run summaries
@@ -36,9 +44,49 @@ When working with Skyline nightly test data from skyline.ms, consult these docum
 - `get_run_leaks(run_id)` - Memory and handle leaks
 - `query_table` - Generic queries including custom server-side queries
 
-**Server-side queries** (use via query_table):
+**Server-side queries** (use via query_table with `parameters`):
+- `testruns_detail` - Test run summaries with computer name (params: StartDate, EndDate)
+- `testpasses_detail` - Per-pass handle/memory data (param: RunId)
 - `handleleaks_by_computer` - Handle leaks grouped by computer
 - `testfails_by_computer` - Test failures grouped by computer
+
+## Common Operations
+
+### Review test runs for a date range (bread-and-butter)
+
+This is the primary way to start investigating nightly test results:
+
+```
+query_table(
+    schema_name="testresults",
+    query_name="testruns_detail",
+    container_path="/home/development/Nightly x64",
+    parameters={"StartDate": "2025-12-13", "EndDate": "2025-12-14"}
+)
+```
+
+Returns: run_id, computer, posttime, duration, passedtests, failedtests, leakedtests, averagemem, githash, os
+
+**Tip**: Duration of 540 min = complete base run; shorter may indicate hangs.
+
+### Examine per-pass data for leak investigation
+
+When investigating handle/memory leaks, examine how values change across test passes:
+
+```
+query_table(
+    schema_name="testresults",
+    query_name="testpasses_detail",
+    container_path="/home/development/Nightly x64",
+    parameters={"RunId": "74829"},
+    filter_column="testname",
+    filter_value="TestMethodRefinementTutorial"
+)
+```
+
+Returns: run_date, computer, testrunid, testname, passnum, handles, userandgdihandles, managedmemory, totalmemory, duration
+
+This reveals whether handles/memory leak between passes or accumulate within a pass.
 
 ## Common Questions
 
@@ -63,13 +111,23 @@ Results are ranked by count, so the first computer listed has the most occurrenc
 ### "What tests are failing in nightly?"
 
 ```
-query_test_runs(days=7)  # Find run with failures
-get_run_failures(run_id=...)  # Get details
+# Step 1: Find runs with failures
+query_table(schema_name="testresults", query_name="testruns_detail",
+            parameters={"StartDate": "2025-12-13", "EndDate": "2025-12-14"})
+# Look for rows where failedtests > 0
+
+# Step 2: Get failure details
+get_run_failures(run_id=...)  # Use run_id from step 1
 ```
 
 ### "Are there memory leaks I should investigate?"
 
 ```
-query_test_runs(days=7)  # Find run with leaks
-get_run_leaks(run_id=...)  # Get details
+# Step 1: Find runs with leaks
+query_table(schema_name="testresults", query_name="testruns_detail",
+            parameters={"StartDate": "2025-12-13", "EndDate": "2025-12-14"})
+# Look for rows where leakedtests > 0
+
+# Step 2: Get leak details
+get_run_leaks(run_id=...)  # Use run_id from step 1
 ```

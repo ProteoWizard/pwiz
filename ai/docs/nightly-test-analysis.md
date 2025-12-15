@@ -49,7 +49,7 @@ Test results are organized into folders under `/home/development/` on skyline.ms
 - **Integration** - Large branch validation before merge (e.g., PR #3687)
 - **Performance Tests** - Perf regression detection
 
-**Note**: Currently only **Nightly x64** has the `testresults` schema accessible via the MCP server. Other folders require server-side configuration to enable the schema.
+All 6 test folders are accessible via the MCP server by specifying the `container_path` parameter.
 
 ## Data Location
 
@@ -75,12 +75,15 @@ Test results data lives at:
 |--------|-------------|
 | `id` | Unique run identifier |
 | `posttime` | When the run was posted |
-| `duration` | Run duration in minutes |
+| `duration` | Run duration in minutes (540 for base, 720 for perf runs) |
 | `passedtests` | Number of passed tests |
 | `failedtests` | Number of failed tests |
 | `leakedtests` | Number of tests with leaks |
 | `averagemem` | Average memory usage in MB |
-| `revision` | Git revision tested |
+| `githash` | Git commit hash tested (e.g., "cd98ae308") |
+| `os` | Operating system (e.g., "Microsoft Windows NT 10.0.19045.0") |
+| `userid` | Foreign key to user table (computer name) |
+| `revision` | Sequential build number from TeamCity |
 | `flagged` | Whether the run was flagged for attention |
 
 ### Custom Queries (Server-Side Views)
@@ -89,40 +92,68 @@ These queries are created on the LabKey server to provide pre-joined, aggregated
 
 | Query | Description | Parameters |
 |-------|-------------|------------|
+| `testruns_detail` | Test run summaries with computer, git hash, OS | `StartDate`, `EndDate` |
+| `testpasses_detail` | Per-pass test data with computer name | `RunId` (required) |
 | `handleleaks_by_computer` | Handle leaks grouped by computer and test name | (none) |
 | `testfails_by_computer` | Test failures grouped by computer and test name | (none) |
-| `testpasses_detail` | Per-pass test data with computer name | `RunId` (required) |
 
-**Example**: Query `handleleaks_by_computer` with filter `testname=TestMethodRefinementTutorial` returns:
+### Test Run Summary Query (testruns_detail)
 
-| computer | testname | leak_count | avg_handles | last_seen |
-|----------|----------|------------|-------------|-----------|
-| KAIPO-DEV | TestMethodRefinementTutorial | 28 | 3.7 | 2025-12-08 |
-| BRENDANX-UW5 | TestMethodRefinementTutorial | 19 | 2.7 | 2025-12-02 |
+The primary query for reviewing nightly test results. Returns one row per test run with all key metrics:
 
-This immediately answers "which computer should I use to debug this leak?"
+```
+query_table(
+    schema_name="testresults",
+    query_name="testruns_detail",
+    container_path="/home/development/Nightly x64",
+    parameters={"StartDate": "2025-12-07", "EndDate": "2025-12-14"}
+)
+```
 
-### Parameterized Queries
+**Returns:**
 
-Some queries require parameters for efficient execution on large tables. Use `param_name` and `param_value` with `query_table`:
+| Column | Description |
+|--------|-------------|
+| `run_id` | Unique run identifier |
+| `computer` | Machine name (e.g., "BOSS-PC", "KAIPOT-PC1") |
+| `posttime` | When the run was posted |
+| `duration` | Run duration in minutes |
+| `os` | Operating system version |
+| `passedtests` | Number of passed tests |
+| `failedtests` | Number of failed tests |
+| `leakedtests` | Number of tests with leaks |
+| `averagemem` | Average memory usage in MB |
+| `githash` | Git commit hash tested |
+| `revision` | TeamCity build number |
+| `flagged` | Whether flagged for attention |
+
+**Example output:**
+
+| computer | posttime | duration | passed | fail | leaks | githash |
+|----------|----------|----------|--------|------|-------|---------|
+| BOSS-PC | 12/14 06:01 | 540 | 9148 | 0 | 0 | afdaac3ad |
+| EKONEIL01 | 12/14 06:01 | 540 | 12769 | 0 | 0 | afdaac3ad |
+
+**Tip:** A full base run should be ~540 minutes. Shorter runs may indicate hangs or incomplete testing.
+
+### Per-Pass Test Data Analysis (testpasses_detail)
+
+The `testpasses_detail` query returns handle/memory measurements for each pass of a test within a specific run. This is essential for diagnosing leaks.
 
 ```
 query_table(
     schema_name="testresults",
     query_name="testpasses_detail",
     container_path="/home/development/Nightly x64",
-    param_name="RunId",
-    param_value="74829",
+    parameters={"RunId": "74829"},
     filter_column="testname",
     filter_value="TestMethodRefinementTutorial"
 )
 ```
 
-**Why parameterized?** The `testpasses` table has 700M+ rows. A parameterized query filters by `RunId` BEFORE joining, making it fast. Without the parameter, the query would timeout.
+**Why parameterized?** The `testpasses` table has 700M+ rows. The `RunId` parameter filters BEFORE joining, making it fast. Without it, the query would timeout.
 
-### Per-Pass Test Data Analysis
-
-The `testpasses_detail` query returns handle/memory measurements for each pass of a test:
+**Returns:**
 
 | Column | Description |
 |--------|-------------|
@@ -146,6 +177,17 @@ The `testpasses_detail` query returns handle/memory measurements for each pass o
 | 1 (end) | 1233 | 150 | Handles grow during pass |
 
 This reveals whether handles leak between passes or accumulate within a pass.
+
+### Leak Analysis Queries
+
+**Example**: Query `handleleaks_by_computer` with filter `testname=TestMethodRefinementTutorial` returns:
+
+| computer | testname | leak_count | avg_handles | last_seen |
+|----------|----------|------------|-------------|-----------|
+| KAIPO-DEV | TestMethodRefinementTutorial | 28 | 3.7 | 2025-12-08 |
+| BRENDANX-UW5 | TestMethodRefinementTutorial | 19 | 2.7 | 2025-12-02 |
+
+This immediately answers "which computer should I use to debug this leak?"
 
 ## Available MCP Tools
 
