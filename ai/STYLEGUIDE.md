@@ -39,12 +39,19 @@ if (condition)
 ```
 
 ### File and Member Ordering
+
+**Order members from high-level to low-level (like a document: introduction before details):**
+
 1. static variables/fields
 2. static public methods
 3. private instance fields
 4. constructor(s)
 5. public methods/properties
-6. private helper methods (placed after methods that use them)
+6. **private helper methods (AFTER the public methods that use them)**
+
+**CRITICAL**: C# is not C/C++ - helpers go LAST, not first:
+- ✅ Main method first → helpers below (reader sees PURPOSE, then DETAILS)
+- ❌ Helpers first → main method last (old C style - forces backward reading)
 
 ### Using Directive Ordering
 **System and Windows namespaces come first**, then external libraries, then project namespaces (not strictly alphabetical):
@@ -79,6 +86,8 @@ MessageBox.Show(Resources.ErrorMessage_FileNotFound);
 2. Add corresponding property to `.Designer.cs` file
 3. Keep properties in alphabetical order
 4. Build to verify no CS0117 errors
+
+**Note:** When viewing `.ja.resx` and `.zh-CHS.resx` files (Japanese/Chinese translations), UTF-8 encoding must be configured for characters to display correctly. Developers who followed `ai/docs/developer-setup-guide.md` already have permanent UTF-8 configured in their PowerShell profile.
 
 ## Asynchronous Programming
 
