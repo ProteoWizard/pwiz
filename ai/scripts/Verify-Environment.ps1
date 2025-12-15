@@ -223,7 +223,7 @@ if ((Test-Path $netrcPath) -or (Test-Path $netrcAltPath)) {
     $foundPath = if (Test-Path $netrcPath) { ".netrc" } else { "_netrc" }
     Add-Result "netrc credentials" "OK" "$foundPath exists" $true
 } else {
-    Add-Result "netrc credentials" "MISSING" "Create ~\.netrc with skyline.ms credentials" $false
+    Add-Result "netrc credentials" "MISSING" "Create ~\.netrc with shared agent credentials (see developer-setup-guide.md)" $false
 }
 
 # 11. LabKey MCP Server registration

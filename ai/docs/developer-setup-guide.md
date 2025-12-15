@@ -248,17 +248,19 @@ pip install mcp labkey
 
 **Configure credentials:**
 
-Create a netrc file in your home directory with your skyline.ms credentials:
+Create a netrc file in your home directory:
 
 - **Windows**: `C:\Users\<YourName>\.netrc` or `C:\Users\<YourName>\_netrc`
 - **Unix/macOS**: `~/.netrc`
 
 ```
 machine skyline.ms
-login your-email@example.com
-password your-password
+login claude.c.skyline@gmail.com
+password <password>
 ```
 
+> **Important**: Use the shared Claude agent account (`claude.c.skyline@gmail.com`), **not** your personal skyline.ms login. This account has appropriate read-only permissions for AI tooling. Request the password from team leads via LastPass.
+>
 > **Security note:** The netrc file contains credentials in plain text. Ensure appropriate file permissions and never commit it to version control.
 
 **Register MCP server with Claude Code:**
@@ -408,7 +410,7 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 | `TestRunner.exe` missing | Build not run | `.\ai\Build-Skyline.ps1` |
 | `inspectcode` builds solution again | `--no-build` flag missing | Use latest script (already includes `--no-build`) |
 | LabKey MCP tools not available | MCP server not registered | Run `claude mcp add labkey -- python <path>/server.py` and restart Claude Code |
-| LabKey authentication fails | Missing or incorrect `_netrc` | Create `C:\Users\<Name>\_netrc` with skyline.ms credentials |
+| LabKey authentication fails | Missing or incorrect `.netrc` | Create `C:\Users\<Name>\.netrc` with shared agent credentials (see LabKey MCP section) |
 | `labkey` or `mcp` package not found | Python dependencies missing | `pip install mcp labkey` |
 
 ---
