@@ -18,7 +18,7 @@ Setup:
 
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Any, Optional, Union
 
 import labkey
 from labkey.query import QueryFilter, ServerContext
@@ -243,8 +243,7 @@ async def query_table(
     max_rows: int = 100,
     filter_column: Optional[str] = None,
     filter_value: Optional[str] = None,
-    param_name: Optional[str] = None,
-    param_value: Optional[str] = None,
+    parameters: Union[str, dict, None] = None,
 ) -> str:
     """Query data from a LabKey table.
 
@@ -256,9 +255,10 @@ async def query_table(
         max_rows: Maximum rows to return (default: 100)
         filter_column: Optional column name to filter on
         filter_value: Optional value to filter for (requires filter_column)
-        param_name: Optional query parameter name (for parameterized queries)
-        param_value: Optional query parameter value (requires param_name)
+        parameters: Optional JSON string of query parameters (e.g., '{"StartDate": "2025-12-07", "EndDate": "2025-12-14"}')
     """
+    import json
+
     try:
         server_context = get_server_context(server, container_path)
 
@@ -267,10 +267,13 @@ async def query_table(
         if filter_column and filter_value:
             filter_array = [QueryFilter(filter_column, filter_value, "eq")]
 
-        # Build parameters if provided (for parameterized queries)
-        parameters = None
-        if param_name and param_value:
-            parameters = {param_name: param_value}
+        # Parse parameters - accept either dict or JSON string
+        params_dict = None
+        if parameters:
+            if isinstance(parameters, dict):
+                params_dict = parameters
+            else:
+                params_dict = json.loads(parameters)
 
         result = labkey.query.select_rows(
             server_context=server_context,
@@ -278,7 +281,7 @@ async def query_table(
             query_name=query_name,
             max_rows=max_rows,
             filter_array=filter_array,
-            parameters=parameters,
+            parameters=params_dict,
         )
 
         if result and "rows" in result:
