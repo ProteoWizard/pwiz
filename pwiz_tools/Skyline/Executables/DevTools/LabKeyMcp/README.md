@@ -86,9 +86,25 @@ query_table(
 
 | Tool | Description |
 |------|-------------|
+| `get_daily_test_summary(report_date)` | Query all 6 folders, save report to ai/.tmp/ |
+| `save_test_failure_history(test_name, start_date, container_path)` | Collect stack traces, detect patterns |
 | `query_test_runs(days, max_rows)` | Query recent test runs with pass/fail/leak counts |
 | `get_run_failures(run_id)` | Get failed tests and stack traces for a run |
 | `get_run_leaks(run_id)` | Get memory and handle leaks for a run |
+| `save_run_log(run_id)` | Save full test run log to ai/.tmp/ for grep/search |
+
+The `get_daily_test_summary(report_date)` tool is the primary entry point for daily test review. It queries all 6 test folders, saves a full markdown report to `ai/.tmp/nightly-report-YYYYMMDD.md`, and returns a brief summary with action items.
+
+For **historical analysis** (How long has this been failing? When did it last pass?), use `query_table` with `testruns_detail` and a date range:
+```
+query_table(schema_name="testresults", query_name="testruns_detail",
+            container_path="/home/development/Nightly x64",
+            parameters={"StartDate": "2025-12-01", "EndDate": "2025-12-15"})
+```
+
+The `save_run_log(run_id)` tool saves the complete 9-12 hour test run output to `ai/.tmp/testrun-log-{run_id}.txt` for deep investigation.
+
+The `save_test_failure_history(test_name, start_date, container_path)` tool collects all stack traces for a specific test, groups them by pattern, and saves to `ai/.tmp/test-failures-{testname}.md`. This helps determine if multiple failures share the same root cause.
 
 ## Usage Examples
 
@@ -111,9 +127,9 @@ Once registered, Claude Code can use these tools:
 | Nightly x64 | `/home/development/Nightly x64` |
 | Performance Tests | `/home/development/Performance Tests` |
 | Release Branch | `/home/development/Release Branch` |
-| Release Branch Perf | `/home/development/Release Branch Perf` |
+| Release Branch Performance Tests | `/home/development/Release Branch Performance Tests` |
 | Integration | `/home/development/Integration` |
-| Integration with Perf | `/home/development/Integration with Perf` |
+| Integration with Perf Tests | `/home/development/Integration with Perf Tests` |
 
 ## Discovery Workflow
 

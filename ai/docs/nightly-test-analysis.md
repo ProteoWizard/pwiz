@@ -94,6 +94,9 @@ These queries are created on the LabKey server to provide pre-joined, aggregated
 |-------|-------------|------------|
 | `testruns_detail` | Test run summaries with computer, git hash, OS | `StartDate`, `EndDate` |
 | `testpasses_detail` | Per-pass test data with computer name | `RunId` (required) |
+| `failures_by_date` | Test failures with test names for a date range | `StartDate`, `EndDate` |
+| `leaks_by_date` | Memory/handle leaks with test names and type | `StartDate`, `EndDate` |
+| `expected_computers` | Active computers with trained mean/stddev for anomaly detection | (none) |
 | `handleleaks_by_computer` | Handle leaks grouped by computer and test name | (none) |
 | `testfails_by_computer` | Test failures grouped by computer and test name | (none) |
 
@@ -193,9 +196,44 @@ This immediately answers "which computer should I use to debug this leak?"
 
 | Tool | Description |
 |------|-------------|
+| `get_daily_test_summary(report_date)` | Query all 6 folders, save report to ai/.tmp/ |
+| `save_test_failure_history(test_name, start_date, container_path)` | Collect stack traces for a test, detect patterns |
+| `save_run_log(run_id)` | Save full test run log to ai/.tmp/ for grep/search |
 | `query_test_runs(days, max_rows)` | Query recent test runs with summaries |
 | `get_run_failures(run_id)` | Get failed tests and stack traces for a run |
 | `get_run_leaks(run_id)` | Get memory and handle leaks for a run |
+
+### Daily Test Summary
+
+The primary entry point for daily test review. Queries all 6 test folders in one call:
+
+```
+get_daily_test_summary(report_date="2025-12-14")
+```
+
+Returns a brief summary and saves a full markdown report to `ai/.tmp/nightly-report-YYYYMMDD.md` including:
+- Summary table with pass/fail/leak/anomaly counts per folder
+- Per-computer details with stddev-based anomaly detection
+- Missing computers that didn't report
+- **Failures by Test** - which tests failed on which computers
+- **Leaks by Test** - which tests leaked on which computers
+
+### Stack Trace Pattern Analysis
+
+When a test fails on multiple machines, use `save_test_failure_history` to determine if they share the same root cause:
+
+```
+save_test_failure_history(
+    test_name="TestPanoramaDownloadFile",
+    start_date="2025-12-14",
+    container_path="/home/development/Release Branch"
+)
+```
+
+Returns summary and saves to `ai/.tmp/test-failures-{testname}.md` with:
+- All stack traces grouped by unique pattern
+- Pattern count (1 = same root cause, multiple = different issues)
+- Affected computers per pattern
 
 ## Usage Examples
 
@@ -239,12 +277,21 @@ To add new custom queries (like `handleleaks_by_computer`), see [MCP Development
 
 ## Future Enhancements
 
-- `/pw-nightly` slash command for daily test review
+- Stack trace normalization (handle path/locale differences for better pattern detection)
 - Trend analysis across multiple runs
 - Flaky test identification (tests that pass/fail inconsistently)
 - Automatic correlation with git commits
-- Test failure grouping by stack trace signature
 - `memoryleaks_by_computer` query for memory leak analysis
+
+## Recently Implemented
+
+- `/pw-nightly` slash command for daily test review ✓
+- `get_daily_test_summary` - Query all 6 folders in one call ✓
+- `save_test_failure_history` - Stack trace pattern grouping ✓
+- `save_run_log` - Full log download for deep investigation ✓
+- `failures_by_date` / `leaks_by_date` queries - Test names for date ranges ✓
+- `expected_computers` query - Stddev-based anomaly detection ✓
+- "Failures by Test" / "Leaks by Test" sections in daily report ✓
 
 ## Related Documentation
 
