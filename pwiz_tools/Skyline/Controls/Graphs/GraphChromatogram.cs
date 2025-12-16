@@ -542,7 +542,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-
         public void ZoomToPeak(double rtStart, double rtEnd)
         {
             _graphHelper.ZoomToPeak(rtStart, rtEnd);
@@ -815,7 +814,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
-            if (IsDisposed)
+            if (!Visible || IsDisposed)
                 return;
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
@@ -3640,6 +3639,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 (PeptideDocNode) imputedBoundsParameter.Document.FindNode(imputedBoundsParameter.IdentityPath), imputedBoundsParameter.ChromatogramSet,
                 imputedBoundsParameter.FilePath);
         }
+
 
         #region Test support
 
