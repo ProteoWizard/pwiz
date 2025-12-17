@@ -30,7 +30,7 @@
     <ul>
         <li>Open the file "ExtracellularVesicalMagNet.sky" in the "PeakImptutationDia" folder.</li>
     </ul>
-    <p>After Skyline opens the document and it will display the Targets tree on the left. The peptide "FYNELTEILVR" is selected in the Targets tree.
+    <p>After Skyline opens the document it displays the Targets tree on the left. The peptide "FYNELTEILVR" is selected in the Targets tree.
         In the center, six chromatogram graphs are displayed.
         In the upper right corner is the Peak Area Relative Abundance graph and in the lower right corner is the Retention Times Replicate Comparison graph.</p>
     <ul>
@@ -114,6 +114,9 @@
         results gave the identification the best score. For this particular peptide, the best-scoring file searched by DIA-NN
         was the first replicate, "EV13_SAXN_12mz_10". Skyline indicates this by displaying the words "Exemplary Replicate"
         on that chromatogram graph.</p>
+    <p>Note: There is currently a bug in Skyline-daily involving imported DIA-NN results. All replicates for a given peptide
+    have the same score from DIA-NN. When multiple replicates have the same best score, Skyline uses the median peak boundaries
+    as the exemplary replicate, and the word "Exemplary" may not be shown on the chromatogram graph.</p>
     <h1>When the boundary imputation does a bad job</h1>
     <p>There are some peptides in this document where the peak imputation feature is not going to do as good a job as this one. In the Targets tree, there is another peptide "KADLVNR" which is sixteen peptides above the currently selected one.</p>
     <ul>
@@ -126,7 +129,7 @@
         does not line up with the peak boundaries that were chosen by DIA-NN. The "Score to Run Regression" graph in Skyline
         can be helpful for understanding why Skyline would do that.
     </p>
-    <ul>li>On the <b>View</b> menu, choose <b>Retention Times</b>, then <b>Regression</b>, and click <b>Score to
+    <ul><li>On the <b>View</b> menu, choose <b>Retention Times</b>, then <b>Regression</b>, and click <b>Score to
         Run</b>. </li></ul>
     <p>The retention time regression window appears in the same place as the retention time replicate comparison window, on a different tab.</p>
     <ul>
@@ -165,37 +168,6 @@
     <p><img src="s-18.png"/></p>
     <p>The fold change values are less extreme when the imputed peak areas are used instead of using zero for all missing peaks.</p>
     <p><img src="s-19.png"/></p>
-    <!--<h1>Imputing peaks in the document from Webinar 26 ("DIA with Fragpipe")</h1>
-    <ul>
-        <li>Open the file "Webinar26.sky" in the "PeakImptutationDia" folder</li>
-        <li>Select the first peptide under the first protein in the Targets tree</li>
-        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
-    </ul>
-    <p><img src="s-20.png"/></p>
-    <li>On the <b>Settings</b> menu click <b>Peptide Settings</b></li>
-    <li>Click the <b>Prediction</b> tab.</li>
-    <li>Check the <b>Missing peaks</b> checkbox inside of the "Impute boundaries for" box.</li>
-    <li>Click the <b>OK</b> button.</li>
-    </ul>
-    <p><img src="s-21.png"/></p>
-    <h1>Showing aligned retention times</h1>
-    <ul><li>Right-click on the chromatogram graph and click <b>Align to library 'Webinar26'</b></li></ul>
-    <p><img src="s-22.png"/></p>
-    <p>Skyline changes the scaling on Y-axis of the Retention Times graph so that instead of showing the actual retention
-        times of the peak boundaries, it shows where those peak boundaries correspond to when compared to the average retention
-        times from the spectral library in this document.</p>
-    <h1>Showing library retention times in linear regression graph pane</h1>
-    <ul><li>On the <b>View</b> menu, choose <b>Retention Times</b> then <b>Regression</b>, and click <b>Score to Run</b></li></ul>
-    <p>Initially, Skyline chooses to display the retention time calculator which most closely matches the data in the document.
-        When Skyline is first installed, the only retention time calculator it knows about is called "SSRCalc", which is
-        what it often ends up being displaying. It can sometimes take a long while for Skyline to do all the linear regressions
-        necessary to choose the best calculator.
-    </p>
-    <ul>
-        <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Calculator</b> and click <b>Library Webinar26</b></li>
-        <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Regression Method</b> and click <b>Loess</b></li>
-    </ul>
-    <p><img src="s-17.png"/></p>-->
 </body>
 
 </html>
