@@ -35,6 +35,7 @@ using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
+using System.Diagnostics;
 using Array = System.Array;
 
 namespace pwiz.Skyline.Model.Results
@@ -368,14 +369,20 @@ namespace pwiz.Skyline.Model.Results
                                                                                             ResultsResources.Loader_FinishLoad_Updating_peak_statistics,
                                                                                             _container, docCurrent))
                             {
+                                OutputMessage("ApplyChromatogramSetRemovals");
                                 // First remove any chromatogram sets that were removed during processing
                                 results = results.ApplyChromatogramSetRemovals(resultsLoad, resultsPrevious);
+                                OutputMessage("UpdateCaches");
                                 // Then update caches
                                 if (results != null)
                                     results = results.UpdateCaches(documentPath, resultsLoad);
+                                OutputMessage("ChangeMeasuredResults");
                                 docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
+                                OutputMessage("ApplyMetadataRules");
                                 docNew = _manager.ApplyMetadataRules(docNew);
+                                OutputMessage("UpdateRevisionIndex");
                                 docNew = UpdateUserRevisionIndex(docCurrent, docNew);
+                                OutputMessage("Updating peak statistics finished");
                             }
                         }
                         catch (OperationCanceledException)
@@ -386,6 +393,11 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
+            }
+
+            private void OutputMessage(string message)
+            {
+                Console.Out.WriteLine("Chromatogram Loader status:{0}", new[]{message});
             }
         }
 
