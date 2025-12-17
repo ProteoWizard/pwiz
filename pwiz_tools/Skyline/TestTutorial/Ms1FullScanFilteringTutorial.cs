@@ -317,15 +317,16 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(153, transitionCount);
             });
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
-
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
+            allChromGraph.SetFreezeProgressPercent(24, "00:00:06");
             RunUI(() =>
             {
                 allChromGraph.Left = SkylineWindow.Right + 20;
                 allChromGraph.Activate();
             });
-            WaitForConditionUI(() => allChromGraph.ProgressTotalPercent > 24);
+            WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window");
+            allChromGraph.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(documentBaseName));
