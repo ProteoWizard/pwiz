@@ -691,13 +691,13 @@ namespace pwiz.SkylineTestTutorial
             SelectNode(SrmDocument.Level.MoleculeGroups, SkylineWindow.Document.PeptideGroupCount - 1);
             ActivateReplicate("D_102_REP1");
             WaitForGraphs();
-            RunUI(() => SetXScale(SkylineWindow.GetGraphChrom("D_102_REP1")?.GraphControl, 12, 29));
+            RunUI(() => SkylineWindow.GetGraphChrom("D_102_REP1")?.ZoomTo(12, 29));
 
             PauseForChromGraphScreenShot("Multi-peptide chromatogram graph for S", "D_102_REP1");
 
             RunUI(SkylineWindow.SelectAll);
             WaitForGraphs();
-            RunUI(() => SetXScale(SkylineWindow.GetGraphChrom("D_102_REP1")?.GraphControl, 10, 45));
+            RunUI(() => SkylineWindow.GetGraphChrom("D_102_REP1")?.ZoomTo(10, 45));
 
             PauseForChromGraphScreenShot("All multi-peptide chromatogram graph", "D_102_REP1");
 
@@ -750,7 +750,7 @@ namespace pwiz.SkylineTestTutorial
                 scale.Min = min.Value;
             if (max.HasValue)
                 scale.Max = max.Value;
-        }
+            }
 
         private void ExploreBottomPeptides()
         {
@@ -804,17 +804,19 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.SynchronizeZooming(true);
                     SkylineWindow.Size = new Size(1385, 744);
                 });
-
+                WaitForGraphs();
                 var chromGraphs = new DockableForm[]
                 {
                     SkylineWindow.GetGraphChrom("H_161_REP1"),
                     SkylineWindow.GetGraphChrom("H_148_REP2"),
                     SkylineWindow.GetGraphChrom("D_102_REP3"),
                 };
-                foreach (GraphChromatogram chromGraph in chromGraphs)
+                RunUI(() =>
                 {
-                    SetXScale(chromGraph?.GraphControl, 13.2, 15.8);
-                }
+                    var firstChromGraph = chromGraphs.OfType<GraphChromatogram>().First();
+                    firstChromGraph.UpdateUI();
+                    firstChromGraph.ZoomTo(13.2, 15.8);
+                });
                 PauseForScreenShot("Chromatogram graphs - use zoom and pan to set up", null,
                     bmp => ClipSkylineWindowShotWithForms(bmp, chromGraphs));
 

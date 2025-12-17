@@ -538,7 +538,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 pane.XAxis.Scale.Min = rtStartMeasured;
                 pane.XAxis.Scale.Max = rtEndMeasured;
                 pane.YAxis.Scale.Max = maxIntensity ?? pane.YAxis.Scale.Max;
-                _graphHelper.OnZoom();
+                OnZoom();
+                GraphControl.Refresh();
             }
         }
 
