@@ -376,6 +376,18 @@ Using **ImageComparer** tool (`pwiz_tools/Skyline/Executables/DevTools/ImageComp
 - `pwiz_tools/Skyline/Model/DocSettings/SrmSettings.cs` - Added exclusion logic in `GetAlignedRetentionTimes()`
 **Status**: FIXED
 
+### BUG-009: MinimizeResultsDlg screenshot taken before statistics computation complete
+**Found in**: MS1Filtering s-44.png (en, ja, zh-CHS)
+**Description**: The Minimize Results form screenshot showed varying compression percentages (49% vs 70%) because the screenshot was taken before the background statistics computation completed.
+**Root cause**: `MinimizeResultsDlg` uses a background thread to compute compression statistics. The test took the screenshot immediately after setting options, before `_minStatistics.PercentComplete` reached 100.
+**Fix**:
+1. Added `IsComplete` property to `MinimizeResultsDlg` that returns true when `PercentComplete == 100`
+2. Added `WaitForConditionUI(() => minimizeResultsDlg.IsComplete)` before screenshot in test
+**Files modified**:
+- `pwiz_tools/Skyline/FileUI/MinimizeResultsDlg.cs` - Added `IsComplete` property
+- `pwiz_tools/Skyline/TestTutorial/Ms1FullScanFilteringTutorial.cs` - Added wait before screenshot
+**Status**: FIXED
+
 ## Reverted Screenshots
 
 (List screenshots reverted to original)
@@ -396,6 +408,7 @@ Using **ImageComparer** tool (`pwiz_tools/Skyline/Executables/DevTools/ImageComp
 - [x] BUG-007 fixed (PeptideSettingsUI Prediction tab layout)
 - [x] BUG-008 fixed (SrmSettings aligned ID time exclusion)
 - [x] BUG-001 fixed (Detailed Log report icon and rename)
+- [x] BUG-009 fixed (MinimizeResultsDlg wait for statistics completion)
 - [x] Re-capture CustomReports and PeakPicking screenshots after BUG-001 fix
 - [x] Final verification of BUG-001 affected screenshots
 
