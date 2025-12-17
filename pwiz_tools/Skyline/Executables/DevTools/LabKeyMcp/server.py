@@ -718,18 +718,31 @@ async def get_daily_test_summary(
     This is the primary tool for daily test review. It queries all folders
     in one call and saves a full report to ai/.tmp/nightly-report-YYYYMMDD.md.
 
+    The nightly test "day" runs from 8:01 AM to 8:00 AM the next day.
+    So report_date="2025-12-17" queries runs from Dec 16 8:01 AM to Dec 17 8:00 AM.
+
     Args:
-        report_date: Date in YYYY-MM-DD format (e.g., "2025-12-15")
+        report_date: Date in YYYY-MM-DD format - the END of the nightly window
         server: LabKey server hostname (default: skyline.ms)
 
     Returns:
         Brief summary with file path. Full details are in the saved file.
     """
+    from datetime import datetime, timedelta
     from pathlib import Path
 
-    # Query for runs on this date (use same date for start and end)
-    start_date = report_date
-    end_date = report_date
+    # Parse report_date as the END of the nightly window
+    # Nightly "day" runs from 8:01 AM day before to 8:00 AM report_date
+    end_dt = datetime.strptime(report_date, "%Y-%m-%d")
+    start_dt = end_dt - timedelta(days=1)
+
+    # Define the 8AM boundaries for filtering
+    window_start = start_dt.replace(hour=8, minute=1, second=0, microsecond=0)
+    window_end = end_dt.replace(hour=8, minute=0, second=0, microsecond=0)
+
+    # Query both calendar dates from server (will filter by time later)
+    start_date = start_dt.strftime("%Y-%m-%d")
+    end_date = end_dt.strftime("%Y-%m-%d")
     # All 6 test folders with their expected durations
     folders = [
         ("/home/development/Nightly x64", 540),
@@ -788,6 +801,21 @@ async def get_daily_test_summary(
             )
 
             rows = result.get("rows", []) if result else []
+
+            # Filter rows by posttime within the 8AM-8AM window
+            filtered_rows = []
+            for row in rows:
+                posttime_str = row.get("posttime", "")
+                if posttime_str:
+                    try:
+                        # Parse posttime (format: "2025-12-16 21:07:00.000" or similar)
+                        posttime_dt = datetime.strptime(str(posttime_str)[:19], "%Y-%m-%d %H:%M:%S")
+                        if window_start <= posttime_dt <= window_end:
+                            filtered_rows.append(row)
+                    except ValueError:
+                        # If parsing fails, include the row (be permissive)
+                        filtered_rows.append(row)
+            rows = filtered_rows
 
             if not rows:
                 summary_lines.append(f"| {folder_name} | 0 | - | - | - | - |")
