@@ -247,7 +247,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
                 OkDialog(importResultsNameDlg, importResultsNameDlg.OkDialog);
                 var allChromatograms = WaitForOpenForm<AllChromatogramsGraph>();
-                allChromatograms.SetFreezeProgressPercent(40, "00:00:06");
+                allChromatograms.SetFreezeProgressPercent(40, "00:00:35");
                 RunUI(() =>
                 {
                     allChromatograms.Top = SkylineWindow.Top;

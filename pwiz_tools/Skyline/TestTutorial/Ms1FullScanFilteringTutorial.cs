@@ -318,7 +318,7 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFreezeProgressPercent(24, "00:00:06");
+            allChromGraph.SetFreezeProgressPercent(24, "00:00:02");
             RunUI(() =>
             {
                 allChromGraph.Left = SkylineWindow.Right + 20;

@@ -152,7 +152,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
             string yeastReplicateName = Path.GetFileNameWithoutExtension(Yeast_BSA);
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFreezeProgressPercent(35, "00:00:06");
+            allChromGraph.SetFreezeProgressPercent(35, "00:01:10");
             WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Importing results form");
             allChromGraph.SetFreezeProgressPercent(null, null);

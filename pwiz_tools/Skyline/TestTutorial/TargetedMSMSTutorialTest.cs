@@ -464,7 +464,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFreezeProgressPercent(15, "00:00:06");
+            allChromGraph.SetFreezeProgressPercent(15, "00:00:01");
             doc = WaitForDocumentChange(doc);
 
             // Add FASTA also skipped because filter for document peptides was chosen.
