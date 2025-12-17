@@ -36,7 +36,7 @@ namespace pwiz.Common.GUI
     public partial class CommonAlertDlg : CommonFormEx
     {
         private const int MAX_HEIGHT = 500;
-        private const int LABEL_PADDING = 18;
+        private const int LABEL_PADDING = 24;
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
         private string _message;

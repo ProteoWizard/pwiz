@@ -632,7 +632,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 graphPane.GraphObjList.RemoveAll(o => o is TextObj);
 
-                if (!_refine)
+                if (!HasOutliers)
                 {
                     yNext += AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
                         _regressionAll, _statisticsAll, COLOR_LINE_REFINED);
@@ -794,7 +794,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, Data.Document.DocumentType);
                 GraphRegression(Data._statisticsRefined, Data._regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
-                GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
+                if (Data.HasOutliers)
+                    GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
             }
 
             if (Data._regressionPredict != null && Settings.Default.RTPredictorVisible)
@@ -808,7 +809,7 @@ namespace pwiz.Skyline.Controls.Graphs
             curve.Symbol.Border.IsVisible = false;
             curve.Symbol.Fill = new Fill(COLOR_REFINED);
 
-            if (Data.Outliers != null)
+            if (Data.HasOutliers)
             {
                 var curveOut = AddCurve(GraphsResources.GraphData_Graph_Outliers, Data.Outliers.Select(Data.GetX).ToArray(),
                     Data.Outliers.Select(Data.GetYCorrelation).ToArray(), Color.Black, SymbolType.Diamond);
@@ -849,7 +850,7 @@ namespace pwiz.Skyline.Controls.Graphs
             curve.Symbol.Border.IsVisible = false;
             curve.Symbol.Fill = new Fill(COLOR_REFINED);
 
-            if (Data.Outliers != null)
+            if (Data.HasOutliers)
             {
                 var curveOut = AddCurve(GraphsResources.GraphData_Graph_Outliers, Data.Outliers.Select(Data.GetX).ToArray(),
                     Data.Outliers.Select(Data.GetYResidual).ToArray(), Color.Black, SymbolType.Diamond);
