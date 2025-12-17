@@ -33,13 +33,18 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
+#include "pwiz/data/common/cv.hpp"
 
 using namespace pwiz::util;
 using namespace pwiz::vendor_api::Bruker;
+using namespace pwiz::cv;
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
+
+// Read from chromatography-data.sqlite when available
+std::vector<vendor_api::Bruker::ChromatogramPtr> readChromatographyDataSqlite(const std::string rootpath);
 
 using namespace Bruker;
 
@@ -113,7 +118,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
 
     switch (ci.chromatogramType)
     {
-        case MS_TIC_chromatogram:
+        case MS_TIC_chromatogram: // Prefer the TIC from API over that in chromatography-data.sqlite
             cd = compassDataPtr_->getTIC(config_.globalChromatogramsAreMs1Only);
             break;
 
@@ -121,7 +126,17 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
             cd = compassDataPtr_->getBPC(config_.globalChromatogramsAreMs1Only);
             break;
 
-        default:
+        default: // As found in chromatography-data.sqlite
+            if (ci.trace < lcTraces_.size())
+            {
+                vendor_api::Bruker::ChromatogramPtr lcTrace = lcTraces_[ci.trace];
+                result->setTimeIntensityArrays(lcTrace->times, lcTrace->intensities, UO_second, lcTrace->units);
+                if (!lcTrace->description.empty())
+                    result->cvParams.push_back(CVParam(MS_chromatogram_title, lcTrace->description));
+                if (!lcTrace->instrument.empty())
+                    result->userParams.push_back(UserParam("Instrument", lcTrace->instrument));
+                return result;
+            }
             throw runtime_error("[ChromatogramList_Bruker] unsupported chromatogramType");
     }
 
@@ -169,6 +184,21 @@ PWIZ_API_DECL void ChromatogramList_Bruker::createIndex()
         ie.chromatogramType = MS_basepeak_chromatogram;
         idToIndexMap_[ie.id] = ie.index;
     }
+
+    // Add LC traces from chromatography-data.sqlite when present
+    lcTraces_ = readChromatographyDataSqlite(rootpath_.string());
+    for (size_t i = 0; i < lcTraces_.size(); ++i)
+        {
+            const auto& chrom = lcTraces_[i];
+            index_.push_back(IndexEntry());
+            IndexEntry& ie = index_.back();
+            ie.index = index_.size() - 1;
+            ie.id = chrom->description;
+            ie.chromatogramType = chrom->type;
+            ie.units = chrom->units;
+            ie.trace = static_cast<long>(i);
+            idToIndexMap_[ie.id] = ie.index;
+        }
 
     /*if (format_ == Reader_Bruker_Format_U2)
     {
