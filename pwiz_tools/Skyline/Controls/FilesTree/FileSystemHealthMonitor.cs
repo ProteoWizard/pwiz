@@ -150,13 +150,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             // This allows the worker thread to check the cancellation token and exit
             _manualTriggerEvent?.Set();
 
-            // Dispose the cancellation token source
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
-
             // Wait for the single worker thread to exit completely
             // After Join() returns, we know the thread is gone and won't access _paths or _manualTriggerEvent
+            // IMPORTANT: Join BEFORE disposing CancellationTokenSource - the worker thread accesses
+            // cancellationToken.WaitHandle in MonitorLoop, which throws ObjectDisposedException if disposed early
             _workerThread?.Join();
+
+            // Dispose the cancellation token source - safe now that worker thread has exited
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
 
             // Clear paths - safe because Join() guarantees the worker thread has exited
             lock (_lock)    // For ReSharper
