@@ -182,7 +182,6 @@ namespace pwiz.SkylineTestTutorial
                 });
                 PauseForScreenShot(peptideSettingsUi);
             }, peptideSettingsUi=>peptideSettingsUi.OkDialog());
-            WaitForGraphs();
             WaitForConditionUI(() => SkylineWindow.GraphChromatograms.All(chrom => chrom.ExemplaryPeak != null));
             PauseForScreenShot(SkylineWindow);
             RestoreFloatingWindows(windowPositions);
