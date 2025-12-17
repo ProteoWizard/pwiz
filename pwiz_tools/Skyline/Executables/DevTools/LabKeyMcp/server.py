@@ -753,6 +753,7 @@ async def get_daily_test_summary(
     total_tests = 0
     runs_with_failures = []
     runs_with_leaks = []
+    runs_with_hangs = []
 
     for container_path, expected_duration in folders:
         folder_name = container_path.split("/")[-1]
@@ -816,6 +817,8 @@ async def get_daily_test_summary(
                 githash = row.get("githash", "?")
                 posttime = row.get("posttime", "?")
                 averagemem = row.get("averagemem", 0)
+                hung_test = row.get("hung_test")
+                hung_language = row.get("hung_language")
 
                 computers_seen.add(computer)
                 total_tests += passed
@@ -865,6 +868,17 @@ async def get_daily_test_summary(
                 else:
                     pass_count += 1
 
+                # Track hangs separately (a run can have both failures and hangs)
+                if hung_test:
+                    runs_with_hangs.append({
+                        "run_id": run_id,
+                        "folder": folder_name,
+                        "container_path": container_path,
+                        "computer": computer,
+                        "hung_test": hung_test,
+                        "hung_language": hung_language,
+                    })
+
                 folder_data["runs"].append({
                     "run_id": run_id,
                     "computer": computer,
@@ -876,6 +890,8 @@ async def get_daily_test_summary(
                     "memory": averagemem,
                     "githash": str(githash)[:9] if githash else "?",
                     "anomaly": anomaly_reason,
+                    "hung_test": hung_test,
+                    "hung_language": hung_language,
                 })
 
             # Find missing computers
@@ -912,14 +928,17 @@ async def get_daily_test_summary(
         summary_lines.extend([
             f"## {folder_data['folder']}",
             "",
-            "| Computer | Memory | Tests | PostTime | Duration | Fail | Leak | Git Hash | Anomaly |",
-            "|----------|--------|-------|----------|----------|------|------|----------|---------|",
+            "| Computer | Memory | Tests | PostTime | Duration | Fail | Leak | Hung | Git Hash | Anomaly |",
+            "|----------|--------|-------|----------|----------|------|------|------|----------|---------|",
         ])
 
         for run in folder_data["runs"]:
+            hung_display = run.get('hung_test', '') or ''
+            if hung_display and run.get('hung_language'):
+                hung_display = f"{hung_display} ({run['hung_language']})"
             summary_lines.append(
                 f"| {run['computer']} | {run['memory']} | {run['passed']} | {run['posttime']} | "
-                f"{run['duration']} | {run['failed']} | {run['leaked']} | {run['githash']} | {run['anomaly']} |"
+                f"{run['duration']} | {run['failed']} | {run['leaked']} | {hung_display} | {run['githash']} | {run['anomaly']} |"
             )
 
         # Add missing computers if any
@@ -1022,6 +1041,26 @@ async def get_daily_test_summary(
             summary_lines.append(f"| {testname} | {leak_type} | {computers_str} | {folder} |")
         summary_lines.append("")
 
+    # Group hangs by test name
+    if runs_with_hangs:
+        summary_lines.extend([
+            "## Hangs by Test",
+            "",
+            "| Test | Language | Computers | Folder |",
+            "|------|----------|-----------|--------|",
+        ])
+        # Group by (testname, folder, language)
+        from collections import defaultdict
+        hang_groups = defaultdict(list)
+        for h in runs_with_hangs:
+            key = (h["hung_test"], h["folder"], h.get("hung_language", "?"))
+            hang_groups[key].append(h["computer"])
+
+        for (testname, folder, language), computers in sorted(hang_groups.items()):
+            computers_str = ", ".join(sorted(set(computers)))
+            summary_lines.append(f"| {testname} | {language} | {computers_str} | {folder} |")
+        summary_lines.append("")
+
     # Write full report to file
     report_content = "\n".join(summary_lines)
 
@@ -1040,6 +1079,7 @@ async def get_daily_test_summary(
     total_runs = sum(len(fd["runs"]) for fd in all_results)
     total_failures = len(runs_with_failures)
     total_leaks = len(runs_with_leaks)
+    total_hangs = len(runs_with_hangs)
     total_missing = sum(len(fd.get("missing_computers", [])) for fd in all_results)
 
     brief = [
@@ -1049,6 +1089,7 @@ async def get_daily_test_summary(
         f"  - Total tests: {total_tests:,}",
         f"  - Runs with failures: {total_failures}",
         f"  - Runs with leaks: {total_leaks}",
+        f"  - Runs with hangs: {total_hangs}",
         f"  - Missing computers: {total_missing}",
         "",
     ]
@@ -1062,6 +1103,11 @@ async def get_daily_test_summary(
         brief.append("Leaks to investigate:")
         for r in runs_with_leaks:
             brief.append(f"  - get_run_leaks({r['run_id']})  # {r['folder']}/{r['computer']}")
+
+    if runs_with_hangs:
+        brief.append("Hangs to investigate:")
+        for h in runs_with_hangs:
+            brief.append(f"  - {h['hung_test']} ({h.get('hung_language', '?')})  # {h['folder']}/{h['computer']}")
 
     brief.append("")
     brief.append(f"See {output_file} for full details.")
