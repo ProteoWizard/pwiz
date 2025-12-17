@@ -1133,15 +1133,16 @@ bool DiaNNSpecLibReader::parseFile()
     }
 
     auto& speclib = impl_->specLib;
-    Impl::Reader<9> reader;
+    Impl::Reader<10> reader;
     reader.open_file(diannReportFilepath);
     Verbosity::debug("Opened report file %s.", diannReportFilepath.c_str());
     const char* fileNameColumn = reader.is_parquet(diannReportFilepath) ? "Run" : "File.Name"; // DIANN v2 doesn't provide File.Name column
     Verbosity::status("Reading report headers.");
-    reader.read_header(io::ignore_extra_column, "Run", fileNameColumn, "Protein.Group", "Precursor.Id", "Global.Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
+    reader.read_header(io::ignore_extra_column, "Run", fileNameColumn, "Protein.Group", "Precursor.Id", "Global.Q.Value", "Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
     Verbosity::debug("Read report headers.");
 
     std::string_view run, fileName, proteinGrp, precursorId;
+    float globalQValue;
     RtPSM redundantPSM;
     string firstRun; // used as a placeholder for setSpecFileName; SpectrumSourceFile/fileId is actually managed while reading rows
     int64_t redundantPsmCount = 0;
@@ -1166,7 +1167,7 @@ bool DiaNNSpecLibReader::parseFile()
 
     Verbosity::status("Reading %d rows from report.", reader.num_rows());
     readAddProgress_ = parentProgress_->newNestedIndicator(reader.num_rows());
-    while (reader.read_row(run, fileName, proteinGrp, precursorId, redundantPSM.score, redundantPSM.rt, redundantPSM.rtStart, redundantPSM.rtEnd, redundantPSM.ionMobility))
+    while (reader.read_row(run, fileName, proteinGrp, precursorId, globalQValue, redundantPSM.score, redundantPSM.rt, redundantPSM.rtStart, redundantPSM.rtEnd, redundantPSM.ionMobility))
     {
         string precursorIdStr(precursorId);
         auto findItr = psmByPrecursorId.find(precursorIdStr);
@@ -1186,7 +1187,7 @@ bool DiaNNSpecLibReader::parseFile()
         if (firstRun.empty())
             firstRun = currentRunFilename;
 
-        bool rowPassesFilter = redundantPSM.score <= getScoreThreshold(GENERIC_QVALUE_INPUT);
+        bool rowPassesFilter = globalQValue <= getScoreThreshold(GENERIC_QVALUE_INPUT);
 
         auto& retentionTimes = retentionTimesByPrecursorId[precursorIdStr];
         if (rowPassesFilter)
@@ -1212,7 +1213,7 @@ bool DiaNNSpecLibReader::parseFile()
         }
 
         // update bestQValue and bestPSM if this row is better than any previous one
-        if (rowPassesFilter && redundantPSM.score < psm->score)
+        if (rowPassesFilter && globalQValue < psm->score)
         {
             auto findItr2 = speclib.entryByModPeptideAndCharge.find(precursorIdStr);
             if (findItr2 == speclib.entryByModPeptideAndCharge.end())
@@ -1222,7 +1223,7 @@ bool DiaNNSpecLibReader::parseFile()
             psm->fileId = retentionTimes.back().fileId;
 
             auto& speclibEntry = findItr2->second.get();
-            speclibEntry.bestQValue = redundantPSM.score;
+            speclibEntry.bestQValue = globalQValue;
             speclibEntry.bestPSM = &retentionTimes.back();
         }
 
