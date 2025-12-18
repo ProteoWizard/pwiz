@@ -5,7 +5,7 @@
 - **Base**: `master`
 - **Created**: 2025-12-17
 - **Status**: 🚧 In Progress
-- **PR**: (pending)
+- **PR**: https://github.com/ProteoWizard/pwiz/pull/3723
 - **Objective**: Move ShowWithTimeout functionality from AlertDlg to CommonAlertDlg for shared library reuse
 
 ## Background
@@ -63,20 +63,24 @@ System.Windows.Forms.Form
 ## Tasks
 
 ### Move to CommonAlertDlg
-- [ ] Move `ShowWithTimeout()` method to `CommonAlertDlg`
-- [ ] Move `ShowAndDispose()` method to `CommonAlertDlg`
-- [ ] Move `TIMEOUT_SECONDS` constant to `CommonAlertDlg`
-- [ ] Change references from `Program.FunctionalTest` to `CommonApplicationSettings.FunctionalTest`
-- [ ] Change references from `Program.PauseSeconds` to `CommonApplicationSettings.PauseSeconds`
+- [x] Move `ShowWithTimeout()` method to `CommonAlertDlg`
+- [x] Move `ShowAndDispose()` method to `CommonAlertDlg`
+- [x] Move `TIMEOUT_SECONDS` constant to `CommonAlertDlg`
+- [x] Change references from `Program.FunctionalTest` to `TestMode` (from CommonFormEx)
+- [x] Change references from `Program.PauseSeconds` to `PauseMode` (from CommonFormEx)
+- [x] Add `ShowDialog()` shadow that throws (prevent parentless dialogs)
+- [x] Add `ShowDialog(IWin32Window)` shadow that uses timeout
 
 ### Keep in AlertDlg
-- [ ] Verify `ModeUIExtender` / ModeUI support stays (Skyline-specific)
-- [ ] Verify `ClipboardHelper.SetSystemClipboardText()` override handling
+- [x] Verify `ModeUIExtender` / ModeUI support stays (Skyline-specific)
+- [x] Verify `ClipboardHelper.SetSystemClipboardText()` override stays (Skyline-specific)
+- [x] Remove duplicated timeout methods from AlertDlg (now inherited)
 
 ### Testing
-- [ ] Run existing AlertDlg tests
-- [ ] Verify SharedBatch still works with CommonAlertDlg
-- [ ] Run CodeInspection to check for issues
+- [x] Verified AlertDlg timeout works (TimeoutException after 10s)
+- [x] Verified CommonAlertDlg timeout works (TimeoutException after 10s)
+- [x] Run CodeInspection - passed (no new issues)
+- [x] Run existing AlertDlg tests (TestAlertDlgIcons) - passed
 
 ## Benefits
 
