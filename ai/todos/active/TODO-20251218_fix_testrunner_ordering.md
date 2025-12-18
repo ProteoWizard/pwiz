@@ -5,7 +5,7 @@
 - **Base**: `master`
 - **Created**: 2025-12-18
 - **Status**: 🚧 In Progress
-- **PR**: (pending)
+- **PR**: [#3722](https://github.com/ProteoWizard/pwiz/pull/3722)
 - **Objective**: Fix TestRunner test ordering bugs that conflate perftests=on with nightly runs
 
 ## Background
@@ -127,19 +127,45 @@ else
 
 ## Tasks
 
-- [ ] Fix BUG-1: Add `asNightly` guard to DoNotLeakTest inversion
-- [ ] Fix BUG-2: Add `asNightly` guard to pass 2 reordering
-- [ ] Fix BUG-3: Preserve user-specified test order
-- [ ] Update comments to clarify nightly-only behavior
-- [ ] Test with `perftests=on` to verify ordering is now correct
+- [x] Fix BUG-1: Add `asNightly` guard to DoNotLeakTest inversion
+- [x] Fix BUG-2: Add `asNightly` guard to pass 2 reordering
+- [x] Fix BUG-3: Preserve user-specified test order
+- [x] Update comments to clarify nightly-only behavior
+- [x] Test with `perftests=on` to verify ordering is now correct
 - [ ] Verify nightly behavior is unchanged (if possible)
 
 ## Testing
 
-1. Run SkylineTester with tutorial tests and `perftests=on`
-2. Verify tests run in the order specified in the test list file
-3. Verify tests with `NoLeakTesting` attribute are NOT pushed to the end
+### Test 1: User-specified order preserved (BUG-3)
+Test file `test_order_verify.txt`:
+```
+TestWeightedRegression
+TestAnnotatedDoubleAggregateOperation
+TestAuditLogSerialization
+```
 
-## Files to Modify
+**Result**: Tests ran in specified order (not alphabetical):
+```
+[06:23]   2.0   TestWeightedRegression                         (fr)
+[06:23]   2.1   TestAnnotatedDoubleAggregateOperation          (fr)
+[06:23]   2.2   TestAuditLogSerialization                      (fr)
+```
+
+### Test 2: NoLeakTesting tests not pushed to end (BUG-1/BUG-2)
+Test file `test_order_noleak.txt`:
+```
+TestWeightedRegression
+TestMethodEditTutorial          # Has NoLeakTesting attribute
+TestAuditLogSerialization
+```
+
+**Result**: TestMethodEditTutorial stayed in position 2 (NOT pushed to end):
+```
+[06:39]   2.0   TestWeightedRegression                         (en)
+[06:39]   2.1   TestMethodEditTutorial                         (en)
+[06:40]   2.2   TestAuditLogSerialization                      (en)
+```
+
+## Files Modified
 
 - `pwiz_tools/Skyline/TestRunner/Program.cs`
