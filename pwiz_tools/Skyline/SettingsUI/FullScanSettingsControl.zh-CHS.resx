@@ -1385,7 +1385,7 @@
     <value>True</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
-    <value>385, 425</value>
+    <value>385, 419</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>385, 675</value>

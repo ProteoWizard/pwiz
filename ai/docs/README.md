@@ -74,6 +74,18 @@ This directory contains comprehensive, detailed documentation for LLM-assisted d
 
 **When to read:** Before writing tests, when implementing complex test patterns.
 
+### [screenshot-update-workflow.md](screenshot-update-workflow.md)
+**Tutorial screenshot review and update workflow**
+- ImageComparer tool location and keyboard shortcuts
+- Decision categories: Accept, Revert, Fix
+- Bug documentation conventions (BUG-XXX)
+- LLM interaction conventions for efficient communication
+- Diff image saving to `ai\.tmp\` for analysis
+- Multi-language screenshot considerations
+- TODO file integration patterns
+
+**When to read:** When reviewing tutorial screenshots before releases, investigating screenshot differences.
+
 ## Core vs Detailed Documentation
 
 ### Core Files ([ai/](../))
@@ -104,6 +116,7 @@ This directory contains comprehensive, detailed documentation for LLM-assisted d
 - **Style examples?** → [style-guide.md](style-guide.md)
 - **Workflow templates?** → [workflow-guide.md](workflow-guide.md)
 - **Testing patterns?** → [testing-patterns.md](testing-patterns.md)
+- **Screenshot updates?** → [screenshot-update-workflow.md](screenshot-update-workflow.md)
 
 ## Growth Strategy
 
