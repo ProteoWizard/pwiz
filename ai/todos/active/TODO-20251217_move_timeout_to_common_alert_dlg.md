@@ -1,10 +1,10 @@
-# TODO-move_timeout_to_common_alert_dlg.md
+# TODO-20251217_move_timeout_to_common_alert_dlg.md
 
 ## Branch Information
-- **Branch**: `Skyline/work/YYYYMMDD_move_timeout_to_common_alert_dlg`
+- **Branch**: `Skyline/work/20251217_move_timeout_to_common_alert_dlg`
 - **Base**: `master`
-- **Created**: (pending)
-- **Status**: Backlog
+- **Created**: 2025-12-17
+- **Status**: 🚧 In Progress
 - **PR**: (pending)
 - **Objective**: Move ShowWithTimeout functionality from AlertDlg to CommonAlertDlg for shared library reuse
 
