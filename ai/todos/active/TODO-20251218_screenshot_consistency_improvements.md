@@ -1,10 +1,10 @@
-# TODO-screenshot_consistency_improvements.md
+# TODO-20251218_screenshot_consistency_improvements.md
 
 ## Branch Information
-- **Branch**: (to be created when work starts)
+- **Branch**: `Skyline/work/20251218_screenshot_consistency`
 - **Base**: `master`
-- **Created**: (pending)
-- **Status**: Backlog
+- **Created**: 2025-12-18
+- **Status**: 🚧 In Progress
 - **PR**: (pending)
 - **Objective**: Make tutorial screenshot captures deterministic to eliminate false-positive diffs
 
