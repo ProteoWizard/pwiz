@@ -406,7 +406,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     }
                     else if (_regressionIncludesMissingValues)
                     {
-                        validPoints.Add(pt.ChangeX(pt.X ?? 0).ChangeY(pt.Y ?? 0));
+                        validPoints.Add(pt.ChangeX(pt.X ?? _calculator?.UnknownScore ?? 0).ChangeY(pt.Y ?? 0));
                     }
                     else
                     {

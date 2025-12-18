@@ -58,6 +58,9 @@ namespace pwiz.Skyline.FileUI
 
         public static string SCHED_NOT_SUPPORTED_ERR_TXT { get { return FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text; } }
 
+        // Shift to restore original radio button positions when wcDecideBuckets is hidden
+        private const int RADIO_BUTTON_SHIFT_WC_HIDDEN = 11;
+
         private readonly SrmDocument _document;
         private readonly ExportFileType _fileType;
         private string _instrumentType;
@@ -1931,6 +1934,9 @@ namespace pwiz.Skyline.FileUI
 
             MethodTemplateFile templateFile;
 
+            // Check if currently in 4-button layout (all radio buttons evenly spaced)
+            bool inFourButtonLayout = wcDecideBuckets.Top - radioBuckets.Top == radioProtein.Top - radioSingle.Top;
+
             if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 // User cannot edit remote URL.
@@ -1942,7 +1948,7 @@ namespace pwiz.Skyline.FileUI
                         var templateUrl = new WatersConnectAcquisitionMethodUrl(templateFileUrl.FilePath);
                         SetWatersConnectTemplateText(templateUrl);
                     }
-                    catch 
+                    catch
                     {   // If settings contain invalid URL, clear the text box and set the tag to null. No need to show the error.
                         textTemplateFile.Text = string.Empty;
                         textTemplateFile.Tag = null;
@@ -1952,6 +1958,13 @@ namespace pwiz.Skyline.FileUI
                     }
                 }
                 wcDecideBuckets.Visible = true;
+                // Shift radio buttons up if transitioning from 3-button to 4-button layout
+                if (!inFourButtonLayout)
+                {
+                    radioSingle.Top -= RADIO_BUTTON_SHIFT_WC_HIDDEN;
+                    radioProtein.Top -= RADIO_BUTTON_SHIFT_WC_HIDDEN;
+                    radioBuckets.Top -= RADIO_BUTTON_SHIFT_WC_HIDDEN;
+                }
             }
             else
             {
@@ -1964,6 +1977,13 @@ namespace pwiz.Skyline.FileUI
                 var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
                 helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
                 wcDecideBuckets.Visible = false;
+                // Shift radio buttons down if transitioning from 4-button to 3-button layout
+                if (inFourButtonLayout)
+                {
+                    radioSingle.Top += RADIO_BUTTON_SHIFT_WC_HIDDEN;
+                    radioProtein.Top += RADIO_BUTTON_SHIFT_WC_HIDDEN;
+                    radioBuckets.Top += RADIO_BUTTON_SHIFT_WC_HIDDEN;
+                }
             }
 
             var methodType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());

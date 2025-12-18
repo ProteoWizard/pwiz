@@ -1244,6 +1244,23 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
 
+                    // Exclude the current file - its own ID times shouldn't appear as "aligned"
+                    var currentFileIndex = libraryAlignment.Library.LibraryFiles.FindIndexOf(filePath);
+                    if (currentFileIndex >= 0)
+                    {
+                        var currentLibraryFilePath = libraryAlignment.Library.LibraryFiles.FilePaths[currentFileIndex];
+                        if (spectrumSourceFiles == null)
+                        {
+                            // Create a set of all files except the current one
+                            spectrumSourceFiles = libraryAlignment.Library.LibraryFiles.FilePaths
+                                .Where(f => f != currentLibraryFilePath).ToHashSet();
+                        }
+                        else
+                        {
+                            spectrumSourceFiles.Remove(currentLibraryFilePath);
+                        }
+                    }
+
                     var times = new List<double>();
                     foreach (var normalizedTime in libraryAlignment.GetNormalizedRetentionTimes(spectrumSourceFiles,
                                  targets))

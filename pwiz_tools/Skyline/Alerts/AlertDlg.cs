@@ -77,6 +77,25 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        /// <summary>
+        /// Shadows Form.ShowDialog() to prevent parentless dialogs.
+        /// Use ShowDialog(IWin32Window) or ShowAndDispose(IWin32Window) instead.
+        /// </summary>
+        public new DialogResult ShowDialog()
+        {
+            // Parentless dialogs can leak handles. Use ShowDialog(parent) instead.
+            throw new InvalidOperationException(@"Not supported.");
+        }
+
+        /// <summary>
+        /// Shadows Form.ShowDialog(IWin32Window) to enforce test timeout behavior.
+        /// Use ShowAndDispose() for the common pattern of showing a dialog once and disposing it.
+        /// </summary>
+        public new DialogResult ShowDialog(IWin32Window parent)
+        {
+            return ShowWithTimeout(parent, GetTitleAndMessageDetail());
+        }
+
         public DialogResult ShowWithTimeout(IWin32Window parent, string message)
         {
             Assume.IsNotNull(parent);   // Problems if the parent is null
@@ -96,7 +115,7 @@ namespace pwiz.Skyline.Alerts
                 };
                 timeoutTimer.Start();
 
-                var result = ShowDialog(parent);
+                var result = base.ShowDialog(parent);
                 timeoutTimer.Stop();
                 if (timeout)
                     throw new TimeoutException(
@@ -107,7 +126,7 @@ namespace pwiz.Skyline.Alerts
                 return result;
             }
 
-            return ShowDialog(parent);
+            return base.ShowDialog(parent);
         }
         private const int TIMEOUT_SECONDS = 10;
 
