@@ -914,8 +914,8 @@ Would you like to continue?
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
     <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
   </data>
-  <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
-    <value>Detailed Info</value>
+  <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
+    <value>Detailed Log</value>
   </data>
   <data name="WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__" xml:space="preserve">
     <value>Creating MRM method '{0}' from Skyline document '{1}'</value>

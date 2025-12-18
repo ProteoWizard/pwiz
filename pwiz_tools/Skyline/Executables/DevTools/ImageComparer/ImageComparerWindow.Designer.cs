@@ -329,7 +329,6 @@ namespace ImageComparer
             this.MinimumSize = new System.Drawing.Size(400, 200);
             this.Name = "ImageComparerWindow";
             this.Text = "Compare Images";
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ScreenshotPreviewForm_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).EndInit();
             this.previewSplitContainer.Panel1.ResumeLayout(false);
