@@ -333,7 +333,9 @@ static CVID traceUnitToCVID(int unit, double& value)
     }
     return CVID_Unknown;
 }
-#endif // PWIZ_READER_BRUKER
 } // namespace detail
 } // namespace msdata
 } // namespace pwiz
+
+#endif // PWIZ_READER_BRUKER
+
