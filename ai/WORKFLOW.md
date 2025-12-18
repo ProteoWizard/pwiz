@@ -253,23 +253,28 @@ When switching LLM tools/sessions:
 
 **Keep commit messages concise (≤10 lines)** - digestible in TortoiseGit's multi-line textbox view.
 
-**Pattern:**
+**Required Format:**
 ```
-Brief summary of change (report mood - what was done)
+<Title in past tense>
 
-Optional 2-3 line explanation if needed.
-Details belong in TODO file, not commit message.
+* bullet point 1
+* bullet point 2
+* bullet point 3
 
-See ai/todos/active/TODO-YYYYMMDD_feature.md for complete details.
+See ai/todos/active/TODO-YYYYMMDD_feature.md
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Rules:**
-- **Maximum 10 lines total** including blank lines and attribution
-- **Always include `Co-Authored-By` line** when an LLM agent contributed to the commit
-- **Reference TODO file** for detailed context and decisions
-- **Report mood** - "Added feature" not "Add feature" (like research paper methods section)
+- **Past tense title** - "Added feature" not "Add feature" (report mood)
+- **Bullet points** - 1-5 points, each starting with `* `
+- **TODO reference** - always include `See ai/todos/active/TODO-...`
+- **Co-Authored-By** - always include when LLM contributed
+- **Maximum 10 lines total** including blank lines
+- **No emojis or markdown links**
+
+**See:** [ai/docs/version-control-guide.md](docs/version-control-guide.md) for complete details.
 
 **Examples:**
 ```bash
