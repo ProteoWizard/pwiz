@@ -116,6 +116,7 @@ namespace pwiz.SkylineTestFunctional
             { // Delete sample file in subdirectory
                 var fileName = Path.Combine(TestFilesDirs[0].FullPath, @"SiblingDirectory02", @"small-04-sibling-directory02.mzml");
                 File.Delete(fileName);
+                WaitForFileState(fileName, FileState.missing);
                 WaitForFilesTree();
 
                 var filesTreeNode = FindNodeForPath(fileName);
@@ -126,6 +127,7 @@ namespace pwiz.SkylineTestFunctional
             { // Rename sample file in subdirectory
                 var fileName = Path.Combine(TestFilesDirs[0].FullPath, @"Main", @"SubDirectory", @"small-02-sub-directory.mzml");
                 File.Move(fileName, fileName + @"RENAME");
+                WaitForFileState(fileName, FileState.missing);
                 WaitForFilesTree();
 
                 var filesTreeNode = FindNodeForPath(fileName);
@@ -133,6 +135,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(FileState.missing, filesTreeNode.FileState);
 
                 File.Move(fileName + @"RENAME", fileName);
+                WaitForFileState(fileName, FileState.available);
                 WaitForFilesTree();
 
                 Assert.IsTrue(fileSystemService.IsFileAvailable(fileName));
@@ -233,6 +236,18 @@ namespace pwiz.SkylineTestFunctional
         private static IList<FilesTreeNode> FindNodesForDir(string dirPath)
         {
             return RunUIFunc(() => SkylineWindow.FilesTree.FindNodesByFilePath(dirPath));
+        }
+
+        /// <summary>
+        /// Waits for FileSystemWatcher to detect a file state change and update the node.
+        /// </summary>
+        private static void WaitForFileState(string filePath, FileState expectedState)
+        {
+            WaitForConditionUI(() =>
+            {
+                var nodes = SkylineWindow.FilesTree.FindNodesByFilePath(filePath);
+                return nodes.Count > 0 && nodes[0].FileState == expectedState;
+            }, $"Timeout waiting for file state {expectedState} on path: {filePath}");
         }
     }
 }
