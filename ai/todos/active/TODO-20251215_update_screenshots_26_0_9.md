@@ -240,41 +240,175 @@ Using **ImageComparer** tool (`pwiz_tools/Skyline/Executables/DevTools/ImageComp
 #### Chinese (zh-CHS)
 - [x] s-07.png - **Accepted** - Translation of "Advanced filtering" in Transition Settings Full-Scan tab
 
+## TestPerf Tutorial Screenshots
+
+These tutorials are run from TestPerf project (longer-running tests).
+
+### AcquisitionComparison Tutorial (en)
+- [x] s-11.png - **Accepted** - Build Library form now shows AlphaPeptDeep option (PR #3123)
+- [x] s-22.png - **Accepted** - Extract Chromatograms auto-detects files (PR #3477) - tutorial updated
+- [x] s-28.png - **Accepted** - Context menu changes: "Exemplary Peak" added, "Align Times To..." and "Aligned" removed (RT alignment/imputation work)
+- [x] s-36.png - **Accepted** - Same context menu changes as s-28
+
+### DDASearch Tutorial
+#### English (en)
+- [x] s-11.png - **Accepted** - New "Edit Search Tools" button + MS1 tolerance control spacing adjustment
+- [x] s-13.png - **Reverted** - Alert wrapping should be fixed by LABEL_RIGHT_PADDING = 18 (not verified due to test length)
+- [x] s-16.png - **Reverted** - 1px rendering artifact (see Future Work: ImageComparer amplification)
+- [x] s-17.png - **Accepted** - Files view tab added + chromatogram annotation shifts (RT alignment/imputation)
+
+#### Japanese (ja)
+- [x] s-11.png - **Accepted** - Same as en (Edit Search Tools button)
+- [x] s-16.png - **Accepted** - Slightly higher bar for 1...100fmol replicate (integration area change from alignment)
+- [x] s-17.png - **Accepted** - Same as en (Files tab + chromatogram shifts)
+
+#### Chinese (zh-CHS)
+- [x] s-11.png - **Accepted** - Same as en (Edit Search Tools button)
+- [x] s-16.png - **Accepted** - Slightly higher bar for 1...100fmol replicate (integration area change from alignment)
+- [x] s-17.png - **Accepted** - Same as en (Files tab + chromatogram shifts)
+
+### DIA-PASEF Tutorial (en)
+- [x] s-14.png - **Reverted** - AllChromatogramsGraph timing inconsistency
+- [x] s-18.png - **Accepted** - Tab bold text change due to Files view insertion during layout load (SkylineFile.cs .sky.view handling)
+- [x] s-19.png - **Accepted** - Same as s-18 (tab bold text)
+- [x] s-23.png - **Accepted** - Full Scan spectrum intensity increased (~2300→3700) due to PR #3583 returning complete ion mobility frame instead of limited range - validated by s-24 showing additional ions below 1.1 1/K0
+- [x] s-24.png - **Accepted** - Ion mobility plot now shows data below 1.1 1/K0 (PR #3583 returns full frame) - explains s-23 intensity increase from summing more ions
+- [x] s-25.png - **Accepted** - Full frame view clearly shows complete 1/K0 range (~0.85-1.4) vs old slice (~1.1-1.4) - PR #3583 returns entire timsTOF frame
+- [x] s-27.png - **Accepted** - BUG-010 fixed: Regression Refined line now drawn correctly
+- [x] s-28.png - **Accepted** - BUG-010 fixed: "Peptides Refined" label now shown correctly
+
+### DIA-QE Tutorial
+#### English (en)
+- [x] s-13.png - **Reverted** - AllChromatogramsGraph timing inconsistency
+- [x] s-14.png - **Accepted** - mProphet model changes
+- [x] s-17.png - **Accepted** - Tab bold text change due to Files view insertion during layout load (SkylineFile.cs .sky.view handling)
+- [x] s-18.png - **Accepted** - Same as s-17 (tab bold text)
+- [x] s-24.png - **Accepted** - Slight mass error histogram graph changes
+- [x] s-25.png - **Accepted** - BUG-010 fixed: Regression Refined line now drawn correctly
+- [x] s-26.png - **Accepted** - BUG-010 fixed: "Peptides Refined" label now shown correctly
+- [x] s-28.png - **Accepted** - Slight group comparison change
+- [x] s-29.png - **Accepted** - Slight group comparison change and volcano plot change
+- [x] s-32.png - **Accepted** - Slight group comparison volcano plot change
+- [x] s-33.png - **Accepted** - Slight group comparison bar plot change
+- [x] s-34.png - **Accepted** - Slight group comparison bar plot change
+
+#### Japanese (ja)
+- [x] s-07.png - **Accepted** - Translation of "Advanced filtering" in Transition Settings Full-Scan tab
+- [x] s-13.png - **Reverted** - AllChromatogramsGraph timing inconsistency
+- [x] s-14.png - **Accepted** - mProphet model changes
+- [x] s-17.png - **Accepted** - Tab bold text change due to Files view insertion during layout load (SkylineFile.cs .sky.view handling)
+- [x] s-18.png - **Accepted** - Same as s-17 (tab bold text)
+- [x] s-24.png - **Accepted** - Slight mass error histogram graph changes
+- [x] s-25.png - **Accepted** - BUG-010 fixed: Regression Refined line now drawn correctly
+- [x] s-26.png - **Accepted** - BUG-010 fixed: "Peptides Refined" label now shown correctly
+- [x] s-28.png - **Accepted** - Slight group comparison change
+- [x] s-29.png - **Accepted** - Slight group comparison change and volcano plot change
+- [x] s-32.png - **Accepted** - Slight group comparison volcano plot change
+- [x] s-33.png - **Accepted** - Slight group comparison bar plot change
+- [x] s-34.png - **Accepted** - Slight group comparison bar plot change
+
+#### Chinese (zh-CHS)
+- [x] s-07.png - **Accepted** - Translation of "Advanced filtering" in Transition Settings Full-Scan tab
+- [x] s-13.png - **Reverted** - AllChromatogramsGraph timing inconsistency
+- [x] s-14.png - **Accepted** - mProphet model changes
+- [x] s-17.png - **Accepted** - Tab bold text change due to Files view insertion during layout load (SkylineFile.cs .sky.view handling)
+- [x] s-18.png - **Accepted** - Same as s-17 (tab bold text)
+- [x] s-24.png - **Accepted** - Slight mass error histogram graph changes
+- [x] s-25.png - **Accepted** - BUG-010 fixed: Regression Refined line now drawn correctly
+- [x] s-26.png - **Accepted** - BUG-010 fixed: "Peptides Refined" label now shown correctly
+- [x] s-28.png - **Accepted** - Slight group comparison change
+- [x] s-29.png - **Accepted** - Slight group comparison change and volcano plot change
+- [x] s-32.png - **Accepted** - Slight group comparison volcano plot change
+- [x] s-33.png - **Accepted** - Slight group comparison bar plot change
+- [x] s-34.png - **Accepted** - Slight group comparison bar plot change
+
+### DIA-TTOF Tutorial
+#### English (en)
+- [x] s-14.png - **Accepted** - mProphet model changes
+- [x] s-17.png - **Accepted** - Tab bold text change due to Files view insertion during layout load (SkylineFile.cs .sky.view handling)
+- [x] s-18.png - **Accepted** - Same as s-17 (tab bold text)
+- [x] s-25.png - **Accepted** - BUG-010 fixed: Regression Refined line now drawn correctly
+- [x] s-26.png - **Accepted** - BUG-010 fixed: "Peptides Refined" label now shown correctly
+
+#### Japanese (ja)
+- [x] s-07.png - **Accepted** - Translation of "Advanced filtering" in Transition Settings Full-Scan tab
+- [x] s-14.png - **Accepted** - mProphet model changes
+- [x] s-17.png - **Accepted** - Tab bold text change due to Files view insertion during layout load (SkylineFile.cs .sky.view handling)
+- [x] s-18.png - **Accepted** - Same as s-17 (tab bold text)
+- [x] s-25.png - **Accepted** - BUG-010 fixed: Regression Refined line now drawn correctly
+- [x] s-26.png - **Accepted** - BUG-010 fixed: "Peptides Refined" label now shown correctly
+
+#### Chinese (zh-CHS)
+- [x] s-07.png - **Accepted** - Translation of "Advanced filtering" in Transition Settings Full-Scan tab
+- [x] s-14.png - **Accepted** - mProphet model changes
+- [x] s-17.png - **Accepted** - Tab bold text change due to Files view insertion during layout load (SkylineFile.cs .sky.view handling)
+- [x] s-18.png - **Accepted** - Same as s-17 (tab bold text)
+- [x] s-25.png - **Accepted** - BUG-010 fixed: Regression Refined line now drawn correctly
+- [x] s-26.png - **Accepted** - BUG-010 fixed: "Peptides Refined" label now shown correctly
+
+### DIA-Umpire-TTOF Tutorial (en)
+- [x] s-12.png - **Accepted** - New "Edit Search Tools" button + MS1 tolerance control spacing adjustment
+- [x] s-13.png - **Accepted** - Slight change in search output text
+- [x] s-19.png - **Accepted** - Tab bold text change due to Files view insertion during layout load (SkylineFile.cs .sky.view handling)
+- [x] s-20.png - **Accepted** - Same as s-17 (tab bold text)
+- [x] s-27.png - **Accepted** - BUG-010 fixed: Regression Refined line now drawn correctly
+- [x] s-28.png - **Accepted** - BUG-010 fixed: "Peptides Refined" label now shown correctly
+
+### HiResMetabolomics Tutorial (en)
+- [x] s-07.png - Alert wrapping fixed - no change
+
+### IMSFiltering Tutorial (en)
+- [x] s-14.png - **Reverted** - 18 px change not visible in any way
+- [x] s-17.png - **Reverted** - 11 px change not visible in any way
+- [x] s-22.png - **Accepted** - Peptide Settings Prediction tab changes
+
+### PRMOrbitrap Tutorial (en)
+- [x] s-04.png - **Accepted** - Peptide Settings Prediction tab changes
+- [x] s-16.png - **Accepted** - Orbitrap Fusion now has "Optimizing" dropdown enabled
+- [x] s-20.png - **Accepted** - Orbitrap Fusion now has "Optimizing" dropdown enabled
+
+### SmallMoleculeIMSLibraries Tutorial (en)
+- [x] s-08.png - **Reverted** - AllChromatogramsGraph inconsistent timing
+
+---
+
+## TestTutorial Screenshots (Completed)
+
 ### iRT Tutorial
 #### English (en)
-- [x] s-06.png - **BUG-005 FIXED** - Legend showing "Regression" and "Outliers" when no outliers exist
+- [x] s-06.png - **BUG-005 + BUG-010 FIXED** - Legend fixed + Regression Refined line now drawn
 - [x] s-09.png - **Accepted**
 - [x] s-10.png - **BUG-006 FIXED** - UnknownScore positioning restored
-- [x] s-17.png - **Accepted** - Minor graph changes
+- [x] s-17.png - **BUG-005 + BUG-010 FIXED** - Legend fixed + Regression Refined line now drawn
 - [x] s-18.png - **BUG-007 FIXED** - PeptideSettingsUI cramped control layout
 - [x] s-19.png - **BUG-005 FIXED** - Unrefined regression text now shows when outliers exist
 - [x] s-21.png - **Accepted**
-- [x] s-22.png - **Accepted**
+- [x] s-22.png - **BUG-005 + BUG-010 FIXED** - Legend fixed + Regression Refined line now drawn (distinct from Predictor)
 - [x] s-23.png - **Accepted**
 - [x] s-24.png - **Accepted**
-- [x] s-28.png - **Accepted**
+- [x] s-28.png - **BUG-005 + BUG-010 FIXED** - Legend fixed + Regression Refined line now drawn
 
 #### Japanese (ja)
-- [x] s-06.png - **BUG-005 FIXED**
+- [x] s-06.png - **BUG-005 + BUG-010 FIXED**
 - [x] s-10.png - **BUG-006 FIXED**
-- [x] s-17.png - **Accepted**
+- [x] s-17.png - **BUG-005 + BUG-010 FIXED**
 - [x] s-18.png - **BUG-007 FIXED**
 - [x] s-19.png - **BUG-005 FIXED**
-- [x] s-22.png - **Accepted**
+- [x] s-22.png - **BUG-005 + BUG-010 FIXED**
 - [x] s-23.png - **Accepted**
 - [x] s-24.png - **Accepted**
-- [x] s-28.png - **Accepted**
+- [x] s-28.png - **BUG-005 + BUG-010 FIXED**
 
 #### Chinese (zh-CHS)
-- [x] s-06.png - **BUG-005 FIXED**
+- [x] s-06.png - **BUG-005 + BUG-010 FIXED**
 - [x] s-10.png - **BUG-006 FIXED**
-- [x] s-17.png - **Accepted**
+- [x] s-17.png - **BUG-005 + BUG-010 FIXED**
 - [x] s-18.png - **BUG-007 FIXED**
 - [x] s-19.png - **BUG-005 FIXED**
-- [x] s-22.png - **Accepted**
+- [x] s-22.png - **BUG-005 + BUG-010 FIXED**
 - [x] s-23.png - **Accepted**
 - [x] s-24.png - **Accepted**
-- [x] s-28.png - **Accepted**
+- [x] s-28.png - **BUG-005 + BUG-010 FIXED**
 
 ## Summary Statistics
 
@@ -326,10 +460,12 @@ Using **ImageComparer** tool (`pwiz_tools/Skyline/Executables/DevTools/ImageComp
 **Found in**: GroupedStudies s-98.png (en, ja, zh-CHS) and any screenshot showing CommonAlertDlg
 **Description**: Message text in alert dialogs shifted 6 pixels to the left compared to 25.1 baseline.
 **Root cause**: PR #3386 (Waters Connect) added icon support to CommonAlertDlg with new `iconAndMessageSplitContainer`. The `labelMessage.Location` was changed from `24, 21` to `0, 21` in the designer, with `LABEL_PADDING = 18` used when no icon is shown. This differs from the original X position of 24.
-**Fix**: Changed `LABEL_PADDING` from 18 to 24 in `CommonAlertDlg.cs`
+**Fix**: Split `LABEL_PADDING` into two constants:
+- `LABEL_LEFT_PADDING = 24` - matches original designer position
+- `LABEL_RIGHT_PADDING = 12` - reduced from 18 to maintain same text width (24 + 12 = 36, same as original 18 + 18)
 **Files modified**:
-- `pwiz_tools/Shared/CommonUtil/GUI/CommonAlertDlg.cs` - Changed `LABEL_PADDING` constant from 18 to 24
-**Impact**: All AlertDlg screenshots will match original positioning; affects multiple tutorials showing alert dialogs
+- `pwiz_tools/Shared/CommonUtil/GUI/CommonAlertDlg.cs` - Split padding constants to fix position while maintaining text width
+**Impact**: All AlertDlg screenshots will match original positioning AND text wrapping; affects multiple tutorials showing alert dialogs
 **Status**: FIXED
 
 ### BUG-005: iRT regression graph legend shows "Regression" and "Outliers" when no outliers exist
@@ -374,6 +510,22 @@ Using **ImageComparer** tool (`pwiz_tools/Skyline/Executables/DevTools/ImageComp
 **Fix**: After building `spectrumSourceFiles`, exclude the current file by finding its library path and removing it from the set. If no batch filter exists (spectrumSourceFiles is null), create a set of all library files except the current one.
 **Files modified**:
 - `pwiz_tools/Skyline/Model/DocSettings/SrmSettings.cs` - Added exclusion logic in `GetAlignedRetentionTimes()`
+**Status**: FIXED
+
+### BUG-010: Regression line not drawn when refinement enabled but no outliers
+**Found in**: DIA-PASEF s-27.png
+**Description**: The "Score To Run Regression" graph shows "Regression Refined" in legend but no regression line is visible. Only the predictor line shows.
+**Root cause**: BUG-005 fix changed condition from `if (!_refine)` to `if (!HasOutliers)` in label-drawing code, but line-drawing code at line 789-799 has inconsistent logic:
+- When `Refine == true` but `HasOutliers == false`, it calls `GraphRegression(_statisticsRefined, ...)`
+- But `_statisticsRefined` is null when there are no outliers (nothing to refine)
+- `GraphRegression` adds legend entry but draws empty line (no visible curve)
+**Fix**:
+1. Changed regression line condition to `!Data.RegressionSettings.Refine || !Data.HasOutliers` - uses `_statisticsAll` when no outliers
+2. Added `GetPointsLabel()` helper method that returns "Peptides Refined" when refinement is requested, regardless of outliers
+3. Both `GraphCorrelation` and `GraphResiduals` now use this helper for consistent labeling
+**Files modified**:
+- `pwiz_tools/Skyline/Controls/Graphs/RTLinearRegressionGraphPane.cs`
+**Impact**: Affects any RT regression graph where refinement is enabled but no outliers were found. Need to re-run iRT and DIA-PASEF tutorials after fix.
 **Status**: FIXED
 
 ### BUG-009: MinimizeResultsDlg screenshot taken before statistics computation complete
@@ -544,3 +696,40 @@ This binary approach causes problems when an aligned ID shifts slightly due to R
 **Affected**: MS1Filtering s-21.png (ja, zh-CHS only)
 **Issue**: X-axis labels on graphs can flip between horizontal and vertical orientation depending on available space. This is inconsistent between runs and causes screenshot diffs even when no functional change occurred.
 **Proposed**: Consider making graphs slightly wider to ensure labels consistently remain horizontal, or implement deterministic label orientation during screenshot capture mode.
+
+#### ImageComparer Diff Amplification for Minuscule Changes
+**Affected**: DDASearch s-16.png (1px diff), ExistingQuant s-07.png (1px diff), and similar
+**Issue**: When ImageComparer shows only 1-2 pixel differences, it's nearly impossible to visually locate the changed pixels to diagnose the root cause.
+**Root cause hypothesis**: The `ScreenshotProcessingExtensions.CleanupBorder` algorithm that draws borders around screenshots (because window borders are translucent) may have an off-by-one error for certain window sizes. In Windows 10, this is just a single pixel border, but in Windows 11, the curved corners are translucent and must be reproduced consistently by CleanupBorder. The border pixel color may be determined by the background color behind the window.
+**Proposed enhancements**:
+1. Add a "diff-only" view mode that removes the image and paints only the diff pixels on a white background
+2. Add an "Amplification" slider in the color picker dropdown that expands the visual area around each changed pixel (e.g., from 1:1 up to a calculated circle with radius 10 around each modified pixel)
+3. This would help identify the exact pixel locations and potentially fix the border drawing algorithm to be 100% consistent
+
+#### Automated Screenshot Review CLI Tool and Workflow
+**Goal**: Enable autonomous screenshot review triggered by PR merges or scheduled CI runs, catching unintentional UI changes as they happen.
+
+**Phase 1: CLI Diff Tool**
+Extract ImageComparer's diff generation logic to a command-line tool that:
+- Compares all modified screenshots against git HEAD
+- Generates structured output to `ai/.tmp/screenshot-review/`:
+  - `report.json` - machine-readable diff data (dimensions, pixel counts, file paths)
+  - `report.md` - human-readable summary
+  - `{Tutorial}-{Locale}-{Number}-diff.png` - diff images for each changed screenshot
+  - Header metadata in diff images: pixel count, dimensions before/after, tutorial/locale info
+
+**Phase 2: Claude Code Review Command**
+Create a slash command (e.g., `/pw-screenshot-review`) that:
+- Runs the CLI diff tool
+- Reads the generated report and diff images
+- Produces initial accept/revert/investigate recommendations with reasoning
+- Groups changes by likely cause (Files view, RT alignment, control layout, etc.)
+- Flags potential bugs for human review
+
+**Phase 3: Autonomous CI Integration**
+- Trigger screenshot generation on PR merge (requires standardized test environment)
+- Run automated review and generate report
+- Post results to PR or create tracking issue
+- Human reviews recommendations and approves/overrides
+
+**Vision**: Each code change is automatically reviewed for UI impact. Unintentional changes (like BUG-001 through BUG-009 found in this review) are caught when they happen, not months later during release preparation.

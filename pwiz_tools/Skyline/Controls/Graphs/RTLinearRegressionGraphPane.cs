@@ -514,7 +514,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public RetentionTimeStatistics _statisticsRefined;
 
             private readonly RetentionScoreCalculatorSpec _calculator;
-            private bool _refine;
 
             public RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
 
@@ -536,9 +535,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 _points = snapshot.AllPoints.Select(dp => new PointInfo(dp.IdentityPath, dp.ModifiedTarget, dp.X, dp.Y)).ToImmutable();
                 _refinedPoints = snapshot.RefinedPoints.Select(dp => new PointInfo(dp.IdentityPath, dp.ModifiedTarget, dp.X, dp.Y)).ToImmutable();
                 _outlierPoints = snapshot.Outliers.Select(dp => new PointInfo(dp.IdentityPath, dp.ModifiedTarget, dp.X, dp.Y)).ToImmutable();
-
-                _refine = regressionSettings.Refine && !IsRefined();
-                // Snapshot already reflects refined vs all, so do not re-refine here.
             }
 
             public SrmDocument Document
@@ -579,6 +575,28 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public bool HasOutliers { get { return 0 < _outlierPoints.Count; } }
+
+            /// <summary>
+            /// Returns the appropriate label for points based on whether refinement was requested.
+            /// Shows "Peptides Refined" (or molecule equivalent) when refinement is enabled,
+            /// regardless of whether outliers were actually found.
+            /// </summary>
+            public string GetPointsLabel()
+            {
+                return Helpers.PeptideToMoleculeTextMapper.Translate(
+                    RegressionSettings.Refine ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides,
+                    Document.DocumentType);
+            }
+
+            /// <summary>
+            /// Returns the appropriate label for the regression line based on whether refinement was requested.
+            /// Shows "Regression Refined" when refinement is enabled, regardless of whether outliers were found.
+            /// </summary>
+            public string GetRegressionLabel()
+            {
+                return RegressionSettings.Refine ? GraphsResources.GraphData_Graph_Regression_Refined : GraphsResources.GraphData_Graph_Regression;
+            }
+
             public ImmutableList<PointInfo> AllPoints
             {
                 get { return _points; }
@@ -785,17 +803,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 curveOut.Symbol.Size = 8f;
             }
 
-            string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides, Data.Document.DocumentType);
-            if (!Data.RegressionSettings.Refine)
+            string labelPoints = Data.GetPointsLabel();
+            if (Data.HasOutliers)
             {
-                GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
+                // Refinement with outliers - show both refined and unrefined lines
+                GraphRegression(Data._statisticsRefined, Data._regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
+                GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
             }
             else
             {
-                labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, Data.Document.DocumentType);
-                GraphRegression(Data._statisticsRefined, Data._regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
-                if (Data.HasOutliers)
-                    GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
+                // No outliers - show single line with label based on refinement setting
+                GraphRegression(Data._statisticsAll, Data._regressionAll, Data.GetRegressionLabel(), COLOR_LINE_REFINED);
             }
 
             if (Data._regressionPredict != null && Settings.Default.RTPredictorVisible)
@@ -842,8 +860,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 curveOut.Symbol.Size = 8f;
             }
 
-            string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(
-                Data.IsRefined() ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides, Data.Document.DocumentType);
+            string labelPoints = Data.GetPointsLabel();
             var curve = AddCurve(labelPoints, Data.RefinedPoints.Select(Data.GetX).ToArray(),
                 Data.RefinedPoints.Select(Data.GetYResidual).ToArray(), Color.Black, SymbolType.Diamond);
             curve.Line.IsVisible = false;
