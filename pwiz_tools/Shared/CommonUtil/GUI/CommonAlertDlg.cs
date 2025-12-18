@@ -36,7 +36,8 @@ namespace pwiz.Common.GUI
     public partial class CommonAlertDlg : CommonFormEx
     {
         private const int MAX_HEIGHT = 500;
-        private const int LABEL_PADDING = 18;
+        private const int LABEL_LEFT_PADDING = 24;  // Left margin to match original designer position
+        private const int LABEL_RIGHT_PADDING = 18; // Right margin original 18
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
         private string _message;
@@ -83,7 +84,7 @@ namespace pwiz.Common.GUI
         private void UpdateLabelMessageSize()
         {
             labelMessage.MaximumSize =
-                new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_PADDING), 0);
+                new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_RIGHT_PADDING), 0);
         }
 
         private void UpdateFormHeight()
@@ -245,7 +246,7 @@ namespace pwiz.Common.GUI
                 else
                 {
                     iconAndMessageSplitContainer.Panel1Collapsed = true;
-                    labelMessage.Location = new Point(LABEL_PADDING, labelMessage.Location.Y);
+                    labelMessage.Location = new Point(LABEL_LEFT_PADDING, labelMessage.Location.Y);
                 }
 
                 UpdateFormHeight();
