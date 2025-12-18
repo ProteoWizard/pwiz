@@ -77,8 +77,7 @@ Rules:
 2. Developer can override: "Let's work on TODO-feature.md and base it on ai-context"
 3. Default to `master` if not specified
 
-**Create feature branch from appropriate base:**
-> **Note:** Backlog TODOs live on `ai-context` branch. You'll copy (not move) to your feature branch.
+**Step 1: Create feature branch from appropriate base:**
 ```bash
 # Use base from TODO file, developer override, or default to master
 git checkout <base-branch>  # master, ai-context, or Skyline/skyline_YY_N
@@ -86,17 +85,22 @@ git pull origin <base-branch>
 git checkout -b Skyline/work/20251105_feature_name
 ```
 
-**Copy TODO from ai-context to active:**
+**Step 2: Move TODO on ai-context (claims the work):**
+> **Note:** Backlog TODOs live on `ai-context` branch. Move there first, then cherry-pick.
 ```bash
-git checkout ai-context -- ai/todos/backlog/TODO-feature_name.md
+git checkout ai-context
+git pull origin ai-context
 git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
+# Edit TODO: update Branch, Created, Status fields
+git add ai/todos/active/TODO-20251105_feature_name.md
+git commit -m "Start feature_name work - move TODO to active"
+git push origin ai-context
 ```
 
-**Update TODO header and commit:**
+**Step 3: Cherry-pick to feature branch:**
 ```bash
-# Edit TODO: add Branch, Base, Created, PR fields
-git add ai/todos/active/TODO-20251105_feature_name.md
-git commit -m "Update TODO with branch information"
+git checkout Skyline/work/20251105_feature_name
+git cherry-pick <commit-hash-from-step-2>
 git push -u origin Skyline/work/20251105_feature_name
 ```
 
