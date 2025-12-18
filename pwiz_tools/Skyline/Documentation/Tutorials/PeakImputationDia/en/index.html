@@ -38,7 +38,7 @@
         <li>Right-click on the <b>Peak Area - Relative Abundance</b> graph, click <b>Replicates</b> and then click <b>Single</b></li>
         <li>On the <b>View</b> menu choose <b>Transitions</b> and click <b>Products</b></li>
     </ul>
-    <p><img src="s-01.png"/></p>
+    <p><img src="s-01.png" alt="Skyline main window"/></p>
     <h1>Peak Areas Relative Abundance graph</h1>
     <p>The "Peak Area - Relative Abundance" graph shows all the proteins in the document sorted by abundance. The formatting on this graph
         in this document has been customized so that points corresponding to extracellular vesicle (EV) proteins are displayed as green triangles, and
@@ -48,10 +48,10 @@
     <ul>
         <li>In the <b>Targets</b> view <b>Replicates</b> dropdown list, select the first item which is the “EV13_SAXN_12mz_10” replicate.</li>
     </ul>
-    <p><img src="s-02.png"/></p>
+    <p><img src="s-02.png" alt="Peak abundance - EV enriched"/></p>
     <p>The replicates whose names begin with "EV" measured samples which used the MagNet protocol to enrich for EV proteins. In these samples, the abundance of the EV proteins is increased in these samples.</p>
     <ul><li>In the <b>Targets</b> view <b>Replicates</b> dropdown list, select the fourth item which is the “Total04_HydN_12mz_42” replicate.</li></ul>
-    <p><img src="s-03.png"/></p>
+    <p><img src="s-03.png" alt="Peak abundance - Total plasma"/></p>
     <p>The abundances of the proteins in this total plasma sample are different from the EV enriched sample.
         Whereas the EV enriched sample had measurements for more than 4000 proteins, the total plasma sample has values for fewer than 2000 proteins.
         The abundant plasma proteins (blue triangles) have measured peak areas that are several orders of magnitude greater in the total sample compared to the EV enriched sample.
@@ -60,7 +60,7 @@
     <ul>
         <li>On the <b>View</b> menu, choose <b>Live Reports</b>, then <b>Group Comparisons</b>, and click <b>EV-Enrich</b></li>
     </ul>
-    <p><img src="s-04.png" /></p>
+    <p><img src="s-04.png" alt="Group comparison grid"/></p>
     <p>This displays the results of the "EV-Enrich" group comparison. The number of rows in the grid is much less than the
         total number of proteins in the document because the replicates where no peak was chosen for a peptide are excluded from that peptide's group comparison.
         By default, Skyline shows only a small number of columns in the grid with the group comparison results. This Skyline document
@@ -69,13 +69,13 @@
     <ul>
         <li>In the <b>Reports</b> dropdown at the top of the EV-Enrich:Grid window choose <b>log2fold change</b>.</li>
     </ul>
-    <p><img src="s-05.png"/></p>
+    <p><img src="s-05.png" alt="Group comparison with additional columns"/></p>
     <p>A more graphical way to see the group comparison results is in the volcano plot. To display the volcano plot, do the following:</p>
     <ul>
         <li>Click the <b>Volcano Plot</b> button at the top left of the <b>EV-Enrich:Grid</b> window</li>
         <li>The volcano plot appears in the right half of the space where the EV-Enrich grid was. You can make the window wider so that you can see all of the columns of the group comparison grid as well as the volcano plot</li>
     </ul>
-    <p><img src="s-06.png"/></p>
+    <p><img src="s-06.png" alt="Group comparison with volcano plot"/></p>
     <p>
         The missing proteins peaks are in replicates where the DIA-NN peptide search engine was unable to confidentally identify a peak.
         In this case, a few of the most abundant plasma proteins, represented by blue inverted triangles, had a complete set of peptides detected across a
@@ -89,13 +89,13 @@
         <li>Click the <b>Advanced</b> button in the <b>Edit Group Comparison: EV-Enrich</b> window</li>
         <li>Check the <b>Use zero for missing peaks</b> checkbox</li>
     </ul>
-    <p><img src="s-07.png"/></p>
+    <p><img src="s-07.png" alt="Edit group comparison dialog"/></p>
     <p>After you make that change to the group comparison definition, the grid will have one row for each protein in the document and the volcano plot will have more points.</p>
-    <p><img src="s-08.png"/></p>
+    <p><img src="s-08.png" alt="Volcano plot with missing peaks as zero"/></p>
     <p>The volcano plot remains zoomed in on the subset of data that existed before the change to the group comparison settings. Closing and reopening the volcano plot will reset its display to the default amount of zoom for the data that is displaying.</p>
     <ul><li>Click the <b>X</b> button in the top right corner of the volcano plot</li>
     <li>Click the <b>Volcano Plot</b> button at the top of the <b>EV-Enrich:Grid</b> window</li></ul>
-    <p><img src="s-09.png"/></p>
+    <p><img src="s-09.png" alt="Volcano plot zoomed out"/></p>
     <ul>
         <li>Move the floating windows out of the way so that you can see the main Skyline window</li>
     </ul>
@@ -103,10 +103,10 @@
     <p>The "Retention Times - Replicate Comparison" graph in the lower right corner of the Skyline window shows retention
         times for the peptide across all six replicates. Some of the peptides were detected in all samples, but some were not detected in the unenriched "Total" samples,
         and do not have lines on the graph indicating the retention time of the chosen peak.</p>
-    <p><img src="s-10.png"/></p>
+    <p><img src="s-10.png" alt="Retention times replicate comparison"/></p>
     <h1>Showing the Exemplary Peak</h1>
     <ul><li>Right-click on one of the chromatogram graphs and choose <b>Exemplary Peak</b></li></ul>
-    <p><img src="s-11.png"/></p>
+    <p><img src="s-11.png" alt="Chromatograms with exemplary peak"/></p>
     <p>A green rectangle appears on each of the chromatogram graphs. This green rectangle shows where the peak boundaries
         from the best-scoring replicate would appear on the chromatogram after retention time alignment. In this document,
         Skyline did not do any peak detection, but, instead, used the peak boundaries from the spectral library which had
@@ -121,7 +121,7 @@
         <li>In the <b>Targets</b> view <b>Replicates</b> dropdown list, select the fifth item which is the “Total05_HydN_12mz_38” replicate.</li>
         <li>On the <b>View</b> menu choose <b>Auto Zoom</b> and then click <b>Best Peak</b></li>
     </ul>
-    <p><img src="s-12.png"/></p>
+    <p><img src="s-12.png" alt="KADLVNR with misaligned imputation"/></p>
     <p>In the middle chromatogram in the second row, the green rectangle indicating where Skyline would have imputed boundaries
         does not line up with the peak boundaries that were chosen by DIA-NN. The "Score to Run Regression" graph in Skyline
         can be helpful for understanding why Skyline would do that.
@@ -133,7 +133,7 @@
         <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Calculator</b> and click <b>Library ExtracellularVesicalMagNet</b></li>
         <li>Right-click on the "Retention Times - Score to Run Regression" graph, choose <b>Regression Method</b> and click <b>Loess</b></li>
     </ul>
-    <p><img src="s-13.png"/></p>
+    <p><img src="s-13.png" alt="Score to run regression"/></p>
     <p>This graph shows all the peptides which can be found in the Skyline document or in the spectral library.
     The X-coordinate of each point is the median retention time for the peptide across all of the data files in the spectral library.
     The Y-coordinate is the retention time of the peptide in the currently selected replicate.
@@ -143,15 +143,15 @@
         There is another view of this graph which makes it easier to see.
     </p>
     <ul><li>Right-click the graph, choose <b>Plot</b>, and click <b>Residuals</b>.</li></ul>
-    <p><img src="s-14.png"/></p>
+    <p><img src="s-14.png" alt="Regression residuals plot"/></p>
     <ul><li>In the <b>Targets</b> view <b>Replicates</b> dropdown list, select the first item which is the “EV13_SAXN_12mz_10” replicate.</li></ul>
-    <p><img src="s-15.png"/></p>
+    <p><img src="s-15.png" alt="Residuals for EV13 replicate"/></p>
     <p>To go return to what was displayed before:</p>
     <ul>
         <li>Click on the peptide <b>FYNELTEILVR</b> in the Targets tree</li>
         <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
     </ul>
-    <p><img src="s-16.png"/></p>
+    <p><img src="s-16.png" alt="FYNELTEILVR peptide view"/></p>
     <h1>Imputing boundaries for missing peaks</h1>
     <p>Now we are going to tell Skyline to set the peak boundaries for all missing peaks based on the peak boundaries of the best-scoring replicate.</p>
     <ul>
@@ -159,12 +159,12 @@
         <li>Click the <b>Prediction</b> tab.</li>
         <li>Check the <b>Missing peaks</b> checkbox inside of the "Impute boundaries for" box.</li>
     </ul>
-    <p><img src="s-17.png"/></p>
+    <p><img src="s-17.png" alt="Peptide settings prediction tab"/></p>
     <ul><li>Click the <b>OK</b> button.</li></ul>
     <p>Skyline has now set the integration boundaries to coincide with the green rectangle in the replicates where the peak had been missing.</p>
-    <p><img src="s-18.png"/></p>
+    <p><img src="s-18.png" alt="Chromatograms with imputed boundaries"/></p>
     <p>The fold change values are less extreme when the imputed peak areas are used instead of using zero for all missing peaks.</p>
-    <p><img src="s-19.png"/></p>
+    <p><img src="s-19.png" alt="Volcano plot after imputation"/></p>
 </body>
 
 </html>
