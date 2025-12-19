@@ -47,6 +47,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
@@ -1820,6 +1821,20 @@ namespace pwiz.SkylineTestUtil
             if (replicateName == null)
                 RunUI(() => replicateName = SkylineWindow.SelectedGraphChromName);
             PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), timeout, processShot);
+        }
+
+        public void PauseForRelativeAbundanceGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            var graphSummary = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
+            Assert.IsNotNull(graphSummary, "Relative abundance graph not found");
+            PauseForGraphScreenShot(description, graphSummary, timeout, processShot);
+        }
+
+        public void PauseForVolcanoPlotGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            var volcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
+            Assert.IsNotNull(volcanoPlot, "Volcano plot not found");
+            PauseForGraphScreenShot(description, volcanoPlot, timeout, processShot);
         }
 
         protected ZedGraphControl FindZedGraph(Control graphContainer)

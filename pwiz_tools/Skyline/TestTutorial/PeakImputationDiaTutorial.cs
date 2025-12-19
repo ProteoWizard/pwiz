@@ -22,7 +22,9 @@ using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
@@ -53,6 +55,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            const string pepOfInterest1 = "FYNELTEILVR";
+            const string pepOfInterest2 = "KADLVNR";
             RunUI(() =>
             {
                 if (!Program.SkylineOffscreen)
@@ -66,7 +70,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("ExtracellularVesicalMagNet.sky"));
                 var selectedNode = SkylineWindow.SelectedNode;
                 Assert.IsInstanceOfType(selectedNode, typeof(PeptideTreeNode));
-                Assert.AreEqual("FYNELTEILVR", GetSelectedPeptide());
+                Assert.AreEqual(pepOfInterest1, GetSelectedPeptide());
             });
             WaitForDocumentLoaded();
             var relativeAbundanceForm = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
@@ -81,10 +85,10 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot(SkylineWindow, "Skyline main window");
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
             WaitForComplete(relativeAbundanceForm);
-            PauseForScreenShot(relativeAbundanceForm, "Peak abundance - EV enriched");
+            PauseForRelativeAbundanceGraphScreenShot("Peak abundance - EV enriched");
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
             WaitForComplete(relativeAbundanceForm);
-            PauseForScreenShot(relativeAbundanceForm, "Peak abundance - Total plasma");
+            PauseForRelativeAbundanceGraphScreenShot("Peak abundance - Total plasma");
             RunUI(()=>SkylineWindow.ShowGroupComparisonWindow("EV-Enrich"));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
             WaitForConditionUI(() => foldChangeGrid.IsComplete);
@@ -121,31 +125,24 @@ namespace pwiz.SkylineTestTutorial
             });
             foldChangeVolcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
             WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
-            PauseForScreenShot(floatingWindow, "Volcano plot zoomed out");
-            RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
+            PauseForVolcanoPlotGraphScreenShot("Volcano plot zoomed out");
+            RunUI(() => SkylineWindow.SelectedResultsIndex = 3);
             var windowPositions = HideFloatingWindows();
-            Assert.AreEqual("FYNELTEILVR", CallUI(GetSelectedPeptide));
+            Assert.AreEqual(pepOfInterest1, CallUI(GetSelectedPeptide));
             var rtReplicateGraphSummary = SkylineWindow.GraphRetentionTime;
             Assert.IsNotNull(rtReplicateGraphSummary);
-            PauseForScreenShot(rtReplicateGraphSummary, "Retention times replicate comparison");
-            RunUI(()=>SkylineWindow.ShowExemplaryPeak(true));
+            PauseForRetentionTimeGraphScreenShot("Retention times replicate comparison");
+            RunUI(() => SkylineWindow.ShowExemplaryPeak(true));
             WaitForExemplaryPeaks();
             PauseForScreenShot(SkylineWindow, "Chromatograms with exemplary peak");
-            RunUI(() =>
-            {
-                var proteinNode = SkylineWindow.SequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
-                Assert.IsNotNull(proteinNode);
-                var peptideNode = proteinNode.Nodes.OfType<PeptideTreeNode>()
-                    .First(node => node.DocNode.Peptide.Sequence == "KADLVNR");
-                SkylineWindow.SelectedPath = peptideNode.Path;
-            });
+            SelectPeptide(pepOfInterest2);
             RunUI(()=>
             {
                 SkylineWindow.SelectedResultsIndex = 4;
                 SkylineWindow.AutoZoomBestPeak();
             });
             WaitForExemplaryPeaks();
-            PauseForScreenShot(SkylineWindow, "KADLVNR with misaligned imputation");
+            PauseForScreenShot(SkylineWindow, $"{pepOfInterest2} with misaligned imputation");
             GraphSummary scoreToRunGraphSummary = null;
             RunUI(() =>
             {
@@ -156,26 +153,19 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowRegressionMethod(RegressionMethodRT.loess);
             });
             WaitForComplete(scoreToRunGraphSummary);
-            PauseForScreenShot(scoreToRunGraphSummary, "Score to run regression");
-            RunUI(()=> SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
+            PauseForRetentionTimeGraphScreenShot("Score to run regression");
+            RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
             WaitForComplete(scoreToRunGraphSummary);
-            PauseForScreenShot(scoreToRunGraphSummary, "Regression residuals plot");
-            RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
+            PauseForRetentionTimeGraphScreenShot("Regression residuals plot");
+            RunUI(() => SkylineWindow.SelectedResultsIndex = 0);
             WaitForComplete(scoreToRunGraphSummary);
-            PauseForScreenShot(scoreToRunGraphSummary, "Residuals for EV13 replicate");
-            RunUI(() =>
-            {
-                var proteinNode = SkylineWindow.SequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
-                Assert.IsNotNull(proteinNode);
-                var peptideNode = proteinNode.Nodes.OfType<PeptideTreeNode>()
-                    .First(node => node.DocNode.Peptide.Sequence == "FYNELTEILVR");
-                SkylineWindow.SelectedPath = peptideNode.Path;
-            });
-            RunUI(()=>rtReplicateGraphSummary.Activate());
-            PauseForScreenShot(SkylineWindow, "FYNELTEILVR peptide view");
+            PauseForRetentionTimeGraphScreenShot("Residuals for EV13 replicate");
+            SelectPeptide(pepOfInterest1);
+            RunUI(() => rtReplicateGraphSummary.Activate());
+            PauseForScreenShot(SkylineWindow, $"{pepOfInterest1} peptide view");
             RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
-                RunUI(()=>
+                RunUI(() =>
                 {
                     peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Prediction;
                     peptideSettingsUi.ImputeMissingPeaks = true;
@@ -186,7 +176,47 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot(SkylineWindow, "Chromatograms with imputed boundaries");
             RestoreFloatingWindows(windowPositions);
             WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
-            PauseForScreenShot(floatingWindow, "Volcano plot after imputation");
+            PauseForVolcanoPlotGraphScreenShot("Volcano plot after imputation");
+
+            if (IsCoverShotMode)
+            {
+                // Remove some of the peptide siblings of the selected node to
+                // allow it to be closer to the protein highlighted in the volcano plot
+                // and relative abundance plot views.
+                TreeNode nodeProtTree = null;
+                RunUI(() =>
+                {
+                    nodeProtTree = SkylineWindow.SequenceTree.SelectedNode.Parent;
+                    DeleteNodes(nodeProtTree, 0, 6);
+                    DeleteNodes(nodeProtTree, 4, 14);
+                    DeleteNodes(nodeProtTree, 5, 5);
+                    SkylineWindow.ShowChromatogramLegends(false);
+                });
+                // Restore a layout with the volcano plot alone in a floating window
+                RestoreCoverViewOnScreen();
+                // Reselect the peptide of interest - though the layout should have selected it
+                SelectPeptide(pepOfInterest1);
+                var volcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
+                Assert.IsNotNull(volcanoPlot);
+                RunUI(() =>
+                {
+                    // Place it in the lower left corner of the Skyline window
+                    // showing a line of pluses for the hidden proteins, and just
+                    // above the Targets and Files tabs.
+                    var volcanoFrame = volcanoPlot.Parent.Parent;
+                    volcanoFrame.Location = SkylineWindow.SequenceTree.PointToScreen(
+                        new Point(10, SkylineWindow.SequenceTree.Height - 4 - volcanoFrame.Height));
+                    SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode.Parent.PrevNode;
+                    SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
+                });
+                TakeCoverShot();
+            }
+        }
+
+        private void DeleteNodes(TreeNode nodeProtTree, int start, int count)
+        {
+            SelectNodes(nodeProtTree, start, count);
+            SkylineWindow.EditDelete();
         }
 
         private void WaitForComplete(GraphSummary graphSummary)
@@ -202,6 +232,27 @@ namespace pwiz.SkylineTestTutorial
 
                 return true;
             });
+        }
+
+        private static void SelectPeptide(string sequence)
+        {
+            RunUI(() =>
+            {
+                var proteinNode = SkylineWindow.SequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
+                Assert.IsNotNull(proteinNode);
+                var peptideNode = proteinNode.Nodes.OfType<PeptideTreeNode>()
+                    .First(node => node.DocNode.Peptide.Sequence == sequence);
+                SkylineWindow.SelectedPath = peptideNode.Path;
+            });
+        }
+
+        private void SelectNodes(TreeNode nodeProtTree, int start, int count)
+        {
+            SkylineWindow.SequenceTree.SelectedNode = nodeProtTree.Nodes[start];
+            for (int i = start + 1; i < start + count; i++)
+            {
+                SkylineWindow.SequenceTree.SelectedNodes.Add((TreeNodeMS)nodeProtTree.Nodes[i]);
+            }
         }
 
         private string GetSelectedPeptide()
