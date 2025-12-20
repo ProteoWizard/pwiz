@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             DateTime Time { get; }
             string PrepareErrorText(string errorText);
+            int? GetFrozenProgress(MsDataFileUri filePath);
         }
 
         private readonly IStateProvider _stateProvider;
@@ -178,16 +179,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         Finish();
                     }
-                    else if (status.PercentComplete > 0)
+                    else
                     {
-                        progressBar.Visible = true;
-                        labelPercent.Visible = true;
-                        progressBar.Value = status.PercentComplete;
-                        labelPercent.Text = (status.PercentComplete / 100.0).ToString(@"P0");
-                        labelStatus.Visible = false;
-                        btnRetry.Text = GraphsResources.FileProgressControl_SetStatus_Cancel;
-                        btnRetry.Visible = true;
-                        _backColor = _okColor;
+                        var frozenProgress = _stateProvider.GetFrozenProgress(_filePath);
+                        var displayProgress = frozenProgress ?? status.PercentComplete;
+                        if (displayProgress > 0)
+                        {
+                            progressBar.Visible = true;
+                            labelPercent.Visible = true;
+                            progressBar.Value = displayProgress;
+                            labelPercent.Text = (displayProgress / 100.0).ToString(@"P0");
+                            labelStatus.Visible = false;
+                            btnRetry.Text = GraphsResources.FileProgressControl_SetStatus_Cancel;
+                            btnRetry.Visible = true;
+                            _backColor = _okColor;
+                        }
                     }
                 }
                 Invalidate();
