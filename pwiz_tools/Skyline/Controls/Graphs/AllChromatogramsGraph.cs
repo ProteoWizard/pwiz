@@ -354,6 +354,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 elapsedTimer.Stop();
             }
 
+            // Don't hide progress UI when frozen for screenshot consistency
+            if (_freezeProgressPercent.HasValue)
+                return;
+
             progressBarTotal.Visible = false;
             btnCancel.Visible = false;
             btnHide.Text = GraphsResources.AllChromatogramsGraph_Finish_Close;
@@ -411,7 +415,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private void UpdateStatusInternal(MultiProgressStatus status)
         {
             // Update overall progress bar.
-            if (_partialProgressList.Count == 0)
+            if (_frozenTotalProgress.HasValue)
+            {
+                progressBarTotal.Value = _frozenTotalProgress.Value;
+            }
+            else if (_partialProgressList.Count == 0)
             {
                 if (status.PercentComplete >= 0) // -1 value means "unknown" (possible if we are mid-completion). Just leave things alone in that case.
                 {
@@ -788,18 +796,49 @@ namespace pwiz.Skyline.Controls.Graphs
         private DateTime? _timeAtFreeze;
         private Tuple<string, string> _replacementText;
         private List<MultiProgressStatus> _missedProgressStatusList = new List<MultiProgressStatus>();
+        private Dictionary<string, int> _frozenFileProgress;
+        private int? _frozenTotalProgress;
 
         /// <summary>
-        /// Provide enough information for a consistent screenshot. Set values to null to resume.
+        /// Freeze progress display for consistent screenshots.
         /// </summary>
-        /// <param name="percent">Percent to freeze at when all processing threads match this percent or greater</param>
-        /// <param name="elapsedTime">Text for an elapsed time during the freeze</param>
-        public void SetFreezeProgressPercent(int? percent, string elapsedTime)
+        /// <param name="freezeThreshold">Progress percentage threshold - freezes when any file exceeds this</param>
+        /// <param name="elapsedTime">Elapsed time text to display</param>
+        /// <param name="totalProgress">Total progress bar percentage to display</param>
+        /// <param name="fileProgress">Optional dictionary mapping filename to progress percentage.
+        /// Files not in the dictionary will display 0% when frozen.</param>
+        public void SetFrozenProgress(int freezeThreshold, string elapsedTime, int totalProgress, Dictionary<string, int> fileProgress = null)
         {
             lock (_missedProgressStatusList)
             {
-                _freezeProgressPercent = percent;
+                _freezeProgressPercent = freezeThreshold;
                 _elapsedTimeAtFreeze = elapsedTime;
+                _frozenFileProgress = fileProgress;
+                _frozenTotalProgress = totalProgress;
+            }
+        }
+
+        /// <summary>
+        /// Release frozen progress state and resume normal updates.
+        /// </summary>
+        public void ReleaseFrozenProgress()
+        {
+            bool importFinished;
+            lock (_missedProgressStatusList)
+            {
+                _freezeProgressPercent = null;
+                _elapsedTimeAtFreeze = null;
+                _frozenFileProgress = null;
+                _frozenTotalProgress = null;
+                importFinished = Finished;
+            }
+
+            // If import completed while frozen, complete the UI updates now
+            if (importFinished)
+            {
+                progressBarTotal.Visible = false;
+                btnCancel.Visible = false;
+                btnHide.Text = GraphsResources.AllChromatogramsGraph_Finish_Close;
             }
         }
 
@@ -819,6 +858,23 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return _replacementText == null ? errorText
                 : errorText.Replace(_replacementText.Item1, _replacementText.Item2);
+        }
+
+        int? FileProgressControl.IStateProvider.GetFrozenProgress(MsDataFileUri filePath)
+        {
+            if (_frozenFileProgress == null)
+                return null;
+            var fileName = filePath.GetFileName();
+            // First try exact match
+            if (_frozenFileProgress.TryGetValue(fileName, out var progress))
+                return progress;
+            // Then try partial match (key is contained in filename) for flexibility with extensions
+            foreach (var kvp in _frozenFileProgress)
+            {
+                if (fileName.Contains(kvp.Key))
+                    return kvp.Value;
+            }
+            return 0;
         }
 
         public bool IsProgressFrozen(MultiProgressStatus status = null)
@@ -843,6 +899,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 return (100*(progressBarTotal.Value - -progressBarTotal.Minimum))/(progressBarTotal.Maximum - progressBarTotal.Minimum);
             }
         }
+
+        /// <summary>
+        /// Gets the total progress bar control for screenshot processing.
+        /// Use with ScreenshotProcessingExtensions.FillProgressBar to paint over
+        /// the animated progress bar with a static representation.
+        /// </summary>
+        public ProgressBar ProgressBarTotal => progressBarTotal;
 
         // Click the button for this named file - first click is cancel, which toggles to retry
         public void FileButtonClick(string name)

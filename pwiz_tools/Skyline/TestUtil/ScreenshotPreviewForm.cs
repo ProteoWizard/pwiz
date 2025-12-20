@@ -981,6 +981,59 @@ namespace pwiz.SkylineTestUtil
                 RefreshOldScreenshot();
         }
 
+        private void SaveDiffImage()
+        {
+            try
+            {
+                ScreenshotFile file;
+                ScreenshotDiff diff;
+                lock (_lock)
+                {
+                    file = _fileToShow;
+                    diff = _diff;
+                }
+
+                if (file == null)
+                {
+                    ShowMessage("No screenshot selected.");
+                    return;
+                }
+
+                if (diff?.HighlightedImage == null)
+                {
+                    ShowMessage("No diff image available to save.");
+                    return;
+                }
+
+                var aiTmpFolder = file.GetAiTmpFolder();
+                if (aiTmpFolder == null)
+                {
+                    ShowMessage(@"Could not locate ai\.tmp folder.");
+                    return;
+                }
+
+                // Ensure the folder exists
+                if (!Directory.Exists(aiTmpFolder))
+                {
+                    Directory.CreateDirectory(aiTmpFolder);
+                }
+
+                var fileName = file.GetDiffFileName(diff.PixelCount);
+                var fullPath = Path.Combine(aiTmpFolder, fileName);
+
+                lock (diff.HighlightedImage)
+                {
+                    diff.HighlightedImage.Save(fullPath, ImageFormat.Png);
+                }
+
+                ShowMessage($"Diff image saved to:\n{fullPath}");
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException("Failed to save diff image.", e);
+            }
+        }
+
         private void GotoLink()
         {
             string urlInTutorial;
@@ -1242,8 +1295,15 @@ namespace pwiz.SkylineTestUtil
                 case Keys.S:
                     if (e.Control)
                     {
-                        if (IsComplete)
+                        if (e.Alt)
+                        {
+                            // Ctrl+Alt+S: Save diff image to ai\.tmp
+                            SaveDiffImage();
+                        }
+                        else if (IsComplete)
+                        {
                             SaveAndStay();
+                        }
                         e.Handled = true;
                     }
                     break;
@@ -1267,7 +1327,21 @@ namespace pwiz.SkylineTestUtil
                         Bitmap imageToCopy;
                         lock (_lock)
                         {
-                            imageToCopy = e.Shift ? _oldScreenshot.Image : _newScreenshot.Image;
+                            if (e.Alt)
+                            {
+                                // Ctrl+Alt+C: Copy diff image
+                                imageToCopy = _diff?.HighlightedImage;
+                                if (imageToCopy == null)
+                                {
+                                    ShowMessage("No diff image available to copy.");
+                                    e.Handled = true;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                imageToCopy = e.Shift ? _oldScreenshot.Image : _newScreenshot.Image;
+                            }
                         }
                         CopyBitmap(imageToCopy);
                         e.Handled = true;

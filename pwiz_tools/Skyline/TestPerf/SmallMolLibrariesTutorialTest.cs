@@ -18,6 +18,7 @@
  */
 
 
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -247,15 +248,19 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
                 OkDialog(importResultsNameDlg, importResultsNameDlg.OkDialog);
                 var allChromatograms = WaitForOpenForm<AllChromatogramsGraph>();
-                allChromatograms.SetFreezeProgressPercent(40, "00:00:35");
+                allChromatograms.SetFrozenProgress(42, "00:00:35", 33, new Dictionary<string, int>
+                {
+                    { Path.GetFileNameWithoutExtension(Flies_F), 44 },
+                    { Path.GetFileNameWithoutExtension(Flies_M), 40 }
+                });
                 RunUI(() =>
                 {
                     allChromatograms.Top = SkylineWindow.Top;
                     allChromatograms.Left = SkylineWindow.Right + 20;
                 });
                 WaitForConditionUI(() => allChromatograms.IsProgressFrozen());
-                PauseForScreenShot<AllChromatogramsGraph>("Importing results form");
-                allChromatograms.SetFreezeProgressPercent(null, null);
+                PauseForAllChromatogramsGraphScreenShot("Importing results form");
+                allChromatograms.ReleaseFrozenProgress();
             }
 
             WaitForGraphs();
