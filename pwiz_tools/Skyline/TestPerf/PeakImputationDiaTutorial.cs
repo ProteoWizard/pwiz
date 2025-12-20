@@ -48,7 +48,7 @@ namespace TestPerf
             TestFilesZipPaths = new[]
             {
                 "https://skyline.ms/tutorials/PeakImputationDia.zip",
-                @"TestTutorial\PeakImputationDiaViews.zip"
+                @"TestPerf\PeakImputationDiaViews.zip"
             };
             RunFunctionalTest();
         }
@@ -61,11 +61,11 @@ namespace TestPerf
             {
                 if (!Program.SkylineOffscreen)
                 {
-                    var screen = Screen.FromControl(SkylineWindow);
-                    var width = Math.Min(screen.Bounds.Width, 1680);
-                    var height = Math.Min(screen.Bounds.Height, 1050);
-                    SkylineWindow.Bounds = new Rectangle(screen.Bounds.Left + (screen.Bounds.Width - width) / 2,
-                        screen.Bounds.Top + (screen.Bounds.Height - height) / 2, width, height);
+                    var screenBounds = Screen.GetWorkingArea(SkylineWindow);
+                    var width = Math.Min(screenBounds.Width, 1680);
+                    var height = Math.Min(screenBounds.Height, 1050);
+                    SkylineWindow.Bounds = new Rectangle(screenBounds.Left + (screenBounds.Width - width) / 2,
+                        screenBounds.Top + (screenBounds.Height - height) / 2, width, height);
                 }
                 SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("ExtracellularVesicalMagNet.sky"));
                 var selectedNode = SkylineWindow.SelectedNode;
@@ -209,6 +209,9 @@ namespace TestPerf
                     SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode.Parent.PrevNode;
                     SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
                 });
+                // Wait for plots to finish updating before taking the cover shot
+                WaitForConditionUI(() => volcanoPlot.IsComplete);
+                WaitForComplete(relativeAbundanceForm);
                 TakeCoverShot();
             }
         }
@@ -221,16 +224,15 @@ namespace TestPerf
 
         private void WaitForComplete(GraphSummary graphSummary)
         {
-            //WaitForGraphs();
             WaitForConditionUI(() =>
             {
                 var pane = graphSummary.GraphControl.GraphPane;
-                if (pane is SummaryRelativeAbundanceGraphPane relativeAbundance)
+                return pane switch
                 {
-                    return relativeAbundance.IsComplete;
-                }
-
-                return true;
+                    SummaryRelativeAbundanceGraphPane relativeAbundance => relativeAbundance.IsComplete,
+                    RTLinearRegressionGraphPane regressionGraphPane => !regressionGraphPane.IsCalculating,
+                    _ => true
+                };
             });
         }
 
