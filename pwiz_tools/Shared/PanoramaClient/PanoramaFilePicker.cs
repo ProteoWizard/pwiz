@@ -162,13 +162,21 @@ namespace pwiz.PanoramaClient
                         var sizeObj = new FileSizeFormatProvider();
                         var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
                         listItem[1] = sizeString;
-                        // The date format for webDav files is: Thu Jul 13 12:00:00 PDT 2023
-                        // We need to use a custom date format and remove the time zone characters
-                        // in order to apply an InvariantCulture
+                        // Parse the creationdate field, which can be in two formats:
+                        // - ISO 8601: 2013-01-31T22:29:34-08:00 (LabKey 25.11+)
+                        // - Legacy: Thu Jul 13 12:00:00 PDT 2023 (older LabKey versions)
                         var date = (string)file[@"creationdate"];
-                        date = date.Remove(20, 4);
-                        var format = "ddd MMM dd HH:mm:ss yyyy";
-                        DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
+                        DateTime formattedDate;
+                        if (!DateTime.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out formattedDate))
+                        {
+                            // Fall back to legacy format: remove timezone chars (e.g., "PDT ") and parse
+                            if (date != null && date.Length > 24)
+                            {
+                                date = date.Remove(20, 4);
+                                var format = "ddd MMM dd HH:mm:ss yyyy";
+                                DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out formattedDate);
+                            }
+                        }
                         listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
                         var fileNode = fileName.EndsWith(EXT) || fileName.EndsWith(ZIP_EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
                         fileNode.Tag = size;
