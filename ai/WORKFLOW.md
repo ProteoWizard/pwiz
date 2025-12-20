@@ -122,19 +122,29 @@ git push
 1. Add completion summary to TODO
 2. Add PR reference to TODO (`**PR**: #1234` or `**PR**: [#1234](https://github.com/ProteoWizard/pwiz/pull/1234)`)
 3. Mark all completed tasks as `[x]`
-4. Commit TODO updates to branch
-
-**PR URL format:** `https://github.com/ProteoWizard/pwiz/pull/{PR_NUMBER}`
-
-**After PR merge:**
+4. Update Status to `✅ Completed`
+5. Move TODO to completed and commit:
 ```bash
-# On branch
 git mv ai/todos/active/TODO-YYYYMMDD_feature.md ai/todos/completed/
-git commit -m "Move TODO to completed - PR #1234 merged"
+git commit -m "Move TODO to completed - ready for merge"
 git push
 ```
 
-**On master after merge:**
+**PR URL format:** `https://github.com/ProteoWizard/pwiz/pull/{PR_NUMBER}`
+
+**Before merging to master (CRITICAL):**
+> Sync TODO state to ai-context to prevent merge conflicts. See [ai-context-branch-strategy.md](docs/ai-context-branch-strategy.md#syncing-todo-changes-to-ai-context).
+
+```bash
+# Cherry-pick the TODO completion commit to ai-context
+git checkout ai-context
+git pull origin ai-context
+git cherry-pick <commit-hash-of-TODO-move>
+git push origin ai-context
+git checkout Skyline/work/YYYYMMDD_feature
+```
+
+**After PR merge:**
 ```bash
 git checkout master
 git pull origin master

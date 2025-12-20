@@ -14,7 +14,16 @@ pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -DryRun
 # Then create PR via: gh pr create --base master --head ai-context ...
 ```
 
-See [Automation: sync-ai-context.ps1 Script](#automation-sync-ai-contextps1-script) for full details.
+**CRITICAL: Before merging any PR to master**, sync TODO completion to ai-context:
+```bash
+# On feature branch after moving TODO to completed/
+git checkout ai-context && git pull origin ai-context
+git cherry-pick <commit-hash-of-TODO-move>
+git push origin ai-context
+git checkout <feature-branch>
+```
+
+See [Syncing TODO Changes to ai-context](#syncing-todo-changes-to-ai-context) for details.
 
 ---
 
@@ -174,6 +183,61 @@ git push origin ai-context
 - Daily batch merge if changes accumulated
 - Immediate merge if a feature branch needs updated context
 - No merge needed if ai-context is just holding backlog items
+
+## Syncing TODO Changes to ai-context
+
+### The Problem
+
+When a feature branch updates a TODO file and merges to master, ai-context may have an older version of that TODO. This causes add/add merge conflicts during the weekly sync, even though both versions represent the same logical file at different lifecycle stages.
+
+### The Solution: Sync Before Merge
+
+**ai-context is the authoritative source for all `ai/` content.** To maintain this:
+
+1. **Before merging a PR to master**, sync the TODO completion state to ai-context
+2. This ensures ai-context and master have the TODO in the same location (`completed/`)
+3. Weekly syncs then merge cleanly with no conflicts
+
+### When to Sync to ai-context
+
+| Event | Action |
+|-------|--------|
+| Move TODO to `completed/` | **Required**: Cherry-pick to ai-context before merging PR |
+| Significant TODO updates during development | Recommended: Keep ai-context current |
+| Minor TODO task checkbox updates | Optional: Can wait for PR completion |
+
+### How to Sync TODO Changes
+
+**Option 1: Cherry-pick (recommended for single commits)**
+```bash
+# After committing TODO move on feature branch
+git checkout ai-context
+git pull origin ai-context
+git cherry-pick <commit-hash>
+git push origin ai-context
+git checkout <feature-branch>
+```
+
+**Option 2: Manual copy (for multiple scattered updates)**
+```bash
+git checkout ai-context
+git pull origin ai-context
+# Copy the TODO file from feature branch
+git show <feature-branch>:ai/todos/completed/TODO-YYYYMMDD_feature.md > ai/todos/completed/TODO-YYYYMMDD_feature.md
+# Remove from active/ if it exists
+git rm ai/todos/active/TODO-YYYYMMDD_feature.md 2>/dev/null || true
+git add ai/todos/completed/TODO-YYYYMMDD_feature.md
+git commit -m "Sync TODO-YYYYMMDD_feature to completed (pre-merge sync)"
+git push origin ai-context
+git checkout <feature-branch>
+```
+
+### Why This Matters
+
+- **Prevents conflicts**: Both branches have the file in the same location
+- **Maintains authority**: ai-context always reflects current TODO state
+- **Enables clean syncs**: Weekly `FromMaster` syncs merge without manual resolution
+- **Preserves history**: Cherry-picks maintain commit attribution
 
 ## Automation: sync-ai-context.ps1 Script
 
