@@ -32,7 +32,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestPerf
+namespace TestPerf
 {
     [TestClass]
     public class PeakImputationDiaTutorial : AbstractFunctionalTest
