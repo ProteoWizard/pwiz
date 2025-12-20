@@ -349,7 +349,7 @@ namespace TestPerf
             }
             //WaitForDocumentLoaded();
 
-            //PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 13, 30 * 1000); // 30 second timeout to avoid getting stuck
+            //PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 30 * 1000); // 30 second timeout to avoid getting stuck
             //WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             RunUI(() => SkylineWindow.SaveDocument());

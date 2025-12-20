@@ -464,7 +464,11 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFreezeProgressPercent(15, "00:00:01");
+            allChromGraph.SetFrozenProgress(15, "00:00:01", 10, new Dictionary<string, int>
+            {
+                { "20fmol_uL_tech1", 34 },
+                { "20fmol_uL_tech2", 31 }
+            });
             doc = WaitForDocumentChange(doc);
 
             // Add FASTA also skipped because filter for document peptides was chosen.
@@ -473,8 +477,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
 
             WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window");
-            allChromGraph.SetFreezeProgressPercent(null, null);
+            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window");
+            allChromGraph.ReleaseFrozenProgress();
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
 

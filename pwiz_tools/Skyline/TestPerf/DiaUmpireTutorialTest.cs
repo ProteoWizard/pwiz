@@ -670,10 +670,10 @@ namespace TestPerf
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
+            allChrom.SetFrozenProgress(41, @"00:00:22", 40);
             WaitForCondition(() => allChrom.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
-            allChrom.SetFreezeProgressPercent(null, null);
+            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
+            allChrom.ReleaseFrozenProgress();
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();

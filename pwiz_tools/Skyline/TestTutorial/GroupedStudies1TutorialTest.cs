@@ -198,10 +198,15 @@ namespace pwiz.SkylineTestTutorial
             {
                 allChrom = WaitForOpenForm<AllChromatogramsGraph>();
 
-                allChrom.SetFreezeProgressPercent(72, @"00:00:06");
+                allChrom.SetFrozenProgress(72, @"00:00:06", 5, new Dictionary<string, int>
+                {
+                    { "D_102_REP1", 72 },
+                    { "D_102_REP2", 71 },
+                    { "D_102_REP3", 72 }
+                });
                 WaitForCondition(() => allChrom.IsProgressFrozen());
-                PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms form");
-                allChrom.SetFreezeProgressPercent(null, null);
+                PauseForAllChromatogramsGraphScreenShot("Loading Chromatograms form");
+                allChrom.ReleaseFrozenProgress();
             }
 
             RunUI(() =>

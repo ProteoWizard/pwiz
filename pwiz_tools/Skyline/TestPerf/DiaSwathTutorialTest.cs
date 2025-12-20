@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -905,10 +906,15 @@ namespace TestPerf
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
+            allChrom.SetFrozenProgress(41, @"00:00:22", 15, new Dictionary<string, int>
+            {
+                { "collinsb_X1803_171-A", 42 },
+                { "collinsb_X1803_172-B", 43 },
+                { "collinsb_X1803_173-A", 43 }
+            });
             WaitForCondition(10 * 60 * 1000, () => allChrom.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
-            allChrom.SetFreezeProgressPercent(null, null);
+            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
+            allChrom.ReleaseFrozenProgress();
             WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
 
             if (importPeptideSearchDlg.ImportFastaControl.AutoTrain)

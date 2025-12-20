@@ -1839,6 +1839,18 @@ namespace pwiz.SkylineTestUtil
             PauseForGraphScreenShot(description, volcanoPlot, timeout, processShot);
         }
 
+        /// <summary>
+        /// Takes a screenshot of the AllChromatogramsGraph (Importing Results form),
+        /// painting over the animated progress bar with a static representation.
+        /// Call SetFrozenProgress on the form before calling this method.
+        /// </summary>
+        public void PauseForAllChromatogramsGraphScreenShot(string description, int? timeout = null)
+        {
+            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
+            PauseForScreenShot(allChrom, description, timeout,
+                processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChrom.ProgressBarTotal));
+        }
+
         protected ZedGraphControl FindZedGraph(Control graphContainer)
         {
             var zedGraphControl = graphContainer as ZedGraphControl;
