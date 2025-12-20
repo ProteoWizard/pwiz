@@ -5,7 +5,7 @@
 - **Base**: `master`
 - **Created**: 2025-12-18
 - **Status**: 🚧 In Progress
-- **PR**: (pending)
+- **PR**: [#3727](https://github.com/ProteoWizard/pwiz/pull/3727)
 - **Objective**: Make tutorial screenshot captures deterministic to eliminate false-positive diffs
 
 ## Background
