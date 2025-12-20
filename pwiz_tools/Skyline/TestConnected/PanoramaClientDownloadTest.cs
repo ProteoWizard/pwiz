@@ -392,9 +392,9 @@ namespace pwiz.SkylineTestConnected
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => ShowPanoramaFilePicker(serverList, selectedPath));
             WaitForConditionUI(() => remoteDlg.IsLoaded);
             RunUI(() => SelectNode(remoteDlg, "@files"));
-            WaitForConditionUI(() => remoteDlg.FileNumber == 4);
+            WaitForConditionUI(15000, () => remoteDlg.FileNumber == 4);
             RunUI(() => SelectNode(remoteDlg, NOT_RENAMED_FOLDER));
-            WaitForConditionUI(() => remoteDlg.FileNumber == 6);
+            WaitForConditionUI(15000, () => remoteDlg.FileNumber == 6);
             OkDialog(remoteDlg, remoteDlg.Close);
         }
 
