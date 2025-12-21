@@ -27,6 +27,42 @@ The MCP server should be a thin adapter layer. Avoid implementing complex busine
 - Let the data source handle joins, aggregations, and filtering
 - Keep Python code focused on protocol translation and formatting
 
+### File-Based Data Exploration Pattern
+
+**Critical for context management**: When MCP responses exceed a few KB, write data to disk instead of returning it directly. Large responses blow up conversation token budgets and can cause context overflow.
+
+**Pattern:**
+1. MCP tool writes large data to `ai/.tmp/{descriptive-name}.md` or `.txt`
+2. Tool returns brief summary + file path (not the data itself)
+3. Claude uses Grep/Read tools to explore the file as needed
+
+**Example implementation:**
+```python
+@mcp.tool()
+async def save_large_data(query_params):
+    # Fetch data
+    large_result = fetch_from_server(query_params)
+
+    # Write to file instead of returning
+    output_file = repo_root / "ai" / ".tmp" / "result.md"
+    output_file.write_text(format_as_markdown(large_result))
+
+    # Return metadata only
+    return f"Data saved to: {output_file}\nRows: {len(large_result)}\nUse Grep/Read to explore."
+```
+
+**When to use this pattern:**
+- Test run logs (9-12 hours of output)
+- Stack trace collections (multiple failures)
+- Daily reports aggregating multiple data sources
+- Any response > 5-10 KB
+
+**Benefits:**
+- Preserves conversation context for reasoning
+- Enables targeted exploration (grep for patterns, read specific sections)
+- Data persists across conversation restarts
+- Multiple tools can build on the same file
+
 ## LabKey Server Patterns
 
 ### Server-Side Custom Queries
@@ -122,16 +158,39 @@ ORDER BY p.testname, p.pass
 query_table(
     schema_name="testresults",
     query_name="testpasses_detail",
-    param_name="RunId",
-    param_value="74829",
+    parameters={"RunId": "74829"},
     filter_column="testname",
     filter_value="TestMethodRefinementTutorial"
 )
 ```
 
+**Date Range Queries:**
+
+For queries that filter by date, use two parameters:
+
+```sql
+PARAMETERS (StartDate TIMESTAMP, EndDate TIMESTAMP)
+
+SELECT ...
+FROM testruns t
+WHERE CAST(t.posttime AS DATE) >= StartDate
+  AND CAST(t.posttime AS DATE) <= EndDate
+```
+
+Note: Use `CAST(posttime AS DATE)` to ensure date-only comparisons (inclusive on both ends).
+
+**Calling date range queries:**
+```
+query_table(
+    schema_name="testresults",
+    query_name="testruns_detail",
+    parameters={"StartDate": "2025-12-14", "EndDate": "2025-12-14"}
+)
+```
+
 **When to use parameterized queries:**
 - Table has millions of rows
-- You always filter by a specific column (like run ID)
+- You always filter by a specific column (like run ID or date)
 - Non-parameterized query times out or is slow
 
 ### Authentication
