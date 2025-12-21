@@ -1,4 +1,12 @@
 ---
 description: Guide developer through environment setup
 ---
-Read ai\docs\developer-setup-guide.md and begin helping the developer to set up their agentic coding environment. Walk through each section, verify prerequisites, and assist with any configuration steps.
+First, run the environment verification script to check all prerequisites:
+
+```powershell
+pwsh -File ai\scripts\Verify-Environment.ps1
+```
+
+Show the results to the developer. For any items marked [MISSING] or [WARN], offer to help fix them by running the suggested commands or providing guidance.
+
+If the developer needs more details about any component, refer to ai\docs\developer-setup-guide.md for full installation instructions.

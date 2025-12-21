@@ -128,13 +128,15 @@ The official `labkey` package handles all authentication internally via netrc.
 **Step 1**: Create `_netrc` file in user home directory (Windows) or `.netrc` (Unix):
 ```
 machine skyline.ms
-login your-email@example.com
-password your-password
+login claude.c.skyline@gmail.com
+password <password>
 ```
+> Use the shared Claude agent account. Request the password from team leads via LastPass.
 
 **Step 2**: Register MCP server in Claude Code:
 ```bash
-claude mcp add labkey -- python C:/proj/pwiz/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+# Replace <repo-root> with your actual repository path
+claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
 ```
 
 ### Available Tools

@@ -12,6 +12,8 @@ This directory contains all documentation for LLM-assisted development on the Sk
 
 **Total: <500 lines for essential context.**
 
+**Need more?** See [TOC.md](TOC.md) for a complete index of all 58 documents with descriptions.
+
 ## Core Files (Read Every Session)
 
 These files are kept small (<200 lines each) for quick loading:

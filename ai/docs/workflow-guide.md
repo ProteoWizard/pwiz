@@ -286,44 +286,46 @@ The TODO file in ai/todos/active/ contains full context. Please read it first, t
 
 When you have a branch-ready TODO file (e.g., `ai/todos/backlog/TODO-utf8_no_bom.md`):
 
-**Step 1: Move TODO to active on master (claims the work)**
+> **Note:** Backlog TODOs live on `ai-context` branch, not master.
+
+**Step 1: Create feature branch from master**
 ```bash
 git checkout master
 git pull origin master
 git submodule update --init --recursive  # Ensure submodules are in sync
-# IMPORTANT: Use git mv to preserve Git history when moving tracked files
-git mv ai/todos/backlog/TODO-utf8_no_bom.md ai/todos/active/TODO-20251015_utf8_no_bom.md
+git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date
 ```
 
 **Why the submodule update?** The project has Git submodules (e.g., `DocumentConverter`, `BullseyeSharp`) that need to be at the exact commit master expects. Without this step, submodules may show as modified in all your diffs.
 
-**Step 2: Commit and push to master (makes work visible to team)**
+**Step 2: Move TODO on ai-context (claims the work)**
 ```bash
-git commit -m "Start utf8_no_bom work - move TODO to active"
-git push origin master
+git checkout ai-context
+git pull origin ai-context
+# IMPORTANT: Use git mv to preserve Git history when moving tracked files
+git mv ai/todos/backlog/TODO-utf8_no_bom.md ai/todos/active/TODO-20251015_utf8_no_bom.md
 ```
 
-**Step 3: Create feature branch**
-```bash
-git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date matching TODO
-```
-
-**Step 4: Update TODO file header**
-- Change "Branch Information (Future)" to "Branch Information"
-- Fill in actual branch name and creation date
-- Update any "will be" to actual values
-
-**Step 5: Commit TODO update to branch**
+**Step 3: Update TODO header and commit on ai-context**
+- Fill in Branch, Created, Status fields
+- Update any placeholder values
 ```bash
 git add ai/todos/active/TODO-20251015_utf8_no_bom.md
-git commit -m "Update TODO with branch information"
+git commit -m "Start utf8_no_bom work - move TODO to active"
+git push origin ai-context
+```
+
+**Step 4: Cherry-pick to feature branch**
+```bash
+git checkout Skyline/work/20251015_utf8_no_bom
+git cherry-pick <commit-hash-from-step-3>
 git push -u origin Skyline/work/20251015_utf8_no_bom
 ```
 
-**Why move TODO to master first?**
-- Makes it immediately visible on master that this work is being claimed
-- Prevents duplicate work by other developers
-- Atomic operation: file move is committed before code changes begin
+**Why move on ai-context first?**
+- Removes TODO from backlog (prevents duplicate work claims)
+- Makes it visible on ai-context that work is in progress
+- Cherry-pick brings the TODO to feature branch cleanly
 - Git history properly tracks the TODO lifecycle
 
 ### Workflow 2: Creating Branch and TODO Together
