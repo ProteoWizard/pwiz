@@ -80,9 +80,22 @@ Created a reusable wrapper class that enhances the Producer/Receiver pattern wit
 - `ai/docs/build-and-test-guide.md` - Documented process detection feature
 - `pwiz_tools/Skyline/ai/Build-Skyline.ps1` - Added test process detection with LLM guidance
 
-## Phase 2: Apply to RTLinearRegressionGraphPane (PLANNED)
+## Phase 2: Apply to RTLinearRegressionGraphPane ✅ COMPLETE
 
-Apply `ReplicateCachingReceiver` wrapper to `RTLinearRegressionGraphPane` for same benefits.
+Applied `ReplicateCachingReceiver` wrapper to `RTLinearRegressionGraphPane` - proving separation of concerns:
+
+### Changes Made
+- Changed field type to `ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>`
+- Wrapped receiver with caching config (document, settings, TargetIndex as cache key)
+- Added dispose call for cleanup
+- Moved `GraphObjList.Clear()` and `CurveList.Clear()` after `TryGetProduct()` for stale-while-revalidate
+
+### Files Modified
+- `pwiz_tools/Skyline/Controls/Graphs/RTLinearRegressionGraphPane.cs`
+
+### UX Result
+- Both Relative Abundance and RT Regression graphs now have seamless replicate switching
+- Tested with ~5,000 proteins, 48,000 peptides - instant switching after first calculation
 
 ## Phase 3: Incremental Updates (PLANNED)
 

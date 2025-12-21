@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private NodeTip _tip;
         private int _progressValue = -1;
         public PaneProgressBar _progressBar;
-        private Receiver<RetentionTimeRegressionSettings, RtRegressionResults> _graphDataReceiver;
+        private ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults> _graphDataReceiver;
 
         public RTLinearRegressionGraphPane(GraphSummary graphSummary, bool runToRun)
             : base(graphSummary)
@@ -63,12 +63,19 @@ namespace pwiz.Skyline.Controls.Graphs
             RunToRun = runToRun;
             Settings.Default.RTScoreCalculatorList.ListChanged += RTScoreCalculatorList_ListChanged;
             AllowDisplayTip = true;
-            _graphDataReceiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
+            var receiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
+            _graphDataReceiver = new ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>(
+                receiver,
+                settings => settings.Document,
+                settings => new { settings.BestResult, settings.Threshold, settings.Refine, settings.PointsType,
+                    settings.RegressionMethod, settings.CalculatorName, settings.IsRunToRun, settings.OriginalIndex },
+                settings => settings.TargetIndex);  // Cache key: replicate index (-1 for all/best modes)
             _graphDataReceiver.ProgressChange += ProgressChangeAction;
         }
 
         public void Dispose()
         {
+            _graphDataReceiver?.Dispose();
             _progressBar?.Dispose();
             _progressBar = null;
             AllowDisplayTip = false;
@@ -340,13 +347,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void UpdateNow() 
+        private void UpdateNow()
         {
-            GraphObjList.Clear();
-            CurveList.Clear();
             var regressionSettings = GetRegressionSettings();
             if (!_graphDataReceiver.TryGetProduct(regressionSettings, out var results))
             {
+                // Keep showing previous graph while calculating new data (stale-while-revalidate)
                 return;
             }
 
@@ -355,11 +361,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            _data = results.GraphData;
-            if (_data == null)
+            if (results.GraphData == null)
             {
                 return;
             }
+
+            // Clear only when new data is ready for seamless transition
+            GraphObjList.Clear();
+            CurveList.Clear();
+            _data = results.GraphData;
             GraphHelper.FormatGraphPane(this);
 
             var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
