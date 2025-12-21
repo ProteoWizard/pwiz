@@ -5,71 +5,39 @@ description: Use when investigating Skyline nightly test issues, handle leaks, m
 
 # Skyline Nightly Test Analysis
 
-When working with Skyline nightly test data from skyline.ms, consult these documentation files.
+**Full documentation**: ai/docs/nightly-test-analysis.md
 
-## Core Documentation
+## MCP Tools (Quick Reference)
 
-1. **ai/docs/nightly-test-analysis.md** - Complete system documentation
-   - Test folders and their purposes
-   - Available tables and queries
-   - MCP tools reference
-   - Analysis workflow
+| Tool | Purpose |
+|------|---------|
+| `get_daily_test_summary(report_date)` | Daily report for all 6 folders → ai/.tmp/ |
+| `save_test_failure_history(test_name, start_date, container_path)` | Stack trace pattern analysis → ai/.tmp/ |
+| `save_run_log(run_id)` | Full test log for grep/search → ai/.tmp/ |
+| `get_run_failures(run_id)` | Stack traces for a specific run |
+| `get_run_leaks(run_id)` | Leak details for a specific run |
 
-2. **ai/docs/mcp-development-guide.md** - MCP patterns
-   - Server-side query pattern
-   - How to extend with new queries
+## Test Folders
 
-## When to Read What
+| Folder | Duration | Branch |
+|--------|----------|--------|
+| Nightly x64 | 540 min | master (default) |
+| Performance Tests | 720 min | master |
+| Release Branch | 540 min | release |
+| Release Branch Performance Tests | 720 min | release |
+| Integration | 540 min | assigned |
+| Integration with Perf Tests | 720 min | assigned |
 
-- **Before querying test results**: Read ai/docs/nightly-test-analysis.md (MCP tools section)
-- **To understand test folders**: Read ai/docs/nightly-test-analysis.md (Test Folders table)
-- **For extending queries**: Read ai/docs/mcp-development-guide.md (Server-Side Custom Queries)
-- **For MCP server changes**: Read pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/README.md
+## Typical Workflow
 
-## Quick Reference
+1. **Daily review**: `get_daily_test_summary("2025-12-15")` → read report
+2. **Pattern analysis**: If test failed on multiple machines, use `save_test_failure_history` to check if same root cause
+3. **Deep dive**: Use `save_run_log` when stack traces aren't sufficient
 
-**Data location**: skyline.ms -> /home/development/Nightly x64 -> testresults schema
+## Anomaly Detection
 
-**MCP tools available**:
-- `query_test_runs(days, max_rows)` - Recent test run summaries
-- `get_run_failures(run_id)` - Failed tests with stack traces
-- `get_run_leaks(run_id)` - Memory and handle leaks
-- `query_table` - Generic queries including custom server-side queries
+- **Short duration** (< expected) = crash or premature termination
+- **Full duration + low test count** = hang
+- **Stddev-based**: 3σ/4σ from trained mean flags anomalies
 
-**Server-side queries** (use via query_table):
-- `handleleaks_by_computer` - Handle leaks grouped by computer
-- `testfails_by_computer` - Test failures grouped by computer
-
-## Common Questions
-
-### "Which computer should I use to debug this leak/failure?"
-
-Use the server-side queries to find computers most affected:
-
-**For handle leaks**:
-```
-query_table(schema="testresults", query="handleleaks_by_computer",
-            filter_column="testname", filter_value="TestMethodRefinementTutorial")
-```
-
-**For test failures**:
-```
-query_table(schema="testresults", query="testfails_by_computer",
-            filter_column="testname", filter_value="TestToolService")
-```
-
-Results are ranked by count, so the first computer listed has the most occurrences and is the best candidate for debugging.
-
-### "What tests are failing in nightly?"
-
-```
-query_test_runs(days=7)  # Find run with failures
-get_run_failures(run_id=...)  # Get details
-```
-
-### "Are there memory leaks I should investigate?"
-
-```
-query_test_runs(days=7)  # Find run with leaks
-get_run_leaks(run_id=...)  # Get details
-```
+For server-side queries, examples, and detailed workflows, see **ai/docs/nightly-test-analysis.md**.
