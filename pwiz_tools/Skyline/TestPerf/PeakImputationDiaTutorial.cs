@@ -22,6 +22,7 @@ using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
@@ -29,6 +30,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -73,21 +75,19 @@ namespace TestPerf
                 Assert.AreEqual(pepOfInterest1, GetSelectedPeptide());
             });
             WaitForDocumentLoaded();
-            var relativeAbundanceForm = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
-            Assert.IsNotNull(relativeAbundanceForm);
             RunUI(() =>
             {
                 SkylineWindow.SetAreaProteinTargets(true);
                 SkylineWindow.ShowSingleReplicate();
                 SkylineWindow.ShowProductTransitions();
             });
-            WaitForComplete(relativeAbundanceForm);
+            WaitForRelativeAbundanceComplete();
             PauseForScreenShot(SkylineWindow, "Skyline main window");
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
-            WaitForComplete(relativeAbundanceForm);
+            WaitForRelativeAbundanceComplete();
             PauseForRelativeAbundanceGraphScreenShot("Peak abundance - EV enriched");
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
-            WaitForComplete(relativeAbundanceForm);
+            WaitForRelativeAbundanceComplete();
             PauseForRelativeAbundanceGraphScreenShot("Peak abundance - Total plasma");
             RunUI(()=>SkylineWindow.ShowGroupComparisonWindow("EV-Enrich"));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
@@ -143,22 +143,22 @@ namespace TestPerf
             });
             WaitForExemplaryPeaks();
             PauseForScreenShot(SkylineWindow, $"{pepOfInterest2} with misaligned imputation");
-            GraphSummary scoreToRunGraphSummary = null;
+            WaitForGraphs();
             RunUI(() =>
             {
+                // Reduce the number of updates to this graph by setting directly to settings
+                // and then showing the graph.
+                Settings.Default.RtCalculatorOption = new RtCalculatorOption.Library("ExtracellularVesicalMagNet");
+                RTGraphController.RegressionMethod = RegressionMethodRT.loess;
                 SkylineWindow.ShowRTRegressionGraphScoreToRun();
-                scoreToRunGraphSummary = FindGraphSummaryByGraphType<RTLinearRegressionGraphPane>();
-                Assert.IsNotNull(scoreToRunGraphSummary);
-                SkylineWindow.ChooseCalculator(new RtCalculatorOption.Library("ExtracellularVesicalMagNet"));
-                SkylineWindow.ShowRegressionMethod(RegressionMethodRT.loess);
             });
-            WaitForComplete(scoreToRunGraphSummary);
+            WaitForRTRegressionComplete();
             PauseForRetentionTimeGraphScreenShot("Score to run regression");
             RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
-            WaitForComplete(scoreToRunGraphSummary);
+            WaitForRTRegressionComplete();
             PauseForRetentionTimeGraphScreenShot("Regression residuals plot");
             RunUI(() => SkylineWindow.SelectedResultsIndex = 0);
-            WaitForComplete(scoreToRunGraphSummary);
+            WaitForRTRegressionComplete();
             PauseForRetentionTimeGraphScreenShot("Residuals for EV13 replicate");
             SelectPeptide(pepOfInterest1);
             RunUI(() => rtReplicateGraphSummary.Activate());
@@ -211,7 +211,7 @@ namespace TestPerf
                 });
                 // Wait for plots to finish updating before taking the cover shot
                 WaitForConditionUI(() => volcanoPlot.IsComplete);
-                WaitForComplete(relativeAbundanceForm);
+                WaitForRelativeAbundanceComplete();
                 TakeCoverShot();
             }
         }
@@ -222,18 +222,33 @@ namespace TestPerf
             SkylineWindow.EditDelete();
         }
 
-        private void WaitForComplete(GraphSummary graphSummary)
+        private void WaitForRTRegressionComplete()
         {
-            WaitForConditionUI(() =>
-            {
-                var pane = graphSummary.GraphControl.GraphPane;
-                return pane switch
-                {
-                    SummaryRelativeAbundanceGraphPane relativeAbundance => relativeAbundance.IsComplete,
-                    RTLinearRegressionGraphPane regressionGraphPane => !regressionGraphPane.IsCalculating,
-                    _ => true
-                };
-            });
+            var scoreToRunGraphPane = GetScoreToRunGraphPane();
+            Assert.IsNotNull(scoreToRunGraphPane);
+            // WARNING: Using WaitForConditionUI here causes an unexplained deadlock.
+            //          The call to Program.MainWindow.Invoke blocks waiting for the UI thread,
+            //          while the Skyline window remains responsive to mouse and keyboard input.
+            //          The UI thread is actively pumping messages, yet the Invoke message is
+            //          never dispatched. This occurs after ProductAvailableAction runs via
+            //          BeginInvoke from the caching system. Using WaitForCondition works because
+            //          IsCalculating is thread-safe (reads _graphDataReceiver.IsProcessing()).
+            //          This pattern was previously established in RunToRunAlignmentTest.
+            // WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
+            WaitForCondition(() => !scoreToRunGraphPane.IsCalculating);
+        }
+
+        public static RTLinearRegressionGraphPane GetScoreToRunGraphPane()
+        {
+            return FormUtil.OpenForms.OfType<GraphSummary>().Select(graphSummary => graphSummary.GraphControl.GraphPane)
+                .OfType<RTLinearRegressionGraphPane>().FirstOrDefault(graphPane => !graphPane.RunToRun);
+        }
+
+        private void WaitForRelativeAbundanceComplete()
+        {
+            var summary = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
+            Assert.IsNotNull(summary);
+            WaitForPaneCondition<SummaryRelativeAbundanceGraphPane>(summary, pane => pane.IsComplete);
         }
 
         private static void SelectPeptide(string sequence)
