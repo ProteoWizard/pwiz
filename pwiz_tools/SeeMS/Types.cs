@@ -243,9 +243,14 @@ namespace seems
                 {
                     var intensityArray = chromatogram.Element.getIntensityArray();
                     var type = chromatogram.Element.cvParamChild(CVID.MS_chromatogram_type);
+                    if (type.cvid == CVID.CVID_Unknown)
+                    {
+                        // Didn't find a particular kind of chromatogram, look for generic
+                        type = chromatogram.Element.cvParam(CVID.MS_chromatogram);
+                    }
                     if (type.cvid != CVID.MS_total_ion_current_chromatogram &&
-                        type.cvid != CVID.MS_basepeak_chromatogram &&
-                        intensityArray != null)
+                             type.cvid != CVID.MS_basepeak_chromatogram &&
+                             intensityArray != null)
                     {
                         // Get Y axis title - ideally the units for the intensity array
                         var unitsParam = intensityArray.cvParamChild(CVID.MS_intensity_array);

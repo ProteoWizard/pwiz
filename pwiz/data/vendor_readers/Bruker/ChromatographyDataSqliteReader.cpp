@@ -117,8 +117,9 @@ using pwiz::vendor_api::Bruker::Chromatogram;
 using pwiz::vendor_api::Bruker::ChromatogramPtr;
 
 // Forward declarations for local helpers used below
-static CVID traceTypeToCVID(int type);
+static CVID traceTypeToCVID(int type, int unit, const std::string description);
 static CVID traceUnitToCVID(int unit, double& value);
+static TraceUnit getDefaultUnitForTraceType(CVID chromatogramType);
 
 std::vector<vendor_api::Bruker::ChromatogramPtr> readChromatographyDataSqlite(const std::string rootpath)
 {
@@ -139,20 +140,26 @@ std::vector<vendor_api::Bruker::ChromatogramPtr> readChromatographyDataSqlite(co
             ChromatogramPtr chrom(new Chromatogram);
 
             int unitValue = 0;
+            double timeOffset = 0.0;
 
             // Get trace metadata from TraceSources
             std::ostringstream sourceQuery;
-            sourceQuery << "SELECT Type, Unit, Description, Instrument FROM TraceSources WHERE Id=" << traceId;
+            sourceQuery << "SELECT Type, Unit, Description, Instrument, TimeOffset FROM TraceSources WHERE Id=" << traceId;
             sqlite3pp::query sq(db, sourceQuery.str().c_str());
             sqlite3pp::query::iterator sitr = sq.begin();
             if (sitr != sq.end())
             {
-                chrom->type = traceTypeToCVID(sitr->get<int>(0));
-                unitValue = sitr->get<int>(1);
-                double dummyValue = 0.0;
-                chrom->units = traceUnitToCVID(unitValue, dummyValue);
                 chrom->description = sitr->get<std::string>(2);
                 chrom->instrument = sitr->get<std::string>(3);
+                timeOffset = sitr->get<double>(4);
+                unitValue = sitr->get<int>(1);
+                chrom->type = traceTypeToCVID(sitr->get<int>(0), unitValue, chrom->description);
+                if (unitValue == static_cast<int>(TraceUnit::NoneUnit))
+                {
+                    unitValue = static_cast<int>(TraceUnit::Intensity); // default to Intensity if no unit specified
+                }
+                double dummyValue = 0.0;
+                chrom->units = traceUnitToCVID(unitValue, dummyValue);
             }
 
             sqlite3_stmt* chunksStmt = nullptr;
@@ -175,7 +182,7 @@ std::vector<vendor_api::Bruker::ChromatogramPtr> readChromatographyDataSqlite(co
 
                     const double* timesData = reinterpret_cast<const double*>(timesBlob);
                     int numTimes = timesBlobSize / static_cast<int>(sizeof(double));
-                    chrom->times.insert(chrom->times.end(), timesData, timesData + numTimes);
+                        chrom->times.insert(chrom->times.end(), timesData, timesData + numTimes);
 
                     const float* intensitiesData = reinterpret_cast<const float*>(intensitiesBlob);
                     int numIntensities = intensitiesBlobSize / static_cast<int>(sizeof(float));
@@ -191,6 +198,11 @@ std::vector<vendor_api::Bruker::ChromatogramPtr> readChromatographyDataSqlite(co
             for (double& intensity : chrom->intensities)
                 traceUnitToCVID(unitValue, intensity); // Scale values as needed to fit available standard unit types
 
+            if (timeOffset != 0.0)
+            {
+                for (double& time : chrom->times)
+                    time += timeOffset;
+            }
             results.push_back(chrom);
         }
     }
@@ -202,7 +214,7 @@ std::vector<vendor_api::Bruker::ChromatogramPtr> readChromatographyDataSqlite(co
     return results;
 }
 
-static CVID traceTypeToCVID(int type)
+static CVID traceTypeToCVID(int type, int unit, const std::string description)
 {
     TraceType traceTypeEnum = static_cast<TraceType>(type);
     switch (traceTypeEnum)
@@ -210,6 +222,8 @@ static CVID traceTypeToCVID(int type)
         case TraceType::NoneTrace:
             return CVID_Unknown;
         case TraceType::ChromMS:
+            if (description.find("BPC") == 0)
+                return MS_basepeak_chromatogram;
             return MS_TIC_chromatogram;
         case TraceType::ChromUV:
             return MS_absorption_chromatogram;
@@ -222,6 +236,11 @@ static CVID traceTypeToCVID(int type)
         case TraceType::ChromTemperature:
             return MS_temperature_chromatogram;
         case TraceType::ChromUserDefined:
+            if (unit == static_cast<int>(TraceUnit::Temperature_C) ||
+                unit == static_cast<int>(TraceUnit::Temperature_F))
+            {
+                return MS_temperature_chromatogram;
+            }
             return MS_chromatogram;
     }
     return CVID_Unknown;
@@ -285,6 +304,9 @@ static CVID traceUnitToCVID(int unit, double& value)
             return UO_watt;
         case TraceUnit::Pressure_mbar:
             value *= 100.0; // convert mbar to Pa (1 mbar = 100 Pa)
+            return UO_pascal;
+        case TraceUnit::Pressure_kPa:
+            value *= 1000.0; // convert kPa to Pa
             return UO_pascal;
         case TraceUnit::Pressure_MPa:
             value *= 1000000.0; // convert MPa to Pa
