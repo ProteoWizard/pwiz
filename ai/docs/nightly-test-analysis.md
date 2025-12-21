@@ -49,7 +49,7 @@ Test results are organized into folders under `/home/development/` on skyline.ms
 - **Integration** - Large branch validation before merge (e.g., PR #3687)
 - **Performance Tests** - Perf regression detection
 
-**Note**: Currently only **Nightly x64** has the `testresults` schema accessible via the MCP server. Other folders require server-side configuration to enable the schema.
+All 6 test folders are accessible via the MCP server by specifying the `container_path` parameter.
 
 ## Data Location
 
@@ -75,12 +75,15 @@ Test results data lives at:
 |--------|-------------|
 | `id` | Unique run identifier |
 | `posttime` | When the run was posted |
-| `duration` | Run duration in minutes |
+| `duration` | Run duration in minutes (540 for base, 720 for perf runs) |
 | `passedtests` | Number of passed tests |
 | `failedtests` | Number of failed tests |
 | `leakedtests` | Number of tests with leaks |
 | `averagemem` | Average memory usage in MB |
-| `revision` | Git revision tested |
+| `githash` | Git commit hash tested (e.g., "cd98ae308") |
+| `os` | Operating system (e.g., "Microsoft Windows NT 10.0.19045.0") |
+| `userid` | Foreign key to user table (computer name) |
+| `revision` | Sequential build number from TeamCity |
 | `flagged` | Whether the run was flagged for attention |
 
 ### Custom Queries (Server-Side Views)
@@ -89,40 +92,71 @@ These queries are created on the LabKey server to provide pre-joined, aggregated
 
 | Query | Description | Parameters |
 |-------|-------------|------------|
+| `testruns_detail` | Test run summaries with computer, git hash, OS | `StartDate`, `EndDate` |
+| `testpasses_detail` | Per-pass test data with computer name | `RunId` (required) |
+| `failures_by_date` | Test failures with test names for a date range | `StartDate`, `EndDate` |
+| `leaks_by_date` | Memory/handle leaks with test names and type | `StartDate`, `EndDate` |
+| `expected_computers` | Active computers with trained mean/stddev for anomaly detection | (none) |
 | `handleleaks_by_computer` | Handle leaks grouped by computer and test name | (none) |
 | `testfails_by_computer` | Test failures grouped by computer and test name | (none) |
-| `testpasses_detail` | Per-pass test data with computer name | `RunId` (required) |
 
-**Example**: Query `handleleaks_by_computer` with filter `testname=TestMethodRefinementTutorial` returns:
+### Test Run Summary Query (testruns_detail)
 
-| computer | testname | leak_count | avg_handles | last_seen |
-|----------|----------|------------|-------------|-----------|
-| KAIPO-DEV | TestMethodRefinementTutorial | 28 | 3.7 | 2025-12-08 |
-| BRENDANX-UW5 | TestMethodRefinementTutorial | 19 | 2.7 | 2025-12-02 |
+The primary query for reviewing nightly test results. Returns one row per test run with all key metrics:
 
-This immediately answers "which computer should I use to debug this leak?"
+```
+query_table(
+    schema_name="testresults",
+    query_name="testruns_detail",
+    container_path="/home/development/Nightly x64",
+    parameters={"StartDate": "2025-12-07", "EndDate": "2025-12-14"}
+)
+```
 
-### Parameterized Queries
+**Returns:**
 
-Some queries require parameters for efficient execution on large tables. Use `param_name` and `param_value` with `query_table`:
+| Column | Description |
+|--------|-------------|
+| `run_id` | Unique run identifier |
+| `computer` | Machine name (e.g., "BOSS-PC", "KAIPOT-PC1") |
+| `posttime` | When the run was posted |
+| `duration` | Run duration in minutes |
+| `os` | Operating system version |
+| `passedtests` | Number of passed tests |
+| `failedtests` | Number of failed tests |
+| `leakedtests` | Number of tests with leaks |
+| `averagemem` | Average memory usage in MB |
+| `githash` | Git commit hash tested |
+| `revision` | TeamCity build number |
+| `flagged` | Whether flagged for attention |
+
+**Example output:**
+
+| computer | posttime | duration | passed | fail | leaks | githash |
+|----------|----------|----------|--------|------|-------|---------|
+| BOSS-PC | 12/14 06:01 | 540 | 9148 | 0 | 0 | afdaac3ad |
+| EKONEIL01 | 12/14 06:01 | 540 | 12769 | 0 | 0 | afdaac3ad |
+
+**Tip:** A full base run should be ~540 minutes. Shorter runs may indicate hangs or incomplete testing.
+
+### Per-Pass Test Data Analysis (testpasses_detail)
+
+The `testpasses_detail` query returns handle/memory measurements for each pass of a test within a specific run. This is essential for diagnosing leaks.
 
 ```
 query_table(
     schema_name="testresults",
     query_name="testpasses_detail",
     container_path="/home/development/Nightly x64",
-    param_name="RunId",
-    param_value="74829",
+    parameters={"RunId": "74829"},
     filter_column="testname",
     filter_value="TestMethodRefinementTutorial"
 )
 ```
 
-**Why parameterized?** The `testpasses` table has 700M+ rows. A parameterized query filters by `RunId` BEFORE joining, making it fast. Without the parameter, the query would timeout.
+**Why parameterized?** The `testpasses` table has 700M+ rows. The `RunId` parameter filters BEFORE joining, making it fast. Without it, the query would timeout.
 
-### Per-Pass Test Data Analysis
-
-The `testpasses_detail` query returns handle/memory measurements for each pass of a test:
+**Returns:**
 
 | Column | Description |
 |--------|-------------|
@@ -147,13 +181,59 @@ The `testpasses_detail` query returns handle/memory measurements for each pass o
 
 This reveals whether handles leak between passes or accumulate within a pass.
 
+### Leak Analysis Queries
+
+**Example**: Query `handleleaks_by_computer` with filter `testname=TestMethodRefinementTutorial` returns:
+
+| computer | testname | leak_count | avg_handles | last_seen |
+|----------|----------|------------|-------------|-----------|
+| KAIPO-DEV | TestMethodRefinementTutorial | 28 | 3.7 | 2025-12-08 |
+| BRENDANX-UW5 | TestMethodRefinementTutorial | 19 | 2.7 | 2025-12-02 |
+
+This immediately answers "which computer should I use to debug this leak?"
+
 ## Available MCP Tools
 
 | Tool | Description |
 |------|-------------|
+| `get_daily_test_summary(report_date)` | Query all 6 folders, save report to ai/.tmp/ |
+| `save_test_failure_history(test_name, start_date, container_path)` | Collect stack traces for a test, detect patterns |
+| `save_run_log(run_id)` | Save full test run log to ai/.tmp/ for grep/search |
 | `query_test_runs(days, max_rows)` | Query recent test runs with summaries |
 | `get_run_failures(run_id)` | Get failed tests and stack traces for a run |
 | `get_run_leaks(run_id)` | Get memory and handle leaks for a run |
+
+### Daily Test Summary
+
+The primary entry point for daily test review. Queries all 6 test folders in one call:
+
+```
+get_daily_test_summary(report_date="2025-12-14")
+```
+
+Returns a brief summary and saves a full markdown report to `ai/.tmp/nightly-report-YYYYMMDD.md` including:
+- Summary table with pass/fail/leak/anomaly counts per folder
+- Per-computer details with stddev-based anomaly detection
+- Missing computers that didn't report
+- **Failures by Test** - which tests failed on which computers
+- **Leaks by Test** - which tests leaked on which computers
+
+### Stack Trace Pattern Analysis
+
+When a test fails on multiple machines, use `save_test_failure_history` to determine if they share the same root cause:
+
+```
+save_test_failure_history(
+    test_name="TestPanoramaDownloadFile",
+    start_date="2025-12-14",
+    container_path="/home/development/Release Branch"
+)
+```
+
+Returns summary and saves to `ai/.tmp/test-failures-{testname}.md` with:
+- All stack traces grouped by unique pattern
+- Pattern count (1 = same root cause, multiple = different issues)
+- Affected computers per pattern
 
 ## Usage Examples
 
@@ -197,12 +277,21 @@ To add new custom queries (like `handleleaks_by_computer`), see [MCP Development
 
 ## Future Enhancements
 
-- `/pw-nightly` slash command for daily test review
+- Stack trace normalization (handle path/locale differences for better pattern detection)
 - Trend analysis across multiple runs
 - Flaky test identification (tests that pass/fail inconsistently)
 - Automatic correlation with git commits
-- Test failure grouping by stack trace signature
 - `memoryleaks_by_computer` query for memory leak analysis
+
+## Recently Implemented
+
+- `/pw-nightly` slash command for daily test review ✓
+- `get_daily_test_summary` - Query all 6 folders in one call ✓
+- `save_test_failure_history` - Stack trace pattern grouping ✓
+- `save_run_log` - Full log download for deep investigation ✓
+- `failures_by_date` / `leaks_by_date` queries - Test names for date ranges ✓
+- `expected_computers` query - Stddev-based anomaly detection ✓
+- "Failures by Test" / "Leaks by Test" sections in daily report ✓
 
 ## Related Documentation
 
