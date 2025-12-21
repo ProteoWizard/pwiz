@@ -342,15 +342,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
             var graphSettings = GraphSettings.FromSettings();
+            var showReplicate = RTLinearRegressionGraphPane.ShowReplicate;
+            var resultsIndex = GraphSummary.ResultsIndex;
             var oldGraphData = _graphData;
-            if (!_graphDataReceiver.TryGetProduct(new GraphDataParameters(document, graphSettings), out var newGraphData))
+            if (!_graphDataReceiver.TryGetProduct(
+                    new GraphDataParameters(document, graphSettings, showReplicate, resultsIndex),
+                    out var newGraphData))
             {
                 return;
             }
             _graphData = newGraphData;
-            // Calculate y values and order which can change based on the
-            // replicate display option or the show CV option
-            _graphData.CalcDataPositions(GraphSummary.ResultsIndex, selectedProtein);
+            // Find selected index - quick O(n) scan on UI thread
+            _graphData.SelectedIndex = _graphData.FindSelectedIndex(selectedProtein);
             bool dataChanged = _graphData.MinY != oldGraphData?.MinY || _graphData.MaxY != oldGraphData?.MaxY;
 
             // For proper z-order, add the selected points, then the matched points, then the unmatched points
@@ -606,10 +609,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public abstract class GraphData : Immutable
         {
-            protected GraphData(SrmDocument document, GraphSettings graphSettings, ProductionMonitor productionMonitor)
+            protected GraphData(SrmDocument document, GraphSettings graphSettings,
+                ReplicateDisplay showReplicate, int resultsIndex, ProductionMonitor productionMonitor)
             {
                 Document = document;
                 GraphSettings = graphSettings;
+                ShowReplicate = showReplicate;
+                ResultsIndex = resultsIndex;
                 AggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
                 var schema = SkylineDataSchema.MemoryDataSchema(document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
                 bool anyMolecules = document.HasSmallMolecules;
@@ -637,7 +643,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var moleculeGroup = moleculeGroups[iMoleculeGroup];
                     if (graphSettings.AreaProteinTargets && !anyMolecules)
                     {
-                        productionMonitor.SetProgress(100 * iMoleculeGroup / moleculeGroups.Count);
+                        productionMonitor.SetProgress(50 * iMoleculeGroup / moleculeGroups.Count);
                         var path = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
                         var protein = new Protein(schema, path);
                         listPoints.Add(new GraphPointData(protein));
@@ -647,7 +653,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         foreach (var nodePep in moleculeGroup.Molecules)
                         {
                             productionMonitor.CancellationToken.ThrowIfCancellationRequested();
-                            productionMonitor.SetProgress(100 * iMolecule / moleculeCount);
+                            productionMonitor.SetProgress(50 * iMolecule / moleculeCount);
                             iMolecule++;
                             var pepPath = new IdentityPath(moleculeGroup.PeptideGroup, nodePep.Peptide);
                             var peptide = new Peptide(schema, pepPath);
@@ -655,51 +661,55 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                 }
-                GraphPointList = listPoints;
+
+                // Calculate Y values, sort, and assign X positions (all on background thread)
+                productionMonitor.SetProgress(60);
+                CalcDataPositions(listPoints, productionMonitor);
             }
 
-            public SrmDocument Document { get; }
-            public GraphSettings GraphSettings { get; }
-            public GraphValues.AggregateOp AggregateOp { get; }
-
-            public void CalcDataPositions(int iResult, PeptideGroupDocNode selectedProtein)
+            /// <summary>
+            /// Calculate Y values for each point, sort by Y descending, and assign X positions.
+            /// This runs on the background thread during construction.
+            /// </summary>
+            private void CalcDataPositions(List<GraphPointData> listPoints, ProductionMonitor productionMonitor)
             {
-                // Init calculated values
                 var xscalePaths = new List<IdentityPath>();
                 double maxY = 0;
                 var minY = double.MaxValue;
-                var selectedIndex = -1;
 
                 var pointPairList = new PointPairList();
+                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? (int?)ResultsIndex : null;
 
-                foreach (var dataPoint in GraphPointList)
+                foreach (var dataPoint in listPoints)
                 {
                     double groupMaxY = 0;
                     var groupMinY = double.MaxValue;
-                    // ReSharper disable DoNotCallOverridableMethodsInConstructor
-                    var pointPair = CreatePointPair(dataPoint, ref groupMaxY, ref groupMinY, iResult);
-                    // ReSharper restore DoNotCallOverridableMethodsInConstructor
+                    var pointPair = CreatePointPair(dataPoint, ref groupMaxY, ref groupMinY, resultIndex);
                     pointPairList.Add(pointPair);
                     maxY = Math.Max(maxY, groupMaxY);
                     minY = Math.Min(minY, groupMinY);
                 }
 
+                productionMonitor.SetProgress(80);
                 pointPairList.Sort(CompareYValues);
+
+                productionMonitor.SetProgress(90);
+                var identityToIndex = new Dictionary<Identity, int>();
                 for (var i = 0; i < pointPairList.Count; i++)
                 {
-                    // Save the selected index and its y extent
                     var dataPoint = (GraphPointData)pointPairList[i].Tag;
-                    if (ReferenceEquals(selectedProtein?.PeptideGroup, dataPoint.IdentityPath.GetIdentity(0)))
-                    {
-                        selectedIndex = i;
-                    }
                     // 1-index the proteins
                     pointPairList[i].X = i + 1;
                     xscalePaths.Add(dataPoint.IdentityPath);
+                    // Build map for O(1) selection lookup
+                    var groupIdentity = dataPoint.IdentityPath.GetIdentity(0);
+                    if (!identityToIndex.ContainsKey(groupIdentity))
+                        identityToIndex[groupIdentity] = i;
                 }
+
                 PointPairList = pointPairList;
                 XScalePaths = xscalePaths.ToArray();
-                SelectedIndex = selectedIndex - 1;
+                _identityToIndex = identityToIndex;
                 MaxY = maxY;
                 if (minY != double.MaxValue)
                 {
@@ -707,16 +717,38 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            /// <summary>
+            /// Find the index of the selected protein in the sorted list.
+            /// Uses dictionary for O(1) lookup on the UI thread.
+            /// </summary>
+            public int FindSelectedIndex(PeptideGroupDocNode selectedProtein)
+            {
+                if (selectedProtein == null || _identityToIndex == null)
+                    return -1;
+
+                if (_identityToIndex.TryGetValue(selectedProtein.PeptideGroup, out var index))
+                    return index - 1;
+
+                return -1;
+            }
+
+            private Dictionary<Identity, int> _identityToIndex;
+
             private static int CompareYValues(PointPair p1, PointPair p2)
             {
                 return Comparer.Default.Compare(p2.Y, p1.Y);
             }
-            public List<GraphPointData> GraphPointList;
+
+            public SrmDocument Document { get; }
+            public GraphSettings GraphSettings { get; }
+            public ReplicateDisplay ShowReplicate { get; }
+            public int ResultsIndex { get; }
+            public GraphValues.AggregateOp AggregateOp { get; }
             public PointPairList PointPairList { get; private set; }
             public IdentityPath[] XScalePaths { get; private set; }
             public double MaxY { get; private set; }
             public double? MinY { get; private set; }
-            public int SelectedIndex { get; private set; }
+            public int SelectedIndex { get; set; }
 
             public virtual double MaxValueSetting { get { return 0; } }
             public virtual double MinValueSetting { get { return 0; } }
@@ -732,10 +764,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return pointPair;
             }
 
-            private static double GetY(GraphPointData pointData, int? resultIndex)
+            private double GetY(GraphPointData pointData, int? resultIndex)
             {
                 Statistics statValues;
-                if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single && resultIndex.HasValue)
+                if (ShowReplicate == ReplicateDisplay.single && resultIndex.HasValue)
                 {
                     statValues = new Statistics(pointData.ReplicateAreas[resultIndex.Value]);
                 }
@@ -755,7 +787,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return 0;
                 }
 
-                if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best)
+                if (ShowReplicate == ReplicateDisplay.best)
                 {
                     return statValues.Max();
                 }
@@ -851,18 +883,27 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected class GraphDataParameters
         {
-            public GraphDataParameters(SrmDocument document, GraphSettings graphSettings)
+            public GraphDataParameters(SrmDocument document, GraphSettings graphSettings,
+                ReplicateDisplay showReplicate, int resultsIndex)
             {
                 Document = document;
                 GraphSettings = graphSettings;
+                ShowReplicate = showReplicate;
+                // ResultsIndex only matters for single replicate mode
+                ResultsIndex = showReplicate == ReplicateDisplay.single ? resultsIndex : -1;
             }
 
             public SrmDocument Document { get; }
             public GraphSettings GraphSettings { get; }
+            public ReplicateDisplay ShowReplicate { get; }
+            public int ResultsIndex { get; }
 
             protected bool Equals(GraphDataParameters other)
             {
-                return ReferenceEquals(Document, other.Document) && GraphSettings.Equals(other.GraphSettings);
+                return ReferenceEquals(Document, other.Document) &&
+                       GraphSettings.Equals(other.GraphSettings) &&
+                       ShowReplicate == other.ShowReplicate &&
+                       ResultsIndex == other.ResultsIndex;
             }
 
             public override bool Equals(object obj)
@@ -877,7 +918,11 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 unchecked
                 {
-                    return (RuntimeHelpers.GetHashCode(Document) * 397) ^ GraphSettings.GetHashCode();
+                    var hashCode = RuntimeHelpers.GetHashCode(Document);
+                    hashCode = (hashCode * 397) ^ GraphSettings.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (int)ShowReplicate;
+                    hashCode = (hashCode * 397) ^ ResultsIndex;
+                    return hashCode;
                 }
             }
         }

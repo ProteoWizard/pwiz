@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -43,8 +44,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal class AreaGraphData : GraphData
         {
-            public AreaGraphData(SrmDocument document, GraphSettings graphSettings, ProductionMonitor productionMonitor)
-                : base(document, graphSettings, productionMonitor)
+            public AreaGraphData(SrmDocument document, GraphSettings graphSettings,
+                ReplicateDisplay showReplicate, int resultsIndex, ProductionMonitor productionMonitor)
+                : base(document, graphSettings, showReplicate, resultsIndex, productionMonitor)
             {
             }
 
@@ -57,7 +59,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public override GraphData ProduceResult(ProductionMonitor productionMonitor, GraphDataParameters parameter, IDictionary<WorkOrder, object> inputs)
             {
-                return new AreaGraphData(parameter.Document, parameter.GraphSettings, productionMonitor);
+                return new AreaGraphData(parameter.Document, parameter.GraphSettings,
+                    parameter.ShowReplicate, parameter.ResultsIndex, productionMonitor);
             }
         }
     }

@@ -10,40 +10,83 @@
 - **Objective**: Improve Relative Abundance graph performance by moving computation to background threads
 
 ## Background
-Improve the performance of the Relative Abundance graph for large documents by moving more computation to background threads.
+The Relative Abundance graph (`SummaryRelativeAbundanceGraphPane`) showed sluggish UI updates with large documents (e.g., 500K transitions). The `CalcDataPositions()` method was running on the UI thread and included an expensive O(n log n) sort.
 
-## Problem
-The Relative Abundance graph (`SummaryRelativeAbundanceGraphPane`) shows sluggish UI updates with large documents (e.g., 500K transitions). While initial data gathering runs on a background thread, `CalcDataPositions()` runs on the UI thread and includes:
-- Iterating through all graph points
-- Creating PointPairs for each point
-- **Sorting the entire list by Y values**
-- Iterating again to set X coordinates
+## Phase 1: Move Sort to Background Thread ✅ COMPLETE
 
-This causes noticeable UI freezes when changing replicate selection or other updates.
+### Changes Made
+1. **Extended `GraphDataParameters` cache key** to include:
+   - `ReplicateDisplay ShowReplicate` - the display mode (single/best/all)
+   - `int ResultsIndex` - which replicate (only used when ShowReplicate == single)
 
-## Contrast with RT Graph
-The Retention Times regression graph (`RTLinearRegressionGraphPane`) shows "Calculating..." and does all heavy computation in the background producer. When `TryGetProduct` returns, results are ready for immediate display.
+2. **Moved all computation to `GraphData` constructor** (runs on background thread):
+   - Y value calculation for each point
+   - Sorting by Y values (the expensive operation)
+   - X coordinate assignment
+   - Building identity-to-index dictionary for O(1) selection lookup
 
-## Proposed Solution
-Move `CalcDataPositions` logic into the background producer so that:
-1. Sorting happens on the background thread
-2. The UI thread only needs to apply the pre-computed positions
-3. Consider caching sorted results since Y values don't change based on selection
+3. **Simplified UI thread work**:
+   - `FindSelectedIndex()` uses dictionary lookup - O(1) instead of O(n)
+   - `UpdateGraph()` just calls `FindSelectedIndex()` for selected protein
 
-### Implementation Options
-1. **Pre-sort in background** - Sort once when data is produced, store sorted order
-2. **Include ResultsIndex in cache key** - Allow background computation to include replicate-specific positioning
-3. **Incremental updates** - Only recalculate when data actually changes, not on every selection change
+4. **`GetY()` refactored** to use instance properties instead of static `RTLinearRegressionGraphPane.ShowReplicate`
 
-## Additional Issue: X-Axis Range
-The x-axis range shows total proteins in the document instead of proteins with actual values. For example, if only 2000 proteins have data in a replicate, the axis should scale to ~2000, not 5000.
-
-## Files to Modify
+### Files Modified
 - `pwiz_tools/Skyline/Controls/Graphs/SummaryRelativeAbundanceGraphPane.cs`
-  - `CalcDataPositions()` method (lines 665-708)
-  - `UpdateGraph()` method
-  - Consider changes to the `Producer` pattern
+  - `GraphDataParameters` - added ShowReplicate, ResultsIndex
+  - `GraphData` - constructor now does full computation, added `_identityToIndex` dictionary
+  - `CalcDataPositions()` - now private, called from constructor
+  - `FindSelectedIndex()` - new O(1) method using dictionary
+  - `GetY()` - now instance method using stored ShowReplicate
+- `pwiz_tools/Skyline/Controls/Graphs/AreaRelativeAbundanceGraphPane.cs`
+  - `AreaGraphData` constructor updated for new parameters
+  - `GraphDataProducerImpl.ProduceResult()` passes new parameters
+
+### Expected Behavior After Phase 1
+- First view of a replicate: brief "Calculating..." then graph appears
+- Clicking different proteins: instant (O(1) dictionary lookup)
+- UI remains responsive during calculation (work on background thread)
+- X-axis properly scales to number of entries with values (bonus fix)
+- Note: Replicate switching currently recalculates (see Phase 1.5)
+
+## Phase 1.5: Multi-Replicate Caching (PLANNED)
+
+### Issue
+Currently switching replicates always triggers recalculation because the `Producer`/`Receiver` pattern only caches the most recent result. Switching from replicate 1 → 2 → 1 recomputes replicate 1.
+
+### Research Needed
+Review other document-wide summary graphs that support single replicate vs. all mode:
+- `MassErrorHistogramGraphPane` - may have multi-replicate caching
+- Other summary graph panes
+
+### Potential Solutions
+1. Modify `ProductionFacility` to keep multiple cached results
+2. Maintain local cache of `GraphData` per replicate in the pane
+
+## Phase 2: Incremental Updates (PLANNED)
+
+### Concept
+When the document changes slightly (e.g., one peak's integration changes), we can update the sorted list incrementally instead of re-sorting from scratch.
+
+### Approach
+1. **Provide prior state to background computation** - pass the previous `GraphData` to the producer
+2. **Diff the documents** using `ReferenceEquals()` on the immutable tree nodes
+3. **Identify changed elements** - typically very few (often just one)
+4. **Update sorted list incrementally**:
+   - Remove changed items from their old positions
+   - Insert them at their new positions based on new Y values
+   - This is O(k log n) where k is the number of changes, vs O(n log n) for full re-sort
+
+### Benefits
+- Single peak integration change: O(1) to find changed item, O(log n) to reposition
+- Much faster than full re-sort of thousands of items
+
+## Testing
+- Use ExtracellularVesicalMagNet.sky document from Peak Imputation DIA tutorial
+- Test replicate switching performance
+- Test protein selection responsiveness
+- Test peak integration changes (Phase 2)
 
 ## Related
 - Discovered during PR #3707 (Peak Imputation DIA Tutorial) review
-- Large dataset: ExtracellularVesicalMagNet.sky with 500K transitions
+- Pattern follows `RTLinearRegressionGraphPane` approach for background computation
