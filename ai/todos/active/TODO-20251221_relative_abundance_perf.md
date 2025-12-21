@@ -1,6 +1,15 @@
-# TODO: Relative Abundance Graph Performance
+# TODO-20251221_relative_abundance_perf.md
 
-## Objective
+## Branch Information
+- **Branch**: `Skyline/work/20251221_relative_abundance_perf`
+- **Base**: `Skyline/work/20251122_PeakImputationTutorial` (will rebase to master after parent merges)
+- **Created**: 2025-12-21
+- **Completed**: (pending)
+- **Status**: 🚧 In Progress
+- **PR**: (pending)
+- **Objective**: Improve Relative Abundance graph performance by moving computation to background threads
+
+## Background
 Improve the performance of the Relative Abundance graph for large documents by moving more computation to background threads.
 
 ## Problem
