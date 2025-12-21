@@ -457,6 +457,7 @@
       <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
+    <Compile Include="Controls\Graphs\ReplicateCachingReceiver.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\SummaryRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\ImageListBox.cs">

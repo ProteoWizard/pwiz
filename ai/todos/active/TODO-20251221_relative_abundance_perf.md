@@ -49,21 +49,42 @@ The Relative Abundance graph (`SummaryRelativeAbundanceGraphPane`) showed sluggi
 - X-axis properly scales to number of entries with values (bonus fix)
 - Note: Replicate switching currently recalculates (see Phase 1.5)
 
-## Phase 1.5: Multi-Replicate Caching (PLANNED)
+## Phase 1.5: Multi-Replicate Caching ✅ COMPLETE
 
-### Issue
-Currently switching replicates always triggers recalculation because the `Producer`/`Receiver` pattern only caches the most recent result. Switching from replicate 1 → 2 → 1 recomputes replicate 1.
+### Solution: ReplicateCachingReceiver
+Created a reusable wrapper class that enhances the Producer/Receiver pattern with:
 
-### Research Needed
-Review other document-wide summary graphs that support single replicate vs. all mode:
-- `MassErrorHistogramGraphPane` - may have multi-replicate caching
-- Other summary graph panes
+1. **Local cache by replicate index** - `Dictionary<int, TResult>` for instant switching
+2. **Stale-while-revalidate** - Previous graph stays visible while calculating new data (no blank/flash)
+3. **Background calculation preservation** - When switching away from an in-progress calculation, a `CompletionListener` keeps it running so results are cached when complete (like browser tabs)
+4. **Cache invalidation** - Automatically clears when document or settings change
 
-### Potential Solutions
-1. Modify `ProductionFacility` to keep multiple cached results
-2. Maintain local cache of `GraphData` per replicate in the pane
+### Files Added/Modified
+- `pwiz_tools/Skyline/Controls/Graphs/ReplicateCachingReceiver.cs` (NEW)
+  - Generic wrapper: `ReplicateCachingReceiver<TParam, TResult>`
+  - Nested `CompletionListener` class for background preservation
+  - Reusable for `RTLinearRegressionGraphPane` and other summary graphs
+- `pwiz_tools/Skyline/Controls/Graphs/SummaryRelativeAbundanceGraphPane.cs`
+  - Changed field type to `ReplicateCachingReceiver<GraphDataParameters, GraphData>`
+  - Moved `Clear()` after `TryGetProduct()` for stale-while-revalidate
+- `pwiz_tools/Skyline/Skyline.csproj` - Added new file
 
-## Phase 2: Incremental Updates (PLANNED)
+### UX Result
+- Seamless, flash-free replicate switching
+- Rapidly switching replicates: graph never blanks, progress shown over previous data
+- Switching back to a replicate: instant if cached, or resumes from where it left off
+- Visual comparison between replicates is now possible (stable reference frames)
+
+### Also Updated
+- `ai/STYLEGUIDE.md`, `ai/docs/style-guide.md` - Added Claude Code attribution format
+- `ai/docs/build-and-test-guide.md` - Documented process detection feature
+- `pwiz_tools/Skyline/ai/Build-Skyline.ps1` - Added test process detection with LLM guidance
+
+## Phase 2: Apply to RTLinearRegressionGraphPane (PLANNED)
+
+Apply `ReplicateCachingReceiver` wrapper to `RTLinearRegressionGraphPane` for same benefits.
+
+## Phase 3: Incremental Updates (PLANNED)
 
 ### Concept
 When the document changes slightly (e.g., one peak's integration changes), we can update the sorted list incrementally instead of re-sorting from scratch.
