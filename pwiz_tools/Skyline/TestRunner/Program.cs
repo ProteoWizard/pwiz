@@ -1429,10 +1429,11 @@ namespace TestRunner
                 testList.RemoveAll(test => test.IsPerfTest);
                 unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
-            else
+            else if (asNightly)
             {
-                // Take advantage of the extra time available in perftest runs to do the leak tests we
-                // skip in regular nightlies - but skip leak tests covered in regular nightlies
+                // Take advantage of the extra time available in nightly perftest runs to do the leak tests we
+                // skip in regular nightlies - but skip leak tests covered in regular nightlies.
+                // Only apply this inversion during actual nightly runs, not when perftests=on is used interactively.
                 foreach (var test in unfilteredTestList)
                 {
                     test.DoNotLeakTest = !test.DoNotLeakTest;
@@ -1753,10 +1754,14 @@ namespace TestRunner
                     runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
                 }
 
-                // Move any tests with the NoLeakTesting attribute to the front of the list for pass 2, as we skipped them in pass 1
-                testList = testList.Where(t => t.DoNotLeakTest)
-                    .Concat(testList.Where(t => !t.DoNotLeakTest))
-                    .ToList();
+                // Move any tests with the NoLeakTesting attribute to the front of the list for pass 2, as we skipped them in pass 1.
+                // Only apply this reordering during actual nightly runs, not when perftests=on is used interactively.
+                if (asNightly)
+                {
+                    testList = testList.Where(t => t.DoNotLeakTest)
+                        .Concat(testList.Where(t => !t.DoNotLeakTest))
+                        .ToList();
+                }
 
                 int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
                 bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
@@ -1989,7 +1994,16 @@ namespace TestRunner
                 testList.AddRange(testArray.Where(testInfo => testInfo != null));
 
             // Sort tests alphabetically, but run perf tests last for best coverage in a fixed amount of time.
-            return testList.OrderBy(e => e.IsPerfTest).ThenBy(e => e.TestMethod.Name).ToList();
+            // However, if tests were explicitly specified (via file or command line), preserve that order.
+            if (testNames.Count == 0)
+            {
+                return testList.OrderBy(e => e.IsPerfTest).ThenBy(e => e.TestMethod.Name).ToList();
+            }
+            else
+            {
+                // User explicitly specified test order - preserve it exactly
+                return testList;
+            }
         }
 
         private static List<TestInfo> GetTestList(IEnumerable<string> dlls)
