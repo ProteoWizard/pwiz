@@ -612,6 +612,71 @@ git checkout Skyline/work/YYYYMMDD_current_feature
 - Separates TODO lifecycle from feature branch lifecycle
 - When your feature branch eventually merges, Git handles the duplicate commit gracefully
 
+### Workflow 6: Branching from a Feature Branch (Pre-Merge Dependency)
+
+When you want to start new work that depends on changes in a feature branch not yet merged to master. This is useful when:
+- The parent feature branch provides essential context (e.g., a tutorial you're extending)
+- The parent branch will merge before your new work creates a PR
+- You want to start immediately rather than wait for the parent merge
+
+**Step 1: Create new branch from the feature branch (not master)**
+```bash
+git checkout Skyline/work/20251122_parent_feature
+git pull origin Skyline/work/20251122_parent_feature
+git checkout -b Skyline/work/20251221_new_feature
+```
+
+**Step 2: Copy TODO from backlog on ai-context**
+```bash
+git checkout ai-context -- ai/todos/backlog/TODO-new_feature.md
+git mv ai/todos/backlog/TODO-new_feature.md ai/todos/active/TODO-20251221_new_feature.md
+```
+
+**Step 3: Update TODO header with temporary base notation**
+```markdown
+## Branch Information
+- **Branch**: `Skyline/work/20251221_new_feature`
+- **Base**: `Skyline/work/20251122_parent_feature` (will rebase to master after parent merges)
+- **Created**: 2025-12-21
+- **Status**: 🚧 In Progress
+```
+
+**Step 4: Commit TODO and push**
+```bash
+git add ai/todos/active/TODO-20251221_new_feature.md
+git commit -m "Start new_feature work - branched from parent_feature"
+git push -u origin Skyline/work/20251221_new_feature
+```
+
+**Step 5: After parent branch merges to master, rebase onto master**
+```bash
+git fetch origin master
+git rebase origin/master
+# Resolve any conflicts if needed
+```
+
+**Step 6: Update TODO header to reflect new base**
+```markdown
+- **Base**: `master` (rebased after parent merged)
+```
+
+**Step 7: Force push (required after rebase) and create PR**
+```bash
+git push --force-with-lease
+# Create PR against master as usual
+```
+
+**Why this works:**
+- You can start work immediately using parent branch context
+- Git rebase cleanly replays your commits onto master after parent merges
+- The `--force-with-lease` is safe because you're the only one working on this branch
+- PR is created against master, not the (now-deleted) parent branch
+
+**Caution:**
+- Only use this when confident the parent will merge before your PR
+- If parent branch is abandoned, you'll need to cherry-pick or recreate your changes on master
+- Document the temporary base clearly in the TODO so future sessions understand the situation
+
 ## Best Practices
 
 ### TODO File Management
