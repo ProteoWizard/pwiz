@@ -42,8 +42,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZipPaths = new[]
             {
-                "https://skyline.ms/tutorials/PeakBoundaryImputation-DIA.zip",
-                @"TestPerf\PeakImputationDiaViews.zip"
+                @"TestFunctional\WaitForConditionHangTest.zip",
             };
             RunFunctionalTest();
         }
@@ -62,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.Bounds = new Rectangle(screenBounds.Left + (screenBounds.Width - width) / 2,
                         screenBounds.Top + (screenBounds.Height - height) / 2, width, height);
                 }
-                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("ExtracellularVesicalMagNet.sky"));
+                SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("WaitForConditionHangTest.sky"));
                 var selectedNode = SkylineWindow.SelectedNode;
                 Assert.IsInstanceOfType(selectedNode, typeof(PeptideTreeNode));
                 Assert.AreEqual(pepOfInterest1, GetSelectedPeptide());
