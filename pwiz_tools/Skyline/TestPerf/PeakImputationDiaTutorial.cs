@@ -46,10 +46,10 @@ namespace TestPerf
             {
                 return;
             }
-            CoverShotName = "PeakImputationDia";
+            CoverShotName = "PeakBoundaryImputation-DIA";
             TestFilesZipPaths = new[]
             {
-                "https://skyline.ms/tutorials/PeakImputationDia.zip",
+                "https://skyline.ms/tutorials/PeakBoundaryImputation-DIA.zip",
                 @"TestPerf\PeakImputationDiaViews.zip"
             };
             RunFunctionalTest();

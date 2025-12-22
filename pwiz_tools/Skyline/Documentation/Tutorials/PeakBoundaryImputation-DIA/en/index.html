@@ -10,38 +10,38 @@
     <h1 class="document-title">Peak Boundary Imputation for DIA</h1>
     <h1>Introduction</h1>
     <p>
-        This tutorial introduces Skyline's peak boundary imputation feature for DIA experiments. You will learn how to transfer peak boundaries from 
-        replicates where a peptide was confidently identified to replicates where it was not, enabling Skyline to integrate the chromatographic signal 
-        and produce measured peak areas. This is particularly valuable for group comparisons, where missing values can reduce statistical power or 
+        This tutorial introduces Skyline's peak boundary imputation feature for DIA experiments. You will learn how to transfer peak boundaries from
+        replicates where a peptide was confidently identified to replicates where it was not, enabling Skyline to integrate the chromatographic signal
+        and produce measured peak areas. This is particularly valuable for group comparisons, where missing values can reduce statistical power or
         introduce bias depending on how they are handled.
     </p>
-    <p>    
-        Missing values are a common challenge in untargeted proteomics. In data-dependent acquisition (DDA), a peptide may be missing simply because 
-        it was not selected for MS/MS fragmentation in a particular run -- a stochastic sampling issue. Data-independent acquisition (DIA) eliminates 
-        this problem by fragmenting all precursors within each isolation window, but missing values still occur for two reasons. First, a peptide may 
-        produce detectable signal but fail to be confidently detected by the search engine due to factors like fragment ion interference, co-eluting 
-        peptides, or marginal abundance. Second, a peptide may be truly below the limit of detection in a specific replicate, producing no meaningful quantity to use for downstream quantitative analysis. Traditional approaches to handling missing values include removing high-missingness peptides from analysis, using statistical imputation methods 
-        to estimate missing quantities, or replacing missing values with zero or a small constant. Each approach has limitations: removal reduces 
-        statistical power, statistical imputation can introduce spurious correlations or dilute biological signal, and zero-substitution can 
+    <p>
+        Missing values are a common challenge in untargeted proteomics. In data-dependent acquisition (DDA), a peptide may be missing simply because
+        it was not selected for MS/MS fragmentation in a particular run -- a stochastic sampling issue. Data-independent acquisition (DIA) eliminates
+        this problem by fragmenting all precursors within each isolation window, but missing values still occur for two reasons. First, a peptide may
+        produce detectable signal but fail to be confidently detected by the search engine due to factors like fragment ion interference, co-eluting
+        peptides, or marginal abundance. Second, a peptide may be truly below the limit of detection in a specific replicate, producing no meaningful quantity to use for downstream quantitative analysis. Traditional approaches to handling missing values include removing high-missingness peptides from analysis, using statistical imputation methods
+        to estimate missing quantities, or replacing missing values with zero or a small constant. Each approach has limitations: removal reduces
+        statistical power, statistical imputation can introduce spurious correlations or dilute biological signal, and zero-substitution can
         exaggerate fold changes when comparing groups.
     </p>
     <p>
-        Skyline's peak boundary imputation takes a different approach: rather than imputing quantities, it imputes retention time boundaries. Skyline 
-        identifies an "exemplary replicate" -- the replicate with the best-scoring identification for a given peptide -- and transfers those peak boundaries 
-        to replicates where the search tool failed to detect the peptide. After retention time alignment, Skyline integrates the chromatographic signal 
-        within the imputed boundaries and performs background subtraction to obtain a measured quantity. When the peptide signal is present but was missed 
-        by the search tool, this recovers real data. When the peptide is below the limit of detection, this captures background signal, which still 
-        provides a more meaningful comparison than zero or a statistically imputed value. Harris et al. recently demonstrated that retention time 
+        Skyline's peak boundary imputation takes a different approach: rather than imputing quantities, it imputes retention time boundaries. Skyline
+        identifies an "exemplary replicate" -- the replicate with the best-scoring identification for a given peptide -- and transfers those peak boundaries
+        to replicates where the search tool failed to detect the peptide. After retention time alignment, Skyline integrates the chromatographic signal
+        within the imputed boundaries and performs background subtraction to obtain a measured quantity. When the peptide signal is present but was missed
+        by the search tool, this recovers real data. When the peptide is below the limit of detection, this captures background signal, which still
+        provides a more meaningful comparison than zero or a statistically imputed value. Harris et al. recently demonstrated that retention time
         boundary imputation produces more accurate quantitation than imputation methods that estimate missing quantities<sup>1</sup>.
     </p>
 
     <h1>Getting Started</h1>
     <p>
-        This tutorial uses data from a study comparing extracellular vesicle-enriched plasma samples to total plasma using 
+        This tutorial uses data from a study comparing extracellular vesicle-enriched plasma samples to total plasma using
         the Mag-Net enrichment protocol<sup>2</sup>. To start this tutorial, download the following ZIP file:
     </p>
     <p>
-        <a href="https://skyline.ms/tutorials/PeakImputationDia.zip">https://skyline.ms/tutorials/PeakImputationDia.zip</a>
+        <a href="https://skyline.ms/tutorials/PeakBoundaryImputation-DIA.zip">https://skyline.ms/tutorials/PeakBoundaryImputation-DIA.zip</a>
     </p>
     <p>
         Extract the files in it to a folder on your computer, like:
@@ -193,35 +193,35 @@
     <p><img src="s-18.png" alt="Chromatograms with imputed boundaries"/></p>
     <p>The fold change values are less extreme when the imputed peak areas are used instead of using zero for all missing peaks.</p>
     <p><img src="s-19.png" alt="Volcano plot after imputation"/></p>
-    
+
     <h1>Conclusion</h1>
     <p>
-        In this tutorial, you learned how to use Skyline's peak boundary imputation feature to address missing values in DIA experiments. 
-        You explored how missing peaks affect group comparisons, examined the "Use zero for missing peaks" option and its limitations, 
-        and saw how the exemplary replicate concept allows Skyline to transfer peak boundaries from high-confidence identifications to 
+        In this tutorial, you learned how to use Skyline's peak boundary imputation feature to address missing values in DIA experiments.
+        You explored how missing peaks affect group comparisons, examined the "Use zero for missing peaks" option and its limitations,
+        and saw how the exemplary replicate concept allows Skyline to transfer peak boundaries from high-confidence identifications to
         replicates where detection failed.
     </p>
     <p>
-        Peak boundary imputation provides measured quantities rather than statistical estimates, making it a valuable alternative to 
-        traditional missing value handling approaches. When signal is present but was missed by the search engine, imputation recovers 
-        real data. When signal is below the limit of detection, imputation captures background, which still produces more accurate 
+        Peak boundary imputation provides measured quantities rather than statistical estimates, making it a valuable alternative to
+        traditional missing value handling approaches. When signal is present but was missed by the search engine, imputation recovers
+        real data. When signal is below the limit of detection, imputation captures background, which still produces more accurate
         fold change estimates than zero-substitution.
     </p>
     <p>
-        You also learned how to use the Score to Run Regression graph to understand retention time alignment and identify cases where 
-        imputation may not perform well due to peptides that deviate from the expected retention time relationship. This diagnostic 
+        You also learned how to use the Score to Run Regression graph to understand retention time alignment and identify cases where
+        imputation may not perform well due to peptides that deviate from the expected retention time relationship. This diagnostic
         capability helps you evaluate the quality of imputed boundaries in your own experiments.
     </p>
 
     <h1>Reference List</h1>
     <ol>
-        <li>Harris L, Riffle M, Noble WS, MacCoss MJ. Improved quantitative accuracy in data-independent acquisition proteomics 
-            via retention time boundary imputation. <i>bioRxiv</i>. 2025. 
+        <li>Harris L, Riffle M, Noble WS, MacCoss MJ. Improved quantitative accuracy in data-independent acquisition proteomics
+            via retention time boundary imputation. <i>bioRxiv</i>. 2025.
             <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12154835/">https://pmc.ncbi.nlm.nih.gov/articles/PMC12154835/</a></li>
-        <li>Wu CC, Tsantilas KA, Park J, Plubell D, Naicker P, Govender I, Buthelezi SG, Stoychev S, Jordaan J, Sanders JD, 
-            Merrihew GE, Huang E, Riffle M, Hoofnagle AN, Noble WS, Poston KL, Bhardwaj N, Parker E, Montine TJ, MacCoss MJ. 
-            Mag-Net: Rapid enrichment of membrane-bound particles enables high coverage quantitative analysis of the plasma proteome. 
-            <i>Mol Cell Proteomics</i>. 2025;24(1):100876. 
+        <li>Wu CC, Tsantilas KA, Park J, Plubell D, Naicker P, Govender I, Buthelezi SG, Stoychev S, Jordaan J, Sanders JD,
+            Merrihew GE, Huang E, Riffle M, Hoofnagle AN, Noble WS, Poston KL, Bhardwaj N, Parker E, Montine TJ, MacCoss MJ.
+            Mag-Net: Rapid enrichment of membrane-bound particles enables high coverage quantitative analysis of the plasma proteome.
+            <i>Mol Cell Proteomics</i>. 2025;24(1):100876.
             <a href="https://pubmed.ncbi.nlm.nih.gov/40595564/">https://pubmed.ncbi.nlm.nih.gov/40595564/</a></li>
     </ol>
 </body>
