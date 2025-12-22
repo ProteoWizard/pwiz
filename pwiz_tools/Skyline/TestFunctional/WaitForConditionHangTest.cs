@@ -53,14 +53,6 @@ namespace pwiz.SkylineTestFunctional
             const string pepOfInterest2 = "KADLVNR";
             RunUI(() =>
             {
-                if (!Program.SkylineOffscreen)
-                {
-                    var screenBounds = Screen.GetWorkingArea(SkylineWindow);
-                    var width = Math.Min(screenBounds.Width, 1680);
-                    var height = Math.Min(screenBounds.Height, 1050);
-                    SkylineWindow.Bounds = new Rectangle(screenBounds.Left + (screenBounds.Width - width) / 2,
-                        screenBounds.Top + (screenBounds.Height - height) / 2, width, height);
-                }
                 SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("WaitForConditionHangTest.sky"));
                 var selectedNode = SkylineWindow.SelectedNode;
                 Assert.IsInstanceOfType(selectedNode, typeof(PeptideTreeNode));
@@ -74,20 +66,15 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowProductTransitions();
             });
             WaitForRelativeAbundanceComplete();
-            PauseForScreenShot(SkylineWindow, "Skyline main window");
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
             WaitForRelativeAbundanceComplete();
-            PauseForRelativeAbundanceGraphScreenShot("Peak abundance - EV enriched");
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
             WaitForRelativeAbundanceComplete();
-            PauseForRelativeAbundanceGraphScreenShot("Peak abundance - Total plasma");
             RunUI(()=>SkylineWindow.ShowGroupComparisonWindow("EV-Enrich"));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
             WaitForConditionUI(() => foldChangeGrid.IsComplete);
-            PauseForScreenShot(foldChangeGrid, "Group comparison grid");
             RunUI(()=>foldChangeGrid.DataboundGridControl.ChooseView("log2fold change"));
             WaitForConditionUI(() => foldChangeGrid.IsComplete);
-            PauseForScreenShot(foldChangeGrid, "Group comparison with additional columns");
             RunUI(()=>foldChangeGrid.ShowVolcanoPlot());
             var foldChangeVolcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
             var floatingWindow = ScreenshotManager.FindParent<FloatingWindow>(foldChangeGrid);
@@ -97,7 +84,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 floatingWindow.Width = 1024;
             });
-            PauseForScreenShot(floatingWindow, "Group comparison with volcano plot");
             RunUI(()=>foldChangeGrid.ShowChangeSettings());
             var editGroupComparisonDlg = FindOpenForm<EditGroupComparisonDlg>();
             RunUI(() =>
@@ -107,9 +93,7 @@ namespace pwiz.SkylineTestFunctional
                     editGroupComparisonDlg.GroupComparisonDef.ChangeUseZeroForMissingPeaks(true);
             });
             WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
-            PauseForScreenShot(editGroupComparisonDlg, "Edit group comparison dialog");
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.Close);
-            PauseForScreenShot(floatingWindow, "Volcano plot with missing peaks as zero");
             RunUI(()=>
             {
                 foldChangeVolcanoPlot.Close();
@@ -117,16 +101,12 @@ namespace pwiz.SkylineTestFunctional
             });
             foldChangeVolcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
             WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
-            PauseForVolcanoPlotGraphScreenShot("Volcano plot zoomed out");
             RunUI(() => SkylineWindow.SelectedResultsIndex = 3);
-            var windowPositions = HideFloatingWindows();
             Assert.AreEqual(pepOfInterest1, CallUI(GetSelectedPeptide));
             var rtReplicateGraphSummary = SkylineWindow.GraphRetentionTime;
             Assert.IsNotNull(rtReplicateGraphSummary);
-            PauseForRetentionTimeGraphScreenShot("Retention times replicate comparison");
             RunUI(() => SkylineWindow.ShowExemplaryPeak(true));
             WaitForExemplaryPeaks();
-            PauseForScreenShot(SkylineWindow, "Chromatograms with exemplary peak");
             SelectPeptide(pepOfInterest2);
             RunUI(()=>
             {
@@ -134,7 +114,6 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.AutoZoomBestPeak();
             });
             WaitForExemplaryPeaks();
-            PauseForScreenShot(SkylineWindow, $"{pepOfInterest2} with misaligned imputation");
             WaitForGraphs();
             RunUI(() =>
             {
@@ -145,13 +124,10 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowRTRegressionGraphScoreToRun();
             });
             WaitForRTRegressionComplete();
-            PauseForRetentionTimeGraphScreenShot("Score to run regression");
             RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
             WaitForRTRegressionComplete();
-            PauseForRetentionTimeGraphScreenShot("Regression residuals plot");
             RunUI(() => SkylineWindow.SelectedResultsIndex = 0);
             WaitForRTRegressionComplete();
-            PauseForRetentionTimeGraphScreenShot("Residuals for EV13 replicate");
         }
 
         private void WaitForRTRegressionComplete()
