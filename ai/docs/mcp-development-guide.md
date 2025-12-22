@@ -26,6 +26,7 @@ The MCP server should be a thin adapter layer. Avoid implementing complex busine
 - Use server-side capabilities where available (views, stored procedures, custom queries)
 - Let the data source handle joins, aggregations, and filtering
 - Keep Python code focused on protocol translation and formatting
+- **Save large content to files** - see File-Based Data Exploration Pattern below
 
 ### File-Based Data Exploration Pattern
 
@@ -55,7 +56,11 @@ async def save_large_data(query_params):
 - Test run logs (9-12 hours of output)
 - Stack trace collections (multiple failures)
 - Daily reports aggregating multiple data sources
+- Wiki page content (HTML/markup can be large)
+- Support thread posts (multiple responses)
 - Any response > 5-10 KB
+
+**Key insight**: Searching files on disk (using Grep/Read) preserves conversation context far longer than ingesting large query results directly. Let the MCP server do the heavy lifting of fetching and formatting, then explore the saved file as needed.
 
 **Benefits:**
 - Preserves conversation context for reasoning

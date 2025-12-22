@@ -92,14 +92,53 @@ Agent account (`claude.c.skyline@gmail.com`) has "Editor without Delete" role:
 ## Tasks
 
 ### Phase 1: Read-Only Access (Current)
-- [ ] Verify Body field is accessible in wiki queries
-- [ ] Create `get_wiki_page(container_path, page_name)` tool
-- [ ] Create `list_wiki_pages(container_path, path_filter)` tool
-- [ ] Create `query_support_threads(days, max_rows)` tool
-- [ ] Create `get_support_thread(thread_id)` tool
-- [ ] Test read access to tutorial wiki pages
-- [ ] Test read access to support board posts
-- [ ] Document new tools in ai/docs/
+
+**Server-side queries (user creates on skyline.ms):**
+- [x] Create `wiki_page_content` query in wiki schema (see SQL above)
+- [x] Create `wiki_page_list` query in wiki schema
+- [x] Create `support_threads_recent` query in announcement schema
+- [x] Create `support_thread_posts` query in announcement schema
+
+**MCP server tools (Claude Code implements):**
+- [x] Add `get_wiki_page()` tool to server.py
+- [x] Add `list_wiki_pages()` tool to server.py
+- [x] Add `query_support_threads()` tool to server.py
+- [x] Add `get_support_thread()` tool to server.py
+- [x] Test read access to tutorial wiki pages
+- [x] Test read access to support board posts
+
+**Documentation:**
+- [ ] Document wiki/support tools in ai/docs/
+
+### Phase 1.5: Support Board Attachments (Future)
+
+Support board posts can include file attachments (e.g., batch files, screenshots, Skyline documents).
+Currently these are not accessible via MCP, which limits diagnostic capability.
+
+**Known URL pattern:**
+```
+https://skyline.ms/home/support/announcements-download.view?entityId={entityId}&name={filename}
+```
+Example: `entityId=2f518904-be28-103e-9d4b-22f53556b982&name=launch_skyline.bat`
+
+**Investigation needed:**
+- [ ] Find table/API that lists attachments for an announcement (entityId is per-attachment, not per-post)
+- [ ] Check with LabKey team about attachment metadata API
+- [ ] Wiki pages also have attachments - may be a shared mechanism in core schema
+
+**Status:** Brendan to ask LabKey about attachment discovery API.
+
+**Implementation:**
+- [ ] Create `list_post_attachments(post_id)` tool - returns filenames and sizes
+- [ ] Create `get_post_attachment(post_id, filename)` tool - saves to `ai/.tmp/`
+- [ ] For text files (.bat, .py, .txt, .csv), display content directly
+- [ ] For images (.png, .jpg), save and return path for viewing
+- [ ] For Skyline files (.sky, .skyd), save and return path
+
+**Example use case:**
+Thread 73628 had a batch file attachment that revealed the user was confusing
+Skyline.exe (GUI) and SkylineCmd.exe (CLI). Seeing the attachment enabled a
+much more helpful response.
 
 ### Phase 2: Write Access (Future)
 - [ ] Create `update_wiki_page(container_path, page_name, content, comment)` tool
@@ -121,13 +160,121 @@ Agent account (`claude.c.skyline@gmail.com`) has "Editor without Delete" role:
 - `ai/docs/exception-triage-system.md` - May need renaming to broader scope
 - `pwiz_tools/Skyline/Documentation/tutorial.js` - Commit to Git (new file)
 
-## API Notes
+## Implementation Approach
 
-The LabKey Python SDK (`labkey` package) handles data queries well. Wiki read/write operations may require:
-1. Direct HTTP API calls to wiki controller endpoints
-2. Or discovering if SDK has wiki support we haven't found yet
+Following the pattern in [mcp-development-guide.md](../docs/mcp-development-guide.md), we'll use **server-side custom queries** rather than implementing complex logic in Python.
 
-**LabKey Wiki API endpoints to investigate:**
+### Required Server-Side Queries
+
+**Wiki queries (container: `/home/software/Skyline`, schema: `wiki`):**
+
+1. **`wiki_page_content`** - Parameterized query for full page content
+```sql
+PARAMETERS (PageName VARCHAR)
+
+SELECT
+    Name,
+    Title,
+    Body,
+    RendererType,
+    Version,
+    Created,
+    Modified,
+    CreatedBy,
+    ModifiedBy
+FROM CurrentWikiVersions
+WHERE Name = PageName
+```
+
+2. **`wiki_page_list`** - List all pages (no Body to keep small)
+```sql
+SELECT
+    Name,
+    Title,
+    RendererType,
+    Version,
+    Modified
+FROM CurrentWikiVersions
+ORDER BY Name
+```
+
+**Support board queries (container: `/home/support`, schema: `announcement`):**
+
+3. **`support_threads_recent`** - Recent threads with metadata (no Body - that's in Announcement)
+```sql
+PARAMETERS (DaysBack INTEGER DEFAULT 30)
+
+SELECT
+    RowId,
+    Title,
+    Created,
+    CreatedBy,
+    ResponseCount
+FROM Threads
+WHERE Created > TIMESTAMPADD('SQL_TSI_DAY', -DaysBack, NOW())
+ORDER BY Created DESC
+```
+
+4. **`support_thread_posts`** - All posts in a thread (uses FormattedBody for HTML content)
+```sql
+PARAMETERS (ThreadId INTEGER)
+
+SELECT
+    a.RowId,
+    a.Title,
+    a.FormattedBody,
+    a.Created,
+    a.CreatedBy
+FROM Announcement a
+WHERE a.RowId = ThreadId
+   OR a.Parent.RowId = ThreadId
+ORDER BY a.Created
+```
+
+### MCP Server Tools to Add
+
+Once server-side queries exist, add thin wrappers in `server.py`:
+
+```python
+@mcp.tool()
+async def get_wiki_page(page_name: str, container_path: str = "/home/software/Skyline"):
+    """Get full wiki page content by name."""
+    return await query_table("wiki", "wiki_page_content",
+                            container_path=container_path,
+                            param_name="PageName", param_value=page_name)
+
+@mcp.tool()
+async def list_wiki_pages(container_path: str = "/home/software/Skyline"):
+    """List all wiki pages with metadata (no body content)."""
+    return await query_table("wiki", "wiki_page_list",
+                            container_path=container_path, max_rows=500)
+
+@mcp.tool()
+async def query_support_threads(days: int = 30, max_rows: int = 50):
+    """Query recent support board threads."""
+    return await query_table("announcements", "support_threads_recent",
+                            container_path="/home/support",
+                            param_name="DaysBack", param_value=str(days),
+                            max_rows=max_rows)
+
+@mcp.tool()
+async def get_support_thread(thread_id: int):
+    """Get all posts in a support thread."""
+    # Saves to ai/.tmp/support-thread-{id}.md
+
+@mcp.tool()
+async def get_support_summary(days: int = 1):
+    """Generate support board activity summary."""
+    # Saves to ai/.tmp/support-report-YYYYMMDD.md
+```
+
+### Slash Command
+
+- `/pw-support` - Generate support board activity report (uses `get_support_summary`)
+
+### Alternative: Direct Wiki API
+
+For write operations (Phase 2), the LabKey Python SDK may not support wiki editing. May need direct HTTP calls:
 - `GET wiki/<container>/getWikiPage.api?name=<pageName>`
 - `POST wiki/<container>/saveWiki.api`
 

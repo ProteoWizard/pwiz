@@ -46,6 +46,14 @@ EXCEPTION_QUERY = "Announcement"
 TESTRESULTS_SCHEMA = "testresults"
 DEFAULT_TEST_CONTAINER = "/home/development/Nightly x64"
 
+# Wiki schema
+WIKI_SCHEMA = "wiki"
+DEFAULT_WIKI_CONTAINER = "/home/software/Skyline"
+
+# Support board schema
+ANNOUNCEMENT_SCHEMA_SUPPORT = "announcement"
+DEFAULT_SUPPORT_CONTAINER = "/home/support"
+
 
 def get_server_context(server: str, container_path: str):
     """Create a LabKey server context for API calls.
@@ -1321,6 +1329,482 @@ async def save_test_failure_history(
         f"\n"
         f"See {output_file} for full stack traces."
     )
+
+
+# =============================================================================
+# Wiki Tools - For documentation and tutorial content
+# =============================================================================
+
+@mcp.tool()
+async def list_wiki_pages(
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_WIKI_CONTAINER,
+) -> str:
+    """List all wiki pages in a container with metadata (no body content).
+
+    Returns page names, titles, renderer types, and last modified dates.
+    Use get_wiki_page() to retrieve full content for a specific page.
+
+    Args:
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/software/Skyline)
+    """
+    try:
+        server_context = get_server_context(server, container_path)
+
+        result = labkey.query.select_rows(
+            server_context=server_context,
+            schema_name=WIKI_SCHEMA,
+            query_name="wiki_page_list",
+            max_rows=500,
+            sort="Name",
+        )
+
+        if result and result.get("rows"):
+            rows = result["rows"]
+            lines = [
+                f"Found {len(rows)} wiki pages in {container_path}:",
+                "",
+                "| Name | Title | Renderer | Modified |",
+                "|------|-------|----------|----------|",
+            ]
+
+            for row in rows:
+                name = row.get("Name", "?")
+                title = row.get("Title", "")[:40]
+                renderer = row.get("RendererType", "?")
+                modified = str(row.get("Modified", "?"))[:10]
+                lines.append(f"| {name} | {title} | {renderer} | {modified} |")
+
+            return "\n".join(lines)
+        return f"No wiki pages found in {container_path}."
+
+    except Exception as e:
+        logger.error(f"Error listing wiki pages: {e}", exc_info=True)
+        return f"Error listing wiki pages: {e}"
+
+
+@mcp.tool()
+async def get_wiki_page(
+    page_name: str,
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_WIKI_CONTAINER,
+) -> str:
+    """Get full wiki page content and save to ai/.tmp/wiki-{page_name}.md.
+
+    Wiki pages can contain HTML or wiki markup and may be large.
+    Content is saved to a file for exploration with Grep/Read tools.
+
+    Args:
+        page_name: Wiki page name (e.g., 'tutorial_method_edit')
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/software/Skyline)
+
+    Returns:
+        Metadata about the page and file path. Use Read tool to view content.
+    """
+    from pathlib import Path
+
+    try:
+        server_context = get_server_context(server, container_path)
+
+        result = labkey.query.select_rows(
+            server_context=server_context,
+            schema_name=WIKI_SCHEMA,
+            query_name="wiki_page_content",
+            max_rows=1,
+            parameters={"PageName": page_name},
+        )
+
+        if not result or not result.get("rows"):
+            return f"No wiki page found with name '{page_name}' in {container_path}"
+
+        row = result["rows"][0]
+        body = row.get("Body", "")
+        title = row.get("Title", page_name)
+        renderer = row.get("RendererType", "unknown")
+        version = row.get("Version", "?")
+        modified = row.get("Modified", "?")
+
+        if not body:
+            return f"Wiki page '{page_name}' exists but has no body content."
+
+        # Build content for file
+        lines = [
+            f"# {title}",
+            "",
+            f"**Page name**: {page_name}",
+            f"**Renderer**: {renderer}",
+            f"**Version**: {version}",
+            f"**Modified**: {modified}",
+            "",
+            "---",
+            "",
+            body,
+        ]
+        content = "\n".join(lines)
+
+        # Determine output path
+        script_dir = Path(__file__).resolve().parent
+        repo_root = script_dir.parent.parent.parent.parent.parent
+        output_dir = repo_root / "ai" / ".tmp"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Sanitize page name for filename
+        safe_name = page_name.replace("/", "_").replace("\\", "_").replace(" ", "_")
+        output_file = output_dir / f"wiki-{safe_name}.md"
+        output_file.write_text(content, encoding="utf-8")
+
+        # Calculate metadata
+        size_bytes = output_file.stat().st_size
+        line_count = content.count("\n") + 1
+
+        return (
+            f"Wiki page saved successfully:\n"
+            f"  file_path: {output_file}\n"
+            f"  title: {title}\n"
+            f"  renderer: {renderer}\n"
+            f"  version: {version}\n"
+            f"  modified: {modified}\n"
+            f"  size_bytes: {size_bytes:,}\n"
+            f"  line_count: {line_count:,}\n"
+            f"\nUse Read tool to view content."
+        )
+
+    except Exception as e:
+        logger.error(f"Error getting wiki page: {e}", exc_info=True)
+        return f"Error getting wiki page: {e}"
+
+
+# =============================================================================
+# Support Board Tools - For user questions and discussions
+# =============================================================================
+
+@mcp.tool()
+async def query_support_threads(
+    days: int = 30,
+    max_rows: int = 50,
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_SUPPORT_CONTAINER,
+) -> str:
+    """Query recent support board threads.
+
+    Returns thread summaries including title, creation date, and response count.
+    Use get_support_thread() to retrieve full thread with all posts.
+
+    Args:
+        days: Number of days back to query (default: 30)
+        max_rows: Maximum threads to return (default: 50)
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/support)
+    """
+    try:
+        server_context = get_server_context(server, container_path)
+
+        result = labkey.query.select_rows(
+            server_context=server_context,
+            schema_name=ANNOUNCEMENT_SCHEMA_SUPPORT,
+            query_name="support_threads_recent",
+            max_rows=max_rows,
+            parameters={"DaysBack": str(days)},
+        )
+
+        if result and result.get("rows"):
+            rows = result["rows"]
+            total = result.get("rowCount", len(rows))
+
+            lines = [
+                f"Found {total} threads in last {days} days (showing {len(rows)}):",
+                "",
+                "| RowId | Title | Created | Responses |",
+                "|-------|-------|---------|-----------|",
+            ]
+
+            for row in rows:
+                row_id = row.get("RowId", "?")
+                title = row.get("Title", "?")[:50]
+                created = str(row.get("Created", "?"))[:10]
+                responses = row.get("ResponseCount", 0)
+                lines.append(f"| {row_id} | {title} | {created} | {responses} |")
+
+            lines.extend([
+                "",
+                "Use get_support_thread(thread_id) to view full thread with all posts.",
+            ])
+
+            return "\n".join(lines)
+        return f"No threads found in the last {days} days."
+
+    except Exception as e:
+        logger.error(f"Error querying support threads: {e}", exc_info=True)
+        return f"Error querying support threads: {e}"
+
+
+@mcp.tool()
+async def get_support_thread(
+    thread_id: int,
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_SUPPORT_CONTAINER,
+) -> str:
+    """Get full support thread with all posts and save to ai/.tmp/support-thread-{id}.md.
+
+    Thread posts can be lengthy and contain code samples, data examples, etc.
+    Content is saved to a file for exploration with Grep/Read tools.
+
+    Args:
+        thread_id: The RowId of the thread to retrieve
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/support)
+
+    Returns:
+        Metadata about the thread and file path. Use Read tool to view content.
+    """
+    from pathlib import Path
+
+    try:
+        server_context = get_server_context(server, container_path)
+
+        result = labkey.query.select_rows(
+            server_context=server_context,
+            schema_name=ANNOUNCEMENT_SCHEMA_SUPPORT,
+            query_name="support_thread_posts",
+            max_rows=200,
+            parameters={"ThreadId": str(thread_id)},
+        )
+
+        if not result or not result.get("rows"):
+            return f"No thread found with RowId={thread_id}"
+
+        rows = result["rows"]
+
+        # First post is the thread starter
+        first_post = rows[0]
+        thread_title = first_post.get("Title", f"Thread {thread_id}")
+
+        # Build content for file
+        lines = [
+            f"# {thread_title}",
+            "",
+            f"**Thread ID**: {thread_id}",
+            f"**Posts**: {len(rows)}",
+            "",
+            "---",
+            "",
+        ]
+
+        for i, row in enumerate(rows):
+            post_id = row.get("RowId", "?")
+            title = row.get("Title", "")
+            body = row.get("FormattedBody", "")  # FormattedBody contains HTML content
+            created = row.get("Created", "?")
+            created_by = row.get("CreatedBy", "?")
+
+            if i == 0:
+                lines.append("## Original Post")
+            else:
+                lines.append(f"## Reply #{i}")
+
+            lines.extend([
+                "",
+                f"**From**: {created_by}",
+                f"**Date**: {created}",
+                "",
+            ])
+
+            if title and i > 0:  # Show title for replies if different
+                lines.append(f"**Subject**: {title}")
+                lines.append("")
+
+            lines.append(body if body else "(no content)")
+            lines.extend(["", "---", ""])
+
+        content = "\n".join(lines)
+
+        # Determine output path
+        script_dir = Path(__file__).resolve().parent
+        repo_root = script_dir.parent.parent.parent.parent.parent
+        output_dir = repo_root / "ai" / ".tmp"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        output_file = output_dir / f"support-thread-{thread_id}.md"
+        output_file.write_text(content, encoding="utf-8")
+
+        # Calculate metadata
+        size_bytes = output_file.stat().st_size
+        line_count = content.count("\n") + 1
+
+        return (
+            f"Support thread saved successfully:\n"
+            f"  file_path: {output_file}\n"
+            f"  title: {thread_title}\n"
+            f"  posts: {len(rows)}\n"
+            f"  size_bytes: {size_bytes:,}\n"
+            f"  line_count: {line_count:,}\n"
+            f"\nUse Read tool to view content."
+        )
+
+    except Exception as e:
+        logger.error(f"Error getting support thread: {e}", exc_info=True)
+        return f"Error getting support thread: {e}"
+
+
+@mcp.tool()
+async def get_support_summary(
+    days: int = 1,
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_SUPPORT_CONTAINER,
+) -> str:
+    """Generate a summary of support board activity and save to ai/.tmp/support-report-YYYYMMDD.md.
+
+    Similar to get_daily_test_summary, this provides an overview of support board
+    activity for a given time period. Useful for daily or weekly review.
+
+    Args:
+        days: Number of days back to query (default: 1)
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/support)
+
+    Returns:
+        Brief summary with file path. Full details are in the saved file.
+    """
+    from datetime import datetime
+    from pathlib import Path
+
+    try:
+        server_context = get_server_context(server, container_path)
+
+        # Query recent threads
+        result = labkey.query.select_rows(
+            server_context=server_context,
+            schema_name=ANNOUNCEMENT_SCHEMA_SUPPORT,
+            query_name="support_threads_recent",
+            max_rows=200,
+            parameters={"DaysBack": str(days)},
+        )
+
+        if not result or not result.get("rows"):
+            return f"No support threads found in the last {days} day(s)."
+
+        threads = result["rows"]
+
+        # Categorize threads
+        new_threads = []  # No responses yet
+        active_threads = []  # Has responses
+
+        for thread in threads:
+            row_id = thread.get("RowId", "?")
+            title = thread.get("Title", "?")
+            created = thread.get("Created", "?")
+            created_by = thread.get("CreatedBy", "?")
+            response_count = thread.get("ResponseCount", 0)
+
+            thread_info = {
+                "row_id": row_id,
+                "title": title,
+                "created": str(created)[:16] if created else "?",
+                "created_by": created_by,
+                "responses": response_count,
+            }
+
+            if response_count == 0:
+                new_threads.append(thread_info)
+            else:
+                active_threads.append(thread_info)
+
+        # Build report
+        report_date = datetime.now().strftime("%Y-%m-%d")
+        lines = [
+            f"# Support Board Summary",
+            f"",
+            f"**Period**: Last {days} day(s) (as of {report_date})",
+            f"**Total threads**: {len(threads)}",
+            f"",
+            "## Summary",
+            "",
+            f"| Category | Count |",
+            f"|----------|-------|",
+            f"| New (unanswered) | {len(new_threads)} |",
+            f"| Active (has responses) | {len(active_threads)} |",
+            "",
+        ]
+
+        # New/unanswered threads - these need attention
+        if new_threads:
+            lines.extend([
+                "## Unanswered Threads (Need Response)",
+                "",
+                "| ID | Title | Posted | By |",
+                "|----|-------|--------|-----|",
+            ])
+            for t in new_threads:
+                title_short = t["title"][:60] + "..." if len(t["title"]) > 60 else t["title"]
+                lines.append(f"| {t['row_id']} | {title_short} | {t['created']} | {t['created_by']} |")
+            lines.append("")
+
+        # Active threads with responses
+        if active_threads:
+            lines.extend([
+                "## Active Threads (Has Responses)",
+                "",
+                "| ID | Title | Posted | Responses |",
+                "|----|-------|--------|-----------|",
+            ])
+            for t in active_threads:
+                title_short = t["title"][:60] + "..." if len(t["title"]) > 60 else t["title"]
+                lines.append(f"| {t['row_id']} | {title_short} | {t['created']} | {t['responses']} |")
+            lines.append("")
+
+        # Add instructions
+        lines.extend([
+            "## Next Steps",
+            "",
+            "To view a specific thread:",
+            "```",
+            "get_support_thread(thread_id)",
+            "```",
+            "",
+            "Thread content will be saved to `ai/.tmp/support-thread-{id}.md`",
+            "",
+        ])
+
+        # Write report to file
+        report_content = "\n".join(lines)
+
+        script_dir = Path(__file__).resolve().parent
+        repo_root = script_dir.parent.parent.parent.parent.parent
+        output_dir = repo_root / "ai" / ".tmp"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        date_str = datetime.now().strftime("%Y%m%d")
+        output_file = output_dir / f"support-report-{date_str}.md"
+        output_file.write_text(report_content, encoding="utf-8")
+
+        # Build brief summary
+        brief = [
+            f"Support board report saved to: {output_file}",
+            "",
+            f"Summary for last {days} day(s):",
+            f"  - Total threads: {len(threads)}",
+            f"  - Unanswered (need response): {len(new_threads)}",
+            f"  - Active (has responses): {len(active_threads)}",
+            "",
+        ]
+
+        if new_threads:
+            brief.append("Unanswered threads to review:")
+            for t in new_threads[:5]:  # Show first 5
+                brief.append(f"  - [{t['row_id']}] {t['title'][:50]}")
+            if len(new_threads) > 5:
+                brief.append(f"  ... and {len(new_threads) - 5} more")
+
+        brief.append("")
+        brief.append(f"See {output_file} for full details.")
+
+        return "\n".join(brief)
+
+    except Exception as e:
+        logger.error(f"Error generating support summary: {e}", exc_info=True)
+        return f"Error generating support summary: {e}"
 
 
 def main():
