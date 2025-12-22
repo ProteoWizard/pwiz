@@ -37,10 +37,10 @@ using pwiz.SkylineTestUtil;
 namespace TestPerf
 {
     [TestClass]
-    public class PeakImputationDiaTutorial : AbstractFunctionalTest
+    public class PeakBoundaryImputationDiaTutorial : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestPeakImputationDiaTutorial()
+        public void TestPeakBoundaryImputationDiaTutorial()
         {
             if (IsTranslationRequired)
             {
@@ -50,7 +50,7 @@ namespace TestPerf
             TestFilesZipPaths = new[]
             {
                 "https://skyline.ms/tutorials/PeakBoundaryImputation-DIA.zip",
-                @"TestPerf\PeakImputationDiaViews.zip"
+                @"TestPerf\PeakBoundaryImputationDiaViews.zip"
             };
             RunFunctionalTest();
         }
