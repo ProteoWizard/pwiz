@@ -100,9 +100,17 @@ if ($unexpectedBoms.Count -gt 0) {
         Write-Host "  [ERROR] $file" -ForegroundColor Red
     }
     Write-Host ""
+    
+    # Write file list for remove-bom.ps1 (in script directory)
+    $fileListPath = Join-Path $PSScriptRoot "files-with-bom.txt"
+    $unexpectedBoms | Out-File -FilePath $fileListPath -Encoding UTF8
+    Write-Host "File list written to: $fileListPath" -ForegroundColor Cyan
+    Write-Host ""
     Write-Host "Action required:" -ForegroundColor Yellow
-    Write-Host "  1. If these files should NOT have BOM, remove it using ai/scripts/remove-bom.ps1" -ForegroundColor Yellow
-    Write-Host "  2. If these files MUST have BOM, add them to the approved list in this script" -ForegroundColor Yellow
+    Write-Host "  1. Review the files listed above" -ForegroundColor Yellow
+    Write-Host "  2. If these files should NOT have BOM, run: ai/scripts/remove-bom.ps1 -Execute" -ForegroundColor Yellow
+    Write-Host "  3. If any files MUST have BOM, add them to the approved list in this script" -ForegroundColor Yellow
+    Write-Host "     (and remove them from $fileListPath if needed)" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "For more information, see ai/scripts/README.md or ai/todos/completed/TODO-20251019_utf8_no_bom.md" -ForegroundColor Yellow
     Write-Host ""

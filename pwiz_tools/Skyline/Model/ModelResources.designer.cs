@@ -1709,11 +1709,11 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Detailed Info.
+        ///   Looks up a localized string similar to Detailed Log.
         /// </summary>
-        public static string PersistedViews_GetDefaults_Detailed_Info {
+        public static string PersistedViews_GetDefaults_Detailed_Log {
             get {
-                return ResourceManager.GetString("PersistedViews_GetDefaults_Detailed_Info", resourceCulture);
+                return ResourceManager.GetString("PersistedViews_GetDefaults_Detailed_Log", resourceCulture);
             }
         }
         

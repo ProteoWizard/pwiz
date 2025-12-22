@@ -672,6 +672,96 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edited background proteome named {0} from the Files window.
+        /// </summary>
+        public static string files_tree_background_proteome_update {
+            get {
+                return ResourceManager.GetString("files_tree_background_proteome_update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed all spectral libraries in the Files window.
+        /// </summary>
+        public static string files_tree_libraries_remove_all {
+            get {
+                return ResourceManager.GetString("files_tree_libraries_remove_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed spectral library {0} in the Files window.
+        /// </summary>
+        public static string files_tree_libraries_remove_one {
+            get {
+                return ResourceManager.GetString("files_tree_libraries_remove_one", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} spectral libraries in the Files window.
+        /// </summary>
+        public static string files_tree_libraries_remove_several {
+            get {
+                return ResourceManager.GetString("files_tree_libraries_remove_several", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drag and dropped {0} node to {1} in the Files window.
+        /// </summary>
+        public static string files_tree_node_drag_and_drop {
+            get {
+                return ResourceManager.GetString("files_tree_node_drag_and_drop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renamed node {0} to {1} in the Files window.
+        /// </summary>
+        public static string files_tree_node_renamed {
+            get {
+                return ResourceManager.GetString("files_tree_node_renamed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drag and dropped {0} nodes to {1} in the Files window.
+        /// </summary>
+        public static string files_tree_nodes_drag_and_drop {
+            get {
+                return ResourceManager.GetString("files_tree_nodes_drag_and_drop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed all replicates in the Files window.
+        /// </summary>
+        public static string files_tree_replicates_remove_all {
+            get {
+                return ResourceManager.GetString("files_tree_replicates_remove_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed replicate {0} in the Files window.
+        /// </summary>
+        public static string files_tree_replicates_remove_one {
+            get {
+                return ResourceManager.GetString("files_tree_replicates_remove_one", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} replicates in the Files window.
+        /// </summary>
+        public static string files_tree_replicates_remove_several {
+            get {
+                return ResourceManager.GetString("files_tree_replicates_remove_several", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filled down {0} values in the document grid.
         /// </summary>
         public static string fill_down_document_grid {
@@ -1327,6 +1417,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string removed_from {
             get {
                 return ResourceManager.GetString("removed_from", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed library {0}.
+        /// </summary>
+        public static string removed_library {
+            get {
+                return ResourceManager.GetString("removed_library", resourceCulture);
             }
         }
         

@@ -11,9 +11,14 @@
 
 param(
     [switch]$Execute = $false,
-    [string]$FileList = "files-with-bom.txt",
+    [string]$FileList = "",
     [string[]]$ExcludePatterns = @("*.tli", "*.tlh")
 )
+
+# Default to files-with-bom.txt in script directory if not specified
+if ([string]::IsNullOrEmpty($FileList)) {
+    $FileList = Join-Path $PSScriptRoot "files-with-bom.txt"
+}
 
 $utf8Bom = @(0xEF, 0xBB, 0xBF)
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
@@ -37,7 +42,7 @@ if (-not $Execute) {
 # Check if file list exists
 if (-not (Test-Path $FileList)) {
     Write-Error "File list not found: $FileList"
-    Write-Host "Run analyze-bom-git.ps1 first to generate the file list"
+    Write-Host "Run ai/scripts/validate-bom-compliance.ps1 first to generate the file list"
     exit 1
 }
 

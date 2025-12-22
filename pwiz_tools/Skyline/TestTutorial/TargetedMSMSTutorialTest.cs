@@ -463,16 +463,18 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
+            allChromGraph.SetFreezeProgressPercent(15, "00:00:01");
             doc = WaitForDocumentChange(doc);
 
             // Add FASTA also skipped because filter for document peptides was chosen.
 
             WaitForClosedForm(importPeptideSearchDlg);
-            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
 
-            WaitForConditionUI(() => allChromGraph.ProgressTotalPercent >= 15);
+            WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window");
+            allChromGraph.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
 
@@ -497,7 +499,6 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(SkylineWindow.IsGraphSpectrumVisible);
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.CollapsePrecursors();
-                SkylineWindow.Width = 1070;
             });
 
             // Select the first precursor. 
@@ -507,13 +508,18 @@ namespace pwiz.SkylineTestTutorial
                 FindNode(SkylineWindow.Document.MoleculeTransitionGroups.First().CustomMolecule.DisplayName);
             // Ensure Graphs look like p20. (checked)
             WaitForGraphs();
-            RunUI(() => SkylineWindow.Width = 1050);
+            RunUI(() =>
+            {
+                SkylineWindow.Width = 1050;
+                SkylineWindow.Height += 15; // Account for Targets and Files tabs
+            });
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported");
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
             {
                 TestPropertySheet();
             }
+            RunUI(() => SkylineWindow.Height -= 15);    // Subsequent screenshots are graphs only
 
             ValidatePeakRanks(1, 176, true);
             WaitForGraphs();
@@ -902,6 +908,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(31);
             RunUI(() =>
             {
+                SkylineWindow.ActivateReplicate("6-BSA-500fmol");
                 SkylineWindow.FocusDocument();
             });
             PauseForScreenShot("Main window");

@@ -7,7 +7,7 @@
     iterative builds and tests without requiring manual Visual Studio interaction.
 
 .PARAMETER Target
-    What to build: Skyline, Test, TestFunctional, All, Clean, Rebuild
+    What to build: Solution, Skyline, Test, TestData, TestFunctional, TestConnected, TestTutorial, TestPerf, Clean, Rebuild
 
 .PARAMETER Configuration
     Debug or Release (default: Debug)
@@ -57,7 +57,7 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [ValidateSet("Solution", "Skyline", "Test", "TestData", "TestFunctional", "Clean", "Rebuild")]
+    [ValidateSet("Solution", "Skyline", "Test", "TestData", "TestFunctional", "TestConnected", "TestTutorial", "TestPerf", "Clean", "Rebuild")]
     [string]$Target = "Solution",
     
     [Parameter(Mandatory=$false)]
@@ -157,6 +157,9 @@ if ($Target -ne "Solution") {
         "Test" { "Test" }
         "TestData" { "TestData" }
         "TestFunctional" { "TestFunctional" }
+        "TestConnected" { "TestConnected" }
+        "TestTutorial" { "TestTutorial" }
+        "TestPerf" { "TestPerf" }
         "Clean" { "Clean" }
         "Rebuild" { "Rebuild" }
     }
@@ -204,6 +207,9 @@ if ($RunTests -and $Target -ne "Clean") {
         "Test" { "Test.dll" }
         "TestData" { "TestData.dll" }
         "TestFunctional" { "TestFunctional.dll" }
+        "TestConnected" { "TestConnected.dll" }
+        "TestTutorial" { "TestTutorial.dll" }
+        "TestPerf" { "TestPerf.dll" }
         default { "Test.dll" }
     }
     

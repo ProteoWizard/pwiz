@@ -111,7 +111,7 @@ namespace Bruker {
 TsfDataImpl::TsfDataImpl(const string& rawpath, int preferOnlyMsLevel)
     : tsfFilepath_((bfs::path(rawpath) / "analysis.tsf").string()),
       preferOnlyMsLevel_(preferOnlyMsLevel),
-      tsfStoragePtr_(new TsfBinaryData(rawpath)),
+      tsfStoragePtr_(new TsfBinaryData(rawpath, true)), // Set "DA re-calibration shall be used if available"=true
       tsfStorage_(*tsfStoragePtr_)
 {
     tsf_set_num_threads(4);

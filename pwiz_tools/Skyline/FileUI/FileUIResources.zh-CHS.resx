@@ -575,7 +575,7 @@
     <value>上传文档</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers" xml:space="preserve">
-    <value>从服务器检索信息</value>
+    <value>正在加载远程服务器文件夹</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
     <value>尝试从下列服务器检索信息失败：</value>
