@@ -242,6 +242,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public ImputedPeak ExemplaryPeak
+        {
+            get { return _imputedPeak; }
+        }
+
 
         public string NameSet
         {
@@ -2343,7 +2348,36 @@ namespace pwiz.Skyline.Controls.Graphs
             if (true == _imputedBoundsReceiver?.TryGetProduct(parameter, out var imputedBounds))
             {
                 chromGraphPrimary.ImputedBounds = imputedBounds?.PeakBounds;
+                if (IsExemplaryReplicate(chromatogramSet, chromGraphPrimary.Chromatogram.FilePath, imputedBounds?.ExemplaryPeak?.Source))
+                {
+                    Messages.Add(GraphsResources.GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate);
+                }
             }
+        }
+
+        private bool IsExemplaryReplicate(ChromatogramSet chromatogramSet, MsDataFileUri filePath, PeakSource peakSource)
+        {
+            if (peakSource == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(peakSource.LibraryName))
+            {
+                if (chromatogramSet.Name == peakSource.ReplicateName)
+                {
+                    if (chromatogramSet.FileCount <= 1)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return Path.GetFileName(peakSource.FilePath) == filePath.GetFileName();
         }
 
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,
@@ -3263,6 +3297,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            if (ModifierKeys != Keys.None)
+            {
+                return false;
+            }
             if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);
