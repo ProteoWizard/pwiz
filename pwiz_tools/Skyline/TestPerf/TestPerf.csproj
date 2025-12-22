@@ -139,7 +139,7 @@
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
     <Compile Include="BullseyeSharpTest.cs" />
     <Compile Include="DiaNnPeakImputationTest.cs" />
-    <Compile Include="PeakImputationDiaTutorial.cs" />
+    <Compile Include="PeakBoundaryImputationDiaTutorial.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
     <Compile Include="PerfCreateLibraryFromSpectraTest.cs" />
