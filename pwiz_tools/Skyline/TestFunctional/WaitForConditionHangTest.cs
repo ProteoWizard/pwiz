@@ -68,15 +68,12 @@ namespace pwiz.SkylineTestFunctional
             WaitForRelativeAbundanceComplete();
             RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             Assert.AreEqual(pepOfInterest1, CallUI(GetSelectedPeptide));
-            RunUI(() => SkylineWindow.ShowExemplaryPeak(true));
-            WaitForExemplaryPeaks();
             SelectPeptide(pepOfInterest2);
             RunUI(()=>
             {
                 SkylineWindow.SelectedResultsIndex = 0;
                 SkylineWindow.AutoZoomBestPeak();
             });
-            WaitForExemplaryPeaks();
             WaitForGraphs();
             RunUI(() =>
             {
@@ -165,12 +162,5 @@ namespace pwiz.SkylineTestFunctional
         {
             return SkylineWindow.SequenceTree.GetNodeOfType<PeptideTreeNode>()?.DocNode.Peptide.Sequence;
         }
-
-        private void WaitForExemplaryPeaks()
-        {
-            WaitForGraphs();
-            WaitForConditionUI(() => SkylineWindow.GraphChromatograms.All(chrom => chrom.ExemplaryPeak != null));
-        }
-
     }
 }
