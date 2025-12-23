@@ -132,27 +132,27 @@ namespace pwiz.SkylineTestFunctional
         {
             var scoreToRunGraphPane = GetScoreToRunGraphPane();
             Assert.IsNotNull(scoreToRunGraphPane);
-            bool[] boolHolder = new bool[1];
+            bool[] isCompleted = new bool[1];
             var thread = Thread.CurrentThread;
             var allowedTime = TimeSpan.FromMinutes(2);
             CommonActionUtil.RunAsync(() =>
             {
-                InterruptThreadAfter(boolHolder, thread, allowedTime);
+                InterruptThreadAfter(isCompleted, thread, allowedTime);
             });
             try
             {
                 WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
+                lock (isCompleted)
+                {
+                    isCompleted[0] = true;
+                    Monitor.Pulse(isCompleted);
+                }
             }
             catch (ThreadInterruptedException tei)
             {
                 throw new AssertFailedException(string.Format("Failed waiting {0} for graph pane", allowedTime), tei);
             }
 
-            lock (boolHolder)
-            {
-                boolHolder[0] = true;
-                Monitor.Pulse(boolHolder);
-            }
         }
 
         private void InterruptThreadAfter(bool[] boolHolder, Thread thread, TimeSpan timeSpan)
