@@ -64,16 +64,16 @@ namespace pwiz.SkylineTestFunctional
             WaitForRelativeAbundanceComplete();
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
             WaitForRelativeAbundanceComplete();
-            RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
+            RunUI(()=>SkylineWindow.SelectedResultsIndex = 1);
             WaitForRelativeAbundanceComplete();
-            RunUI(() => SkylineWindow.SelectedResultsIndex = 3);
+            RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             Assert.AreEqual(pepOfInterest1, CallUI(GetSelectedPeptide));
             RunUI(() => SkylineWindow.ShowExemplaryPeak(true));
             WaitForExemplaryPeaks();
             SelectPeptide(pepOfInterest2);
             RunUI(()=>
             {
-                SkylineWindow.SelectedResultsIndex = 4;
+                SkylineWindow.SelectedResultsIndex = 0;
                 SkylineWindow.AutoZoomBestPeak();
             });
             WaitForExemplaryPeaks();
@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForRTRegressionComplete();
             RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
             WaitForRTRegressionComplete();
-            RunUI(() => SkylineWindow.SelectedResultsIndex = 0);
+            RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             WaitForRTRegressionComplete();
         }
 
