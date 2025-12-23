@@ -2307,6 +2307,26 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
+        #region Quantification comparison
+
+        /// <summary>
+        /// Compares settings that affect quantification/abundance calculations.
+        /// Used to determine if cached abundance values can be reused.
+        /// TODO: Nick - please review and expand this to cover all relevant settings.
+        /// </summary>
+        public bool HasEqualQuantificationSettings(SrmSettings other)
+        {
+            if (ReferenceEquals(this, other))
+                return true;
+            if (other == null)
+                return false;
+
+            // Compare quantification settings that affect abundance calculations
+            return Equals(PeptideSettings.Quantification, other.PeptideSettings.Quantification);
+        }
+
+        #endregion
+
         #region object overrides
 
         public bool Equals(SrmSettings obj)

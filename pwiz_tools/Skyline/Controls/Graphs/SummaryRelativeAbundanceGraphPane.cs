@@ -58,6 +58,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private static List<LabeledPoint.PointLayout> _labelsLayout = new List<LabeledPoint.PointLayout>();
         private static RelativeAbundanceFormatting _formattingOverride;
         private int _progressValue = -1;
+        private Stopwatch _progressStopwatch;
+        private const int PROGRESS_INITIAL_DELAY_MS = 300; // Wait before showing progress bar
+        private const int PROGRESS_UPDATE_INTERVAL_MS = 100; // Throttle progress UI updates after first show
         private NodeTip _toolTip;
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
@@ -109,6 +112,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 var newProgressValue = _graphDataReceiver.GetProgressValue();
                 if (newProgressValue != _progressValue)
                 {
+                    if (_progressStopwatch == null)
+                    {
+                        // First progress update - start timing but don't show yet
+                        _progressStopwatch = Stopwatch.StartNew();
+                        _progressValue = newProgressValue;
+                        return;
+                    }
+
+                    bool progressBarShowing = ProgressBar != null;
+                    int throttleMs = progressBarShowing ? PROGRESS_UPDATE_INTERVAL_MS : PROGRESS_INITIAL_DELAY_MS;
+
+                    if (_progressStopwatch.ElapsedMilliseconds < throttleMs)
+                    {
+                        return; // Skip this update, not enough time has passed
+                    }
+
+                    _progressStopwatch.Restart();
                     ProgressBar ??= new PaneProgressBar(this);
                     ProgressBar.UpdateProgress(newProgressValue);
                     _progressValue = newProgressValue;
@@ -119,6 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 ProgressBar?.Dispose();
                 ProgressBar = null;
                 _progressValue = -1;
+                _progressStopwatch = null;
             }
         }
 
@@ -348,11 +369,34 @@ namespace pwiz.Skyline.Controls.Graphs
             var showReplicate = RTLinearRegressionGraphPane.ShowReplicate;
             var resultsIndex = GraphSummary.ResultsIndex;
             var oldGraphData = _graphData;
-            if (!_graphDataReceiver.TryGetProduct(
-                    new GraphDataParameters(document, graphSettings, showReplicate, resultsIndex),
-                    out var newGraphData))
+
+            // Get prior cached data for this replicate to enable incremental updates
+            var cacheKey = showReplicate == ReplicateDisplay.single ? resultsIndex : -1;
+            _graphDataReceiver.TryGetCachedResult(cacheKey, out var priorGraphData);
+
+            GraphData newGraphData;
+            try
             {
-                // Keep showing previous graph while calculating new data (stale-while-revalidate)
+                if (!_graphDataReceiver.TryGetProduct(
+                        new GraphDataParameters(document, graphSettings, showReplicate, resultsIndex, priorGraphData),
+                        out newGraphData))
+                {
+                    // Keep showing previous graph while calculating new data (stale-while-revalidate)
+                    // Set initial X-axis scale estimate based on document counts
+                    if (_graphData == null)
+                    {
+                        int estimatedCount = graphSettings.AreaProteinTargets
+                            ? document.MoleculeGroupCount
+                            : document.MoleculeCount;
+                        XAxis.Scale.Max = estimatedCount;
+                        AxisChange();
+                    }
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(Program.MainWindow, e);
                 return;
             }
 
@@ -433,20 +477,23 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                if (!_graphDataReceiver.TryGetCurrentProduct(out var product))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(product.Document, GraphSummary.DocumentUIContainer.DocumentUI) &&
-                    Equals(product.GraphSettings, GraphSettings.FromSettings()))
-                {
+                // Error means we're "done" (no further processing will occur)
+                if (_graphDataReceiver.HasError)
                     return true;
-                }
 
-                return false;
+                if (!_graphDataReceiver.TryGetCurrentProduct(out var product))
+                    return false;
+
+                return ReferenceEquals(product.Document, GraphSummary.DocumentUIContainer.DocumentUI) &&
+                       Equals(product.GraphSettings, GraphSettings.FromSettings());
             }
         }
+
+        /// <summary>
+        /// Returns true only when processing completed successfully (no errors).
+        /// Use this in tests to wait for successful completion and fail fast on errors.
+        /// </summary>
+        public bool IsSuccessfullyComplete => !_graphDataReceiver.HasError && IsComplete;
 
         private void this_AxisChangeEvent(GraphPane pane)
         {
@@ -617,39 +664,43 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public abstract class GraphData : Immutable
         {
-            protected GraphData(SrmDocument document, GraphSettings graphSettings,
-                ReplicateDisplay showReplicate, int resultsIndex, ProductionMonitor productionMonitor)
+            protected GraphData(GraphDataParameters parameters, ProductionMonitor productionMonitor)
             {
-                Document = document;
-                GraphSettings = graphSettings;
-                ShowReplicate = showReplicate;
-                ResultsIndex = resultsIndex;
+                Document = parameters.Document;
+                GraphSettings = parameters.GraphSettings;
+                ShowReplicate = parameters.ShowReplicate;
+                ResultsIndex = parameters.ResultsIndex;
                 AggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
-                var schema = SkylineDataSchema.MemoryDataSchema(document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-                bool anyMolecules = document.HasSmallMolecules;
-                // Build the list of points to show.
-                var listPoints = new List<GraphPointData>();
-                var moleculeGroups = document.MoleculeGroups.Where(moleculeGroup =>
+
+                if (parameters.CanUseIncrementalUpdate && GraphSettings.AreaProteinTargets && !Document.HasSmallMolecules)
                 {
-                    if (graphSettings.ExcludePeptideLists && !anyMolecules && moleculeGroup.IsPeptideList)
-                    {
-                        return false;
-                    }
+                    // Incremental update: merge with prior data (protein mode only for now)
+                    CalcDataPositionsIncremental(parameters.PriorGraphData, productionMonitor);
+                }
+                else
+                {
+                    // Full calculation
+                    CalcDataPositionsFull(productionMonitor);
+                }
+            }
 
-                    if (graphSettings.ExcludeStandards && ContainsStandards(moleculeGroup))
-                    {
-                        return false;
-                    }
-
-                    return true;
-                }).ToList();
+            /// <summary>
+            /// Full calculation: build all points from scratch, sort, assign positions.
+            /// </summary>
+            private void CalcDataPositionsFull(ProductionMonitor productionMonitor)
+            {
+                var schema = SkylineDataSchema.MemoryDataSchema(Document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+                bool anyMolecules = Document.HasSmallMolecules;
+                var listPoints = new List<GraphPointData>();
+                var moleculeGroups = GetFilteredMoleculeGroups();
                 int moleculeCount = moleculeGroups.Sum(group => group.MoleculeCount);
                 int iMolecule = 0;
+
                 for (int iMoleculeGroup = 0; iMoleculeGroup < moleculeGroups.Count; iMoleculeGroup++)
                 {
                     productionMonitor.CancellationToken.ThrowIfCancellationRequested();
                     var moleculeGroup = moleculeGroups[iMoleculeGroup];
-                    if (graphSettings.AreaProteinTargets && !anyMolecules)
+                    if (GraphSettings.AreaProteinTargets && !anyMolecules)
                     {
                         productionMonitor.SetProgress(50 * iMoleculeGroup / moleculeGroups.Count);
                         var path = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
@@ -670,9 +721,227 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
-                // Calculate Y values, sort, and assign X positions (all on background thread)
                 productionMonitor.SetProgress(60);
                 CalcDataPositions(listPoints, productionMonitor);
+            }
+
+            /// <summary>
+            /// Get molecule groups filtered by current graph settings.
+            /// </summary>
+            private List<PeptideGroupDocNode> GetFilteredMoleculeGroups()
+            {
+                bool anyMolecules = Document.HasSmallMolecules;
+                return Document.MoleculeGroups.Where(moleculeGroup =>
+                {
+                    if (GraphSettings.ExcludePeptideLists && !anyMolecules && moleculeGroup.IsPeptideList)
+                        return false;
+                    if (GraphSettings.ExcludeStandards && ContainsStandards(moleculeGroup))
+                        return false;
+                    return true;
+                }).ToList();
+            }
+
+            /// <summary>
+            /// Incremental update: use prior data to avoid full re-sort.
+            /// Complexity: O(n + k log k) where k is the number of changed nodes.
+            /// </summary>
+            private void CalcDataPositionsIncremental(GraphData priorData, ProductionMonitor productionMonitor)
+            {
+                var schema = SkylineDataSchema.MemoryDataSchema(Document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? (int?)ResultsIndex : null;
+                var moleculeGroups = GetFilteredMoleculeGroups();
+
+                // Step 1: Build set of new doc node references
+                productionMonitor.SetProgress(10);
+                var newDocNodeKeys = BuildNewDocNodeSet(moleculeGroups, productionMonitor);
+
+                // Step 2: Partition prior data into unchanged vs changed
+                productionMonitor.SetProgress(30);
+                var (unchanged, changedIdentities) = PartitionPriorData(priorData, newDocNodeKeys, productionMonitor);
+
+                // Step 3: Calculate values for new/changed nodes
+                productionMonitor.SetProgress(50);
+                var changedPoints = CalculateChangedPoints(moleculeGroups, priorData.NodePositions, schema, resultIndex, productionMonitor);
+
+                // Steps 4-5: Sort changed and merge with unchanged
+                productionMonitor.SetProgress(70);
+                MergeSortedLists(unchanged, changedPoints, productionMonitor);
+            }
+
+            /// <summary>
+            /// Build a set of doc node keys (GlobalIndex - guaranteed unique per object) for new document.
+            /// </summary>
+            private HashSet<int> BuildNewDocNodeSet(List<PeptideGroupDocNode> moleculeGroups, ProductionMonitor productionMonitor)
+            {
+                var newDocNodeKeys = new HashSet<int>(moleculeGroups.Count);
+                foreach (var moleculeGroup in moleculeGroups)
+                {
+                    productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                    newDocNodeKeys.Add(moleculeGroup.Id.GlobalIndex);
+                }
+                return newDocNodeKeys;
+            }
+
+            /// <summary>
+            /// Partition prior data into unchanged nodes (same reference) and changed identities.
+            /// Returns unchanged list in sorted order (by Y descending, preserving prior PointPairList order).
+            /// </summary>
+            private (List<(PointPair point, NodePosition pos)> unchanged, HashSet<int> changedIdentities)
+                PartitionPriorData(GraphData priorData, HashSet<int> newDocNodeKeys, ProductionMonitor productionMonitor)
+            {
+                var unchanged = new List<(PointPair point, NodePosition pos)>(priorData.NodePositions.Count);
+                var changedIdentities = new HashSet<int>();
+
+                // Build array indexed by PointPairList position for sorted iteration
+                var positionsByIndex = new NodePosition?[priorData.PointPairList.Count];
+                foreach (var kvp in priorData.NodePositions)
+                {
+                    positionsByIndex[kvp.Value.Index] = kvp.Value;
+                }
+
+                // Iterate in sorted order (PointPairList is sorted by Y descending)
+                for (int i = 0; i < priorData.PointPairList.Count; i++)
+                {
+                    productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                    var pos = positionsByIndex[i];
+                    if (!pos.HasValue)
+                        continue; // Skip holes (shouldn't happen, but be safe)
+
+                    var priorNodeKey = pos.Value.DocNode.Id.GlobalIndex;
+
+                    if (newDocNodeKeys.Contains(priorNodeKey))
+                    {
+                        // Same reference exists in new doc - unchanged (preserves sorted order)
+                        unchanged.Add((priorData.PointPairList[i], pos.Value));
+                    }
+                    else
+                    {
+                        // Node reference changed - mark identity for recalculation
+                        changedIdentities.Add(pos.Value.DocNode.PeptideGroup.GlobalIndex);
+                    }
+                }
+
+                return (unchanged, changedIdentities);
+            }
+
+            /// <summary>
+            /// Calculate Y values for new or changed nodes.
+            /// </summary>
+            private List<(PointPair point, PeptideGroupDocNode docNode)> CalculateChangedPoints(
+                List<PeptideGroupDocNode> moleculeGroups,
+                IReadOnlyDictionary<int, NodePosition> priorNodePositions,
+                SkylineDataSchema schema,
+                int? resultIndex,
+                ProductionMonitor productionMonitor)
+            {
+                var changedPoints = new List<(PointPair point, PeptideGroupDocNode docNode)>();
+                double maxY = 0;
+                var minY = double.MaxValue;
+
+                foreach (var moleculeGroup in moleculeGroups)
+                {
+                    productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                    var nodeKey = moleculeGroup.Id.GlobalIndex;
+
+                    // Skip if unchanged (already handled in partition step)
+                    if (priorNodePositions.ContainsKey(nodeKey))
+                        continue;
+
+                    // This is a new or changed node - calculate its value
+                    var path = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
+                    var protein = new Protein(schema, path);
+                    var pointData = new GraphPointData(protein);
+                    var pointPair = CreatePointPair(pointData, ref maxY, ref minY, resultIndex);
+                    changedPoints.Add((pointPair, moleculeGroup));
+                }
+
+                // Sort by Y descending (typically small list - k items where k << n)
+                changedPoints.Sort((a, b) => CompareYValues(a.point, b.point));
+
+                return changedPoints;
+            }
+
+            /// <summary>
+            /// Merge unchanged list with changed list into final sorted output.
+            /// Both lists must already be sorted by Y descending.
+            /// </summary>
+            private void MergeSortedLists(
+                List<(PointPair point, NodePosition pos)> unchanged,
+                List<(PointPair point, PeptideGroupDocNode docNode)> changed,
+                ProductionMonitor productionMonitor)
+            {
+                // Pre-allocate output structures
+                int totalCount = unchanged.Count + changed.Count;
+                var pointPairList = new PointPairList();
+                var xscalePaths = new List<IdentityPath>(totalCount);
+                var identityToIndex = new Dictionary<Identity, int>(totalCount);
+                var nodePositions = new Dictionary<int, NodePosition>(totalCount);
+
+                // Track min/max Y
+                double maxY = 0;
+                var minY = double.MaxValue;
+
+                // Merge with two pointers
+                int iUnchanged = 0, iChanged = 0;
+                int outputIndex = 0;
+
+                productionMonitor.SetProgress(85);
+                while (iUnchanged < unchanged.Count || iChanged < changed.Count)
+                {
+                    productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                    PointPair sourcePoint;
+                    PeptideGroupDocNode docNode;
+
+                    // Pick the larger Y value (descending sort)
+                    if (iChanged >= changed.Count ||
+                        (iUnchanged < unchanged.Count && CompareYValues(unchanged[iUnchanged].point, changed[iChanged].point) <= 0))
+                    {
+                        var (point, pos) = unchanged[iUnchanged++];
+                        sourcePoint = point;
+                        docNode = pos.DocNode;
+                    }
+                    else
+                    {
+                        var (point, node) = changed[iChanged++];
+                        sourcePoint = point;
+                        docNode = node;
+                    }
+
+                    // Create output point with correct X position
+                    var nextPoint = new PointPair(outputIndex + 1, sourcePoint.Y) { Tag = sourcePoint.Tag };
+                    pointPairList.Add(nextPoint);
+
+                    // Update min/max
+                    if (nextPoint.Y > maxY) maxY = nextPoint.Y;
+                    if (nextPoint.Y < minY) minY = nextPoint.Y;
+
+                    // Build lookup structures
+                    var dataPoint = (GraphPointData)nextPoint.Tag;
+                    xscalePaths.Add(dataPoint.IdentityPath);
+
+                    var groupIdentity = dataPoint.IdentityPath.GetIdentity(0);
+                    if (!identityToIndex.ContainsKey(groupIdentity))
+                        identityToIndex.Add(groupIdentity, outputIndex);
+
+                    var nodeKey = docNode.Id.GlobalIndex;
+                    nodePositions.Add(nodeKey, new NodePosition
+                    {
+                        Index = outputIndex,
+                        YValue = nextPoint.Y,
+                        DocNode = docNode
+                    });
+
+                    outputIndex++;
+                }
+
+                productionMonitor.SetProgress(95);
+                PointPairList = pointPairList;
+                XScalePaths = xscalePaths.ToArray();
+                _identityToIndex = identityToIndex;
+                _nodePositions = nodePositions;
+                MaxY = maxY;
+                if (minY != double.MaxValue)
+                    MinY = minY;
             }
 
             /// <summary>
@@ -702,7 +971,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 pointPairList.Sort(CompareYValues);
 
                 productionMonitor.SetProgress(90);
-                var identityToIndex = new Dictionary<Identity, int>();
+                var identityToIndex = new Dictionary<Identity, int>(pointPairList.Count);
+                var nodePositions = new Dictionary<int, NodePosition>(pointPairList.Count);
                 for (var i = 0; i < pointPairList.Count; i++)
                 {
                     var dataPoint = (GraphPointData)pointPairList[i].Tag;
@@ -713,11 +983,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     var groupIdentity = dataPoint.IdentityPath.GetIdentity(0);
                     if (!identityToIndex.ContainsKey(groupIdentity))
                         identityToIndex[groupIdentity] = i;
+                    // Build map for incremental update support
+                    var docNode = dataPoint.Protein.DocNode;
+                    var nodeKey = docNode.Id.GlobalIndex;
+                    nodePositions.Add(nodeKey, new NodePosition
+                    {
+                        Index = i,
+                        YValue = pointPairList[i].Y,
+                        DocNode = docNode
+                    });
                 }
 
                 PointPairList = pointPairList;
                 XScalePaths = xscalePaths.ToArray();
                 _identityToIndex = identityToIndex;
+                _nodePositions = nodePositions;
                 MaxY = maxY;
                 if (minY != double.MaxValue)
                 {
@@ -741,6 +1021,27 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             private Dictionary<Identity, int> _identityToIndex;
+
+            /// <summary>
+            /// Maps doc node reference (via Id.GlobalIndex - guaranteed unique per object) to its position and Y value in the sorted list.
+            /// Used for incremental updates: unchanged nodes (same reference) keep their position.
+            /// </summary>
+            private Dictionary<int, NodePosition> _nodePositions;
+
+            /// <summary>
+            /// Stores the position and computed value for a doc node in the sorted list.
+            /// </summary>
+            internal struct NodePosition
+            {
+                public int Index;
+                public double YValue;
+                public PeptideGroupDocNode DocNode;
+            }
+
+            /// <summary>
+            /// Gets the node position data for incremental update support.
+            /// </summary>
+            internal IReadOnlyDictionary<int, NodePosition> NodePositions => _nodePositions;
 
             private static int CompareYValues(PointPair p1, PointPair p2)
             {
@@ -802,6 +1103,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 return statValues.Mean();
             }
+
         }
 
         public class GraphPointData 
@@ -889,22 +1191,37 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        protected class GraphDataParameters
+        public class GraphDataParameters
         {
             public GraphDataParameters(SrmDocument document, GraphSettings graphSettings,
-                ReplicateDisplay showReplicate, int resultsIndex)
+                ReplicateDisplay showReplicate, int resultsIndex, GraphData priorGraphData = null)
             {
                 Document = document;
                 GraphSettings = graphSettings;
                 ShowReplicate = showReplicate;
                 // ResultsIndex only matters for single replicate mode
                 ResultsIndex = showReplicate == ReplicateDisplay.single ? resultsIndex : -1;
+                PriorGraphData = priorGraphData;
             }
 
             public SrmDocument Document { get; }
             public GraphSettings GraphSettings { get; }
             public ReplicateDisplay ShowReplicate { get; }
             public int ResultsIndex { get; }
+
+            /// <summary>
+            /// Optional prior graph data for incremental update optimization.
+            /// Only valid if ReferenceEquals(PriorGraphData.Document.Settings, Document.Settings).
+            /// Not included in Equals/GetHashCode - same parameters should produce same result.
+            /// </summary>
+            public GraphData PriorGraphData { get; }
+
+            /// <summary>
+            /// Returns true if incremental update is possible (prior data exists and
+            /// quantification settings unchanged).
+            /// </summary>
+            public bool CanUseIncrementalUpdate => PriorGraphData != null &&
+                Document.Settings.HasEqualQuantificationSettings(PriorGraphData.Document.Settings);
 
             protected bool Equals(GraphDataParameters other)
             {

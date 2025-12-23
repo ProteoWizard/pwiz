@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -53,6 +54,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private GraphData _data;
         private NodeTip _tip;
         private int _progressValue = -1;
+        private Stopwatch _progressStopwatch;
+        private const int PROGRESS_INITIAL_DELAY_MS = 300; // Wait before showing progress bar
+        private const int PROGRESS_UPDATE_INTERVAL_MS = 100; // Throttle progress UI updates after first show
         public PaneProgressBar _progressBar;
         private ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults> _graphDataReceiver;
 
@@ -118,10 +122,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 int newProgressValue = _graphDataReceiver.GetProgressValue();
                 if (newProgressValue != _progressValue)
                 {
-                    Title.Text = GraphsResources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
-                    Legend.IsVisible = false;
+                    if (_progressStopwatch == null)
+                    {
+                        // First progress update - start timing but don't show yet
+                        _progressStopwatch = Stopwatch.StartNew();
+                        _progressValue = newProgressValue;
+                        return;
+                    }
+
+                    bool progressBarShowing = _progressBar != null;
+                    int throttleMs = progressBarShowing ? PROGRESS_UPDATE_INTERVAL_MS : PROGRESS_INITIAL_DELAY_MS;
+
+                    if (_progressStopwatch.ElapsedMilliseconds < throttleMs)
+                    {
+                        return; // Skip this update, not enough time has passed
+                    }
+
+                    _progressStopwatch.Restart();
                     _progressBar ??= new PaneProgressBar(this);
-                    _progressBar?.UpdateProgress(_graphDataReceiver.GetProgressValue());
+                    _progressBar.UpdateProgress(newProgressValue);
                     _progressValue = newProgressValue;
                 }
             }
@@ -130,6 +149,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _progressBar?.Dispose();
                 _progressBar = null;
                 _progressValue = -1;
+                _progressStopwatch = null;
             }
         }
 
@@ -350,9 +370,18 @@ namespace pwiz.Skyline.Controls.Graphs
         private void UpdateNow()
         {
             var regressionSettings = GetRegressionSettings();
-            if (!_graphDataReceiver.TryGetProduct(regressionSettings, out var results))
+            RtRegressionResults results;
+            try
             {
-                // Keep showing previous graph while calculating new data (stale-while-revalidate)
+                if (!_graphDataReceiver.TryGetProduct(regressionSettings, out results))
+                {
+                    // Keep showing previous graph while calculating new data (stale-while-revalidate)
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(Program.MainWindow, e);
                 return;
             }
 

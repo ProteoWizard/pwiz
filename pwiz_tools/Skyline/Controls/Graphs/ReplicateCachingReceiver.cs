@@ -19,9 +19,12 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -50,11 +53,16 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly Func<TParam, object> _getSettings;
         private readonly Func<TParam, int> _getCacheKey;
 
-        private readonly Dictionary<int, TResult> _localCache = new Dictionary<int, TResult>();
+        private readonly ConcurrentDictionary<int, TResult> _localCache = new ConcurrentDictionary<int, TResult>();
         private readonly Dictionary<int, CompletionListener> _pendingListeners = new Dictionary<int, CompletionListener>();
         private SrmDocument _cachedDocument;
         private object _cachedSettings;
         private int _currentCacheKey = int.MinValue;
+
+        // Exception from background completion listener, to be thrown on UI thread
+        private Exception _pendingException;
+        // Track the last reported exception to ensure we only report each error once
+        private Exception _reportedException;
 
         /// <summary>
         /// Creates a caching wrapper around a Receiver.
@@ -95,6 +103,48 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool IsProcessing() => _receiver.IsProcessing();
 
         /// <summary>
+        /// Tries to get a cached result for the given cache key.
+        /// Used to provide prior data for incremental updates.
+        /// </summary>
+        /// <param name="cacheKey">The cache key (typically replicate index)</param>
+        /// <param name="result">The cached result if available</param>
+        /// <returns>True if a cached result exists for this key</returns>
+        public bool TryGetCachedResult(int cacheKey, out TResult result)
+        {
+            return _localCache.TryGetValue(cacheKey, out result);
+        }
+
+        /// <summary>
+        /// Throws any pending exception from background processing.
+        /// Follows the LongWaitDlg pattern: exceptions are stored on the background thread
+        /// and re-thrown on the UI thread via WrapAndThrowException.
+        /// </summary>
+        private void ThrowIfError()
+        {
+            // Check for pending exception from background listener (thrown once, then cleared)
+            var pendingEx = Interlocked.Exchange(ref _pendingException, null);
+            if (pendingEx != null)
+            {
+                _reportedException = pendingEx;
+                ExceptionUtil.WrapAndThrowException(pendingEx);
+            }
+
+            // Check for error from underlying receiver (only throw if not already reported)
+            var error = _receiver.GetError();
+            if (error != null && !ReferenceEquals(error, _reportedException))
+            {
+                _reportedException = error;
+                ExceptionUtil.WrapAndThrowException(error);
+            }
+        }
+
+        /// <summary>
+        /// Returns true if there is a pending or reported error.
+        /// Use this to check for errors without triggering exception display.
+        /// </summary>
+        public bool HasError => _pendingException != null || _receiver.GetError() != null;
+
+        /// <summary>
         /// Tries to get a cached or computed result for the given parameters.
         ///
         /// First checks local cache. If the document or settings have changed,
@@ -109,6 +159,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <returns>True if a result is available, false if still computing</returns>
         public bool TryGetProduct(TParam param, out TResult result)
         {
+            ThrowIfError();
+
             var document = _getDocument(param);
             var settings = _getSettings(param);
             var cacheKey = _getCacheKey(param);
@@ -168,10 +220,16 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Tries to get the current product from the underlying Receiver.
+        /// Tries to get the current product - checks local cache first, then underlying Receiver.
+        /// Does NOT throw on error - use HasError to check for errors without side effects.
         /// </summary>
         public bool TryGetCurrentProduct(out TResult result)
         {
+            // Check local cache first for the current cache key
+            if (_currentCacheKey != int.MinValue && _localCache.TryGetValue(_currentCacheKey, out result))
+            {
+                return true;
+            }
             return _receiver.TryGetCurrentProduct(out result);
         }
 
@@ -185,6 +243,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _cachedDocument = null;
             _cachedSettings = null;
             _currentCacheKey = int.MinValue;
+            _reportedException = null;  // Allow new errors to be reported
 
             // Clean up pending listeners
             foreach (var listener in _pendingListeners.Values)
@@ -219,9 +278,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void OnProductAvailable(WorkOrder key, ProductionResult result)
             {
-                // Store result in cache if successful
-                if (result.Exception == null && result.Value is TResult typedResult)
+                if (result.Exception != null)
                 {
+                    // Store exception for later throwing on UI thread (follows LongWaitDlg pattern)
+                    _owner._pendingException = result.Exception;
+                }
+                else if (result.Value is TResult typedResult)
+                {
+                    // Store successful result in cache
                     _owner._localCache[_cacheKey] = typedResult;
                 }
 

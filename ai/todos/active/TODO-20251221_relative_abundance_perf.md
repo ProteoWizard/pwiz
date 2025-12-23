@@ -97,23 +97,104 @@ Applied `ReplicateCachingReceiver` wrapper to `RTLinearRegressionGraphPane` - pr
 - Both Relative Abundance and RT Regression graphs now have seamless replicate switching
 - Tested with ~5,000 proteins, 48,000 peptides - instant switching after first calculation
 
-## Phase 3: Incremental Updates (PLANNED)
+## Phase 3: Incremental Updates ✅ COMPLETE
 
 ### Concept
 When the document changes slightly (e.g., one peak's integration changes), we can update the sorted list incrementally instead of re-sorting from scratch.
 
-### Approach
-1. **Provide prior state to background computation** - pass the previous `GraphData` to the producer
-2. **Diff the documents** using `ReferenceEquals()` on the immutable tree nodes
-3. **Identify changed elements** - typically very few (often just one)
-4. **Update sorted list incrementally**:
-   - Remove changed items from their old positions
-   - Insert them at their new positions based on new Y values
-   - This is O(k log n) where k is the number of changes, vs O(n log n) for full re-sort
+### Key Architectural Insight
+SrmDocument and its tree nodes are **immutable**. Modifications clone from the changed node up to root. Unchanged subtrees keep the **same object references**. This means `ReferenceEquals(nodeNew, nodeOld)` tells us instantly if a subtree changed.
 
-### Benefits
-- Single peak integration change: O(1) to find changed item, O(log n) to reposition
-- Much faster than full re-sort of thousands of items
+See `ai/docs/architecture-data-model.md` for full documentation.
+
+### Algorithm: Single-Pass Merge - O(n + k log k)
+
+1. **Partition prior data** - Walk prior PointPairList in sorted order, check if each node reference exists in new doc
+2. **Calculate changed points** - For new/changed nodes only, calculate abundance values
+3. **Sort changed** - O(k log k) for the small changed list
+4. **Merge** - Single-pass merge of unchanged (already sorted) with changed (just sorted)
+
+### Implementation
+- `GraphDataParameters.PriorGraphData` - passes prior result for incremental update
+- `GraphDataParameters.CanUseIncrementalUpdate` - checks `HasEqualQuantificationSettings()`
+- `NodePosition` struct - stores index, Y value, and doc node reference for ReferenceEquals
+- `CalcDataPositionsIncremental()` - implements the merge algorithm
+- Helper methods: `BuildNewDocNodeSet()`, `PartitionPriorData()`, `CalculateChangedPoints()`, `MergeSortedLists()`
+
+### Settings Comparison
+- Added `SrmSettings.HasEqualQuantificationSettings()` stub method
+- Currently compares `PeptideSettings.Quantification`
+- TODO for Nick: Expand to cover all settings that affect abundance calculations
+
+## Phase 4: Progress Bar Improvements ✅ COMPLETE
+
+### Issues Fixed
+1. **Timer-based throttling** - Progress bar updates now use stopwatch-based throttling:
+   - 300ms initial delay before showing (avoids flash for fast calculations)
+   - 100ms throttle between updates after first show
+2. **Thread safety** - Changed `_localCache` in `ReplicateCachingReceiver` to `ConcurrentDictionary`
+   - `CompletionListener.OnProductAvailable` is called on background thread, was writing to regular Dictionary
+   - This helped but did not fully fix intermittent test failures
+3. **Removed ProgressMonitor.cs** - Deleted unused file that was accidentally left in .csproj
+4. **RT graph cleanup** - Removed "Calculating..." title and legend hiding from RTLinearRegressionGraphPane
+   - Progress bar alone is sufficient visual feedback
+   - Prevents layout shift during calculation
+
+### Files Modified
+- `RTLinearRegressionGraphPane.cs` - Added progress throttling, removed title/legend changes
+- `SummaryRelativeAbundanceGraphPane.cs` - Added progress throttling
+- `ReplicateCachingReceiver.cs` - Changed to ConcurrentDictionary, added TryGetCachedResult()
+- `SrmSettings.cs` - Added HasEqualQuantificationSettings() stub
+- Deleted `ProgressMonitor.cs`
+
+## Phase 5: Exception Handling & Bug Fix ✅ COMPLETE
+
+### Problem Discovered
+Intermittent test failure in `PeakImputationDiaTutorial` - test hangs waiting for `IsComplete` which never returns true. Using `LaunchDebuggerOnWaitForConditionTimeout = true` caught the issue:
+
+**Symptom**: `CalcDataPositions` throws `ArgumentException: "An item with the same key has already been added"` at line 935 when adding to `nodePositions` dictionary.
+
+### Root Cause Analysis Journey
+1. **Initial theory**: Duplicate `PeptideGroupDocNode` references in `Document.MoleculeGroups`
+2. **Added assertions** using `RuntimeHelpers.GetHashCode()` to trace duplicates
+3. **Assertions fired** showing apparent duplicates at various indices
+4. **Key insight**: Different proteins with different names were "duplicating"
+5. **Discovery**: The duplicates were **hash collisions**, not actual reference duplicates!
+
+### The Real Bug: `RuntimeHelpers.GetHashCode()` Collisions
+`RuntimeHelpers.GetHashCode()` returns an identity hash code that is **NOT guaranteed unique**. With thousands of objects, collisions occur:
+- Two different `PeptideGroupDocNode` objects can have the same hash code
+- When used as dictionary keys, this causes "duplicate key" exceptions
+
+**Evidence**:
+- Error showed proteins like `sp|O60518|RNBP6_HUMAN` and `sp|Q9UBI1|COMD3_HUMAN` (clearly different) "colliding"
+- Switching to `DocNode.Id.GlobalIndex` (guaranteed unique via `Interlocked.Increment()`) eliminated all false positives
+
+### The Fix
+Replaced all uses of `RuntimeHelpers.GetHashCode(docNode)` with `docNode.Id.GlobalIndex` in `SummaryRelativeAbundanceGraphPane.cs`:
+
+1. `BuildNewDocNodeSet()` - line 788
+2. `PartitionPriorData()` - line 818
+3. `CalculateChangedPoints()` - line 852
+4. `MergeSortedLists()` - lines 934, 996
+5. Updated comment on `_nodePositions` dictionary
+
+### Lesson Learned
+- `RuntimeHelpers.GetHashCode()` is a **debugging convenience**, not a uniqueness guarantee
+- For true object identity, use `DocNode.Id.GlobalIndex` (assigned via `Interlocked.Increment()`)
+- This pattern exists because the codebase predates widespread knowledge of `RuntimeHelpers`
+
+### Files Modified
+- `SummaryRelativeAbundanceGraphPane.cs` - Replaced 5 uses of `RuntimeHelpers.GetHashCode()` with `GlobalIndex`
+
+### Exception Handling (retained from earlier work)
+The LongWaitDlg-pattern exception handling remains in place:
+- `ReplicateCachingReceiver` - `ThrowIfError()`, `HasError`, single-throw guarantee
+- Graph panes - try-catch with `DisplayOrReportException()`
+- Background exceptions now surface immediately to tests
+
+### Diagnostic Code
+Temporary diagnostic assertions were added during investigation to trace duplicates through `DocNodeChildren`, `SrmDocument`, and `DocumentReader`. These were removed after confirming the root cause was hash collisions, not actual duplicates. Test passed 43 iterations (over 2x the longest pre-fix run) confirming the fix.
 
 ## Testing
 - Use ExtracellularVesicalMagNet.sky document from Peak Imputation DIA tutorial
