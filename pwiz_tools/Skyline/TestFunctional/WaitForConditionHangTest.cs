@@ -18,13 +18,11 @@
  */
 
 using System;
-using System.Drawing;
 using System.Linq;
-using System.Windows.Forms;
+using System.Threading;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
@@ -134,7 +132,43 @@ namespace pwiz.SkylineTestFunctional
         {
             var scoreToRunGraphPane = GetScoreToRunGraphPane();
             Assert.IsNotNull(scoreToRunGraphPane);
-            WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
+            bool[] boolHolder = new bool[1];
+            var thread = Thread.CurrentThread;
+            var allowedTime = TimeSpan.FromMinutes(2);
+            CommonActionUtil.RunAsync(() =>
+            {
+                InterruptThreadAfter(boolHolder, thread, allowedTime);
+            });
+            try
+            {
+                WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
+            }
+            catch (ThreadInterruptedException tei)
+            {
+                throw new AssertFailedException(string.Format("Failed waiting {0} for graph pane", allowedTime), tei);
+            }
+
+            lock (boolHolder)
+            {
+                boolHolder[0] = true;
+                Monitor.Pulse(boolHolder);
+            }
+        }
+
+        private void InterruptThreadAfter(bool[] boolHolder, Thread thread, TimeSpan timeSpan)
+        {
+            lock (boolHolder)
+            {
+                if (!boolHolder[0])
+                {
+                    Monitor.Wait(boolHolder, timeSpan);
+                }
+
+                if (!boolHolder[0])
+                {
+                    thread.Interrupt();
+                }
+            }
         }
 
         public static RTLinearRegressionGraphPane GetScoreToRunGraphPane()
