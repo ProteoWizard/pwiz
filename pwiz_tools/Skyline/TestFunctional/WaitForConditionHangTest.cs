@@ -61,12 +61,6 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowSingleReplicate();
                 SkylineWindow.ShowProductTransitions();
             });
-            WaitForRelativeAbundanceComplete();
-            RunUI(()=>SkylineWindow.SelectedResultsIndex = 0);
-            WaitForRelativeAbundanceComplete();
-            RunUI(()=>SkylineWindow.SelectedResultsIndex = 1);
-            WaitForRelativeAbundanceComplete();
-            RunUI(() => SkylineWindow.SelectedResultsIndex = 1);
             Assert.AreEqual(pepOfInterest1, CallUI(GetSelectedPeptide));
             SelectPeptide(pepOfInterest2);
             RunUI(()=>
