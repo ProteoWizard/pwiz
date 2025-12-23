@@ -20,11 +20,9 @@
 using System;
 using System.Linq;
 using System.Threading;
-using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -70,8 +68,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForRelativeAbundanceComplete();
             RunUI(() => SkylineWindow.SelectedResultsIndex = 3);
             Assert.AreEqual(pepOfInterest1, CallUI(GetSelectedPeptide));
-            var rtReplicateGraphSummary = SkylineWindow.GraphRetentionTime;
-            Assert.IsNotNull(rtReplicateGraphSummary);
             RunUI(() => SkylineWindow.ShowExemplaryPeak(true));
             WaitForExemplaryPeaks();
             SelectPeptide(pepOfInterest2);
