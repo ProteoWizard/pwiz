@@ -108,6 +108,15 @@ Classes subclassing `BackgroundLoader` register as document change listeners. Pa
 
 Search for `BackgroundLoader` subclasses to see all implementations.
 
+## Content Equality vs Reference Equality
+
+A fundamental concept in Skyline's immutable architecture:
+
+- **Content equality** (`Object.Equals()` overrides): Two objects represent the same logical entity (same peptide sequence, same protein name, etc.)
+- **Reference equality** (`ReferenceEquals()`, `object.ReferenceEquals()`): Two variables point to the exact same object instance in memory
+
+In an immutable system, reference equality is extremely powerful because unchanged subtrees keep their original object references. If `ReferenceEquals(nodeNew, nodeOld)` returns true, you know the entire subtree is unchanged without examining any content.
+
 ## Identity and GlobalIndex
 
 Every `DocNode` contains an `Identity` object representing its reference identity:
@@ -120,24 +129,52 @@ public abstract class DocNode
 }
 ```
 
-### GlobalIndex
-- Unique `int` per document (in-memory only, never persisted to disk)
-- Created before `RuntimeHelpers.GetHashCode()` was known
-- Can be used as Dictionary key for ReferenceEquals-based lookups:
+### GlobalIndex - The Reliable Reference Identifier
+
+`Identity.GlobalIndex` is the **only reliable way** to create dictionary keys for reference-based lookups:
+
+- Assigned via `Interlocked.Increment()` - **guaranteed unique** per object instance
+- 32-bit integer with billions of headroom (documents rarely exceed millions of nodes)
+- In-memory only, never persisted to disk
+- More reliable than `RuntimeHelpers.GetHashCode()` (see warning below)
 
 ```csharp
-// Dictionary keyed by identity
-var indexByIdentity = new Dictionary<int, int>();
+// CORRECT: Dictionary keyed by GlobalIndex for reference-based lookup
+var indexByReference = new Dictionary<int, int>();
 foreach (var protein in doc.MoleculeGroups)
-    indexByIdentity[protein.Id.GlobalIndex] = index++;
+    indexByReference[protein.Id.GlobalIndex] = index++;
+
+// O(1) lookup by reference
+if (indexByReference.TryGetValue(someProtein.Id.GlobalIndex, out int idx))
+    // Found the exact same object instance
 ```
 
+### WARNING: Do NOT Use RuntimeHelpers.GetHashCode()
+
+`RuntimeHelpers.GetHashCode()` returns a 32-bit identity hash code, but it is **NOT guaranteed unique**:
+
+- On 64-bit Windows, object addresses don't fit in 32 bits, so collisions are inevitable
+- With thousands of objects, collisions become common (observed with ~5,000 proteins in PR #3730)
+- Using it as a dictionary key causes intermittent "duplicate key" exceptions
+
+```csharp
+// WRONG: RuntimeHelpers.GetHashCode() can have collisions!
+var nodeSet = new HashSet<int>();
+foreach (var protein in doc.MoleculeGroups)
+    nodeSet.Add(RuntimeHelpers.GetHashCode(protein)); // COLLISIONS POSSIBLE!
+```
+
+**Historical note**: `RuntimeHelpers.GetHashCode()` has existed since .NET 2.0. On 32-bit Windows, it may have been derived from memory addresses and was more reliable. On 64-bit Windows with 64-bit address space, object addresses cannot fit in 32 bits, making collisions inevitable. `Identity.GlobalIndex` was designed independently and turned out to be the correct solution.
+
 ### Identity Subclasses
-Each DocNode level has its own Identity subclass with content-based equality:
+
+Each DocNode level has its own Identity subclass with **content-based equality** (for `Equals()`/`GetHashCode()`):
 - `PeptideGroup.Id` - protein/list identity
 - `Peptide.Id` - peptide/molecule identity
 - `TransitionGroup.Id` - precursor identity
 - `Transition.Id` - transition identity
+
+The `GlobalIndex` property on these Identity objects provides **reference-based** uniqueness.
 
 ## Power of ReferenceEquals for Change Detection
 
@@ -200,16 +237,16 @@ void OnDocumentChanged(SrmDocument docNew, SrmDocument docOld)
 
 ## Reference-Based Set Operations
 
-Using `RuntimeHelpers.GetHashCode(obj)` (or `Identity.GlobalIndex`), you can build dictionaries keyed by object reference. This enables O(1) membership tests across different orderings of the same data.
+Using `Identity.GlobalIndex`, you can build dictionaries and sets keyed by object reference. This enables O(1) membership tests across different orderings of the same data.
 
 ```csharp
 // Build reference set from one document
 var nodeSet = new HashSet<int>();
 foreach (var protein in doc.MoleculeGroups)
-    nodeSet.Add(RuntimeHelpers.GetHashCode(protein));
+    nodeSet.Add(protein.Id.GlobalIndex);
 
 // O(1) lookup: is this exact node reference in the set?
-if (nodeSet.Contains(RuntimeHelpers.GetHashCode(someProtein)))
+if (nodeSet.Contains(someProtein.Id.GlobalIndex))
     // Same object reference exists
 ```
 
