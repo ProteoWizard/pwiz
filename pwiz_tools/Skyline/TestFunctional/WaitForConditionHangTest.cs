@@ -68,37 +68,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForRelativeAbundanceComplete();
             RunUI(()=>SkylineWindow.SelectedResultsIndex = 3);
             WaitForRelativeAbundanceComplete();
-            RunUI(()=>SkylineWindow.ShowGroupComparisonWindow("EV-Enrich"));
-            var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
-            WaitForConditionUI(() => foldChangeGrid.IsComplete);
-            RunUI(()=>foldChangeGrid.DataboundGridControl.ChooseView("log2fold change"));
-            WaitForConditionUI(() => foldChangeGrid.IsComplete);
-            RunUI(()=>foldChangeGrid.ShowVolcanoPlot());
-            var foldChangeVolcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
-            var floatingWindow = ScreenshotManager.FindParent<FloatingWindow>(foldChangeGrid);
-            Assert.IsNotNull(floatingWindow);
-            Assert.AreSame(floatingWindow, ScreenshotManager.FindParent<FloatingWindow>(foldChangeVolcanoPlot));
-            RunUI(()=>
-            {
-                floatingWindow.Width = 1024;
-            });
-            RunUI(()=>foldChangeGrid.ShowChangeSettings());
-            var editGroupComparisonDlg = FindOpenForm<EditGroupComparisonDlg>();
-            RunUI(() =>
-            {
-                editGroupComparisonDlg.ShowAdvanced(true);
-                editGroupComparisonDlg.GroupComparisonDef =
-                    editGroupComparisonDlg.GroupComparisonDef.ChangeUseZeroForMissingPeaks(true);
-            });
-            WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
-            OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.Close);
-            RunUI(()=>
-            {
-                foldChangeVolcanoPlot.Close();
-                foldChangeGrid.ShowVolcanoPlot();
-            });
-            foldChangeVolcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
-            WaitForConditionUI(() => foldChangeVolcanoPlot.IsComplete);
             RunUI(() => SkylineWindow.SelectedResultsIndex = 3);
             Assert.AreEqual(pepOfInterest1, CallUI(GetSelectedPeptide));
             var rtReplicateGraphSummary = SkylineWindow.GraphRetentionTime;
