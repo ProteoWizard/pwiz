@@ -6,7 +6,7 @@
 - **Created**: 2025-12-21
 - **Status**: 🚧 In Progress
 - **PR**: (pending)
-- **Objective**: Add read-only wiki and support board access to the LabKey MCP server
+- **Objective**: Add wiki read/write and support board access to the LabKey MCP server
 
 ## Background
 
@@ -41,6 +41,13 @@ Claude Code should be able to read and eventually edit these to help maintain do
 - 180 wiki pages in `/home/software/Skyline`
 - Tutorial pages follow naming: `tutorial_<name>`, `tutorial_<name>_ja`, `tutorial_<name>_zh`
 - Example: `tutorial_method_edit` has 69 versions (since 2011)
+
+### Wiki Write Implementation Challenges
+
+1. **No wiki-getWikiPage.api endpoint**: Had to parse `wiki-edit.view` HTML instead
+2. **JS object format in edit page**: Uses single quotes (`entityId: 'guid'`), not JSON double quotes
+3. **Session reuse critical**: CSRF token is tied to session; must reuse same session for metadata fetch and save
+4. **WAF encoding required**: Body content must be URL-encoded, then Base64-encoded, with WAF hint prefix
 
 ### Support Board Schema (`/home/support`)
 
@@ -89,9 +96,16 @@ Agent account (`claude.c.skyline@gmail.com`) has "Editor without Delete" role:
 - Can update existing pages
 - Cannot delete pages or folders (preserves history)
 
+**Important:** Permissions must be set at the specific folder level (`/home/software/Skyline`), not just at project root. Project root permissions don't inherit to wiki containers.
+
+**Content Security Limitation:** The Agents group does **not** have "Allow Iframes and Scripts" permission. This means:
+- Can edit simple HTML wiki pages (like AIDevSetup) ✅
+- Cannot edit tutorial wrapper pages that use `<iframe>` or `<script>` elements ❌
+- Tutorial content (actual HTML files) lives in Git, not wiki - only wrapper pages are affected
+
 ## Tasks
 
-### Phase 1: Read-Only Access (Current)
+### Phase 1: Read-Only Access ✅
 
 **Server-side queries (user creates on skyline.ms):**
 - [x] Create `wiki_page_content` query in wiki schema (see SQL above)
@@ -110,55 +124,237 @@ Agent account (`claude.c.skyline@gmail.com`) has "Editor without Delete" role:
 **Documentation:**
 - [ ] Document wiki/support tools in ai/docs/
 
-### Phase 1.5: Support Board Attachments (Future)
+### Phase 1.5: Attachments ✅ (support board) / 🚧 (wiki)
 
-Support board posts can include file attachments (e.g., batch files, screenshots, Skyline documents).
-Currently these are not accessible via MCP, which limits diagnostic capability.
+Support board posts and wiki pages can have file attachments.
 
-**Known URL pattern:**
+**Solution:** Brendan created external schema `corex` exposing `core.documents` table.
+
+**Server-side queries created:**
+- [x] `documents_metadata` (corex schema) - Lists attachments without binary column
+- [x] `support_thread_posts` expanded to include EntityId
+
+**MCP tools implemented:**
+- [x] `list_attachments(parent_entity_id)` - Lists attachments for a post/page
+- [x] `get_attachment(parent_entity_id, filename)` - Downloads via HTTP URL
+  - Text files (.bat, .py, .txt, etc.) → returns content directly
+  - Binary files (.png, .sky, etc.) → saves to `ai/.tmp/attachments/`
+
+**Support board attachments: ✅ Working**
+- Tested on thread 73628 - successfully downloaded `launch_skyline.bat`
+- EntityId available via `get_support_thread()` output
+
+**Wiki attachments: 🚧 Blocked**
+- WikiVersions table does NOT have EntityId column
+- Wiki pages DO have EntityId (seen in download URLs like `wiki-download.view?entityId=...`)
+- Need to find source table that has wiki page EntityId
+- Also need to add `corex` schema to `/home/software/Skyline` container
+
+**Wiki attachment download URLs observed:**
 ```
-https://skyline.ms/home/support/announcements-download.view?entityId={entityId}&name={filename}
+NewMachineBootstrap: entityId=945040f8-bdf6-103e-9d4b-22f53556b982
+UI Modes page:       entityId=f22a0806-871e-1037-a1ed-e465a3935ecb
 ```
-Example: `entityId=2f518904-be28-103e-9d4b-22f53556b982&name=launch_skyline.bat`
 
-**Investigation needed:**
-- [ ] Find table/API that lists attachments for an announcement (entityId is per-attachment, not per-post)
-- [ ] Check with LabKey team about attachment metadata API
-- [ ] Wiki pages also have attachments - may be a shared mechanism in core schema
+**Next steps for wiki attachments:**
+- [ ] Explore wiki schema for Pages table or similar with EntityId
+- [ ] Add `corex` schema to `/home/software/Skyline` container
+- [ ] Update `get_wiki_page()` to extract EntityId if found
 
-**Status:** Brendan to ask LabKey about attachment discovery API.
+**corex.documents Schema (reference):**
+| Column | Type | Description |
+|--------|------|-------------|
+| rowid | Integer | Primary key |
+| parent | Text | **EntityId of parent object** |
+| documentname | Text | **Filename** |
+| documentsize | Integer | File size in bytes |
+| documenttype | Text | MIME type |
+| document | Other | **Binary content (up to 50MB) - NEVER query directly** |
 
-**Implementation:**
-- [ ] Create `list_post_attachments(post_id)` tool - returns filenames and sizes
-- [ ] Create `get_post_attachment(post_id, filename)` tool - saves to `ai/.tmp/`
-- [ ] For text files (.bat, .py, .txt, .csv), display content directly
-- [ ] For images (.png, .jpg), save and return path for viewing
-- [ ] For Skyline files (.sky, .skyd), save and return path
+### Phase 2: Wiki Write Access ✅ (with limitations)
 
-**Example use case:**
-Thread 73628 had a batch file attachment that revealed the user was confusing
-Skyline.exe (GUI) and SkylineCmd.exe (CLI). Seeing the attachment enabled a
-much more helpful response.
+**Endpoints discovered via Chrome DevTools:**
+- Save wiki: `wiki-saveWiki.view` (POST)
+- Attach files: `wiki-attachFiles.api`
+- Get TOC: `wiki-getWikiToc.api` (GET)
 
-### Phase 2: Write Access (Future)
-- [ ] Create `update_wiki_page(container_path, page_name, content, comment)` tool
-- [ ] Create `create_wiki_page(container_path, page_name, title, content)` tool
-- [ ] Add confirmation/preview mechanism for edits
-- [ ] Test with non-critical wiki page first
-- [ ] Document edit workflow
+**CSRF Token Pattern (from ReportErrorDlg.cs:313-342):**
+```python
+# 1. GET request to establish session and get CSRF token
+session = LabKeySession(server, login, password)
+session._establish_session()  # GET /project/home/begin.view? for CSRF cookie
 
-### Phase 3: Tutorial Maintenance (Future)
+# 2. Reuse same session for all requests (critical for CSRF to work)
+metadata, session = _get_wiki_page_metadata(page_name, server, container, session)
+session.post_json(save_url, payload)  # CSRF token added automatically
+```
+
+**RendererType values (4 types):**
+- `HTML` - Standard HTML markup
+- `MARKDOWN` - Markdown syntax
+- `RADEOX` - LabKey Wiki syntax (legacy)
+- `TEXT_WITH_LINKS` - Plain text with auto-linked URLs
+
+**WAF (Web Application Firewall) Body Encoding:**
+```python
+def _encode_waf_body(content: str) -> str:
+    # 1. URL-encode the content
+    url_encoded = quote(content, safe="")
+    # 2. Base64 encode
+    base64_encoded = base64.b64encode(url_encoded.encode()).decode()
+    # 3. Prepend WAF hint
+    return f"/*{{{{base64/x-www-form-urlencoded/wafText}}}}*/{base64_encoded}"
+```
+
+**Implementation complete in server.py:**
+- [x] `LabKeySession` class - urllib-based session with cookie jar and CSRF support
+- [x] `_get_labkey_session()` - Create authenticated session
+- [x] `_encode_waf_body()` / `_decode_waf_body()` - WAF encoding
+- [x] `_get_wiki_page_metadata()` - Fetch edit page, parse entityId/rowId/pageVersionId
+- [x] `update_wiki_page()` tool - Full update workflow
+
+**Testing:**
+- [x] Test wiki update on AIDevSetup page (added/verified `<!-- test -->` comment)
+- [ ] Test by removing `<!-- test -->` comment from tutorial_method_edit page (blocked by iframe/script restriction)
+- [ ] Verify page renders correctly after update
+- [ ] Test with non-HTML renderer (RADEOX page)
+
+**Status:** Wiki write works for simple HTML pages. Tutorial wrapper pages require "Allow Iframes and Scripts" permission or human review workflow.
+
+**Reference files:**
+- `ai/.tmp/wiki-save-capture.md` - Full network capture details
+- `ai/.tmp/WikiSaveHttpRequests.txt` - Raw HTTP request/response headers
+
+### Phase 3: Commands and Skills ✅ (Partial)
+- [x] Create `/pw-exceptions` command for exception triage workflow
+- [x] Create `/pw-upconfig` command to sync developer config wiki pages with ai/docs
+- [x] Remove obsolete `/pw-confightml` command (replaced by /pw-upconfig)
+- [ ] Create `skyline-wiki` skill for wiki documentation work
+
+### Phase 3.1: Tutorial Maintenance (Future)
 - [ ] Audit wiki page names vs HTML folder names for consistency
 - [ ] Consider standardizing naming convention
 - [ ] Commit tutorial.js to Git at `pwiz_tools/Skyline/Documentation/tutorial.js`
 - [ ] Create `/pw-tutorial-sync` command for coordinating Git and wiki updates
 
-## Files to Modify
+### Phase 3.5: MCP Server Relocation ✅
 
-- `pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py` - Add wiki/support tools
-- `ai/docs/mcp-development-guide.md` - Document new patterns
-- `ai/docs/exception-triage-system.md` - May need renaming to broader scope
-- `pwiz_tools/Skyline/Documentation/tutorial.js` - Commit to Git (new file)
+Moved LabKeyMcp from `pwiz_tools/Skyline/Executables/DevTools/` to `ai/mcp/` to align with ai-context branch strategy.
+
+**Changes made:**
+- [x] Move entire LabKeyMcp directory to `ai/mcp/LabKeyMcp/`
+- [x] Create `ai/mcp/README.md` explaining the MCP servers directory
+- [x] Update path calculations in server.py (5 → 3 parent levels)
+- [x] Update all documentation references to new path
+- [x] Update `.claude/skills/skyline-exceptions/SKILL.md`
+- [x] Fix `Verify-Environment.ps1` to detect wrong MCP server path
+- [x] Re-register MCP server with Claude Code
+- [x] Rename `support_*` queries to `announcement_*` in server.py (server-side already renamed)
+
+### Phase 3.6: Query Documentation ✅ (Partial)
+
+Created `queries/` directory alongside the MCP server to document all server-side LabKey queries.
+
+**Directory structure created:**
+```
+ai/mcp/LabKeyMcp/queries/
+├── README.md                       # Main index of all queries
+├── announcement-usage.md           # How Announcement table is used across skyline.ms
+├── announcement/                   # Shared Announcement table (used by multiple containers)
+│   ├── announcement-schema.md      # ✅ Formatted
+│   ├── announcement_threads_recent.sql
+│   ├── announcement_thread_posts.sql
+│   └── threads-schema.md           # ⏳ Needs paste
+├── nightly/                        # Test result queries
+│   ├── testruns-schema.md          # ✅ Formatted
+│   ├── testpasses-schema.md        # ✅ Formatted
+│   ├── testfails-schema.md         # ✅ Formatted
+│   ├── handleleaks-schema.md       # ⏳ Needs paste
+│   ├── user-schema.md              # ⏳ Needs paste
+│   ├── testruns_detail.sql
+│   ├── testpasses_detail.sql
+│   ├── handleleaks_by_computer.sql
+│   ├── testfails_by_computer.sql
+│   └── compare_run_timings.sql     # ⚠️ Has errors on server
+├── support/
+│   ├── documents_metadata.sql
+│   └── documents-schema.md         # ✅ Pre-filled
+├── wiki/
+│   ├── wiki_page_content.sql
+│   ├── wiki_page_list.sql
+│   └── wikiversions-schema.md      # ✅ Formatted
+└── exceptions/
+    └── README.md                   # Explains exceptions use base Announcement table
+```
+
+**Key insights documented:**
+- `announcement.Announcement` is a shared table used by: support board, exceptions, daily releases, events, funding, release announcements
+- Current `support_*` query naming is a misnomer - should be renamed to `announcement_*`
+- `testpasses` table has 700M+ rows - always filter by RunId
+- `documents` table has binary blob up to 50MB - never query directly, use `documents_metadata`
+- WikiVersions tables don't expose EntityId (needed for attachment lookups)
+
+**Pending work:**
+- [ ] Paste handleleaks table schema from LabKey UI
+- [ ] Paste user table schema from LabKey UI
+- [ ] Paste Threads view schema from LabKey UI
+- [ ] Fix `compare_run_timings.sql` errors on server (has GROUP BY issues)
+- [ ] Rename `support_threads_recent` → `announcement_threads_recent` on server
+- [ ] Rename `support_thread_posts` → `announcement_thread_posts` on server
+
+### Phase 4: Code Refactoring (Before Completion)
+
+The `server.py` file has grown to ~2400 lines and should be split into modules before moving this TODO to complete.
+
+**Proposed structure:**
+```
+LabKeyMcp/
+├── server.py           # Main entry, FastMCP init, imports tools
+├── tools/
+│   ├── __init__.py
+│   ├── common.py       # Shared utilities (get_server_context, LabKeySession, etc.)
+│   ├── exceptions.py   # query_exceptions, get_exception_details
+│   ├── nightly.py      # query_test_runs, get_run_failures, get_daily_test_summary
+│   ├── wiki.py         # list_wiki_pages, get_wiki_page, update_wiki_page
+│   ├── support.py      # query_support_threads, get_support_thread, get_support_summary
+│   └── attachments.py  # list_attachments, get_attachment
+└── test_connection.py
+```
+
+**FastMCP decorator pattern:** Each module exports a `register_tools(mcp)` function:
+```python
+# server.py
+mcp = FastMCP("labkey")
+
+from tools import exceptions, nightly, wiki, support, attachments
+exceptions.register_tools(mcp)
+nightly.register_tools(mcp)
+# etc.
+```
+
+**Tasks:**
+- [ ] Create `tools/` directory structure
+- [ ] Extract common utilities to `tools/common.py`
+- [ ] Move exception tools to `tools/exceptions.py`
+- [ ] Move nightly test tools to `tools/nightly.py`
+- [ ] Move wiki tools to `tools/wiki.py`
+- [ ] Move support tools to `tools/support.py`
+- [ ] Move attachment tools to `tools/attachments.py`
+- [ ] Update `server.py` to import and register tools
+- [ ] Verify all tools still work after refactor
+
+## Files Modified
+
+- `ai/mcp/LabKeyMcp/server.py` - Added wiki/support tools, moved from DevTools
+- `ai/mcp/README.md` - NEW - MCP servers directory overview
+- `ai/docs/mcp-development-guide.md` - Updated paths
+- `ai/docs/developer-setup-guide.md` - Updated MCP server path
+- `ai/docs/exception-triage-system.md` - Updated paths
+- `ai/docs/nightly-test-analysis.md` - Updated paths
+- `ai/scripts/Verify-Environment.ps1` - Enhanced MCP path detection
+- `.claude/commands/pw-exceptions.md` - NEW - Exception report command
+- `.claude/commands/pw-upconfig.md` - NEW - Wiki sync command (replaces pw-confightml)
+- `.claude/skills/skyline-exceptions/SKILL.md` - Updated paths
 
 ## Implementation Approach
 

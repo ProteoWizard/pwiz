@@ -33,7 +33,7 @@ Claude Code
 
 ### MCP Server
 
-**Location**: `pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/`
+**Location**: `ai/mcp/LabKeyMcp/`
 
 | File | Purpose |
 |------|---------|
@@ -112,7 +112,7 @@ TargetInvocationException | RetentionTimeValues.cs:line 98 | 24.1.0.199-6a0775ef
 pip install mcp labkey
 
 # Register MCP server with Claude Code (replace <repo-root> with your repository path)
-claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+claude mcp add labkey -- python <repo-root>/ai/mcp/LabKeyMcp/server.py
 ```
 
 ### Credential Configuration
@@ -134,7 +134,7 @@ password <password>
 
 ```bash
 # Replace <repo-root> with your repository path
-python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
+python <repo-root>/ai/mcp/LabKeyMcp/test_connection.py
 ```
 
 ## Usage
@@ -174,6 +174,6 @@ After setup, Claude Code can query exceptions directly:
 
 - [MCP Development Guide](mcp-development-guide.md) - Patterns for extending MCP capabilities
 - [Nightly Test Analysis](nightly-test-analysis.md) - Test results data access
-- [LabKey MCP Server README](../../pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/README.md) - Setup instructions
+- [LabKey MCP Server README](../mcp/LabKeyMcp/README.md) - Setup instructions
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
 - [LabKey Python API](https://github.com/LabKey/labkey-api-python)

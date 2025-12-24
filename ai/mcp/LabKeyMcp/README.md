@@ -30,7 +30,7 @@ password your-password
 
 ```bash
 # Replace <repo-root> with your actual repository path
-claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+claude mcp add labkey -- python <repo-root>/ai/mcp/LabKeyMcp/server.py
 ```
 
 Or add to your Claude Code settings (`~/.claude/settings.json`):
@@ -40,7 +40,7 @@ Or add to your Claude Code settings (`~/.claude/settings.json`):
   "mcpServers": {
     "labkey": {
       "command": "python",
-      "args": ["<repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py"]
+      "args": ["<repo-root>/ai/mcp/LabKeyMcp/server.py"]
     }
   }
 }
@@ -50,7 +50,7 @@ Or add to your Claude Code settings (`~/.claude/settings.json`):
 
 ```bash
 # Replace <repo-root> with your actual repository path
-python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
+python <repo-root>/ai/mcp/LabKeyMcp/test_connection.py
 ```
 
 ## Available Tools

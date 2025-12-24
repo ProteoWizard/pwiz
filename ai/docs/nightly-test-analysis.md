@@ -297,4 +297,4 @@ To add new custom queries (like `handleleaks_by_computer`), see [MCP Development
 
 - [MCP Development Guide](mcp-development-guide.md) - Patterns for extending MCP capabilities
 - [Exception Triage System](exception-triage-system.md) - User-reported crash analysis
-- [LabKey MCP Server README](../../pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/README.md) - Setup instructions
+- [LabKey MCP Server README](../mcp/LabKeyMcp/README.md) - Setup instructions

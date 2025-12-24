@@ -241,10 +241,11 @@ Another LabKey server with proteomics datasets. The same patterns apply:
 ## MCP Server Location
 
 ```
-pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/
+ai/mcp/LabKeyMcp/
 ├── server.py        # MCP server with all tools
 ├── pyproject.toml   # Dependencies
 ├── test_connection.py
+├── queries/         # Server-side query documentation
 └── README.md
 ```
 

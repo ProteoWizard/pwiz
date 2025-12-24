@@ -20,7 +20,7 @@ When working with Skyline exception data from skyline.ms, consult these document
 - **Before querying exceptions**: Read ai/docs/exception-triage-system.md (MCP tools section)
 - **For daily triage**: Read ai/docs/exception-triage-system.md (Daily triage workflow)
 - **For setup/debugging**: Read ai/docs/exception-triage-system.md (Setup section)
-- **For code changes to MCP server**: Read pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/README.md
+- **For code changes to MCP server**: Read ai/mcp/LabKeyMcp/README.md
 
 ## Quick Reference
 

@@ -619,10 +619,10 @@ async def save_run_log(
             return f"Test run #{run_id} has no log content"
 
         # Determine output path relative to this script
-        # server.py is in: pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/
+        # server.py is in: ai/mcp/LabKeyMcp/
         # ai/.tmp/ is in: ai/.tmp/
         script_dir = Path(__file__).resolve().parent
-        repo_root = script_dir.parent.parent.parent.parent.parent
+        repo_root = script_dir.parent.parent.parent
         output_dir = repo_root / "ai" / ".tmp"
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1102,7 +1102,7 @@ async def get_daily_test_summary(
 
     # Determine output path
     script_dir = Path(__file__).resolve().parent
-    repo_root = script_dir.parent.parent.parent.parent.parent
+    repo_root = script_dir.parent.parent.parent
     output_dir = repo_root / "ai" / ".tmp"
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1306,7 +1306,7 @@ async def save_test_failure_history(
     report_content = "\n".join(lines)
 
     script_dir = Path(__file__).resolve().parent
-    repo_root = script_dir.parent.parent.parent.parent.parent
+    repo_root = script_dir.parent.parent.parent
     output_dir = repo_root / "ai" / ".tmp"
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1334,6 +1334,283 @@ async def save_test_failure_history(
 # =============================================================================
 # Wiki Tools - For documentation and tutorial content
 # =============================================================================
+
+
+class LabKeySession:
+    """A simple session class for making authenticated LabKey requests with CSRF support.
+
+    Following the pattern from ReportErrorDlg.cs:313-342.
+    Uses urllib and http.cookiejar to maintain session cookies.
+    """
+
+    def __init__(self, server: str, login: str, password: str):
+        import urllib.request
+        import http.cookiejar
+        import base64
+
+        self.server = server
+        self.login = login
+        self.password = password
+        self.csrf_token = None
+
+        # Set up cookie jar for session management
+        self.cookie_jar = http.cookiejar.CookieJar()
+        self.opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(self.cookie_jar)
+        )
+
+        # Add basic auth header
+        credentials = base64.b64encode(f"{login}:{password}".encode()).decode()
+        self.auth_header = f"Basic {credentials}"
+
+    def _establish_session(self):
+        """GET to establish session and get CSRF token."""
+        import urllib.request
+
+        url = f"https://{self.server}/project/home/begin.view?"
+        request = urllib.request.Request(url)
+        request.add_header("Authorization", self.auth_header)
+
+        with self.opener.open(request, timeout=30) as response:
+            # Extract CSRF token from cookies
+            for cookie in self.cookie_jar:
+                if cookie.name == "X-LABKEY-CSRF":
+                    self.csrf_token = cookie.value
+                    break
+
+        if not self.csrf_token:
+            raise Exception("CSRF token not found in session cookies")
+
+    def get(self, url: str, params: dict = None, headers: dict = None) -> dict:
+        """Make a GET request with session cookies."""
+        import urllib.request
+        import json
+        from urllib.parse import urlencode
+
+        if params:
+            url = f"{url}?{urlencode(params)}"
+
+        request = urllib.request.Request(url)
+        request.add_header("Authorization", self.auth_header)
+        if self.csrf_token:
+            request.add_header("X-LABKEY-CSRF", self.csrf_token)
+        if headers:
+            for key, value in headers.items():
+                request.add_header(key, value)
+
+        with self.opener.open(request, timeout=30) as response:
+            return json.loads(response.read().decode())
+
+    def post_json(self, url: str, data: dict, headers: dict = None) -> tuple:
+        """Make a POST request with JSON body. Returns (status_code, response_data)."""
+        import urllib.request
+        import urllib.error
+        import json
+
+        request = urllib.request.Request(url, method="POST")
+        request.add_header("Authorization", self.auth_header)
+        request.add_header("Content-Type", "application/json")
+        if self.csrf_token:
+            request.add_header("X-LABKEY-CSRF", self.csrf_token)
+        if headers:
+            for key, value in headers.items():
+                request.add_header(key, value)
+
+        json_data = json.dumps(data).encode("utf-8")
+        request.data = json_data
+
+        try:
+            with self.opener.open(request, timeout=30) as response:
+                return response.status, json.loads(response.read().decode())
+        except urllib.error.HTTPError as e:
+            return e.code, {"error": e.read().decode()[:500]}
+
+
+def _get_labkey_session(server: str):
+    """Create an authenticated session with CSRF token for LabKey POST requests.
+
+    Following the pattern from ReportErrorDlg.cs:313-342:
+    1. GET to /project/home/begin.view? to establish session
+    2. Extract X-LABKEY-CSRF cookie
+    3. Return session with CSRF token for use in POST requests
+
+    Args:
+        server: LabKey server hostname
+
+    Returns:
+        Tuple of (LabKeySession, csrf_token)
+    """
+    import netrc
+    from pathlib import Path
+
+    # Get credentials from netrc
+    home = Path.home()
+    netrc_paths = [home / ".netrc", home / "_netrc"]
+
+    login, password = None, None
+    for netrc_path in netrc_paths:
+        if netrc_path.exists():
+            try:
+                nrc = netrc.netrc(str(netrc_path))
+                auth = nrc.authenticators(server)
+                if auth:
+                    login, _, password = auth
+                    break
+            except Exception:
+                continue
+
+    if not login:
+        raise Exception(f"No credentials found for {server} in netrc")
+
+    # Create session and establish CSRF token
+    session = LabKeySession(server, login, password)
+    session._establish_session()
+
+    return session, session.csrf_token
+
+
+def _encode_waf_body(content: str) -> str:
+    """Encode wiki body content using LabKey's WAF (Web Application Firewall) format.
+
+    The format is: /*{{base64/x-www-form-urlencoded/wafText}}*/[base64-encoded-url-encoded-content]
+
+    Args:
+        content: The raw wiki page content (HTML or text)
+
+    Returns:
+        WAF-encoded string ready for the "body" field
+    """
+    import base64
+    from urllib.parse import quote
+
+    # Step 1: URL-encode the content (encodes special chars like <, >, &, etc.)
+    url_encoded = quote(content, safe="")
+
+    # Step 2: Base64 encode the URL-encoded content
+    base64_encoded = base64.b64encode(url_encoded.encode("utf-8")).decode("ascii")
+
+    # Step 3: Prepend the WAF hint comment
+    return f"/*{{{{base64/x-www-form-urlencoded/wafText}}}}*/{base64_encoded}"
+
+
+def _decode_waf_body(waf_content: str) -> str:
+    """Decode wiki body content from LabKey's WAF format.
+
+    Args:
+        waf_content: WAF-encoded string from the "body" field
+
+    Returns:
+        The decoded wiki page content
+    """
+    import base64
+    from urllib.parse import unquote
+
+    # Check for WAF prefix
+    prefix = "/*{{base64/x-www-form-urlencoded/wafText}}*/"
+    if waf_content.startswith(prefix):
+        base64_content = waf_content[len(prefix):]
+        url_encoded = base64.b64decode(base64_content).decode("utf-8")
+        return unquote(url_encoded)
+
+    # If not WAF encoded, return as-is
+    return waf_content
+
+
+def _get_wiki_page_metadata(
+    page_name: str,
+    server: str,
+    container_path: str,
+    session: LabKeySession = None,
+) -> tuple:
+    """Get wiki page metadata needed for updates (entityId, rowId, pageVersionId).
+
+    Fetches the wiki edit page and parses the JavaScript data object to extract
+    the metadata needed for saving.
+
+    Args:
+        page_name: Wiki page name
+        server: LabKey server hostname
+        container_path: Container path
+        session: Optional existing session to reuse (avoids CSRF token mismatch)
+
+    Returns:
+        Tuple of (metadata_dict, session) where metadata_dict has:
+        entityId, rowId, pageVersionId, name, title, body, rendererType, parent
+    """
+    import re
+    import json
+    import urllib.request
+    from urllib.parse import quote
+
+    if session is None:
+        session, _ = _get_labkey_session(server)
+
+    # Fetch the wiki edit page - it contains the metadata in JavaScript
+    encoded_path = quote(container_path, safe="/")
+    url = f"https://{server}{encoded_path}/wiki-edit.view?name={page_name}"
+
+    request = urllib.request.Request(url)
+    request.add_header("Authorization", session.auth_header)
+
+    with session.opener.open(request, timeout=30) as response:
+        html = response.read().decode("utf-8")
+
+    # Debug: Save HTML to temp file for inspection
+    from pathlib import Path
+    script_dir = Path(__file__).resolve().parent
+    repo_root = script_dir.parent.parent.parent
+    debug_file = repo_root / "ai" / ".tmp" / f"wiki-edit-{page_name}.html"
+    debug_file.parent.mkdir(parents=True, exist_ok=True)
+    debug_file.write_text(html, encoding="utf-8")
+    logger.info(f"Saved wiki edit page HTML to {debug_file}")
+
+    # Parse the JavaScript data object from the page
+    # Look for: LABKEY.wiki.internal.Wiki.init({...})
+    match = re.search(r'LABKEY\.wiki\.internal\.Wiki\.init\((\{.*?\})\)', html, re.DOTALL)
+    if not match:
+        # Try alternate pattern: window._wikiData = {...}
+        match = re.search(r'window\._wikiData\s*=\s*(\{.*?\});', html, re.DOTALL)
+
+    if not match:
+        # Try to find entityId, rowId, pageVersionId directly
+        # Handle both JSON-style double quotes and JS-style single quotes
+        entity_match = re.search(r'entityId["\']?\s*:\s*["\']([^"\']+)["\']', html)
+        row_match = re.search(r'rowId["\']?\s*:\s*(\d+)', html)
+        version_match = re.search(r'pageVersionId["\']?\s*:\s*(\d+)', html)
+        title_match = re.search(r'title["\']?\s*:\s*["\']([^"\']*)["\']', html)
+        parent_match = re.search(r'parent["\']?\s*:\s*["\']?(\d+)["\']?', html)
+        renderer_match = re.search(r'rendererType["\']?\s*:\s*["\']([^"\']+)["\']', html)
+        body_match = re.search(r'body["\']?\s*:\s*["\']', html)  # Just check if body exists
+
+        if entity_match and row_match and version_match:
+            return ({
+                "entityId": entity_match.group(1),
+                "rowId": int(row_match.group(1)),
+                "name": page_name,
+                "title": title_match.group(1) if title_match else page_name,
+                "body": "",  # We don't need the old body since we're replacing it
+                "parent": parent_match.group(1) if parent_match else "",
+                "pageVersionId": int(version_match.group(1)),
+                "rendererType": renderer_match.group(1) if renderer_match else "HTML",
+            }, session)
+        raise Exception(f"Could not find wiki metadata in edit page for '{page_name}'")
+
+    # Parse the JSON data
+    try:
+        data = json.loads(match.group(1))
+        return ({
+            "entityId": data.get("entityId"),
+            "rowId": data.get("rowId"),
+            "name": data.get("name", page_name),
+            "title": data.get("title", page_name),
+            "body": data.get("body", ""),
+            "parent": data.get("parent", ""),
+            "pageVersionId": data.get("pageVersionId"),
+            "rendererType": data.get("rendererType", "HTML"),
+        }, session)
+    except json.JSONDecodeError as e:
+        raise Exception(f"Could not parse wiki metadata JSON: {e}")
+
 
 @mcp.tool()
 async def list_wiki_pages(
@@ -1446,7 +1723,7 @@ async def get_wiki_page(
 
         # Determine output path
         script_dir = Path(__file__).resolve().parent
-        repo_root = script_dir.parent.parent.parent.parent.parent
+        repo_root = script_dir.parent.parent.parent
         output_dir = repo_root / "ai" / ".tmp"
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1474,6 +1751,113 @@ async def get_wiki_page(
     except Exception as e:
         logger.error(f"Error getting wiki page: {e}", exc_info=True)
         return f"Error getting wiki page: {e}"
+
+
+@mcp.tool()
+async def update_wiki_page(
+    page_name: str,
+    new_body: str,
+    title: str = None,
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_WIKI_CONTAINER,
+) -> str:
+    """Update an existing wiki page's content.
+
+    CAUTION: This modifies live wiki content on skyline.ms.
+    The wiki has version history, so changes can be reverted if needed.
+
+    This tool:
+    1. Retrieves current page metadata (entityId, rowId, pageVersionId)
+    2. Encodes the new body using WAF format
+    3. POSTs to wiki-saveWiki.view with proper CSRF headers
+
+    Args:
+        page_name: Wiki page name (e.g., 'tutorial_method_edit')
+        new_body: The new page content (HTML or text depending on renderer)
+        title: Optional new title for the page (if not provided, keeps existing title)
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/software/Skyline)
+
+    Returns:
+        Success message with version info, or error details.
+    """
+    from urllib.parse import quote
+
+    try:
+        # Step 1: Get current page metadata (also returns the session to reuse)
+        logger.info(f"Getting metadata for wiki page: {page_name}")
+        metadata, session = _get_wiki_page_metadata(page_name, server, container_path)
+
+        if not metadata.get("entityId"):
+            return f"Could not find wiki page '{page_name}' in {container_path}"
+
+        old_version = metadata.get("pageVersionId", "?")
+        logger.info(f"Current page version: {old_version}")
+
+        # Step 2: Reuse the same session (same CSRF token) for the save
+
+        # Step 3: Build the save request
+        encoded_path = quote(container_path, safe="/")
+        save_url = f"https://{server}{encoded_path}/wiki-saveWiki.view"
+
+        # Normalize line endings to LF-only
+        # LabKey adds its own CR before each LF, so sending CRLF results in CR CR LF
+        normalized_body = new_body.replace("\r\n", "\n").replace("\r", "\n")
+
+        # Encode the body using WAF format
+        encoded_body = _encode_waf_body(normalized_body)
+
+        # Use provided title or keep existing
+        page_title = title if title is not None else metadata["title"]
+
+        # Build payload matching the captured request
+        payload = {
+            "entityId": metadata["entityId"],
+            "rowId": metadata["rowId"],
+            "name": metadata["name"],
+            "title": page_title,
+            "body": encoded_body,
+            "parent": metadata.get("parent", ""),
+            "pageVersionId": metadata["pageVersionId"],
+            "rendererType": metadata.get("rendererType", "HTML"),
+            "webPartId": 0,
+            "showAttachments": True,
+            "shouldIndex": True,
+            "isDirty": False,
+            "useVisualEditor": False,
+        }
+
+        headers = {
+            "X-Requested-With": "XMLHttpRequest",
+            "Origin": f"https://{server}",
+            "Referer": f"https://{server}{container_path}/wiki-edit.view?name={page_name}",
+        }
+
+        logger.info(f"Saving wiki page: {page_name}")
+        status_code, result = session.post_json(save_url, payload, headers=headers)
+
+        # Check response
+        if status_code == 200:
+            new_version = result.get("pageVersionId", "?")
+            return (
+                f"Wiki page updated successfully:\n"
+                f"  page_name: {page_name}\n"
+                f"  container: {container_path}\n"
+                f"  old_version: {old_version}\n"
+                f"  new_version: {new_version}\n"
+                f"  title: {page_title}\n"
+                f"\nView at: https://{server}{container_path}/wiki-page.view?name={page_name}"
+            )
+        else:
+            error_msg = result.get("error", str(result)[:500])
+            return (
+                f"Wiki update failed with status {status_code}:\n"
+                f"  Response: {error_msg}"
+            )
+
+    except Exception as e:
+        logger.error(f"Error updating wiki page: {e}", exc_info=True)
+        return f"Error updating wiki page: {e}"
 
 
 # =============================================================================
@@ -1504,7 +1888,7 @@ async def query_support_threads(
         result = labkey.query.select_rows(
             server_context=server_context,
             schema_name=ANNOUNCEMENT_SCHEMA_SUPPORT,
-            query_name="support_threads_recent",
+            query_name="announcement_threads_recent",
             max_rows=max_rows,
             parameters={"DaysBack": str(days)},
         )
@@ -1567,7 +1951,7 @@ async def get_support_thread(
         result = labkey.query.select_rows(
             server_context=server_context,
             schema_name=ANNOUNCEMENT_SCHEMA_SUPPORT,
-            query_name="support_thread_posts",
+            query_name="announcement_thread_posts",
             max_rows=200,
             parameters={"ThreadId": str(thread_id)},
         )
@@ -1594,6 +1978,7 @@ async def get_support_thread(
 
         for i, row in enumerate(rows):
             post_id = row.get("RowId", "?")
+            entity_id = row.get("EntityId", "")
             title = row.get("Title", "")
             body = row.get("FormattedBody", "")  # FormattedBody contains HTML content
             created = row.get("Created", "?")
@@ -1608,8 +1993,13 @@ async def get_support_thread(
                 "",
                 f"**From**: {created_by}",
                 f"**Date**: {created}",
-                "",
             ])
+
+            # Include EntityId for attachment lookups
+            if entity_id:
+                lines.append(f"**EntityId**: {entity_id}")
+
+            lines.append("")
 
             if title and i > 0:  # Show title for replies if different
                 lines.append(f"**Subject**: {title}")
@@ -1622,7 +2012,7 @@ async def get_support_thread(
 
         # Determine output path
         script_dir = Path(__file__).resolve().parent
-        repo_root = script_dir.parent.parent.parent.parent.parent
+        repo_root = script_dir.parent.parent.parent
         output_dir = repo_root / "ai" / ".tmp"
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1677,7 +2067,7 @@ async def get_support_summary(
         result = labkey.query.select_rows(
             server_context=server_context,
             schema_name=ANNOUNCEMENT_SCHEMA_SUPPORT,
-            query_name="support_threads_recent",
+            query_name="announcement_threads_recent",
             max_rows=200,
             parameters={"DaysBack": str(days)},
         )
@@ -1771,7 +2161,7 @@ async def get_support_summary(
         report_content = "\n".join(lines)
 
         script_dir = Path(__file__).resolve().parent
-        repo_root = script_dir.parent.parent.parent.parent.parent
+        repo_root = script_dir.parent.parent.parent
         output_dir = repo_root / "ai" / ".tmp"
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1805,6 +2195,192 @@ async def get_support_summary(
     except Exception as e:
         logger.error(f"Error generating support summary: {e}", exc_info=True)
         return f"Error generating support summary: {e}"
+
+
+# =============================================================================
+# Attachment Tools - For support board and wiki attachments
+# =============================================================================
+
+
+@mcp.tool()
+async def list_attachments(
+    parent_entity_id: str,
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_SUPPORT_CONTAINER,
+) -> str:
+    """List attachments for a support post or wiki page.
+
+    Queries the corex.documents table to find attachments linked to a parent entity.
+    Does NOT retrieve file contents - use get_attachment() for that.
+
+    Args:
+        parent_entity_id: The EntityId of the parent object (announcement post or wiki page)
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/support)
+
+    Returns:
+        List of attachments with filename, size, and type.
+    """
+    try:
+        server_context = get_server_context(server, container_path)
+
+        # Query documents_metadata (custom query that excludes binary document column)
+        result = labkey.query.select_rows(
+            server_context=server_context,
+            schema_name="corex",
+            query_name="documents_metadata",
+            parameters={"ParentEntityId": parent_entity_id},
+            max_rows=100,
+        )
+
+        if not result or not result.get("rows"):
+            return f"No attachments found for entity: {parent_entity_id}"
+
+        attachments = result["rows"]
+
+        lines = [
+            f"Found {len(attachments)} attachment(s) for entity {parent_entity_id}:",
+            "",
+        ]
+
+        for att in attachments:
+            name = att.get("documentname", "?")
+            size = att.get("documentsize", 0)
+            doc_type = att.get("documenttype", "?")
+            created = str(att.get("created", "?"))[:16]
+
+            # Format size nicely
+            if size > 1024 * 1024:
+                size_str = f"{size / (1024 * 1024):.1f} MB"
+            elif size > 1024:
+                size_str = f"{size / 1024:.1f} KB"
+            else:
+                size_str = f"{size} bytes"
+
+            lines.append(f"  - {name} ({size_str}, {doc_type})")
+
+        lines.extend([
+            "",
+            "To download an attachment:",
+            f'  get_attachment("{parent_entity_id}", "filename")',
+        ])
+
+        return "\n".join(lines)
+
+    except Exception as e:
+        logger.error(f"Error listing attachments: {e}", exc_info=True)
+        return f"Error listing attachments: {e}"
+
+
+@mcp.tool()
+async def get_attachment(
+    parent_entity_id: str,
+    filename: str,
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_SUPPORT_CONTAINER,
+) -> str:
+    """Download an attachment from a support post or wiki page.
+
+    For text files (.bat, .py, .txt, .csv, .xml, .json, .md, .log), returns content directly.
+    For binary files (.png, .jpg, .sky, .skyd, .pdf), saves to ai/.tmp/ and returns path.
+
+    Args:
+        parent_entity_id: The EntityId of the parent object
+        filename: The attachment filename to download
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/support)
+
+    Returns:
+        File content (for text files) or file path (for binary files).
+    """
+    import urllib.request
+    import netrc
+    import base64
+    from pathlib import Path
+
+    try:
+        # Get credentials from netrc
+        home = Path.home()
+        netrc_paths = [home / ".netrc", home / "_netrc"]
+
+        login, password = None, None
+        for netrc_path in netrc_paths:
+            if netrc_path.exists():
+                try:
+                    nrc = netrc.netrc(str(netrc_path))
+                    auth = nrc.authenticators(server)
+                    if auth:
+                        login, _, password = auth
+                        break
+                except Exception:
+                    continue
+
+        if not login or not password:
+            return "Error: Could not find credentials in .netrc file"
+
+        # Build download URL
+        # For support: announcements-download.view
+        # For wiki: wiki-download.view (uses different parameter names)
+        if "support" in container_path.lower():
+            download_url = f"https://{server}{container_path}/announcements-download.view?entityId={parent_entity_id}&name={filename}"
+        else:
+            download_url = f"https://{server}{container_path}/wiki-download.view?entityId={parent_entity_id}&name={filename}"
+
+        # Create authenticated request
+        request = urllib.request.Request(download_url)
+        credentials = base64.b64encode(f"{login}:{password}".encode()).decode()
+        request.add_header("Authorization", f"Basic {credentials}")
+
+        logger.info(f"Downloading attachment: {filename}")
+
+        with urllib.request.urlopen(request, timeout=60) as response:
+            content = response.read()
+
+        # Determine if text or binary based on extension
+        text_extensions = {'.bat', '.py', '.txt', '.csv', '.xml', '.json', '.md', '.log', '.tsv', '.ini', '.cfg', '.yaml', '.yml', '.html', '.htm', '.css', '.js', '.sh', '.ps1', '.r', '.sql'}
+        ext = Path(filename).suffix.lower()
+
+        if ext in text_extensions:
+            # Return text content directly
+            try:
+                text_content = content.decode('utf-8')
+            except UnicodeDecodeError:
+                try:
+                    text_content = content.decode('latin-1')
+                except UnicodeDecodeError:
+                    text_content = content.decode('utf-8', errors='replace')
+
+            return (
+                f"**Attachment**: {filename}\n"
+                f"**Size**: {len(content):,} bytes\n"
+                f"\n---\n\n"
+                f"{text_content}"
+            )
+        else:
+            # Save binary file to ai/.tmp/
+            script_dir = Path(__file__).resolve().parent
+            repo_root = script_dir.parent.parent.parent
+            output_dir = repo_root / "ai" / ".tmp" / "attachments"
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Include entity ID prefix to avoid name collisions
+            safe_filename = f"{parent_entity_id[:8]}_{filename}"
+            output_file = output_dir / safe_filename
+            output_file.write_bytes(content)
+
+            return (
+                f"Binary attachment saved:\n"
+                f"  filename: {filename}\n"
+                f"  size: {len(content):,} bytes\n"
+                f"  saved_to: {output_file}\n"
+                f"\nUse Read tool to view (for images) or appropriate application for other files."
+            )
+
+    except urllib.error.HTTPError as e:
+        return f"HTTP Error {e.code}: {e.reason}. Check that the entityId and filename are correct."
+    except Exception as e:
+        logger.error(f"Error downloading attachment: {e}", exc_info=True)
+        return f"Error downloading attachment: {e}"
 
 
 def main():
