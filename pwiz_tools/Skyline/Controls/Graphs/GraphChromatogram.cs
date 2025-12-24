@@ -529,6 +529,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Set min and max displayed time values, and optionally max intensity
         /// Note: this is intended for use in automated functional tests only
+        /// Note: this always zooms all graph windows, regardless of the "Synchronize Axes" setting
         /// </summary>
         public void ZoomTo(double rtStartMeasured, double rtEndMeasured, double? maxIntensity=null)
         {
@@ -541,7 +542,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     pane.YAxis.Scale.Max = maxIntensity.Value;
                 }
-                OnZoom();
+
+                bool wasSynchronizeAxes = Settings.Default.AutoZoomAllChromatograms;
+                try
+                {
+                    // Apply zoom state to all other replicates.
+                    Settings.Default.AutoZoomAllChromatograms = true;
+                    OnZoom();
+                }
+                finally
+                {
+                    Settings.Default.AutoZoomAllChromatograms = wasSynchronizeAxes;
+                }
                 GraphControl.Refresh();
             }
         }

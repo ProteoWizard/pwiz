@@ -753,6 +753,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 ApplyState(zoomStacks.Values.FirstOrDefault(), GraphPanes.First());
             }
+
+            using var g = GraphControl.CreateGraphics();
+            foreach (var pane in GraphPanes)
+            {
+                pane.SetScale(g);
+            }
             GraphControl.Refresh();
         }
 

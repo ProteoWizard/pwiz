@@ -402,6 +402,11 @@ namespace pwiz.Skyline.FileUI
             set { tbxNoiseTimeRange.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public bool IsComplete
+        {
+            get { return _minStatistics.PercentComplete == 100; }
+        }
+
         #endregion
 
         /// <summary>

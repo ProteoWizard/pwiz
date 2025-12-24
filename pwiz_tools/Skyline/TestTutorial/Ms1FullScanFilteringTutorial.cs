@@ -743,6 +743,7 @@ namespace pwiz.SkylineTestTutorial
                     minimizeResultsDlg.LimitNoiseTime = true;
                     minimizeResultsDlg.NoiseTimeRange = 2; // Not L10N
                 });
+                WaitForConditionUI(() => minimizeResultsDlg.IsComplete);
                 PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form (percentages vary slightly)");   // old p. 23
 
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));
