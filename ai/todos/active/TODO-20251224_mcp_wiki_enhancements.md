@@ -12,15 +12,16 @@ Complete wiki-related MCP features that were deferred from the initial implement
 
 ## Tasks
 
-### Wiki Attachments (Blocked)
+### Wiki Attachments (Unblocked)
 
-WikiVersions table doesn't expose EntityId needed for attachment lookups.
+**Solution discovered:** The `entityId` is already being parsed from the wiki-edit.view HTML page in `_get_wiki_page_metadata()`. This same entityId can be used for attachment lookups without waiting for LabKey schema changes.
 
-- [ ] Explore wiki schema for Pages table or similar with EntityId
-- [ ] Request `corex` schema added to `/home/software/Skyline` container
-- [ ] Update `get_wiki_page()` to extract EntityId if found
+- [ ] Create `get_wiki_attachments(page_name)` tool that:
+  1. Calls `_get_wiki_page_metadata()` to get entityId from HTML
+  2. Uses entityId with existing `list_attachments()` / `get_attachment()`
+- [ ] Test with pages known to have attachments (NewMachineBootstrap, UI Modes)
 
-**Known EntityIds (from download URLs):**
+**Known EntityIds (from download URLs, for verification):**
 - NewMachineBootstrap: `945040f8-bdf6-103e-9d4b-22f53556b982`
 - UI Modes: `f22a0806-871e-1037-a1ed-e465a3935ecb`
 
@@ -28,9 +29,13 @@ WikiVersions table doesn't expose EntityId needed for attachment lookups.
 
 Agents group now has "Allow Iframes and Scripts" permission (as of 2025-12-24).
 
-- [ ] Test updating tutorial_method_edit page (has iframe)
-- [ ] Verify page renders correctly after update
-- [ ] Test with non-HTML renderer (RADEOX page)
+- [x] Fixed title preservation bug in `update_wiki_page()` - now queries database for title/rendererType
+- [x] Simplified HTML parsing - direct regex for entityId/rowId/pageVersionId (no object parsing)
+- [x] Restored tutorial_method_edit title to "Targeted Method Editing"
+- [x] Restored AIDevSetup title to "Developer Environment Setup for LLM-Assisted IDEs"
+- [x] Verified title preservation on body-only updates (no title param)
+- [x] Tested updating tutorial_method_edit page (has iframe) - works correctly
+- [x] Tested AIDevSetup page (MARKDOWN renderer) - works correctly
 
 ### Skills and Commands
 

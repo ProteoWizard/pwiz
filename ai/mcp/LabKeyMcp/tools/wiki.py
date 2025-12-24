@@ -176,8 +176,9 @@ def _get_wiki_page_metadata(
 ) -> tuple:
     """Get wiki page metadata needed for updates (entityId, rowId, pageVersionId).
 
-    Fetches the wiki edit page and parses the JavaScript data object to extract
-    the metadata needed for saving.
+    Fetches page metadata from two sources:
+    1. Database query (wiki_page_content) for title and rendererType - authoritative
+    2. Wiki edit page HTML for entityId, rowId, pageVersionId - not in wiki schema
 
     Args:
         page_name: Wiki page name
@@ -187,12 +188,32 @@ def _get_wiki_page_metadata(
 
     Returns:
         Tuple of (metadata_dict, session) where metadata_dict has:
-        entityId, rowId, pageVersionId, name, title, body, rendererType, parent
+        entityId, rowId, pageVersionId, name, title, rendererType, parent
     """
     if session is None:
         session, _ = _get_labkey_session(server)
 
-    # Fetch the wiki edit page - it contains the metadata in JavaScript
+    # Step 1: Query database for authoritative title and rendererType
+    # These should NOT come from HTML parsing - they're database fields
+    server_context = get_server_context(server, container_path)
+    db_result = labkey.query.select_rows(
+        server_context=server_context,
+        schema_name=WIKI_SCHEMA,
+        query_name="wiki_page_content",
+        max_rows=1,
+        parameters={"PageName": page_name},
+    )
+
+    if not db_result or not db_result.get("rows"):
+        raise Exception(f"Wiki page '{page_name}' not found in database")
+
+    db_row = db_result["rows"][0]
+    db_title = db_row.get("Title", page_name)
+    db_renderer = db_row.get("RendererType", "HTML")
+    logger.info(f"Database title: '{db_title}', renderer: '{db_renderer}'")
+
+    # Step 2: Fetch the wiki edit page for entityId, rowId, pageVersionId
+    # These aren't exposed in the wiki schema but are required for the save API
     encoded_path = quote(container_path, safe="/")
     url = f"https://{server}{encoded_path}/wiki-edit.view?name={page_name}"
 
@@ -208,51 +229,27 @@ def _get_wiki_page_metadata(
     debug_file.write_text(html, encoding="utf-8")
     logger.info(f"Saved wiki edit page HTML to {debug_file}")
 
-    # Parse the JavaScript data object from the page
-    # Look for: LABKEY.wiki.internal.Wiki.init({...})
-    match = re.search(r'LABKEY\.wiki\.internal\.Wiki\.init\((\{.*?\})\)', html, re.DOTALL)
-    if not match:
-        # Try alternate pattern: window._wikiData = {...}
-        match = re.search(r'window\._wikiData\s*=\s*(\{.*?\});', html, re.DOTALL)
+    # Step 3: Extract entityId, rowId, pageVersionId from HTML
+    # These fields appear in the LABKEY._wiki.setProps({...}) JavaScript call
+    # We search for them directly rather than trying to parse the full JS object,
+    # since the object contains a large body field that complicates regex matching
+    entity_match = re.search(r"entityId:\s*'([^']+)'", html)
+    row_match = re.search(r'rowId:\s*(\d+)', html)
+    version_match = re.search(r'pageVersionId:\s*(\d+)', html)
+    parent_match = re.search(r'parent:\s*(\d+)', html)
 
-    if not match:
-        # Try to find entityId, rowId, pageVersionId directly
-        # Handle both JSON-style double quotes and JS-style single quotes
-        entity_match = re.search(r'entityId["\']?\s*:\s*["\']([^"\']+)["\']', html)
-        row_match = re.search(r'rowId["\']?\s*:\s*(\d+)', html)
-        version_match = re.search(r'pageVersionId["\']?\s*:\s*(\d+)', html)
-        title_match = re.search(r'title["\']?\s*:\s*["\']([^"\']*)["\']', html)
-        parent_match = re.search(r'parent["\']?\s*:\s*["\']?(\d+)["\']?', html)
-        renderer_match = re.search(r'rendererType["\']?\s*:\s*["\']([^"\']+)["\']', html)
-
-        if entity_match and row_match and version_match:
-            return ({
-                "entityId": entity_match.group(1),
-                "rowId": int(row_match.group(1)),
-                "name": page_name,
-                "title": title_match.group(1) if title_match else page_name,
-                "body": "",  # We don't need the old body since we're replacing it
-                "parent": parent_match.group(1) if parent_match else "",
-                "pageVersionId": int(version_match.group(1)),
-                "rendererType": renderer_match.group(1) if renderer_match else "HTML",
-            }, session)
-        raise Exception(f"Could not find wiki metadata in edit page for '{page_name}'")
-
-    # Parse the JSON data
-    try:
-        data = json.loads(match.group(1))
+    if entity_match and row_match and version_match:
         return ({
-            "entityId": data.get("entityId"),
-            "rowId": data.get("rowId"),
-            "name": data.get("name", page_name),
-            "title": data.get("title", page_name),
-            "body": data.get("body", ""),
-            "parent": data.get("parent", ""),
-            "pageVersionId": data.get("pageVersionId"),
-            "rendererType": data.get("rendererType", "HTML"),
+            "entityId": entity_match.group(1),
+            "rowId": int(row_match.group(1)),
+            "name": page_name,
+            "title": db_title,  # From database, not HTML
+            "parent": parent_match.group(1) if parent_match else "",
+            "pageVersionId": int(version_match.group(1)),
+            "rendererType": db_renderer,  # From database, not HTML
         }, session)
-    except json.JSONDecodeError as e:
-        raise Exception(f"Could not parse wiki metadata JSON: {e}")
+
+    raise Exception(f"Could not find wiki metadata in edit page for '{page_name}'")
 
 
 def register_tools(mcp):
