@@ -46,6 +46,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestImportDoc()
         {
             TestFilesZip = @"TestFunctional\ImportDocTest.zip";
+            TestFilesZipSuffix = "-functional";
             RunFunctionalTest();
         }
 

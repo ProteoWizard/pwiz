@@ -451,7 +451,19 @@ window.onload = submitForm;
                     seenZoom = true;
                 }
             }
-            ZedGraphClipboard.AddToContextMenu(graphControl, menuStrip);            
+            ZedGraphClipboard.AddToContextMenu(graphControl, menuStrip);
+        }
+    }
+
+    public static class BitmapExtensions
+    {
+        /// <summary>
+        /// Converts a Bitmap to an Icon.
+        /// Note: The caller is responsible for disposing the returned Icon.
+        /// </summary>
+        public static Icon ToIcon(this Bitmap bitmap)
+        {
+            return Icon.FromHandle(bitmap.GetHicon());
         }
     }
 }

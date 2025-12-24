@@ -21,9 +21,7 @@ using pwiz.Common.GUI;
 using pwiz.Skyline.Util;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -69,47 +67,6 @@ namespace pwiz.Skyline.Alerts
             _modeUIHelper = new Helpers.ModeUIAwareFormHelper(ModeUIExtender);
         }
         #endregion
-        public DialogResult ShowAndDispose(IWin32Window parent)
-        {
-            using (this)
-            {
-                return ShowWithTimeout(parent, GetTitleAndMessageDetail());
-            }
-        }
-
-        public DialogResult ShowWithTimeout(IWin32Window parent, string message)
-        {
-            Assume.IsNotNull(parent);   // Problems if the parent is null
-
-            if (Program.FunctionalTest && Program.PauseSeconds == 0 && !Debugger.IsAttached)
-            {
-                bool timeout = false;
-                var timeoutTimer = new Timer { Interval = TIMEOUT_SECONDS * 1000 };
-                timeoutTimer.Tick += (sender, args) =>
-                {
-                    timeoutTimer.Stop();
-                    if (!timeout)
-                    {
-                        timeout = true;
-                        Close();
-                    }
-                };
-                timeoutTimer.Start();
-
-                var result = ShowDialog(parent);
-                timeoutTimer.Stop();
-                if (timeout)
-                    throw new TimeoutException(
-                        string.Format(@"{0} not closed for {1} seconds. Message = {2}",
-                            GetType(),
-                            TIMEOUT_SECONDS,
-                            message));
-                return result;
-            }
-
-            return ShowDialog(parent);
-        }
-        private const int TIMEOUT_SECONDS = 10;
 
         protected override void OnLoad(EventArgs e)
         {

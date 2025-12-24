@@ -105,6 +105,7 @@ namespace SkylineTester
 
         private readonly string _resultsDir;
         private readonly string _openFile;
+        private readonly bool _autoRun;
 
         private Button[] _runButtons;
         private TabBase _runningTab;
@@ -161,6 +162,10 @@ namespace SkylineTester
         public SkylineTesterWindow(string[] args)
             : this()
         {
+            // Check for --autorun flag
+            _autoRun = args.Contains("--autorun");
+            args = args.Where(a => a != "--autorun").ToArray();
+
             // Grab some critical config values to avoid some timing issues in the initialization process
             string settings = args.Length > 0 ? File.ReadAllText(args[0]) : Settings.Default.SavedSettings;
             if (!string.IsNullOrEmpty(settings))
@@ -356,7 +361,14 @@ namespace SkylineTester
         {
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
+            loader.RunWorkerCompleted += BackgroundLoadCompleted;
             loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
+        }
+
+        private void BackgroundLoadCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (_autoRun)
+                BeginInvoke(new System.Action(Run));
         }
 
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
@@ -1551,7 +1563,7 @@ namespace SkylineTester
         /// Updates all parent nodes in a tree to reflect their children's check states.
         /// Call this after programmatically checking/unchecking child nodes.
         /// </summary>
-        private void UpdateAllParentNodeCheckStates(TreeView treeView)
+        public void UpdateAllParentNodeCheckStates(TreeView treeView)
         {
             foreach (TreeNode rootNode in treeView.Nodes)
             {

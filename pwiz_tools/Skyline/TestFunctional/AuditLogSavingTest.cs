@@ -26,9 +26,8 @@ namespace pwiz.SkylineTestFunctional
         public void TestAuditLogSaving()
         {
             TestFilesZip = "TestFunctional/AuditLogSavingTest.zip";
-            AuditLogList.IgnoreTestChecks = true;
-            RunFunctionalTest();
-            AuditLogList.IgnoreTestChecks = false;
+            using (new AuditLogList.IgnoreTestChecksScope())
+                RunFunctionalTest();
 
             Assert.IsFalse(IsRecordMode, "Successfully recorded data");
         }

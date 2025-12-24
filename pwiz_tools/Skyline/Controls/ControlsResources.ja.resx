@@ -193,4 +193,7 @@
   <data name="UndoRedoList_GetLabelText_Undo_1_Action" xml:space="preserve">
     <value>操作を1つ元に戻す</value>
   </data>
+  <data name="NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_" xml:space="preserve">
+    <value>ツールヒントの表示中にエラーが発生しました。</value>
+  </data>
 </root>

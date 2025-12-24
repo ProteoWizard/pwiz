@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -41,7 +40,6 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -60,15 +58,19 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestLiveReportsTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             CoverShotName = "LiveReports";
             TestFilesZipPaths = new []
             {
                 "https://skyline.ms/tutorials/LiveReports.zip",
                 @"TestTutorial\LiveReportsViews.zip"
             };
-            AuditLogList.IgnoreTestChecks = true;
-            RunFunctionalTest();
-            AuditLogList.IgnoreTestChecks = false;
+
+            using (new AuditLogList.IgnoreTestChecksScope())
+                RunFunctionalTest();
         }
 
         private string GetTestPath(string relativePath)
@@ -782,39 +784,6 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsInstanceOfType(selectedPath.Child, typeof(pwiz.Skyline.Model.Peptide));
             var peptide = (pwiz.Skyline.Model.Peptide)selectedPath.Child;
             Assert.AreEqual(expectedSequence, peptide.Sequence);
-        }
-
-        /// <summary>
-        /// Moves all the FloatingWindow's off the screen so they are not in the way of the
-        /// main Skyline window's screenshots.
-        /// </summary>
-        /// <returns>A list of the original locations of the windows that were moved</returns>
-        private List<Tuple<FloatingWindow, Rectangle>> HideFloatingWindows()
-        {
-            var list = new List<Tuple<FloatingWindow, Rectangle>>();
-            RunUI(() =>
-            {
-                foreach (var floatingWindow in FormUtil.OpenForms.OfType<FloatingWindow>())
-                {
-                    list.Add(Tuple.Create(floatingWindow, floatingWindow.Bounds));
-                    floatingWindow.Location = FormEx.GetOffscreenPoint();
-                }
-            });
-            return list;
-        }
-
-        /// <summary>
-        /// Move the windows back to their original locations
-        /// </summary>
-        private void RestoreFloatingWindows(List<Tuple<FloatingWindow, Rectangle>> list)
-        {
-            RunUI(() =>
-            {
-                foreach (var tuple in list)
-                {
-                    tuple.Item1.Bounds = tuple.Item2;
-                }
-            });
         }
     }
 }

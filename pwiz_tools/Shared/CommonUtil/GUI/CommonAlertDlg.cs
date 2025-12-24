@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
@@ -36,7 +37,8 @@ namespace pwiz.Common.GUI
     public partial class CommonAlertDlg : CommonFormEx
     {
         private const int MAX_HEIGHT = 500;
-        private const int LABEL_PADDING = 18;
+        private const int LABEL_LEFT_PADDING = 24;  // Left margin to match original designer position
+        private const int LABEL_RIGHT_PADDING = 18; // Right margin original 18
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
         private string _message;
@@ -83,7 +85,7 @@ namespace pwiz.Common.GUI
         private void UpdateLabelMessageSize()
         {
             labelMessage.MaximumSize =
-                new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_PADDING), 0);
+                new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - LABEL_RIGHT_PADDING), 0);
         }
 
         private void UpdateFormHeight()
@@ -245,7 +247,7 @@ namespace pwiz.Common.GUI
                 else
                 {
                     iconAndMessageSplitContainer.Panel1Collapsed = true;
-                    labelMessage.Location = new Point(LABEL_PADDING, labelMessage.Location.Y);
+                    labelMessage.Location = new Point(LABEL_LEFT_PADDING, labelMessage.Location.Y);
                 }
 
                 UpdateFormHeight();
@@ -426,5 +428,71 @@ namespace pwiz.Common.GUI
             dlg.Exception = exception;
             dlg.ShowDialog(parent);
         }
+
+        #region Timeout Support for Functional Tests
+
+        private const int TIMEOUT_SECONDS = 10;
+
+        public DialogResult ShowAndDispose(IWin32Window parent)
+        {
+            using (this)
+            {
+                return ShowWithTimeout(parent, GetTitleAndMessageDetail());
+            }
+        }
+
+        /// <summary>
+        /// Shadows Form.ShowDialog() to prevent parentless dialogs.
+        /// Use ShowDialog(IWin32Window) or ShowAndDispose(IWin32Window) instead.
+        /// </summary>
+        public new DialogResult ShowDialog()
+        {
+            // Parentless dialogs can leak handles. Use ShowDialog(parent) instead.
+            throw new InvalidOperationException(@"Not supported.");
+        }
+
+        /// <summary>
+        /// Shadows Form.ShowDialog(IWin32Window) to enforce test timeout behavior.
+        /// Use ShowAndDispose() for the common pattern of showing a dialog once and disposing it.
+        /// </summary>
+        public new DialogResult ShowDialog(IWin32Window parent)
+        {
+            return ShowWithTimeout(parent, GetTitleAndMessageDetail());
+        }
+
+        public DialogResult ShowWithTimeout(IWin32Window parent, string message)
+        {
+            Assume.IsNotNull(parent);   // Problems if the parent is null
+
+            if (TestMode && !PauseMode && !Debugger.IsAttached)
+            {
+                bool timeout = false;
+                var timeoutTimer = new Timer { Interval = TIMEOUT_SECONDS * 1000 };
+                timeoutTimer.Tick += (sender, args) =>
+                {
+                    timeoutTimer.Stop();
+                    if (!timeout)
+                    {
+                        timeout = true;
+                        Close();
+                    }
+                };
+                timeoutTimer.Start();
+
+                var result = base.ShowDialog(parent);
+                timeoutTimer.Stop();
+                if (timeout)
+                    throw new TimeoutException(
+                        string.Format(@"{0} not closed for {1} seconds. Message = {2}",
+                            GetType(),
+                            TIMEOUT_SECONDS,
+                            message));
+                return result;
+            }
+
+            return base.ShowDialog(parent);
+        }
+
+        #endregion
     }
 }

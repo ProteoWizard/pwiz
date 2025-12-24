@@ -634,7 +634,8 @@ namespace pwiz.Skyline.Controls.Databinding
             {typeof (Model.Databinding.Entities.Peptide).FullName, Tuple.Create(2, 7)},
             {typeof (Model.Databinding.Entities.Precursor).FullName, Tuple.Create(3, 3)},
             {typeof (Model.Databinding.Entities.Transition).FullName, Tuple.Create(4, 4)},
-            {typeof (Model.Databinding.Entities.Replicate).FullName, Tuple.Create(5, 5)}
+            {typeof (Model.Databinding.Entities.Replicate).FullName, Tuple.Create(5, 5)},
+            {typeof (Model.AuditLog.Databinding.AuditLogRow).FullName, Tuple.Create(8, 8)}
             // ReSharper restore AssignNullToNotNullAttribute
             // ReSharper restore RedundantNameQualifier
         };
@@ -651,6 +652,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 Resources.Replicate,
                 Resources.MoleculeList,
                 Resources.Molecule,
+                Resources.AuditLog,
             };
         }
 

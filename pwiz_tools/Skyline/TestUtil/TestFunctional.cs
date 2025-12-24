@@ -47,6 +47,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
@@ -345,6 +346,23 @@ namespace pwiz.SkylineTestUtil
                     Assert.Fail(e.ToString());
                 }
             });
+        }
+
+        public static T RunUIFunc<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            SkylineInvoke(() =>
+            {
+                try
+                {
+                    result = func();
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail(e.ToString());
+                }
+            });
+            return result;
         }
 
         /// <summary>
@@ -1209,7 +1227,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
+            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, throwOnProgramException);
         }
 
         public static void WaitForRegression()
@@ -1805,6 +1823,20 @@ namespace pwiz.SkylineTestUtil
             PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), timeout, processShot);
         }
 
+        public void PauseForRelativeAbundanceGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            var graphSummary = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
+            Assert.IsNotNull(graphSummary, "Relative abundance graph not found");
+            PauseForGraphScreenShot(description, graphSummary, timeout, processShot);
+        }
+
+        public void PauseForVolcanoPlotGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            var volcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
+            Assert.IsNotNull(volcanoPlot, "Volcano plot not found");
+            PauseForGraphScreenShot(description, volcanoPlot, timeout, processShot);
+        }
+
         protected ZedGraphControl FindZedGraph(Control graphContainer)
         {
             var zedGraphControl = graphContainer as ZedGraphControl;
@@ -2060,6 +2092,8 @@ namespace pwiz.SkylineTestUtil
             // Delete unzipped test files.
             if (TestFilesDirs != null)
             {
+                using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
+
                 CleanupPersistentDir(); // Clean before checking for modifications
 
                 foreach (var dir in TestFilesDirs.Where(d => d != null))
@@ -2563,6 +2597,11 @@ namespace pwiz.SkylineTestUtil
                 WaitForGraphs(false);
                 // Wait for any background loaders to notice the change and stop what they're doing
                 WaitForBackgroundLoaders();
+                // Wait for FileSystemWatchers to be completely shut down before test cleanup
+                // This prevents race conditions where watchers might access directories during cleanup
+                // Note: FilesTree may be null if already destroyed, in which case watching is already complete
+                WaitForConditionUI(5000, () => SkylineWindow.IsFileSystemWatchingComplete(), 
+                    () => "FileSystemWatchers should be shut down before test cleanup", false);
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
 
@@ -2999,6 +3038,40 @@ namespace pwiz.SkylineTestUtil
                 intercept = -intercept;
             }
         }
+
+        /// <summary>
+        /// Moves all the FloatingWindow's off the screen so they are not in the way of the
+        /// main Skyline window's screenshots.
+        /// </summary>
+        /// <returns>A list of the original locations of the windows that were moved</returns>
+        public static List<(FloatingWindow Window, Rectangle Bounds)> HideFloatingWindows()
+        {
+            var list = new List<(FloatingWindow Window, Rectangle Bounds)>();
+            RunUI(() =>
+            {
+                foreach (var floatingWindow in FormUtil.OpenForms.OfType<FloatingWindow>())
+                {
+                    list.Add((floatingWindow, floatingWindow.Bounds));
+                    floatingWindow.Location = FormEx.GetOffscreenPoint();
+                }
+            });
+            return list;
+        }
+        /// <summary>
+        /// Move the windows back to their original locations
+        /// </summary>
+        public static void RestoreFloatingWindows(List<(FloatingWindow Window, Rectangle Bounds)> list)
+        {
+            RunUI(() =>
+            {
+                foreach (var tuple in list)
+                {
+                    tuple.Window.Bounds = tuple.Bounds;
+                }
+            });
+        }
+
+
 
         #region Modification helpers
 
