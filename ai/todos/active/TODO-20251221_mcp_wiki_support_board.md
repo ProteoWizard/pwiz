@@ -122,7 +122,7 @@ Agent account (`claude.c.skyline@gmail.com`) has "Editor without Delete" role:
 - [x] Test read access to support board posts
 
 **Documentation:**
-- [ ] Document wiki/support tools in ai/docs/
+- [x] Document wiki/support tools in ai/docs/ → `wiki-support-system.md`
 
 ### Phase 1.5: Attachments ✅ (support board) / 🚧 (wiki)
 
@@ -315,50 +315,50 @@ Fixed tools that need to access large blob columns (log, xml) by using HTTP endp
 - [x] Added troubleshooting section to mcp-development-guide.md
 - [x] Documented schema conventions for LARGE column warnings
 
-### Phase 4: Code Refactoring (Before Completion)
+### Phase 4: Code Refactoring ✅
 
-The `server.py` file has grown to ~2400 lines and should be split into modules before moving this TODO to complete.
+The `server.py` file was ~2400 lines and has been split into modules.
 
-**Proposed structure:**
+**Final structure:**
 ```
 LabKeyMcp/
-├── server.py           # Main entry, FastMCP init, imports tools
+├── server.py           # 52 lines - Main entry, FastMCP init, imports tools
 ├── tools/
-│   ├── __init__.py
-│   ├── common.py       # Shared utilities (get_server_context, LabKeySession, etc.)
-│   ├── exceptions.py   # query_exceptions, get_exception_details
-│   ├── nightly.py      # query_test_runs, get_run_failures, get_daily_test_summary
-│   ├── wiki.py         # list_wiki_pages, get_wiki_page, update_wiki_page
-│   ├── support.py      # query_support_threads, get_support_thread, get_support_summary
-│   └── attachments.py  # list_attachments, get_attachment
+│   ├── __init__.py     # register_all_tools() function
+│   ├── common.py       # 4 tools: list_schemas, list_queries, list_containers, query_table
+│   ├── exceptions.py   # 2 tools: query_exceptions, get_exception_details
+│   ├── nightly.py      # 7 tools: query_test_runs, get_run_failures, etc.
+│   ├── wiki.py         # 3 tools: list_wiki_pages, get_wiki_page, update_wiki_page
+│   ├── support.py      # 3 tools: query_support_threads, get_support_thread, etc.
+│   └── attachments.py  # 2 tools: list_attachments, get_attachment
+├── queries/            # Server-side query documentation
 └── test_connection.py
 ```
 
-**FastMCP decorator pattern:** Each module exports a `register_tools(mcp)` function:
-```python
-# server.py
-mcp = FastMCP("labkey")
-
-from tools import exceptions, nightly, wiki, support, attachments
-exceptions.register_tools(mcp)
-nightly.register_tools(mcp)
-# etc.
-```
+**Total: 21 tools registered across 6 modules.**
 
 **Tasks:**
-- [ ] Create `tools/` directory structure
-- [ ] Extract common utilities to `tools/common.py`
-- [ ] Move exception tools to `tools/exceptions.py`
-- [ ] Move nightly test tools to `tools/nightly.py`
-- [ ] Move wiki tools to `tools/wiki.py`
-- [ ] Move support tools to `tools/support.py`
-- [ ] Move attachment tools to `tools/attachments.py`
-- [ ] Update `server.py` to import and register tools
-- [ ] Verify all tools still work after refactor
+- [x] Create `tools/` directory structure
+- [x] Extract common utilities to `tools/common.py`
+- [x] Move exception tools to `tools/exceptions.py`
+- [x] Move nightly test tools to `tools/nightly.py`
+- [x] Move wiki tools to `tools/wiki.py`
+- [x] Move support tools to `tools/support.py`
+- [x] Move attachment tools to `tools/attachments.py`
+- [x] Update `server.py` to import and register tools
+- [x] Verify all tools still work after refactor (21 tools registered)
 
 ## Files Modified
 
-- `ai/mcp/LabKeyMcp/server.py` - Added wiki/support tools, moved from DevTools
+- `ai/mcp/LabKeyMcp/server.py` - Refactored to 52 lines (was ~2400), imports from tools/
+- `ai/mcp/LabKeyMcp/tools/__init__.py` - NEW - Package with register_all_tools()
+- `ai/mcp/LabKeyMcp/tools/common.py` - NEW - Shared utilities and discovery tools
+- `ai/mcp/LabKeyMcp/tools/exceptions.py` - NEW - Exception triage tools
+- `ai/mcp/LabKeyMcp/tools/nightly.py` - NEW - Nightly test analysis tools
+- `ai/mcp/LabKeyMcp/tools/wiki.py` - NEW - Wiki page tools
+- `ai/mcp/LabKeyMcp/tools/support.py` - NEW - Support board tools
+- `ai/mcp/LabKeyMcp/tools/attachments.py` - NEW - Attachment tools
+- `ai/docs/wiki-support-system.md` - NEW - Wiki and support board documentation
 - `ai/mcp/README.md` - NEW - MCP servers directory overview
 - `ai/docs/mcp-development-guide.md` - Updated paths
 - `ai/docs/developer-setup-guide.md` - Updated MCP server path

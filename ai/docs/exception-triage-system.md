@@ -37,7 +37,11 @@ Claude Code
 
 | File | Purpose |
 |------|---------|
-| `server.py` | MCP server with all tools |
+| `server.py` | MCP server entry point |
+| `tools/` | Tool modules by domain |
+| `tools/exceptions.py` | Exception triage tools |
+| `tools/common.py` | Shared utilities and discovery tools |
+| `queries/` | Server-side query documentation |
 | `pyproject.toml` | Python dependencies |
 | `test_connection.py` | Standalone connection test |
 | `README.md` | Setup instructions |
@@ -174,6 +178,8 @@ After setup, Claude Code can query exceptions directly:
 
 - [MCP Development Guide](mcp-development-guide.md) - Patterns for extending MCP capabilities
 - [Nightly Test Analysis](nightly-test-analysis.md) - Test results data access
+- [Wiki and Support Board System](wiki-support-system.md) - Documentation and support access
 - [LabKey MCP Server README](../mcp/LabKeyMcp/README.md) - Setup instructions
+- [Query Documentation](../mcp/LabKeyMcp/queries/README.md) - Server-side query reference
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
 - [LabKey Python API](https://github.com/LabKey/labkey-api-python)
