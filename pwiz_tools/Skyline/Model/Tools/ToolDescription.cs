@@ -30,6 +30,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -445,7 +446,22 @@ namespace pwiz.Skyline.Model.Tools
                 new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                     reportTitle));
             progressMonitor.UpdateProgress(status);
-            rowFactories.ExportReport(writer, PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle), TextUtil.SEPARATOR_CSV, progressMonitor, ref status);
+            using (var memoryStream = new MemoryStream())
+            {
+                var dsvWriter = new DsvWriter(dataSchema.DataSchemaLocalizer.FormatProvider,
+                    dataSchema.DataSchemaLocalizer.Language, TextUtil.SEPARATOR_CSV);
+                if (ReferenceEquals(dataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))
+                {
+                    dsvWriter.NumberFormatOverride = Formats.RoundTrip;
+                }
+                var rowItemExporter = new RowItemExporter(dataSchema.DataSchemaLocalizer, dsvWriter);
+                rowFactories.ExportReport(memoryStream, PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle), rowItemExporter, progressMonitor, ref status);
+                memoryStream.Position = 0;
+                using (var reader = new StreamReader(memoryStream))
+                {
+                    writer.Write(reader.ReadToEnd());
+                }
+            }
         }
 
 

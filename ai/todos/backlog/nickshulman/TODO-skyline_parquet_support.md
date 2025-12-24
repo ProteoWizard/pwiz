@@ -12,94 +12,212 @@ Apache Parquet is a columnar storage format optimized for analytical workloads. 
 - **Industry standard**: Wide support across data analysis tools (pandas, Apache Spark, R, etc.)
 - **Large dataset handling**: Efficient for datasets with many columns where only subsets are needed
 
-## Initial Setup (Completed)
+## Current Status
 
-- [x] Downloaded Parquet.Net 5.4.0 and all dependencies
-- [x] Placed libraries in `pwiz_tools\Shared\Lib\Parquet\`
-- [x] Added reference to Parquet.dll in Skyline.csproj
+### Phase 1: Core Infrastructure (COMPLETED ✓)
 
-## Dependencies Installed
+**Library Setup:**
+- [x] Downloaded Parquet.Net 3.3.4 (net45 version for .NET Framework 4.7.2 compatibility)
+- [x] Renamed to Parquet2.dll to avoid naming conflict with native Apache Arrow parquet.dll
+- [x] Placed in `pwiz_tools\Shared\Lib\Parquet\Parquet2.dll`
+- [x] Added reference to Skyline.csproj with proper assembly identity
 
-Main library:
-- Parquet.Net 5.4.0
+**Architecture Refactoring:**
+- [x] Created `IRowItemExporter` interface (Stream-based export abstraction)
+- [x] Refactored `RowItemExporter` to implement `IRowItemExporter`
+- [x] Refactored `RowFactories.ExportReport()` to accept `IRowItemExporter` instead of char separator
+- [x] Updated all callers to create and pass `RowItemExporter` instances:
+  - `ExportLiveReportDlg.cs`
+  - `CommandLine.cs`
+  - `ToolDescription.cs`
 
-Supporting libraries (in `pwiz_tools\Shared\Lib\Parquet\`):
-- IronCompress 1.7.0
-- Microsoft.IO.RecyclableMemoryStream 3.0.1
-- System.Linq.AsyncEnumerable 10.0.0
-- System.Reflection.Emit.Lightweight 4.7.0
-- System.Text.Json 10.0.0
-- System.IO.Pipelines 10.0.0
-- System.Text.Encodings.Web 10.0.0
+**Parquet Implementation:**
+- [x] Created `ParquetRowItemExporter` class implementing `IRowItemExporter`
+- [x] Implemented data type mapping for basic types:
+  - string → DataField&lt;string&gt;
+  - int/int? → DataField&lt;int?&gt;
+  - long/long? → DataField&lt;long?&gt;
+  - double/double? → DataField&lt;double?&gt;
+  - float/float? → DataField&lt;float?&gt;
+  - bool/bool? → DataField&lt;bool?&gt;
+  - DateTime/DateTime? → DataField&lt;DateTime?&gt;
+  - decimal/decimal? → DataField&lt;decimal?&gt;
+  - Unknown types → DataField&lt;string&gt; (ToString() fallback)
+- [x] Used Parquet.Net 3.3.4 synchronous API (no async/await per Skyline standards)
+- [x] Added required using statements (pwiz.Skyline.Model.Hibernate for Formats)
 
-## Planned Implementation
+**Build Status:**
+- [x] **Build succeeds** (Release configuration)
+- ⚠️ Warning: Assembly identity mismatch (Parquet2.dll contains 'Parquet' identity) - non-blocking
 
-### Phase 1: Core Export Functionality
-- [ ] Create `ParquetReportExporter` class in appropriate namespace
-- [ ] Implement IReportExporter interface (if one exists) or create export method
-- [ ] Handle data type mapping (Skyline types → Parquet types)
-- [ ] Support basic column types (string, numeric, boolean, datetime)
+### Files Modified
 
-### Phase 2: UI Integration
-- [ ] Add "Parquet (*.parquet)" option to export file dialog
-- [ ] Add to Export menu as export format option
-- [ ] Ensure proper file extension handling (.parquet)
+**New Files:**
+- `pwiz_tools/Skyline/Model/Databinding/IRowItemExporter.cs`
+- `pwiz_tools/Skyline/Model/Databinding/ParquetRowItemExporter.cs`
 
-### Phase 3: Advanced Features
-- [ ] Support for nested/complex column types (if applicable)
-- [ ] Compression options (Snappy, Gzip, etc.)
-- [ ] Row group size configuration for large datasets
-- [ ] Schema customization options
+**Modified Files:**
+- `pwiz_tools/Skyline/Skyline.csproj` - Added Parquet2 reference
+- `pwiz_tools/Skyline/Model/Databinding/RowItemExporter.cs` - Implements IRowItemExporter
+- `pwiz_tools/Skyline/Model/Databinding/RowFactories.cs` - Accepts IRowItemExporter parameter
+- `pwiz_tools/Skyline/Controls/Databinding/ExportLiveReportDlg.cs` - Creates RowItemExporter
+- `pwiz_tools/Skyline/CommandLine.cs` - Creates RowItemExporter
+- `pwiz_tools/Skyline/Model/Tools/ToolDescription.cs` - Creates RowItemExporter
 
-### Phase 4: Testing
-- [ ] Unit tests for data type conversion
-- [ ] Functional tests for export workflow
-- [ ] Test with various report types
-- [ ] Validate exported files can be read by external tools
-- [ ] Performance testing with large datasets
+**Library Files:**
+- `pwiz_tools/Shared/Lib/Parquet/Parquet2.dll` (196 KB, assembly version 3.0.0.0)
+- `pwiz_tools/Shared/Lib/Parquet/Parquet2.pdb`
+- `pwiz_tools/Shared/Lib/Parquet/System.Reflection.Emit.Lightweight.dll` (dependency)
 
-## Technical Considerations
+### Phase 2: UI Integration (TODO)
 
-### Data Type Mapping
-Need to map Skyline report column types to Parquet data types:
-- Text columns → String
-- Numeric columns → Double/Int32/Int64
-- Boolean columns → Boolean
-- DateTime columns → Timestamp
+- [ ] Add .parquet file extension to ExportLiveReportDlg file dialog filter
+- [ ] Wire up ParquetRowItemExporter when .parquet extension is selected
+- [ ] Add localized resource strings for "Parquet (*.parquet)" filter text
+- [ ] Test file save dialog workflow end-to-end
 
-### Threading
-- Export operations should run on background thread (use `ActionUtil.RunAsync()`)
-- NO async/await keywords (per Skyline coding standards)
-- Progress reporting via UI thread marshaling
+### Phase 3: Command Line Support (TODO)
 
-### Error Handling
-- Handle file I/O errors
-- Validate data before export
-- User-friendly error messages via resource strings (.resx)
+- [ ] Add --report-format=parquet option to SkylineCmd
+- [ ] Update command line help text
+- [ ] Add to DatabindingResources.resx for localization
 
-### Localization
-- All UI strings must be in .resx files
-- Error messages must be localizable
-- Test assertions must use resource strings (translation-proof testing)
+### Phase 4: Testing (TODO)
 
-## Resources
+**Unit Tests:**
+- [ ] Test ParquetRowItemExporter data type conversions
+- [ ] Test handling of null values
+- [ ] Test schema generation with various column types
+- [ ] Test fallback to string for unknown types
 
-- Parquet.Net documentation: https://github.com/aloneguid/parquet-dotnet
-- Apache Parquet specification: https://parquet.apache.org/docs/
-- Existing export implementations in Skyline codebase for reference
+**Functional Tests:**
+- [ ] Export various report types (Peptide, Protein, Transition, etc.)
+- [ ] Validate exported .parquet files with external tools:
+  - Python pandas: `pd.read_parquet()`
+  - Apache Spark
+  - R arrow package
+- [ ] Test with large datasets (>10K rows)
+- [ ] Test with many columns (>100 columns)
+- [ ] Test special characters in column names
+- [ ] Test special characters in data values
 
-## Questions to Resolve
+**Regression Tests:**
+- [ ] Verify CSV/TSV export still works (ensure refactoring didn't break existing exports)
+- [ ] Run full test suite to ensure no regressions
 
-- Which existing export format implementation should serve as a template?
-- Should Parquet export support all report types or specific ones initially?
-- What compression codec should be the default?
-- Should we expose advanced Parquet options (compression, row group size) to users?
+### Phase 5: Documentation (TODO)
+
+- [ ] Add to Skyline user documentation
+- [ ] Update tutorial if applicable
+- [ ] Document Parquet export limitations (if any)
+- [ ] Add release notes entry
+
+## Technical Details
+
+### Library Choice: Parquet.Net 3.3.4
+
+**Why version 3.3.4?**
+- Latest version compatible with .NET Framework 4.7.2
+- Minimal dependencies (only System.Reflection.Emit.Lightweight)
+- lib/net45 version available (not just .NET Standard)
+- Synchronous API aligns with Skyline coding standards (no async/await)
+
+**Why not 5.4.0+?**
+- Newer versions only provide .NET Standard 2.0 assemblies
+- Assembly resolution issues with MSBuild when using .NET Standard version
+- More dependencies to manage
+- Async-first API conflicts with Skyline's no async/await rule
+
+### Naming Conflict Resolution
+
+**Problem:** Skyline already has `libraries/arrow/parquet.dll` (Apache Arrow C++ native library)
+
+**Solution:** Renamed .NET library to `Parquet2.dll`
+- Avoids file name conflicts
+- Assembly identity remains 'Parquet' internally (causes warning but non-blocking)
+- MSBuild and runtime resolve correctly
+
+### API Compatibility (Parquet.Net 3.3.4 vs. 5.x)
+
+**Version 3.3.4 API:**
+```csharp
+using (var writer = new ParquetWriter(schema, stream))
+{
+    using (var groupWriter = writer.CreateRowGroup())
+    {
+        groupWriter.WriteColumn(dataColumn);
+    }
+}
+```
+
+**Version 5.x+ API (NOT compatible with Skyline):**
+```csharp
+using (var writer = await ParquetWriter.CreateAsync(schema, stream))
+{
+    using (var groupWriter = writer.CreateRowGroup())
+    {
+        await groupWriter.WriteColumnAsync(dataColumn);
+    }
+}
+```
+
+### Data Flow Architecture
+
+```
+User selects export → ExportLiveReportDlg
+    ↓
+Creates RowItemExporter (CSV) OR ParquetRowItemExporter (Parquet)
+    ↓
+Calls RowFactories.ExportReport(stream, viewName, exporter, ...)
+    ↓
+Gets RowItemEnumerator with PropertyDescriptors
+    ↓
+Exporter builds columns/schema and writes to stream
+    ↓
+File saved via FileSaver
+```
+
+## Known Issues / Limitations
+
+1. **Assembly Identity Warning:** Parquet2.dll has internal assembly name 'Parquet' causing MSB3110 warning (non-blocking)
+2. **System.Buffers/System.Memory:** These are provided automatically by .NET Framework 4.7.2, explicit references cause issues
+3. **Type Mapping:** Unknown types fall back to string representation (may lose type information)
+
+## Questions Resolved
+
+- ✓ Which library version? → Parquet.Net 3.3.4 (net45)
+- ✓ How to handle async API? → Version 3.3.4 has synchronous API
+- ✓ How to integrate with existing export? → Created IRowItemExporter abstraction
+- ✓ Naming conflict with Arrow parquet.dll? → Renamed to Parquet2.dll
+
+## Questions Still Open
+
+- How should compression be configured (Snappy, Gzip, None)?
+- Should row group size be configurable for large exports?
+- Should Parquet export be available for all report types or limited subset?
+- What should the default behavior be for null values?
+
+## Next Steps (Priority Order)
+
+1. **Add UI integration** - Wire up file dialog filter for .parquet extension
+2. **Manual testing** - Export a simple report and validate with Python pandas
+3. **Add unit tests** - Test data type conversions and schema generation
+4. **Add functional test** - Full export workflow test
+5. **Documentation** - Update user guide with Parquet export instructions
 
 ## Success Criteria
 
-- Users can export any Skyline report to .parquet format
-- Exported files are valid Parquet format readable by standard tools
-- Export performance is comparable to CSV export for similar-sized datasets
-- All strings are properly localized
-- Zero ReSharper warnings
-- All tests pass in all supported locales
+- [x] Core export functionality compiles and builds
+- [ ] Users can export reports to .parquet via UI
+- [ ] Exported files are valid Parquet format
+- [ ] Files readable by pandas, Spark, R
+- [ ] Export performance comparable to CSV
+- [ ] All strings localized via .resx
+- [ ] Zero ReSharper warnings
+- [ ] All tests pass
+
+## Resources
+
+- Parquet.Net 3.x documentation: https://github.com/aloneguid/parquet-dotnet/tree/3.x
+- Apache Parquet specification: https://parquet.apache.org/docs/
+- Skyline export code reference: `RowItemExporter.cs`, `DsvWriter.cs`

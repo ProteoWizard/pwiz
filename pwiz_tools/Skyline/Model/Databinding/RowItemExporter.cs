@@ -25,7 +25,7 @@ using System.Linq;
 
 namespace pwiz.Skyline.Model.Databinding
 {
-    public class RowItemExporter
+    public class RowItemExporter : IRowItemExporter
     {
         public RowItemExporter(DataSchemaLocalizer localizer, DsvWriter dsvWriter)
         {
@@ -35,7 +35,17 @@ namespace pwiz.Skyline.Model.Databinding
         
         public DataSchemaLocalizer Localizer { get; }
         public DsvWriter DsvWriter { get; }
-        
+
+        public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
+            RowItemEnumerator rowItemEnumerator)
+        {
+            using (var writer = new StreamWriter(stream))
+            {
+                Export(progressMonitor, ref status, writer, rowItemEnumerator);
+                writer.Flush();
+            }
+        }
+
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
             RowItemEnumerator rowItemEnumerator) 
         {

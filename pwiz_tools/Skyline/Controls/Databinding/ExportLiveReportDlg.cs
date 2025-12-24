@@ -21,6 +21,7 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -149,23 +150,26 @@ namespace pwiz.Skyline.Controls.Databinding
                 return false;
             }
 
-            using (var writer = new StreamWriter(fileSaver.Stream))
+            using var longWaitDlg = new LongWaitDlg();
+            longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
+            IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
+            var dataSchema = GetSkylineDataSchema(true);
+            longWaitDlg.PerformWork(this, 1500, progressMonitor =>
             {
-                using var longWaitDlg = new LongWaitDlg();
-                longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
-                IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
-                var dataSchema = GetSkylineDataSchema(true);
-                longWaitDlg.PerformWork(this, 1500, progressMonitor =>
+                progressMonitor.UpdateProgress(status);
+                var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
+                var dsvWriter = new DsvWriter(dataSchema.DataSchemaLocalizer.FormatProvider,
+                    dataSchema.DataSchemaLocalizer.Language, separator);
+                if (ReferenceEquals(dataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))
                 {
-                    progressMonitor.UpdateProgress(status);
-                    var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
-
-                    rowFactories.ExportReport(writer, viewName.Value, separator, progressMonitor, ref status);
-                });
-                if (longWaitDlg.IsCanceled)
-                {
-                    return false;
+                    dsvWriter.NumberFormatOverride = Formats.RoundTrip;
                 }
+                var rowItemExporter = new RowItemExporter(dataSchema.DataSchemaLocalizer, dsvWriter);
+                rowFactories.ExportReport(fileSaver.Stream, viewName.Value, rowItemExporter, progressMonitor, ref status);
+            });
+            if (longWaitDlg.IsCanceled)
+            {
+                return false;
             }
 
             fileSaver.Commit();

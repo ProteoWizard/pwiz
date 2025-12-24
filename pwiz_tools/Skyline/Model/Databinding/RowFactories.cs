@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Model.Databinding
             return rowFactories;
         }
 
-        public void ExportReport(TextWriter writer, ViewName viewName, char separator, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public void ExportReport(Stream stream, ViewName viewName, IRowItemExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             if (Equals(viewName.GroupId, ViewGroup.BUILT_IN.Id))
             {
@@ -174,18 +174,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             var rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
-            var dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider,
-                DataSchema.DataSchemaLocalizer.Language,
-                separator)
-            {
-                ColumnFormats = rowItemEnumerator.ColumnFormats
-            };
-            if (ReferenceEquals(DataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))
-            {
-                dsvWriter.NumberFormatOverride = Formats.RoundTrip;
-            }
-            var rowItemExporter = new RowItemExporter(DataSchema.DataSchemaLocalizer, dsvWriter);
-            rowItemExporter.Export(progressMonitor, ref status, writer, rowItemEnumerator);
+            rowItemExporter.Export(progressMonitor, ref status, stream, rowItemEnumerator);
             if (!progressMonitor.IsCanceled)
             {
                 progressMonitor.UpdateProgress(status = status.Complete());

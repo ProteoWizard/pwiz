@@ -1,0 +1,2495 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Parquet</name>
+    </assembly>
+    <members>
+        <member name="M:Snappy.Sharp.SnappyDecompressor.DecompressTagSlow(System.Byte[],System.Int32,System.Byte[],System.Int32,System.Int32,System.Int32)">
+            NOTE: from Java version, need to determine if true in .Net as well.
+            This is a second copy of the inner loop of decompressTags used when near the end
+            of the input. The key difference is the reading of the trailer bytes.  The fast
+            code does a blind read of the next 4 bytes as an int, and this code assembles
+            the int byte-by-byte to assure that the array is not over run.  The reason this
+            code path is separate is the if condition to choose between these two seemingly
+            small differences costs like 10-20% of the throughput.  I'm hoping in future
+            versions of hot-spot this code can be integrated into the main loop but for now
+            it is worth the extra maintenance pain to get the extra 10-20%.
+        </member>
+        <member name="M:Snappy.Sharp.SnappyDecompressor.IncrementalCopy(System.Byte[],System.Int32,System.Byte[],System.Int32,System.Int32)">
+             Copy "len" bytes from "src" to "op", one byte at a time.  Used for
+             handling COPY operations where the input and output regions may
+             overlap.  For example, suppose:
+             src    == "ab"
+             op     == src + 2
+             len    == 20
+            
+             After incrementalCopy, the result will have
+             eleven copies of "ab"
+             ababababababababababab
+             Note that this does not match the semantics of either memcpy()
+             or memmove().
+        </member>
+        <member name="M:Snappy.Sharp.SnappyStream.#ctor(System.IO.Stream,System.IO.Compression.CompressionMode)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Snappy.Sharp.SnappyStream"/> class.
+            </summary>
+            <param name="s">The stream.</param>
+            <param name="mode">The compression mode.</param>
+        </member>
+        <member name="M:Snappy.Sharp.SnappyStream.#ctor(System.IO.Stream,System.IO.Compression.CompressionMode,System.Boolean,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Snappy.Sharp.SnappyStream"/> class.
+            </summary>
+            <param name="s">The stream.</param>
+            <param name="mode">The compression mode.</param>
+            <param name="leaveOpen">If set to <c>true</c> leaves the stream open when complete.</param>
+            <param name="checksum"><c>true</c> if checksums should be written to the stream </param>
+        </member>
+        <member name="P:Snappy.Sharp.SnappyStream.BaseStream">
+            <summary>
+            Provides access to the underlying (compressed) <see cref="T:System.IO.Stream"/>.
+            </summary>
+        </member>
+        <member name="M:Snappy.Sharp.SnappyStream.Seek(System.Int64,System.IO.SeekOrigin)">
+            <summary>
+            This operation is not supported and always throws a <see cref="T:System.NotSupportedException" />.
+            </summary>
+            <exception cref="T:System.NotSupportedException">This operation is not supported on this stream.</exception>
+        </member>
+        <member name="M:Snappy.Sharp.SnappyStream.SetLength(System.Int64)">
+            <summary>
+            This operation is not supported and always throws a <see cref="T:System.NotSupportedException" />.
+            </summary>
+            <exception cref="T:System.NotSupportedException">This operation is not supported on this stream.</exception>
+        </member>
+        <member name="P:Snappy.Sharp.SnappyStream.Length">
+            <summary>
+            This property is not supported and always throws a <see cref="T:System.NotSupportedException" />.
+            </summary>
+            <exception cref="T:System.NotSupportedException">This property is not supported on this stream.</exception>
+        </member>
+        <member name="P:Snappy.Sharp.SnappyStream.Position">
+            <summary>
+            This property is not supported and always throws a <see cref="T:System.NotSupportedException" />.
+            </summary>
+            <exception cref="T:System.NotSupportedException">This property is not supported on this stream.</exception>
+        </member>
+        <member name="M:Snappy.Sharp.Utilities.UnalignedCopy64(System.Byte[],System.Int32,System.Byte[],System.Int32)">
+            <summary>
+            Copies 64 bits (8 bytes) from source array starting at sourceIndex into dest array starting at destIndex.
+            </summary>
+            <param name="source">The source array.</param>
+            <param name="sourceIndex">Index to start copying.</param>
+            <param name="dest">The destination array.</param>
+            <param name="destIndex">Index to start writing.</param>
+            <remarks>The name comes from the original Snappy C++ source. I don't think there is a good way to look at 
+            things in an aligned manner in the .NET Framework.</remarks>
+        </member>
+        <member name="M:Snappy.Sharp.Utilities.GetFourBytes(System.Byte[],System.Int32)">
+            <summary>>
+             Reads 4 bytes from memory into a uint. Does not take host enianness into account.
+             </summary>
+        </member>
+        <member name="M:Snappy.Sharp.Utilities.GetEightBytes(System.Byte[],System.Int32)">
+            <summary>>
+             Reads 8 bytes from memory into a uint. Does not take host enianness into account.
+             </summary>
+        </member>
+        <member name="M:Thrift.Collections.TCollections.Equals(System.Collections.IEnumerable,System.Collections.IEnumerable)">
+            <summary>
+            This will return true if the two collections are value-wise the same.
+            If the collection contains a collection, the collections will be compared using this method.
+            </summary>
+        </member>
+        <member name="M:Thrift.Collections.TCollections.GetHashCode(System.Collections.IEnumerable)">
+            <summary>
+            This returns a hashcode based on the value of the enumerable.
+            </summary>
+        </member>
+        <member name="T:Thrift.Protocol.TAbstractBase">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Thrift.Protocol.TAbstractBase.Write(Thrift.Protocol.TProtocol)">
+            <summary>
+            Writes the objects out to the protocol
+            </summary>
+            <param name="tProtocol"></param>
+        </member>
+        <member name="M:Thrift.Protocol.TBase.Read(Thrift.Protocol.TProtocol)">
+            
+             Reads the TObject from the given input protocol.
+            
+        </member>
+        <member name="T:Thrift.Protocol.TBinaryProtocol.Factory">
+            Factory
+        </member>
+        <member name="T:Thrift.Protocol.TCompactProtocol.Types">
+            All of the on-wire type codes.
+        </member>
+        <member name="F:Thrift.Protocol.TCompactProtocol.lastField_">
+            Used to keep track of the last field for the current and previous structs,
+            so we can do the delta stuff.
+        </member>
+        <member name="F:Thrift.Protocol.TCompactProtocol.booleanField_">
+            If we encounter a boolean field begin, save the TField here so it can
+            have the value incorporated.
+        </member>
+        <member name="F:Thrift.Protocol.TCompactProtocol.boolValue_">
+            If we Read a field header, and it's a boolean field, save the boolean
+            value here so that ReadBool can use it.
+        </member>
+        <member name="T:Thrift.Protocol.TCompactProtocol.Factory">
+            Factory
+        </member>
+        <member name="F:Thrift.Protocol.TCompactProtocol.byteDirectBuffer">
+            Writes a byte without any possibility of all that field header nonsense.
+            Used internally by other writing methods that know they need to Write a byte.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteByteDirect(System.Int32)">
+            Writes a byte without any possibility of all that field header nonsense.
+        </member>
+        <member name="F:Thrift.Protocol.TCompactProtocol.i32buf">
+            Write an i32 as a varint. Results in 1-5 bytes on the wire.
+            TODO: make a permanent buffer like WriteVarint64?
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteMessageBegin(Thrift.Protocol.TMessage)">
+            Write a message header to the wire. Compact Protocol messages contain the
+            protocol version so we can migrate forwards in the future if need be.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteStructBegin(Thrift.Protocol.TStruct)">
+            Write a struct begin. This doesn't actually put anything on the wire. We
+            use it as an opportunity to put special placeholder markers on the field
+            stack so we can get the field id deltas correct.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteStructEnd">
+            Write a struct end. This doesn't actually put anything on the wire. We use
+            this as an opportunity to pop the last field from the current struct off
+            of the field stack.
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:Thrift.Protocol.TCompactProtocol.WriteFieldBegin(Thrift.Protocol.TField)" -->
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteFieldBeginInternal(Thrift.Protocol.TField,System.Byte)">
+            The workhorse of WriteFieldBegin. It has the option of doing a
+            'type override' of the type header. This is used specifically in the
+            boolean field case.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteFieldStop">
+            Write the STOP symbol so we know there are no more fields in this struct.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteMapBegin(Thrift.Protocol.TMap)">
+            Write a map header. If the map is empty, omit the key and value type
+            headers, as we don't need any additional information to skip it.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteListBegin(Thrift.Protocol.TList)">
+            Write a list header.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteSetBegin(Thrift.Protocol.TSet)">
+            Write a set header.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteBool(System.Boolean)">
+            Write a boolean value. Potentially, this could be a boolean field, in
+            which case the field header info isn't written yet. If so, decide what the
+            right type header is for the value and then Write the field header.
+            Otherwise, Write a single byte.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteByte(System.SByte)">
+            Write a byte. Nothing to see here!
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteI16(System.Int16)">
+            Write an I16 as a zigzag varint.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteI32(System.Int32)">
+            Write an i32 as a zigzag varint.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteI64(System.Int64)">
+            Write an i64 as a zigzag varint.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteDouble(System.Double)">
+            Write a double to the wire as 8 bytes.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteString(System.String)">
+            Write a string to the wire with a varint size preceding.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteBinary(System.Byte[])">
+            Write a byte array, using a varint for the size.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.WriteCollectionBegin(Thrift.Protocol.TType,System.Int32)">
+            Abstract method for writing the start of lists and sets. List and sets on
+            the wire differ only by the type indicator.
+        </member>
+        <member name="F:Thrift.Protocol.TCompactProtocol.varint64out">
+            Write an i64 as a varint. Results in 1-10 bytes on the wire.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.longToZigzag(System.Int64)">
+            Convert l into a zigzag long. This allows negative numbers to be
+            represented compactly as a varint.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.intToZigZag(System.Int32)">
+            Convert n into a zigzag int. This allows negative numbers to be
+            represented compactly as a varint.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.fixedLongToBytes(System.Int64,System.Byte[],System.Int32)">
+            Convert a long into little-endian bytes in buf starting at off and going
+            until off+7.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadMessageBegin">
+            Read a message header.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadStructBegin">
+            Read a struct begin. There's nothing on the wire for this, but it is our
+            opportunity to push a new struct begin marker onto the field stack.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadStructEnd">
+            Doesn't actually consume any wire data, just removes the last field for
+            this struct from the field stack.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadFieldBegin">
+            Read a field header off the wire.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadMapBegin">
+            Read a map header off the wire. If the size is zero, skip Reading the key
+            and value type. This means that 0-length maps will yield TMaps without the
+            "correct" types.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadListBegin">
+            Read a list header off the wire. If the list size is 0-14, the size will
+            be packed into the element type header. If it's a longer list, the 4 MSB
+            of the element type header will be 0xF, and a varint will follow with the
+            true size.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadSetBegin">
+            Read a set header off the wire. If the set size is 0-14, the size will
+            be packed into the element type header. If it's a longer set, the 4 MSB
+            of the element type header will be 0xF, and a varint will follow with the
+            true size.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadBool">
+            Read a boolean off the wire. If this is a boolean field, the value should
+            already have been Read during ReadFieldBegin, so we'll just consume the
+            pre-stored value. Otherwise, Read a byte.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadByte">
+            Read a single byte off the wire. Nothing interesting here.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadI16">
+            Read an i16 from the wire as a zigzag varint.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadI32">
+            Read an i32 from the wire as a zigzag varint.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadI64">
+            Read an i64 from the wire as a zigzag varint.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadDouble">
+            No magic here - just Read a double off the wire.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadString">
+            Reads a byte[] (via ReadBinary), and then UTF-8 decodes it.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadBinary">
+            Read a byte[] from the wire.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadBinary(System.Int32)">
+            Read a byte[] of a known length from the wire.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadVarint32">
+            Read an i32 from the wire as a varint. The MSB of each byte is set
+            if there is another byte to follow. This can Read up to 5 bytes.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.ReadVarint64">
+            Read an i64 from the wire as a proper varint. The MSB of each byte is set
+            if there is another byte to follow. This can Read up to 10 bytes.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.zigzagToInt(System.UInt32)">
+            Convert from zigzag int to int.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.zigzagToLong(System.UInt64)">
+            Convert from zigzag long to long.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.bytesToLong(System.Byte[])">
+            Note that it's important that the mask bytes are long literals,
+            otherwise they'll default to ints, and when you shift an int left 56 bits,
+            you just get a messed up int.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.getTType(System.Byte)">
+            Given a TCompactProtocol.Types constant, convert it to its corresponding
+            TType value.
+        </member>
+        <member name="M:Thrift.Protocol.TCompactProtocol.getCompactType(Thrift.Protocol.TType)">
+            Given a TType value, find the appropriate TCompactProtocol.Types constant.
+        </member>
+        <member name="T:Thrift.Protocol.TMultiplexedProcessor">
+             TMultiplexedProcessor is a TProcessor allowing a single TServer to provide multiple services.
+             To do so, you instantiate the processor and then register additional processors with it,
+             as shown in the following example:
+            
+                 TMultiplexedProcessor processor = new TMultiplexedProcessor();
+            
+                 processor.registerProcessor(
+                     "Calculator",
+                     new Calculator.Processor(new CalculatorHandler()));
+            
+                 processor.registerProcessor(
+                     "WeatherReport",
+                     new WeatherReport.Processor(new WeatherReportHandler()));
+            
+                 TServerTransport t = new TServerSocket(9090);
+                 TSimpleServer server = new TSimpleServer(processor, t);
+            
+                 server.serve();
+        </member>
+        <member name="M:Thrift.Protocol.TMultiplexedProcessor.RegisterProcessor(System.String,Thrift.TProcessor)">
+             'Register' a service with this TMultiplexedProcessor. This allows us to broker
+             requests to individual services by using the service name to select them at request time.
+            
+             Args:
+             - serviceName    Name of a service, has to be identical to the name
+                              declared in the Thrift IDL, e.g. "WeatherReport".
+             - processor      Implementation of a service, usually referred to as "handlers",
+                              e.g. WeatherReportHandler implementing WeatherReport.Iface.
+        </member>
+        <member name="M:Thrift.Protocol.TMultiplexedProcessor.Process(Thrift.Protocol.TProtocol,Thrift.Protocol.TProtocol)">
+             This implementation of process performs the following steps:
+            
+             - Read the beginning of the message.
+             - Extract the service name from the message.
+             - Using the service name to locate the appropriate processor.
+             - Dispatch to the processor, with a decorated instance of TProtocol
+                that allows readMessageBegin() to return the original TMessage.
+            
+             Throws an exception if
+             - the message type is not CALL or ONEWAY,
+             - the service name was not found in the message, or
+             - the service name has not been RegisterProcessor()ed.
+        </member>
+        <member name="T:Thrift.Protocol.TMultiplexedProcessor.StoredMessageProtocol">
+            Our goal was to work with any protocol.  In order to do that, we needed
+            to allow them to call readMessageBegin() and get a TMessage in exactly
+            the standard format, without the service name prepended to TMessage.name.
+        </member>
+        <member name="T:Thrift.Protocol.TMultiplexedProtocol">
+             TMultiplexedProtocol is a protocol-independent concrete decorator that allows a Thrift
+             client to communicate with a multiplexing Thrift server, by prepending the service name
+             to the function name during function calls.
+            
+             NOTE: THIS IS NOT TO BE USED BY SERVERS.
+             On the server, use TMultiplexedProcessor to handle requests from a multiplexing client.
+            
+             This example uses a single socket transport to invoke two services:
+            
+                 TSocket transport = new TSocket("localhost", 9090);
+                 transport.open();
+            
+                 TBinaryProtocol protocol = new TBinaryProtocol(transport);
+            
+                 TMultiplexedProtocol mp = new TMultiplexedProtocol(protocol, "Calculator");
+                 Calculator.Client service = new Calculator.Client(mp);
+            
+                 TMultiplexedProtocol mp2 = new TMultiplexedProtocol(protocol, "WeatherReport");
+                 WeatherReport.Client service2 = new WeatherReport.Client(mp2);
+            
+                 System.out.println(service.add(2,2));
+                 System.out.println(service2.getTemperature());
+            
+        </member>
+        <member name="F:Thrift.Protocol.TMultiplexedProtocol.SEPARATOR">
+            Used to delimit the service name from the function name 
+        </member>
+        <member name="M:Thrift.Protocol.TMultiplexedProtocol.#ctor(Thrift.Protocol.TProtocol,System.String)">
+             Wrap the specified protocol, allowing it to be used to communicate with a
+             multiplexing server.  The <code>serviceName</code> is required as it is
+             prepended to the message header so that the multiplexing server can broker
+             the function call to the proper service.
+            
+             Args:
+              protocol        Your communication protocol of choice, e.g. TBinaryProtocol
+              serviceName     The service name of the service communicating via this protocol.
+        </member>
+        <member name="M:Thrift.Protocol.TMultiplexedProtocol.WriteMessageBegin(Thrift.Protocol.TMessage)">
+            Prepends the service name to the function name, separated by TMultiplexedProtocol.SEPARATOR.
+            Args:
+              tMessage     The original message.
+        </member>
+        <member name="T:Thrift.Protocol.TProtocolDecorator">
+             TProtocolDecorator forwards all requests to an enclosed TProtocol instance,
+             providing a way to author concise concrete decorator subclasses.  While it has
+             no abstract methods, it is marked abstract as a reminder that by itself,
+             it does not modify the behaviour of the enclosed TProtocol.
+            
+             See p.175 of Design Patterns (by Gamma et al.)
+             See TMultiplexedProtocol
+        </member>
+        <member name="M:Thrift.Protocol.TProtocolDecorator.#ctor(Thrift.Protocol.TProtocol)">
+            Encloses the specified protocol.
+            @param protocol All operations will be forward to this protocol.  Must be non-null.
+        </member>
+        <member name="T:Parquet.Attributes.ParquetColumnAttribute">
+            <summary>
+            Annotates a class property to provide some extra metadata for it.
+            </summary>
+        </member>
+        <member name="M:Parquet.Attributes.ParquetColumnAttribute.#ctor">
+            <summary>
+            Creates a new instance of the attribute clas
+            </summary>
+        </member>
+        <member name="M:Parquet.Attributes.ParquetColumnAttribute.#ctor(System.String)">
+            <summary>
+            Creates a new instance of the attribute class specifying column name
+            </summary>
+            <param name="name">Column name</param>
+        </member>
+        <member name="P:Parquet.Attributes.ParquetColumnAttribute.Name">
+            <summary>
+            Column name. When undefined a default propety name is used which is simply the declared property name on the class.
+            </summary>
+        </member>
+        <member name="T:Parquet.CompressionMethod">
+            <summary>
+            Parquet compression method
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.None">
+            <summary>
+            No compression
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.Gzip">
+            <summary>
+            Gzip compression
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.Snappy">
+            <summary>
+            Snappy compression 
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Concrete.BooleanDataTypeHandler.ReadSingle(System.IO.BinaryReader,Parquet.Thrift.SchemaElement,System.Int32)">
+            <summary>
+            Normally bools are packed, which is implemented in <see cref="M:Parquet.Data.Concrete.BooleanDataTypeHandler.Read(System.IO.BinaryReader,Parquet.Thrift.SchemaElement,System.Array,System.Int32)"/>
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.DataColumn">
+            <summary>
+            The primary low-level structure to hold data for a parqut column.
+            Handles internal data composition/decomposition to enrich with custom data Parquet format requires.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DataColumn.#ctor(Parquet.Data.DataField,System.Array,System.Int32[])">
+            <summary>
+            
+            </summary>
+            <param name="field"></param>
+            <param name="data"></param>
+            <param name="repetitionLevels"></param>
+        </member>
+        <member name="P:Parquet.Data.DataColumn.Data">
+            <summary>
+            Column data where definition levels are already applied
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataColumn.RepetitionLevels">
+            <summary>
+            Repetition levels if any.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataColumn.Field">
+            <summary>
+            Data field
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataColumn.HasRepetitions">
+            <summary>
+            When true, this field has repetitions. It doesn't mean that it's an array though. This property simply checks that
+            repetition levels are present on this column.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DataColumn.ToString">
+            <summary>
+            pretty print
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.DataType">
+            <summary>
+            List of supported data types
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Unspecified">
+            <summary>
+            Type is not specified, shouldn't be used.
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Boolean">
+            <summary>
+            Boolean
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Byte">
+            <summary>
+            Byte
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.SignedByte">
+            <summary>
+            Signed byte data type
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.UnsignedByte">
+            <summary>
+            Unsigned byte
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Short">
+            <summary>
+            Short
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.UnsignedShort">
+            <summary>
+            Unsigned short
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Int16">
+            <summary>
+            16 bit integer
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.UnsignedInt16">
+            <summary>
+            16 bit unsigned integer
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Int32">
+            <summary>
+            32 bit integer
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Int64">
+            <summary>
+            64 bit integer
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Int96">
+            <summary>
+            96 bit integer
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.ByteArray">
+            <summary>
+            Array of bytes
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.String">
+            <summary>
+            UTF-8 string
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Float">
+            <summary>
+            Float
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Double">
+            <summary>
+            Double
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Decimal">
+            <summary>
+            Decimal
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.DateTimeOffset">
+            <summary>
+            DateTimeOffset
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DataType.Interval">
+            <summary>
+            Interval
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.DateTimeFormat">
+            <summary>
+            Choice of representing dates
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DateTimeFormat.Impala">
+            <summary>
+            The impala compatible date, which maps to INT96. This is the default datetime representation.
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DateTimeFormat.DateAndTime">
+            <summary>
+            This is the default Parquet datetime representation, but not default option for saving which is <see cref="F:Parquet.Data.DateTimeFormat.Impala"/>.
+            Stores date and time up to millisecond precision as INT64
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.DateTimeFormat.Date">
+            <summary>
+            Only stores a date. Time portion is truncated. Internally stored as INT32
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.IDataTypeHandler.IsMatch(Parquet.Thrift.SchemaElement,Parquet.ParquetOptions)">
+            <summary>
+            Called by the library to determine if this data handler can be used in current schema position
+            </summary>
+            <param name="tse"></param>
+            <param name="formatOptions"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.IDataTypeHandler.Read(System.IO.BinaryReader,Parquet.Thrift.SchemaElement,System.Int32)">
+            <summary>
+            Reads a single value from the current stream position. This shouldn't be used normally, however it's useful when decoding parquet stats.
+            </summary>
+            <param name="reader">Incoming data</param>
+            <param name="tse">Schema element</param>
+            <param name="length">Number of bytes to read (type specific). Pass -1 to read the length from incoming stream if you don't know how long the buffer is.</param>
+        </member>
+        <member name="M:Parquet.Data.IDataTypeHandler.GetArray(System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Creates or rents a native array
+            </summary>
+            <param name="minCount">Minimum element count. Realistically there could be more elements than you've asked for only when arrays are rented.</param>
+            <param name="rent">Rent or create</param>
+            <param name="isNullable">Nullable elements or not</param>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.Data.Rows.DataColumnEnumerator">
+            <summary>
+            Helps iterating over <see cref="P:Parquet.Data.Rows.DataColumnEnumerator.DataColumn"/> returning either a singular value or an array if the column is repeated.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.LazyColumnEnumerator.ToEnumeratorList">
+            <summary>
+            Helper method to get all elements as a list of enumerators
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.LazyColumnEnumerator.ReadWindow">
+            <summary>
+            Reads current element using repetition and definition levels. Given "current" repetiton level
+            skips over the nest level to create a "window" over appropriate nesting level. This creates an illusion of
+            nested enumerators so that you can build data structures from honestly flat parquet columns.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.Data.Rows.Row">
+            <summary>
+            Represents a tabular row
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.#ctor(System.Object)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Data.Rows.Row"/> class which has only one single column.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.SingleCell(System.Object)">
+            <summary>
+            Creates a single cell row. Use this method to avoid overloading confusion.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.#ctor(System.Collections.Generic.IEnumerable{System.Object})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Data.Rows.Row"/> class.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.#ctor(System.Object[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Data.Rows.Row"/> class.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Rows.Row.Values">
+            <summary>
+            Raw values
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Rows.Row.Length">
+            <summary>
+            Gets the number of values in this row
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Rows.Row.Item(System.Int32)">
+            <summary>
+            Gets the row value by index
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetBoolean(System.Int32)">
+            <summary>
+            Gets the value as boolean
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetInt(System.Int32)">
+            <summary>
+            Gets the value as integer
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetFloat(System.Int32)">
+            <summary>
+            Gets the value as float
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetLong(System.Int32)">
+            <summary>
+            Gets the value as long
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetDouble(System.Int32)">
+            <summary>
+            Gets the value as double
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetBigInt(System.Int32)">
+            <summary>
+            Gets the value as big integer
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetByteArray(System.Int32)">
+            <summary>
+            Gets the value as byte array
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetString(System.Int32)">
+            <summary>
+            Gets the value as string
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetDateTimeOffset(System.Int32)">
+            <summary>
+            Gets the value as <see cref="T:System.DateTimeOffset"/>
+            </summary>
+            <param name="i">Value index</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.IsNullAt(System.Int32)">
+            <summary>
+            Returns true if value at column <paramref name="i"/> is NULL.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.Get``1(System.Int32)">
+            <summary>
+            Gets the value trying to cast to <typeparamref name="T"/>
+            </summary>
+            <param name="i">Value index</param>
+            <exception cref="T:System.ArgumentException">Cannot cast <typeparamref name="T"/></exception>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.ToString">
+            <summary>
+            Converts to internal format string
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.ToString(System.String)">
+            <summary>
+            Convert to string with optional formatting
+            </summary>
+            <param name="format">jsq - one line single-quote json, default, j - one line json</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.Equals(Parquet.Data.Rows.Row)">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.Equals(Parquet.Data.Rows.Row,System.Boolean)">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Row.GetEnumerator">
+            <summary>
+            Gets object enumerator
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.Rows.RowValidator">
+            <summary>
+            Everything is rows!!! Not dealing with dictionaries etc. seems like a brilliant idea!!!
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.Rows.Table">
+            <summary>
+            Represents a table or table chunk that stores data in row format.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.#ctor(Parquet.Data.Schema)">
+            <summary>
+            Creates an empty table with specified schema
+            </summary>
+            <param name="schema">Parquet file schema.</param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.#ctor(Parquet.Data.Field[])">
+            <summary>
+            Creates an empty table with specified fiels as schema
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.#ctor(Parquet.Data.Schema,Parquet.Data.DataColumn[],System.Int64)">
+            <summary>
+            Creates a table with specified schema
+            </summary>
+            <param name="schema">Parquet file schema.</param>
+            <param name="tableData">Optionally initialise this table with data columns that correspond to the passed <paramref name="schema"/></param>
+            <param name="rowCount"></param>
+        </member>
+        <member name="P:Parquet.Data.Rows.Table.Schema">
+            <summary>
+            Table schema
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Rows.Table.Item(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="P:Parquet.Data.Rows.Table.Count">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Rows.Table.IsReadOnly">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.Add(Parquet.Data.Rows.Row)">
+            <summary>
+            Adds a new row
+            </summary>
+            <param name="item"></param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.Add(System.Object[])">
+            <summary>
+            Adds a new row from passed cells
+            </summary>
+            <param name="rowCells"></param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.Clear">
+            <summary>
+            /
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.Contains(Parquet.Data.Rows.Row)">
+            <summary>
+            
+            </summary>
+            <param name="item"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.CopyTo(Parquet.Data.Rows.Row[],System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="array"></param>
+            <param name="arrayIndex"></param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.GetEnumerator">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.IndexOf(Parquet.Data.Rows.Row)">
+            <summary>
+            
+            </summary>
+            <param name="item"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.Insert(System.Int32,Parquet.Data.Rows.Row)">
+            <summary>
+            
+            </summary>
+            <param name="index"></param>
+            <param name="item"></param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.Remove(Parquet.Data.Rows.Row)">
+            <summary>
+            
+            </summary>
+            <param name="item"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.RemoveAt(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="index"></param>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.Equals(Parquet.Data.Rows.Table)">
+            <summary>
+            Compares tables for equality, including:
+            - schema equality
+            - row count
+            - row values equality
+            </summary>
+            <param name="other"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.Equals(Parquet.Data.Rows.Table,System.Boolean)">
+            <summary>
+            Compares tables for equality, including:
+            - schema equality
+            - row count
+            - row values equality
+            </summary>
+            <param name="other"></param>
+            <param name="throwExceptions"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.ToString">
+            <summary>
+            Converts table to multiline json. Only shows the first 10 rows as table may be large.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.ToString(System.String,System.IFormatProvider)">
+            <summary>
+            Converts to string with optional formatting.  Only shows the first 10 rows as table may be large.
+            </summary>
+            <param name="format">jsq - one line single-quote json, default, j - one line json</param>
+            <param name="formatProvider">Optaional format provider, not used at the moment</param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Rows.Table.ToString(System.String)">
+            <summary>
+            Converts to string with optional formatting.  Only shows the first 10 rows as table may be large.
+            </summary>
+            <param name="format">jsq - one line single-quote json, default, j - one line json</param>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.Data.Rows.TableReader">
+            <summary>
+            Navigates the table
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Rows.TableReader.#ctor(Parquet.Data.Rows.Table)">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.SchemaType">
+            <summary>
+            Type of schema
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.SchemaType.Data">
+            <summary>
+            Contains actual values i.e. declared by a <see cref="T:Parquet.Data.DataField"/>
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.SchemaType.Map">
+            <summary>
+            Contains dictionary definition
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.SchemaType.Struct">
+            <summary>
+            Contains structure definition
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.SchemaType.List">
+            <summary>
+            Contains list definition
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.DataField">
+            <summary>
+            Field containing actual data, unlike fields containing metadata.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataField.DataType">
+            <summary>
+            Data type of this element
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataField.HasNulls">
+            <summary>
+            When true, this element is allowed to have nulls
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataField.IsArray">
+            <summary>
+            When true, the value is an array rather than a single value.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataField.ClrType">
+            <summary>
+            CLR type of this column. Not sure whether to expose this externally yet.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DataField.#ctor(System.String,System.Type)">
+            <summary>
+            Creates a new instance of <see cref="T:Parquet.Data.DataField"/> by name and CLR type.
+            </summary>
+            <param name="name">Field name</param>
+            <param name="clrType">CLR type of this field. The type is internally discovered and expanded into appropriate Parquet flags.</param>
+        </member>
+        <member name="M:Parquet.Data.DataField.#ctor(System.String,Parquet.Data.DataType,System.Boolean,System.Boolean)">
+            <summary>
+            Creates a new instance of <see cref="T:Parquet.Data.DataField"/> by specifying all the required attributes.
+            </summary>
+            <param name="name">Field name.</param>
+            <param name="dataType">Native Parquet type</param>
+            <param name="hasNulls">When true, the field accepts null values. Note that nullable values take slightly more disk space comparing to non-nullable.</param>
+            <param name="isArray">When true, each value of this field can have multiple values, similar to array in .NET</param>
+        </member>
+        <member name="M:Parquet.Data.DataField.PropagateLevels(System.Int32,System.Int32)">
+            <summary>
+            see
+            <see cref="M:Parquet.File.ThriftFooter.GetLevels(Parquet.Thrift.ColumnChunk,System.Int32@,System.Int32@)"/>
+            and
+            <see cref="M:Parquet.Data.BasicDataTypeHandler`1.CreateSchemaElement(System.Collections.Generic.IList{Parquet.Thrift.SchemaElement},System.Int32@,System.Int32@)"/>
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DataField.Equals(Parquet.Data.DataField)">
+            <summary>
+            Indicates whether the current object is equal to another object of the same type.
+            </summary>
+            <param name="other">An object to compare with this object.</param>
+            <returns>
+            true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:Parquet.Data.DataField.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object" />, is equal to this instance.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object" /> to compare with this instance.</param>
+            <returns>
+              <c>true</c> if the specified <see cref="T:System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Parquet.Data.DataField.GetHashCode">
+            <summary>
+            Returns a hash code for this instance.
+            </summary>
+            <returns>
+            A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
+            </returns>
+        </member>
+        <member name="T:Parquet.Data.DataField`1">
+            <summary>
+            Element of dataset's schema. Provides a helper way to construct a schema element with .NET generics.
+            <typeparamref name="T">Type of element in the column</typeparamref>
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DataField`1.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Data.Field"/> class.
+            </summary>
+            <param name="name">Column name</param>
+        </member>
+        <member name="T:Parquet.Data.DateTimeDataField">
+            <summary>
+            Schema element for <see cref="T:System.DateTimeOffset"/> which allows to specify precision
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DateTimeDataField.DateTimeFormat">
+            <summary>
+            Desired data format, Parquet specific
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DateTimeDataField.#ctor(System.String,Parquet.Data.DateTimeFormat,System.Boolean,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Data.DateTimeDataField"/> class.
+            </summary>
+            <param name="name">The name.</param>
+            <param name="format">The format.</param>
+            <param name="hasNulls">Is 'DateTime?'</param>
+            <param name="isArray"></param>
+        </member>
+        <member name="T:Parquet.Data.DecimalDataField">
+            <summary>
+            Maps to Parquet decimal type, allowing to specify custom scale and precision
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DecimalDataField.Precision">
+            <summary>
+            Precision
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DecimalDataField.Scale">
+            <summary>
+            Scale
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DecimalDataField.ForceByteArrayEncoding">
+            <summary>
+            Gets a flag indicating whether byte array encoding is forced.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DecimalDataField.#ctor(System.String,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Constructs class instance
+            </summary>
+            <param name="name">The name of the column</param>
+            <param name="precision">Cusom precision</param>
+            <param name="scale">Custom scale</param>
+            <param name="forceByteArrayEncoding">Whether to force decimal type encoding as fixed bytes. Hive and Impala only understands decimals when forced to true.</param>
+            <param name="hasNulls">Is 'decimal?'</param>
+            <param name="isArray">Indicates whether this field is repeatable.</param>
+        </member>
+        <member name="T:Parquet.Data.Field">
+            <summary>
+            Element of dataset's schema
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Field.SchemaType">
+            <summary>
+            Type of schema in this field
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Field.Name">
+            <summary>
+            Column name
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Field.Path">
+            <summary>
+            Gets Parquet column path. For non-nested columns always equals to column <see cref="P:Parquet.Data.Field.Name"/> otherwise contains
+            a dot (.) separated path to the column within Parquet file. Note that this is a physical path which depends on field
+            schema and you shouldn't build any reasonable business logic based on it.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Field.MaxRepetitionLevel">
+            <summary>
+            Max repetition level
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Field.MaxDefinitionLevel">
+            <summary>
+            Max definition level
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Field.ClrPropName">
+            <summary>
+            Used internally for serialisation
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Field.#ctor(System.String,Parquet.Data.SchemaType)">
+            <summary>
+            Constructs a field with only requiremd parameters
+            </summary>
+            <param name="name">Field name, required</param>
+            <param name="schemaType">Type of schema of this field</param>
+        </member>
+        <member name="M:Parquet.Data.Field.PropagateLevels(System.Int32,System.Int32)">
+            <summary>
+            Called by schema when field hierarchy is constructed, so that fields can calculate levels as this is
+            done in reverse order of construction and needs to be done after data is ready
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Field.ToString">
+            <summary>
+            pretty prints
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.ListField">
+            <summary>
+            Represents a list of items. The list can contain either a normal data field or a complex structure.
+            If you need to get a list of primitive data fields it's more efficient to use arrays.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.ListField.Item">
+            <summary>
+            Item contained within this list
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.ListField.#ctor(System.String,Parquet.Data.Field)">
+            <summary>
+            Creates a new instance of <see cref="T:Parquet.Data.ListField"/>
+            </summary>
+            <param name="name">Field name</param>
+            <param name="item">Field representing list element</param>
+        </member>
+        <member name="M:Parquet.Data.ListField.Equals(Parquet.Data.ListField)">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.ListField.Equals(System.Object)">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.ListField.GetHashCode">
+            <summary>
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.MapField">
+            <summary>
+            Implements a dictionary field
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.MapField.Key">
+            <summary>
+            Data field used as a key
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.MapField.Value">
+            <summary>
+            Data field used as a value
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.MapField.#ctor(System.String,Parquet.Data.DataField,Parquet.Data.DataField)">
+            <summary>
+            Declares a map field
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.MapField.CreateSimpleDictionary">
+            <summary>
+            Creates an empty dictionary to keep values for this map field. Only works when both key and value are <see cref="T:Parquet.Data.DataField"/>
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.MapField.Equals(System.Object)">
+            <summary>
+            <see cref="M:Parquet.Data.MapField.Equals(System.Object)"/>
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.MapField.GetHashCode">
+            <summary>
+            <see cref="M:Parquet.Data.MapField.GetHashCode"/>
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.Schema">
+            <summary>
+            Represents dataset schema
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.Schema.PathSeparator">
+            <summary>
+            Symbol used to separate path parts in schema element path
+            </summary>
+        </member>
+        <member name="F:Parquet.Data.Schema.PathSeparatorChar">
+            <summary>
+            Character used to separate path parts in schema element path
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Schema.#ctor(System.Collections.Generic.IReadOnlyCollection{Parquet.Data.Field})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Data.Schema"/> class from schema elements.
+            </summary>
+            <param name="fields">The elements.</param>
+        </member>
+        <member name="M:Parquet.Data.Schema.#ctor(Parquet.Data.Field[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Data.Schema"/> class.
+            </summary>
+            <param name="fields">The elements.</param>
+        </member>
+        <member name="P:Parquet.Data.Schema.Fields">
+            <summary>
+            Gets the schema elements
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.Schema.Item(System.Int32)">
+            <summary>
+            Get schema element by index
+            </summary>
+            <param name="i">Index of schema element</param>
+            <returns>Schema element</returns>
+        </member>
+        <member name="M:Parquet.Data.Schema.GetDataFields">
+            <summary>
+            Gets a flat list of all data fields in this schema
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.Schema.Equals(Parquet.Data.Schema)">
+            <summary>
+            Indicates whether the current object is equal to another object of the same type.
+            </summary>
+            <param name="other">An object to compare with this object.</param>
+            <returns>
+            true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:Parquet.Data.Schema.GetNotEqualsMessage(Parquet.Data.Schema,System.String,System.String)">
+            <summary>
+            Compares this schema to <paramref name="other"/> and produces a human readable message describing the differences.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.Schema.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object" />, is equal to this instance.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object" /> to compare with this instance.</param>
+            <returns>
+              <c>true</c> if the specified <see cref="T:System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Parquet.Data.Schema.GetHashCode">
+            <summary>
+            Returns a hash code for this instance.
+            </summary>
+            <returns>
+            A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+            </returns>
+        </member>
+        <member name="M:Parquet.Data.Schema.ToString">
+            <summary>
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.StructField">
+            <summary>
+            Represents a structure i.e. a container for other fields.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.StructField.#ctor(System.String,Parquet.Data.Field[])">
+            <summary>
+            Creates a new structure field 
+            </summary>
+            <param name="name">Structure name</param>
+            <param name="elements">List of elements</param>
+        </member>
+        <member name="P:Parquet.Data.StructField.Fields">
+            <summary>
+            Elements of this structure
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.StructField.Equals(Parquet.Data.StructField)">
+            <summary>
+            
+            </summary>
+            <param name="other"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.StructField.Equals(System.Object)">
+            <summary>
+            
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Data.StructField.GetHashCode">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.CollectionExtensions.Batch``1(System.Collections.Generic.IEnumerable{``0},System.Int32)">
+            <summary>
+            Batch through IEnumerable without going to the beginning every time. May need optimisations but OK so far.
+            </summary>
+        </member>
+        <member name="T:Parquet.ThriftExtensions">
+            <summary>
+            Internal thrift data structure helpers
+            </summary>
+        </member>
+        <member name="M:Parquet.TypeExtensions.CreateGenericList(System.Type)">
+            <summary>
+            Creates a generic typed list of elements of this type.
+            </summary>
+        </member>
+        <member name="M:Parquet.TypeExtensions.TryExtractEnumerableType(System.Type,System.Type@)">
+            <summary>
+            Checks if this type implements generic IEnumerable or an array.
+            </summary>
+            <param name="t"></param>
+            <param name="baseType"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.File.BytesOwner">
+            <summary>
+            Provides a back-reference to an allocator which has created the original byte array.
+            For instance, if this byte array was rented from a pool, the client won't know how to return it so
+            he will just dispose it.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.Streams.IMarkStream.MarkWriteFinished">
+            <summary>
+            Crappy workaround to mark stream as finished for writing. To be deleted once Snappy supports streaming.
+            </summary>
+        </member>
+        <member name="T:Parquet.File.Streams.SnappyInMemoryStream">
+            <summary>
+            In-memory hacky implementation of Snappy streaming as Snappy.Sharp's implementation is a work in progress
+            </summary>
+        </member>
+        <member name="T:Parquet.File.ThriftStream">
+            <summary>
+            Utility methods to work with Thrift data in a stream
+            </summary>
+        </member>
+        <member name="M:Parquet.File.ThriftStream.Read``1">
+            <summary>
+            Reads typed structure from incoming stream
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.File.ThriftStream.Write``1(``0,System.Boolean)">
+            <summary>
+            Writes types structure to the destination stream
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="obj"></param>
+            <param name="rewind">When true, rewinds to the original position before writing</param>
+            <returns>Actual size of the object written</returns>
+        </member>
+        <member name="T:Parquet.File.Values.Primitives.BigDecimal">
+            <summary>
+            A class that encapsulates BigDecimal like the java class
+            </summary>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.BigDecimal.DecimalValue">
+            <summary>
+            Contains a Decimal value that is the big integer
+            </summary>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.BigDecimal.Scale">
+            <summary>
+            The scale of the decimal value
+            </summary>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.BigDecimal.Precision">
+            <summary>
+            The precision of the decimal value
+            </summary>
+        </member>
+        <member name="M:Parquet.File.Values.Primitives.BigDecimal.op_Implicit(Parquet.File.Values.Primitives.BigDecimal)~System.Decimal">
+            <summary>
+            Converts a BigDecimal to a decimal
+            </summary>
+            <param name="bd">The BigDecimal value</param>
+        </member>
+        <member name="M:Parquet.File.Values.Primitives.BigDecimal.GetBufferSize(System.Int32)">
+            <summary>
+            Gets buffer size enough to be able to hold the decimal number of a specific precision
+            </summary>
+            <param name="precision">Precision value</param>
+            <returns>Length in bytes</returns>
+        </member>
+        <member name="T:Parquet.File.Values.Primitives.Interval">
+            <summary>
+            A parquet interval type compatible with a Spark INTERVAL type
+            12 byte little Endian structure fits in an INT96 original type with an INTERVAL converted type
+            </summary>
+        </member>
+        <member name="M:Parquet.File.Values.Primitives.Interval.#ctor(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Used to create an interval type
+            </summary>
+            <param name="months">The month interval</param>
+            <param name="days">The days interval</param>
+            <param name="millis">The milliseconds interval</param>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.Interval.Millis">
+            <summary>
+            Returns the number of milliseconds in the type
+            </summary>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.Interval.Days">
+            <summary>
+            Returns the number of days in the type
+            </summary>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.Interval.Months">
+            <summary>
+            Returns the number of months in type
+            </summary>
+        </member>
+        <member name="M:Parquet.File.Values.RunLengthBitPackingHybridValuesReader.ReadRle(System.Int32,System.IO.BinaryReader,System.Int32,System.Collections.Generic.List{System.Int32})">
+            <summary>
+            Read run-length encoded run from the given header and bit length.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.Values.RunLengthBitPackingHybridValuesReader.ReadUnsignedVarInt(System.IO.BinaryReader)">
+            <summary>
+            Read a value using the unsigned, variable int encoding.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.Values.RunLengthBitPackingHybridValuesWriter.WriteForwardOnly(System.IO.BinaryWriter,System.Int32,System.Int32[],System.Int32)">
+            <summary>
+            Writes to target stream without jumping around, therefore can be used in forward-only stream
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetActor">
+            <summary>
+            Base class for reader and writer
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetActor.Stream">
+            <summary>
+            Original stream to write or read
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetConvert">
+            <summary>
+            High-level object oriented API for Apache Parquet
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetConvert.Serialize``1(System.Collections.Generic.IEnumerable{``0},System.IO.Stream,Parquet.Data.Schema,Parquet.CompressionMethod,System.Int32)">
+            <summary>
+            Serialises a collection of classes into a Parquet stream
+            </summary>
+            <typeparam name="T">Class type</typeparam>
+            <param name="objectInstances">Collection of classes</param>
+            <param name="destination">Destination stream</param>
+            <param name="schema">Optional schema to use. When not specified the class schema will be discovered and everything possible will be
+            written to the stream. If you want to write only a subset of class properties please specify the schema yourself.
+            </param>
+            <param name="compressionMethod"><see cref="T:Parquet.CompressionMethod"/></param>
+            <param name="rowGroupSize"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetConvert.Serialize``1(System.Collections.Generic.IEnumerable{``0},System.String,Parquet.Data.Schema,Parquet.CompressionMethod)">
+            <summary>
+            Serialises a collection of classes into a Parquet file
+            </summary>
+            <typeparam name="T">Class type</typeparam>
+            <param name="objectInstances">Collection of classes</param>
+            <param name="filePath">Destination file path</param>
+            <param name="schema">Optional schema to use. When not specified the class schema will be discovered and everything possible will be
+            written to the stream. If you want to write only a subset of class properties please specify the schema yourself.
+            </param>
+            <param name="compressionMethod"><see cref="T:Parquet.CompressionMethod"/></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetConvert.Deserialize``1(System.IO.Stream)">
+            <summary>
+            
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="input"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.ParquetException">
+            <summary>
+            Parquet format specific
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetException.#ctor">
+            <summary>
+            Creates an instance
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetException.#ctor(System.String)">
+            <summary>
+            Creates an instance
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetException.#ctor(System.String,System.Exception)">
+            <summary>
+            Creates an instance
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetExtensions">
+            <summary>
+            Defines extension methods to simplify Parquet usage (experimental v3)
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetExtensions.WriteSingleRowGroupParquetFile(System.IO.Stream,Parquet.Data.Schema,Parquet.Data.DataColumn[])">
+            <summary>
+            Writes a file with a single row group
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetExtensions.ReadSingleRowGroupParquetFile(System.IO.Stream,Parquet.Data.Schema@,Parquet.Data.DataColumn[]@)">
+            <summary>
+            Reads the first row group from a file
+            </summary>
+            <param name="stream"></param>
+            <param name="schema"></param>
+            <param name="columns"></param>
+        </member>
+        <member name="M:Parquet.ParquetExtensions.Write(Parquet.ParquetWriter,Parquet.Data.Rows.Table)">
+            <summary>
+            Writes entire table in a single row group
+            </summary>
+            <param name="writer"></param>
+            <param name="table"></param>
+        </member>
+        <member name="M:Parquet.ParquetExtensions.ReadAsTable(Parquet.ParquetReader)">
+            <summary>
+            Reads the first row group as a table
+            </summary>
+            <param name="reader">Open reader</param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetExtensions.Write(Parquet.ParquetRowGroupWriter,Parquet.Data.Rows.Table)">
+            <summary>
+            Writes table to this row group
+            </summary>
+            <param name="writer"></param>
+            <param name="table"></param>
+        </member>
+        <member name="M:Parquet.ParquetExtensions.DecodeSingleStatsValue(Parquet.Thrift.FileMetaData,Parquet.Thrift.ColumnChunk,System.Byte[])">
+            <summary>
+            Decodes raw bytes from <see cref="T:Parquet.Thrift.Statistics"/> into a CLR value
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetOptions">
+            <summary>
+            Parquet options
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.TreatByteArrayAsString">
+            <summary>
+            When true byte arrays will be treated as UTF-8 strings
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.TreatBigIntegersAsDates">
+            <summary>
+            Gets or sets a value indicating whether big integers are always treated as dates
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetReader">
+            <summary>
+            Implements Apache Parquet format reader, experimental version for next major release.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetReader.#ctor(System.IO.Stream,Parquet.ParquetOptions,System.Boolean)">
+            <summary>
+            Creates an instance from input stream
+            </summary>
+            <param name="input">Input stream, must be readable and seekable</param>
+            <param name="parquetOptions">Optional reader options</param>
+            <param name="leaveStreamOpen">When true, leaves the stream passed in <paramref name="input"/> open after disposing the reader.</param>
+            <exception cref="T:System.ArgumentNullException">input</exception>
+            <exception cref="T:System.ArgumentException">stream must be readable and seekable - input</exception>
+            <exception cref="T:System.IO.IOException">not a Parquet file (size too small)</exception>
+        </member>
+        <member name="M:Parquet.ParquetReader.OpenFromFile(System.String,Parquet.ParquetOptions)">
+            <summary>
+            Opens reader from a file on disk. When the reader is disposed the file handle is automatically closed.
+            </summary>
+            <param name="filePath"></param>
+            <param name="parquetOptions"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetReader.ReadTableFromFile(System.String,Parquet.ParquetOptions)">
+            <summary>
+            Reads entire file as a table
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetReader.ReadTableFromStream(System.IO.Stream,Parquet.ParquetOptions)">
+            <summary>
+            Reads entire stream as a table
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetReader.RowGroupCount">
+            <summary>
+            Gets the number of rows groups in this file
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetReader.Schema">
+            <summary>
+            Reader schema
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetReader.ThriftMetadata">
+            <summary>
+            Internal parquet metadata
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetReader.OpenRowGroupReader(System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="index"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetReader.ReadEntireRowGroup(System.Int32)">
+            <summary>
+            Reads entire row group's data columns in one go.
+            </summary>
+            <param name="rowGroupIndex">Index of the row group. Default to the first row group if not specified.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetReader.Dispose">
+            <summary>
+            Disposes 
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetRowGroupReader">
+            <summary>
+            Reader for Parquet row groups
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetRowGroupReader.RowCount">
+            <summary>
+            Gets the number of rows in this row group
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ReadColumn(Parquet.Data.DataField)">
+            <summary>
+            Reads a column from this row group.
+            </summary>
+            <param name="field"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.Dispose">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetRowGroupWriter">
+            <summary>
+            Writer for Parquet row groups
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WriteColumn(Parquet.Data.DataColumn)">
+            <summary>
+            Writes next data column to parquet stream. Note that columns must be written in the order they are declared in the
+            file schema.
+            </summary>
+            <param name="column"></param>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.Dispose">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetWriter">
+            <summary>
+            Implements Apache Parquet format writer
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetWriter.CompressionMethod">
+            <summary>
+            Type of compression to use, defaults to <see cref="F:Parquet.CompressionMethod.Snappy"/>
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetWriter.#ctor(Parquet.Data.Schema,System.IO.Stream,Parquet.ParquetOptions,System.Boolean)">
+            <summary>
+            Creates an instance of parquet writer on top of a stream
+            </summary>
+            <param name="schema"></param>
+            <param name="output">Writeable, seekable stream</param>
+            <param name="formatOptions">Additional options</param>
+            <param name="append"></param>
+            <exception cref="T:System.ArgumentNullException">Output is null.</exception>
+            <exception cref="T:System.ArgumentException">Output stream is not writeable</exception>
+        </member>
+        <member name="M:Parquet.ParquetWriter.CreateRowGroup">
+            <summary>
+            Creates a new row group and a writer for it.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetWriter.Dispose">
+            <summary>
+            Disposes the writer and writes the file footer.
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.HttpEncoder.JavaScriptStringEncode(System.String)">
+            <summary>Encodes a string.</summary>
+            <param name="value">The string to encode.</param>
+            <returns>An encoded string.</returns>
+        </member>
+        <member name="T:Parquet.Serialization.ILExtensions">
+            <summary>
+            Extension methods to simplify MSIL generation
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.ILExtensions.CallVirt(System.Reflection.Emit.ILGenerator,System.Reflection.MethodInfo,System.Object[])">
+            <summary>
+            
+            </summary>
+            <param name="il"></param>
+            <param name="method"></param>
+            <param name="parameters">List of parameters, OpCode and LocalBuilder are supported</param>
+        </member>
+        <member name="T:Parquet.Serialization.SchemaReflector">
+            <summary>
+            Infers a class schema using reflection
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.SchemaReflector.#ctor(System.Type)">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.SchemaReflector.Reflect">
+            <summary>
+            
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Serialization.SchemaReflector.Reflect``1">
+            <summary>
+            
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.Serialization.Values.ConversionHelpers">
+            <summary>
+            This class is public to simplify use from Reflection
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.Values.ConversionHelpers.DateTimeFromDateTimeOffset(System.DateTimeOffset)">
+            <summary>
+            Convert DateTimeOffset to DateTime
+            </summary>
+            <param name="value">DateTimeOffset</param>
+            <returns>DateTime</returns>
+        </member>
+        <member name="M:Parquet.Serialization.Values.ConversionHelpers.NullableDateTimeFromDateTimeOffset(System.Nullable{System.DateTimeOffset})">
+            <summary>
+            Convert DateTimeOffset? to DateTime?
+            </summary>
+            <param name="value">DateTimeOffset?</param>
+            <returns>DateTime?</returns>
+        </member>
+        <member name="M:Parquet.Serialization.Values.ConversionHelpers.NullableDateTimeOffsetFromDateTime(System.Nullable{System.DateTime})">
+            <summary>
+            Convert DateTime? to DateTimeOffset?
+            </summary>
+            <param name="value">DateTime?</param>
+            <returns>DateTimeOffset?</returns>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnChunk.File_path">
+            <summary>
+            File where column data is stored.  If not set, assumed to be same file as
+            metadata.  This path is relative to the current file.
+            
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnChunk.File_offset">
+            <summary>
+            Byte offset in file_path to the ColumnMetaData *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnChunk.Meta_data">
+            <summary>
+            Column metadata for this chunk. This is the same content as what is at
+            file_path/file_offset.  Having it here has it replicated in the file
+            metadata.
+            
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.ColumnMetaData">
+            <summary>
+            Description for column metadata
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Type">
+            <summary>
+            Type of this column *
+            
+            <seealso cref="P:Parquet.Thrift.ColumnMetaData.Type"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Encodings">
+            <summary>
+            Set of all encodings used for this column. The purpose is to validate
+            whether we can decode those pages. *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Path_in_schema">
+            <summary>
+            Path in schema *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Codec">
+            <summary>
+            Compression codec *
+            
+            <seealso cref="T:Parquet.Thrift.CompressionCodec"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Num_values">
+            <summary>
+            Number of values in this column *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Total_uncompressed_size">
+            <summary>
+            total byte size of all uncompressed pages in this column chunk (including the headers) *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Total_compressed_size">
+            <summary>
+            total byte size of all compressed pages in this column chunk (including the headers) *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Key_value_metadata">
+            <summary>
+            Optional key/value metadata *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Data_page_offset">
+            <summary>
+            Byte offset from beginning of file to first data page *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Index_page_offset">
+            <summary>
+            Byte offset from beginning of file to root index page *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Dictionary_page_offset">
+            <summary>
+            Byte offset from the beginning of file to first (only) dictionary page *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Statistics">
+            <summary>
+            optional statistics for this column chunk
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.ColumnMetaData.Encoding_stats">
+            <summary>
+            Set of all encodings used for pages in this column chunk.
+            This information can be used to determine if all data pages are
+            dictionary encoded for example *
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.CompressionCodec">
+            <summary>
+            Supported compression algorithms.
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.ConvertedType">
+            <summary>
+            Common types used by frameworks(e.g. hive, pig) using parquet.  This helps map
+            between types in those frameworks to the base types in parquet.  This is only
+            metadata and not needed to read or write the data.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.UTF8">
+            <summary>
+            a BYTE_ARRAY actually contains UTF8 encoded chars
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.MAP">
+            <summary>
+            a map is converted as an optional field containing a repeated key/value pair
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.MAP_KEY_VALUE">
+            <summary>
+            a key/value pair is converted into a group of two fields
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.LIST">
+            <summary>
+            a list is converted into an optional field containing a repeated field for its
+            values
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.ENUM">
+            <summary>
+            an enum is converted into a binary field
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.DECIMAL">
+            <summary>
+            A decimal value.
+            
+            This may be used to annotate binary or fixed primitive types. The
+            underlying byte array stores the unscaled value encoded as two's
+            complement using big-endian byte order (the most significant byte is the
+            zeroth element). The value of the decimal is the value * 10^{-scale}.
+            
+            This must be accompanied by a (maximum) precision and a scale in the
+            SchemaElement. The precision specifies the number of digits in the decimal
+            and the scale stores the location of the decimal point. For example 1.23
+            would have precision 3 (3 total digits) and scale 2 (the decimal point is
+            2 digits over).
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.DATE">
+            <summary>
+            A Date
+            
+            Stored as days since Unix epoch, encoded as the INT32 physical type.
+            
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.TIME_MILLIS">
+            <summary>
+            A time
+            
+            The total number of milliseconds since midnight.  The value is stored
+            as an INT32 physical type.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.TIMESTAMP_MILLIS">
+            <summary>
+            A date/time combination
+            
+            Date and time recorded as milliseconds since the Unix epoch.  Recorded as
+            a physical type of INT64.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.UINT_8">
+            <summary>
+            An unsigned integer value.
+            
+            The number describes the maximum number of meainful data bits in
+            the stored value. 8, 16 and 32 bit values are stored using the
+            INT32 physical type.  64 bit values are stored using the INT64
+            physical type.
+            
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.INT_8">
+            <summary>
+            A signed integer value.
+            
+            The number describes the maximum number of meainful data bits in
+            the stored value. 8, 16 and 32 bit values are stored using the
+            INT32 physical type.  64 bit values are stored using the INT64
+            physical type.
+            
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.JSON">
+            <summary>
+            An embedded JSON document
+            
+            A JSON document embedded within a single UTF8 column.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.BSON">
+            <summary>
+            An embedded BSON document
+            
+            A BSON document embedded within a single BINARY column.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.ConvertedType.INTERVAL">
+            <summary>
+            An interval of time
+            
+            This type annotates data stored as a FIXED_LEN_BYTE_ARRAY of length 12
+            This data is composed of three separate little endian unsigned
+            integers.  Each stores a component of a duration of time.  The first
+            integer identifies the number of months associated with the duration,
+            the second identifies the number of days associated with the duration
+            and the third identifies the number of milliseconds associated with
+            the provided duration.  This duration of time is independent of any
+            particular timezone or date.
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.DataPageHeader">
+            <summary>
+            Data page header
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeader.Num_values">
+            <summary>
+            Number of values, including NULLs, in this data page. *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeader.Encoding">
+            <summary>
+            Encoding used for this data page *
+            
+            <seealso cref="P:Parquet.Thrift.DataPageHeader.Encoding"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeader.Definition_level_encoding">
+            <summary>
+            Encoding used for definition levels *
+            
+            <seealso cref="P:Parquet.Thrift.DataPageHeader.Encoding"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeader.Repetition_level_encoding">
+            <summary>
+            Encoding used for repetition levels *
+            
+            <seealso cref="P:Parquet.Thrift.DataPageHeader.Encoding"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeader.Statistics">
+            <summary>
+            Optional statistics for the data in this page*
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.DataPageHeaderV2">
+            <summary>
+            New page format alowing reading levels without decompressing the data
+            Repetition and definition levels are uncompressed
+            The remaining section containing the data is compressed if is_compressed is true
+            
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeaderV2.Num_values">
+            <summary>
+            Number of values, including NULLs, in this data page. *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeaderV2.Num_nulls">
+            <summary>
+            Number of NULL values, in this data page.
+            Number of non-null = num_values - num_nulls which is also the number of values in the data section *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeaderV2.Num_rows">
+            <summary>
+            Number of rows in this data page. which means pages change on record boundaries (r = 0) *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeaderV2.Encoding">
+            <summary>
+            Encoding used for data in this page *
+            
+            <seealso cref="P:Parquet.Thrift.DataPageHeaderV2.Encoding"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeaderV2.Definition_levels_byte_length">
+            <summary>
+            length of the repetition levels
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeaderV2.Repetition_levels_byte_length">
+            <summary>
+            length of the definition levels
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeaderV2.Is_compressed">
+            <summary>
+            whether the values are compressed.
+            Which means the section of the page between
+            definition_levels_byte_length + repetition_levels_byte_length + 1 and compressed_page_size (included)
+            is compressed with the compression_codec.
+            If missing it is considered compressed
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DataPageHeaderV2.Statistics">
+            <summary>
+            optional statistics for this column chunk
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.DictionaryPageHeader">
+            <summary>
+            TODO: *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DictionaryPageHeader.Num_values">
+            <summary>
+            Number of values in the dictionary *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DictionaryPageHeader.Encoding">
+            <summary>
+            Encoding using this dictionary page *
+            
+            <seealso cref="P:Parquet.Thrift.DictionaryPageHeader.Encoding"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.DictionaryPageHeader.Is_sorted">
+            <summary>
+            If true, the entries in the dictionary are sorted in ascending order *
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.Encoding">
+            <summary>
+            Encodings supported by Parquet.  Not all encodings are valid for all types.  These
+            enums are also used to specify the encoding of definition and repetition levels.
+            See the accompanying doc for the details of the more complicated encodings.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.Encoding.PLAIN">
+            <summary>
+            Default encoding.
+            BOOLEAN - 1 bit per value. 0 is false; 1 is true.
+            INT32 - 4 bytes per value.  Stored as little-endian.
+            INT64 - 8 bytes per value.  Stored as little-endian.
+            FLOAT - 4 bytes per value.  IEEE. Stored as little-endian.
+            DOUBLE - 8 bytes per value.  IEEE. Stored as little-endian.
+            BYTE_ARRAY - 4 byte length stored as little endian, followed by bytes.
+            FIXED_LEN_BYTE_ARRAY - Just the bytes.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.Encoding.PLAIN_DICTIONARY">
+            <summary>
+            Deprecated: Dictionary encoding. The values in the dictionary are encoded in the
+            plain type.
+            in a data page use RLE_DICTIONARY instead.
+            in a Dictionary page use PLAIN instead
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.Encoding.RLE">
+            <summary>
+            Group packed run length encoding. Usable for definition/reptition levels
+            encoding and Booleans (on one bit: 0 is false; 1 is true.)
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.Encoding.BIT_PACKED">
+            <summary>
+            Bit packed encoding.  This can only be used if the data has a known max
+            width.  Usable for definition/repetition levels encoding.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.Encoding.DELTA_BINARY_PACKED">
+            <summary>
+            Delta encoding for integers. This can be used for int columns and works best
+            on sorted data
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.Encoding.DELTA_LENGTH_BYTE_ARRAY">
+            <summary>
+            Encoding for byte arrays to separate the length values and the data. The lengths
+            are encoded using DELTA_BINARY_PACKED
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.Encoding.DELTA_BYTE_ARRAY">
+            <summary>
+            Incremental-encoded byte array. Prefix lengths are encoded using DELTA_BINARY_PACKED.
+            Suffixes are stored as delta length byte arrays.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.Encoding.RLE_DICTIONARY">
+            <summary>
+            Dictionary encoding: the ids are encoded using the RLE encoding
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.FieldRepetitionType">
+            <summary>
+            Representation of Schemas
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.FieldRepetitionType.REQUIRED">
+            <summary>
+            This field is required (can not be null) and each record has exactly 1 value.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.FieldRepetitionType.OPTIONAL">
+            <summary>
+            The field is optional (can be null) and each record has 0 or 1 values.
+            </summary>
+        </member>
+        <member name="F:Parquet.Thrift.FieldRepetitionType.REPEATED">
+            <summary>
+            The field is repeated and can contain 0 or more values
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.FileMetaData">
+            <summary>
+            Description for file metadata
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.FileMetaData.Version">
+            <summary>
+            Version of this file *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.FileMetaData.Schema">
+            <summary>
+            Parquet schema for this file.  This schema contains metadata for all the columns.
+            The schema is represented as a tree with a single root.  The nodes of the tree
+            are flattened to a list by doing a depth-first traversal.
+            The column metadata contains the path in the schema for that column which can be
+            used to map columns to nodes in the schema.
+            The first element is the root *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.FileMetaData.Num_rows">
+            <summary>
+            Number of rows in this file *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.FileMetaData.Row_groups">
+            <summary>
+            Row groups in this file *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.FileMetaData.Key_value_metadata">
+            <summary>
+            Optional key/value metadata *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.FileMetaData.Created_by">
+            <summary>
+            String for application that wrote this file.  This should be in the format
+            [Application] version [App Version] (build [App Build Hash]).
+            e.g. impala version 1.0 (build 6cf94d29b2b7115df4de2c06e2ab4326d721eb55)
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.KeyValue">
+            <summary>
+            Wrapper struct to store key values
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.PageEncodingStats">
+            <summary>
+            statistics of a given page type and encoding
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.PageEncodingStats.Page_type">
+            <summary>
+            the page type (data/dic/...) *
+            
+            <seealso cref="T:Parquet.Thrift.PageType"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.PageEncodingStats.Encoding">
+            <summary>
+            encoding of the page *
+            
+            <seealso cref="P:Parquet.Thrift.PageEncodingStats.Encoding"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.PageEncodingStats.Count">
+            <summary>
+            number of pages of this type with this encoding *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.PageHeader.Type">
+            <summary>
+            the type of the page: indicates which of the *_header fields is set *
+            
+            <seealso cref="T:Parquet.Thrift.PageType"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.PageHeader.Uncompressed_page_size">
+            <summary>
+            Uncompressed page size in bytes (not including this header) *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.PageHeader.Compressed_page_size">
+            <summary>
+            Compressed page size in bytes (not including this header) *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.PageHeader.Crc">
+            <summary>
+            32bit crc for the data below. This allows for disabling checksumming in HDFS
+            if only a few pages needs to be read
+            
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.RowGroup.Total_byte_size">
+            <summary>
+            Total byte size of all the uncompressed column data in this row group *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.RowGroup.Num_rows">
+            <summary>
+            Number of rows in this row group *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.RowGroup.Sorting_columns">
+            <summary>
+            If set, specifies a sort ordering of the rows in this RowGroup.
+            The sorting columns can be a subset of all the columns.
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.SchemaElement">
+            <summary>
+            Represents a element inside a schema definition.
+             - if it is a group (inner node) then type is undefined and num_children is defined
+             - if it is a primitive type (leaf) then type is defined and num_children is undefined
+            the nodes are listed in depth first traversal order.
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SchemaElement.Type">
+            <summary>
+            Data type for this field. Not set if the current element is a non-leaf node
+            
+            <seealso cref="P:Parquet.Thrift.SchemaElement.Type"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SchemaElement.Type_length">
+            <summary>
+            If type is FIXED_LEN_BYTE_ARRAY, this is the byte length of the vales.
+            Otherwise, if specified, this is the maximum bit length to store any of the values.
+            (e.g. a low cardinality INT col could have this set to 3).  Note that this is
+            in the schema, and therefore fixed for the entire file.
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SchemaElement.Repetition_type">
+            <summary>
+            repetition of the field. The root of the schema does not have a repetition_type.
+            All other nodes must have one
+            
+            <seealso cref="T:Parquet.Thrift.FieldRepetitionType"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SchemaElement.Name">
+            <summary>
+            Name of the field in the schema
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SchemaElement.Num_children">
+            <summary>
+            Nested fields.  Since thrift does not support nested fields,
+            the nesting is flattened to a single list by a depth-first traversal.
+            The children count is used to construct the nested relationship.
+            This field is not set when the element is a primitive type
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SchemaElement.Converted_type">
+            <summary>
+            When the schema is the result of a conversion from another model
+            Used to record the original type to help with cross conversion.
+            
+            <seealso cref="T:Parquet.Thrift.ConvertedType"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SchemaElement.Scale">
+            <summary>
+            Used when this column contains decimal data.
+            See the DECIMAL converted type for more details.
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SchemaElement.Field_id">
+            <summary>
+            When the original schema supports field ids, this will save the
+            original field id in the parquet schema
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.SortingColumn">
+            <summary>
+            Wrapper struct to specify sort order
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SortingColumn.Column_idx">
+            <summary>
+            The column index (in this row group) *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SortingColumn.Descending">
+            <summary>
+            If true, indicates this column is sorted in descending order. *
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.SortingColumn.Nulls_first">
+            <summary>
+            If true, nulls will come before non-null values, otherwise,
+            nulls go at the end.
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.Statistics">
+            <summary>
+            Statistics per row group and per page
+            All fields are optional.
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.Statistics.Max">
+            <summary>
+            min and max value of the column, encoded in PLAIN encoding
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.Statistics.Null_count">
+            <summary>
+            count of null value in the column
+            </summary>
+        </member>
+        <member name="P:Parquet.Thrift.Statistics.Distinct_count">
+            <summary>
+            count of distinct values occurring
+            </summary>
+        </member>
+        <member name="T:Parquet.Thrift.Type">
+            <summary>
+            Types supported by Parquet.  These types are intended to be used in combination
+            with the encodings to control the on disk storage format.
+            For example INT16 is not included as a type since a good encoding of INT32
+            would handle this.
+            </summary>
+        </member>
+    </members>
+</doc>
