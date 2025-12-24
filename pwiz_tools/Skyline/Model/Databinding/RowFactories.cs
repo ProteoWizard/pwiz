@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.Databinding
 {

@@ -34,16 +34,15 @@ namespace pwiz.Skyline.Model.Databinding
 
     public static class RowItemExporters
     {
-        public static IRowItemExporter Create(DataSchemaLocalizer dataSchemaLocalizer, string filePath)
+        public static IRowItemExporter ForExtension(DataSchemaLocalizer dataSchemaLocalizer, string extension)
         {
-            var extension = Path.GetExtension(filePath);
-            if (".csv".Equals(extension, StringComparison.OrdinalIgnoreCase))
+            if (TextUtil.EXT_CSV.Equals(extension, StringComparison.OrdinalIgnoreCase))
             {
                 var separator = TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider);
                 return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, separator));
             }
 
-            if (".parquet".Equals(extension, StringComparison.OrdinalIgnoreCase))
+            if (TextUtil.EXT_PARQUET.Equals(extension, StringComparison.OrdinalIgnoreCase))
             {
                 return new ParquetRowItemExporter();
             }
@@ -51,7 +50,12 @@ namespace pwiz.Skyline.Model.Databinding
             return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
         }
 
-        public static DsvWriter CreateDsvWriter(DataSchemaLocalizer dataSchemaLocalizer, char separator)
+        public static IRowItemExporter ForSeparator(DataSchemaLocalizer dataSchemaLocalizer, char separator)
+        {
+            return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, separator));
+        }
+
+        private static DsvWriter CreateDsvWriter(DataSchemaLocalizer dataSchemaLocalizer, char separator)
         {
             var dsvWriter = new DsvWriter(dataSchemaLocalizer.FormatProvider, dataSchemaLocalizer.Language, separator);
             if (ReferenceEquals(dataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))

@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -68,18 +69,20 @@ namespace pwiz.Skyline.Controls.Databinding
             saveFileDialog.InitialDirectory = Settings.Default.ExportDirectory;
             saveFileDialog.OverwritePrompt = true;
             saveFileDialog.DefaultExt = TextUtil.EXT_CSV;
-            saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV);
+            var extensions = new[] { TextUtil.EXT_CSV, TextUtil.EXT_TSV, TextUtil.EXT_PARQUET };
+            saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV, TextUtil.FILTER_PARQUET);
             saveFileDialog.FileName = SelectedViewName.Value.Name;
             // TODO: If document has been saved, initial directory should be document directory
             if (saveFileDialog.ShowDialog(this) == DialogResult.Cancel)
             {
                 return;
             }
-            var separator = saveFileDialog.FilterIndex == 2
-                ? TextUtil.SEPARATOR_TSV
-                : TextUtil.GetCsvSeparator(_viewContext.DataSchema.DataSchemaLocalizer.FormatProvider);
+
+            var chosenExtension = extensions.ElementAtOrDefault(saveFileDialog.FilterIndex);
             var fileName = saveFileDialog.FileName;
-            if (!ExportReport(fileName, separator))
+            var rowExporter =
+                RowItemExporters.ForExtension(GetDataSchemaLocalizer(), chosenExtension ?? Path.GetExtension(fileName));
+            if (!ExportReport(fileName, rowExporter))
                 return;
 
             DialogResult = DialogResult.OK;
@@ -89,8 +92,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public void OkDialog(string fileName, char separator)
         {
             Settings.Default.ExportDirectory = Path.GetDirectoryName(fileName);
-
-            if (!ExportReport(fileName, separator))
+            if (!ExportReport(fileName, RowItemExporters.ForSeparator(GetDataSchemaLocalizer(), separator)))
                 return;
 
             DialogResult = DialogResult.OK;
@@ -136,7 +138,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
        
-        private bool ExportReport(string filename, char separator)
+        private bool ExportReport(string filename, IRowItemExporter rowItemExporter)
         {
             var viewName = SelectedViewName;
             if (!viewName.HasValue)
@@ -157,7 +159,6 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 progressMonitor.UpdateProgress(status);
                 var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
-                var rowItemExporter = RowItemExporters.Create(dataSchema.DataSchemaLocalizer, filename);
                 rowFactories.ExportReport(fileSaver.Stream, viewName.Value, rowItemExporter, progressMonitor, ref status);
             });
             if (longWaitDlg.IsCanceled)

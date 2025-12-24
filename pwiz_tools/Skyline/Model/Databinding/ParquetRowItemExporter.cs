@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -34,7 +35,7 @@ namespace pwiz.Skyline.Model.Databinding
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
             RowItemEnumerator rowItemEnumerator)
         {
-            var columns = BuildColumns(rowItemEnumerator);
+            var columns = BuildColumns(progressMonitor, ref status, rowItemEnumerator);
             var schema = new Schema(columns.Select(column=>column.DataField).ToArray());
 
             using (var writer = new ParquetWriter(schema, stream))
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        private List<ColumnData> BuildColumns(RowItemEnumerator rowItemEnumerator)
+        private List<ColumnData> BuildColumns(IProgressMonitor progressMonitor, ref IProgressStatus status, RowItemEnumerator rowItemEnumerator)
         {
             var columns = new List<ColumnData>();
             var itemProperties = rowItemEnumerator.ItemProperties;
@@ -61,8 +62,21 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             int rowIndex = 0;
+            int rowCount = rowItemEnumerator.Count;
             while (rowItemEnumerator.MoveNext())
             {
+                if (progressMonitor.IsCanceled)
+                {
+                    return null;
+                }
+                int percentComplete = rowIndex * 100 / rowCount;
+                if (percentComplete > status.PercentComplete)
+                {
+                    status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, rowIndex + 1, rowCount))
+                        .ChangePercentComplete(percentComplete);
+                    progressMonitor.UpdateProgress(status);
+                }
+
                 var currentItem = rowItemEnumerator.Current!;
                 foreach (var column in columns)
                 {

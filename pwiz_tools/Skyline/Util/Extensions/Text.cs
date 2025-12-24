@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Util.Extensions
 
         public const string EXT_CSV = ".csv";
         public const string EXT_TSV = ".tsv";
+        public const string EXT_PARQUET = ".parquet";
 
         public static string FILTER_CSV
         {
@@ -59,6 +60,11 @@ namespace pwiz.Skyline.Util.Extensions
         public static string FILTER_TSV
         {
             get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
+        }
+
+        public static string FILTER_PARQUET
+        {
+            get { return FileDialogFilter("Parquet", EXT_PARQUET); }
         }
 
         public const char SEPARATOR_CSV = ',';
