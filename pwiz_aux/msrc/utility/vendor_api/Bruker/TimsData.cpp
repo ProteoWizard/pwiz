@@ -129,7 +129,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
       currentFrameId_(-1),
       passEntireDiaPasefFrame_(passEntireDiaPasefFrame),
       includeIsolationArrays_(includeIsolationArrays),
-      tdfStoragePtr_(new TimsBinaryData(rawpath)),
+      tdfStoragePtr_(new TimsBinaryData(rawpath, true)), // Set "DA re-calibration shall be used if available"=true
       tdfStorage_(*tdfStoragePtr_)
 {
     tims_set_num_threads(4);

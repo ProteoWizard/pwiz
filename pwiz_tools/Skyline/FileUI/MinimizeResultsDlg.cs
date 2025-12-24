@@ -402,10 +402,11 @@ namespace pwiz.Skyline.FileUI
             set { tbxNoiseTimeRange.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
-        public bool IsComplete
-        {
-            get { return _minStatistics.PercentComplete == 100; }
-        }
+        /// <summary>
+        /// Returns true when background statistics computation is complete.
+        /// Use this to wait before taking screenshots to ensure consistent compression ratios.
+        /// </summary>
+        public bool IsComplete => _minStatistics?.PercentComplete == 100;
 
         #endregion
 

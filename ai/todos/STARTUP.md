@@ -16,24 +16,28 @@ When starting work on a TODO (e.g., `TODO-compress_vendor_test_data.md`):
 
 See [../WORKFLOW.md](../WORKFLOW.md) for complete details. Summary:
 
-**Create feature branch from master:**
+**Step 2a: Create feature branch from master:**
 ```bash
 git checkout master
 git pull origin master
 git checkout -b Skyline/work/20251105_feature_name
 ```
 
-**Copy TODO from ai-context to active:**
+**Step 2b: Move TODO on ai-context (claims the work):**
 ```bash
-git checkout ai-context -- ai/todos/backlog/TODO-feature_name.md
+git checkout ai-context
+git pull origin ai-context
 git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
+# Edit TODO: update Branch, Created, Status fields
+git add ai/todos/active/TODO-20251105_feature_name.md
+git commit -m "Start feature_name work - move TODO to active"
+git push origin ai-context
 ```
 
-**Update TODO header and commit:**
+**Step 2c: Cherry-pick to feature branch:**
 ```bash
-# Edit TODO: add Branch, Created, PR fields
-git add ai/todos/active/TODO-20251105_feature_name.md
-git commit -m "Update TODO with branch information"
+git checkout Skyline/work/20251105_feature_name
+git cherry-pick <commit-hash-from-step-2b>
 git push -u origin Skyline/work/20251105_feature_name
 ```
 
