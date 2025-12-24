@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -78,10 +79,11 @@ namespace pwiz.Skyline.Model.Databinding
         private Schema BuildSchema(List<ColumnData> columns)
         {
             var fields = new List<DataField>();
+            var usedColumnNames = new HashSet<string>();
 
             foreach (var column in columns)
             {
-                var field = CreateDataField(column);
+                var field = CreateDataField(column, usedColumnNames);
                 fields.Add(field);
                 var typedArray = ConvertToTypedArray(column);
                 column.DataColumn = new DataColumn(field, typedArray, null);
@@ -90,10 +92,10 @@ namespace pwiz.Skyline.Model.Databinding
             return new Schema(fields.ToArray());
         }
 
-        private DataField CreateDataField(ColumnData columnData)
+        private DataField CreateDataField(ColumnData columnData, HashSet<string> usedColumnNames)
         {
             var propertyType = columnData.PropertyDescriptor.PropertyType;
-            var columnName = columnData.PropertyDescriptor.Name;
+            var columnName = GetUniqueColumnName(columnData.PropertyDescriptor, usedColumnNames);
 
             if (propertyType == typeof(string))
             {
@@ -130,6 +132,64 @@ namespace pwiz.Skyline.Model.Databinding
 
             // Default to string representation for unknown types
             return new DataField<string>(columnName);
+        }
+
+        private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)
+        {
+            // Get the display name from DisplayNameAttribute, or fall back to property name
+            string baseName = propertyDescriptor.DisplayName;
+            if (string.IsNullOrEmpty(baseName) || baseName == propertyDescriptor.Name)
+            {
+                baseName = propertyDescriptor.Name;
+            }
+
+            // Sanitize the column name - replace illegal characters with underscores
+            // Parquet column names should be valid identifiers (alphanumeric and underscore)
+            var sanitized = SanitizeColumnName(baseName);
+
+            // Ensure uniqueness by appending a number if needed
+            string uniqueName = Helpers.GetUniqueName(sanitized, usedColumnNames);
+            usedColumnNames.Add(uniqueName);
+            return uniqueName;
+        }
+
+        private string SanitizeColumnName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return "Column";
+            }
+
+            var sanitized = new System.Text.StringBuilder(name.Length);
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                // Allow alphanumeric characters and underscores
+                if (char.IsLetterOrDigit(c) || c == '_')
+                {
+                    sanitized.Append(c);
+                }
+                else
+                {
+                    // Replace illegal characters with underscores
+                    sanitized.Append('_');
+                }
+            }
+
+            // Ensure the name doesn't start with a digit
+            string result = sanitized.ToString();
+            if (result.Length > 0 && char.IsDigit(result[0]))
+            {
+                result = "_" + result;
+            }
+
+            // Handle case where sanitization resulted in an empty string
+            if (string.IsNullOrEmpty(result))
+            {
+                result = "Column";
+            }
+
+            return result;
         }
 
         private Array ConvertToTypedArray(ColumnData columnData)

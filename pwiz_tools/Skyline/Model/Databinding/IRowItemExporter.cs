@@ -16,8 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Util.Extensions;
+using System;
 using System.IO;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -26,5 +30,36 @@ namespace pwiz.Skyline.Model.Databinding
     {
         void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
             RowItemEnumerator rowItemEnumerator);
+    }
+
+    public static class RowItemExporters
+    {
+        public static IRowItemExporter Create(DataSchemaLocalizer dataSchemaLocalizer, string filePath)
+        {
+            var extension = Path.GetExtension(filePath);
+            if (".csv".Equals(extension, StringComparison.OrdinalIgnoreCase))
+            {
+                var separator = TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider);
+                return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, separator));
+            }
+
+            if (".parquet".Equals(extension, StringComparison.OrdinalIgnoreCase))
+            {
+                return new ParquetRowItemExporter();
+            }
+
+            return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
+        }
+
+        public static DsvWriter CreateDsvWriter(DataSchemaLocalizer dataSchemaLocalizer, char separator)
+        {
+            var dsvWriter = new DsvWriter(dataSchemaLocalizer.FormatProvider, dataSchemaLocalizer.Language, separator);
+            if (ReferenceEquals(dataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))
+            {
+                dsvWriter.NumberFormatOverride = Formats.RoundTrip;
+            }
+
+            return dsvWriter;
+        }
     }
 }

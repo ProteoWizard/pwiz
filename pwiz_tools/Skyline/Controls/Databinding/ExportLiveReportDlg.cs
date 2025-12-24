@@ -21,7 +21,6 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -154,17 +153,11 @@ namespace pwiz.Skyline.Controls.Databinding
             longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
             IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
             var dataSchema = GetSkylineDataSchema(true);
-            longWaitDlg.PerformWork(this, 1500, progressMonitor =>
+            longWaitDlg.PerformWork(this, 1500, (IProgressMonitor progressMonitor) =>
             {
                 progressMonitor.UpdateProgress(status);
                 var rowFactories = RowFactories.GetRowFactories(longWaitDlg.CancellationToken, dataSchema);
-                var dsvWriter = new DsvWriter(dataSchema.DataSchemaLocalizer.FormatProvider,
-                    dataSchema.DataSchemaLocalizer.Language, separator);
-                if (ReferenceEquals(dataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))
-                {
-                    dsvWriter.NumberFormatOverride = Formats.RoundTrip;
-                }
-                var rowItemExporter = new RowItemExporter(dataSchema.DataSchemaLocalizer, dsvWriter);
+                var rowItemExporter = RowItemExporters.Create(dataSchema.DataSchemaLocalizer, filename);
                 rowFactories.ExportReport(fileSaver.Stream, viewName.Value, rowItemExporter, progressMonitor, ref status);
             });
             if (longWaitDlg.IsCanceled)
