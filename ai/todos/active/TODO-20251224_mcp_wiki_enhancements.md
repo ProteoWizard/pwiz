@@ -3,7 +3,7 @@
 ## Branch Information
 - **Branch**: `ai-context`
 - **Created**: 2025-12-24
-- **Status**: Backlog
+- **Status**: Active
 - **Parent**: Spun off from TODO-20251221_mcp_wiki_support_board.md
 
 ## Objective
