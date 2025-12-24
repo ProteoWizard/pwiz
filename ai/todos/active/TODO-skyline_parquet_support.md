@@ -18,9 +18,10 @@ Apache Parquet is a columnar storage format optimized for analytical workloads. 
 
 **Library Setup:**
 - [x] Downloaded Parquet.Net 3.3.4 (net45 version for .NET Framework 4.7.2 compatibility)
-- [x] Renamed to Parquet2.dll to avoid naming conflict with native Apache Arrow parquet.dll
-- [x] Placed in `pwiz_tools\Shared\Lib\Parquet\Parquet2.dll`
+- [x] Renamed to ParquetNet.dll to avoid naming conflict with native Apache Arrow parquet.dll
+- [x] Placed in `pwiz_tools\Shared\Lib\Parquet\ParquetNet.dll`
 - [x] Added reference to Skyline.csproj with proper assembly identity
+- [x] Added app.config binding redirect to resolve BadImageFormatException
 
 **Architecture Refactoring:**
 - [x] Created `IRowItemExporter` interface (Stream-based export abstraction)
@@ -44,11 +45,15 @@ Apache Parquet is a columnar storage format optimized for analytical workloads. 
   - decimal/decimal? → DataField&lt;decimal?&gt;
   - Unknown types → DataField&lt;string&gt; (ToString() fallback)
 - [x] Used Parquet.Net 3.3.4 synchronous API (no async/await per Skyline standards)
-- [x] Added required using statements (pwiz.Skyline.Model.Hibernate for Formats)
+- [x] Added required using statements (pwiz.Skyline.Model.Hibernate for Formats, pwiz.Skyline.Util for Helpers)
+- [x] Fixed compile errors by implementing ConvertToTypedArray method for proper type conversion
+- [x] Added DisplayNameAttribute support for column names (falls back to PropertyDescriptor.Name)
+- [x] Added column name sanitization (replaces illegal characters with underscores)
+- [x] Added column name uniqueness tracking (appends numeric suffix if duplicates exist)
 
 **Build Status:**
-- [x] **Build succeeds** (Release configuration)
-- ⚠️ Warning: Assembly identity mismatch (Parquet2.dll contains 'Parquet' identity) - non-blocking
+- [x] **Build succeeds** (Debug and Release configurations)
+- ⚠️ Warning: Assembly identity mismatch (ParquetNet.dll contains 'Parquet' identity) - non-blocking
 
 ### Files Modified
 
@@ -57,7 +62,8 @@ Apache Parquet is a columnar storage format optimized for analytical workloads. 
 - `pwiz_tools/Skyline/Model/Databinding/ParquetRowItemExporter.cs`
 
 **Modified Files:**
-- `pwiz_tools/Skyline/Skyline.csproj` - Added Parquet2 reference
+- `pwiz_tools/Skyline/Skyline.csproj` - Added ParquetNet reference
+- `pwiz_tools/Skyline/app.config` - Added assembly binding redirect for Parquet → ParquetNet.dll
 - `pwiz_tools/Skyline/Model/Databinding/RowItemExporter.cs` - Implements IRowItemExporter
 - `pwiz_tools/Skyline/Model/Databinding/RowFactories.cs` - Accepts IRowItemExporter parameter
 - `pwiz_tools/Skyline/Controls/Databinding/ExportLiveReportDlg.cs` - Creates RowItemExporter
@@ -65,8 +71,9 @@ Apache Parquet is a columnar storage format optimized for analytical workloads. 
 - `pwiz_tools/Skyline/Model/Tools/ToolDescription.cs` - Creates RowItemExporter
 
 **Library Files:**
-- `pwiz_tools/Shared/Lib/Parquet/Parquet2.dll` (196 KB, assembly version 3.0.0.0)
-- `pwiz_tools/Shared/Lib/Parquet/Parquet2.pdb`
+- `pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll` (196 KB, assembly version 3.0.0.0)
+- `pwiz_tools/Shared/Lib/Parquet/ParquetNet.pdb`
+- `pwiz_tools/Shared/Lib/Parquet/ParquetNet.xml` (API documentation)
 - `pwiz_tools/Shared/Lib/Parquet/System.Reflection.Emit.Lightweight.dll` (dependency)
 
 ### Phase 2: UI Integration (TODO)
@@ -132,10 +139,16 @@ Apache Parquet is a columnar storage format optimized for analytical workloads. 
 
 **Problem:** Skyline already has `libraries/arrow/parquet.dll` (Apache Arrow C++ native library)
 
-**Solution:** Renamed .NET library to `Parquet2.dll`
-- Avoids file name conflicts
-- Assembly identity remains 'Parquet' internally (causes warning but non-blocking)
-- MSBuild and runtime resolve correctly
+**Initial Solution:** Renamed .NET library to `Parquet2.dll`, then `ParquetNet.dll`
+- Avoids file name conflicts with native DLL
+- Assembly identity remains 'Parquet' internally (causes MSB3110 warning but non-blocking)
+
+**Runtime Resolution Issue:** BadImageFormatException occurred because .NET runtime found native `parquet.dll` when looking for assembly "Parquet"
+
+**Final Solution:** Added app.config binding redirect
+- `<codeBase>` element explicitly maps assembly "Parquet" to file "ParquetNet.dll"
+- Both parquet.dll (native) and ParquetNet.dll (managed) can coexist in output directory
+- Runtime correctly loads ParquetNet.dll when Parquet assembly is referenced
 
 ### API Compatibility (Parquet.Net 3.3.4 vs. 5.x)
 
@@ -179,16 +192,20 @@ File saved via FileSaver
 
 ## Known Issues / Limitations
 
-1. **Assembly Identity Warning:** Parquet2.dll has internal assembly name 'Parquet' causing MSB3110 warning (non-blocking)
+1. **Assembly Identity Warning:** ParquetNet.dll has internal assembly name 'Parquet' causing MSB3110 warning (non-blocking)
 2. **System.Buffers/System.Memory:** These are provided automatically by .NET Framework 4.7.2, explicit references cause issues
 3. **Type Mapping:** Unknown types fall back to string representation (may lose type information)
+4. **Column Name Sanitization:** Illegal characters in column names are replaced with underscores (may affect readability)
 
 ## Questions Resolved
 
 - ✓ Which library version? → Parquet.Net 3.3.4 (net45)
 - ✓ How to handle async API? → Version 3.3.4 has synchronous API
 - ✓ How to integrate with existing export? → Created IRowItemExporter abstraction
-- ✓ Naming conflict with Arrow parquet.dll? → Renamed to Parquet2.dll
+- ✓ Naming conflict with Arrow parquet.dll? → Renamed to ParquetNet.dll + app.config binding
+- ✓ BadImageFormatException at runtime? → Added codeBase redirect in app.config
+- ✓ How to create typed arrays for DataColumn? → Implemented ConvertToTypedArray method
+- ✓ Column naming from PropertyDescriptor? → Use DisplayNameAttribute with sanitization and uniqueness
 
 ## Questions Still Open
 

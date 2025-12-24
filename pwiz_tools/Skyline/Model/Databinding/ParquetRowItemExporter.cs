@@ -53,24 +53,30 @@ namespace pwiz.Skyline.Model.Databinding
         {
             var columns = new List<ColumnData>();
             var itemProperties = rowItemEnumerator.ItemProperties;
-
-            foreach (PropertyDescriptor property in itemProperties)
+            var usedColumnNames = new HashSet<string>();
+            foreach (DataPropertyDescriptor property in itemProperties)
             {
-                columns.Add(new ColumnData
-                {
-                    PropertyDescriptor = property,
-                    Values = new List<object>()
-                });
+                var name = GetUniqueColumnName(property, usedColumnNames);
+                columns.Add(new ColumnData(name, property, rowItemEnumerator.Count));
             }
 
+            int rowIndex = 0;
             while (rowItemEnumerator.MoveNext())
             {
-                var currentItem = rowItemEnumerator.Current;
+                var currentItem = rowItemEnumerator.Current!;
                 foreach (var column in columns)
                 {
-                    var value = column.PropertyDescriptor.GetValue(currentItem);
-                    column.Values.Add(value);
+                    column.StoreValue(currentItem, rowIndex);
                 }
+
+                rowIndex++;
+            }
+
+            // Create DataFields and DataColumns now that all values are populated
+            foreach (var column in columns)
+            {
+                var field = new DataField(column.Name, column.StorageType);
+                column.DataColumn = new DataColumn(field, column.Values, null);
             }
 
             return columns;
@@ -78,60 +84,8 @@ namespace pwiz.Skyline.Model.Databinding
 
         private Schema BuildSchema(List<ColumnData> columns)
         {
-            var fields = new List<DataField>();
-            var usedColumnNames = new HashSet<string>();
-
-            foreach (var column in columns)
-            {
-                var field = CreateDataField(column, usedColumnNames);
-                fields.Add(field);
-                var typedArray = ConvertToTypedArray(column);
-                column.DataColumn = new DataColumn(field, typedArray, null);
-            }
-
-            return new Schema(fields.ToArray());
-        }
-
-        private DataField CreateDataField(ColumnData columnData, HashSet<string> usedColumnNames)
-        {
-            var propertyType = columnData.PropertyDescriptor.PropertyType;
-            var columnName = GetUniqueColumnName(columnData.PropertyDescriptor, usedColumnNames);
-
-            if (propertyType == typeof(string))
-            {
-                return new DataField<string>(columnName);
-            }
-            if (propertyType == typeof(int) || propertyType == typeof(int?))
-            {
-                return new DataField<int?>(columnName);
-            }
-            if (propertyType == typeof(long) || propertyType == typeof(long?))
-            {
-                return new DataField<long?>(columnName);
-            }
-            if (propertyType == typeof(double) || propertyType == typeof(double?))
-            {
-                return new DataField<double?>(columnName);
-            }
-            if (propertyType == typeof(float) || propertyType == typeof(float?))
-            {
-                return new DataField<float?>(columnName);
-            }
-            if (propertyType == typeof(bool) || propertyType == typeof(bool?))
-            {
-                return new DataField<bool?>(columnName);
-            }
-            if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
-            {
-                return new DataField<DateTime?>(columnName);
-            }
-            if (propertyType == typeof(decimal) || propertyType == typeof(decimal?))
-            {
-                return new DataField<decimal?>(columnName);
-            }
-
-            // Default to string representation for unknown types
-            return new DataField<string>(columnName);
+            var fields = columns.Select(c => c.DataColumn.Field).ToArray();
+            return new Schema(fields);
         }
 
         private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)
@@ -192,53 +146,62 @@ namespace pwiz.Skyline.Model.Databinding
             return result;
         }
 
-        private Array ConvertToTypedArray(ColumnData columnData)
-        {
-            var propertyType = columnData.PropertyDescriptor.PropertyType;
-            var values = columnData.Values;
-
-            if (propertyType == typeof(string))
-            {
-                return values.Select(v => v == null ? null : v.ToString()).ToArray();
-            }
-            if (propertyType == typeof(int) || propertyType == typeof(int?))
-            {
-                return values.Select(v => v == null ? (int?)null : Convert.ToInt32(v)).ToArray();
-            }
-            if (propertyType == typeof(long) || propertyType == typeof(long?))
-            {
-                return values.Select(v => v == null ? (long?)null : Convert.ToInt64(v)).ToArray();
-            }
-            if (propertyType == typeof(double) || propertyType == typeof(double?))
-            {
-                return values.Select(v => v == null ? (double?)null : Convert.ToDouble(v)).ToArray();
-            }
-            if (propertyType == typeof(float) || propertyType == typeof(float?))
-            {
-                return values.Select(v => v == null ? (float?)null : Convert.ToSingle(v)).ToArray();
-            }
-            if (propertyType == typeof(bool) || propertyType == typeof(bool?))
-            {
-                return values.Select(v => v == null ? (bool?)null : Convert.ToBoolean(v)).ToArray();
-            }
-            if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
-            {
-                return values.Select(v => v == null ? (DateTime?)null : Convert.ToDateTime(v)).ToArray();
-            }
-            if (propertyType == typeof(decimal) || propertyType == typeof(decimal?))
-            {
-                return values.Select(v => v == null ? (decimal?)null : Convert.ToDecimal(v)).ToArray();
-            }
-
-            // Default to string representation for unknown types
-            return values.Select(v => v == null ? null : v.ToString()).ToArray();
-        }
-
         private class ColumnData
         {
-            public PropertyDescriptor PropertyDescriptor { get; set; }
-            public List<object> Values { get; set; }
+            public ColumnData(string name, DataPropertyDescriptor propertyDescriptor, int rowCount)
+            {
+                Name = name;
+                PropertyDescriptor = propertyDescriptor;
+                var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
+                StorageType = DecideStorageType(valueType);
+                Values = Array.CreateInstance(StorageType, rowCount);
+            }
+            public DataPropertyDescriptor PropertyDescriptor { get; }
+            public string Name { get; }
+
+            public Type StorageType
+            {
+                get;
+            }
+
+            public object GetValue(RowItem rowItem)
+            {
+                var dataSchema = PropertyDescriptor.DataSchema;
+                return dataSchema.UnwrapValue(PropertyDescriptor.GetValue(rowItem));
+            }
+
+            public void StoreValue(RowItem rowItem, int rowIndex)
+            {
+                var value = GetValue(rowItem);
+                if (value == null)
+                {
+                    return;
+                }
+
+                if (StorageType == typeof(string))
+                {
+                    value = value as string ?? value.ToString();
+                }
+                Values.SetValue(value, rowIndex);
+            }
+            
+            public Array Values { get; }
             public DataColumn DataColumn { get; set; }
+        }
+
+        private static HashSet<Type> _primitiveTypes = new HashSet<Type>
+        {
+            typeof(int), typeof(long), typeof(double), typeof(float), typeof(bool), typeof(DateTime),
+            typeof(decimal)
+        };
+        public static Type DecideStorageType(Type type)
+        {
+            if (_primitiveTypes.Contains(type))
+            {
+                return typeof(Nullable<>).MakeGenericType(new[] { type });
+            }
+
+            return typeof(string);
         }
     }
 }
