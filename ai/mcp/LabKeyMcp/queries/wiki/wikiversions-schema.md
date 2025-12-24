@@ -23,7 +23,7 @@ Both tables share the same schema. `CurrentWikiVersions` has one row per page (l
 | Created | DateTime | | | Creation timestamp |
 | ModifiedBy | Integer | core.SiteUsers.UserId | RO | User who last modified |
 | Modified | DateTime | | RO, V | Last modification timestamp |
-| Body | Text | | | Page content (HTML or markup) |
+| Body | Text | | | **⚠️ LARGE** - Page content (HTML or markup), use `get_wiki_page()` |
 
 ## Notes
 

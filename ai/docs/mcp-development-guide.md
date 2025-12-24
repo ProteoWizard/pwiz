@@ -216,6 +216,24 @@ LabKey organizes data in containers (folders). Always use the `container_path` p
 
 Note: The `testresults` schema may need to be enabled per-container by a LabKey administrator.
 
+### Troubleshooting
+
+**"Query does not exist" error**: If a custom query reports it doesn't exist but you've verified it's on the server, check the query properties. In LabKey's query editor, ensure **"Available in child folders?"** is set to **Yes**. Without this, queries created in a parent container won't be visible from child containers.
+
+**Large column errors**: Some columns contain large binary or text data (logs, XML, documents). Never query these directly - use dedicated MCP tools that save content to `ai/.tmp/` files. See the schema documentation for columns marked **⚠️ LARGE**.
+
+### Schema Documentation Conventions
+
+The `queries/` directory contains schema documentation for all tables used by the MCP server. When documenting table schemas:
+
+**Large columns**: Mark columns that should never be queried directly with **⚠️ LARGE** in the Description column. These require MCP tools that save to disk rather than returning content.
+
+Example:
+| Column | Type | Description |
+|--------|------|-------------|
+| log | Other | **⚠️ LARGE** - Full test log, use `save_run_log()` |
+| document | Other | **⚠️ LARGE** - Binary blob up to 50MB |
+
 ## Future Data Sources
 
 ### Gmail Integration

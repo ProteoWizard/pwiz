@@ -18,7 +18,7 @@ This table exists in multiple containers across skyline.ms. See [announcement-us
 | Parent | Text | announcement.Announcement.EntityId | | EntityId of parent (null if top-level) |
 | Title | Text | | | Post title |
 | Expires | DateTime | | | Expiration date |
-| Body | Text | | | Raw body content |
+| Body | Text | | | **⚠️ LARGE** - Raw body content, use `get_support_thread()` |
 | RendererType | Text | wiki.RendererType.Value | | HTML, MARKDOWN, RADEOX, TEXT_WITH_LINKS |
 | Status | Text | | | Status field (usage varies by container) |
 | AssignedTo | Integer | core.SiteUsers.UserId | | Assigned user |
@@ -27,7 +27,7 @@ This table exists in multiple containers across skyline.ms. See [announcement-us
 | LastIndexed | DateTime | | RO | Full-text search index timestamp |
 | DiscussionSrcEntityType | Text | | | Entity type of discussion source |
 | Folder | Text | core.Containers.EntityId | Req | Container reference |
-| FormattedBody | Text | | | HTML-rendered body content |
+| FormattedBody | Text | | | **⚠️ LARGE** - HTML-rendered body, use `get_support_thread()` |
 
 ## Key Relationships
 

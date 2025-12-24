@@ -17,13 +17,13 @@
 | flagged | Boolean | | Req | Manual flag for attention |
 | timestamp | DateTime | | | |
 | userid | Integer | testresults.user.id | Req | FK to user (computer name) |
-| xml | Other | | | Raw XML data |
+| xml | Other | | | **⚠️ LARGE** - Raw XML data, use `save_run_xml()` |
 | pointsummary | Other | | | |
 | passedtests | Integer | | | Count of passed tests |
 | failedtests | Integer | | | Count of failed tests |
 | leakedtests | Integer | | | Count of leaked tests |
 | averagemem | Integer | | | Average memory usage (MB) |
-| log | Other | | | Full test log |
+| log | Other | | | **⚠️ LARGE** - Full test log, use `save_run_log()` |
 | githash | Text | | | Git commit hash |
 
 ## Notes

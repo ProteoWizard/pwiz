@@ -275,7 +275,7 @@ ai/mcp/LabKeyMcp/queries/
 │   ├── testpasses_detail.sql
 │   ├── handleleaks_by_computer.sql
 │   ├── testfails_by_computer.sql
-│   └── compare_run_timings.sql     # ⚠️ Has errors on server
+│   └── compare_run_timings.sql     # ✅ Working - compares test timings between runs
 ├── support/
 │   ├── documents_metadata.sql
 │   └── documents-schema.md         # ✅ Pre-filled
@@ -298,9 +298,22 @@ ai/mcp/LabKeyMcp/queries/
 - [ ] Paste handleleaks table schema from LabKey UI
 - [ ] Paste user table schema from LabKey UI
 - [ ] Paste Threads view schema from LabKey UI
-- [ ] Fix `compare_run_timings.sql` errors on server (has GROUP BY issues)
-- [ ] Rename `support_threads_recent` → `announcement_threads_recent` on server
-- [ ] Rename `support_thread_posts` → `announcement_thread_posts` on server
+- [x] Fix `compare_run_timings.sql` errors on server - working with pass counts and total time impact
+- [x] Rename `support_threads_recent` → `announcement_threads_recent` on server (done in prior commit)
+- [x] Rename `support_thread_posts` → `announcement_thread_posts` on server (done in prior commit)
+
+### Phase 3.7: HTTP-Based Data Access ✅
+
+Fixed tools that need to access large blob columns (log, xml) by using HTTP endpoints instead of direct database queries.
+
+**Tools updated:**
+- [x] `save_run_log()` - Now uses `testresults-viewLog.view` HTTP endpoint
+- [x] `save_run_xml()` - NEW - Uses `testresults-viewXml.view` HTTP endpoint
+
+**Schema annotations added:**
+- [x] Marked large columns with **⚠️ LARGE** in schema documentation
+- [x] Added troubleshooting section to mcp-development-guide.md
+- [x] Documented schema conventions for LARGE column warnings
 
 ### Phase 4: Code Refactoring (Before Completion)
 

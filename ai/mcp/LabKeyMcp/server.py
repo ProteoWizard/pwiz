@@ -595,25 +595,43 @@ async def save_run_log(
         container_path: Container path (default: /home/development/Nightly x64)
     """
     from pathlib import Path
+    from urllib.parse import quote
+    import json
 
     try:
-        server_context = get_server_context(server, container_path)
-        filter_array = [QueryFilter("id", str(run_id), "eq")]
+        # Get credentials for HTTP request
+        login, password = None, None
+        netrc_path = Path.home() / "_netrc"
+        if netrc_path.exists():
+            import netrc
+            try:
+                authenticators = netrc.netrc(str(netrc_path))
+                auth = authenticators.authenticators(server)
+                if auth:
+                    login, _, password = auth
+            except Exception:
+                pass
 
-        result = labkey.query.select_rows(
-            server_context=server_context,
-            schema_name=TESTRESULTS_SCHEMA,
-            query_name="testruns",
-            max_rows=1,
-            filter_array=filter_array,
-            columns=["id", "log"],
-        )
+        if not login or not password:
+            return "Error: No credentials found in _netrc for skyline.ms"
 
-        if not result or not result.get("rows"):
-            return f"No test run found with id={run_id}"
+        # URL-encode the container path for the URL
+        encoded_path = quote(container_path, safe='/')
+        log_url = f"https://{server}{encoded_path}/testresults-viewLog.view?runid={run_id}"
 
-        row = result["rows"][0]
-        log_content = row.get("log", "")
+        # Make authenticated HTTP request
+        request = urllib.request.Request(log_url)
+        credentials = base64.b64encode(f"{login}:{password}".encode()).decode()
+        request.add_header("Authorization", f"Basic {credentials}")
+
+        logger.info(f"Fetching log from: {log_url}")
+
+        with urllib.request.urlopen(request, timeout=120) as response:
+            response_text = response.read().decode("utf-8")
+
+        # Parse JSON response - endpoint returns {log: "..."}
+        data = json.loads(response_text)
+        log_content = data.get("log", "")
 
         if not log_content:
             return f"Test run #{run_id} has no log content"
@@ -644,6 +662,96 @@ async def save_run_log(
     except Exception as e:
         logger.error(f"Error saving run log: {e}", exc_info=True)
         return f"Error saving run log: {e}"
+
+
+@mcp.tool()
+async def save_run_xml(
+    run_id: int,
+    server: str = DEFAULT_SERVER,
+    container_path: str = DEFAULT_TEST_CONTAINER,
+) -> str:
+    """Fetch test run XML and save to ai/.tmp/testrun-xml-{run_id}.xml for analysis.
+
+    The XML contains structured test results including all test passes, failures,
+    and timing data. This is an alternative to querying the testpasses table directly,
+    which has 700M+ rows and requires careful filtering.
+
+    Returns metadata only (not the XML content) to avoid context bloat:
+    - file_path: where the XML was saved
+    - size_bytes: file size
+    - line_count: number of lines
+
+    Args:
+        run_id: The test run ID to fetch the XML for
+        server: LabKey server hostname (default: skyline.ms)
+        container_path: Container path (default: /home/development/Nightly x64)
+    """
+    from pathlib import Path
+    from urllib.parse import quote
+    import json
+
+    try:
+        # Get credentials for HTTP request
+        login, password = None, None
+        netrc_path = Path.home() / "_netrc"
+        if netrc_path.exists():
+            import netrc
+            try:
+                authenticators = netrc.netrc(str(netrc_path))
+                auth = authenticators.authenticators(server)
+                if auth:
+                    login, _, password = auth
+            except Exception:
+                pass
+
+        if not login or not password:
+            return "Error: No credentials found in _netrc for skyline.ms"
+
+        # URL-encode the container path for the URL
+        encoded_path = quote(container_path, safe='/')
+        xml_url = f"https://{server}{encoded_path}/testresults-viewXml.view?runid={run_id}"
+
+        # Make authenticated HTTP request
+        request = urllib.request.Request(xml_url)
+        credentials = base64.b64encode(f"{login}:{password}".encode()).decode()
+        request.add_header("Authorization", f"Basic {credentials}")
+
+        logger.info(f"Fetching XML from: {xml_url}")
+
+        with urllib.request.urlopen(request, timeout=120) as response:
+            response_text = response.read().decode("utf-8")
+
+        # Parse JSON response - endpoint returns {xml: "..."}
+        data = json.loads(response_text)
+        xml_content = data.get("xml", "")
+
+        if not xml_content:
+            return f"Test run #{run_id} has no XML content"
+
+        # Determine output path relative to this script
+        script_dir = Path(__file__).resolve().parent
+        repo_root = script_dir.parent.parent.parent
+        output_dir = repo_root / "ai" / ".tmp"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        output_file = output_dir / f"testrun-xml-{run_id}.xml"
+        output_file.write_text(xml_content, encoding="utf-8")
+
+        # Calculate metadata
+        size_bytes = output_file.stat().st_size
+        line_count = xml_content.count("\n") + 1
+
+        return (
+            f"XML saved successfully:\n"
+            f"  file_path: {output_file}\n"
+            f"  size_bytes: {size_bytes:,}\n"
+            f"  line_count: {line_count:,}\n"
+            f"\nUse Grep or Read tools to search within this file."
+        )
+
+    except Exception as e:
+        logger.error(f"Error saving run XML: {e}", exc_info=True)
+        return f"Error saving run XML: {e}"
 
 
 @mcp.tool()

@@ -13,7 +13,7 @@
 | documentname | Text | Filename |
 | documentsize | Integer | File size in bytes |
 | documenttype | Text | MIME type |
-| document | Binary | **NEVER QUERY - up to 50MB binary blob** |
+| document | Binary | **⚠️ LARGE** - Up to 50MB binary blob, use `get_attachment()` |
 
 ## Notes
 
