@@ -1,0 +1,1523 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.IO.RecyclableMemoryStream</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager">
+             <summary>
+             Manages pools of <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> objects.
+             </summary>
+             <remarks>
+             <para>
+             There are two pools managed in here. The small pool contains same-sized buffers that are handed to streams
+             as they write more data.
+            </para>
+            <para>
+             For scenarios that need to call <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetBuffer"/>, the large pool contains buffers of various sizes, all
+             multiples/exponentials of <see cref="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.LargeBufferMultiple"/> (1 MB by default). They are split by size to avoid overly-wasteful buffer
+             usage. There should be far fewer 8 MB buffers than 1 MB buffers, for example.
+             </para>
+             </remarks>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreatedEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreated"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreatedEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="requestedSize">The requested stream size.</param>
+            <param name="actualSize">The actual stream size.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreatedEventArgs.#ctor(System.Guid,System.String,System.Int64,System.Int64)">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreated"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreatedEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="requestedSize">The requested stream size.</param>
+            <param name="actualSize">The actual stream size.</param>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreatedEventArgs.Id">
+            <summary>
+            Unique ID for the stream.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreatedEventArgs.Tag">
+            <summary>
+            Optional Tag for the event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreatedEventArgs.RequestedSize">
+            <summary>
+            Requested stream size.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreatedEventArgs.ActualSize">
+            <summary>
+            Actual stream size.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposed"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="lifetime">Lifetime of the stream</param>
+            <param name="allocationStack">Stack of original allocation.</param>
+            <param name="disposeStack">Dispose stack.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs.#ctor(System.Guid,System.String,System.TimeSpan,System.String,System.String)">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposed"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="lifetime">Lifetime of the stream</param>
+            <param name="allocationStack">Stack of original allocation.</param>
+            <param name="disposeStack">Dispose stack.</param>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs.Id">
+            <summary>
+            Unique ID for the stream.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs.Tag">
+            <summary>
+            Optional Tag for the event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs.AllocationStack">
+            <summary>
+            Stack where the stream was allocated.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs.DisposeStack">
+            <summary>
+            Stack where stream was disposed.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposedEventArgs.Lifetime">
+            <summary>
+            Lifetime of the stream.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposed"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="allocationStack">Stack of original allocation.</param>
+            <param name="disposeStack1">First dispose stack.</param>
+            <param name="disposeStack2">Second dispose stack.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs.#ctor(System.Guid,System.String,System.String,System.String,System.String)">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposed"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="allocationStack">Stack of original allocation.</param>
+            <param name="disposeStack1">First dispose stack.</param>
+            <param name="disposeStack2">Second dispose stack.</param>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs.Id">
+            <summary>
+            Unique ID for the stream.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs.Tag">
+            <summary>
+            Optional Tag for the event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs.AllocationStack">
+            <summary>
+            Stack where the stream was allocated.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs.DisposeStack1">
+            <summary>
+            First dispose stack.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposedEventArgs.DisposeStack2">
+            <summary>
+            Second dispose stack.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalizedEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalized"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalizedEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="allocationStack">Stack of original allocation.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalizedEventArgs.#ctor(System.Guid,System.String,System.String)">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalized"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalizedEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="allocationStack">Stack of original allocation.</param>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalizedEventArgs.Id">
+            <summary>
+            Unique ID for the stream.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalizedEventArgs.Tag">
+            <summary>
+            Optional Tag for the event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalizedEventArgs.AllocationStack">
+            <summary>
+            Stack where the stream was allocated.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArrayEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArray"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArrayEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="stack">Stack of ToArray call.</param>
+            <param name="length">Length of stream.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArrayEventArgs.#ctor(System.Guid,System.String,System.String,System.Int64)">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArray"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArrayEventArgs"/> class.
+            </remarks>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="stack">Stack of ToArray call.</param>
+            <param name="length">Length of stream.</param>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArrayEventArgs.Id">
+            <summary>
+            Unique ID for the stream.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArrayEventArgs.Tag">
+            <summary>
+            Optional Tag for the event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArrayEventArgs.Stack">
+            <summary>
+            Stack where ToArray was called.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArrayEventArgs.Length">
+            <summary>
+            Length of stack.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacityEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacity"/> event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacityEventArgs.Id">
+            <summary>
+            Unique ID for the stream.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacityEventArgs.Tag">
+            <summary>
+            Optional Tag for the event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacityEventArgs.AllocationStack">
+            <summary>
+            Original allocation stack.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacityEventArgs.RequestedCapacity">
+            <summary>
+            Requested capacity.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacityEventArgs.MaximumCapacity">
+            <summary>
+            Maximum capacity.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacityEventArgs.#ctor(System.Guid,System.String,System.Int64,System.Int64,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacityEventArgs"/> class.
+            </summary>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="requestedCapacity">Requested capacity.</param>
+            <param name="maximumCapacity">Maximum stream capacity of the manager.</param>
+            <param name="allocationStack">Original allocation stack.</param>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.BlockCreatedEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.BlockCreated"/> event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.BlockCreatedEventArgs.SmallPoolInUse">
+            <summary>
+            How many bytes are currently in use from the small pool.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.BlockCreatedEventArgs.#ctor(System.Int64)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.BlockCreatedEventArgs"/> class.
+            </summary>
+            <param name="smallPoolInUse">Number of bytes currently in use from the small pool.</param>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreated"/> events.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs.Id">
+            <summary>
+            Unique ID for the stream.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs.Tag">
+            <summary>
+            Optional Tag for the event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs.Pooled">
+            <summary>
+            Whether the buffer was satisfied from the pool or not.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs.RequiredSize">
+            <summary>
+            Required buffer size.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs.LargePoolInUse">
+            <summary>
+            How many bytes are in use from the large pool.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs.CallStack">
+            <summary>
+            If the buffer was not satisfied from the pool, and <see cref="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.GenerateCallStacks"/> is turned on, then.
+            this will contain the call stack of the allocation request.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs.#ctor(System.Guid,System.String,System.Int64,System.Int64,System.Boolean,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreatedEventArgs"/> class.
+            </summary>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="requiredSize">Required size of the new buffer.</param>
+            <param name="largePoolInUse">How many bytes from the large pool are currently in use.</param>
+            <param name="pooled">Whether the buffer was satisfied from the pool or not.</param>
+            <param name="callStack">Call stack of the allocation, if it wasn't pooled.</param>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscardedEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscarded"/> event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscardedEventArgs.Id">
+            <summary>
+            Unique ID for the stream.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscardedEventArgs.Tag">
+            <summary>
+            Optional Tag for the event.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscardedEventArgs.BufferType">
+            <summary>
+            Type of the buffer.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscardedEventArgs.Reason">
+            <summary>
+            The reason this buffer was discarded.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscardedEventArgs.#ctor(System.Guid,System.String,Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamBufferType,Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamDiscardReason)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscardedEventArgs"/> class.
+            </summary>
+            <param name="guid">Unique ID of the stream.</param>
+            <param name="tag">Tag of the stream.</param>
+            <param name="bufferType">Type of buffer being discarded.</param>
+            <param name="reason">The reason for the discard.</param>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamLengthEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamLength"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamLengthEventArgs"/> class.
+            </remarks>
+            <param name="length">Length of the strength.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.StreamLengthEventArgs.#ctor(System.Int64)">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamLength"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.StreamLengthEventArgs"/> class.
+            </remarks>
+            <param name="length">Length of the strength.</param>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.StreamLengthEventArgs.Length">
+            <summary>
+            Length of the stream.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.UsageReportEventArgs">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.UsageReport"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.UsageReportEventArgs"/> class.
+            </remarks>
+            <param name="smallPoolInUseBytes">Bytes from the small pool currently in use.</param>
+            <param name="smallPoolFreeBytes">Bytes from the small pool currently available.</param>
+            <param name="largePoolInUseBytes">Bytes from the large pool currently in use.</param>
+            <param name="largePoolFreeBytes">Bytes from the large pool currently available.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.UsageReportEventArgs.#ctor(System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Arguments for the <see cref="E:Microsoft.IO.RecyclableMemoryStreamManager.UsageReport"/> event.
+            </summary>
+            <remarks>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.UsageReportEventArgs"/> class.
+            </remarks>
+            <param name="smallPoolInUseBytes">Bytes from the small pool currently in use.</param>
+            <param name="smallPoolFreeBytes">Bytes from the small pool currently available.</param>
+            <param name="largePoolInUseBytes">Bytes from the large pool currently in use.</param>
+            <param name="largePoolFreeBytes">Bytes from the large pool currently available.</param>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.UsageReportEventArgs.SmallPoolInUseBytes">
+            <summary>
+            Bytes from the small pool currently in use.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.UsageReportEventArgs.SmallPoolFreeBytes">
+            <summary>
+            Bytes from the small pool currently available.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.UsageReportEventArgs.LargePoolInUseBytes">
+            <summary>
+            Bytes from the large pool currently in use.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.UsageReportEventArgs.LargePoolFreeBytes">
+            <summary>
+            Bytes from the large pool currently available.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.Events">
+            <summary>
+            ETW events for RecyclableMemoryStream.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.Events.Writer">
+            <summary>
+            Static log object, through which all events are written.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamBufferType">
+            <summary>
+            Type of buffer.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamBufferType.Small">
+            <summary>
+            Small block buffer.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamBufferType.Large">
+            <summary>
+            Large pool buffer.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamDiscardReason">
+            <summary>
+            The possible reasons for discarding a buffer.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamDiscardReason.TooLarge">
+            <summary>
+            Buffer was too large to be re-pooled.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamDiscardReason.EnoughFree">
+            <summary>
+            There are enough free bytes in the pool.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamCreated(System.Guid,System.String,System.Int64,System.Int64)">
+            <summary>
+            Logged when a stream object is created.
+            </summary>
+            <param name="guid">A unique ID for this stream.</param>
+            <param name="tag">A temporary ID for this stream, usually indicates current usage.</param>
+            <param name="requestedSize">Requested size of the stream.</param>
+            <param name="actualSize">Actual size given to the stream from the pool.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamDisposed(System.Guid,System.String,System.Int64,System.String,System.String)">
+            <summary>
+            Logged when the stream is disposed.
+            </summary>
+            <param name="guid">A unique ID for this stream.</param>
+            <param name="tag">A temporary ID for this stream, usually indicates current usage.</param>
+            <param name="lifetimeMs">Lifetime in milliseconds of the stream</param>
+            <param name="allocationStack">Call stack of initial allocation.</param>
+            <param name="disposeStack">Call stack of the dispose.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamDoubleDispose(System.Guid,System.String,System.String,System.String,System.String)">
+            <summary>
+            Logged when the stream is disposed for the second time.
+            </summary>
+            <param name="guid">A unique ID for this stream.</param>
+            <param name="tag">A temporary ID for this stream, usually indicates current usage.</param>
+            <param name="allocationStack">Call stack of initial allocation.</param>
+            <param name="disposeStack1">Call stack of the first dispose.</param>
+            <param name="disposeStack2">Call stack of the second dispose.</param>
+            <remarks>Note: Stacks will only be populated if RecyclableMemoryStreamManager.GenerateCallStacks is true.</remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamFinalized(System.Guid,System.String,System.String)">
+            <summary>
+            Logged when a stream is finalized.
+            </summary>
+            <param name="guid">A unique ID for this stream.</param>
+            <param name="tag">A temporary ID for this stream, usually indicates current usage.</param>
+            <param name="allocationStack">Call stack of initial allocation.</param>
+            <remarks>Note: Stacks will only be populated if RecyclableMemoryStreamManager.GenerateCallStacks is true.</remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamToArray(System.Guid,System.String,System.String,System.Int64)">
+            <summary>
+            Logged when ToArray is called on a stream.
+            </summary>
+            <param name="guid">A unique ID for this stream.</param>
+            <param name="tag">A temporary ID for this stream, usually indicates current usage.</param>
+            <param name="stack">Call stack of the ToArray call.</param>
+            <param name="size">Length of stream.</param>
+            <remarks>Note: Stacks will only be populated if RecyclableMemoryStreamManager.GenerateCallStacks is true.</remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamManagerInitialized(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Logged when the RecyclableMemoryStreamManager is initialized.
+            </summary>
+            <param name="blockSize">Size of blocks, in bytes.</param>
+            <param name="largeBufferMultiple">Size of the large buffer multiple, in bytes.</param>
+            <param name="maximumBufferSize">Maximum buffer size, in bytes.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamNewBlockCreated(System.Int64)">
+            <summary>
+            Logged when a new block is created.
+            </summary>
+            <param name="smallPoolInUseBytes">Number of bytes in the small pool currently in use.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamNewLargeBufferCreated(System.Int64,System.Int64)">
+            <summary>
+            Logged when a new large buffer is created.
+            </summary>
+            <param name="requiredSize">Requested size.</param>
+            <param name="largePoolInUseBytes">Number of bytes in the large pool in use.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamNonPooledLargeBufferCreated(System.Guid,System.String,System.Int64,System.String)">
+            <summary>
+            Logged when a buffer is created that is too large to pool.
+            </summary>
+            <param name="guid">Unique stream ID.</param>
+            <param name="tag">A temporary ID for this stream, usually indicates current usage.</param>
+            <param name="requiredSize">Size requested by the caller.</param>
+            <param name="allocationStack">Call stack of the requested stream.</param>
+            <remarks>Note: Stacks will only be populated if RecyclableMemoryStreamManager.GenerateCallStacks is true.</remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamDiscardBuffer(System.Guid,System.String,Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamBufferType,Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamDiscardReason,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Logged when a buffer is discarded (not put back in the pool, but given to GC to clean up).
+            </summary>
+            <param name="guid">Unique stream ID.</param>
+            <param name="tag">A temporary ID for this stream, usually indicates current usage.</param>
+            <param name="bufferType">Type of the buffer being discarded.</param>
+            <param name="reason">Reason for the discard.</param>
+            <param name="smallBlocksFree">Number of free small pool blocks.</param>
+            <param name="smallPoolBytesFree">Bytes free in the small pool.</param>
+            <param name="smallPoolBytesInUse">Bytes in use from the small pool.</param>
+            <param name="largeBlocksFree">Number of free large pool blocks.</param>
+            <param name="largePoolBytesFree">Bytes free in the large pool.</param>
+            <param name="largePoolBytesInUse">Bytes in use from the large pool.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Events.MemoryStreamOverCapacity(System.Guid,System.String,System.Int64,System.Int64,System.String)">
+            <summary>
+            Logged when a stream grows beyond the maximum capacity.
+            </summary>
+            <param name="guid">Unique stream ID</param>
+            <param name="requestedCapacity">The requested capacity.</param>
+            <param name="maxCapacity">Maximum capacity, as configured by RecyclableMemoryStreamManager.</param>
+            <param name="tag">A temporary ID for this stream, usually indicates current usage.</param>
+            <param name="allocationStack">Call stack for the capacity request.</param>
+            <remarks>Note: Stacks will only be populated if RecyclableMemoryStreamManager.GenerateCallStacks is true.</remarks>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.MaxArrayLength">
+            <summary>
+            Maximum length of a single array.
+            </summary>
+            <remarks>See documentation at https://docs.microsoft.com/dotnet/api/system.array?view=netcore-3.1
+            </remarks>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.DefaultBlockSize">
+            <summary>
+            Default block size, in bytes.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.DefaultLargeBufferMultiple">
+            <summary>
+            Default large buffer multiple, in bytes.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStreamManager.DefaultMaximumBufferSize">
+            <summary>
+            Default maximum buffer size, in bytes.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Settings">
+            <summary>
+            Settings for controlling the behavior of RecyclableMemoryStream
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.SmallPoolFreeSize">
+            <summary>
+            Number of bytes in small pool not currently in use.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.SmallPoolInUseSize">
+            <summary>
+            Number of bytes currently in use by stream from the small pool.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargePoolFreeSize">
+            <summary>
+            Number of bytes in large pool not currently in use.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargePoolInUseSize">
+            <summary>
+            Number of bytes currently in use by streams from the large pool.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.SmallBlocksFree">
+            <summary>
+            How many blocks are in the small pool.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.LargeBuffersFree">
+            <summary>
+            How many buffers are in the large pool.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStreamManager.Options">
+            <summary>
+            Parameters for customizing the behavior of <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager"/>
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.BlockSize">
+            <summary>
+            Gets or sets the size of the pooled blocks. This must be greater than 0.
+            </summary>
+            <remarks>The default size 131,072 (128KB)</remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.LargeBufferMultiple">
+            <summary>
+            Each large buffer will be a multiple exponential of this value
+            </summary>
+            <remarks>The default value is 1,048,576 (1MB)</remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.MaximumBufferSize">
+            <summary>
+            Buffer beyond this length are not pooled.
+            </summary>
+            <remarks>The default value is 134,217,728 (128MB)</remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.MaximumSmallPoolFreeBytes">
+            <summary>
+            Maximum number of bytes to keep available in the small pool.
+            </summary>
+            <remarks>
+            <para>Trying to return buffers to the pool beyond this limit will result in them being garbage collected.</para>
+            <para>The default value is 0, but all users should set a reasonable value depending on your application's memory requirements.</para>
+            </remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.MaximumLargePoolFreeBytes">
+            <summary>
+            Maximum number of bytes to keep available in the large pools.
+            </summary>
+            <remarks>
+            <para>Trying to return buffers to the pool beyond this limit will result in them being garbage collected.</para>
+            <para>The default value is 0, but all users should set a reasonable value depending on your application's memory requirements.</para>
+            </remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.UseExponentialLargeBuffer">
+            <summary>
+            Whether to use the exponential allocation strategy (see documentation).
+            </summary>
+            <remarks>The default value is false.</remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.MaximumStreamCapacity">
+            <summary>
+            Maximum stream capacity in bytes. Attempts to set a larger capacity will
+            result in an exception.
+            </summary>
+            <remarks>The default value of 0 indicates no limit.</remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.GenerateCallStacks">
+            <summary>
+            Whether to save call stacks for stream allocations. This can help in debugging.
+            It should NEVER be turned on generally in production.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.AggressiveBufferReturn">
+            <summary>
+            Whether dirty buffers can be immediately returned to the buffer pool.
+            </summary>
+            <remarks>
+            <para>
+            When <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetBuffer"/> is called on a stream and creates a single large buffer, if this setting is enabled, the other blocks will be returned
+            to the buffer pool immediately.
+            </para>
+            <para>
+            Note when enabling this setting that the user is responsible for ensuring that any buffer previously
+            retrieved from a stream which is subsequently modified is not used after modification (as it may no longer
+            be valid).
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.ThrowExceptionOnToArray">
+            <summary>
+            Causes an exception to be thrown if <see cref="M:Microsoft.IO.RecyclableMemoryStream.ToArray"/> is ever called.
+            </summary>
+            <remarks>Calling <see cref="M:Microsoft.IO.RecyclableMemoryStream.ToArray"/> defeats the purpose of a pooled buffer. Use this property to discover code that is calling <see cref="M:Microsoft.IO.RecyclableMemoryStream.ToArray"/>. If this is
+            set and <see cref="M:Microsoft.IO.RecyclableMemoryStream.ToArray"/> is called, a <c>NotSupportedException</c> will be thrown.</remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.ZeroOutBuffer">
+            <summary>
+            Zero out buffers on allocation and before returning them to the pool.
+            </summary>
+            <remarks>Setting this to true causes a performance hit and should only be set if one wants to avoid accidental data leaks.</remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Options.#ctor">
+            <summary>
+            Creates a new <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.Options"/> object.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.Options.#ctor(System.Int32,System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>
+            Creates a new <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.Options"/> object with the most common options.
+            </summary>
+            <param name="blockSize">Size of the blocks in the small pool.</param>
+            <param name="largeBufferMultiple">Size of the large buffer multiple</param>
+            <param name="maximumBufferSize">Maximum poolable buffer size.</param>
+            <param name="maximumSmallPoolFreeBytes">Maximum bytes to hold in the small pool.</param>
+            <param name="maximumLargePoolFreeBytes">Maximum bytes to hold in each of the large pools.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.#ctor">
+            <summary>
+            Initializes the memory manager with the default block/buffer specifications. This pool may have unbounded growth unless you modify <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager.Options"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.#ctor(Microsoft.IO.RecyclableMemoryStreamManager.Options)">
+            <summary>
+            Initializes the memory manager with the given block requiredSize.
+            </summary>
+            <param name="options">Object specifying options for stream behavior.</param>
+            <exception cref="T:System.InvalidOperationException">
+            <paramref name="options.BlockSize.BlockSize"/> is not a positive number,
+            or <paramref name="options.LargeBufferMultiple.LargeBufferMultiple"/> is not a positive number,
+            or <paramref name="options.MaximumBufferSize.MaximumBufferSize"/> is less than options.BlockSize,
+            or <paramref name="options.MaximumSmallPoolFreeBytes.MaximumSmallPoolFreeBytes"/> is negative,
+            or <paramref name="options.MaximumLargePoolFreeBytes.MaximumLargePoolFreeBytes"/> is negative,
+            or <paramref name="options.MaximumBufferSize.MaximumBufferSize"/> is not a multiple/exponential of <paramref name="options.LargeBufferMultiple.LargeBufferMultiple"/>.
+            </exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetBlock">
+            <summary>
+            Removes and returns a single block from the pool.
+            </summary>
+            <returns>A <c>byte[]</c> array.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetLargeBuffer(System.Int64,System.Guid,System.String)">
+            <summary>
+            Returns a buffer of arbitrary size from the large buffer pool. This buffer
+            will be at least the requiredSize and always be a multiple/exponential of largeBufferMultiple.
+            </summary>
+            <param name="requiredSize">The minimum length of the buffer.</param>
+            <param name="id">Unique ID for the stream.</param>
+            <param name="tag">The tag of the stream returning this buffer, for logging if necessary.</param>
+            <returns>A buffer of at least the required size.</returns>
+            <exception cref="T:System.OutOfMemoryException">Requested array size is larger than the maximum allowed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.ReturnLargeBuffer(System.Byte[],System.Guid,System.String)">
+            <summary>
+            Returns the buffer to the large pool.
+            </summary>
+            <param name="buffer">The buffer to return.</param>
+            <param name="id">Unique stream ID.</param>
+            <param name="tag">The tag of the stream returning this buffer, for logging if necessary.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentException"><c>buffer.Length</c> is not a multiple/exponential of <see cref="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.LargeBufferMultiple"/> (it did not originate from this pool).</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.ReturnBlocks(System.Collections.Generic.List{System.Byte[]},System.Guid,System.String)">
+            <summary>
+            Returns the blocks to the pool.
+            </summary>
+            <param name="blocks">Collection of blocks to return to the pool.</param>
+            <param name="id">Unique Stream ID.</param>
+            <param name="tag">The tag of the stream returning these blocks, for logging if necessary.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="blocks"/> is null.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="blocks"/> contains buffers that are the wrong size (or null) for this memory manager.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.ReturnBlock(System.Byte[],System.Guid,System.String)">
+            <summary>
+            Returns a block to the pool.
+            </summary>
+            <param name="block">Block to return to the pool.</param>
+            <param name="id">Unique Stream ID.</param>
+            <param name="tag">The tag of the stream returning this, for logging if necessary.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="block"/> is null.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="block"/> is the wrong size for this memory manager.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with no tag and a default initial capacity.
+            </summary>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.Guid)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with no tag and a default initial capacity.
+            </summary>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.String)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and a default initial capacity.
+            </summary>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.Guid,System.String)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and a default initial capacity.
+            </summary>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.String,System.Int64)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and at least the given capacity.
+            </summary>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <param name="requiredSize">The minimum desired capacity for the stream.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.Guid,System.String,System.Int64)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and at least the given capacity.
+            </summary>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <param name="requiredSize">The minimum desired capacity for the stream.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.Guid,System.String,System.Int64,System.Boolean)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and at least the given capacity, possibly using
+            a single contiguous underlying buffer.
+            </summary>
+            <remarks>Retrieving a <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> which provides a single contiguous buffer can be useful in situations
+            where the initial size is known and it is desirable to avoid copying data between the smaller underlying
+            buffers to a single large one. This is most helpful when you know that you will always call <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetBuffer"/>
+            on the underlying stream.</remarks>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <param name="requiredSize">The minimum desired capacity for the stream.</param>
+            <param name="asContiguousBuffer">Whether to attempt to use a single contiguous buffer.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.String,System.Int64,System.Boolean)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and at least the given capacity, possibly using
+            a single contiguous underlying buffer.
+            </summary>
+            <remarks>Retrieving a <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> which provides a single contiguous buffer can be useful in situations
+            where the initial size is known and it is desirable to avoid copying data between the smaller underlying
+            buffers to a single large one. This is most helpful when you know that you will always call <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetBuffer"/>
+            on the underlying stream.</remarks>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <param name="requiredSize">The minimum desired capacity for the stream.</param>
+            <param name="asContiguousBuffer">Whether to attempt to use a single contiguous buffer.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.Guid,System.String,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and with contents copied from the provided
+            buffer. The provided buffer is not wrapped or used after construction.
+            </summary>
+            <remarks>The new stream's position is set to the beginning of the stream when returned.</remarks>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <param name="buffer">The byte buffer to copy data from.</param>
+            <param name="offset">The offset from the start of the buffer to copy from.</param>
+            <param name="count">The number of bytes to copy from the buffer.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.Byte[])">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the contents copied from the provided
+            buffer. The provided buffer is not wrapped or used after construction.
+            </summary>
+            <remarks>The new stream's position is set to the beginning of the stream when returned.</remarks>
+            <param name="buffer">The byte buffer to copy data from.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.String,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and with contents copied from the provided
+            buffer. The provided buffer is not wrapped or used after construction.
+            </summary>
+            <remarks>The new stream's position is set to the beginning of the stream when returned.</remarks>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <param name="buffer">The byte buffer to copy data from.</param>
+            <param name="offset">The offset from the start of the buffer to copy from.</param>
+            <param name="count">The number of bytes to copy from the buffer.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.Guid,System.String,System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and with contents copied from the provided
+            buffer. The provided buffer is not wrapped or used after construction.
+            </summary>
+            <remarks>The new stream's position is set to the beginning of the stream when returned.</remarks>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <param name="buffer">The byte buffer to copy data from.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the contents copied from the provided
+            buffer. The provided buffer is not wrapped or used after construction.
+            </summary>
+            <remarks>The new stream's position is set to the beginning of the stream when returned.</remarks>
+            <param name="buffer">The byte buffer to copy data from.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStreamManager.GetStream(System.String,System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Retrieve a new <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> object with the given tag and with contents copied from the provided
+            buffer. The provided buffer is not wrapped or used after construction.
+            </summary>
+            <remarks>The new stream's position is set to the beginning of the stream when returned.</remarks>
+            <param name="tag">A tag which can be used to track the source of the stream.</param>
+            <param name="buffer">The byte buffer to copy data from.</param>
+            <returns>A <see cref="T:Microsoft.IO.RecyclableMemoryStream"/>.</returns>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.BlockCreated">
+            <summary>
+            Triggered when a new block is created.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.LargeBufferCreated">
+            <summary>
+            Triggered when a new large buffer is created.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamCreated">
+            <summary>
+            Triggered when a new stream is created.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamDisposed">
+            <summary>
+            Triggered when a stream is disposed.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamDoubleDisposed">
+            <summary>
+            Triggered when a stream is disposed of twice (an error).
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamFinalized">
+            <summary>
+            Triggered when a stream is finalized.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamLength">
+            <summary>
+            Triggered when a stream is disposed to report the stream's length.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamConvertedToArray">
+            <summary>
+            Triggered when a user converts a stream to array.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.StreamOverCapacity">
+            <summary>
+            Triggered when a stream is requested to expand beyond the maximum length specified by the responsible RecyclableMemoryStreamManager.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.BufferDiscarded">
+            <summary>
+            Triggered when a buffer of either type is discarded, along with the reason for the discard.
+            </summary>
+        </member>
+        <member name="E:Microsoft.IO.RecyclableMemoryStreamManager.UsageReport">
+            <summary>
+            Periodically triggered to report usage statistics.
+            </summary>
+        </member>
+        <member name="T:Microsoft.IO.RecyclableMemoryStream">
+            <summary>
+            MemoryStream implementation that deals with pooling and managing memory streams which use potentially large
+            buffers.
+            </summary>
+            <remarks>
+            This class works in tandem with the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager"/> to supply <c>MemoryStream</c>-derived
+            objects to callers, while avoiding these specific problems:
+            <list type="number">
+            <item>
+            <term>LOH allocations</term>
+            <description>Since all large buffers are pooled, they will never incur a Gen2 GC</description>
+            </item>
+            <item>
+            <term>Memory waste</term><description>A standard memory stream doubles its size when it runs out of room. This
+            leads to continual memory growth as each stream approaches the maximum allowed size.</description>
+            </item>
+            <item>
+            <term>Memory copying</term>
+            <description>Each time a <c>MemoryStream</c> grows, all the bytes are copied into new buffers.
+            This implementation only copies the bytes when <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetBuffer"/> is called.</description>
+            </item>
+            <item>
+            <term>Memory fragmentation</term>
+            <description>By using homogeneous buffer sizes, it ensures that blocks of memory
+            can be easily reused.
+            </description>
+            </item>
+            </list>
+            <para>
+            The stream is implemented on top of a series of uniformly-sized blocks. As the stream's length grows,
+            additional blocks are retrieved from the memory manager. It is these blocks that are pooled, not the stream
+            object itself.
+            </para>
+            <para>
+            The biggest wrinkle in this implementation is when <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetBuffer"/> is called. This requires a single
+            contiguous buffer. If only a single block is in use, then that block is returned. If multiple blocks
+            are in use, we retrieve a larger buffer from the memory manager. These large buffers are also pooled,
+            split by size--they are multiples/exponentials of a chunk size (1 MB by default).
+            </para>
+            <para>
+            Once a large buffer is assigned to the stream the small blocks are NEVER again used for this stream. All operations take place on the
+            large buffer. The large buffer can be replaced by a larger buffer from the pool as needed. All blocks and large buffers
+            are maintained in the stream until the stream is disposed (unless AggressiveBufferReturn is enabled in the stream manager).
+            </para>
+            <para>
+            A further wrinkle is what happens when the stream is longer than the maximum allowable array length under .NET. This is allowed
+            when only blocks are in use, and only the Read/Write APIs are used. Once a stream grows to this size, any attempt to convert it
+            to a single buffer will result in an exception. Similarly, if a stream is already converted to use a single larger buffer, then
+            it cannot grow beyond the limits of the maximum allowable array size.
+            </para>
+            <para>
+            Any method that modifies the stream has the potential to throw an <c>OutOfMemoryException</c>, either because
+            the stream is beyond the limits set in <c>RecyclableStreamManager</c>, or it would result in a buffer larger than
+            the maximum array size supported by .NET.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStream.blocks">
+            <summary>
+            All of these blocks must be the same size.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStream.dirtyBuffers">
+            <summary>
+            This list is used to store buffers once they're replaced by something larger.
+            This is for the cases where you have users of this class that may hold onto the buffers longer
+            than they should and you want to prevent race conditions which could corrupt the data.
+            </summary>
+        </member>
+        <member name="F:Microsoft.IO.RecyclableMemoryStream.largeBuffer">
+            <summary>
+            This is only set by GetBuffer() if the necessary buffer is larger than a single block size, or on
+            construction if the caller immediately requests a single large buffer.
+            </summary>
+            <remarks>If this field is non-null, it contains the concatenation of the bytes found in the individual
+            blocks. Once it is created, this (or a larger) largeBuffer will be used for the life of the stream.
+            </remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.Id">
+            <summary>
+            Unique identifier for this stream across its entire lifetime.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.Tag">
+            <summary>
+            A temporary identifier for the current usage of this stream.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.MemoryManager">
+            <summary>
+            Gets the memory manager being used by this stream.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.AllocationStack">
+            <summary>
+            Call stack of the constructor. It is only set if <see cref="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.GenerateCallStacks"/> is true,
+            which should only be in debugging situations.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.DisposeStack">
+            <summary>
+            Call stack of the <see cref="M:Microsoft.IO.RecyclableMemoryStream.Dispose(System.Boolean)"/> call. It is only set if <see cref="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.GenerateCallStacks"/> is true,
+            which should only be in debugging situations.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.#ctor(Microsoft.IO.RecyclableMemoryStreamManager)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> class.
+            </summary>
+            <param name="memoryManager">The memory manager.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.#ctor(Microsoft.IO.RecyclableMemoryStreamManager,System.Guid)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> class.
+            </summary>
+            <param name="memoryManager">The memory manager.</param>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.#ctor(Microsoft.IO.RecyclableMemoryStreamManager,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> class.
+            </summary>
+            <param name="memoryManager">The memory manager.</param>
+            <param name="tag">A string identifying this stream for logging and debugging purposes.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.#ctor(Microsoft.IO.RecyclableMemoryStreamManager,System.Guid,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> class.
+            </summary>
+            <param name="memoryManager">The memory manager.</param>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <param name="tag">A string identifying this stream for logging and debugging purposes.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.#ctor(Microsoft.IO.RecyclableMemoryStreamManager,System.String,System.Int64)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> class.
+            </summary>
+            <param name="memoryManager">The memory manager.</param>
+            <param name="tag">A string identifying this stream for logging and debugging purposes.</param>
+            <param name="requestedSize">The initial requested size to prevent future allocations.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.#ctor(Microsoft.IO.RecyclableMemoryStreamManager,System.Guid,System.String,System.Int64)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> class.
+            </summary>
+            <param name="memoryManager">The memory manager</param>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <param name="tag">A string identifying this stream for logging and debugging purposes.</param>
+            <param name="requestedSize">The initial requested size to prevent future allocations.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.#ctor(Microsoft.IO.RecyclableMemoryStreamManager,System.Guid,System.String,System.Int64,System.Byte[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.IO.RecyclableMemoryStream"/> class.
+            </summary>
+            <param name="memoryManager">The memory manager.</param>
+            <param name="id">A unique identifier which can be used to trace usages of the stream.</param>
+            <param name="tag">A string identifying this stream for logging and debugging purposes.</param>
+            <param name="requestedSize">The initial requested size to prevent future allocations.</param>
+            <param name="initialLargeBuffer">An initial buffer to use. This buffer will be owned by the stream and returned to the memory manager upon Dispose.</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Finalize">
+            <summary>
+            The finalizer will be called when a stream is not disposed properly.
+            </summary>
+            <remarks>Failing to dispose indicates a bug in the code using streams. Care should be taken to properly account for stream lifetime.</remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Dispose(System.Boolean)">
+            <summary>
+            Returns the memory used by this stream back to the pool.
+            </summary>
+            <param name="disposing">Whether we're disposing (true), or being called by the finalizer (false).</param>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Close">
+            <summary>
+            Equivalent to <c>Dispose</c>.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.Capacity">
+            <summary>
+            Gets or sets the capacity.
+            </summary>
+            <remarks>
+            <para>
+            Capacity is always in multiples of the memory manager's block size, unless
+            the large buffer is in use. Capacity never decreases during a stream's lifetime.
+            Explicitly setting the capacity to a lower value than the current value will have no effect.
+            This is because the buffers are all pooled by chunks and there's little reason to
+            allow stream truncation.
+            </para>
+            <para>
+            Writing past the current capacity will cause <see cref="P:Microsoft.IO.RecyclableMemoryStream.Capacity"/> to automatically increase, until MaximumStreamCapacity is reached.
+            </para>
+            <para>
+            If the capacity is larger than <c>int.MaxValue</c>, then <c>InvalidOperationException</c> will be thrown. If you anticipate using
+            larger streams, use the <see cref="P:Microsoft.IO.RecyclableMemoryStream.Capacity64"/> property instead.
+            </para>
+            </remarks>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+            <exception cref="T:System.InvalidOperationException">Capacity is larger than int.MaxValue.</exception>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.Capacity64">
+            <summary>
+            Returns a 64-bit version of capacity, for streams larger than <c>int.MaxValue</c> in length.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.Length">
+            <summary>
+            Gets the number of bytes written to this stream.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+            <remarks>If the buffer has already been converted to a large buffer, then the maximum length is limited by the maximum allowed array length in .NET.</remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.Position">
+            <summary>
+            Gets the current position in the stream.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">A negative value was passed.</exception>
+            <exception cref="T:System.InvalidOperationException">Stream is in large-buffer mode, but an attempt was made to set the position past the maximum allowed array length.</exception>
+            <remarks>If the buffer has already been converted to a large buffer, then the maximum length (and thus position) is limited by the maximum allowed array length in .NET.</remarks>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.CanRead">
+            <summary>
+            Whether the stream can currently read.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.CanSeek">
+            <summary>
+            Whether the stream can currently seek.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.CanTimeout">
+            <summary>
+            Always false.
+            </summary>
+        </member>
+        <member name="P:Microsoft.IO.RecyclableMemoryStream.CanWrite">
+            <summary>
+            Whether the stream can currently write.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.GetBuffer">
+            <summary>
+            Returns a single buffer containing the contents of the stream.
+            The buffer may be longer than the stream length.
+            </summary>
+            <returns>A byte[] buffer.</returns>
+            <remarks>IMPORTANT: Doing a <see cref="M:Microsoft.IO.RecyclableMemoryStream.Write(System.Byte[],System.Int32,System.Int32)"/> after calling <c>GetBuffer</c> invalidates the buffer. The old buffer is held onto
+            until <see cref="M:Microsoft.IO.RecyclableMemoryStream.Dispose(System.Boolean)"/> is called, but the next time <c>GetBuffer</c> is called, a new buffer from the pool will be required.</remarks>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+            <exception cref="T:System.OutOfMemoryException">stream is too large for a contiguous buffer.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.CopyToAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
+            <summary>Asynchronously reads all the bytes from the current position in this stream and writes them to another stream.</summary>
+            <param name="destination">The stream to which the contents of the current stream will be copied.</param>
+            <param name="bufferSize">This parameter is ignored.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+            <returns>A task that represents the asynchronous copy operation.</returns>
+            <exception cref="T:System.ArgumentNullException">
+              <paramref name="destination"/> is <see langword="null"/>.</exception>
+            <exception cref="T:System.ObjectDisposedException">Either the current stream or the destination stream is disposed.</exception>
+            <exception cref="T:System.NotSupportedException">The current stream does not support reading, or the destination stream does not support writing.</exception>
+            <remarks>Similarly to <c>MemoryStream</c>'s behavior, <c>CopyToAsync</c> will adjust the source stream's position by the number of bytes written to the destination stream, as a Read would do.</remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Advance(System.Int32)">
+            <summary>
+            Notifies the stream that <paramref name="count"/> bytes were written to the buffer returned by <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetMemory(System.Int32)"/> or <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetSpan(System.Int32)"/>.
+            Seeks forward by <paramref name="count"/> bytes.
+            </summary>
+            <remarks>
+            You must request a new buffer after calling Advance to continue writing more data and cannot write to a previously acquired buffer.
+            </remarks>
+            <param name="count">How many bytes to advance.</param>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="count"/> is negative.</exception>
+            <exception cref="T:System.InvalidOperationException"><paramref name="count"/> is larger than the size of the previously requested buffer.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.GetMemory(System.Int32)">
+            <inheritdoc/>
+            <remarks>
+            IMPORTANT: Calling Write(), GetBuffer(), TryGetBuffer(), Seek(), GetLength(), Advance(),
+            or setting Position after calling GetMemory() invalidates the memory.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.GetSpan(System.Int32)">
+            <inheritdoc/>
+            <remarks>
+            IMPORTANT: Calling Write(), GetBuffer(), TryGetBuffer(), Seek(), GetLength(), Advance(),
+            or setting Position after calling GetSpan() invalidates the span.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.GetWritableBuffer(System.Int32)">
+            <summary>
+            When callers to GetSpan() or GetMemory() request a buffer that is larger than the remaining size of the current block
+            this method return a temp buffer. When Advance() is called, that temp buffer is then copied into the stream.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.GetReadOnlySequence">
+            <summary>
+            Returns a sequence containing the contents of the stream.
+            </summary>
+            <returns>A ReadOnlySequence of bytes.</returns>
+            <remarks>IMPORTANT: Calling Write(), GetMemory(), GetSpan(), Dispose(), or Close() after calling GetReadOnlySequence() invalidates the sequence.</remarks>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.TryGetBuffer(System.ArraySegment{System.Byte}@)">
+            <summary>
+            Returns an <c>ArraySegment</c> that wraps a single buffer containing the contents of the stream.
+            </summary>
+            <param name="buffer">An <c>ArraySegment</c> containing a reference to the underlying bytes.</param>
+            <returns>Returns <see langword="true"/> if a buffer can be returned; otherwise, <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.ToArray">
+            <summary>
+            Returns a new array with a copy of the buffer's contents. You should almost certainly be using <see cref="M:Microsoft.IO.RecyclableMemoryStream.GetBuffer"/> combined with the <see cref="P:Microsoft.IO.RecyclableMemoryStream.Length"/> to
+            access the bytes in this stream. Calling <c>ToArray</c> will destroy the benefits of pooled buffers, but it is included
+            for the sake of completeness.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+            <exception cref="T:System.NotSupportedException">The current <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager"/>object disallows <c>ToArray</c> calls.</exception>
+            <exception cref="T:System.OutOfMemoryException">The length of the stream is too long for a contiguous array.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Read(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Reads from the current position into the provided buffer.
+            </summary>
+            <param name="buffer">Destination buffer.</param>
+            <param name="offset">Offset into buffer at which to start placing the read bytes.</param>
+            <param name="count">Number of bytes to read.</param>
+            <returns>The number of bytes read.</returns>
+            <exception cref="T:System.ArgumentNullException">buffer is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">offset or count is less than 0.</exception>
+            <exception cref="T:System.ArgumentException">offset subtracted from the buffer length is less than count.</exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.SafeRead(System.Byte[],System.Int32,System.Int32,System.Int64@)">
+            <summary>
+            Reads from the specified position into the provided buffer.
+            </summary>
+            <param name="buffer">Destination buffer.</param>
+            <param name="offset">Offset into buffer at which to start placing the read bytes.</param>
+            <param name="count">Number of bytes to read.</param>
+            <param name="streamPosition">Position in the stream to start reading from.</param>
+            <returns>The number of bytes read.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="offset"/> or <paramref name="count"/> is less than 0.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="offset"/> subtracted from the buffer length is less than <paramref name="count"/>.</exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Read(System.Span{System.Byte})">
+            <summary>
+            Reads from the current position into the provided buffer.
+            </summary>
+            <param name="buffer">Destination buffer.</param>
+            <returns>The number of bytes read.</returns>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.SafeRead(System.Span{System.Byte},System.Int64@)">
+            <summary>
+            Reads from the specified position into the provided buffer.
+            </summary>
+            <param name="buffer">Destination buffer.</param>
+            <param name="streamPosition">Position in the stream to start reading from.</param>
+            <returns>The number of bytes read.</returns>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Write(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Writes the buffer to the stream.
+            </summary>
+            <param name="buffer">Source buffer.</param>
+            <param name="offset">Start position.</param>
+            <param name="count">Number of bytes to write.</param>
+            <exception cref="T:System.ArgumentNullException">buffer is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">offset or count is negative.</exception>
+            <exception cref="T:System.ArgumentException">buffer.Length - offset is not less than count.</exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Write(System.ReadOnlySpan{System.Byte})">
+            <summary>
+            Writes the buffer to the stream.
+            </summary>
+            <param name="source">Source buffer.</param>
+            <exception cref="T:System.ArgumentNullException">buffer is null.</exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.ToString">
+            <summary>
+            Returns a useful string for debugging. This should not normally be called in actual production code.
+            </summary>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.WriteByte(System.Byte)">
+            <summary>
+            Writes a single byte to the current position in the stream.
+            </summary>
+            <param name="value">byte value to write.</param>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.ReadByte">
+            <summary>
+            Reads a single byte from the current position in the stream.
+            </summary>
+            <returns>The byte at the current position, or -1 if the position is at the end of the stream.</returns>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.SafeReadByte(System.Int64@)">
+            <summary>
+            Reads a single byte from the specified position in the stream.
+            </summary>
+            <param name="streamPosition">The position in the stream to read from.</param>
+            <returns>The byte at the current position, or -1 if the position is at the end of the stream.</returns>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.SetLength(System.Int64)">
+            <summary>
+            Sets the length of the stream.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">value is negative or larger than <see cref="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.MaximumStreamCapacity"/>.</exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.Seek(System.Int64,System.IO.SeekOrigin)">
+            <summary>
+            Sets the position to the offset from the seek location.
+            </summary>
+            <param name="offset">How many bytes to move.</param>
+            <param name="loc">From where.</param>
+            <returns>The new position.</returns>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="offset"/> is larger than <see cref="P:Microsoft.IO.RecyclableMemoryStreamManager.Options.MaximumStreamCapacity"/>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid seek origin.</exception>
+            <exception cref="T:System.IO.IOException">Attempt to set negative position.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.WriteTo(System.IO.Stream)">
+            <summary>
+            Synchronously writes this stream's bytes to the argument stream.
+            </summary>
+            <param name="stream">Destination stream.</param>
+            <remarks>Important: This does a synchronous write, which may not be desired in some situations.</remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> is null.</exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.WriteTo(System.IO.Stream,System.Int64,System.Int64)">
+            <summary>
+            Synchronously writes this stream's bytes, starting at offset, for count bytes, to the argument stream.
+            </summary>
+            <param name="stream">Destination stream.</param>
+            <param name="offset">Offset in source.</param>
+            <param name="count">Number of bytes to write.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="offset"/> is less than 0, or <paramref name="offset"/> + <paramref name="count"/> is beyond  this <paramref name="stream"/>'s length.
+            </exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.WriteTo(System.Byte[])">
+            <summary>
+            Writes bytes from the current stream to a destination <c>byte</c> array.
+            </summary>
+            <param name="buffer">Target buffer.</param>
+            <remarks>The entire stream is written to the target array.</remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/>> is null.</exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.WriteTo(System.Byte[],System.Int64,System.Int64)">
+            <summary>
+            Writes bytes from the current stream to a destination <c>byte</c> array.
+            </summary>
+            <param name="buffer">Target buffer.</param>
+            <param name="offset">Offset in the source stream, from which to start.</param>
+            <param name="count">Number of bytes to write.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="buffer"/>> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="offset"/> is less than 0, or <paramref name="offset"/> + <paramref name="count"/> is beyond this stream's length.
+            </exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.WriteTo(System.Byte[],System.Int64,System.Int64,System.Int32)">
+            <summary>
+            Writes bytes from the current stream to a destination <c>byte</c> array.
+            </summary>
+            <param name="buffer">Target buffer.</param>
+            <param name="offset">Offset in the source stream, from which to start.</param>
+            <param name="count">Number of bytes to write.</param>
+            <param name="targetOffset">Offset in the target byte array to start writing</param>
+            <exception cref="T:System.ArgumentNullException"><c>buffer</c> is null</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="offset"/> is less than 0, or <paramref name="offset"/> + <paramref name="count"/> is beyond this stream's length.
+            </exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            <paramref name="targetOffset"/> is less than 0, or <paramref name="targetOffset"/> + <paramref name="count"/> is beyond the target <paramref name="buffer"/>'s length.
+            </exception>
+            <exception cref="T:System.ObjectDisposedException">Object has been disposed.</exception>
+        </member>
+        <member name="M:Microsoft.IO.RecyclableMemoryStream.ReleaseLargeBuffer">
+            <summary>
+            Release the large buffer (either stores it for eventual release or returns it immediately).
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -159,6 +159,9 @@
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="Parquet">
+      <HintPath>..\Shared\Lib\Parquet\Parquet.dll</HintPath>
+    </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
