@@ -19,7 +19,6 @@
 using Parquet;
 using Parquet.Data;
 using pwiz.Common.DataBinding;
-using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 using System;
 using System.Collections.Generic;
@@ -84,10 +83,11 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 var field = CreateDataField(column);
                 fields.Add(field);
-                column.DataColumn = new DataColumn(field, column.Values.ToArray(), null);
+                var typedArray = ConvertToTypedArray(column);
+                column.DataColumn = new DataColumn(field, typedArray, null);
             }
 
-            return new Schema(fields);
+            return new Schema(fields.ToArray());
         }
 
         private DataField CreateDataField(ColumnData columnData)
@@ -130,6 +130,48 @@ namespace pwiz.Skyline.Model.Databinding
 
             // Default to string representation for unknown types
             return new DataField<string>(columnName);
+        }
+
+        private Array ConvertToTypedArray(ColumnData columnData)
+        {
+            var propertyType = columnData.PropertyDescriptor.PropertyType;
+            var values = columnData.Values;
+
+            if (propertyType == typeof(string))
+            {
+                return values.Select(v => v == null ? null : v.ToString()).ToArray();
+            }
+            if (propertyType == typeof(int) || propertyType == typeof(int?))
+            {
+                return values.Select(v => v == null ? (int?)null : Convert.ToInt32(v)).ToArray();
+            }
+            if (propertyType == typeof(long) || propertyType == typeof(long?))
+            {
+                return values.Select(v => v == null ? (long?)null : Convert.ToInt64(v)).ToArray();
+            }
+            if (propertyType == typeof(double) || propertyType == typeof(double?))
+            {
+                return values.Select(v => v == null ? (double?)null : Convert.ToDouble(v)).ToArray();
+            }
+            if (propertyType == typeof(float) || propertyType == typeof(float?))
+            {
+                return values.Select(v => v == null ? (float?)null : Convert.ToSingle(v)).ToArray();
+            }
+            if (propertyType == typeof(bool) || propertyType == typeof(bool?))
+            {
+                return values.Select(v => v == null ? (bool?)null : Convert.ToBoolean(v)).ToArray();
+            }
+            if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
+            {
+                return values.Select(v => v == null ? (DateTime?)null : Convert.ToDateTime(v)).ToArray();
+            }
+            if (propertyType == typeof(decimal) || propertyType == typeof(decimal?))
+            {
+                return values.Select(v => v == null ? (decimal?)null : Convert.ToDecimal(v)).ToArray();
+            }
+
+            // Default to string representation for unknown types
+            return values.Select(v => v == null ? null : v.ToString()).ToArray();
         }
 
         private class ColumnData

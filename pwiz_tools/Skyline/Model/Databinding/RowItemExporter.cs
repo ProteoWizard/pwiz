@@ -39,11 +39,8 @@ namespace pwiz.Skyline.Model.Databinding
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
             RowItemEnumerator rowItemEnumerator)
         {
-            using (var writer = new StreamWriter(stream))
-            {
-                Export(progressMonitor, ref status, writer, rowItemEnumerator);
-                writer.Flush();
-            }
+            using var writer = new StreamWriter(stream);
+            Export(progressMonitor, ref status, writer, rowItemEnumerator);
         }
 
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
