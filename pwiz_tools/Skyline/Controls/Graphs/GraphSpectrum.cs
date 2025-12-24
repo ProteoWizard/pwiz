@@ -747,7 +747,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _spectra = null;
                 _koinaSpectra = new Dictionary<Tuple<IsotopeLabelType, int>, SpectrumDisplayInfo>();
 
-                var s = TransitionGroupTreeNode.GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz.RawValue, null);
+                var s = DocNode.TransitionGroup.GetLabel(DocNode.PrecursorMz.RawValue, null);
                 DisplayString = !(selectedTreeNode is PeptideGroupTreeNode) ? s : $@"{DocNode.Peptide.Target}, {s}";
             }
 
