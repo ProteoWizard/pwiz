@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Databinding
             RowItemEnumerator rowItemEnumerator)
         {
             var columns = BuildColumns(rowItemEnumerator);
-            var schema = BuildSchema(columns);
+            var schema = new Schema(columns.Select(column=>column.DataField).ToArray());
 
             using (var writer = new ParquetWriter(schema, stream))
             {
@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     foreach (var column in columns)
                     {
-                        groupWriter.WriteColumn(column.DataColumn);
+                        groupWriter.WriteColumn(column.GetDataColumn());
                     }
                 }
             }
@@ -72,20 +72,7 @@ namespace pwiz.Skyline.Model.Databinding
                 rowIndex++;
             }
 
-            // Create DataFields and DataColumns now that all values are populated
-            foreach (var column in columns)
-            {
-                var field = new DataField(column.Name, column.StorageType);
-                column.DataColumn = new DataColumn(field, column.Values, null);
-            }
-
             return columns;
-        }
-
-        private Schema BuildSchema(List<ColumnData> columns)
-        {
-            var fields = columns.Select(c => c.DataColumn.Field).ToArray();
-            return new Schema(fields);
         }
 
         private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)
@@ -111,7 +98,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             if (string.IsNullOrEmpty(name))
             {
-                return "Column";
+                return @"Column";
             }
 
             var sanitized = new System.Text.StringBuilder(name.Length);
@@ -134,13 +121,7 @@ namespace pwiz.Skyline.Model.Databinding
             string result = sanitized.ToString();
             if (result.Length > 0 && char.IsDigit(result[0]))
             {
-                result = "_" + result;
-            }
-
-            // Handle case where sanitization resulted in an empty string
-            if (string.IsNullOrEmpty(result))
-            {
-                result = "Column";
+                result = @"_" + result;
             }
 
             return result;
@@ -155,6 +136,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
                 StorageType = DecideStorageType(valueType);
                 Values = Array.CreateInstance(StorageType, rowCount);
+                DataField = new DataField(Name, StorageType);
             }
             public DataPropertyDescriptor PropertyDescriptor { get; }
             public string Name { get; }
@@ -163,6 +145,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 get;
             }
+            public DataField DataField { get; }
 
             public object GetValue(RowItem rowItem)
             {
@@ -186,7 +169,11 @@ namespace pwiz.Skyline.Model.Databinding
             }
             
             public Array Values { get; }
-            public DataColumn DataColumn { get; set; }
+
+            public DataColumn GetDataColumn()
+            {
+                return new DataColumn(DataField, Values, null);
+            }
         }
 
         private static HashSet<Type> _primitiveTypes = new HashSet<Type>
