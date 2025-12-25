@@ -235,7 +235,7 @@ namespace TestPerf
             //          IsCalculating is thread-safe (reads _graphDataReceiver.IsProcessing()).
             //          This pattern was previously established in RunToRunAlignmentTest.
             // WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
-            WaitForCondition(() => !scoreToRunGraphPane.IsCalculating);
+            WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
         }
 
         public static RTLinearRegressionGraphPane GetScoreToRunGraphPane()

@@ -125,7 +125,7 @@
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Diagnostics.Runtime">
-      <HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\Microsoft.Diagnostics.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -171,6 +171,7 @@
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="GitFileHelper.cs" />
+    <Compile Include="HangDetection.cs" />
     <Compile Include="HttpClientTestHelper.cs" />
     <Compile Include="KoinaTestUtil.cs" />
     <Compile Include="MockHttpMessageHandler.cs" />
