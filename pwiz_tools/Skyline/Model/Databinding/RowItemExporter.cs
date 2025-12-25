@@ -27,13 +27,11 @@ namespace pwiz.Skyline.Model.Databinding
 {
     public class RowItemExporter
     {
-        public RowItemExporter(DataSchemaLocalizer localizer, DsvWriter dsvWriter)
+        public RowItemExporter(DsvWriter dsvWriter)
         {
-            Localizer = localizer;
             DsvWriter = dsvWriter;
         }
         
-        public DataSchemaLocalizer Localizer { get; }
         public DsvWriter DsvWriter { get; }
         
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
@@ -54,7 +52,7 @@ namespace pwiz.Skyline.Model.Databinding
             var replicateVariablePropertyCounts = filteredColumnDescriptors.GroupBy(column => column.PivotKey ?? PivotKey.EMPTY)
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
             // Create header line with property column and replicate headers.
-            var propertyCaption = LocalizationHelper.CallWithCulture(Localizer.Language,
+            var propertyCaption = LocalizationHelper.CallWithCulture(rowItemEnumerator.ItemProperties.First().DataSchemaLocalizer.Language,
                 () => DatabindingResources.SkylineViewContext_WriteDataWithStatus_Property);
             var headerLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1)
                 .Prepend(propertyCaption).ToList();
