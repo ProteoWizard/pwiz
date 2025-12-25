@@ -70,6 +70,38 @@ async def save_large_data(query_params):
 
 ## LabKey Server Patterns
 
+### Schema-First Development
+
+Before adding MCP tools for a new data source, document the schema first:
+
+1. **Explore the schema** - Use `list_schemas` and `list_queries` to discover available tables
+2. **Query sample data** - Use `query_table` with small `max_rows` to see column names and sample values
+3. **Document in `queries/`** - Create `{schema}/{table}-schema.md` files with:
+   - Container path, schema name, table name
+   - All columns with types, lookups, and descriptions
+   - Key values for enum-like fields (Status, Type, etc.)
+   - Usage notes (row counts, relationships, gotchas)
+
+**Why schema-first?**
+- Provides reference for MCP tool development
+- Documents lookup relationships (e.g., `AssignedTo` → `issues.UsersData.UserId`)
+- Identifies large columns that need file-based handling
+- Captures institutional knowledge about the data model
+
+**Example: Adding issues schema support**
+```
+ai/mcp/LabKeyMcp/queries/issues/
+├── issues-schema.md       # Main issue tracking table
+├── comments-schema.md     # Issue comments
+└── issuelistdef-schema.md # Issue list definitions
+```
+
+**To populate schema documentation:**
+1. Go to LabKey Schema Browser: `https://skyline.ms/{container}/query-begin.view`
+2. Navigate to the schema and table
+3. Click "view raw table metadata" for column details
+4. Copy the metadata and format into markdown tables
+
 ### Server-Side Custom Queries
 
 When Claude Code needs aggregated or joined data, create **custom queries on the LabKey server** rather than implementing complex joins in Python.
@@ -210,7 +242,10 @@ The `labkey` SDK reads these automatically. Do not implement custom netrc handli
 
 LabKey organizes data in containers (folders). Always use the `container_path` parameter to specify which folder to query:
 
+- `/home/issues` - Issue tracking (bugs, TODOs, feature requests)
 - `/home/issues/exceptions` - Exception reports
+- `/home/support` - Support board discussions
+- `/home/software/Skyline` - Wiki pages and documentation
 - `/home/development/Nightly x64` - Nightly test results
 - `/home/development/Integration` - Integration test results
 
@@ -221,6 +256,29 @@ Note: The `testresults` schema may need to be enabled per-container by a LabKey 
 **"Query does not exist" error**: If a custom query reports it doesn't exist but you've verified it's on the server, check the query properties. In LabKey's query editor, ensure **"Available in child folders?"** is set to **Yes**. Without this, queries created in a parent container won't be visible from child containers.
 
 **Large column errors**: Some columns contain large binary or text data (logs, XML, documents). Never query these directly - use dedicated MCP tools that save content to `ai/.tmp/` files. See the schema documentation for columns marked **⚠️ LARGE**.
+
+### Sorting Results (Critical)
+
+**ORDER BY in LabKey SQL custom queries is unreliable.** The query is processed as a subquery within a parent "view layer" that can override the sort order.
+
+**Always use the API `sort` parameter in `select_rows()`:**
+
+```python
+result = labkey.query.select_rows(
+    server_context=server_context,
+    schema_name="issues",
+    query_name="issues_list",
+    max_rows=50,
+    sort="-Modified",  # Minus prefix = descending
+)
+```
+
+**Sort parameter syntax:**
+- `-ColumnName` - Descending order
+- `ColumnName` - Ascending order
+- `-Col1,Col2` - Multi-column sort (Col1 desc, Col2 asc)
+
+**Note:** You may still include `ORDER BY` in `.sql` files for documentation purposes, but the API `sort` parameter is what actually controls the order. See `ai/.tmp/labkey-orderby-findings.md` for detailed research.
 
 ### Schema Documentation Conventions
 
@@ -240,10 +298,10 @@ Example:
 
 *(To be documented when implemented)*
 
-The `claude.c.skyline@gmail.com` account could receive:
-- Exception report notifications
-- Nightly test result summaries
-- Other automated alerts
+A Gmail MCP server could enable:
+- Reading exception report notifications
+- Reading nightly test result summaries
+- Other automated email alerts
 
 Will require Gmail MCP server setup with OAuth2.
 

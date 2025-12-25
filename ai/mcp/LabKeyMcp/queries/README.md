@@ -5,13 +5,21 @@ This directory documents custom queries on skyline.ms that the MCP server uses. 
 ## Directory Structure
 
 - `announcement/` - Shared Announcement table schema and queries (used by multiple containers)
-- `corex/` - Document/attachment storage (shared between support and wiki)
+- `corex/` - Document/attachment storage (shared between support, wiki, and issues)
 - `exceptions/` - Exception-specific notes (uses base Announcement table directly)
+- `issues/` - Issue tracking schema (`/home/issues`)
 - `nightly/` - Queries in `/home/development/Nightly x64` (also used by other test folders)
 - `support/` - Support board notes (uses shared announcement + corex)
 - `wiki/` - Queries in `/home/software/Skyline`
 
 ## Queries Used by server.py
+
+### Issues (`/home/issues`)
+| Query | Schema | Description | Used By |
+|-------|--------|-------------|---------|
+| issues_list | issues | All issues with user display names (no Comments) | `query_issues()`, `save_issues_report()` |
+| issue_with_comments | issues | Single issue with all comments joined | `get_issue_details()` |
+| issues_by_status | issues | Filter by status with optional date range | (available for future use) |
 
 ### Nightly Tests (`/home/development/Nightly x64`)
 | Query | Schema | Description | Used By |
@@ -38,7 +46,7 @@ See [announcement-usage.md](announcement-usage.md) for containers using Announce
 |-------|--------|-------------|---------|
 | documents_metadata | corex | Attachment metadata (excludes binary blob) | `list_attachments()` |
 
-Available in: `/home/support`. Pending: `/home/software/Skyline` (for wiki attachments).
+Available in: `/home/support`, `/home/issues`. Pending: `/home/software/Skyline` (for wiki attachments).
 
 ### Wiki (`/home/software/Skyline`)
 | Query | Schema | Description | Used By |
@@ -57,6 +65,7 @@ These tables are queried directly by server.py without custom queries:
 | testfails | testresults | (test folders) | `get_run_failures()`, `save_test_failure_history()` |
 | memoryleaks | testresults | (test folders) | `get_run_leaks()` |
 | handleleaks | testresults | (test folders) | `get_run_leaks()` |
+| documents | corex | /home/support, /home/issues | `list_attachments()`, `get_attachment()` |
 
 ## Proposed Queries (Not Yet Used)
 
@@ -73,10 +82,19 @@ These queries exist in the documentation but aren't currently used by server.py:
 ## Schema Documentation
 
 **Announcement:**
+- PERMISSIONS: /home/support `Site: Guests` - Read
+- PERMISSIONS: /home/issues/exceptions `Site: Agents` - Reader
 - `announcement/announcement-schema.md` - Shared Announcement table
 - `announcement/threads-schema.md` - Threads view (aggregates posts)
 
-**Nightly Tests (testresults):**
+**Issues (`/home/issues`):**
+- PERMISSIONS: `Site: Agents` - Write without delete
+- `issues/issues-schema.md` - Main issue tracking table
+- `issues/comments-schema.md` - Issue comments
+- `issues/issuelistdef-schema.md` - Issue list definitions
+
+**Nightly Tests (`/home/development/*` - testresults):**
+- PERMISSIONS: `Site: Agents` - Write without delete
 - `nightly/testruns-schema.md` - Test run summaries
 - `nightly/testpasses-schema.md` - Individual test results
 - `nightly/testfails-schema.md` - Test failures with stack traces
@@ -86,6 +104,8 @@ These queries exist in the documentation but aren't currently used by server.py:
 - `nightly/expected_computers-schema.md` - Query joining user/userdata
 
 **Wiki:**
+- PERMISSIONS: /home/software/Skyline `Site: Agents` - Write without delete
+- PERMISSIONS: /home/development `Site: Agents` - Write without delete
 - `wiki/wikiversions-schema.md` - Wiki version tables
 
 **Attachments (corex):**
@@ -103,4 +123,5 @@ When creating or modifying queries on skyline.ms:
 - Queries with `PARAMETERS` require `parameters={...}` when called
 - The `testpasses` table has 700M+ rows - always filter by testrunid
 - The `documents` table has a binary blob column up to 50MB - always use `documents_metadata`
+- The `issues.Comments.Comment` field can be large - use file-based MCP tools
 - The `announcement_*` queries are generic but currently named `support_*` on the server

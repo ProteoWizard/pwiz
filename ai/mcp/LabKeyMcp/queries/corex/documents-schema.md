@@ -1,6 +1,6 @@
 # Documents Table Schema
 
-**Container:** `/home/support` (and other containers with corex schema)
+**Containers:** `/home/support`, `/home/issues`
 **Schema:** `corex`
 **Table:** `documents`
 
@@ -19,4 +19,7 @@
 
 - The `document` column contains binary file data up to 50MB
 - Always use `documents_metadata` query which excludes this column
-- `parent` is the EntityId of the attachment's parent (announcement post, wiki page, etc.)
+- `parent` is the EntityId of the attachment's parent:
+  - `announcement.Announcement.EntityId` - Support posts, exception reports
+  - `issues.issues.EntityId` - Issue attachments
+  - Wiki pages (via HTTP lookup, no direct EntityId column)

@@ -187,10 +187,15 @@ Text files are returned directly; binary files are saved to `ai/.tmp/attachments
 
 ## Authentication and Permissions
 
-The system uses a dedicated agent account:
-- **Email**: `claude.c.skyline@gmail.com`
+Each developer uses a personal `+claude` account:
+- **Team members**: `yourname+claude@proteinms.net`
+- **Interns/others**: `yourname+claude@gmail.com`
 - **Group**: "Agents" on skyline.ms
 - **Role**: "Editor without Delete" on `/home/software/Skyline`
+
+> **Why +claude accounts?** Individual accounts provide attribution for edits, while the Agents group restricts permissions to least-privilege access.
+>
+> **Important**: The `+claude` suffix only works with Gmail-backed email providers (@proteinms.net, @gmail.com). It will **not** work with @uw.edu or similar providers.
 
 **Permissions:**
 - ✅ Read all wiki and announcement content

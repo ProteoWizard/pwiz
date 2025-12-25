@@ -50,8 +50,9 @@ Claude Code
 
 | Tool | Description |
 |------|-------------|
-| `query_exceptions(days, max_rows)` | Query recent exceptions, sorted by date |
-| `get_exception_details(exception_id)` | Get full stack trace and details |
+| `save_exceptions_report(report_date)` | Generate daily report, save to `ai/.tmp/exceptions-report-YYYYMMDD.md` |
+| `query_exceptions(days, max_rows)` | Query recent exceptions, returns summary |
+| `get_exception_details(exception_id)` | Get full stack trace and details for one exception |
 | `list_schemas(container_path)` | Discover available schemas |
 | `list_queries(schema_name)` | List tables in a schema |
 | `list_containers(parent_path)` | Browse folder structure |
@@ -59,12 +60,18 @@ Claude Code
 
 ### Authentication
 
-The system uses a dedicated agent account with minimal permissions:
-- **Email**: `claude.c.skyline@gmail.com`
+Each developer uses a personal `+claude` account for MCP access:
+- **Team members**: `yourname+claude@proteinms.net`
+- **Interns/others**: `yourname+claude@gmail.com`
 - **Group**: "Agents" on skyline.ms
-- **Permissions**: Read-only access to specific containers only
+- **Permissions**: Read-only access to most containers, edit access to wiki pages
 
-> **Why a dedicated account?** All developers have at least edit access to these data folders, and some have site administrator privileges. Using personal credentials would grant the MCP server more access than needed. The agent account follows the principle of least privilege with read-only access to specific folders. Additional agent accounts can be added to the "Agents" group if needed.
+> **Why individual accounts?** Using `+claude` suffix accounts provides:
+> - **Attribution**: Edits are tracked to the specific developer's Claude instance
+> - **Least privilege**: The Agents group has minimal permissions (read-only for most data)
+> - **Gmail trick**: Emails to `user+tag@gmail.com` go to `user@gmail.com`, so notifications still reach you
+>
+> **Important**: The `+claude` suffix only works with Gmail-backed email providers (@proteinms.net, @gmail.com). It will **not** work with @uw.edu or similar providers.
 
 Credentials are stored in the user's netrc file (not in the repository):
 - **Unix/macOS**: `~/.netrc`
@@ -128,11 +135,11 @@ Create a netrc file in your home directory:
 
 ```
 machine skyline.ms
-login claude.c.skyline@gmail.com
+login yourname+claude@domain.com
 password <password>
 ```
 
-> **Note**: Use the shared agent account credentials (available from team leads), not your personal skyline.ms login.
+> **Note**: Use your personal `+claude` account. Ask a team lead to add your account to the "Agents" group on skyline.ms.
 
 ### Verify Setup
 
@@ -156,18 +163,31 @@ After setup, Claude Code can query exceptions directly:
 
 ## Daily Triage Workflow
 
-*(To be expanded as the system matures)*
+### Quick Start
 
-1. **Query recent exceptions**: Start with last 24-48 hours
-2. **Filter noise**: Ignore old versions, repeat reports from same installation
-3. **Identify patterns**: Group by exception type and location
-4. **Prioritize**: Focus on current version, multiple users affected
-5. **Investigate**: Cross-reference stack traces with codebase
-6. **Propose fixes**: For clear-cut issues, generate fix candidates
+Use the `/pw-exceptions` command or call directly:
+
+```
+save_exceptions_report(report_date="2025-12-24")
+```
+
+This saves a full report to `ai/.tmp/exceptions-report-YYYYMMDD.md` with:
+- Summary table of all exceptions for the day
+- Full stack traces for each exception
+- User comments and contact info
+
+### Triage Steps
+
+1. **Generate daily report**: `save_exceptions_report(report_date="YYYY-MM-DD")`
+2. **Review summary table**: Identify exception types and frequencies
+3. **Filter noise**: Ignore old versions, repeat reports from same installation
+4. **Identify patterns**: Group by exception type and location
+5. **Prioritize**: Focus on current version, multiple users affected
+6. **Investigate**: Cross-reference stack traces with codebase
+7. **Propose fixes**: For clear-cut issues, generate fix candidates
 
 ## Future Enhancements
 
-- `/pw-exceptions` slash command for daily triage
 - Exception grouping by stack trace signature
 - Version filtering (current release vs older)
 - User impact analysis (unique installations affected)

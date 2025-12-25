@@ -248,6 +248,13 @@ pip install mcp labkey
 
 **Configure credentials:**
 
+Create a personal `+claude` account for MCP access:
+- **Team members**: `yourname+claude@proteinms.net`
+- **Interns/others**: `yourname+claude@gmail.com`
+- Ask a team lead to add your account to the "Agents" group on skyline.ms
+
+> **Important**: The `+claude` suffix only works with Gmail-backed email providers (@proteinms.net, @gmail.com). It will **not** work with @uw.edu or similar providers.
+
 Create a netrc file in your home directory:
 
 - **Windows**: `C:\Users\<YourName>\.netrc` or `C:\Users\<YourName>\_netrc`
@@ -255,11 +262,11 @@ Create a netrc file in your home directory:
 
 ```
 machine skyline.ms
-login claude.c.skyline@gmail.com
+login yourname+claude@domain.com
 password <password>
 ```
 
-> **Important**: Use the shared Claude agent account (`claude.c.skyline@gmail.com`), **not** your personal skyline.ms login. This account has appropriate read-only permissions for AI tooling. Request the password from team leads via LastPass.
+> **Why +claude accounts?** Individual accounts provide attribution for edits made via Claude, while the Agents group restricts permissions to least-privilege access.
 >
 > **Security note:** The netrc file contains credentials in plain text. Ensure appropriate file permissions and never commit it to version control.
 

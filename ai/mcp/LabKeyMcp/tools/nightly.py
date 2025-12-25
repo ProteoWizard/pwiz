@@ -429,6 +429,7 @@ def register_tools(mcp):
                     query_name="testruns_detail",
                     max_rows=50,
                     parameters={"StartDate": start_date, "EndDate": end_date},
+                    sort="-posttime",  # API sort required - ORDER BY in SQL unreliable
                 )
 
                 rows = result.get("rows", []) if result else []

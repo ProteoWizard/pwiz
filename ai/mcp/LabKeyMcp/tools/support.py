@@ -50,6 +50,7 @@ def register_tools(mcp):
                 query_name="announcement_threads_recent",
                 max_rows=max_rows,
                 parameters={"DaysBack": str(days)},
+                sort="-Created",  # API sort required - ORDER BY in SQL unreliable
             )
 
             if result and result.get("rows"):
@@ -110,6 +111,7 @@ def register_tools(mcp):
                 query_name="announcement_thread_posts",
                 max_rows=200,
                 parameters={"ThreadId": str(thread_id)},
+                sort="Created",  # Chronological order for reading thread
             )
 
             if not result or not result.get("rows"):
@@ -219,6 +221,7 @@ def register_tools(mcp):
                 query_name="announcement_threads_recent",
                 max_rows=200,
                 parameters={"DaysBack": str(days)},
+                sort="-Created",  # API sort required - ORDER BY in SQL unreliable
             )
 
             if not result or not result.get("rows"):

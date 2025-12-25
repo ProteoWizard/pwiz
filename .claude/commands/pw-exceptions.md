@@ -4,37 +4,40 @@ description: Generate daily exception report
 
 # Daily Exception Report
 
-Generate a summary of recent exceptions submitted by Skyline users.
+Generate the daily exception report for Skyline user submissions.
 
-**Argument**: Number of days to look back (default: 1)
+**Argument**: Date in YYYY-MM-DD format (optional, defaults to yesterday)
 
-## Instructions
+## Exception Day Boundary
 
-Call `query_exceptions()` with the days parameter:
-- If user provided a number (e.g., `/pw-exceptions 7`), use that as the days value
-- If no number provided, default to 1 day
+Exceptions are reported for a **12:00 AM to 11:59 PM** calendar day window:
+- `report_date=2025-12-24` → queries all exceptions created on Dec 24
 
-Example: `query_exceptions(days=$ARGUMENTS)` where $ARGUMENTS is the number provided, or 1 if none.
+**Default behavior** (no date argument):
+- Use yesterday's date (gives a complete 24-hour report)
+
+## Quick Start
+
+```
+save_exceptions_report(report_date="YYYY-MM-DD")
+```
+
+This queries all exceptions for the day and saves a full report to `ai/.tmp/exceptions-report-YYYYMMDD.md`.
 
 ## Report Contents
 
-- **Exception type and title**
-- **User comments and email** (if provided)
-- **Stack trace** (in FormattedBody)
-- **Created/Modified dates**
-- **Skyline version**
+- Summary table with RowId, Title, Status, Created time
+- Full exception details including:
+  - Stack traces (FormattedBody)
+  - User email and comments
+  - Skyline version
+  - Created/Modified dates
 
-## Follow-up Actions
+## Follow-up Investigation
 
-To get full details for a specific exception:
+For a specific exception:
 ```
 get_exception_details(exception_id)
 ```
-
-This returns:
-- Full stack trace
-- User email and comments
-- Skyline version
-- Installation ID
 
 For detailed triage workflow, see **ai/docs/exception-triage-system.md**.

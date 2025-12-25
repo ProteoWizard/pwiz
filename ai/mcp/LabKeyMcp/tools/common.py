@@ -43,6 +43,10 @@ DEFAULT_WIKI_CONTAINER = "/home/software/Skyline"
 ANNOUNCEMENT_SCHEMA_SUPPORT = "announcement"
 DEFAULT_SUPPORT_CONTAINER = "/home/support"
 
+# Issues schema
+ISSUES_SCHEMA = "issues"
+DEFAULT_ISSUES_CONTAINER = "/home/issues"
+
 
 # =============================================================================
 # Shared Helper Functions

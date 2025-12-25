@@ -6,6 +6,7 @@ LabKey servers, including:
 - Nightly test results and analysis
 - Wiki documentation pages
 - Support board threads
+- Issue tracking (bugs, TODOs)
 - File attachments
 
 Authentication is handled via netrc file.

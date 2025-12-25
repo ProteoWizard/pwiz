@@ -10,6 +10,7 @@ Modules:
 - wiki: Wiki page tools
 - support: Support board tools
 - attachments: Attachment handling tools
+- issues: Issue tracking tools
 """
 
 from . import common
@@ -18,6 +19,7 @@ from . import nightly
 from . import wiki
 from . import support
 from . import attachments
+from . import issues
 
 
 def register_all_tools(mcp):
@@ -28,3 +30,4 @@ def register_all_tools(mcp):
     wiki.register_tools(mcp)
     support.register_tools(mcp)
     attachments.register_tools(mcp)
+    issues.register_tools(mcp)
