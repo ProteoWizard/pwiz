@@ -446,22 +446,13 @@ namespace pwiz.Skyline.Model.Tools
                 new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                     reportTitle));
             progressMonitor.UpdateProgress(status);
-            using (var memoryStream = new MemoryStream())
-            {
-                var dsvWriter = new DsvWriter(dataSchema.DataSchemaLocalizer.FormatProvider,
-                    dataSchema.DataSchemaLocalizer.Language, TextUtil.SEPARATOR_CSV);
-                if (ReferenceEquals(dataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))
-                {
-                    dsvWriter.NumberFormatOverride = Formats.RoundTrip;
-                }
-                var rowItemExporter = new RowItemExporter(dataSchema.DataSchemaLocalizer, dsvWriter);
-                rowFactories.ExportReport(memoryStream, PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle), rowItemExporter, progressMonitor, ref status);
-                memoryStream.Position = 0;
-                using (var reader = new StreamReader(memoryStream))
-                {
-                    writer.Write(reader.ReadToEnd());
-                }
-            }
+            using var memoryStream = new MemoryStream();
+            var rowItemExporter =
+                RowItemExporters.ForSeparator(DataSchemaLocalizer.INVARIANT, TextUtil.SEPARATOR_CSV);
+            rowFactories.ExportReport(memoryStream, PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle), rowItemExporter, progressMonitor, ref status);
+            memoryStream.Position = 0;
+            using var reader = new StreamReader(memoryStream);
+            writer.Write(reader.ReadToEnd());
         }
 
 

@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Databinding
 {
     public class ParquetRowItemExporter : IRowItemExporter
     {
-        private const int ROWS_PER_GROUP = 10000;
+        private const int ROWS_PER_GROUP = 100_000;
 
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
             RowItemEnumerator rowItemEnumerator)

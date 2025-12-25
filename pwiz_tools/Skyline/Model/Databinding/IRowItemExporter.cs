@@ -34,6 +34,16 @@ namespace pwiz.Skyline.Model.Databinding
 
     public static class RowItemExporters
     {
+        /// <summary>
+        /// Returns a IRowItemExporter appropriate for the specified filename extension.
+        /// </summary>
+        /// <param name="dataSchemaLocalizer">determines whether to override number formatting with <see cref="Formats.RoundTrip"/>.</param>
+        /// <param name="extensionsToTry">Typically a list of the following extensions:
+        /// <list type="number">
+        /// <item><description>The filename extension of the file being saved</description></item>
+        /// <item><description>The option chosen in the "Save as type" dropdown in the SaveFileDialog</description></item>
+        /// <item><description>The default extension if no match for the previous ones</description></item>
+        /// </list></param>
         public static IRowItemExporter ForFilenameExtension(DataSchemaLocalizer dataSchemaLocalizer, params string[] extensionsToTry)
         {
             foreach (var extension in extensionsToTry)
@@ -41,7 +51,7 @@ namespace pwiz.Skyline.Model.Databinding
                 if (TextUtil.EXT_CSV.Equals(extension, StringComparison.OrdinalIgnoreCase))
                 {
                     var separator = TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider);
-                    return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, separator));
+                    return new RowItemExporter(CreateDsvWriter(dataSchemaLocalizer, separator));
                 }
 
                 if (TextUtil.EXT_PARQUET.Equals(extension, StringComparison.OrdinalIgnoreCase))
@@ -50,12 +60,12 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }
 
-            return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
+            return new RowItemExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
         }
 
         public static IRowItemExporter ForSeparator(DataSchemaLocalizer dataSchemaLocalizer, char separator)
         {
-            return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, separator));
+            return new RowItemExporter(CreateDsvWriter(dataSchemaLocalizer, separator));
         }
 
         private static DsvWriter CreateDsvWriter(DataSchemaLocalizer dataSchemaLocalizer, char separator)
