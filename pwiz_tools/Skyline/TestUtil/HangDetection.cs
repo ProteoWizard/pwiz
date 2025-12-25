@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestUtil
 
         public static IEnumerable<string> GetAllThreadsCallstacks(int processId)
         {
-            using var dataTarget = DataTarget.AttachToProcess(processId, 60000, AttachFlag.Passive);
+            using var dataTarget = DataTarget.AttachToProcess(processId, 5000, AttachFlag.Passive);
             var runtime = dataTarget.ClrVersions[0].CreateRuntime();
 
             foreach (var thread in runtime.Threads)
