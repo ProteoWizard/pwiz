@@ -101,7 +101,9 @@ Both wiki pages and support posts can have file attachments. These are stored in
 |------|-------------|
 | `list_wiki_pages(container_path)` | List all pages with metadata (no body) |
 | `get_wiki_page(page_name)` | Get full page content, save to `ai/.tmp/wiki-{name}.md` |
-| `update_wiki_page(page_name, new_body)` | Update page content (simple HTML only) |
+| `update_wiki_page(page_name, new_body, title)` | Update page content (optional title change) |
+| `list_wiki_attachments(page_name)` | List attachments for a wiki page |
+| `get_wiki_attachment(page_name, filename)` | Download attachment from wiki page |
 
 ### Support Board Tools
 
@@ -138,7 +140,18 @@ Returns metadata and saves full content to `ai/.tmp/wiki-tutorial_method_edit.md
 update_wiki_page("AIDevSetup", "<html>New content here</html>")
 ```
 
-> **Limitation:** The agent account cannot update pages containing `<iframe>` or `<script>` elements (tutorial wrapper pages). This is a LabKey permission restriction. Actual tutorial content lives in Git, not the wiki.
+> **Note:** Pages with `<iframe>` or `<script>` elements (tutorial wrappers) require "Allow Iframes and Scripts" permission, which the Agents group now has.
+
+**List wiki page attachments:**
+```
+list_wiki_attachments("NewMachineBootstrap")
+```
+
+**Download a wiki attachment:**
+```
+get_wiki_attachment("NewMachineBootstrap", "new-machine-setup.md")
+```
+Text files are returned directly; binary files (PDF, images) are saved to `ai/.tmp/attachments/`.
 
 ### Support Board Access
 
@@ -228,7 +241,6 @@ The wiki maintains full version history, so changes can be reverted if needed.
 
 ## Future Enhancements
 
-- Wiki attachment support (blocked on EntityId not exposed in WikiVersions table)
 - Tutorial sync workflow (`/pw-tutorial-sync`) for coordinating Git and wiki updates
 - Support thread response posting
 - Attachment upload capability

@@ -3,7 +3,7 @@
 ## Branch Information
 - **Branch**: `ai-context`
 - **Created**: 2025-12-24
-- **Status**: Active
+- **Status**: Complete
 - **Parent**: Spun off from TODO-20251221_mcp_wiki_support_board.md
 
 ## Objective
@@ -37,21 +37,18 @@ Agents group now has "Allow Iframes and Scripts" permission (as of 2025-12-24).
 - [x] Tested updating tutorial_method_edit page (has iframe) - works correctly
 - [x] Tested AIDevSetup page (MARKDOWN renderer) - works correctly
 
-### Skills and Commands
+### Skills and Commands (Complete)
 
-- [ ] Create `skyline-wiki` skill for wiki documentation work
+- [x] Created `skyline-wiki` skill at `.claude/skills/skyline-wiki/SKILL.md`
+- [x] Updated `ai/docs/wiki-support-system.md` with new attachment tools
 
-### Tutorial Maintenance (Future)
+## Deferred to Future Sprints
 
-- [ ] Audit wiki page names vs HTML folder names for consistency
-- [ ] Commit tutorial.js to Git at `pwiz_tools/Skyline/Documentation/tutorial.js`
-- [ ] Create `/pw-tutorial-sync` command for Git/wiki coordination
+### Tutorial Maintenance
 
-### Schema Documentation (Minor)
-
-- [ ] Paste handleleaks table schema from LabKey UI
-- [ ] Paste user table schema from LabKey UI
-- [ ] Paste Threads view schema from LabKey UI
+- Audit wiki page names vs HTML folder names for consistency
+- Commit tutorial.js to Git at `pwiz_tools/Skyline/Documentation/tutorial.js`
+- Create `/pw-tutorial-sync` command for Git/wiki coordination
 
 ## Related Documentation
 
