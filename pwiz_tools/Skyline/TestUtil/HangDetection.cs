@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     Console.Out.WriteLine("Unable to get thread dump: {0}", ex);
                 }
-                throw new AssertFailedException(string.Format("Timeout waiting {0} times {1} for action to complete", cycleDuration, cycleCount), interruptedException);
+                throw new AssertFailedException(string.Format("Timeout waiting {0} for action to complete", TimeSpan.FromTicks(cycleDuration.Ticks * cycleCount)), interruptedException);
             }
         }
 
@@ -84,15 +84,12 @@ namespace pwiz.SkylineTestUtil
             {
                 for (int i = 0; i < cycleCount; i++)
                 {
-                    lock (completed)
+                    if (completed[0])
                     {
-                        if (completed[0])
-                        {
-                            return;
-                        }
-
-                        Monitor.Wait(completed, cycleDuration);
+                        return;
                     }
+
+                    Monitor.Wait(completed, cycleDuration);
                 }
 
                 if (!completed[0])
