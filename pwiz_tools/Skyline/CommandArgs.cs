@@ -1028,7 +1028,7 @@ namespace pwiz.Skyline
             ARG_REPORT_INVARIANT);
 
         public string ReportName { get; private set; }
-        public char ReportColumnSeparator { get; private set; }
+        public char? ReportColumnSeparator { get; private set; }
         public string ReportFile { get; private set; }
         public bool IsReportInvariant { get; private set; }
         public bool ExportingReport
@@ -2477,7 +2477,6 @@ namespace pwiz.Skyline
             _out = output;
             _isDocumentLoaded = isDocumentLoaded;
 
-            ReportColumnSeparator = TextUtil.CsvSeparator;
             MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             ImportOptimizeType = OPT_NONE;
             ExportOptimizeType = OPT_NONE;

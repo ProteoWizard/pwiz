@@ -78,10 +78,10 @@ namespace pwiz.Skyline.Controls.Databinding
                 return;
             }
 
-            var chosenExtension = extensions.ElementAtOrDefault(saveFileDialog.FilterIndex);
             var fileName = saveFileDialog.FileName;
-            var rowExporter =
-                RowItemExporters.ForExtension(GetDataSchemaLocalizer(), chosenExtension ?? Path.GetExtension(fileName));
+            var localizer = GetDataSchemaLocalizer();
+            var rowExporter = RowItemExporters.ForFilenameExtension(localizer, Path.GetExtension(fileName),
+                extensions.ElementAtOrDefault(saveFileDialog.FilterIndex), TextUtil.EXT_TSV);
             if (!ExportReport(fileName, rowExporter))
                 return;
 

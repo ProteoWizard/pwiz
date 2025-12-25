@@ -3377,7 +3377,7 @@ namespace pwiz.Skyline
 
         private bool ExportLiveReport(CommandArgs commandArgs)
         {
-            char reportColSeparator = commandArgs.ReportColumnSeparator;
+            char? reportColSeparator = commandArgs.ReportColumnSeparator;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, commandArgs.IsReportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
@@ -3408,13 +3408,17 @@ namespace pwiz.Skyline
                     IProgressStatus status = new ProgressStatus(string.Empty);
                     IProgressMonitor broker = new CommandProgressMonitor(_out, status);
 
-                    var dsvWriter = new DsvWriter(dataSchema.DataSchemaLocalizer.FormatProvider,
-                        dataSchema.DataSchemaLocalizer.Language, reportColSeparator);
-                    if (ReferenceEquals(dataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT))
+                    IRowItemExporter rowItemExporter;
+                    if (reportColSeparator.HasValue)
                     {
-                        dsvWriter.NumberFormatOverride = Formats.RoundTrip;
+                        rowItemExporter =
+                            RowItemExporters.ForSeparator(dataSchema.DataSchemaLocalizer, reportColSeparator.Value);
                     }
-                    var rowItemExporter = new RowItemExporter(dataSchema.DataSchemaLocalizer, dsvWriter);
+                    else
+                    {
+                        rowItemExporter = RowItemExporters.ForFilenameExtension(dataSchema.DataSchemaLocalizer,
+                            Path.GetExtension(commandArgs.ReportFile), TextUtil.EXT_CSV);
+                    }
                     rowFactories.ExportReport(saver.Stream, PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName), rowItemExporter, broker, ref status);
 
                     broker.UpdateProgress(status.Complete());

@@ -34,17 +34,20 @@ namespace pwiz.Skyline.Model.Databinding
 
     public static class RowItemExporters
     {
-        public static IRowItemExporter ForExtension(DataSchemaLocalizer dataSchemaLocalizer, string extension)
+        public static IRowItemExporter ForFilenameExtension(DataSchemaLocalizer dataSchemaLocalizer, params string[] extensionsToTry)
         {
-            if (TextUtil.EXT_CSV.Equals(extension, StringComparison.OrdinalIgnoreCase))
+            foreach (var extension in extensionsToTry)
             {
-                var separator = TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider);
-                return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, separator));
-            }
+                if (TextUtil.EXT_CSV.Equals(extension, StringComparison.OrdinalIgnoreCase))
+                {
+                    var separator = TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider);
+                    return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, separator));
+                }
 
-            if (TextUtil.EXT_PARQUET.Equals(extension, StringComparison.OrdinalIgnoreCase))
-            {
-                return new ParquetRowItemExporter();
+                if (TextUtil.EXT_PARQUET.Equals(extension, StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ParquetRowItemExporter();
+                }
             }
 
             return new RowItemExporter(dataSchemaLocalizer, CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
