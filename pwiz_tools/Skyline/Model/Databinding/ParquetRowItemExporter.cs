@@ -32,47 +32,89 @@ namespace pwiz.Skyline.Model.Databinding
 {
     public class ParquetRowItemExporter : IRowItemExporter
     {
+        private const int ROWS_PER_GROUP = 10000;
+
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
             RowItemEnumerator rowItemEnumerator)
         {
-            var columns = BuildColumns(progressMonitor, ref status, rowItemEnumerator);
-            var schema = new Schema(columns.Select(column=>column.DataField).ToArray());
+            // Build columns and schema from item properties
+            var columns = BuildColumns(rowItemEnumerator.ItemProperties);
+            var schema = new Schema(columns.Select(col => col.DataField).ToArray());
 
             using (var writer = new ParquetWriter(schema, stream))
             {
-                using (var groupWriter = writer.CreateRowGroup())
+                int totalRows = rowItemEnumerator.Count;
+                int rowsProcessed = 0;
+
+                // Process in chunks
+                while (rowsProcessed < totalRows)
                 {
+                    if (progressMonitor.IsCanceled)
+                    {
+                        return;
+                    }
+
+                    int rowsInChunk = Math.Min(ROWS_PER_GROUP, totalRows - rowsProcessed);
+
+                    // Resize arrays for this chunk
                     foreach (var column in columns)
                     {
-                        groupWriter.WriteColumn(column.GetDataColumn());
+                        column.SetRowCount(rowsInChunk);
                     }
+
+                    // Populate chunk data
+                    if (!PopulateChunk(progressMonitor, ref status, rowItemEnumerator, columns,
+                        rowsInChunk, rowsProcessed, totalRows))
+                    {
+                        return; // Canceled
+                    }
+
+                    // Write chunk
+                    using (var groupWriter = writer.CreateRowGroup())
+                    {
+                        foreach (var column in columns)
+                        {
+                            groupWriter.WriteColumn(column.GetDataColumn());
+                        }
+                    }
+
+                    rowsProcessed += rowsInChunk;
                 }
             }
         }
 
-        private List<ColumnData> BuildColumns(IProgressMonitor progressMonitor, ref IProgressStatus status, RowItemEnumerator rowItemEnumerator)
+        private List<ColumnData> BuildColumns(ItemProperties itemProperties)
         {
             var columns = new List<ColumnData>();
-            var itemProperties = rowItemEnumerator.ItemProperties;
             var usedColumnNames = new HashSet<string>();
+
             foreach (DataPropertyDescriptor property in itemProperties)
             {
                 var name = GetUniqueColumnName(property, usedColumnNames);
-                columns.Add(new ColumnData(name, property, rowItemEnumerator.Count));
+                columns.Add(new ColumnData(name, property));
             }
 
+            return columns;
+        }
+
+        private bool PopulateChunk(IProgressMonitor progressMonitor, ref IProgressStatus status,
+            RowItemEnumerator rowItemEnumerator, List<ColumnData> columns, int rowsInChunk,
+            int rowsProcessed, int totalRows)
+        {
             int rowIndex = 0;
-            int rowCount = rowItemEnumerator.Count;
-            while (rowItemEnumerator.MoveNext())
+            while (rowIndex < rowsInChunk && rowItemEnumerator.MoveNext())
             {
                 if (progressMonitor.IsCanceled)
                 {
-                    return null;
+                    return false;
                 }
-                int percentComplete = rowIndex * 100 / rowCount;
+
+                int overallRowIndex = rowsProcessed + rowIndex;
+                int percentComplete = overallRowIndex * 100 / totalRows;
                 if (percentComplete > status.PercentComplete)
                 {
-                    status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, rowIndex + 1, rowCount))
+                    status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
+                        overallRowIndex + 1, totalRows))
                         .ChangePercentComplete(percentComplete);
                     progressMonitor.UpdateProgress(status);
                 }
@@ -86,7 +128,7 @@ namespace pwiz.Skyline.Model.Databinding
                 rowIndex++;
             }
 
-            return columns;
+            return true;
         }
 
         private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)
@@ -143,28 +185,29 @@ namespace pwiz.Skyline.Model.Databinding
 
         private class ColumnData
         {
-            public ColumnData(string name, DataPropertyDescriptor propertyDescriptor, int rowCount)
+            public ColumnData(string name, DataPropertyDescriptor propertyDescriptor)
             {
                 Name = name;
                 PropertyDescriptor = propertyDescriptor;
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
                 StorageType = DecideStorageType(valueType);
-                Values = Array.CreateInstance(StorageType, rowCount);
                 DataField = new DataField(Name, StorageType);
             }
-            public DataPropertyDescriptor PropertyDescriptor { get; }
-            public string Name { get; }
 
-            public Type StorageType
-            {
-                get;
-            }
+            public string Name { get; }
+            public DataPropertyDescriptor PropertyDescriptor { get; }
+            public Type StorageType { get; }
             public DataField DataField { get; }
 
             public object GetValue(RowItem rowItem)
             {
                 var dataSchema = PropertyDescriptor.DataSchema;
                 return dataSchema.UnwrapValue(PropertyDescriptor.GetValue(rowItem));
+            }
+
+            public void SetRowCount(int rowCount)
+            {
+                Values = Array.CreateInstance(StorageType, rowCount);
             }
 
             public void StoreValue(RowItem rowItem, int rowIndex)
@@ -181,8 +224,8 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 Values.SetValue(value, rowIndex);
             }
-            
-            public Array Values { get; }
+
+            public Array Values { get; private set; }
 
             public DataColumn GetDataColumn()
             {
