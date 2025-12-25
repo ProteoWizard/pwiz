@@ -12,18 +12,18 @@ Complete wiki-related MCP features that were deferred from the initial implement
 
 ## Tasks
 
-### Wiki Attachments (Unblocked)
+### Wiki Attachments (Complete)
 
-**Solution discovered:** The `entityId` is already being parsed from the wiki-edit.view HTML page in `_get_wiki_page_metadata()`. This same entityId can be used for attachment lookups without waiting for LabKey schema changes.
+- [x] Created `list_wiki_attachments(page_name)` tool - gets entityId from HTML, queries corex.documents_metadata
+- [x] Created `get_wiki_attachment(page_name, filename)` tool - downloads text or binary files
+- [x] Added URL encoding for page names and filenames with spaces
+- [x] Tested with NewMachineBootstrap (text file: new-machine-setup.md)
+- [x] Tested with "UI Modes" (binary file: Skyline UI Modes.pdf)
+- [x] Verified entityIds match known values
 
-- [ ] Create `get_wiki_attachments(page_name)` tool that:
-  1. Calls `_get_wiki_page_metadata()` to get entityId from HTML
-  2. Uses entityId with existing `list_attachments()` / `get_attachment()`
-- [ ] Test with pages known to have attachments (NewMachineBootstrap, UI Modes)
-
-**Known EntityIds (from download URLs, for verification):**
-- NewMachineBootstrap: `945040f8-bdf6-103e-9d4b-22f53556b982`
-- UI Modes: `f22a0806-871e-1037-a1ed-e465a3935ecb`
+**Verified EntityIds:**
+- NewMachineBootstrap: `945040f8-bdf6-103e-9d4b-22f53556b982` ✓
+- UI Modes: `f22a0806-871e-1037-a1ed-e465a3935ecb` ✓
 
 ### Wiki Write Testing
 

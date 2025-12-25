@@ -215,7 +215,8 @@ def _get_wiki_page_metadata(
     # Step 2: Fetch the wiki edit page for entityId, rowId, pageVersionId
     # These aren't exposed in the wiki schema but are required for the save API
     encoded_path = quote(container_path, safe="/")
-    url = f"https://{server}{encoded_path}/wiki-edit.view?name={page_name}"
+    encoded_name = quote(page_name, safe="")
+    url = f"https://{server}{encoded_path}/wiki-edit.view?name={encoded_name}"
 
     request = urllib.request.Request(url)
     request.add_header("Authorization", session.auth_header)
@@ -492,3 +493,175 @@ def register_tools(mcp):
         except Exception as e:
             logger.error(f"Error updating wiki page: {e}", exc_info=True)
             return f"Error updating wiki page: {e}"
+
+    @mcp.tool()
+    async def list_wiki_attachments(
+        page_name: str,
+        server: str = DEFAULT_SERVER,
+        container_path: str = DEFAULT_WIKI_CONTAINER,
+    ) -> str:
+        """List attachments for a wiki page.
+
+        Gets the page's entityId and queries for attached files.
+        Use get_wiki_attachment() to download a specific file.
+
+        Args:
+            page_name: Wiki page name (e.g., 'NewMachineBootstrap')
+            server: LabKey server hostname (default: skyline.ms)
+            container_path: Container path (default: /home/software/Skyline)
+
+        Returns:
+            List of attachments with filename, size, and type.
+        """
+        try:
+            # Get entityId from wiki edit page
+            metadata, _ = _get_wiki_page_metadata(page_name, server, container_path)
+            entity_id = metadata.get("entityId")
+
+            if not entity_id:
+                return f"Could not find entityId for wiki page '{page_name}'"
+
+            logger.info(f"Wiki page '{page_name}' has entityId: {entity_id}")
+
+            # Query for attachments
+            server_context = get_server_context(server, container_path)
+
+            result = labkey.query.select_rows(
+                server_context=server_context,
+                schema_name="corex",
+                query_name="documents_metadata",
+                parameters={"ParentEntityId": entity_id},
+                max_rows=100,
+            )
+
+            if not result or not result.get("rows"):
+                return f"No attachments found for wiki page '{page_name}'"
+
+            attachments = result["rows"]
+
+            lines = [
+                f"Found {len(attachments)} attachment(s) for wiki page '{page_name}':",
+                f"  entityId: {entity_id}",
+                "",
+            ]
+
+            for att in attachments:
+                name = att.get("documentname", "?")
+                size = att.get("documentsize", 0)
+                doc_type = att.get("documenttype", "?")
+
+                # Format size nicely
+                if size > 1024 * 1024:
+                    size_str = f"{size / (1024 * 1024):.1f} MB"
+                elif size > 1024:
+                    size_str = f"{size / 1024:.1f} KB"
+                else:
+                    size_str = f"{size} bytes"
+
+                lines.append(f"  - {name} ({size_str}, {doc_type})")
+
+            lines.extend([
+                "",
+                "To download an attachment:",
+                f'  get_wiki_attachment("{page_name}", "filename")',
+            ])
+
+            return "\n".join(lines)
+
+        except Exception as e:
+            logger.error(f"Error listing wiki attachments: {e}", exc_info=True)
+            return f"Error listing wiki attachments: {e}"
+
+    @mcp.tool()
+    async def get_wiki_attachment(
+        page_name: str,
+        filename: str,
+        server: str = DEFAULT_SERVER,
+        container_path: str = DEFAULT_WIKI_CONTAINER,
+    ) -> str:
+        """Download an attachment from a wiki page.
+
+        For text files, returns content directly.
+        For binary files (.png, .jpg, .pdf, etc.), saves to ai/.tmp/ and returns path.
+
+        Args:
+            page_name: Wiki page name (e.g., 'NewMachineBootstrap')
+            filename: The attachment filename to download
+            server: LabKey server hostname (default: skyline.ms)
+            container_path: Container path (default: /home/software/Skyline)
+
+        Returns:
+            File content (for text files) or file path (for binary files).
+        """
+        import base64
+        from pathlib import Path
+
+        try:
+            # Get entityId from wiki edit page
+            metadata, _ = _get_wiki_page_metadata(page_name, server, container_path)
+            entity_id = metadata.get("entityId")
+
+            if not entity_id:
+                return f"Could not find entityId for wiki page '{page_name}'"
+
+            logger.info(f"Downloading '{filename}' from wiki page '{page_name}' (entityId: {entity_id})")
+
+            # Build download URL (encode filename for spaces and special chars)
+            login, password = get_netrc_credentials(server)
+            encoded_filename = quote(filename, safe="")
+            download_url = f"https://{server}{container_path}/wiki-download.view?entityId={entity_id}&name={encoded_filename}"
+
+            # Create authenticated request
+            request = urllib.request.Request(download_url)
+            credentials = base64.b64encode(f"{login}:{password}".encode()).decode()
+            request.add_header("Authorization", f"Basic {credentials}")
+
+            with urllib.request.urlopen(request, timeout=60) as response:
+                content = response.read()
+
+            # Determine if text or binary based on extension
+            text_extensions = {'.bat', '.py', '.txt', '.csv', '.xml', '.json', '.md', '.log', '.tsv', '.ini', '.cfg', '.yaml', '.yml', '.html', '.htm', '.css', '.js', '.sh', '.ps1', '.r', '.sql'}
+            ext = Path(filename).suffix.lower()
+
+            if ext in text_extensions:
+                # Return text content directly
+                try:
+                    text_content = content.decode('utf-8')
+                except UnicodeDecodeError:
+                    try:
+                        text_content = content.decode('latin-1')
+                    except UnicodeDecodeError:
+                        text_content = content.decode('utf-8', errors='replace')
+
+                return (
+                    f"**Attachment**: {filename}\n"
+                    f"**Wiki page**: {page_name}\n"
+                    f"**Size**: {len(content):,} bytes\n"
+                    f"\n---\n\n"
+                    f"{text_content}"
+                )
+            else:
+                # Save binary file to ai/.tmp/attachments/
+                output_dir = get_tmp_dir() / "attachments"
+                output_dir.mkdir(parents=True, exist_ok=True)
+
+                # Include page name prefix to avoid name collisions
+                safe_page = page_name.replace("/", "_").replace("\\", "_")
+                safe_filename = f"{safe_page}_{filename}"
+                output_file = output_dir / safe_filename
+                output_file.write_bytes(content)
+
+                return (
+                    f"Binary attachment saved:\n"
+                    f"  wiki_page: {page_name}\n"
+                    f"  filename: {filename}\n"
+                    f"  size: {len(content):,} bytes\n"
+                    f"  saved_to: {output_file}\n"
+                    f"\nUse Read tool to view (for images) or appropriate application for other files."
+                )
+
+        except urllib.error.HTTPError as e:
+            return f"HTTP Error {e.code}: {e.reason}. Check that the page name and filename are correct."
+        except Exception as e:
+            logger.error(f"Error downloading wiki attachment: {e}", exc_info=True)
+            return f"Error downloading wiki attachment: {e}"
