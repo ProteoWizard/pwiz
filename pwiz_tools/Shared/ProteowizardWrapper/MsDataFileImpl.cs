@@ -1011,6 +1011,7 @@ namespace pwiz.ProteowizardWrapper
         public abstract class QcTraceUnits
         {
             public const string Intensity = @"intensity";
+            public const string Pascal = @"pascal";
             public const string PoundsPerSquareInch = @"psi";
             public const string MicrolitersPerMinute = @"uL/min";
         }
