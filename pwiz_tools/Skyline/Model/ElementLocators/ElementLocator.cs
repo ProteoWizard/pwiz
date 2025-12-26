@@ -18,13 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util.Extensions;
+using Sprache;
 
 namespace pwiz.Skyline.Model.ElementLocators
 {
@@ -40,6 +39,66 @@ namespace pwiz.Skyline.Model.ElementLocators
     {
         // ReSharper disable once LocalizableElement
         private static readonly Regex REGEX_SPECIALCHARS = new Regex("[/?&=\"]");
+
+        private static readonly Parser<ElementLocator> FullLocatorParser = CreateFullLocatorParser();
+
+        private static Parser<ElementLocator> CreateFullLocatorParser()
+        {
+            // Parser for escaped quote ("") inside a quoted string, returning a single quote char
+            var escapedQuote = Sprache.Parse.String("\"\"").Return('"');
+
+            // Parser for a character inside a quoted string (escaped quote or any non-quote char)
+            var quotedChar = escapedQuote.Or(Sprache.Parse.CharExcept('"'));
+
+            // Parser for a quoted string: "..." where "" represents a literal "
+            var quotedString = Sprache.Parse.Char('"')
+                .Then(_ => quotedChar.Many().Text())
+                .Then(content => Sprache.Parse.Char('"').Return(content));
+
+            // Parser for an unquoted string (no special chars), can be empty
+            var unquotedString = Sprache.Parse.CharExcept("/?&=\"").Many().Text();
+
+            // Parser for a string value (quoted or unquoted)
+            var stringValue = quotedString.Or(unquotedString);
+
+            // Parser for an attribute value (after '='): can be empty or a string
+            var attributeValue = Sprache.Parse.Char('=').Then(_ => stringValue);
+
+            // Parser for an attribute: name(=value)?
+            var attribute = stringValue
+                .Then(name => attributeValue.Optional()
+                    .Select(value => new KeyValuePair<string, string>(name, value.GetOrDefault())));
+
+            // Parser for attributes section: ?(attr1(&attr2)*)
+            var attributesSection = Sprache.Parse.Char('?')
+                .Then(_ => attribute)
+                .Then(first => Sprache.Parse.Char('&').Then(_ => attribute).Many()
+                    .Select(rest => new[] { first }.Concat(rest)));
+
+            // Parser for a single segment: name(?attrs)?
+            var segment = stringValue
+                .Then(name => attributesSection.Optional()
+                    .Select(attrs => new ElementLocator(name, attrs.GetOrElse(Enumerable.Empty<KeyValuePair<string, string>>()))));
+
+            // Parser for the path (segments separated by /)
+            var pathParser = segment.DelimitedBy(Sprache.Parse.Char('/'));
+
+            // Full parser for Type:path (type can be empty)
+            return Sprache.Parse.CharExcept(':').Many().Text()
+                .Then(type => Sprache.Parse.Char(':')
+                    .Then(_ => pathParser)
+                    .Select(segments => BuildLocatorFromSegments(type, segments)));
+        }
+
+        private static ElementLocator BuildLocatorFromSegments(string type, IEnumerable<ElementLocator> segments)
+        {
+            ElementLocator result = null;
+            foreach (var segment in segments)
+            {
+                result = segment.ChangeParent(result);
+            }
+            return result?.ChangeType(type);
+        }
 
         public ElementLocator(string name, IEnumerable<KeyValuePair<string, string>> attributes)
         {
@@ -137,27 +196,13 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         public static ElementLocator Parse(string str)
         {
-            int ichColon = str.IndexOf(':');
-            if (ichColon < 0)
+            var parseResult = FullLocatorParser.TryParse(str);
+            if (!parseResult.WasSuccessful || parseResult.Value == null)
             {
                 string message = string.Format(ElementLocatorsResources.ElementLocator_Parse__0__is_not_a_valid_element_locator_, str);
                 throw new FormatException(message);
             }
-            var type = str.Substring(0, ichColon);
-            ElementLocator result = null;
-            var stringReader = new StringReader(str);
-            stringReader.Read(new char[ichColon + 1], 0, ichColon + 1);
-            foreach (var elementLocator in ParseParts(stringReader))
-            {
-                result = elementLocator.ChangeParent(result);
-            }
-            if (result == null)
-            {
-                string message = string.Format(ElementLocatorsResources.ElementLocator_Parse__0__is_not_a_valid_element_locator_, str);
-                throw new FormatException(message);
-            }
-            result = result.ChangeType(type);
-            return result;
+            return parseResult.Value;
         }
 
         public override string ToString()
@@ -202,195 +247,5 @@ namespace pwiz.Skyline.Model.ElementLocators
             // ReSharper restore LocalizableElement
         }
 
-        private static TokenType? TokenTypeFromChar(char ch)
-        {
-            switch (ch)
-            {
-                case '/':
-                    return TokenType.Slash;
-                case '?':
-                    return TokenType.Question;
-                case '&':
-                    return TokenType.And;
-                case '=':
-                    return TokenType.Equals;
-            }
-            return null;
-        }
-
-
-        private static string ReadQuotedString(StringReader reader, char chEndQuote)
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            while (true)
-            {
-                int chInt = reader.Read();
-                if (chInt < 0)
-                {
-                    throw UnexpectedException(reader, ElementLocatorsResources.ElementLocator_ReadQuotedString_End_of_text);
-                }
-                char ch = (char)chInt;
-                if (ch == chEndQuote)
-                {
-                    int chNext = reader.Peek();
-                    if (chNext == chEndQuote)
-                    {
-                        reader.Read();
-                        stringBuilder.Append(ch);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    stringBuilder.Append(ch);
-                }
-            }
-            return stringBuilder.ToString();
-        }
-
-        private static Exception UnexpectedException(StringReader reader, KeyValuePair<TokenType, string> token)
-        {
-            return UnexpectedException(reader, @"'" + token.Value + @"'");
-        }
-
-        private static Exception UnexpectedException(StringReader reader, string unexpected)
-        {
-            var remainder = reader.ReadToEnd();
-            string fullText = reader.ToString();
-            // ReSharper disable PossibleNullReferenceException
-            int position = fullText.Length - remainder.Length;
-            // ReSharper restore PossibleNullReferenceException
-            string fullMessage = TextUtil.LineSeparate(string.Format(ElementLocatorsResources.ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__, unexpected, fullText, position));
-            return new FormatException(fullMessage);
-        }
-
-        private static IEnumerable<KeyValuePair<TokenType, string>> EnumerateTokens(StringReader reader)
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            while (true)
-            {
-                int chInt = reader.Read();
-                if (chInt < 0)
-                {
-                    break;
-                }
-                if (chInt == '"')
-                {
-                    yield return new KeyValuePair<TokenType, string>(TokenType.String,
-                        ReadQuotedString(reader, '"'));
-                }
-                else
-                {
-                    var tokenType = TokenTypeFromChar((char)chInt);
-                    if (tokenType.HasValue)
-                    {
-                        if (stringBuilder.Length > 0)
-                        {
-                            yield return new KeyValuePair<TokenType, string>(TokenType.String,
-                                stringBuilder.ToString());
-                            stringBuilder.Clear();
-                        }
-                        yield return new KeyValuePair<TokenType, string>(tokenType.Value, null);
-                    }
-                    else
-                    {
-                        stringBuilder.Append((char)chInt);
-                    }
-                }
-            }
-            if (stringBuilder.Length > 0)
-            {
-                yield return new KeyValuePair<TokenType, string>(TokenType.String, stringBuilder.ToString());
-            }
-        }
-        private static IEnumerable<ElementLocator> ParseParts(StringReader reader)
-        {
-            string keyName = null;
-            string attributeName = null;
-            string attributeValue = null;
-            List<KeyValuePair<string, string>> attributes = new List<KeyValuePair<string, string>>();
-            foreach (var tk in EnumerateTokens(reader))
-            {
-                switch (tk.Key)
-                {
-                    case TokenType.String:
-                        if (string.IsNullOrEmpty(keyName))
-                        {
-                            keyName = tk.Value;
-                        }
-                        else if (attributeName == null)
-                        {
-                            attributeName = tk.Value;
-                        }
-                        else
-                        {
-                            if (!string.IsNullOrEmpty(attributeValue))
-                            {
-                                throw UnexpectedException(reader, tk);
-                            }
-                            attributeValue = tk.Value;
-                        }
-                        break;
-                    case TokenType.Slash:
-                        if (attributeName != null)
-                        {
-                            attributes.Add(new KeyValuePair<string, string>(attributeName, attributeValue));
-                        }
-                        yield return new ElementLocator(keyName ?? string.Empty, attributes);
-                        keyName = string.Empty;
-                        attributeName = null;
-                        attributeValue = null;
-                        attributes.Clear();
-                        break;
-                    case TokenType.Question:
-                        if (attributeName != null || attributes.Count > 0)
-                        {
-                            throw new FormatException();
-                        }
-                        keyName = keyName ?? string.Empty;
-                        attributeName = null;
-                        attributes.Clear();
-                        break;
-                    case TokenType.And:
-                        if (keyName == null)
-                        {
-                            throw UnexpectedException(reader, tk);
-                        }
-                        attributes.Add(new KeyValuePair<string, string>(attributeName ?? string.Empty, attributeValue));
-                        attributeName = null;
-                        attributeValue = null;
-                        break;
-                    case TokenType.Equals:
-                        attributeName = attributeName ?? string.Empty;
-                        if (attributeValue != null)
-                        {
-                            throw UnexpectedException(reader, tk);
-                        }
-                        attributeValue = string.Empty;
-                        break;
-                }
-            }
-            if (keyName == null)
-            {
-                yield break;
-            }
-            if (attributeName != null)
-            {
-                attributes.Add(new KeyValuePair<string, string>(attributeName, attributeValue));
-            }
-
-            yield return new ElementLocator(keyName, attributes);
-        }
-        private enum TokenType
-        {
-            String,
-            Slash,
-            Question,
-            And,
-            Equals,
-        }
     }
 }

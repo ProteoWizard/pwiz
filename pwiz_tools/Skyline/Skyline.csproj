@@ -171,6 +171,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
+    <Reference Include="Sprache">
+      <HintPath>..\Shared\Lib\Sprache.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
