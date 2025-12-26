@@ -196,9 +196,10 @@ This saves a full report to `ai/.tmp/exceptions-report-YYYYMMDD.md` with:
 
 ## Related Documentation
 
-- [MCP Development Guide](mcp-development-guide.md) - Patterns for extending MCP capabilities
-- [Nightly Test Analysis](nightly-test-analysis.md) - Test results data access
-- [Wiki and Support Board System](wiki-support-system.md) - Documentation and support access
+- [MCP Development Guide](development-guide.md) - Patterns for extending MCP capabilities
+- [Nightly Tests](nightly-tests.md) - Test results data access
+- [Wiki](wiki.md) - Documentation access
+- [Support](support.md) - Support board access
 - [LabKey MCP Server README](../mcp/LabKeyMcp/README.md) - Setup instructions
 - [Query Documentation](../mcp/LabKeyMcp/queries/README.md) - Server-side query reference
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)

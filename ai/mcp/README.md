@@ -34,4 +34,4 @@ MCP servers are configured in the user's Claude Code settings. See [LabKeyMcp/RE
 ## Related Documentation
 
 - [ai-context-branch-strategy.md](../docs/ai-context-branch-strategy.md) - How AI infrastructure is managed
-- [mcp-development-guide.md](../docs/mcp-development-guide.md) - Patterns for MCP development
+- [development-guide.md](../docs/mcp/development-guide.md) - Patterns for MCP development

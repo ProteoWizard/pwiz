@@ -327,6 +327,6 @@ ai/mcp/LabKeyMcp/
 
 ## Related Documentation
 
-- [Developer Setup Guide](developer-setup-guide.md) - Environment configuration
-- [Exception Triage System](exception-triage-system.md) - Exception data access
-- [Nightly Test Analysis](nightly-test-analysis.md) - Test results data access
+- [Developer Setup Guide](../developer-setup-guide.md) - Environment configuration
+- [Exceptions](exceptions.md) - Exception data access
+- [Nightly Tests](nightly-tests.md) - Test results data access

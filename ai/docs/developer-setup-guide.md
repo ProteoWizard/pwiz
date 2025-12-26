@@ -288,7 +288,7 @@ Expected output shows successful connection and recent exception data.
 - Exception reports (`/home/issues/exceptions`)
 - Nightly test results (`/home/development/Nightly x64`)
 
-See `ai/docs/exception-triage-system.md` for exception documentation.
+See `ai/docs/mcp/exceptions.md` for exception documentation.
 
 ### Git Configuration (line endings)
 

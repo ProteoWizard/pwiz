@@ -160,6 +160,6 @@ python server.py
 
 ## Related Documentation
 
-- [Nightly Test Analysis](../../../ai/docs/nightly-test-analysis.md) - Test analysis workflow and queries
-- [Exception Triage System](../../../ai/docs/exception-triage-system.md) - Exception workflow documentation
-- [Developer Setup Guide](../../../ai/docs/developer-setup-guide.md) - Environment configuration
+- [Nightly Tests](../../docs/mcp/nightly-tests.md) - Test analysis workflow and queries
+- [Exceptions](../../docs/mcp/exceptions.md) - Exception workflow documentation
+- [Developer Setup Guide](../../docs/developer-setup-guide.md) - Environment configuration

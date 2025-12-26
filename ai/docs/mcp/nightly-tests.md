@@ -317,7 +317,7 @@ Use `query_table` with `testpasses_detail`, passing `param_name="RunId"` and `pa
 
 ## Extending the System
 
-To add new custom queries (like `handleleaks_by_computer`), see [MCP Development Guide](mcp-development-guide.md) for the server-side query pattern. This approach keeps complex JOINs on the LabKey server rather than in Python code.
+To add new custom queries (like `handleleaks_by_computer`), see [MCP Development Guide](development-guide.md) for the server-side query pattern. This approach keeps complex JOINs on the LabKey server rather than in Python code.
 
 ## Future Enhancements
 
@@ -341,8 +341,9 @@ To add new custom queries (like `handleleaks_by_computer`), see [MCP Development
 
 ## Related Documentation
 
-- [MCP Development Guide](mcp-development-guide.md) - Patterns for extending MCP capabilities
-- [Exception Triage System](exception-triage-system.md) - User-reported crash analysis
-- [Wiki and Support Board System](wiki-support-system.md) - Documentation and support access
+- [MCP Development Guide](development-guide.md) - Patterns for extending MCP capabilities
+- [Exceptions](exceptions.md) - User-reported crash analysis
+- [Wiki](wiki.md) - Documentation access
+- [Support](support.md) - Support board access
 - [LabKey MCP Server README](../mcp/LabKeyMcp/README.md) - Setup instructions
 - [Query Documentation](../mcp/LabKeyMcp/queries/README.md) - Server-side query reference

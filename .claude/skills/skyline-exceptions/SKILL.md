@@ -9,7 +9,7 @@ When working with Skyline exception data from skyline.ms, consult these document
 
 ## Core Documentation
 
-1. **ai/docs/exception-triage-system.md** - Complete system documentation
+1. **ai/docs/mcp/exceptions.md** - Complete system documentation
    - Architecture and components
    - MCP tools reference
    - Data schema
@@ -17,9 +17,9 @@ When working with Skyline exception data from skyline.ms, consult these document
 
 ## When to Read What
 
-- **Before querying exceptions**: Read ai/docs/exception-triage-system.md (MCP tools section)
-- **For daily triage**: Read ai/docs/exception-triage-system.md (Daily triage workflow)
-- **For setup/debugging**: Read ai/docs/exception-triage-system.md (Setup section)
+- **Before querying exceptions**: Read ai/docs/mcp/exceptions.md (MCP tools section)
+- **For daily triage**: Read ai/docs/mcp/exceptions.md (Daily triage workflow)
+- **For setup/debugging**: Read ai/docs/mcp/exceptions.md (Setup section)
 - **For code changes to MCP server**: Read ai/mcp/LabKeyMcp/README.md
 
 ## Quick Reference
