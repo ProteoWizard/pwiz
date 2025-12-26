@@ -84,7 +84,7 @@ namespace pwiz.Skyline
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
         private CandidatePeakForm _candidatePeakForm;
-        public static int MAX_GRAPH_CHROM => Settings.Default.MaxChromatogramGraphs; // Never show more than this many chromatograms, lest we hit the Windows handle limit
+        public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private bool _alignToPrediction;
