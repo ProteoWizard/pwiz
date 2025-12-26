@@ -343,6 +343,47 @@ def register_tools(mcp):
                 p = issue.get("Priority", "?")
                 by_priority.setdefault(p, []).append(issue)
 
+            # Categorize by area
+            by_area = {}
+            for issue in issues:
+                area = issue.get("Area", "-") or "-"
+                by_area.setdefault(area, []).append(issue)
+
+            # Categorize by milestone
+            by_milestone = {}
+            for issue in issues:
+                milestone = issue.get("Milestone", "-") or "-"
+                by_milestone.setdefault(milestone, []).append(issue)
+
+            # Categorize by assignee
+            by_assignee = {}
+            for issue in issues:
+                assignee = issue.get("AssignedTo", "-") or "-"
+                by_assignee.setdefault(assignee, []).append(issue)
+
+            # Age analysis (years since last modified)
+            from datetime import datetime as dt
+            now = dt.now()
+            age_buckets = {"< 1 year": 0, "1-2 years": 0, "2-3 years": 0, "3-5 years": 0, "> 5 years": 0}
+            for issue in issues:
+                mod = issue.get("Modified", "")
+                if mod:
+                    try:
+                        mod_date = dt.fromisoformat(mod.replace("Z", "+00:00").split("+")[0])
+                        years = (now - mod_date).days / 365
+                        if years < 1:
+                            age_buckets["< 1 year"] += 1
+                        elif years < 2:
+                            age_buckets["1-2 years"] += 1
+                        elif years < 3:
+                            age_buckets["2-3 years"] += 1
+                        elif years < 5:
+                            age_buckets["3-5 years"] += 1
+                        else:
+                            age_buckets["> 5 years"] += 1
+                    except:
+                        pass
+
             # Build report
             report_date = datetime.now().strftime("%Y-%m-%d")
             lines = [
@@ -370,6 +411,52 @@ def register_tools(mcp):
             ])
             for p in sorted(by_priority.keys()):
                 lines.append(f"| {p} | {len(by_priority[p])} |")
+
+            # Summary by Area
+            lines.extend([
+                "",
+                "## Summary by Area",
+                "",
+                "| Area | Count |",
+                "|------|-------|",
+            ])
+            for area in sorted(by_area.keys(), key=lambda x: -len(by_area[x])):
+                lines.append(f"| {area} | {len(by_area[area])} |")
+
+            # Summary by Assignee
+            lines.extend([
+                "",
+                "## Summary by Assignee",
+                "",
+                "| Assignee | Count |",
+                "|----------|-------|",
+            ])
+            for assignee in sorted(by_assignee.keys(), key=lambda x: -len(by_assignee[x])):
+                lines.append(f"| {assignee} | {len(by_assignee[assignee])} |")
+
+            # Summary by Milestone
+            if any(m != "-" for m in by_milestone.keys()):
+                lines.extend([
+                    "",
+                    "## Summary by Milestone",
+                    "",
+                    "| Milestone | Count |",
+                    "|-----------|-------|",
+                ])
+                for milestone in sorted(by_milestone.keys(), key=lambda x: -len(by_milestone[x])):
+                    lines.append(f"| {milestone} | {len(by_milestone[milestone])} |")
+
+            # Age Analysis
+            lines.extend([
+                "",
+                "## Age Analysis (time since last modified)",
+                "",
+                "| Age | Count |",
+                "|-----|-------|",
+            ])
+            for age in ["< 1 year", "1-2 years", "2-3 years", "3-5 years", "> 5 years"]:
+                if age_buckets[age] > 0:
+                    lines.append(f"| {age} | {age_buckets[age]} |")
 
             # List defects
             if defects:
