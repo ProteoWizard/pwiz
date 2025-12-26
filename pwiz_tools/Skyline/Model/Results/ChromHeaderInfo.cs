@@ -2903,11 +2903,13 @@ namespace pwiz.Skyline.Model.Results
                 interpolatedTimeIntensities, null);
         }
 
-        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator,
-            ImmutableList<float> interpolatedTimes)
+        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator, ImmutableList<float> interpolatedTimes)
         {
+            var interpolatedTimeIntensities = interpolatedTimes == null
+                ? GetTransformedTimeIntensities(TransformChrom.interpolated)
+                : GetInterpolatedIntensitiesForTimes(interpolatedTimes);
             return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, RawTimeIntensities,
-                GetInterpolatedIntensitiesForTimes(interpolatedTimes), null);
+                interpolatedTimeIntensities, null);
         }
 
         public int IndexOfPeak(double retentionTime)

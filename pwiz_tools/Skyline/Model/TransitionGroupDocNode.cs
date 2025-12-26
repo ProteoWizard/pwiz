@@ -1527,7 +1527,8 @@ namespace pwiz.Skyline.Model
             int numSteps = 0;
             if (chromatograms.OptimizationFunction != null)
                 numSteps = chromatograms.OptimizationFunction.StepCount;
-            var transitionGroupIntegrators = new TransitionGroupIntegrator[countGroupInfos];
+            var transitionGroupIntegrators = chromGroupInfos.Select(chromGroupInfo =>
+                new TransitionGroupIntegrator(settingsNew, this, chromatograms, chromGroupInfo)).ToList();
             // Calculate the transition info, and the max values for the transition group
             for (int iTran = 0; iTran < Children.Count; iTran++)
             {
@@ -1544,9 +1545,7 @@ namespace pwiz.Skyline.Model
                 {
                     // Get all transition chromatogram info for this file.
                     ChromatogramGroupInfo chromGroupInfo = chromGroupInfos[j];
-                    var transitionGroupIntegrator =
-                        transitionGroupIntegrators[j] ??
-                        new TransitionGroupIntegrator(settingsNew, this, chromatograms, chromGroupInfo);
+                    var transitionGroupIntegrator = transitionGroupIntegrators[j];
                     ChromFileInfoId fileId = fileIds[j];
 
                     var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran,
