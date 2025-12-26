@@ -1,6 +1,19 @@
-# LabKey MCP Server Documentation
+# MCP Server Documentation
 
-This folder contains documentation for accessing skyline.ms data via the LabKey MCP server.
+This folder contains documentation for MCP (Model Context Protocol) servers used by Claude Code.
+
+## MCP Servers
+
+| Server | Purpose | Documentation |
+|--------|---------|---------------|
+| LabKey | skyline.ms data access (wiki, support, exceptions, tests) | See sections below |
+| Gmail | Email sending for automated reports | [gmail.md](gmail.md) |
+
+---
+
+# LabKey MCP Server
+
+Access skyline.ms data via the LabKey MCP server.
 
 ## Data Sources
 
