@@ -121,6 +121,23 @@ Try GitHub Issues workflow before committing to LabKey write operations:
 
 ## Progress Log
 
+### 2025-12-26 (Session 4) - Workflow Testing & Tooling
+- Tested GitHub Issues workflow with Issue #3733 (Gmail MCP) - SUCCESSFUL
+  - Issue created → TODO created on start → work completed → TODO moved to completed → Issue closed
+  - Identified gap: need ownership signaling (push TODO + comment on issue)
+  - Updated workflow-issues-guide.md with ownership signaling requirement
+- Created /pw-startissue command for zero-prompt issue startup
+  - Takes issue number, checks labels, determines branch strategy
+  - `ai-context` label → work on ai-context branch directly
+  - Other labels → create Skyline/work branch from master
+- Created GitHub labels: `ai-context`, `todo`
+- Created /pw-auditdocs command for comprehensive documentation audit
+  - Sections: skills, commands, ai, docs, mcp
+  - Replaced single-purpose audit-skills.ps1
+- Eliminated ai/todos/backlog - GitHub Issues is now the only backlog
+- Updated Issue #3732 (scheduled daily analysis) with Gmail completion status
+- Ready for next test: /pw-startissue 3732
+
 ### 2025-12-26 (Session 3)
 - Reorganized MCP documentation into `ai/docs/mcp/` folder
   - Moved: mcp-development-guide.md → mcp/development-guide.md
