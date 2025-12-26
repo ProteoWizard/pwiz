@@ -1,0 +1,12 @@
+Undo Redo : Group Comparison > "EV-Enrich" > Use zero for missing peaks changed to True
+Summary   : Settings > Document Settings -- Group Comparisons > "EV-Enrich" > Use zero for missing peaks changed to True
+All Info  :
+Group Comparison > "EV-Enrich" > Use zero for missing peaks changed to True
+Settings > Document Settings -- Group Comparisons > "EV-Enrich" > Use zero for missing peaks changed from False to True
+
+Undo Redo : Peptide Settings > Imputation > Impute Missing Peaks changed to True
+Summary   : Settings > Peptide Settings > Imputation > Impute Missing Peaks changed to True
+All Info  :
+Peptide Settings > Imputation > Impute Missing Peaks changed to True
+Settings > Peptide Settings > Imputation > Impute Missing Peaks changed from False to True
+
