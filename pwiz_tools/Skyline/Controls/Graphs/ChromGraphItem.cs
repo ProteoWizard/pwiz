@@ -25,7 +25,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.PeakFinding;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
