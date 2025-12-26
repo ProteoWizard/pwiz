@@ -25,6 +25,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.PeakFinding;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -306,7 +308,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         return string.Format(GraphsResources.ChromGraphItem_Title__0____base_peak, title);
                     if (extractor == ChromExtractor.summed)
                         return string.Format(GraphsResources.ChromGraphItem_Title__0____TIC, title);
-                    return Chromatogram.GroupInfo.ChromatogramGroupId?.Target?.ToString() ?? @"no summary text";
+                    return Chromatogram.GroupInfo.ChromatogramGroupId?.Target?.ToString() ??
+                           Chromatogram.GroupInfo.ChromatogramGroupId?.QcTraceName ??
+                           @"no summary text";
                 }
                 if (OptimizationStep.HasValue && !OptimizationStep.Value.Equals(0))
                     return string.Format(GraphsResources.ChromGraphItem_Title_Step__0_, OptimizationStep);
@@ -1176,7 +1180,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void CustomizeYAxis(Axis axis)
         {
-            CustomizeAxis(axis, GraphsResources.AbstractChromGraphItem_CustomizeYAxis_Intensity);
+            var units = (this as ChromGraphItem)?.Chromatogram?.GroupInfo?.QcTraceUnits ??
+                        GraphsResources.AbstractChromGraphItem_CustomizeYAxis_Intensity;
+            CustomizeAxis(axis, units);
         }
 
         public void CustomizeXAxis(Axis axis)

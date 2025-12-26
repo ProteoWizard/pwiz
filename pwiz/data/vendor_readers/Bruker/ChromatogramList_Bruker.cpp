@@ -30,7 +30,6 @@
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/data/common/cv.hpp"
@@ -112,8 +111,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
 
     if (detailLevel < DetailLevel_FullMetadata)
         return result;
-    bool getBinaryData = detailLevel == DetailLevel_FullData;
-
+    
     vendor_api::Bruker::ChromatogramPtr cd;
 
     switch (ci.chromatogramType)

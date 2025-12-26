@@ -1010,28 +1010,57 @@ namespace pwiz.ProteowizardWrapper
 
         public abstract class QcTraceUnits
         {
+            public const string Intensity = @"intensity";
             public const string PoundsPerSquareInch = @"psi";
             public const string MicrolitersPerMinute = @"uL/min";
         }
 
         public class QcTrace
         {
-            public QcTrace(Chromatogram c, CVID chromatogramType)
+            public QcTrace(Chromatogram c)
             {
                 Name = c.id;
                 Index = c.index;
+                var param = c.cvParamChild(CVID.MS_chromatogram_type);
+                var chromatogramType = param.cvid;
+                var intensityArray = c.getIntensityArray();
+                var unitsCVID = CVID.CVID_Unknown;
+                string unitsString = null;
+                if (intensityArray != null)
+                {
+                    var typeParam = intensityArray.cvParamChild(CVID.MS_intensity_array);
+                    unitsCVID = typeParam.units;
+                    unitsString = typeParam.unitsName;
+                    if (unitsCVID == CVID.MS_number_of_detector_counts ||
+                        unitsCVID == CVID.CVID_Unknown)
+                    {
+                        using var userParam = c.userParam("units");
+                        if (!userParam.empty())
+                        {
+                            unitsString = userParam.value;
+                        }
+                        else
+                        {
+                            unitsString = QcTraceUnits.Intensity;
+                        }
+                    }
+                }
+
                 if (chromatogramType == CVID.MS_pressure_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.Pressure;
-                    IntensityUnits = QcTraceUnits.PoundsPerSquareInch;
+                    IntensityUnits = unitsCVID == CVID.UO_pounds_per_square_inch ? QcTraceUnits.PoundsPerSquareInch : unitsString;
                 }
                 else if (chromatogramType == CVID.MS_flow_rate_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.FlowRate;
-                    IntensityUnits = QcTraceUnits.MicrolitersPerMinute;
+                    IntensityUnits = unitsCVID == CVID.UO_microliters_per_minute ? QcTraceUnits.MicrolitersPerMinute : unitsString;
                 }
                 else
-                    throw new InvalidDataException($"unsupported chromatogram type (not pressure or flow rate): {c.id}");
+                {
+                    MeasuredQuality = Name;
+                    IntensityUnits = unitsString ?? @"unknown";
+                }
                 Times = c.getTimeArray().data.Storage();
                 Intensities = c.binaryDataArrays[1].data.Storage();
             }
@@ -1057,13 +1086,11 @@ namespace pwiz.ProteowizardWrapper
             var result = new List<QcTrace>();
             for (int i = 0; i < ChromatogramList.size(); ++i)
             {
-                CVID chromatogramType;
                 using (var chromMetaData = ChromatogramList.chromatogram(i, minDetailLevel))
                 {
-                    using var cvParamChild = chromMetaData.cvParamChild(CVID.MS_chromatogram_type);
-                    chromatogramType = cvParamChild.cvid;
-                    if (chromatogramType != CVID.MS_pressure_chromatogram &&
-                        chromatogramType != CVID.MS_flow_rate_chromatogram)
+                    // Skip over TIC, BPC, SIC, SIM, SRM, etc as they are not QC traces
+                    using var cvParamChild = chromMetaData.cvParamChild(CVID.MS_ion_current_chromatogram);
+                    if (cvParamChild.cvid != CVID.CVID_Unknown)
                         continue;
                 }
 
@@ -1072,7 +1099,7 @@ namespace pwiz.ProteowizardWrapper
                     if (chromatogram == null)
                         return null;
 
-                    result.Add(new QcTrace(chromatogram, chromatogramType));
+                    result.Add(new QcTrace(chromatogram));
                 }
             }
             return result;

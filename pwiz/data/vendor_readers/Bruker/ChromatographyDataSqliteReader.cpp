@@ -156,7 +156,10 @@ std::vector<vendor_api::Bruker::ChromatogramPtr> readChromatographyDataSqlite(co
                 chrom->type = traceTypeToCVID(sitr->get<int>(0), unitValue, chrom->description);
                 if (unitValue == static_cast<int>(TraceUnit::NoneUnit))
                 {
-                    unitValue = static_cast<int>(TraceUnit::Intensity); // default to Intensity if no unit specified
+                    if (chrom->type == CVID::MS_pressure_chromatogram && bal::contains(chrom->description, "[psi]"))
+                        unitValue = static_cast<int>(TraceUnit::Pressure_psi);
+                    else
+                        unitValue = static_cast<int>(TraceUnit::Intensity); // default to Intensity if no unit specified
                 }
                 double dummyValue = 0.0;
                 chrom->units = traceUnitToCVID(unitValue, dummyValue);
