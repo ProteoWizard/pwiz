@@ -209,6 +209,7 @@
     <Compile Include="Controls\FilesTree\FileSystemUtil.cs" />
     <Compile Include="Controls\FilesTree\ManagedFileSystemWatcher.cs" />
     <Compile Include="Controls\Databinding\BuiltInReports.cs" />
+    <Compile Include="Controls\Graphs\ZoomSynchronizer.cs" />
     <Compile Include="Menus\KeyboardShortcutDocumentation.cs" />
   </ItemGroup>
   <ItemGroup>
