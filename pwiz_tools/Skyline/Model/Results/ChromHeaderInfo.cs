@@ -2903,6 +2903,13 @@ namespace pwiz.Skyline.Model.Results
                 interpolatedTimeIntensities, null);
         }
 
+        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator,
+            ImmutableList<float> interpolatedTimes)
+        {
+            return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, RawTimeIntensities,
+                GetInterpolatedIntensitiesForTimes(interpolatedTimes), null);
+        }
+
         public int IndexOfPeak(double retentionTime)
         {
             // Find the closest peak within a tolerance of 0.001 (near the precision of a float)
@@ -3026,6 +3033,18 @@ namespace pwiz.Skyline.Model.Results
 
             return rawTimeIntensities.TransitionTimeIntensities[TransitionIndex]
                 .Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
+        }
+
+        public TimeIntensities GetInterpolatedIntensitiesForTimes(ImmutableList<float> interpolatedTimes)
+        {
+            if (_groupInfo?.TimeIntensitiesGroup is RawTimeIntensities rawTimeIntensities)
+            {
+                bool inferZeros = rawTimeIntensities.InferZeroes;
+                return rawTimeIntensities.TransitionTimeIntensities[TransitionIndex]
+                    .Interpolate(interpolatedTimes, inferZeros);
+            }
+
+            return TimeIntensities;
         }
 
         public static float[] SavitzkyGolaySmooth(float[] intensities)
