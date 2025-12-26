@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model
             }
 
             userSet = UserSet.REINTEGRATED;
-            return transitionGroupIntegrator.CalcPeak(transition, imputedPeak.PeakBounds);
+            return transitionGroupIntegrator.CalcPeak(transition, 0, imputedPeak.PeakBounds);
         }
 
         public bool IsDefaultScoringModel()

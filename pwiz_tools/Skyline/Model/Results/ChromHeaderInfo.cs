@@ -2878,36 +2878,15 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(PeakGroupIntegrator peakGroupIntegrator, float startTime, float endTime, ChromPeak.FlagValues flags)
-        {
-            if (startTime == endTime)
-            {
-                return ChromPeak.EMPTY;
-            }
-            var existingPeak = Peaks.FirstOrDefault(peak => peak.StartTime == startTime && peak.EndTime == endTime);
-            if (!existingPeak.IsEmpty)
-            {
-                return existingPeak;
-            }
-            var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
-            return peakIntegrator.IntegratePeak(startTime, endTime, flags);
-        }
-        
-        
-
-        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
-        {
-            var rawTimeIntensities = RawTimeIntensities;
-            var interpolatedTimeIntensities = GetTransformedTimeIntensities(TransformChrom.interpolated);
-            return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, rawTimeIntensities,
-                interpolatedTimeIntensities, null);
-        }
-
         public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator, ImmutableList<float> interpolatedTimes)
         {
-            var interpolatedTimeIntensities = interpolatedTimes == null
-                ? GetTransformedTimeIntensities(TransformChrom.interpolated)
-                : GetInterpolatedIntensitiesForTimes(interpolatedTimes);
+            TimeIntensities interpolatedTimeIntensities = null;
+            if (interpolatedTimes != null && _groupInfo?.TimeIntensitiesGroup is RawTimeIntensities rawTimeIntensities)
+            {
+                interpolatedTimeIntensities = rawTimeIntensities.TransitionTimeIntensities[TransitionIndex]
+                    .Interpolate(interpolatedTimes, rawTimeIntensities.InferZeroes);
+            }
+            interpolatedTimeIntensities ??= GetTransformedTimeIntensities(TransformChrom.interpolated);
             return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, RawTimeIntensities,
                 interpolatedTimeIntensities, null);
         }

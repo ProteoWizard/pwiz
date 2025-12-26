@@ -19,7 +19,6 @@
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
-using System.Collections.Generic;
 using System.Linq;
 using pwiz.CommonMsData;
 
@@ -27,9 +26,10 @@ namespace pwiz.Skyline.Model.Results
 {
     public class TransitionGroupIntegrator
     {
-        private readonly PeakGroupIntegrator _peakGroupIntegrator;
-        private readonly TransitionEntry[] _transitionEntries;
-        private readonly ImmutableList<float> _interpolatedTimes;
+        private PeakGroupIntegrator _peakGroupIntegrator;
+        private OptStepChromatograms[] _optStepChromatograms;
+        private PeakIntegrator[] _peakIntegrators;
+        private ImmutableList<float> _interpolatedTimes;
 
         public TransitionGroupIntegrator(SrmSettings settings, TransitionGroupDocNode transitionGroupDocNode,
             ChromatogramSet chromatogramSet, ChromatogramGroupInfo chromatogramGroupInfo)
@@ -39,22 +39,6 @@ namespace pwiz.Skyline.Model.Results
             ChromatogramSet = chromatogramSet;
             ChromatogramGroupInfo = chromatogramGroupInfo;
             ChromFileInfoId = ChromatogramSet.FindFile(chromatogramGroupInfo.FilePath);
-            var rawTimeIntensities = ChromatogramGroupInfo.TimeIntensitiesGroup as RawTimeIntensities;
-            _peakGroupIntegrator =
-                new PeakGroupIntegrator(Settings.TransitionSettings.FullScan.AcquisitionMethod, rawTimeIntensities?.TimeIntervals);
-            _interpolatedTimes = rawTimeIntensities?.GetInterpolatedTimes();
-
-            float tolerance = (float) Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var transitionEntries = new List<TransitionEntry>();
-            foreach (var transition in transitionGroupDocNode.Transitions)
-            {
-                var optStepChromatograms = ChromatogramGroupInfo.GetAllTransitionInfo(transition, tolerance,
-                    ChromatogramSet.OptimizationFunction, TransformChrom.raw);
-                var peakIntegrator = optStepChromatograms?.GetChromatogramForStep(0)?.MakePeakIntegrator(_peakGroupIntegrator, _interpolatedTimes);
-                transitionEntries.Add(new TransitionEntry(optStepChromatograms, peakIntegrator));
-            }
-
-            _transitionEntries = transitionEntries.ToArray();
         }
 
         public SrmSettings Settings { get; }
@@ -67,9 +51,9 @@ namespace pwiz.Skyline.Model.Results
         }
         public ChromFileInfoId ChromFileInfoId { get; }
 
-        public ChromPeak CalcPeak(Transition transition, PeakBounds peakBounds)
+        public ChromPeak CalcPeak(Transition transition, int optStep, PeakBounds peakBounds)
         {
-            return CalcPeak(transition, 0, (float)peakBounds.StartTime, (float)peakBounds.EndTime, 0);
+            return CalcPeak(transition, optStep, (float)peakBounds.StartTime, (float)peakBounds.EndTime, 0);
         }
 
         public ChromPeak CalcPeak(Transition transition, int optStep, float startTime, float endTime, ChromPeak.FlagValues flags)
@@ -102,6 +86,14 @@ namespace pwiz.Skyline.Model.Results
             return GetChromatogram(transition, 0)?.Peaks.ElementAtOrDefault(peakIndex) ?? ChromPeak.EMPTY;
         }
 
+        public ChromPeak CalcMatchingPeak(Transition transition, int optStep, TransitionGroupChromInfo matchingPeak, out UserSet userSet)
+        {
+            var peak = CalcPeak(transition, optStep, matchingPeak.StartRetentionTime.Value,
+                matchingPeak.EndRetentionTime.Value, 0);
+            userSet = IsBestPeak(transition, peak) ? UserSet.FALSE : UserSet.MATCHED;
+            return peak;
+        }
+
         public bool IsBestPeak(Transition transition, ChromPeak chromPeak)
         {
             var chromatogramInfo = GetChromatogram(transition, 0);
@@ -117,31 +109,45 @@ namespace pwiz.Skyline.Model.Results
         private ChromatogramInfo GetChromatogram(Transition transition, int optStep)
         {
             int index = TransitionGroupDocNode.FindNodeIndex(transition);
-            return _transitionEntries[index]?.OptStepChromatograms.GetChromatogramForStep(optStep);
+            return EnsureOptStepChromatograms()[index].GetChromatogramForStep(optStep);
         }
 
+        private OptStepChromatograms[] EnsureOptStepChromatograms()
+        {
+            float tolerance = (float)Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            _optStepChromatograms ??= TransitionGroupDocNode.Transitions.Select(transition =>
+                ChromatogramGroupInfo.GetAllTransitionInfo(transition, tolerance, ChromatogramSet.OptimizationFunction,
+                    TransformChrom.raw)).ToArray();
+            return _optStepChromatograms;
+        }
+
+        private PeakGroupIntegrator EnsurePeakGroupIntegrator()
+        {
+            if (_peakGroupIntegrator == null)
+            {
+                var rawTimeIntensities = ChromatogramGroupInfo.TimeIntensitiesGroup as RawTimeIntensities;
+                _interpolatedTimes = rawTimeIntensities?.GetInterpolatedTimes();
+                var peakGroupIntegrator =
+                    new PeakGroupIntegrator(Settings.TransitionSettings.FullScan.AcquisitionMethod,
+                        rawTimeIntensities?.TimeIntervals);
+                _peakIntegrators = EnsureOptStepChromatograms().Zip(TransitionGroupDocNode.Transitions,
+                    (optStepChromatograms, transition) => optStepChromatograms?.GetChromatogramForStep(0)
+                        ?.MakePeakIntegrator(peakGroupIntegrator, _interpolatedTimes)).ToArray();
+                _peakGroupIntegrator = peakGroupIntegrator;
+            }
+            return _peakGroupIntegrator;
+        }
         private PeakIntegrator GetPeakIntegrator(Transition transition, int optStep)
         {
-            var transitionEntry = _transitionEntries[TransitionGroupDocNode.FindNodeIndex(transition)];
+            var peakGroupIntegrator = EnsurePeakGroupIntegrator();
+            int index = TransitionGroupDocNode.FindNodeIndex(transition);
             if (optStep == 0)
             {
-                return transitionEntry.PeakIntegrator;
+                return _peakIntegrators[index];
             }
 
-            return transitionEntry.OptStepChromatograms?.GetChromatogramForStep(optStep)
-                ?.MakePeakIntegrator(_peakGroupIntegrator, _interpolatedTimes);
-        }
-
-        private class TransitionEntry
-        {
-            public TransitionEntry(OptStepChromatograms optStepChromatograms, PeakIntegrator peakIntegrator)
-            {
-                OptStepChromatograms = optStepChromatograms;
-                PeakIntegrator = peakIntegrator;
-            }
-
-            public OptStepChromatograms OptStepChromatograms { get; }
-            public PeakIntegrator PeakIntegrator { get; }
+            return EnsureOptStepChromatograms()[index]?.GetChromatogramForStep(optStep)
+                ?.MakePeakIntegrator(peakGroupIntegrator, _interpolatedTimes);
         }
     }
 }
