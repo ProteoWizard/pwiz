@@ -3965,7 +3965,7 @@ namespace pwiz.Skyline
 
                 // Make sure the graphs for the result set are visible.
                 if (GetGraphChrom(name) != null || // Graph exists
-                    _listGraphChrom.Count >= MAX_GRAPH_CHROM) // Graph doesn't exist, presumably because there are more chromatograms than available graphs
+                    _listGraphChrom.Count >= Settings.Default.MaxChromatogramGraphs) // Graph doesn't exist, presumably because there are more chromatograms than available graphs
                 {
                     bool focus = ComboResults.Focused;
 
