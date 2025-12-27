@@ -2164,7 +2164,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static ChromKey FromQcTrace(MsDataFileImpl.QcTrace qcTrace)
         {
-            var chromatogramGroupId = ChromatogramGroupId.ForQcTraceName(qcTrace.Name);
+            var chromatogramGroupId = ChromatogramGroupId.ForQcTraceName(qcTrace.Name, qcTrace.IntensityUnits);
             return new ChromKey(chromatogramGroupId, SignedMz.ZERO, null, SignedMz.ZERO, 0, 0, 0, ChromSource.unknown, ChromExtractor.qc);
         }
 
@@ -2314,6 +2314,7 @@ namespace pwiz.Skyline.Model.Results
         [CanBeNull]
         public ChromatogramGroupId ChromatogramGroupId { get; private set; }
         public string QcTraceName { get { return ChromatogramGroupId?.QcTraceName; } }
+        public string QcTraceUnits { get { return ChromatogramGroupId?.QcTraceUnits; } }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
         public ChromCachedFile CachedFile { get { return _allFiles[_groupHeaderInfo.FileIndex]; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }

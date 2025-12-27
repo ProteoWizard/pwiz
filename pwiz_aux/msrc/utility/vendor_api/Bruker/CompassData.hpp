@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/BinaryData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
+#include "pwiz/data/common/cv.hpp"
 #include <string>
 #include <vector>
 #include <boost/smart_ptr.hpp>
@@ -272,10 +273,23 @@ struct PWIZ_API_DECL Chromatogram
 {
     std::vector<double> times;
     std::vector<double> intensities;
+    pwiz::cv::CVID type;
+    pwiz::cv::CVID units;
+    std::string description; // Expressed as a UserParam
+    std::string instrument;  // Expressed as a UserParam
+    
+    Chromatogram() : type(pwiz::cv::CVID_Unknown), units(pwiz::cv::CVID_Unknown) {}
 };
 
 typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 
+struct PWIZ_API_DECL LCTraceSource
+{
+    pwiz::cv::CVID type;
+    pwiz::cv::CVID units;
+    std::string description;
+    std::string instrument;
+};
 
 struct FrameScanRange
 {

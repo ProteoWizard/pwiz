@@ -132,10 +132,10 @@ namespace pwiz.SkylineTestData
             {
                 var pressureTraces = msDataFile.GetQcTraces();
 
-                VerifyQcTrace(pressureTraces[0], "Column Pressure (channel 1)", 1148, 0, 9.558333, 1470, 210, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.PoundsPerSquareInch);
+                VerifyQcTrace(pressureTraces[0], "Column Pressure (channel 1)", 1148, 0, 9.558333, 1470, 210, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.Pascal);
                 VerifyQcTrace(pressureTraces[1], "Pump A Flowrate (channel 2)", 1148, 0, 9.558333, 91590, 89120, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
                 VerifyQcTrace(pressureTraces[2], "Pump B Flowrate (channel 3)", 1148, 0, 9.558333, 0, 840, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
-                VerifyQcTrace(pressureTraces[3], "Column Pressure (channel 4)", 3508, 0, 29.225, 1396, 1322, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.PoundsPerSquareInch);
+                VerifyQcTrace(pressureTraces[3], "Column Pressure (channel 4)", 3508, 0, 29.225, 1396, 1322, MsDataFileImpl.QcTraceQuality.Pressure, MsDataFileImpl.QcTraceUnits.Pascal);
                 VerifyQcTrace(pressureTraces[4], "Pump A Flowrate (channel 5)", 3508, 0, 29.225, 7038, 7833, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
                 VerifyQcTrace(pressureTraces[5], "Pump B Flowrate (channel 6)", 3508, 0, 29.225, 680, 151, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
 

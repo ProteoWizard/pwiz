@@ -452,6 +452,7 @@
     <ClCompile Include="pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Agilent\SpectrumList_Agilent.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\ChromatogramList_Bruker.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Bruker\ChromatographyDataSqliteReader.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\Reader_Bruker.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\Reader_Bruker_Detail.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.cpp" />
