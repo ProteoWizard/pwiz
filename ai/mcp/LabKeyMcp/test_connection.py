@@ -76,9 +76,12 @@ def main():
         print("  1. Check that _netrc exists at C:\\Users\\<YourName>\\_netrc")
         print("  2. Verify the file contains:")
         print("     machine skyline.ms")
-        print("     login claude.c.skyline@gmail.com")
+        print("     login yourname+claude@proteinms.net  (or @gmail.com)")
         print("     password <your-password>")
-        print("  3. Ensure the account has been activated on skyline.ms")
+        print("  3. Ensure your +claude account has been added to the 'Agents' group on skyline.ms")
+        print()
+        print("  Note: The +claude suffix only works with Gmail-backed email providers")
+        print("        (@proteinms.net, @gmail.com). It will NOT work with @uw.edu or similar.")
 
 
 if __name__ == "__main__":
