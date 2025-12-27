@@ -229,17 +229,40 @@ if ((Test-Path $netrcPath) -or (Test-Path $netrcAltPath)) {
 # 11. LabKey MCP Server registration
 Write-Host "Checking LabKey MCP server..." -ForegroundColor Gray
 try {
+    $serverPath = Join-Path $repoRoot "ai\mcp\LabKeyMcp\server.py"
+    $serverExists = Test-Path $serverPath
     $mcpList = & claude mcp list 2>&1
-    if ($mcpList -match 'labkey.*Connected') {
+
+    # Parse the registered path from output like: "labkey: python C:/path/to/server.py - ✓ Connected"
+    $registeredPath = $null
+    if ($mcpList -match 'labkey:\s*python\s+([^\s]+server\.py)') {
+        $registeredPath = $matches[1] -replace '/', '\'  # Normalize to backslashes
+    }
+
+    $isConnected = $mcpList -match 'labkey.*Connected'
+    $isRegistered = $null -ne $registeredPath
+
+    # Normalize expected path for comparison
+    $expectedPathNormalized = $serverPath -replace '/', '\'
+    $pathMatches = $isRegistered -and ($registeredPath -eq $expectedPathNormalized)
+
+    if ($isConnected -and $pathMatches) {
         Add-Result "LabKey MCP Server" "OK" "registered and connected" $true
-    } elseif ($mcpList -match 'labkey') {
-        Add-Result "LabKey MCP Server" "WARN" "registered but not connected" $false
-    } else {
-        $serverPath = Join-Path $repoRoot "pwiz_tools\Skyline\Executables\DevTools\LabKeyMcp\server.py"
+    } elseif ($isRegistered -and -not $pathMatches) {
+        # Registered but pointing to wrong path
+        Add-Result "LabKey MCP Server" "WARN" "registered at wrong path. Run: claude mcp remove labkey && claude mcp add labkey -- python $serverPath" $false
+    } elseif ($isRegistered -and $pathMatches) {
+        # Registered at correct path, file exists, but not connected (normal when not in active session)
+        Add-Result "LabKey MCP Server" "WARN" "registered but not connected (normal outside active session)" $false
+    } elseif ($serverExists) {
+        # Server exists but not registered
         Add-Result "LabKey MCP Server" "MISSING" "Run: claude mcp add labkey -- python $serverPath" $false
+    } else {
+        # Neither registered nor server file found
+        Add-Result "LabKey MCP Server" "ERROR" "server.py not found at $serverPath" $false
     }
 } catch {
-    Add-Result "LabKey MCP Server" "ERROR" "Could not check MCP status" $false
+    Add-Result "LabKey MCP Server" "ERROR" "Could not check MCP status: $_" $false
 }
 
 # 12. Git autocrlf (check effective value from any scope: system, global, or local)

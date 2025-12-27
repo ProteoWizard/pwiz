@@ -26,6 +26,7 @@ The MCP server should be a thin adapter layer. Avoid implementing complex busine
 - Use server-side capabilities where available (views, stored procedures, custom queries)
 - Let the data source handle joins, aggregations, and filtering
 - Keep Python code focused on protocol translation and formatting
+- **Save large content to files** - see File-Based Data Exploration Pattern below
 
 ### File-Based Data Exploration Pattern
 
@@ -55,7 +56,11 @@ async def save_large_data(query_params):
 - Test run logs (9-12 hours of output)
 - Stack trace collections (multiple failures)
 - Daily reports aggregating multiple data sources
+- Wiki page content (HTML/markup can be large)
+- Support thread posts (multiple responses)
 - Any response > 5-10 KB
+
+**Key insight**: Searching files on disk (using Grep/Read) preserves conversation context far longer than ingesting large query results directly. Let the MCP server do the heavy lifting of fetching and formatting, then explore the saved file as needed.
 
 **Benefits:**
 - Preserves conversation context for reasoning
@@ -64,6 +69,38 @@ async def save_large_data(query_params):
 - Multiple tools can build on the same file
 
 ## LabKey Server Patterns
+
+### Schema-First Development
+
+Before adding MCP tools for a new data source, document the schema first:
+
+1. **Explore the schema** - Use `list_schemas` and `list_queries` to discover available tables
+2. **Query sample data** - Use `query_table` with small `max_rows` to see column names and sample values
+3. **Document in `queries/`** - Create `{schema}/{table}-schema.md` files with:
+   - Container path, schema name, table name
+   - All columns with types, lookups, and descriptions
+   - Key values for enum-like fields (Status, Type, etc.)
+   - Usage notes (row counts, relationships, gotchas)
+
+**Why schema-first?**
+- Provides reference for MCP tool development
+- Documents lookup relationships (e.g., `AssignedTo` → `issues.UsersData.UserId`)
+- Identifies large columns that need file-based handling
+- Captures institutional knowledge about the data model
+
+**Example: Adding issues schema support**
+```
+ai/mcp/LabKeyMcp/queries/issues/
+├── issues-schema.md       # Main issue tracking table
+├── comments-schema.md     # Issue comments
+└── issuelistdef-schema.md # Issue list definitions
+```
+
+**To populate schema documentation:**
+1. Go to LabKey Schema Browser: `https://skyline.ms/{container}/query-begin.view`
+2. Navigate to the schema and table
+3. Click "view raw table metadata" for column details
+4. Copy the metadata and format into markdown tables
 
 ### Server-Side Custom Queries
 
@@ -205,11 +242,55 @@ The `labkey` SDK reads these automatically. Do not implement custom netrc handli
 
 LabKey organizes data in containers (folders). Always use the `container_path` parameter to specify which folder to query:
 
+- `/home/issues` - Issue tracking (bugs, TODOs, feature requests)
 - `/home/issues/exceptions` - Exception reports
+- `/home/support` - Support board discussions
+- `/home/software/Skyline` - Wiki pages and documentation
 - `/home/development/Nightly x64` - Nightly test results
 - `/home/development/Integration` - Integration test results
 
 Note: The `testresults` schema may need to be enabled per-container by a LabKey administrator.
+
+### Troubleshooting
+
+**"Query does not exist" error**: If a custom query reports it doesn't exist but you've verified it's on the server, check the query properties. In LabKey's query editor, ensure **"Available in child folders?"** is set to **Yes**. Without this, queries created in a parent container won't be visible from child containers.
+
+**Large column errors**: Some columns contain large binary or text data (logs, XML, documents). Never query these directly - use dedicated MCP tools that save content to `ai/.tmp/` files. See the schema documentation for columns marked **⚠️ LARGE**.
+
+### Sorting Results (Critical)
+
+**ORDER BY in LabKey SQL custom queries is unreliable.** The query is processed as a subquery within a parent "view layer" that can override the sort order.
+
+**Always use the API `sort` parameter in `select_rows()`:**
+
+```python
+result = labkey.query.select_rows(
+    server_context=server_context,
+    schema_name="issues",
+    query_name="issues_list",
+    max_rows=50,
+    sort="-Modified",  # Minus prefix = descending
+)
+```
+
+**Sort parameter syntax:**
+- `-ColumnName` - Descending order
+- `ColumnName` - Ascending order
+- `-Col1,Col2` - Multi-column sort (Col1 desc, Col2 asc)
+
+**Note:** You may still include `ORDER BY` in `.sql` files for documentation purposes, but the API `sort` parameter is what actually controls the order. See `ai/.tmp/labkey-orderby-findings.md` for detailed research.
+
+### Schema Documentation Conventions
+
+The `queries/` directory contains schema documentation for all tables used by the MCP server. When documenting table schemas:
+
+**Large columns**: Mark columns that should never be queried directly with **⚠️ LARGE** in the Description column. These require MCP tools that save to disk rather than returning content.
+
+Example:
+| Column | Type | Description |
+|--------|------|-------------|
+| log | Other | **⚠️ LARGE** - Full test log, use `save_run_log()` |
+| document | Other | **⚠️ LARGE** - Binary blob up to 50MB |
 
 ## Future Data Sources
 
@@ -217,10 +298,10 @@ Note: The `testresults` schema may need to be enabled per-container by a LabKey 
 
 *(To be documented when implemented)*
 
-The `claude.c.skyline@gmail.com` account could receive:
-- Exception report notifications
-- Nightly test result summaries
-- Other automated alerts
+A Gmail MCP server could enable:
+- Reading exception report notifications
+- Reading nightly test result summaries
+- Other automated email alerts
 
 Will require Gmail MCP server setup with OAuth2.
 
@@ -236,15 +317,16 @@ Another LabKey server with proteomics datasets. The same patterns apply:
 ## MCP Server Location
 
 ```
-pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/
+ai/mcp/LabKeyMcp/
 ├── server.py        # MCP server with all tools
 ├── pyproject.toml   # Dependencies
 ├── test_connection.py
+├── queries/         # Server-side query documentation
 └── README.md
 ```
 
 ## Related Documentation
 
-- [Developer Setup Guide](developer-setup-guide.md) - Environment configuration
-- [Exception Triage System](exception-triage-system.md) - Exception data access
-- [Nightly Test Analysis](nightly-test-analysis.md) - Test results data access
+- [Developer Setup Guide](../developer-setup-guide.md) - Environment configuration
+- [Exceptions](exceptions.md) - Exception data access
+- [Nightly Tests](nightly-tests.md) - Test results data access
