@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     new Rectangle(e.Location, new Size()),
                     e.Location);
 
-                GraphSummary.Cursor = Cursors.Hand;
+                sender.Cursor = Cursors.Hand;
                 return true;
             }
             else

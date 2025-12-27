@@ -391,7 +391,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var identity = FindIdentityUnderMouse(e);
             if (identity != null)
             {
-                GraphSummary.Cursor = Cursors.Hand;
+                sender.Cursor = Cursors.Hand;
                 var goalPoint = _graphData.PointPairList.FirstOrDefault(pp => identity.Equals((pp.Tag as GraphPointData)?.IdentityPath));
                 if (_toolTip == null)
                     _toolTip = new NodeTip(this) { Parent = GraphSummary.GraphControl };

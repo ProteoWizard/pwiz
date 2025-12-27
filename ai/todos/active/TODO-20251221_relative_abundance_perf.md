@@ -330,13 +330,17 @@ The Relative Abundance graph cursor flickered between Hand and Cross when moving
 3. User sees cursor flicker Cross→Hand on every mouse move
 
 **Fix**:
-1. Added `GraphSummary.Cursor = Cursors.Hand;` in the `if (identity != null)` block
+1. Changed to `sender.Cursor = Cursors.Hand;` - must use the ZedGraphControl (sender), not a parent container
 2. Simplified else branch to just `return false;` (don't call base, let ZedGraph handle cursor reset)
 3. **ZedGraph fix**: Moved `SetCursor(mousePt)` to AFTER the `MouseMoveEvent` check, so it only runs when the handler returns false or doesn't exist
 
 **Files Modified**:
-- `SummaryRelativeAbundanceGraphPane.cs` - cursor and return value fix
+- `SummaryRelativeAbundanceGraphPane.cs` - cursor fix using sender
+- `RTLinearRegressionGraphPane.cs` - cursor fix using sender
+- `SummaryBarGraphPaneBase.cs` - cursor fix using sender (2 places)
 - `pwiz_tools/Shared/ZedGraph/ZedGraph/ZedGraphControl.Events.cs` - moved SetCursor call
+
+**Pattern Note**: Always use `sender.Cursor` in `HandleMouseMoveEvent` handlers, never a parent container like `GraphSummary.Cursor`. The ZedGraphControl's cursor takes precedence over its parent's, so setting the parent's cursor has no effect while ZedGraph manages its own. Using `sender` is foolproof since it's always the control that received the event. Other files use `graphControl.Cursor` which works when `graphControl` IS the ZedGraphControl field, but `sender` is clearer and less error-prone.
 
 ### Bug 2: Progress Bar Z-Order
 The progress bar can appear behind point annotation labels, making it hard to see.
