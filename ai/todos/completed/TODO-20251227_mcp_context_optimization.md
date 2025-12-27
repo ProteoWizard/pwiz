@@ -3,7 +3,7 @@
 ## Branch Information
 - **Branch**: `ai-context`
 - **Created**: 2025-12-27
-- **Status**: 🚧 In Progress
+- **Status**: ✅ Complete
 - **Objective**: Reduce MCP context usage and prioritize high-level tools over discovery tools
 
 Note: ai-context work is managed directly on the branch and merged to master weekly via sync PR. See ai/docs/ai-context-branch-strategy.md.
@@ -91,12 +91,12 @@ Add to low-level tools: "Low-level. Prefer get_daily_test_summary for nightly an
 
 ## Tasks
 
-- [ ] Create tool hierarchy documentation in ai/docs/mcp/
-- [ ] Update LabKey tool docstrings to be terse
-- [ ] Add PRIMARY/DRILL-DOWN/DISCOVERY labels to docstrings
-- [ ] Reorder tool registration (high-level first)
-- [ ] Test with `/doctor` to verify token reduction
-- [ ] Test in session to verify tool selection behavior
+- [x] Create tool hierarchy documentation in ai/docs/mcp/
+- [x] Update LabKey tool docstrings to be terse
+- [x] Add PRIMARY/DRILL-DOWN/DISCOVERY labels to docstrings
+- [x] Reorder tool registration (high-level first)
+- [x] Test with `/doctor` to verify token reduction
+- [x] Test in session to verify tool selection behavior
 
 ## Key Files
 
@@ -105,6 +105,32 @@ Add to low-level tools: "Low-level. Prefer get_daily_test_summary for nightly an
 - `ai/docs/mcp/development-guide.md` - MCP documentation
 
 ## Progress Log
+
+### 2025-12-27 - Session 2 (final)
+- **Verified with /doctor**: LabKey MCP reduced from ~21K to ~17K tokens (20% reduction)
+- **Removed 3 DISCOVERY tools** - `list_schemas`, `list_containers`, `query_table` deleted from common.py
+  - These led Claude down unproductive paths and risked dangerous queries
+  - Only `list_queries` retained - for proposing schema documentation
+- **Updated `list_queries`** to include guidance toward schema documentation workflow
+- **Updated tool-hierarchy.md** to reflect removed tools and clearer anti-patterns
+- Tool count reduced: 27 → 24 tools
+
+### 2025-12-27 - Session 2
+- **Created** `ai/docs/mcp/tool-hierarchy.md` documenting PRIMARY/DRILL-DOWN/DISCOVERY categories
+- **Updated README.md** with reference to tool hierarchy docs
+- **Updated all 27 tool docstrings** with terse descriptions and category labels:
+  - PRIMARY tools: get_daily_test_summary, save_exceptions_report, get_support_summary, save_issues_report
+  - DRILL-DOWN tools: Most tools (get_run_failures, get_exception_details, etc.)
+  - DISCOVERY tools: list_schemas, list_queries, list_containers, query_table
+- **Reordered tool registration** in `__init__.py`:
+  - PRIMARY modules first (nightly, exceptions, support, issues)
+  - DRILL-DOWN modules next (wiki, attachments)
+  - DISCOVERY module last (common)
+- Estimated token reduction: ~60% of docstring content removed
+- **Enhanced tool-hierarchy.md** with "Proposing New Data Access" workflow:
+  - Captured wisdom that DISCOVERY tools are problematic (50MB blobs, 700M row tables)
+  - Documented the better approach: stub schema → human populates → server-side query → high-level tool
+  - Referenced development-guide.md for implementation details
 
 ### 2025-12-27 - Session 1
 - Identified issue from `/doctor` output: ~35K tokens for MCP tools

@@ -261,14 +261,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_WIKI_CONTAINER,
     ) -> str:
-        """List all wiki pages in a container with metadata (no body content).
-
-        Returns page names, titles, renderer types, and last modified dates.
-        Use get_wiki_page() to retrieve full content for a specific page.
+        """**DRILL-DOWN**: List wiki pages (names, titles, dates). Use get_wiki_page for content.
 
         Args:
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/software/Skyline)
+            container_path: Wiki container (default: /home/software/Skyline)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -310,18 +306,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_WIKI_CONTAINER,
     ) -> str:
-        """Get full wiki page content and save to ai/.tmp/wiki-{page_name}.md.
-
-        Wiki pages can contain HTML or wiki markup and may be large.
-        Content is saved to a file for exploration with Grep/Read tools.
+        """**DRILL-DOWN**: Wiki page content. Saves to ai/.tmp/wiki-{page_name}.md.
 
         Args:
-            page_name: Wiki page name (e.g., 'tutorial_method_edit')
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/software/Skyline)
-
-        Returns:
-            Metadata about the page and file path. Use Read tool to view content.
+            page_name: Page name (e.g., 'tutorial_method_edit')
+            container_path: Wiki container (default: /home/software/Skyline)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -398,25 +387,12 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_WIKI_CONTAINER,
     ) -> str:
-        """Update an existing wiki page's content.
-
-        CAUTION: This modifies live wiki content on skyline.ms.
-        The wiki has version history, so changes can be reverted if needed.
-
-        This tool:
-        1. Retrieves current page metadata (entityId, rowId, pageVersionId)
-        2. Encodes the new body using WAF format
-        3. POSTs to wiki-saveWiki.view with proper CSRF headers
+        """**DRILL-DOWN**: Update wiki page content. CAUTION: Modifies live wiki on skyline.ms.
 
         Args:
-            page_name: Wiki page name (e.g., 'tutorial_method_edit')
-            new_body: The new page content (HTML or text depending on renderer)
-            title: Optional new title for the page (if not provided, keeps existing title)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/software/Skyline)
-
-        Returns:
-            Success message with version info, or error details.
+            page_name: Page name (e.g., 'tutorial_method_edit')
+            new_body: New page content (HTML or text)
+            title: New title (optional, keeps existing if not provided)
         """
         try:
             # Step 1: Get current page metadata (also returns the session to reuse)
@@ -500,18 +476,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_WIKI_CONTAINER,
     ) -> str:
-        """List attachments for a wiki page.
-
-        Gets the page's entityId and queries for attached files.
-        Use get_wiki_attachment() to download a specific file.
+        """**DRILL-DOWN**: List attachments for a wiki page.
 
         Args:
-            page_name: Wiki page name (e.g., 'NewMachineBootstrap')
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/software/Skyline)
-
-        Returns:
-            List of attachments with filename, size, and type.
+            page_name: Page name (e.g., 'NewMachineBootstrap')
         """
         try:
             # Get entityId from wiki edit page
@@ -579,19 +547,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_WIKI_CONTAINER,
     ) -> str:
-        """Download an attachment from a wiki page.
-
-        For text files, returns content directly.
-        For binary files (.png, .jpg, .pdf, etc.), saves to ai/.tmp/ and returns path.
+        """**DRILL-DOWN**: Download wiki attachment. Text returns content; binary saves to ai/.tmp/.
 
         Args:
-            page_name: Wiki page name (e.g., 'NewMachineBootstrap')
-            filename: The attachment filename to download
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/software/Skyline)
-
-        Returns:
-            File content (for text files) or file path (for binary files).
+            page_name: Page name
+            filename: Attachment filename
         """
         import base64
         from pathlib import Path

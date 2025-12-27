@@ -32,19 +32,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_CONTAINER,
     ) -> str:
-        """Query recent exceptions from Skyline exception tracking on skyline.ms.
-
-        Returns exception reports submitted by Skyline users, including:
-        - Exception type and title
-        - User comments and email
-        - Stack trace (in FormattedBody)
-        - Created/Modified dates
+        """**DRILL-DOWN**: Browse recent exceptions. Prefer save_exceptions_report for daily review.
 
         Args:
-            days: Number of days back to query (default: 7)
-            max_rows: Maximum rows to return (default: 50)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/issues/exceptions)
+            days: Days back to query (default: 7)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -99,18 +90,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_CONTAINER,
     ) -> str:
-        """Get full details for a specific exception by RowId.
-
-        Returns complete exception information including:
-        - Full stack trace
-        - User email and comments
-        - Skyline version
-        - Installation ID
+        """**DRILL-DOWN**: Full stack trace for one exception.
 
         Args:
-            exception_id: The RowId of the exception to look up
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/issues/exceptions)
+            exception_id: RowId from save_exceptions_report
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -152,19 +135,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_CONTAINER,
     ) -> str:
-        """Generate a daily exception report and save to ai/.tmp/exceptions-report-YYYYMMDD.md.
-
-        Queries all exceptions for a 24-hour period (12:00 AM to 11:59 PM) and
-        includes full stack traces. Designed to match the daily email format
-        from LabKey server.
+        """**PRIMARY**: Daily exception report with full stack traces. Saves to ai/.tmp/exceptions-report-YYYYMMDD.md.
 
         Args:
-            report_date: Date in YYYY-MM-DD format for the report day
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/issues/exceptions)
-
-        Returns:
-            Brief summary with file path. Full details are in the saved file.
+            report_date: Date YYYY-MM-DD
         """
         try:
             # Parse report_date for the 24-hour window

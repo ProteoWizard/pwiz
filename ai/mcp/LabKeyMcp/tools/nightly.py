@@ -37,19 +37,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Query recent test runs from Skyline nightly testing.
-
-        Returns test run summaries including:
-        - Run date and duration
-        - Passed/failed/leaked test counts
-        - Average memory usage
-        - Git revision
+        """**DRILL-DOWN**: Browse test runs in a folder. Prefer get_daily_test_summary for daily review.
 
         Args:
-            days: Number of days back to query (default: 7)
-            max_rows: Maximum rows to return (default: 20)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            days: Days back to query (default: 7)
+            container_path: Test folder (default: Nightly x64)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -104,17 +96,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Get failed tests for a specific test run.
-
-        Returns details about each failed test including:
-        - Test name
-        - Stack trace
-        - Pass number (which attempt failed)
+        """**DRILL-DOWN**: Get stack traces for failed tests in a specific run.
 
         Args:
-            run_id: The test run ID to look up
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            run_id: Test run ID from get_daily_test_summary
+            container_path: Test folder (must match the run's folder)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -156,21 +142,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Fetch test run log and save to ai/.tmp/testrun-log-{run_id}.txt for grep/search.
-
-        The log contains the full 9-12 hour test run output including git checkout,
-        build output, and all test execution output. This is useful for deep investigation
-        when stack traces from testfails aren't sufficient.
-
-        Returns metadata only (not the log content) to avoid context bloat:
-        - file_path: where the log was saved
-        - size_bytes: file size
-        - line_count: number of lines
+        """**DRILL-DOWN**: Full test run log (9-12 hours output). Saves to ai/.tmp/testrun-log-{run_id}.txt.
 
         Args:
-            run_id: The test run ID to fetch the log for
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            run_id: Test run ID
+            container_path: Test folder (must match the run's folder)
         """
         try:
             # URL-encode the container path for the URL
@@ -217,21 +193,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Fetch test run XML and save to ai/.tmp/testrun-xml-{run_id}.xml for analysis.
-
-        The XML contains structured test results including all test passes, failures,
-        and timing data. This is an alternative to querying the testpasses table directly,
-        which has 700M+ rows and requires careful filtering.
-
-        Returns metadata only (not the XML content) to avoid context bloat:
-        - file_path: where the XML was saved
-        - size_bytes: file size
-        - line_count: number of lines
+        """**DRILL-DOWN**: Structured test results XML. Saves to ai/.tmp/testrun-xml-{run_id}.xml.
 
         Args:
-            run_id: The test run ID to fetch the XML for
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            run_id: Test run ID
+            container_path: Test folder (must match the run's folder)
         """
         try:
             # URL-encode the container path for the URL
@@ -278,17 +244,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Get memory and handle leaks for a specific test run.
-
-        Returns details about each leaked test including:
-        - Test name
-        - Bytes leaked (for memory leaks)
-        - Leak type
+        """**DRILL-DOWN**: Get memory/handle leaks for a specific run.
 
         Args:
-            run_id: The test run ID to look up
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            run_id: Test run ID from get_daily_test_summary
+            container_path: Test folder (must match the run's folder)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -346,20 +306,10 @@ def register_tools(mcp):
         report_date: str,
         server: str = DEFAULT_SERVER,
     ) -> str:
-        """Query all 6 nightly test folders and save a consolidated report for one day.
-
-        This is the primary tool for daily test review. It queries all folders
-        in one call and saves a full report to ai/.tmp/nightly-report-YYYYMMDD.md.
-
-        The nightly test "day" runs from 8:01 AM to 8:00 AM the next day.
-        So report_date="2025-12-17" queries runs from Dec 16 8:01 AM to Dec 17 8:00 AM.
+        """**PRIMARY**: Daily nightly test report. Queries all 6 folders. Saves to ai/.tmp/nightly-report-YYYYMMDD.md.
 
         Args:
-            report_date: Date in YYYY-MM-DD format - the END of the nightly window
-            server: LabKey server hostname (default: skyline.ms)
-
-        Returns:
-            Brief summary with file path. Full details are in the saved file.
+            report_date: Date YYYY-MM-DD (end of 8AM-8AM nightly window)
         """
         # Parse report_date as the END of the nightly window
         # Nightly "day" runs from 8:01 AM day before to 8:00 AM report_date
@@ -775,24 +725,13 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Save failure history for a specific test to a file for analysis.
-
-        Collects stack traces and saves to ai/.tmp/test-failures-{testname}.md.
-
-        This enables:
-        - Comparing stack traces across multiple failures
-        - Pattern recognition to determine if failures share the same root cause
-        - Historical analysis to see when a failure started
+        """**DRILL-DOWN**: Compare stack traces for recurring failures. Saves to ai/.tmp/test-failures-{testname}.md.
 
         Args:
-            test_name: The test name to search for (e.g., "TestPanoramaDownloadFile")
-            start_date: Start date in YYYY-MM-DD format
-            end_date: End date in YYYY-MM-DD format (default: same as start_date)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
-
-        Returns:
-            Summary with file path. Full stack traces are in the saved file.
+            test_name: Test name (e.g., "TestPanoramaDownloadFile")
+            start_date: Start date YYYY-MM-DD
+            end_date: End date YYYY-MM-DD (default: same as start_date)
+            container_path: Test folder to search
         """
         # Use same date for start and end if not specified (single day query)
         if not end_date:

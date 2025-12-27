@@ -61,6 +61,13 @@ login yourname+claude@domain.com
 password <password>
 ```
 
+## Tool Selection
+
+**Important**: Start with PRIMARY tools - see [tool-hierarchy.md](tool-hierarchy.md) for:
+- Which tools to use first (PRIMARY vs DRILL-DOWN vs DISCOVERY)
+- Usage patterns and anti-patterns
+- When to propose new tools
+
 ## Development
 
 - [development-guide.md](development-guide.md) - Patterns for extending MCP capabilities

@@ -1,22 +1,20 @@
-"""Common utilities and discovery tools for LabKey MCP server.
+"""Common utilities for LabKey MCP server.
 
 This module contains:
 - Constants for default server configuration
 - Shared helper functions (credentials, HTTP requests)
-- Discovery tools (list_schemas, list_queries, list_containers, query_table)
+- Limited discovery (list_queries only - for proposing schema documentation)
 """
 
-import json
 import logging
 import base64
 import netrc
 import urllib.request
 from pathlib import Path
-from typing import Optional, Union
 from urllib.parse import quote, urlencode
 
 import labkey
-from labkey.query import QueryFilter, ServerContext
+from labkey.query import ServerContext
 
 logger = logging.getLogger("labkey_mcp")
 
@@ -170,43 +168,17 @@ def get_tmp_dir() -> Path:
 
 
 # =============================================================================
-# Discovery Tools
+# Limited Discovery Tools
 # =============================================================================
 
 def register_tools(mcp):
-    """Register discovery and general query tools."""
+    """Register limited discovery tools.
 
-    @mcp.tool()
-    async def list_schemas(
-        server: str = DEFAULT_SERVER,
-        container_path: str = DEFAULT_CONTAINER,
-    ) -> str:
-        """List available schemas in a LabKey container.
-
-        Use this to discover what data is available before querying.
-
-        Args:
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container/folder path (default: /home)
-        """
-        try:
-            result = discovery_request(server, container_path, "query-getSchemas.api")
-
-            if result and "schemas" in result:
-                schemas = []
-                for s in result["schemas"]:
-                    if isinstance(s, dict):
-                        schemas.append(s.get("schemaName", str(s)))
-                    else:
-                        schemas.append(str(s))
-                return f"Available schemas in {container_path}:\n" + "\n".join(
-                    f"  - {s}" for s in sorted(schemas)
-                )
-            return f"No schemas found. Raw result: {result}"
-
-        except Exception as e:
-            logger.error(f"Error listing schemas: {e}", exc_info=True)
-            return f"Error listing schemas: {e}"
+    Only list_queries is exposed - enough to see what tables exist,
+    but not enough to poke around with raw queries. When Claude needs
+    data from a table, it should propose schema documentation work
+    rather than trying to query directly.
+    """
 
     @mcp.tool()
     async def list_queries(
@@ -214,12 +186,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_CONTAINER,
     ) -> str:
-        """List available queries/tables in a LabKey schema.
+        """**DISCOVERY**: See available tables/queries. Use to propose schema documentation, not raw queries.
 
         Args:
-            schema_name: Schema name (e.g., 'lists', 'core', 'exp')
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container/folder path (default: /home)
+            schema_name: Schema name (e.g., 'testresults', 'issues', 'wiki')
+            container_path: Container path (e.g., '/home/development/Nightly x64')
         """
         try:
             result = discovery_request(
@@ -231,7 +202,10 @@ def register_tools(mcp):
 
             if result and "queries" in result:
                 queries = result["queries"]
-                lines = [f"Queries in schema '{schema_name}':"]
+                lines = [
+                    f"Queries/tables in '{schema_name}' at {container_path}:",
+                    "",
+                ]
                 for q in sorted(queries, key=lambda x: x.get("name", "")):
                     name = q.get("name", "unknown")
                     title = q.get("title", "")
@@ -239,132 +213,18 @@ def register_tools(mcp):
                         lines.append(f"  - {name} ({title})")
                     else:
                         lines.append(f"  - {name}")
+
+                lines.extend([
+                    "",
+                    "To access a table, propose schema documentation:",
+                    "  1. Create stub: LabKeyMcp/queries/{schema}/{table}-schema.md",
+                    "  2. Human populates from LabKey Schema Browser",
+                    "  3. Design server-side query as .sql file",
+                    "  4. Add high-level MCP tool",
+                ])
                 return "\n".join(lines)
-            return f"No queries found in schema '{schema_name}'. Raw result: {result}"
+            return f"No queries found in schema '{schema_name}'."
 
         except Exception as e:
             logger.error(f"Error listing queries: {e}", exc_info=True)
             return f"Error listing queries: {e}"
-
-    @mcp.tool()
-    async def list_containers(
-        server: str = DEFAULT_SERVER,
-        parent_path: str = "/",
-    ) -> str:
-        """List child containers (folders) in a LabKey server.
-
-        Use this to explore the folder structure and find exception data.
-
-        Args:
-            server: LabKey server hostname (default: skyline.ms)
-            parent_path: Parent container path to list children of (default: /)
-        """
-        try:
-            data = discovery_request(
-                server,
-                parent_path,
-                "project-getContainers.api",
-                {"includeSubfolders": "false"}
-            )
-
-            lines = [f"Containers under '{parent_path}':"]
-
-            if isinstance(data, dict):
-                children = data.get("children", [])
-                if children:
-                    for child in children:
-                        name = child.get("name", "unknown")
-                        path = child.get("path", "")
-                        lines.append(f"  - {name} ({path})")
-                elif "name" in data:
-                    lines.append(f"  Container: {data.get('name')} ({data.get('path', parent_path)})")
-                    lines.append("  (No child containers)")
-            elif isinstance(data, list):
-                for container in data:
-                    name = container.get("name", "unknown")
-                    path = container.get("path", "")
-                    lines.append(f"  - {name} ({path})")
-
-            return "\n".join(lines) if len(lines) > 1 else "No child containers found."
-
-        except Exception as e:
-            logger.error(f"Error listing containers: {e}", exc_info=True)
-            return f"Error listing containers: {e}"
-
-    @mcp.tool()
-    async def query_table(
-        schema_name: str,
-        query_name: str,
-        server: str = DEFAULT_SERVER,
-        container_path: str = DEFAULT_CONTAINER,
-        max_rows: int = 100,
-        filter_column: Optional[str] = None,
-        filter_value: Optional[str] = None,
-        parameters: Union[str, dict, None] = None,
-    ) -> str:
-        """Query data from a LabKey table.
-
-        Args:
-            schema_name: Schema name (e.g., 'lists', 'core')
-            query_name: Query/table name
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container/folder path (default: /home)
-            max_rows: Maximum rows to return (default: 100)
-            filter_column: Optional column name to filter on
-            filter_value: Optional value to filter for (requires filter_column)
-            parameters: Optional JSON string of query parameters (e.g., '{"StartDate": "2025-12-07", "EndDate": "2025-12-14"}')
-        """
-        try:
-            server_context = get_server_context(server, container_path)
-
-            # Build filter if provided
-            filter_array = None
-            if filter_column and filter_value:
-                filter_array = [QueryFilter(filter_column, filter_value, "eq")]
-
-            # Parse parameters - accept either dict or JSON string
-            params_dict = None
-            if parameters:
-                if isinstance(parameters, dict):
-                    params_dict = parameters
-                else:
-                    params_dict = json.loads(parameters)
-
-            result = labkey.query.select_rows(
-                server_context=server_context,
-                schema_name=schema_name,
-                query_name=query_name,
-                max_rows=max_rows,
-                filter_array=filter_array,
-                parameters=params_dict,
-            )
-
-            if result and "rows" in result:
-                rows = result["rows"]
-                row_count = result.get("rowCount", len(rows))
-
-                if not rows:
-                    return "No rows found."
-
-                lines = [f"Found {row_count} rows (showing up to {max_rows}):"]
-                lines.append("")
-
-                if rows:
-                    columns = list(rows[0].keys())
-                    columns = [c for c in columns if not c.startswith("_")]
-
-                    for i, row in enumerate(rows[:max_rows], 1):
-                        lines.append(f"--- Row {i} ---")
-                        for col in columns:
-                            value = row.get(col, "")
-                            if isinstance(value, str) and len(value) > 200:
-                                value = value[:200] + "..."
-                            lines.append(f"  {col}: {value}")
-                        lines.append("")
-
-                return "\n".join(lines)
-            return "No results returned."
-
-        except Exception as e:
-            logger.error(f"Error querying table: {e}", exc_info=True)
-            return f"Error querying table: {e}"
