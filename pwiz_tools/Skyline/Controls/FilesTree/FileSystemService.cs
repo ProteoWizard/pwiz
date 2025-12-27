@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (IsMonitoringDirectory(directoryPath))
                     return;
 
-                var managedFsw = new ManagedFileSystemWatcher(directoryPath, SynchronizingObject);
+                var managedFsw = new ManagedFileSystemWatcher(directoryPath);
 
                 managedFsw.Renamed += FileSystemWatcher_OnRenamed;
                 managedFsw.Deleted += FileSystemWatcher_OnDeleted;
