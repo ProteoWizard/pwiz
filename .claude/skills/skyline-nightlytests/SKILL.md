@@ -5,7 +5,7 @@ description: Use when investigating Skyline nightly test issues, handle leaks, m
 
 # Skyline Nightly Test Analysis
 
-**Full documentation**: ai/docs/nightly-test-analysis.md
+**Full documentation**: ai/docs/mcp/nightly-tests.md
 
 ## MCP Tools (Quick Reference)
 
@@ -40,4 +40,4 @@ description: Use when investigating Skyline nightly test issues, handle leaks, m
 - **Full duration + low test count** = hang
 - **Stddev-based**: 3σ/4σ from trained mean flags anomalies
 
-For server-side queries, examples, and detailed workflows, see **ai/docs/nightly-test-analysis.md**.
+For server-side queries, examples, and detailed workflows, see **ai/docs/mcp/nightly-tests.md**.

@@ -99,6 +99,7 @@ These queries are created on the LabKey server to provide pre-joined, aggregated
 | `expected_computers` | Active computers with trained mean/stddev for anomaly detection | (none) |
 | `handleleaks_by_computer` | Handle leaks grouped by computer and test name | (none) |
 | `testfails_by_computer` | Test failures grouped by computer and test name | (none) |
+| `compare_run_timings` | Compare test durations between two runs | `RunIdBefore`, `RunIdAfter` |
 
 ### Test Run Summary Query (testruns_detail)
 
@@ -192,6 +193,48 @@ This reveals whether handles leak between passes or accumulate within a pass.
 
 This immediately answers "which computer should I use to debug this leak?"
 
+### Comparing Test Performance Between Runs (compare_run_timings)
+
+The `compare_run_timings` query identifies performance regressions by comparing test durations between two runs. This is essential for diagnosing why test counts drop after code changes.
+
+```
+query_table(
+    schema_name="testresults",
+    query_name="compare_run_timings",
+    container_path="/home/development/Performance Tests",
+    parameters={"RunIdBefore": 79482, "RunIdAfter": 79619},
+    max_rows=20
+)
+```
+
+**Returns:**
+
+| Column | Description |
+|--------|-------------|
+| `testname` | Test name |
+| `passes` | Number of passes run (high = memory variance, low = stable) |
+| `duration_before` | Average seconds per pass in baseline run |
+| `duration_after` | Average seconds per pass in comparison run |
+| `delta_avg` | Per-pass slowdown in seconds |
+| `delta_total` | Total time impact: `passes × delta_avg` |
+| `delta_percent` | Percentage slowdown |
+
+**Example output** comparing runs before/after FilesView merge:
+
+| testname | passes | before | after | delta_avg | delta_total | delta_% |
+|----------|--------|--------|-------|-----------|-------------|---------|
+| TestFilesTreeForm | 4 | NULL | 20 | NULL | NULL | NULL |
+| TestImportHundredsOfReplicates | 1 | 136 | 2405 | 2269 | 2269 | 1668 |
+| TestSynchronizeSummaryZooming | 1 | 1 | 12 | 11 | 11 | 1100 |
+
+**Key insights from this output:**
+- **New tests** appear at top with NULL before values (e.g., TestFilesTreeForm)
+- **Major regressions** show large delta_total values
+- **Pass count** indicates memory stability: low passes = stable memory, high passes = memory variance (system reruns until stable)
+- **delta_total** is the actual time impact on the run (more useful than delta_avg for prioritizing fixes)
+
+**Use case**: After merging a feature branch, compare a run from before the merge to one after to identify which tests slowed down and whether new tests are behaving properly.
+
 ## Available MCP Tools
 
 | Tool | Description |
@@ -199,6 +242,7 @@ This immediately answers "which computer should I use to debug this leak?"
 | `get_daily_test_summary(report_date)` | Query all 6 folders, save report to ai/.tmp/ |
 | `save_test_failure_history(test_name, start_date, container_path)` | Collect stack traces for a test, detect patterns |
 | `save_run_log(run_id)` | Save full test run log to ai/.tmp/ for grep/search |
+| `save_run_xml(run_id)` | Save structured XML test data to ai/.tmp/ for analysis |
 | `query_test_runs(days, max_rows)` | Query recent test runs with summaries |
 | `get_run_failures(run_id)` | Get failed tests and stack traces for a run |
 | `get_run_leaks(run_id)` | Get memory and handle leaks for a run |
@@ -273,7 +317,7 @@ Use `query_table` with `testpasses_detail`, passing `param_name="RunId"` and `pa
 
 ## Extending the System
 
-To add new custom queries (like `handleleaks_by_computer`), see [MCP Development Guide](mcp-development-guide.md) for the server-side query pattern. This approach keeps complex JOINs on the LabKey server rather than in Python code.
+To add new custom queries (like `handleleaks_by_computer`), see [MCP Development Guide](development-guide.md) for the server-side query pattern. This approach keeps complex JOINs on the LabKey server rather than in Python code.
 
 ## Future Enhancements
 
@@ -288,13 +332,18 @@ To add new custom queries (like `handleleaks_by_computer`), see [MCP Development
 - `/pw-nightly` slash command for daily test review ✓
 - `get_daily_test_summary` - Query all 6 folders in one call ✓
 - `save_test_failure_history` - Stack trace pattern grouping ✓
-- `save_run_log` - Full log download for deep investigation ✓
+- `save_run_log` - Full log download via HTTP endpoint ✓
+- `save_run_xml` - Structured XML test data via HTTP endpoint ✓
+- `compare_run_timings` - Compare test durations between runs to identify regressions ✓
 - `failures_by_date` / `leaks_by_date` queries - Test names for date ranges ✓
 - `expected_computers` query - Stddev-based anomaly detection ✓
 - "Failures by Test" / "Leaks by Test" sections in daily report ✓
 
 ## Related Documentation
 
-- [MCP Development Guide](mcp-development-guide.md) - Patterns for extending MCP capabilities
-- [Exception Triage System](exception-triage-system.md) - User-reported crash analysis
-- [LabKey MCP Server README](../../pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/README.md) - Setup instructions
+- [MCP Development Guide](development-guide.md) - Patterns for extending MCP capabilities
+- [Exceptions](exceptions.md) - User-reported crash analysis
+- [Wiki](wiki.md) - Documentation access
+- [Support](support.md) - Support board access
+- [LabKey MCP Server README](../mcp/LabKeyMcp/README.md) - Setup instructions
+- [Query Documentation](../mcp/LabKeyMcp/queries/README.md) - Server-side query reference
