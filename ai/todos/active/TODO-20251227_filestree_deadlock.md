@@ -3,8 +3,9 @@
 ## Branch Information
 - **Branch**: `Skyline/work/20251227_filestree_deadlock`
 - **Created**: 2025-12-27
-- **Status**: In Progress
-- **GitHub Issue**: https://github.com/ProteoWizard/pwiz/issues/3738
+- **Status**: Complete - PR Created
+- **GitHub Issue**: [#3738](https://github.com/ProteoWizard/pwiz/issues/3738)
+- **PR**: [#3739](https://github.com/ProteoWizard/pwiz/pull/3739)
 - **Related**: PR #3867 (Files view feature), TODO-20251126_files_view.md
 
 ## Objective
@@ -59,22 +60,58 @@ Dispose FSW on a background thread to avoid blocking the UI thread. However, thi
 1. Set `EnableRaisingEvents = false` before disposal
 2. Add `IsDisposed`/`IsDisposing` check in the FSW callback before `BeginInvoke`
 
+## Actual Solution (Implemented)
+
+### Root Cause Discovery
+
+The actual root cause was **line 58 in ManagedFileSystemWatcher.cs**:
+```csharp
+FileSystemWatcher.SynchronizingObject = SynchronizingObject;
+```
+
+Setting `SynchronizingObject` on a `FileSystemWatcher` causes .NET to **automatically** call `BeginInvoke` on that control to marshal events to the UI thread. This happens inside FSW's internal implementation, not in our code.
+
+During disposal:
+1. UI thread calls `FileSystemWatcher.Dispose()` which waits for internal callbacks to complete
+2. FSW's internal callback tries to `BeginInvoke` to the SynchronizingObject (FilesTree control)
+3. BeginInvoke needs the UI thread to get/create the control handle
+4. UI thread is blocked waiting for FSW.Dispose() → **Deadlock**
+
+### The Fix
+
+**Remove the SynchronizingObject entirely.** This was unnecessary because the FilesTree code already handles thread marshaling safely:
+
+1. FSW event handlers in `LocalFileSystemService` use `BackgroundActionService.AddTask()` to queue work
+2. `BackgroundActionService.RunUI()` uses `CommonActionUtil.SafeBeginInvoke()` which:
+   - Checks `control.IsHandleCreated` before calling BeginInvoke
+   - Catches exceptions if the control is disposed
+
+### Files Changed
+
+**ManagedFileSystemWatcher.cs**:
+- Removed `SynchronizingObject` property and constructor parameter
+- Removed `FileSystemWatcher.SynchronizingObject = SynchronizingObject;` line
+- Removed `using System.Windows.Forms;` (no longer needed)
+- Added comment explaining why SynchronizingObject must NOT be set
+
+**FileSystemService.cs** (LocalFileSystemService.WatchDirectory):
+- Updated constructor call: `new ManagedFileSystemWatcher(directoryPath)` (removed second parameter)
+
 ## Tasks
 
-- [ ] Reproduce the issue locally (if possible)
-- [ ] Review ManagedFileSystemWatcher.DisposeWatcher() implementation
-- [ ] Review where BeginInvoke is called from FSW callbacks
-- [ ] Implement fix (disable events + IsDisposed check)
-- [ ] Test with TestTreeRestoration
-- [ ] Run full Files view test suite
+- [x] Reproduce the issue locally (if possible)
+- [x] Review ManagedFileSystemWatcher.DisposeWatcher() implementation
+- [x] Review where BeginInvoke is called from FSW callbacks
+- [x] Implement fix (remove SynchronizingObject - see Solution below)
+- [x] Test with Files view test suite (4 tests passing)
 - [ ] Create PR
 
 ## Key Files
 
-- `pwiz_tools/Skyline/Controls/FilesTree/ManagedFileSystemWatcher.cs`
-- `pwiz_tools/Skyline/Controls/FilesTree/LocalFileSystemService.cs`
-- `pwiz_tools/Skyline/Controls/FilesTree/FilesTree.cs`
-- `pwiz_tools/Skyline/Controls/FilesTree/FilesTreeForm.cs`
+- `pwiz_tools/Skyline/Controls/FilesTree/ManagedFileSystemWatcher.cs` ← **Modified**
+- `pwiz_tools/Skyline/Controls/FilesTree/FileSystemService.cs` ← **Modified**
+- `pwiz_tools/Skyline/Controls/FilesTree/BackgroundActionService.cs` (has SafeBeginInvoke pattern)
+- `pwiz_tools/Shared/CommonUtil/SystemUtil/CommonActionUtil.cs` (SafeBeginInvoke implementation)
 
 ## Progress Log
 
@@ -83,3 +120,15 @@ Dispose FSW on a background thread to avoid blocking the UI thread. However, thi
 - Created branch `Skyline/work/20251227_filestree_deadlock`
 - Created this TODO file
 - Initial analysis from Nick's email with call stacks
+
+### 2025-12-27 - Session 2
+- Discovered actual root cause: `FileSystemWatcher.SynchronizingObject` property
+- Found that setting SynchronizingObject causes FSW to internally use BeginInvoke for event marshaling
+- Identified that FilesTree already has safe marshaling via `BackgroundActionService.RunUI()` → `CommonActionUtil.SafeBeginInvoke()`
+- Implemented fix: removed SynchronizingObject from ManagedFileSystemWatcher
+- All 4 Files view tests passing:
+  - TestFilesModel (16s)
+  - TestFilesTreeFileSystem (4s)
+  - TestFilesTreeForm (40s)
+  - TestSkylineWindowEvents (0s)
+- Ready for PR creation
