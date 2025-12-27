@@ -384,7 +384,7 @@ namespace pwiz.SkylineTestUtil
             var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
             if (form.InvokeRequired)
             {
-                form.Invoke(act);
+                HangDetection.InterruptWhenHung(()=> form.Invoke(act));
             }
             else
             {
@@ -1190,7 +1190,9 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                Program.MainWindow.Invoke(new Action(() => isCondition = func()));
+                HangDetection.InterruptAfter(() => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                    TimeSpan.FromMilliseconds(SLEEP_INTERVAL), waitCycles);
+                
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);

@@ -171,6 +171,7 @@
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="GitFileHelper.cs" />
+    <Compile Include="HangDetection.cs" />
     <Compile Include="HttpClientTestHelper.cs" />
     <Compile Include="KoinaTestUtil.cs" />
     <Compile Include="MockHttpMessageHandler.cs" />

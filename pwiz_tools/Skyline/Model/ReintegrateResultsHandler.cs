@@ -66,14 +66,12 @@ namespace pwiz.Skyline.Model
             return MProphetResultsHandler.GetPeakFeatureStatistics(peptide, fileId);
         }
 
-        public ChromPeak GetBestPeak(PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, 
-            ChromatogramSet chromatogramSet, ChromatogramInfo chromatogramInfo,
-            ref PeakGroupIntegrator peakGroupIntegrator,
-            out UserSet userSet)
+        public ChromPeak GetBestPeak(PeptideDocNode peptideDocNode,
+            TransitionGroupIntegrator transitionGroupIntegrator, Transition transition, out UserSet userSet)
         {
-            var chromFileInfoId = chromatogramSet.FindFile(chromatogramInfo.FilePath);
+            var chromFileInfoId = transitionGroupIntegrator.ChromFileInfoId;
             var peakFeatureStatistics = MProphetResultsHandler.GetPeakFeatureStatistics(peptideDocNode.Peptide, chromFileInfoId);
-            int bestIndex = chromatogramInfo.BestPeakIndex;
+            int bestIndex = transitionGroupIntegrator.ChromatogramGroupInfo.BestPeakIndex;
             userSet = UserSet.FALSE;
             if (peakFeatureStatistics != null)
             {
@@ -95,13 +93,13 @@ namespace pwiz.Skyline.Model
             var imputationSettings = PeakBoundaryImputer?.Settings.PeptideSettings.Imputation ?? ImputationSettings.DEFAULT;
             if (!imputationSettings.HasImputation)
             {
-                return bestIndex < 0 ? ChromPeak.EMPTY : chromatogramInfo.GetPeak(bestIndex);
+                return transitionGroupIntegrator.GetPeak(transition, bestIndex);
             }
 
             ChromPeak candidatePeak = ChromPeak.EMPTY;
             if (bestIndex >= 0)
             {
-                candidatePeak = chromatogramInfo.GetPeak(bestIndex);
+                candidatePeak = transitionGroupIntegrator.GetPeak(transition, bestIndex);
                 if (!imputationSettings.MaxRtShift.HasValue && !imputationSettings.MaxPeakWidthVariation.HasValue)
                 {
                     return candidatePeak;
@@ -113,7 +111,7 @@ namespace pwiz.Skyline.Model
             {
                 candidatePeakBounds = new PeakBounds(candidatePeak.StartTime, candidatePeak.EndTime);
             }
-            var imputedPeak = PeakBoundaryImputer!.GetImputedPeak(peptideDocNode, chromatogramSet, chromatogramInfo.FilePath, candidatePeakBounds);
+            var imputedPeak = PeakBoundaryImputer!.GetImputedPeak(peptideDocNode, transitionGroupIntegrator.ChromatogramSet, transitionGroupIntegrator.FilePath, candidatePeakBounds);
             if (imputedPeak == null)
             {
                 return candidatePeak;
@@ -125,15 +123,7 @@ namespace pwiz.Skyline.Model
             }
 
             userSet = UserSet.REINTEGRATED;
-            var settings = PeakBoundaryImputer.Settings;
-            peakGroupIntegrator ??=
-                transitionGroupDocNode.MakePeakGroupIntegrator(settings, chromatogramSet,
-                    chromatogramInfo.GroupInfo);
-            ChromPeak.FlagValues flags = 0;
-            if (settings.MeasuredResults.IsTimeNormalArea)
-                flags = ChromPeak.FlagValues.time_normalized;
-            return chromatogramInfo.CalcPeak(peakGroupIntegrator, (float)imputedPeak.PeakBounds.StartTime,
-                (float)imputedPeak.PeakBounds.EndTime, flags);
+            return transitionGroupIntegrator.CalcPeak(transition, 0, imputedPeak.PeakBounds);
         }
 
         public bool IsDefaultScoringModel()
