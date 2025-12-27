@@ -248,6 +248,7 @@ namespace seems
                         // Didn't find a particular kind of chromatogram, look for generic
                         type = chromatogram.Element.cvParam(CVID.MS_chromatogram);
                     }
+
                     if (type.cvid != CVID.MS_total_ion_current_chromatogram &&
                              type.cvid != CVID.MS_basepeak_chromatogram &&
                              intensityArray != null)
@@ -258,7 +259,25 @@ namespace seems
                             unitsParam.units == CVID.MS_number_of_detector_counts ||
                             unitsParam.units == CVID.CVID_Unknown)
                         {
-                            axisTitle = "Intensity";
+                            // Look for a userParam with name="units"
+                            string unitsValue = null;
+                            foreach (var userParam in chromatogram.Element.userParams)
+                            {
+                                if (userParam.name == "units")
+                                {
+                                    unitsValue = userParam.value;
+                                    break;
+                                }
+                            }
+                            
+                            if (!string.IsNullOrEmpty(unitsValue))
+                            {
+                                axisTitle = unitsValue;
+                            }
+                            else
+                            {
+                                axisTitle = "Intensity";
+                            }
                         }
                         else
                         {
@@ -270,12 +289,7 @@ namespace seems
                                 {
                                     unitName = unitName.Substring(0, unitName.Length - 5).TrimEnd();
                                 }
-
-                                // Capitalize first letter
-                                if (unitName.Length > 0)
-                                {
-                                    axisTitle = char.ToUpper(unitName[0]) + unitName.Substring(1);
-                                }
+                                axisTitle = unitName;
                             }
                         }
                     }
