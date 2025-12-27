@@ -1577,6 +1577,7 @@
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\ColorGenerator.cs" />
+    <Compile Include="Model\CachingContracts.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
     <Compile Include="Controls\PopupPickList.cs">

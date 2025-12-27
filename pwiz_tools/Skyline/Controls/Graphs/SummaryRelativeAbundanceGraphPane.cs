@@ -47,7 +47,6 @@ using pwiz.Skyline.Model.Proteome;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-
     public abstract class SummaryRelativeAbundanceGraphPane : SummaryBarGraphPaneBase, ILayoutPersistable
     {
         private const int MAX_SELECTED = 100;
@@ -93,10 +92,84 @@ namespace pwiz.Skyline.Controls.Graphs
             var receiver = GraphDataProducer.RegisterCustomer(GraphSummary, ProductAvailableAction);
             _graphDataReceiver = new ReplicateCachingReceiver<GraphDataParameters, GraphData>(
                 receiver,
-                p => p.Document,
-                p => new { p.GraphSettings, p.ShowReplicate },  // Cache invalidated when these change
-                p => p.ResultsIndex);  // Cache key: replicate index (-1 for all/best modes)
+                CleanCacheForIncrementalUpdates);
             _graphDataReceiver.ProgressChange += UpdateProgressHandler;
+        }
+
+        /// <summary>
+        /// Smart cache cleaning for incremental updates. Determines which cached entries are stale.
+        ///
+        /// For index -1 (all replicates mode): keeps entry if MeasuredResults reference unchanged.
+        /// For specific replicate index: keeps entry if that ChromatogramSet still exists by reference.
+        /// Also removes entries if quantification settings have changed.
+        ///
+        /// Entries that survive cleaning but have a different document reference will be used
+        /// as prior data for incremental updates.
+        /// </summary>
+        private static IEnumerable<int> CleanCacheForIncrementalUpdates(
+            SrmDocument currentDoc, IReadOnlyDictionary<int, SrmDocument> cachedEntries)
+        {
+            var keysToRemove = new List<int>();
+            var currentResults = currentDoc.Settings.MeasuredResults;
+            var currentChromatograms = currentResults?.Chromatograms;
+
+            // Build map of current ChromatogramSets by identity for O(1) lookup
+            var currentChromById = currentChromatograms?.ToDictionary(c => c.Id.GlobalIndex);
+
+            foreach (var entry in cachedEntries)
+            {
+                var cacheKey = entry.Key;
+                var cachedDoc = entry.Value;
+
+                // Check if document identity changed (different file opened)
+                if (!ReferenceEquals(cachedDoc.Id, currentDoc.Id))
+                {
+                    keysToRemove.Add(cacheKey);
+                    continue;
+                }
+
+                // Check if quantification settings are compatible
+                if (!currentDoc.Settings.HasEqualQuantificationSettings(cachedDoc.Settings))
+                {
+                    keysToRemove.Add(cacheKey);
+                    continue;
+                }
+
+                // Check if the relevant ChromatogramSet still exists
+                if (cacheKey == -1)
+                {
+                    // All replicates mode: check if MeasuredResults itself is unchanged
+                    if (!ReferenceEquals(cachedDoc.Settings.MeasuredResults, currentResults))
+                    {
+                        keysToRemove.Add(cacheKey);
+                    }
+                }
+                else
+                {
+                    // Specific replicate: get the ChromatogramSet that was cached
+                    var cachedResults = cachedDoc.Settings.MeasuredResults;
+
+                    // Defensive: if cache entry is invalid (shouldn't happen), remove it
+                    if (cachedResults == null || cacheKey < 0 || cacheKey >= cachedResults.Chromatograms.Count)
+                    {
+                        keysToRemove.Add(cacheKey);
+                        continue;
+                    }
+
+                    var cachedChromSet = cachedResults.Chromatograms[cacheKey];
+
+                    // Two-phase check: find by identity, then check if unchanged
+                    bool stillValid = currentChromById != null &&
+                                      currentChromById.TryGetValue(cachedChromSet.Id.GlobalIndex, out var currentChromSet) &&
+                                      ReferenceEquals(currentChromSet, cachedChromSet);
+                    if (!stillValid)
+                    {
+                        keysToRemove.Add(cacheKey);
+                    }
+                }
+            }
+
+            return keysToRemove;
         }
 
         private PaneProgressBar ProgressBar { get; set; }
@@ -318,6 +391,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var identity = FindIdentityUnderMouse(e);
             if (identity != null)
             {
+                GraphSummary.Cursor = Cursors.Hand;
                 var goalPoint = _graphData.PointPairList.FirstOrDefault(pp => identity.Equals((pp.Tag as GraphPointData)?.IdentityPath));
                 if (_toolTip == null)
                     _toolTip = new NodeTip(this) { Parent = GraphSummary.GraphControl };
@@ -327,7 +401,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 _toolTip?.HideTip();
-                return false;
+                return base.HandleMouseMoveEvent(sender, e);
             }
         }
 
@@ -662,7 +736,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
 
-        public abstract class GraphData : Immutable
+        public abstract class GraphData : Immutable, ICachingResult
         {
             protected GraphData(GraphDataParameters parameters, ProductionMonitor productionMonitor)
             {
@@ -672,9 +746,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 ResultsIndex = parameters.ResultsIndex;
                 AggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
 
-                if (parameters.CanUseIncrementalUpdate && GraphSettings.AreaProteinTargets && !Document.HasSmallMolecules)
+                if (parameters.PriorGraphData != null)
                 {
-                    // Incremental update: merge with prior data (protein mode only for now)
+                    // Incremental update: merge with prior data
+                    // The caller (CleanCacheForIncrementalUpdates) has already validated that the
+                    // prior data is from the same document identity with compatible settings
                     CalcDataPositionsIncremental(parameters.PriorGraphData, productionMonitor);
                 }
                 else
@@ -751,46 +827,63 @@ namespace pwiz.Skyline.Controls.Graphs
                 int? resultIndex = ShowReplicate == ReplicateDisplay.single ? (int?)ResultsIndex : null;
                 var moleculeGroups = GetFilteredMoleculeGroups();
 
-                // Step 1: Build set of new doc node references
+                // Step 1: Build map of new doc nodes by identity for two-phase change detection
                 productionMonitor.SetProgress(10);
-                var newDocNodeKeys = BuildNewDocNodeSet(moleculeGroups, productionMonitor);
+                var newDocNodes = BuildNewDocNodeMap(moleculeGroups, productionMonitor);
 
-                // Step 2: Partition prior data into unchanged vs changed
+                // Step 2: Partition prior data into unchanged vs changed (identity match + ReferenceEquals)
                 productionMonitor.SetProgress(30);
-                var (unchanged, changedIdentities) = PartitionPriorData(priorData, newDocNodeKeys, productionMonitor);
+                var unchanged = PartitionPriorData(priorData, newDocNodes, productionMonitor);
 
-                // Step 3: Calculate values for new/changed nodes
+                // Build set of unchanged keys to pass to CalculateChangedPoints
+                var unchangedKeys = new HashSet<int>(unchanged.Select(u => u.pos.DocNode.Id.GlobalIndex));
+
+                // Step 3: Calculate values for new/changed nodes (skip only truly unchanged nodes)
                 productionMonitor.SetProgress(50);
-                var changedPoints = CalculateChangedPoints(moleculeGroups, priorData.NodePositions, schema, resultIndex, productionMonitor);
+                var changedPoints = CalculateChangedPoints(moleculeGroups, unchangedKeys, schema, resultIndex, productionMonitor);
 
                 // Steps 4-5: Sort changed and merge with unchanged
                 productionMonitor.SetProgress(70);
                 MergeSortedLists(unchanged, changedPoints, productionMonitor);
+
+                // Assertion: verify all filtered nodes are in the final result
+                Assume.AreEqual(newDocNodes.Count, _nodePositions.Count);
             }
 
             /// <summary>
-            /// Build a set of doc node keys (GlobalIndex - guaranteed unique per object) for new document.
+            /// Build a map of doc nodes by identity (GlobalIndex) for the new document.
+            /// In protein mode, maps protein GlobalIndex to protein. In peptide mode, maps peptide GlobalIndex to peptide.
+            /// Used for two-phase change detection: first match by identity, then check ReferenceEquals.
             /// </summary>
-            private HashSet<int> BuildNewDocNodeSet(List<PeptideGroupDocNode> moleculeGroups, ProductionMonitor productionMonitor)
+            private Dictionary<int, DocNode> BuildNewDocNodeMap(List<PeptideGroupDocNode> moleculeGroups, ProductionMonitor productionMonitor)
             {
-                var newDocNodeKeys = new HashSet<int>(moleculeGroups.Count);
-                foreach (var moleculeGroup in moleculeGroups)
+                bool proteinMode = GraphSettings.AreaProteinTargets;
+                int estimatedCount = proteinMode
+                    ? moleculeGroups.Count
+                    : moleculeGroups.Sum(g => g.MoleculeCount);
+
+                IEnumerable<DocNode> nodes = proteinMode
+                    ? moleculeGroups
+                    : moleculeGroups.SelectMany(g => g.Molecules.Cast<DocNode>());
+
+                var newDocNodes = new Dictionary<int, DocNode>(estimatedCount);
+                foreach (var node in nodes)
                 {
                     productionMonitor.CancellationToken.ThrowIfCancellationRequested();
-                    newDocNodeKeys.Add(moleculeGroup.Id.GlobalIndex);
+                    newDocNodes[node.Id.GlobalIndex] = node;
                 }
-                return newDocNodeKeys;
+                return newDocNodes;
             }
 
             /// <summary>
-            /// Partition prior data into unchanged nodes (same reference) and changed identities.
+            /// Partition prior data to find unchanged nodes (same identity AND same reference).
+            /// Uses two-phase change detection: match by identity (GlobalIndex), then check ReferenceEquals.
             /// Returns unchanged list in sorted order (by Y descending, preserving prior PointPairList order).
             /// </summary>
-            private (List<(PointPair point, NodePosition pos)> unchanged, HashSet<int> changedIdentities)
-                PartitionPriorData(GraphData priorData, HashSet<int> newDocNodeKeys, ProductionMonitor productionMonitor)
+            private List<(PointPair point, NodePosition pos)>
+                PartitionPriorData(GraphData priorData, Dictionary<int, DocNode> newDocNodes, ProductionMonitor productionMonitor)
             {
                 var unchanged = new List<(PointPair point, NodePosition pos)>(priorData.NodePositions.Count);
-                var changedIdentities = new HashSet<int>();
 
                 // Build array indexed by PointPairList position for sorted iteration
                 var positionsByIndex = new NodePosition?[priorData.PointPairList.Count];
@@ -809,50 +902,73 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     var priorNodeKey = pos.Value.DocNode.Id.GlobalIndex;
 
-                    if (newDocNodeKeys.Contains(priorNodeKey))
+                    // Two-phase change detection:
+                    // 1. Match by identity (GlobalIndex) - like finding a database row by ID
+                    // 2. Check ReferenceEquals - if same reference, entire subtree is unchanged
+                    if (newDocNodes.TryGetValue(priorNodeKey, out var newNode) &&
+                        ReferenceEquals(newNode, pos.Value.DocNode))
                     {
-                        // Same reference exists in new doc - unchanged (preserves sorted order)
+                        // Same identity AND same reference - truly unchanged
                         unchanged.Add((priorData.PointPairList[i], pos.Value));
                     }
-                    else
-                    {
-                        // Node reference changed - mark identity for recalculation
-                        changedIdentities.Add(pos.Value.DocNode.PeptideGroup.GlobalIndex);
-                    }
+                    // Nodes with identity missing or reference changed will be recalculated
                 }
 
-                return (unchanged, changedIdentities);
+                return unchanged;
             }
 
             /// <summary>
             /// Calculate Y values for new or changed nodes.
+            /// In protein mode, creates Protein entities. In peptide mode, creates Peptide entities.
             /// </summary>
-            private List<(PointPair point, PeptideGroupDocNode docNode)> CalculateChangedPoints(
+            private List<(PointPair point, DocNode docNode)> CalculateChangedPoints(
                 List<PeptideGroupDocNode> moleculeGroups,
-                IReadOnlyDictionary<int, NodePosition> priorNodePositions,
+                HashSet<int> unchangedKeys,
                 SkylineDataSchema schema,
                 int? resultIndex,
                 ProductionMonitor productionMonitor)
             {
-                var changedPoints = new List<(PointPair point, PeptideGroupDocNode docNode)>();
+                bool proteinMode = GraphSettings.AreaProteinTargets;
+                var changedPoints = new List<(PointPair point, DocNode docNode)>();
                 double maxY = 0;
                 var minY = double.MaxValue;
 
                 foreach (var moleculeGroup in moleculeGroups)
                 {
                     productionMonitor.CancellationToken.ThrowIfCancellationRequested();
-                    var nodeKey = moleculeGroup.Id.GlobalIndex;
 
-                    // Skip if unchanged (already handled in partition step)
-                    if (priorNodePositions.ContainsKey(nodeKey))
-                        continue;
+                    if (proteinMode)
+                    {
+                        var nodeKey = moleculeGroup.Id.GlobalIndex;
+                        // Skip only if truly unchanged (same identity AND same reference)
+                        if (unchangedKeys.Contains(nodeKey))
+                            continue;
 
-                    // This is a new or changed node - calculate its value
-                    var path = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
-                    var protein = new Protein(schema, path);
-                    var pointData = new GraphPointData(protein);
-                    var pointPair = CreatePointPair(pointData, ref maxY, ref minY, resultIndex);
-                    changedPoints.Add((pointPair, moleculeGroup));
+                        // This is a new or changed protein - calculate its value
+                        var path = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
+                        var protein = new Protein(schema, path);
+                        var pointData = new GraphPointData(protein);
+                        var pointPair = CreatePointPair(pointData, ref maxY, ref minY, resultIndex);
+                        changedPoints.Add((pointPair, moleculeGroup));
+                    }
+                    else
+                    {
+                        // Peptide mode - need parent context for IdentityPath
+                        foreach (var molecule in moleculeGroup.Molecules)
+                        {
+                            var nodeKey = molecule.Id.GlobalIndex;
+                            // Skip only if truly unchanged (same identity AND same reference)
+                            if (unchangedKeys.Contains(nodeKey))
+                                continue;
+
+                            // This is a new or changed peptide - calculate its value
+                            var path = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide);
+                            var peptide = new Peptide(schema, path);
+                            var pointData = new GraphPointData(peptide);
+                            var pointPair = CreatePointPair(pointData, ref maxY, ref minY, resultIndex);
+                            changedPoints.Add((pointPair, molecule));
+                        }
+                    }
                 }
 
                 // Sort by Y descending (typically small list - k items where k << n)
@@ -867,7 +983,7 @@ namespace pwiz.Skyline.Controls.Graphs
             /// </summary>
             private void MergeSortedLists(
                 List<(PointPair point, NodePosition pos)> unchanged,
-                List<(PointPair point, PeptideGroupDocNode docNode)> changed,
+                List<(PointPair point, DocNode docNode)> changed,
                 ProductionMonitor productionMonitor)
             {
                 // Pre-allocate output structures
@@ -890,7 +1006,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     productionMonitor.CancellationToken.ThrowIfCancellationRequested();
                     PointPair sourcePoint;
-                    PeptideGroupDocNode docNode;
+                    DocNode docNode;
 
                     // Pick the larger Y value (descending sort)
                     if (iChanged >= changed.Count ||
@@ -984,7 +1100,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!identityToIndex.ContainsKey(groupIdentity))
                         identityToIndex[groupIdentity] = i;
                     // Build map for incremental update support
-                    var docNode = dataPoint.Protein.DocNode;
+                    // Use peptide DocNode in peptide mode, protein DocNode in protein mode
+                    var docNode = dataPoint.Peptide?.DocNode ?? (DocNode)dataPoint.Protein.DocNode;
                     var nodeKey = docNode.Id.GlobalIndex;
                     nodePositions.Add(nodeKey, new NodePosition
                     {
@@ -1030,12 +1147,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             /// <summary>
             /// Stores the position and computed value for a doc node in the sorted list.
+            /// In protein mode, this is a PeptideGroupDocNode. In peptide mode, a PeptideDocNode.
             /// </summary>
             internal struct NodePosition
             {
                 public int Index;
                 public double YValue;
-                public PeptideGroupDocNode DocNode;
+                public DocNode DocNode;
             }
 
             /// <summary>
@@ -1191,7 +1309,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public class GraphDataParameters
+        public class GraphDataParameters : ICachingParameters
         {
             public GraphDataParameters(SrmDocument document, GraphSettings graphSettings,
                 ReplicateDisplay showReplicate, int resultsIndex, GraphData priorGraphData = null)
@@ -1209,19 +1327,16 @@ namespace pwiz.Skyline.Controls.Graphs
             public ReplicateDisplay ShowReplicate { get; }
             public int ResultsIndex { get; }
 
-            /// <summary>
-            /// Optional prior graph data for incremental update optimization.
-            /// Only valid if ReferenceEquals(PriorGraphData.Document.Settings, Document.Settings).
-            /// Not included in Equals/GetHashCode - same parameters should produce same result.
-            /// </summary>
-            public GraphData PriorGraphData { get; }
+            // ICachingParameters implementation
+            int ICachingParameters.CacheKey => ResultsIndex;
+            object ICachingParameters.CacheSettings => new { GraphSettings, ShowReplicate };
 
             /// <summary>
-            /// Returns true if incremental update is possible (prior data exists and
-            /// quantification settings unchanged).
+            /// Optional prior graph data for incremental update optimization.
+            /// If set, the caller guarantees that the prior data is from the same document identity
+            /// with compatible quantification settings. Not included in Equals/GetHashCode.
             /// </summary>
-            public bool CanUseIncrementalUpdate => PriorGraphData != null &&
-                Document.Settings.HasEqualQuantificationSettings(PriorGraphData.Document.Settings);
+            public GraphData PriorGraphData { get; }
 
             protected bool Equals(GraphDataParameters other)
             {

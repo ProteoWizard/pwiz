@@ -70,10 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var receiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
             _graphDataReceiver = new ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>(
                 receiver,
-                settings => settings.Document,
-                settings => new { settings.BestResult, settings.Threshold, settings.Refine, settings.PointsType,
-                    settings.RegressionMethod, settings.CalculatorName, settings.IsRunToRun, settings.OriginalIndex },
-                settings => settings.TargetIndex);  // Cache key: replicate index (-1 for all/best modes)
+                ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>.DefaultCleanCache);
             _graphDataReceiver.ProgressChange += ProgressChangeAction;
         }
 
@@ -104,6 +101,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 GraphSummary.BeginInvoke(new Action(() =>
                 {
+                    // Clear cache because newly initialized calculators require fresh computation.
+                    // Without this, the cached partial result (with GraphData == null) would be returned.
+                    _graphDataReceiver.ClearCache();
                     UpdateGraph(false);
                 }));
             }
@@ -954,7 +954,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private class RtRegressionResults : Immutable
+        private class RtRegressionResults : Immutable, ICachingResult
         {
             public RtRegressionResults(RetentionTimeRegressionSettings regressionSettings)
             {
@@ -973,6 +973,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return ChangeProp(ImClone(this), im => im.GraphData = graphData);
             }
+
+            // ICachingResult implementation
+            public SrmDocument Document => RegressionSettings.Document;
         }
 
         private static Producer<RetentionTimeRegressionSettings, RtRegressionResults> _producer = new DataProducer();

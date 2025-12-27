@@ -196,12 +196,427 @@ The LongWaitDlg-pattern exception handling remains in place:
 ### Diagnostic Code
 Temporary diagnostic assertions were added during investigation to trace duplicates through `DocNodeChildren`, `SrmDocument`, and `DocumentReader`. These were removed after confirming the root cause was hash collisions, not actual duplicates. Test passed 43 iterations (over 2x the longest pre-fix run) confirming the fix.
 
+## Review Feedback: Producer Composition Pattern
+
+### Nick's Suggestion (PR #3730 Review)
+
+Nick suggested that the ProductionFacility pattern already supports caching via **producer composition**:
+
+> "The way that the ProductionFacility stuff would want this to be accomplished is that there are two different producers, and one of the producers overrides GetInputs to return the other as an 'Input'. For instance, the GetInputs method in `AssociateProteinResults.Producer` requests something that depends only on `ParsimonyIndependentParameters`, which enables switching between parsimony settings without having to recalculate everything."
+
+### The Pattern (from `AssociateProteinsResults.cs`)
+
+```csharp
+// Two parameter classes - one subset of the other
+class ParsimonyIndependentParameters { Document, FastaFilePath, BackgroundProteome }
+class Parameters : ParsimonyIndependentParameters { + ParsimonySettings, IrtStandard, ... }
+
+// Two producers - one depends on the other via GetInputs()
+class ResultsProducer : Producer<Parameters, AssociateProteinsResults>
+{
+    public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
+    {
+        // Request the expensive preliminary results (cached by ProductionFacility)
+        yield return PRELIMINARY_RESULTS_PRODUCER.MakeWorkOrder(
+            new ParsimonyIndependentParameters(parameter.Document, ...));
+    }
+
+    public override AssociateProteinsResults ProduceResult(...)
+    {
+        // Get cached preliminary results from inputs dictionary
+        var preliminaryResults = inputs.Values.OfType<ParsimonyIndependentResults>().First();
+        // Only do the cheap parsimony-dependent work
+        return ProduceResults(productionMonitor, parameter, preliminaryResults);
+    }
+}
+```
+
+The ProductionFacility automatically caches the preliminary producer's results. Changing only parsimony settings reuses the cached expensive computation.
+
+### How This Would Apply to Relative Abundance Graph
+
+**Current structure:**
+- `GraphDataParameters` includes replicate index
+- Full calculation runs for each replicate
+
+**Producer composition approach:**
+1. `ReplicateIndependentParameters` - Document, GraphSettings (no replicate index)
+2. `ReplicateIndependentResults` - All points calculated, full sorted list, positions assigned
+3. `ReplicateDependentProducer` - Takes base results, applies replicate-specific Y value lookup and highlighting
+
+The expensive O(n log n) sort would be cached, and switching replicates would only run the O(n) replicate-specific processing.
+
+### Assessment: What ReplicateCachingReceiver Provides
+
+| Feature | ProductionFacility | ReplicateCachingReceiver |
+|---------|-------------------|--------------------------|
+| **Dependency caching** | ✅ Via GetInputs() | ❌ N/A (wrapper pattern) |
+| **Stale-while-revalidate** | ❌ No - entry removed on unlisten | ✅ Yes - shows previous result |
+| **Completion listeners** | ❌ No - calculation cancelled on unlisten | ✅ Yes - calculation continues |
+| **Local replicate cache** | ❌ No - would need producer refactor | ✅ Yes - ConcurrentDictionary |
+
+**Key ProductionFacility behavior** (from `ProductionFacility.cs`):
+```csharp
+private void AfterLastListenerRemoved()
+{
+    _cancellationTokenSource?.Cancel();  // Calculation CANCELLED
+    Cache.RemoveEntry(this);              // Entry REMOVED
+}
+```
+
+When the user navigates away (listener removed), ProductionFacility **cancels** the calculation and **removes** the cached entry. This means:
+1. No stale-while-revalidate (graph would blank while recalculating)
+2. No background completion (switching away loses progress)
+
+### Recommendation
+
+**Keep `ReplicateCachingReceiver` for now** - it provides UX features (stale-while-revalidate, completion listeners) that ProductionFacility doesn't currently support.
+
+**Future consideration**: If ProductionFacility is enhanced with:
+1. Option to keep entries alive during recalculation (stale-while-revalidate)
+2. Option to continue calculations when listener count drops to zero
+
+Then refactoring to producer composition would be cleaner architecturally and would eliminate the need for the wrapper class.
+
+**Alternatively**: The producer composition pattern could be used for the **incremental update** optimization (Phase 3), where the "prior results" could be an explicit input dependency rather than passed through the parameters.
+
+### Additional Note
+
+`AssociateProteinsResults.cs` uses `RuntimeHelpers.GetHashCode(Document)` in its `Parameters.GetHashCode()` method (lines 118 and 333). This is another candidate for the CodeInspection ban backlog item.
+
+## Phase 6: Two-Phase Change Detection Fix ✅ COMPLETE
+
+### Critical Bug Found
+The incremental update was not detecting changed nodes because it only checked identity match (GlobalIndex), not `ReferenceEquals` on the DocNodes themselves.
+
+### Root Cause
+1. `BuildNewDocNodeSet` returned `HashSet<int>` of GlobalIndex values
+2. `PartitionPriorData` checked `if (newDocNodeKeys.Contains(priorNodeKey))` - only identity match
+3. `CalculateChangedPoints` checked `if (priorNodePositions.ContainsKey(nodeKey))` - skipped ALL prior nodes, including changed ones
+
+A node that changed (same identity, different DocNode reference) was:
+- NOT added to `unchanged` (ReferenceEquals failed)
+- SKIPPED by CalculateChangedPoints (existed in prior data)
+- Result: node lost from output entirely
+
+### The Fix (Two-Phase Change Detection)
+Per `ai/docs/architecture-data-model.md`:
+1. **Phase 1**: Match by identity (GlobalIndex) - like finding a database row by ID
+2. **Phase 2**: Check `ReferenceEquals(newNode, priorNode)` - if true, subtree unchanged
+
+Implementation:
+1. `BuildNewDocNodeMap` returns `Dictionary<int, DocNode>` mapping identity → DocNode
+2. `PartitionPriorData` uses `TryGetValue` + `ReferenceEquals` to find truly unchanged nodes
+3. `CalculateChangedPoints` takes `HashSet<int> unchangedKeys` - only skips truly unchanged nodes
+4. Added `Assume.AreEqual(newDocNodes.Count, _nodePositions.Count)` assertion
+
+### Files Modified
+- `SummaryRelativeAbundanceGraphPane.cs`:
+  - `BuildNewDocNodeSet` → `BuildNewDocNodeMap` (returns Dictionary)
+  - `PartitionPriorData` - returns only unchanged list, uses ReferenceEquals
+  - `CalculateChangedPoints` - takes unchangedKeys HashSet
+  - `CalcDataPositionsIncremental` - builds unchangedKeys set, adds assertion
+
+## Phase 7: UI Polish ✅ COMPLETE
+
+### Bug 1: Hand Cursor Flickering
+The Relative Abundance graph cursor flickered between Hand and Cross when moving over clickable points.
+
+**Root Cause 1**: `HandleMouseMoveEvent` in `SummaryRelativeAbundanceGraphPane` never set `GraphSummary.Cursor = Cursors.Hand` when over a point.
+
+**Root Cause 2 (ZedGraph bug)**: In `ZedGraphControl_MouseMove`, `SetCursor(mousePt)` was called BEFORE checking if the `MouseMoveEvent` handler handled the event. This caused:
+1. `SetCursor` → sets cursor to Cross (zoom enabled)
+2. `MouseMoveEvent` handler → sets cursor to Hand, returns true
+3. User sees cursor flicker Cross→Hand on every mouse move
+
+**Fix**:
+1. Added `GraphSummary.Cursor = Cursors.Hand;` in the `if (identity != null)` block
+2. Simplified else branch to just `return false;` (don't call base, let ZedGraph handle cursor reset)
+3. **ZedGraph fix**: Moved `SetCursor(mousePt)` to AFTER the `MouseMoveEvent` check, so it only runs when the handler returns false or doesn't exist
+
+**Files Modified**:
+- `SummaryRelativeAbundanceGraphPane.cs` - cursor and return value fix
+- `pwiz_tools/Shared/ZedGraph/ZedGraph/ZedGraphControl.Events.cs` - moved SetCursor call
+
+### Bug 2: Progress Bar Z-Order
+The progress bar can appear behind point annotation labels, making it hard to see.
+
+**Root Cause**: Both progress bar and labels have `ZOrder.A_InFront`. Within same z-order, render order depends on list position. Labels added after progress bar render on top.
+
+**Fix**: In `PaneProgressBar.DrawBar()`, remove and re-add `_left` and `_right` to end of `GraphObjList` to ensure they render last:
+```csharp
+GraphPane.GraphObjList.Remove(_left);
+GraphPane.GraphObjList.Remove(_right);
+GraphPane.GraphObjList.Add(_left);
+GraphPane.GraphObjList.Add(_right);
+```
+
+**File Modified**: `PaneProgressBar.cs`
+
+## Phase 8: Cross-Replicate Incremental Updates ✅ COMPLETE
+
+### Problem
+When changing peak integration in one replicate, all other replicate caches were cleared. Switching to another replicate would trigger a full recalculation instead of using incremental updates.
+
+### Root Cause
+`ReplicateCachingReceiver.TryGetProduct()` cleared the entire cache whenever the document **reference** changed:
+
+```csharp
+if (!ReferenceEquals(document, _cachedDocument) || !Equals(settings, _cachedSettings))
+{
+    ClearCache();  // Clears ALL replicate caches!
+}
+```
+
+When a peak integration changes:
+1. Document reference changes (new immutable document)
+2. UpdateGraph for current replicate correctly uses incremental update
+3. But cache for OTHER replicates was cleared and couldn't do incremental update
+
+### The Fix
+
+Modified `ReplicateCachingReceiver` to support identity-based cache invalidation:
+
+1. **New callbacks in constructor**:
+   - `getDocumentIdentity`: Extracts identity for cache invalidation (default: reference equality)
+   - `getResultDocument`: Extracts document from result for background-completed calculations
+
+2. **CacheEntry struct**: Stores result paired with its source document
+
+3. **Identity-based invalidation**: Cache only cleared when document **Identity** changes (new file opened), not when document **reference** changes (same file edited)
+
+4. **Exact cache hit detection**: A cache entry is only a "hit" if the document reference matches exactly. Otherwise, it's kept for incremental updates.
+
+### Implementation Details
+
+```csharp
+// CacheEntry stores result + document for incremental updates
+private readonly struct CacheEntry
+{
+    public TResult Result { get; }
+    public SrmDocument Document { get; }
+}
+
+// In TryGetProduct:
+var documentIdentity = _getDocumentIdentity?.Invoke(document) ?? document;
+
+// Only clear cache when identity changes, not reference
+if (!Equals(documentIdentity, _cachedDocumentIdentity) || !Equals(settings, _cachedSettings))
+{
+    ClearCache();
+}
+
+// Cache entry is only a "hit" if document matches exactly
+if (_localCache.TryGetValue(cacheKey, out var entry))
+{
+    if (ReferenceEquals(entry.Document, document))
+    {
+        result = entry.Result;
+        return true;  // Exact hit
+    }
+    // Entry kept for incremental update via TryGetCachedResultWithDocument
+}
+```
+
+### Files Modified
+- `ReplicateCachingReceiver.cs`:
+  - Added `CacheEntry` struct with Result and Document
+  - Added `_getDocumentIdentity` and `_getResultDocument` callbacks
+  - Changed `_localCache` from `ConcurrentDictionary<int, TResult>` to `ConcurrentDictionary<int, CacheEntry>`
+  - Added `TryGetCachedResultWithDocument()` method
+  - Updated `TryGetProduct()` for identity-based invalidation and exact-hit detection
+  - Updated `CompletionListener.OnProductAvailable()` to store document with result
+
+- `SummaryRelativeAbundanceGraphPane.cs`:
+  - Passes `doc => doc.Id.GlobalIndex` as document identity callback
+  - Passes `r => r.Document` as result document callback
+
+- `RTLinearRegressionGraphPane.cs`:
+  - Same pattern for consistency and better caching
+
+### Result
+- Switching replicates after peak integration change now uses incremental updates
+- Cache is preserved across document edits (same file)
+- Cache is correctly cleared when opening a new file (different identity)
+
 ## Testing
 - Use ExtracellularVesicalMagNet.sky document from Peak Imputation DIA tutorial
 - Test replicate switching performance
 - Test protein selection responsiveness
-- Test peak integration changes (Phase 2)
+- Test peak integration changes - verify incremental update works
+- Test both protein mode AND peptide mode (47,000 peptides)
+- **Add iron-clad test coverage** to `TestPeakAreaRelativeAbundanceGraph` for incremental updates
+
+## Phase 8 Refactoring: Clean Cache Design ✅ COMPLETE
+
+### Problem with Current Implementation
+The original code passed many lambdas to `ReplicateCachingReceiver` constructor for accessing document, settings, cache key, and result document. This led to poor separation of concerns and was difficult to extend.
+
+### Solution: Interface-Based Contracts
+
+**Two simple interfaces** that parameter and result types implement:
+
+```csharp
+// In pwiz.Skyline.Model.CachingContracts.cs
+public interface ICachingParameters
+{
+    SrmDocument Document { get; }
+    int CacheKey { get; }           // Typically replicate index
+    object CacheSettings { get; }   // Settings that affect result
+}
+
+public interface ICachingResult
+{
+    SrmDocument Document { get; }   // Document result was computed from
+}
+```
+
+### Named Delegate for Cache Cleaning
+
+```csharp
+/// <summary>
+/// Callback to determine which cache entries should be removed.
+/// </summary>
+/// <param name="currentDocument">The current document being displayed</param>
+/// <param name="cachedEntries">Map of cache key to the document each entry was computed from</param>
+/// <returns>Keys that should be removed from the cache</returns>
+public delegate IEnumerable<int> CleanCacheCallback(
+    SrmDocument currentDocument,
+    IReadOnlyDictionary<int, SrmDocument> cachedEntries);
+```
+
+### Type Constraints on ReplicateCachingReceiver
+
+```csharp
+public class ReplicateCachingReceiver<TParam, TResult> : IDisposable
+    where TParam : ICachingParameters
+    where TResult : class, ICachingResult
+{
+    private readonly CleanCacheCallback _cleanCache;
+
+    // Constructor now only needs receiver + optional cleanCache callback
+    public ReplicateCachingReceiver(
+        Receiver<TParam, TResult> receiver,
+        CleanCacheCallback cleanCache = null)
+    {
+        _receiver = receiver;
+        _cleanCache = cleanCache ?? DefaultCleanCache;
+    }
+
+    // TryGetProduct uses interface properties directly
+    public bool TryGetProduct(TParam param, out TResult result)
+    {
+        var document = param.Document;
+        var settings = param.CacheSettings;
+        var cacheKey = param.CacheKey;
+        // ...
+    }
+}
+```
+
+### RT Graph: Simple DefaultCleanCache Implementation
+
+```csharp
+// Clear all entries if any cached document differs from current
+public static IEnumerable<int> DefaultCleanCache(
+    SrmDocument currentDoc,
+    IReadOnlyDictionary<int, SrmDocument> cachedEntries)
+{
+    if (cachedEntries.Values.Any(cachedDoc => !ReferenceEquals(cachedDoc, currentDoc)))
+        return cachedEntries.Keys.ToList();
+    return Enumerable.Empty<int>();
+}
+```
+
+### RelativeAbundance Graph: Smart CleanCacheForIncrementalUpdates
+
+The smart cache cleaning validates each entry:
+
+1. **Check ChromatogramSet still exists** by reference in `Document.Settings.MeasuredResults.Chromatograms`
+2. **For index -1** (all replicates): Check `ReferenceEquals(cachedDoc.Settings.MeasuredResults, currentDoc.Settings.MeasuredResults)`
+3. **Keep valid entries** for incremental updates via `TryGetCachedResultWithDocument()`
+
+### Implementation Changes
+
+1. **Model/CachingContracts.cs** (NEW) - Interface definitions
+
+2. **RetentionTimeRegressionSettings** implements `ICachingParameters`:
+   ```csharp
+   int ICachingParameters.CacheKey => TargetIndex;
+   object ICachingParameters.CacheSettings => new {
+       BestResult, Threshold, Refine, PointsType,
+       RegressionMethod, CalculatorName, IsRunToRun, OriginalIndex
+   };
+   ```
+
+3. **RtRegressionResults** implements `ICachingResult`:
+   ```csharp
+   public SrmDocument Document => RegressionSettings.Document;
+   ```
+
+4. **GraphDataParameters** implements `ICachingParameters`:
+   ```csharp
+   int ICachingParameters.CacheKey => ResultsIndex;
+   object ICachingParameters.CacheSettings => new { GraphSettings, ShowReplicate };
+   ```
+
+5. **GraphData** implements `ICachingResult`:
+   ```csharp
+   public SrmDocument Document { get; }  // Already had this property
+   ```
+
+6. **Simplified constructors**:
+   ```csharp
+   // Before: 6 lambda parameters
+   _graphDataReceiver = new ReplicateCachingReceiver<...>(
+       receiver,
+       s => s.Document,
+       s => new { s.BestResult, ... },
+       s => s.TargetIndex,
+       DefaultCleanCache,
+       r => r.RegressionSettings.Document);
+
+   // After: 2 parameters (receiver + optional callback)
+   _graphDataReceiver = new ReplicateCachingReceiver<...>(
+       receiver,
+       DefaultCleanCache);  // or CleanCacheForIncrementalUpdates
+   ```
+
+### Files Modified
+- `pwiz_tools/Skyline/Model/CachingContracts.cs` (NEW)
+- `pwiz_tools/Skyline/Model/RetentionTimes/RetentionTimeRegressionGraphData.cs`
+- `pwiz_tools/Skyline/Controls/Graphs/RTLinearRegressionGraphPane.cs`
+- `pwiz_tools/Skyline/Controls/Graphs/SummaryRelativeAbundanceGraphPane.cs`
+- `pwiz_tools/Skyline/Controls/Graphs/ReplicateCachingReceiver.cs`
+- `pwiz_tools/Skyline/Skyline.csproj`
+
+### Benefits
+- Clear contracts about what parameter/result types must provide
+- Type safety via generic constraints
+- Ctrl+Click navigation to interface implementations
+- Easier to add new graph types that use caching
+- Reduced lambda noise in constructors
+
+### Bug Fixes in This Phase
+- Fixed cache storing `param.Document` instead of `result.Document` - caused IndexOutOfRangeException
+- Added defensive bounds check in `CleanCacheForIncrementalUpdates` for invalid cache entries
+- Fixed O(n²) potential in CleanCacheForIncrementalUpdates by using Dictionary lookup
+- Added `ClearCache()` call in RTLinearRegressionGraphPane calculator initialization to prevent stale partial results
+
+### Additional Changes in This Phase
+- **Extended incremental updates to peptide mode** - Previously only protein mode supported incremental updates. Now both modes use the same two-phase change detection pattern:
+  - `NodePosition.DocNode` changed from `PeptideGroupDocNode` to `DocNode` to support both
+  - `BuildNewDocNodeMap` returns identity map for either proteins or peptides
+  - `CalculateChangedPoints` handles both protein (Protein entity) and peptide (Peptide entity) modes
+- **Removed `CanUseIncrementalUpdate` property** - Redundant since `CleanCacheForIncrementalUpdates` callback now validates incremental update eligibility. The caller sets `PriorGraphData` only when appropriate.
+
+### Documentation Updates
+- Updated `ai/docs/architecture-data-model.md` to document Identity pattern beyond DocNode
+- Added sections on XmlNamedIdElement, ChromatogramSet, and two-phase change detection
+- Added "The Change... Pattern" section explaining ChangeProp/ImClone
+- Expanded "Identity vs DocNode" with table comparing purposes and mutability
 
 ## Related
 - Discovered during PR #3707 (Peak Imputation DIA Tutorial) review
 - Pattern follows `RTLinearRegressionGraphPane` approach for background computation
+- Updated `ai/docs/architecture-data-model.md` with two-phase change detection pattern

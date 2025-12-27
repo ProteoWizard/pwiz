@@ -25,7 +25,7 @@ SrmDocument (root)
             └── TransitionDocNode (transitions - leaf nodes)
 ```
 
-**Critical constraint**: No parent pointers in the tree. Parents know their children, but children don't know their parents. This enables the immutable modification pattern.
+**Critical constraint**: No parent pointers in DocNode objects. Parents know their children, but children don't know their parents. This enables the immutable modification pattern (see "Why DocNode Cannot Have Parent Pointers" below).
 
 Views like .NET TreeView can mirror this structure with their own parent pointers - that's fine for UI elements.
 
@@ -50,6 +50,21 @@ SrmDocument₁                 SrmDocument₂ (new)
 ```
 
 Only the path from the modified node to the root is cloned. All unchanged subtrees keep the same object references.
+
+### The Change... Pattern
+
+DocNodes are designed to be constructed through their constructor or XML deserialization, then released for use as immutable objects. **No setters are allowed.**
+
+To create a modified copy, DocNodes use the `Change...` pattern:
+
+```csharp
+public TypedImmutable ChangeQuantitative(T prop)
+{
+    return ChangeProp(ImClone(this), im => im.PropertyName = prop);
+}
+```
+
+`ChangeProp` and `ImClone` are convenience methods on the `Immutable` base class that make this operation a single-line function - as DRY as possible for adding change methods to new Immutable objects.
 
 ## SkylineWindow Document Management
 
@@ -117,9 +132,9 @@ A fundamental concept in Skyline's immutable architecture:
 
 In an immutable system, reference equality is extremely powerful because unchanged subtrees keep their original object references. If `ReferenceEquals(nodeNew, nodeOld)` returns true, you know the entire subtree is unchanged without examining any content.
 
-## Identity and GlobalIndex
+## Identity vs DocNode: A Critical Distinction
 
-Every `DocNode` contains an `Identity` object representing its reference identity:
+Every `DocNode` contains an `Identity` object:
 
 ```csharp
 public abstract class DocNode
@@ -129,25 +144,64 @@ public abstract class DocNode
 }
 ```
 
-### GlobalIndex - The Reliable Reference Identifier
+**Identity and DocNode serve different purposes:**
 
-`Identity.GlobalIndex` is the **only reliable way** to create dictionary keys for reference-based lookups:
+| Aspect | Identity | DocNode |
+|--------|----------|---------|
+| **Purpose** | Identifies *which* entity (like a database row ID) | Contains the entity's *current state* |
+| **Mutability** | Truly immutable - no setters, no Change... methods | Immutable instance, but new instances created via Change... |
+| **GlobalIndex** | Assigned once, never changes for this identity | N/A - uses `Id.GlobalIndex` |
+| **Parent pointers** | Allowed (safe because content never changes) | NOT allowed (would break immutable pattern) |
 
-- Assigned via `Interlocked.Increment()` - **guaranteed unique** per object instance
+### Identity Objects Are Truly Immutable
+
+Identity objects have **no setters and no ChangeProp methods**. The moment you feel the need for a `Change...` method, the value is not truly identifying and belongs on the DocNode instead.
+
+**Example**: `Transition.Id` (transition identity) was originally designed to include m/z values. But when support for switching between monoisotopic and average mass calculations was needed, m/z had to move to `TransitionDocNode`. Values that remained in the Identity:
+- `IonType` - what kind of ion (y, b, precursor, etc.)
+- `CleavageOffset` - position in peptide
+- `Adduct` - charge and adduct type
+- Parent `TransitionGroup` identity reference (without which `CleavageOffset` is meaningless)
+
+These values truly identify *which* transition - changing any of them means you have a fundamentally different transition.
+
+### Why DocNode Cannot Have Parent Pointers
+
+If DocNode had parent pointers, changing a child's *content* (e.g., adding an annotation) would:
+1. Clone the child with new content
+2. Clone the parent to reference the new child
+3. **Force ALL siblings to clone** just to update their parent pointer
+
+Cost explodes from O(tree depth) to O(depth × sibling breadth).
+
+### Why Identity CAN Have Parent Pointers
+
+Identity objects form a **stable scaffolding** that DocNodes "change" around:
+
+- A `Peptide.Identity` can safely reference its parent `Protein.Identity`
+- It can include: peptide sequence, position in protein, parent protein reference
+- Changing ANY of these creates a fundamentally *new* peptide (new GlobalIndex), not a modification
+- Identity objects never change content - they either exist unchanged or are replaced entirely
+
+This is why Identity provides `GlobalIndex` - it uniquely identifies an identity instance that will never change.
+
+### GlobalIndex - For Identity Matching
+
+`Identity.GlobalIndex` provides a unique identifier for each Identity instance:
+
+- Assigned via `Interlocked.Increment()` - **guaranteed unique** per Identity instance
 - 32-bit integer with billions of headroom (documents rarely exceed millions of nodes)
 - In-memory only, never persisted to disk
-- More reliable than `RuntimeHelpers.GetHashCode()` (see warning below)
+- Use for dictionary keys when you need to match nodes by identity across documents
 
 ```csharp
-// CORRECT: Dictionary keyed by GlobalIndex for reference-based lookup
-var indexByReference = new Dictionary<int, int>();
+// Build a map of nodes by their identity
+var nodesByIdentity = new Dictionary<int, PeptideGroupDocNode>();
 foreach (var protein in doc.MoleculeGroups)
-    indexByReference[protein.Id.GlobalIndex] = index++;
-
-// O(1) lookup by reference
-if (indexByReference.TryGetValue(someProtein.Id.GlobalIndex, out int idx))
-    // Found the exact same object instance
+    nodesByIdentity[protein.Id.GlobalIndex] = protein;
 ```
+
+**IMPORTANT**: Matching by GlobalIndex tells you the nodes have the same *identity* - it does NOT tell you they are the same object reference. Two different DocNode objects can share the same Identity if one is a modified clone of the other.
 
 ### WARNING: Do NOT Use RuntimeHelpers.GetHashCode()
 
@@ -164,8 +218,6 @@ foreach (var protein in doc.MoleculeGroups)
     nodeSet.Add(RuntimeHelpers.GetHashCode(protein)); // COLLISIONS POSSIBLE!
 ```
 
-**Historical note**: `RuntimeHelpers.GetHashCode()` has existed since .NET 2.0. On 32-bit Windows, it may have been derived from memory addresses and was more reliable. On 64-bit Windows with 64-bit address space, object addresses cannot fit in 32 bits, making collisions inevitable. `Identity.GlobalIndex` was designed independently and turned out to be the correct solution.
-
 ### Identity Subclasses
 
 Each DocNode level has its own Identity subclass with **content-based equality** (for `Equals()`/`GetHashCode()`):
@@ -174,43 +226,91 @@ Each DocNode level has its own Identity subclass with **content-based equality**
 - `TransitionGroup.Id` - precursor identity
 - `Transition.Id` - transition identity
 
-The `GlobalIndex` property on these Identity objects provides **reference-based** uniqueness.
+### Identity Beyond DocNode
 
-## Power of ReferenceEquals for Change Detection
-
-The immutable pattern makes reference equality extremely powerful:
+The `Identity` pattern is not limited to `DocNode`. Other immutable objects that need stable identification use the same approach via `XmlNamedIdElement`:
 
 ```csharp
-// If same reference, entire subtree is unchanged
-if (ReferenceEquals(docNew, docOld))
-    return; // Nothing changed anywhere
-
-// Check specific proteins
-foreach (var (protNew, protOld) in docNew.MoleculeGroups.Zip(docOld.MoleculeGroups))
+public abstract class XmlNamedIdElement : XmlNamedElement, IIdentiyContainer
 {
-    if (ReferenceEquals(protNew, protOld))
-        continue; // This protein and ALL its children unchanged
-
-    // Only process changed proteins
-    ProcessChangedProtein(protNew, protOld);
+    public Identity Id { get; private set; }
 }
 ```
 
+**Key examples**:
+- `ChromatogramSet` - identifies a replicate (extends `XmlNamedIdElement`)
+- `ChromatogramSetId` - the Identity subclass for ChromatogramSet
+
+This means `ChromatogramSet` also has `Id.GlobalIndex` for efficient identity-based lookups:
+
+```csharp
+// Build map of ChromatogramSets by identity for O(1) lookup
+var chromById = measuredResults.Chromatograms.ToDictionary(c => c.Id.GlobalIndex);
+
+// Two-phase check: find by identity, then verify unchanged
+if (chromById.TryGetValue(cachedChromSet.Id.GlobalIndex, out var currentChromSet) &&
+    ReferenceEquals(currentChromSet, cachedChromSet))
+{
+    // ChromatogramSet is unchanged
+}
+```
+
+The same two-phase change detection pattern applies to any object with an `Identity Id` property.
+
+## Two-Phase Change Detection
+
+To detect which nodes changed between two documents, you need **both** identity matching AND reference equality:
+
+```csharp
+// Phase 1: Build map of new document's nodes by Identity
+var newNodesByIdentity = new Dictionary<int, DocNode>();
+foreach (var node in newDoc.MoleculeGroups)
+    newNodesByIdentity[node.Id.GlobalIndex] = node;
+
+// Phase 2: Check each prior node
+foreach (var priorNode in priorDoc.MoleculeGroups)
+{
+    var identityKey = priorNode.Id.GlobalIndex;
+
+    if (newNodesByIdentity.TryGetValue(identityKey, out var newNode))
+    {
+        // Identity exists in both documents
+        if (ReferenceEquals(newNode, priorNode))
+        {
+            // UNCHANGED - exact same object, entire subtree unchanged
+        }
+        else
+        {
+            // CHANGED - same identity, but content differs
+        }
+    }
+    else
+    {
+        // REMOVED - identity no longer exists in new document
+    }
+}
+
+// Nodes in newDoc not in priorDoc are ADDED
+```
+
+This two-phase pattern is used throughout Skyline for efficient incremental updates.
+
 ### Real-World Example: SrmTreeNode.UpdateNodes()
 
-This method updates a .NET TreeView when the document changes. Instead of tearing down and rebuilding:
+This method (written in 2009) updates a .NET TreeView when the document changes. Instead of tearing down and rebuilding:
 
 1. Walk old and new document trees in parallel
-2. Use `ReferenceEquals()` to skip unchanged subtrees
-3. Only update TreeView nodes where actual changes occurred
+2. Match nodes by Identity (GlobalIndex)
+3. Use `ReferenceEquals()` on matched DocNodes to skip unchanged subtrees
+4. Only update TreeView nodes where actual changes occurred
 
 **Result**: If user changes one peak integration, only the affected protein's tree branch updates. The TreeView doesn't flicker or lose selection state.
 
 ## Application to Graph Updates
 
-The same pattern applies to expensive graph computations:
+The same two-phase pattern applies to expensive graph computations:
 
-### Current Approach (Full Recalculation)
+### Full Recalculation (Simple but Slow)
 ```csharp
 // Every document change triggers full recalculation
 void OnDocumentChanged(SrmDocument docNew, SrmDocument docOld)
@@ -220,41 +320,44 @@ void OnDocumentChanged(SrmDocument docNew, SrmDocument docOld)
 }
 ```
 
-### Optimized Approach (Incremental Update)
+### Incremental Update (Efficient)
 ```csharp
 void OnDocumentChanged(SrmDocument docNew, SrmDocument docOld)
 {
     if (ReferenceEquals(docNew, docOld))
         return;
 
-    // Find only changed proteins using ReferenceEquals
-    var changedProteins = FindChangedProteins(docNew, docOld);
+    // Build identity map for new document
+    var newNodes = BuildIdentityMap(docNew);
 
-    // Update only affected points - O(k log n) where k << n
-    UpdateChangedPoints(changedProteins);
+    // Find changed nodes using two-phase check
+    var unchanged = new List<NodeData>();
+    var changed = new List<DocNode>();
+
+    foreach (var prior in priorData)
+    {
+        if (newNodes.TryGetValue(prior.IdentityKey, out var newNode) &&
+            ReferenceEquals(newNode, prior.DocNode))
+        {
+            unchanged.Add(prior);  // Keep cached calculation
+        }
+        else
+        {
+            changed.Add(newNode);  // Needs recalculation
+        }
+    }
+
+    // Only recalculate changed nodes - O(k log k) where k << n
+    MergeResults(unchanged, CalculatePoints(changed));
 }
 ```
-
-## Reference-Based Set Operations
-
-Using `Identity.GlobalIndex`, you can build dictionaries and sets keyed by object reference. This enables O(1) membership tests across different orderings of the same data.
-
-```csharp
-// Build reference set from one document
-var nodeSet = new HashSet<int>();
-foreach (var protein in doc.MoleculeGroups)
-    nodeSet.Add(protein.Id.GlobalIndex);
-
-// O(1) lookup: is this exact node reference in the set?
-if (nodeSet.Contains(someProtein.Id.GlobalIndex))
-    // Same object reference exists
-```
-
-This pattern enables efficient incremental updates when documents change - you can quickly identify which nodes are unchanged (same reference), modified (different reference, same identity), or added/removed.
 
 ## See Also
 
 - `pwiz_tools/Skyline/Model/DocNode.cs` - Base DocNode class
+- `pwiz_tools/Skyline/Model/Immutable.cs` - ChangeProp and ImClone implementation
 - `pwiz_tools/Skyline/Model/SrmDocument.cs` - Document root
+- `pwiz_tools/Skyline/Model/DocSettings/XmlNamedElement.cs` - XmlNamedIdElement base class
+- `pwiz_tools/Skyline/Model/Results/Chromatogram.cs` - ChromatogramSet and ChromatogramSetId
 - `pwiz_tools/Skyline/Skyline.cs` - SkylineWindow.ModifyDocumentInner()
 - `pwiz_tools/Skyline/Controls/TreeView/SrmTreeNode.cs` - UpdateNodes() example

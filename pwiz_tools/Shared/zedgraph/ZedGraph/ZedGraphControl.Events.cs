@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2007  John Champion
+//Copyright ï¿½ 2007  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -706,17 +706,18 @@ namespace ZedGraph
 			{
 				Point mousePt = new Point( e.X, e.Y );
 
-				SetCursor( mousePt );
-
                 GraphPane pane = this.MasterPane.FindPane(mousePt);
 				// Provide Callback for MouseMove events
 				if ( !(_isTextDragging || _isZooming || _isPanning || _isSelecting) )
 				{
                     if (pane != null && e.Button == MouseButtons.None)
-                        HandleDragHandle(mousePt, pane); 
+                        HandleDragHandle(mousePt, pane);
                     if (this.MouseMoveEvent != null && this.MouseMoveEvent(this, e))
 						return;
 				}
+
+				// Only set default cursor if event wasn't handled
+				SetCursor( mousePt );
 
 				//Point tempPt = this.PointToClient( Control.MousePosition );
 

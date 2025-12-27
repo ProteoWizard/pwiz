@@ -21,6 +21,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
@@ -29,6 +31,17 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
+    /// Callback to determine which cache entries should be removed.
+    /// Called before each lookup with the current document and a read-only view of cached entries.
+    /// </summary>
+    /// <param name="currentDocument">The current document being displayed</param>
+    /// <param name="cachedEntries">Map of cache key to the document each entry was computed from</param>
+    /// <returns>Keys that should be removed from the cache</returns>
+    public delegate IEnumerable<int> CleanCacheCallback(
+        SrmDocument currentDocument,
+        IReadOnlyDictionary<int, SrmDocument> cachedEntries);
+
+    /// <summary>
     /// Wraps a Receiver with a local cache to enable fast replicate switching.
     ///
     /// The standard Producer/Receiver pattern only caches the most recent result.
@@ -36,26 +49,32 @@ namespace pwiz.Skyline.Controls.Graphs
     /// triggers a full recalculation because the old result is discarded.
     ///
     /// This wrapper maintains a local cache keyed by replicate index, allowing
-    /// instant switching between previously-viewed replicates. The cache is
-    /// invalidated when the document or settings change.
+    /// instant switching between previously-viewed replicates.
+    ///
+    /// Cache validity is determined by the cleanCache callback, which is called
+    /// before each lookup. The callback examines the cached entries and returns
+    /// which keys should be removed. This allows different cache invalidation
+    /// strategies for different use cases:
+    /// - Simple: Clear all if document changed (RT graph)
+    /// - Smart: Keep entries whose ChromatogramSet still exists (Relative Abundance)
     ///
     /// Additionally, when switching away from a calculation in progress, this wrapper
     /// keeps a "completion listener" attached so the calculation continues in the
     /// background and its result is cached. This means switching away and back
     /// doesn't lose progress - like browser tabs that keep loading when you switch away.
     /// </summary>
-    /// <typeparam name="TParam">Parameter type for the producer (must provide document, settings, and replicate info)</typeparam>
-    /// <typeparam name="TResult">Result type from the producer</typeparam>
-    public class ReplicateCachingReceiver<TParam, TResult> : IDisposable where TResult : class
+    /// <typeparam name="TParam">Parameter type implementing ICachingParameters</typeparam>
+    /// <typeparam name="TResult">Result type implementing ICachingResult</typeparam>
+    public class ReplicateCachingReceiver<TParam, TResult> : IDisposable
+        where TParam : ICachingParameters
+        where TResult : class, ICachingResult
     {
         private readonly Receiver<TParam, TResult> _receiver;
-        private readonly Func<TParam, SrmDocument> _getDocument;
-        private readonly Func<TParam, object> _getSettings;
-        private readonly Func<TParam, int> _getCacheKey;
+        private readonly CleanCacheCallback _cleanCache;
 
-        private readonly ConcurrentDictionary<int, TResult> _localCache = new ConcurrentDictionary<int, TResult>();
+        // Cache stores results paired with their source document
+        private readonly ConcurrentDictionary<int, CacheEntry> _localCache = new ConcurrentDictionary<int, CacheEntry>();
         private readonly Dictionary<int, CompletionListener> _pendingListeners = new Dictionary<int, CompletionListener>();
-        private SrmDocument _cachedDocument;
         private object _cachedSettings;
         private int _currentCacheKey = int.MinValue;
 
@@ -65,22 +84,44 @@ namespace pwiz.Skyline.Controls.Graphs
         private Exception _reportedException;
 
         /// <summary>
+        /// A cached result paired with its source document.
+        /// </summary>
+        private readonly struct CacheEntry
+        {
+            public TResult Result { get; }
+            public SrmDocument Document { get; }
+
+            public CacheEntry(TResult result, SrmDocument document)
+            {
+                Result = result;
+                Document = document;
+            }
+        }
+
+        /// <summary>
         /// Creates a caching wrapper around a Receiver.
         /// </summary>
         /// <param name="receiver">The underlying Receiver for background computation</param>
-        /// <param name="getDocument">Function to extract document from parameters</param>
-        /// <param name="getSettings">Function to extract settings from parameters (used for cache invalidation)</param>
-        /// <param name="getCacheKey">Function to extract cache key (replicate index) from parameters</param>
+        /// <param name="cleanCache">Callback to determine which cache entries to remove.
+        /// Default: removes all entries if any cached document differs from current.</param>
         public ReplicateCachingReceiver(
             Receiver<TParam, TResult> receiver,
-            Func<TParam, SrmDocument> getDocument,
-            Func<TParam, object> getSettings,
-            Func<TParam, int> getCacheKey)
+            CleanCacheCallback cleanCache = null)
         {
             _receiver = receiver;
-            _getDocument = getDocument;
-            _getSettings = getSettings;
-            _getCacheKey = getCacheKey;
+            _cleanCache = cleanCache ?? DefaultCleanCache;
+        }
+
+        /// <summary>
+        /// Default cache cleaning strategy: clear all entries if any cached document
+        /// differs from the current document. This requires exact document match.
+        /// </summary>
+        public static IEnumerable<int> DefaultCleanCache(SrmDocument currentDoc, IReadOnlyDictionary<int, SrmDocument> cachedEntries)
+        {
+            // If any entry is from a different document, remove all
+            if (cachedEntries.Values.Any(cachedDoc => !ReferenceEquals(cachedDoc, currentDoc)))
+                return cachedEntries.Keys.ToList();
+            return Enumerable.Empty<int>();
         }
 
         /// <summary>
@@ -111,7 +152,35 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <returns>True if a cached result exists for this key</returns>
         public bool TryGetCachedResult(int cacheKey, out TResult result)
         {
-            return _localCache.TryGetValue(cacheKey, out result);
+            if (_localCache.TryGetValue(cacheKey, out var entry))
+            {
+                result = entry.Result;
+                return true;
+            }
+            result = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get a cached result with its source document for the given cache key.
+        /// Used for incremental updates when switching replicates - the cached result
+        /// may be from an older document version but can still be used as prior data.
+        /// </summary>
+        /// <param name="cacheKey">The cache key (typically replicate index)</param>
+        /// <param name="result">The cached result if available</param>
+        /// <param name="sourceDocument">The document the result was computed from</param>
+        /// <returns>True if a cached result exists for this key</returns>
+        public bool TryGetCachedResultWithDocument(int cacheKey, out TResult result, out SrmDocument sourceDocument)
+        {
+            if (_localCache.TryGetValue(cacheKey, out var entry))
+            {
+                result = entry.Result;
+                sourceDocument = entry.Document;
+                return true;
+            }
+            result = default;
+            sourceDocument = null;
+            return false;
         }
 
         /// <summary>
@@ -147,8 +216,12 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Tries to get a cached or computed result for the given parameters.
         ///
-        /// First checks local cache. If the document or settings have changed,
-        /// the cache is cleared. On cache miss, falls back to the underlying Receiver.
+        /// First calls the cleanCache callback to remove stale entries, then checks
+        /// the local cache. An entry is a cache hit only if its document matches
+        /// the current document exactly (ReferenceEquals). Entries from older document
+        /// versions are kept for incremental updates via TryGetCachedResultWithDocument.
+        ///
+        /// On cache miss, falls back to the underlying Receiver.
         /// When the Receiver returns a result, it's stored in the local cache.
         ///
         /// If switching away from a calculation in progress, a completion listener
@@ -161,22 +234,46 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             ThrowIfError();
 
-            var document = _getDocument(param);
-            var settings = _getSettings(param);
-            var cacheKey = _getCacheKey(param);
+            var document = param.Document;
+            var settings = param.CacheSettings;
+            var cacheKey = param.CacheKey;
 
-            // Invalidate cache if document or settings changed
-            if (!ReferenceEquals(document, _cachedDocument) || !Equals(settings, _cachedSettings))
+            // Clear cache if settings changed
+            if (!Equals(settings, _cachedSettings))
             {
                 ClearCache();
-                _cachedDocument = document;
                 _cachedSettings = settings;
             }
 
-            // Check local cache first
-            if (_localCache.TryGetValue(cacheKey, out result))
+            // Clean stale cache entries using the callback
+            if (_localCache.Count > 0)
             {
-                return true;
+                var cachedDocuments = new ReadOnlyDictionary<int, SrmDocument>(
+                    _localCache.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Document));
+                var keysToRemove = _cleanCache(document, cachedDocuments);
+                foreach (var key in keysToRemove)
+                {
+                    _localCache.TryRemove(key, out _);
+                    // Also clean up any pending listener for this key
+                    if (_pendingListeners.TryGetValue(key, out var listener))
+                    {
+                        listener.Unlisten();
+                        _pendingListeners.Remove(key);
+                    }
+                }
+            }
+
+            // Check local cache for exact hit
+            if (_localCache.TryGetValue(cacheKey, out var entry))
+            {
+                if (ReferenceEquals(entry.Document, document))
+                {
+                    // Exact cache hit: same document, same replicate
+                    result = entry.Result;
+                    return true;
+                }
+                // Entry from older document version is kept for incremental updates
+                // via TryGetCachedResultWithDocument
             }
 
             // If switching to a different replicate while calculation is in progress,
@@ -190,8 +287,8 @@ namespace pwiz.Skyline.Controls.Graphs
             // Fall back to Receiver
             if (_receiver.TryGetProduct(param, out result))
             {
-                // Store in local cache
-                _localCache[cacheKey] = result;
+                // Store in local cache with the document the result was computed from
+                _localCache[cacheKey] = new CacheEntry(result, result.Document);
                 return true;
             }
 
@@ -226,8 +323,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool TryGetCurrentProduct(out TResult result)
         {
             // Check local cache first for the current cache key
-            if (_currentCacheKey != int.MinValue && _localCache.TryGetValue(_currentCacheKey, out result))
+            if (_currentCacheKey != int.MinValue && _localCache.TryGetValue(_currentCacheKey, out var entry))
             {
+                result = entry.Result;
                 return true;
             }
             return _receiver.TryGetCurrentProduct(out result);
@@ -240,7 +338,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ClearCache()
         {
             _localCache.Clear();
-            _cachedDocument = null;
             _cachedSettings = null;
             _currentCacheKey = int.MinValue;
             _reportedException = null;  // Allow new errors to be reported
@@ -285,8 +382,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else if (result.Value is TResult typedResult)
                 {
-                    // Store successful result in cache
-                    _owner._localCache[_cacheKey] = typedResult;
+                    // Store successful result in cache with its source document
+                    _owner._localCache[_cacheKey] = new CacheEntry(typedResult, typedResult.Document);
                 }
 
                 // Clean up: unlisten and remove from pending
