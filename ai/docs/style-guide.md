@@ -655,10 +655,10 @@ All source files should include the standard header with copyright and license i
 /*
  * Original author: [Author Name] <[email] .at. [domain]>,
  *                  [Affiliation]
- * AI assistance: Cursor ([model names]) <cursor .at. anysphere.co>
+ * AI assistance: [Tool] ([Model]) <[email]>
  *
  * Copyright [Year] University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -675,7 +675,9 @@ All source files should include the standard header with copyright and license i
 
 ### AI attribution guidelines
 - **Always include AI assistance line** when code is created or significantly modified with AI tools
-- **Specify the tool and models used**: `Cursor (Claude Sonnet 4)` or `Cursor (Claude Sonnet 4, ChatGPT-4)`
+- **Specify the tool and models used**:
+  - Cursor: `Cursor (Claude Sonnet 4)` or `Cursor (Claude Sonnet 4, ChatGPT-4)`
+  - Claude Code: `Claude Code (Claude Opus 4.5)` with email `noreply .at. anthropic.com`
 - **Use current year** for copyright when creating new files
 - **Use .at. format** for email addresses to avoid spam harvesting
 - **Position AI assistance** after original author but before copyright

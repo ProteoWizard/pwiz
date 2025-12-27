@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -53,8 +54,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private GraphData _data;
         private NodeTip _tip;
         private int _progressValue = -1;
+        private Stopwatch _progressStopwatch;
+        private const int PROGRESS_INITIAL_DELAY_MS = 300; // Wait before showing progress bar
+        private const int PROGRESS_UPDATE_INTERVAL_MS = 100; // Throttle progress UI updates after first show
         public PaneProgressBar _progressBar;
-        private Receiver<RetentionTimeRegressionSettings, RtRegressionResults> _graphDataReceiver;
+        private ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults> _graphDataReceiver;
 
         public RTLinearRegressionGraphPane(GraphSummary graphSummary, bool runToRun)
             : base(graphSummary)
@@ -63,12 +67,16 @@ namespace pwiz.Skyline.Controls.Graphs
             RunToRun = runToRun;
             Settings.Default.RTScoreCalculatorList.ListChanged += RTScoreCalculatorList_ListChanged;
             AllowDisplayTip = true;
-            _graphDataReceiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
+            var receiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
+            _graphDataReceiver = new ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>(
+                receiver,
+                ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>.DefaultCleanCache);
             _graphDataReceiver.ProgressChange += ProgressChangeAction;
         }
 
         public void Dispose()
         {
+            _graphDataReceiver?.Dispose();
             _progressBar?.Dispose();
             _progressBar = null;
             AllowDisplayTip = false;
@@ -93,6 +101,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 GraphSummary.BeginInvoke(new Action(() =>
                 {
+                    // Clear cache because newly initialized calculators require fresh computation.
+                    // Without this, the cached partial result (with GraphData == null) would be returned.
+                    _graphDataReceiver.ClearCache();
                     UpdateGraph(false);
                 }));
             }
@@ -111,10 +122,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 int newProgressValue = _graphDataReceiver.GetProgressValue();
                 if (newProgressValue != _progressValue)
                 {
-                    Title.Text = GraphsResources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
-                    Legend.IsVisible = false;
+                    if (_progressStopwatch == null)
+                    {
+                        // First progress update - start timing but don't show yet
+                        _progressStopwatch = Stopwatch.StartNew();
+                        _progressValue = newProgressValue;
+                        return;
+                    }
+
+                    bool progressBarShowing = _progressBar != null;
+                    int throttleMs = progressBarShowing ? PROGRESS_UPDATE_INTERVAL_MS : PROGRESS_INITIAL_DELAY_MS;
+
+                    if (_progressStopwatch.ElapsedMilliseconds < throttleMs)
+                    {
+                        return; // Skip this update, not enough time has passed
+                    }
+
+                    _progressStopwatch.Restart();
                     _progressBar ??= new PaneProgressBar(this);
-                    _progressBar?.UpdateProgress(_graphDataReceiver.GetProgressValue());
+                    _progressBar.UpdateProgress(newProgressValue);
                     _progressValue = newProgressValue;
                 }
             }
@@ -123,6 +149,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _progressBar?.Dispose();
                 _progressBar = null;
                 _progressValue = -1;
+                _progressStopwatch = null;
             }
         }
 
@@ -146,7 +173,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     new Rectangle(e.Location, new Size()),
                     e.Location);
 
-                GraphSummary.Cursor = Cursors.Hand;
+                sender.Cursor = Cursors.Hand;
                 return true;
             }
             else
@@ -340,13 +367,21 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void UpdateNow() 
+        private void UpdateNow()
         {
-            GraphObjList.Clear();
-            CurveList.Clear();
             var regressionSettings = GetRegressionSettings();
-            if (!_graphDataReceiver.TryGetProduct(regressionSettings, out var results))
+            RtRegressionResults results;
+            try
             {
+                if (!_graphDataReceiver.TryGetProduct(regressionSettings, out results))
+                {
+                    // Keep showing previous graph while calculating new data (stale-while-revalidate)
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(Program.MainWindow, e);
                 return;
             }
 
@@ -355,11 +390,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            _data = results.GraphData;
-            if (_data == null)
+            if (results.GraphData == null)
             {
                 return;
             }
+
+            // Clear only when new data is ready for seamless transition
+            GraphObjList.Clear();
+            CurveList.Clear();
+            _data = results.GraphData;
             GraphHelper.FormatGraphPane(this);
 
             var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
@@ -915,7 +954,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private class RtRegressionResults : Immutable
+        private class RtRegressionResults : Immutable, ICachingResult
         {
             public RtRegressionResults(RetentionTimeRegressionSettings regressionSettings)
             {
@@ -934,6 +973,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return ChangeProp(ImClone(this), im => im.GraphData = graphData);
             }
+
+            // ICachingResult implementation
+            public SrmDocument Document => RegressionSettings.Document;
         }
 
         private static Producer<RetentionTimeRegressionSettings, RtRegressionResults> _producer = new DataProducer();

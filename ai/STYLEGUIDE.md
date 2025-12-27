@@ -136,7 +136,7 @@ All source files should include:
 /*
  * Original author: [Author Name] <[email] .at. [domain]>,
  *                  [Affiliation]
- * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
+ * AI assistance: [Tool] ([Model]) <[email]>
  *
  * Copyright [Year] University of Washington - Seattle, WA
  *
@@ -144,6 +144,10 @@ All source files should include:
  * ...
  */
 ```
+
+**AI attribution formats**:
+- Cursor: `Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>`
+- Claude Code: `Claude Code (Claude Opus 4.5) <noreply .at. anthropic.com>`
 
 **Always include AI assistance line** when code is created/modified with AI tools.
 
