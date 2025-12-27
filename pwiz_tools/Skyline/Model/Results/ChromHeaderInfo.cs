@@ -3016,18 +3016,6 @@ namespace pwiz.Skyline.Model.Results
                 .Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
         }
 
-        public TimeIntensities GetInterpolatedIntensitiesForTimes(ImmutableList<float> interpolatedTimes)
-        {
-            if (_groupInfo?.TimeIntensitiesGroup is RawTimeIntensities rawTimeIntensities)
-            {
-                bool inferZeros = rawTimeIntensities.InferZeroes;
-                return rawTimeIntensities.TransitionTimeIntensities[TransitionIndex]
-                    .Interpolate(interpolatedTimes, inferZeros);
-            }
-
-            return TimeIntensities;
-        }
-
         public static float[] SavitzkyGolaySmooth(float[] intensities)
         {
             if (intensities == null || intensities.Length < 9)
