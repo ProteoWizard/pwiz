@@ -47,7 +47,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Configuration
-$WorkDir = "C:\proj\pwiz"
+$WorkDir = "C:\proj\pwiz-ai"
 $LogDir = Join-Path $WorkDir "ai\.tmp\scheduled"
 $Timestamp = Get-Date -Format "yyyyMMdd-HHmm"
 $LogFile = Join-Path $LogDir "daily-$Timestamp.log"
@@ -76,6 +76,7 @@ $ClaudeArgs = @(
 if ($DryRun) {
     Write-Host "Would execute:" -ForegroundColor Cyan
     Write-Host "  Working directory: $WorkDir"
+    Write-Host "  Git pull: git pull origin ai-context"
     Write-Host "  Log file: $LogFile"
     Write-Host "  Command: claude $($ClaudeArgs -join ' ')"
     exit 0
@@ -84,6 +85,22 @@ if ($DryRun) {
 # Log start
 $StartTime = Get-Date
 "[$StartTime] Starting Claude Code daily report" | Out-File -FilePath $LogFile -Encoding UTF8
+
+# Pull latest ai-context branch
+"[$(Get-Date)] Pulling latest ai-context branch..." | Out-File -FilePath $LogFile -Append -Encoding UTF8
+Push-Location $WorkDir
+try {
+    $GitOutput = git pull origin ai-context 2>&1
+    $GitOutput | Out-File -FilePath $LogFile -Append -Encoding UTF8
+    if ($LASTEXITCODE -ne 0) {
+        "[$(Get-Date)] WARNING: Git pull failed, continuing with existing version" | Out-File -FilePath $LogFile -Append -Encoding UTF8
+    } else {
+        "[$(Get-Date)] Git pull successful" | Out-File -FilePath $LogFile -Append -Encoding UTF8
+    }
+}
+finally {
+    Pop-Location
+}
 
 # Change to project directory
 Push-Location $WorkDir

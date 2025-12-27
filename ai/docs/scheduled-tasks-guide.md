@@ -45,6 +45,7 @@ All outputs stay within the project under `ai/.tmp/`:
 ## The Daily Report Script
 
 The script `ai/scripts/Invoke-DailyReport.ps1` handles:
+- Pulling latest `ai-context` branch (ensures latest scripts/commands)
 - Running Claude Code with `/pw-daily`
 - Emailing results via Gmail MCP
 - Logging to `ai/.tmp/scheduled/`
@@ -77,7 +78,7 @@ pwsh -Command "& './ai/scripts/Invoke-DailyReport.ps1' -DryRun"
 ### Step 1: Test the Script Manually
 
 ```powershell
-cd C:\proj\pwiz
+cd C:\proj\pwiz-ai
 pwsh -Command "& './ai/scripts/Invoke-DailyReport.ps1' -DryRun"
 ```
 
@@ -92,10 +93,10 @@ Run as Administrator:
 ```powershell
 $taskAction = New-ScheduledTaskAction `
     -Execute "pwsh" `
-    -Argument "-NoProfile -File C:\proj\pwiz\ai\scripts\Invoke-DailyReport.ps1" `
-    -WorkingDirectory "C:\proj\pwiz"
+    -Argument "-NoProfile -File C:\proj\pwiz-ai\ai\scripts\Invoke-DailyReport.ps1" `
+    -WorkingDirectory "C:\proj\pwiz-ai"
 
-$taskTrigger = New-ScheduledTaskTrigger -Daily -At 9:00AM
+$taskTrigger = New-ScheduledTaskTrigger -Daily -At 8:30AM
 
 $taskSettings = New-ScheduledTaskSettingsSet `
     -RunOnlyIfNetworkAvailable `
@@ -121,11 +122,11 @@ Register-ScheduledTask `
 1. Open "Task Scheduler" (search in Start menu)
 2. Click "Create Basic Task"
 3. Name: "Claude-Daily-Report"
-4. Trigger: Daily at 9:00 AM
+4. Trigger: Daily at 8:30 AM
 5. Action: Start a program
    - Program: `pwsh`
-   - Arguments: `-NoProfile -File C:\proj\pwiz\ai\scripts\Invoke-DailyReport.ps1`
-   - Start in: `C:\proj\pwiz`
+   - Arguments: `-NoProfile -File C:\proj\pwiz-ai\ai\scripts\Invoke-DailyReport.ps1`
+   - Start in: `C:\proj\pwiz-ai`
 6. Finish, then edit task properties:
    - Check "Run with highest privileges"
    - Check "Run only when network is available"
@@ -139,8 +140,8 @@ Pass the `-Recipient` parameter:
 ```powershell
 $taskAction = New-ScheduledTaskAction `
     -Execute "pwsh" `
-    -Argument "-NoProfile -File C:\proj\pwiz\ai\scripts\Invoke-DailyReport.ps1 -Recipient 'team@example.com'" `
-    -WorkingDirectory "C:\proj\pwiz"
+    -Argument "-NoProfile -File C:\proj\pwiz-ai\ai\scripts\Invoke-DailyReport.ps1 -Recipient 'team@example.com'" `
+    -WorkingDirectory "C:\proj\pwiz-ai"
 ```
 
 ### Change Schedule
