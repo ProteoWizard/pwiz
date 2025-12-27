@@ -12,7 +12,14 @@ pip install mcp labkey
 
 ### 2. Configure Authentication
 
-Create a netrc file with your skyline.ms credentials in the standard location:
+Create a personal `+claude` account for MCP access:
+- **Team members**: `yourname+claude@proteinms.net`
+- **Interns/others**: `yourname+claude@gmail.com`
+- Ask a team lead to add your account to the "Agents" group on skyline.ms
+
+> **Important**: The `+claude` suffix only works with Gmail-backed email providers (@proteinms.net, @gmail.com). It will **not** work with @uw.edu or similar providers.
+
+Create a netrc file with your credentials in the standard location:
 
 - **Unix/macOS**: `~/.netrc`
 - **Windows**: `~/.netrc` or `~/_netrc`
@@ -20,17 +27,17 @@ Create a netrc file with your skyline.ms credentials in the standard location:
 File contents:
 ```
 machine skyline.ms
-login your-email@example.com
+login yourname+claude@domain.com
 password your-password
 ```
 
-> **Security note:** The netrc file contains credentials in plain text. Ensure appropriate file permissions and never commit it to version control.
+> **Why +claude accounts?** Individual accounts provide attribution for any edits made via Claude, while the Agents group restricts permissions to least-privilege access.
 
 ### 3. Register with Claude Code
 
 ```bash
 # Replace <repo-root> with your actual repository path
-claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+claude mcp add labkey -- python <repo-root>/ai/mcp/LabKeyMcp/server.py
 ```
 
 Or add to your Claude Code settings (`~/.claude/settings.json`):
@@ -40,7 +47,7 @@ Or add to your Claude Code settings (`~/.claude/settings.json`):
   "mcpServers": {
     "labkey": {
       "command": "python",
-      "args": ["<repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py"]
+      "args": ["<repo-root>/ai/mcp/LabKeyMcp/server.py"]
     }
   }
 }
@@ -50,7 +57,7 @@ Or add to your Claude Code settings (`~/.claude/settings.json`):
 
 ```bash
 # Replace <repo-root> with your actual repository path
-python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
+python <repo-root>/ai/mcp/LabKeyMcp/test_connection.py
 ```
 
 ## Available Tools
@@ -79,7 +86,8 @@ query_table(
 
 | Tool | Description |
 |------|-------------|
-| `query_exceptions(days, max_rows)` | Query recent exceptions, sorted by date |
+| `save_exceptions_report(report_date)` | Generate daily report, save to `ai/.tmp/exceptions-report-YYYYMMDD.md` |
+| `query_exceptions(days, max_rows)` | Query recent exceptions, returns summary |
 | `get_exception_details(exception_id)` | Get full stack trace and details for an exception |
 
 ### Nightly Test Tools
@@ -152,6 +160,6 @@ python server.py
 
 ## Related Documentation
 
-- [Nightly Test Analysis](../../../ai/docs/nightly-test-analysis.md) - Test analysis workflow and queries
-- [Exception Triage System](../../../ai/docs/exception-triage-system.md) - Exception workflow documentation
-- [Developer Setup Guide](../../../ai/docs/developer-setup-guide.md) - Environment configuration
+- [Nightly Tests](../../docs/mcp/nightly-tests.md) - Test analysis workflow and queries
+- [Exceptions](../../docs/mcp/exceptions.md) - Exception workflow documentation
+- [Developer Setup Guide](../../docs/developer-setup-guide.md) - Environment configuration
