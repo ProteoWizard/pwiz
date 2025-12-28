@@ -20,7 +20,6 @@
 using System;
 using System.Drawing;
 using System.Globalization;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Proteome;
@@ -30,9 +29,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public class FoldChangeRowTipProvider : ITipProvider
     {
-        private readonly FoldChangeBindingSource.FoldChangeRow _row;
+        private readonly FoldChangeRow _row;
 
-        public FoldChangeRowTipProvider(FoldChangeBindingSource.FoldChangeRow row)
+        public FoldChangeRowTipProvider(FoldChangeRow row)
         {
             _row = row;
         }

@@ -223,6 +223,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apex Transition Ion Count.
+        /// </summary>
+        public static string ApexTransitionIonCount {
+            get {
+                return ResourceManager.GetString("ApexTransitionIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Area.
         /// </summary>
         public static string Area {
@@ -669,6 +678,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ConfidenceLevel {
             get {
                 return ResourceManager.GetString("ConfidenceLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constant Neutral Loss.
+        /// </summary>
+        public static string ConstantNeutralLoss {
+            get {
+                return ResourceManager.GetString("ConstantNeutralLoss", resourceCulture);
             }
         }
         
@@ -1731,6 +1749,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LcPeakTotalIonCurrentAreaMS1 {
             get {
                 return ResourceManager.GetString("LcPeakTotalIonCurrentAreaMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Transition Ion Count.
+        /// </summary>
+        public static string LcPeakTransitionIonCount {
+            get {
+                return ResourceManager.GetString("LcPeakTransitionIonCount", resourceCulture);
             }
         }
         
@@ -4395,6 +4422,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string TransitionCount {
             get {
                 return ResourceManager.GetString("TransitionCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition Ion Metrics.
+        /// </summary>
+        public static string TransitionIonMetrics {
+            get {
+                return ResourceManager.GetString("TransitionIonMetrics", resourceCulture);
             }
         }
         

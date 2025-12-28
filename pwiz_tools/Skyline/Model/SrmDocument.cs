@@ -57,8 +57,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
-using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -190,6 +188,31 @@ namespace pwiz.Skyline.Model
         /// True when the document change is caused by opening a file
         /// </summary>
         public bool IsOpeningFile { get; private set; }
+    }
+
+    /// <summary>
+    /// EventArgs supplied with the <see cref="SkylineWindow.DocumentSavedEvent"/>.
+    /// The document path refers to the saved location. A boolean is supplied to
+    /// allow changing behavior if this document was saved for the first time.
+    /// </summary>
+    public class DocumentSavedEventArgs : EventArgs
+    {
+        public DocumentSavedEventArgs(string documentPath, bool isSaveAs = false)
+        {
+            DocumentFilePath = documentPath;
+            IsSaveAs = isSaveAs;
+        }
+
+        /// <summary>
+        /// Path where the document was saved.
+        /// </summary>
+        public string DocumentFilePath { get; }
+
+        /// <summary>
+        /// True when this document is saved to a new location. This happens when a new document
+        /// is saved for the first time or an existing document is saved to a new path.
+        /// </summary>
+        public bool IsSaveAs { get; }
     }
 
     /// <summary>
@@ -1858,13 +1881,13 @@ namespace pwiz.Skyline.Model
             {
                 throw new ArgumentOutOfRangeException(string.Format(
                     ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
-                    TransitionGroupTreeNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), nameSet));
+                    TransitionGroupDocNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), nameSet));
             }
             else if (find.IndexInfo == -1)
             {
                 throw new ArgumentOutOfRangeException(string.Format(
                     ModelResources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
-                    TransitionGroupTreeNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), filePath));
+                    TransitionGroupDocNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), filePath));
             }
 
             var nodeGroupNew = change(find.NodeGroup, find.ChromInfo, Settings.TransitionSettings.Instrument.MzMatchTolerance, find.IndexSet, find.FileId,
@@ -2628,67 +2651,6 @@ namespace pwiz.Skyline.Model
         #endregion
 
         /// <summary>
-        /// Compares documents, returns null if equal, or a text diff if not
-        /// </summary>
-        public static string EqualsVerbose(SrmDocument expected, SrmDocument actual)
-        {
-            if (ReferenceEquals(null, expected))
-            {
-                return ReferenceEquals(null, actual) ? null : @"expected a null document";
-            }
-            if (ReferenceEquals(null, actual))
-            {
-                return @"expected a non-null document";
-            }
-            if (expected.Equals(actual))
-            {
-                return null;
-            }
-
-            string textExpected;
-            using (var stringWriterExpected = new StringWriter())
-            using (var xmlWriterExpected = new XmlTextWriter(stringWriterExpected))
-            {
-                xmlWriterExpected.Formatting = Formatting.Indented;
-                expected.Serialize(xmlWriterExpected, null, SkylineVersion.CURRENT, null);
-                textExpected = stringWriterExpected.ToString();
-            }
-            string textActual;
-            using (var stringWriterActual = new StringWriter())
-            using (var xmlWriterActual = new XmlTextWriter(stringWriterActual))
-            {
-                xmlWriterActual.Formatting = Formatting.Indented;
-                actual.Serialize(xmlWriterActual, null, SkylineVersion.CURRENT, null);
-                textActual = stringWriterActual.ToString();
-            }
-
-            var linesExpected = textExpected.Split('\n');
-            var linesActual = textActual.Split('\n');
-            int lineNumber;
-            for (lineNumber = 0; lineNumber < linesExpected.Length && lineNumber < linesActual.Length; lineNumber++)
-            {
-                var lineExpected = linesExpected[lineNumber];
-                var lineActual = linesActual[lineNumber];
-                if (!Equals(lineExpected, lineActual))
-                {
-                    return $@"Expected XML representation of document does not match actual at line {lineNumber}\n" +
-                           $@"Expected line:\n{lineExpected}\n" +
-                           $@"Actual line:\n{lineActual}\n" +
-                           $@"Expected full document:\n{textExpected}\n" +
-                           $@"Actual full document:\n{textActual}\n";
-                }
-            }
-            if (lineNumber < linesExpected.Length || lineNumber < linesActual.Length)
-            {
-                return @"Expected XML representation of document is not the same length as actual\n"+
-                       $@"Expected full document:\n{textExpected}\n"+
-                       $@"Actual full document:\n{textActual}\n";
-            }
-
-            return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
-        }
-
-        /// <summary>
         /// If the passed in IdentityPath is below the specified Level, then return the ancestor IdentityPath
         /// at the specified level.
         /// If the passed in IdentityPath is above the specified level, then return all descendent IdentityPaths
@@ -2763,6 +2725,15 @@ namespace pwiz.Skyline.Model
             {
                 return (base.GetHashCode()*397) ^ Settings.GetHashCode();
             }
+        }
+
+        public override string ToString()
+        {
+            // For debugging convenience, not user-facing
+            // These are the same values in the same order used to summarize the document in the UI (lower right corner of Skyline window).
+            // That's also the same values and order as used in CheckDocumentState() calls.
+            // This is terse by design, for ease of display in debugger.
+            return $@"doc {MoleculeGroupCount},{MoleculeCount},{MoleculeTransitionGroupCount},{MoleculeTransitionCount}"; 
         }
 
         #endregion

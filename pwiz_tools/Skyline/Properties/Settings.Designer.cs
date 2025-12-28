@@ -1746,22 +1746,19 @@ namespace pwiz.Skyline.Properties {
                 this["PanoramaServerExpansion"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ArdiaServerExpansion
-        {
-            get
-            {
+        public string ArdiaServerExpansion {
+            get {
                 return ((string)(this["ArdiaServerExpansion"]));
             }
-            set
-            {
+            set {
                 this["ArdiaServerExpansion"] = value;
             }
         }
-
+        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0.8")]
@@ -3609,6 +3606,30 @@ namespace pwiz.Skyline.Properties {
         public string MsFraggerDownloadUrl {
             get {
                 return ((string)(this["MsFraggerDownloadUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FilesViewShowFileNames {
+            get {
+                return ((bool)(this["FilesViewShowFileNames"]));
+            }
+            set {
+                this["FilesViewShowFileNames"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public int MaxChromatogramGraphs {
+            get {
+                return ((int)(this["MaxChromatogramGraphs"]));
+            }
+            set {
+                this["MaxChromatogramGraphs"] = value;
             }
         }
     }

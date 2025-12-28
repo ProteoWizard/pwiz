@@ -127,4 +127,10 @@
     <value>waters_connect</value>
     <comment>Lower case is intentional branding.</comment>
   </data>
+  <data name="Unifi_GroupBox_Label" xml:space="preserve">
+    <value>Advanced Unifi settings</value>
+  </data>
+  <data name="Waters_Connect_GroupBox_Label" xml:space="preserve">
+    <value>Advanced waters_connect settings</value>
+  </data>
 </root>

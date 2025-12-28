@@ -775,8 +775,7 @@ namespace pwiz.Skyline.Model.Lib
 // ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
         private static readonly RegexOptions NOCASE = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
-        // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
-        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
+        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16]
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks):\s*(\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
         private static readonly string COMMENT = "Comment:";
         private static readonly string COMMENTS = "Comments:";
@@ -1133,11 +1132,11 @@ namespace pwiz.Skyline.Model.Lib
                             string mzField = linePeak.Substring(0, iSeperator1++);
                             string intensityField = linePeak.Substring(iSeperator1, iSeperator2 - iSeperator1);
 
-                            if (!TextUtil.TryParseFloatUncertainCulture(mzField, out var mz))
+                            if (!CommonTextUtil.TryParseFloatUncertainCulture(mzField, out var mz))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(i, sequence);
                             }
-                            if (!TextUtil.TryParseFloatUncertainCulture(intensityField, out var intensity))
+                            if (!CommonTextUtil.TryParseFloatUncertainCulture(intensityField, out var intensity))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(i, sequence);
                             }
@@ -1210,7 +1209,7 @@ namespace pwiz.Skyline.Model.Lib
                     libraryEntries.Add(info);
                 }
 
-                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
+                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries, Path.GetFileName(FilePath));
 
                 long locationHeaders = outStream.Position;
                 foreach (var info in libraryEntries)
@@ -1295,16 +1294,24 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return false;
             }
-            Match match = REGEX_NAME.Match(line);
+            // Watch out for n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
+            // Skyline should treat this as "A[43]LAVLALLSLSGLEAIQR" or AACDEFGHIK[17]
+            var scrubbed = line.Replace(@"c[", @"["); // Deal with c-term
+            var nterm = scrubbed.IndexOf(@"n[", StringComparison.Ordinal);
+            if (nterm > 0) // Deal with n-term
+            { 
+                var closeBracket = line.IndexOf(']');
+                scrubbed = scrubbed.Substring(0, nterm) + // "Name: "
+                           scrubbed.Substring(closeBracket+1, 1) + // "A"
+                           line.Substring(nterm+1, closeBracket - nterm) + // [43]
+                           scrubbed.Substring(closeBracket + 2); // LAVLALLSLSGLEAIQR
+            }
+            Match match = REGEX_NAME.Match(scrubbed);
             if (!match.Success)
             {
-                // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
-                if (!REGEX_NAME.Match(line.Replace(@"n[",@"[").Replace(@"c[", @"[")).Success)
-                {
-                    // Try to recognize as small molecule
-                    isPeptide = false;
-                    match = REGEX_NAME_SMALLMOL.Match(line);
-                }
+                // Try to recognize as small molecule
+                isPeptide = false;
+                match = REGEX_NAME_SMALLMOL.Match(line);
             }
 
             if (!match.Success)
@@ -1318,8 +1325,6 @@ namespace pwiz.Skyline.Model.Lib
             if (isPeptide)
             {
                 charge = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
-                // TODO: Handle n and c terminal notation e.g. "Name: n[43]ALAVLALLSLSGLEAIQR/5" or "Name: AACDEFGHIKc[17]/3"
-                // sequence = sequence.Replace(@"n[", @"[").Replace(@"c[", @"[");
             }
             return true;
         }
@@ -1355,7 +1360,7 @@ namespace pwiz.Skyline.Model.Lib
                 var match = REGEX_CCS.Match(line);
                 if (match.Success)
                 {
-                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var ccs))
+                    if (!CommonTextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var ccs))
                     {
                         ThrowIOException(lineCount,
                             string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__,
@@ -1564,7 +1569,7 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_MOLWEIGHT.Match(line);
                 if (match.Success)
                 {
-                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
+                    if (!CommonTextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
                     {
                         ThrowIOException(lineCount,
                             string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
@@ -1580,7 +1585,7 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_EXACTMASS.Match(line);
                 if (match.Success)
                 {
-                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var em))
+                    if (!CommonTextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var em))
                     {
                         ThrowIOException(lineCount,
                             string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
@@ -1812,7 +1817,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             double rt;
             var valString = rtString.Split(MINOR_SEP).First();
-            if (!TextUtil.TryParseDoubleUncertainCulture(valString, out rt))
+            if (!CommonTextUtil.TryParseDoubleUncertainCulture(valString, out rt))
                 return null;
             return isMinutes ? rt : rt / 60;
         }

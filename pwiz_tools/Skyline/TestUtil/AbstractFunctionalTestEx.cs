@@ -83,7 +83,8 @@ namespace pwiz.SkylineTestUtil
             var unexpectedOpenForms = FindOpenForms<Form>().Where(f => f.Modal).Select(form => form.Name).ToList();
             AssertEx.AreEqual(0, unexpectedOpenForms.Count, $@"Can't open a document when other dialogs are still open: {CommonTextUtil.LineSeparate(unexpectedOpenForms)}");
 
-            string documentFile = null;
+            string documentFile = documentPath; // Default to assuming an absolute path
+            // Check for relative path in test files dirs
             foreach (var testFileDir in TestFilesDirs)
             {
                 documentFile = testFileDir.GetTestPath(documentPath);
@@ -109,6 +110,17 @@ namespace pwiz.SkylineTestUtil
             var documentFile = TestFilesDir.GetTestPath(documentPath);
             WaitForCondition(() => File.Exists(documentFile));
             SkylineWindow.BeginInvoke((Action) (() => SkylineWindow.OpenFile(documentFile)));
+        }
+
+        /// <summary>
+        /// Restore the document to its original state using the undo buffer.
+        /// Much faster than reopening from disk since it swaps in-memory immutable trees.
+        /// </summary>
+        public SrmDocument RestoreOriginalDocument(int version = 0)
+        {
+            using var _ = new WaitDocumentChange(null, true);
+            RunUI(() => SkylineWindow.UndoAll(version));
+            return SkylineWindow.Document;
         }
 
         public static void CheckConsistentLibraryInfo(SrmDocument doc = null)
@@ -389,48 +401,26 @@ namespace pwiz.SkylineTestUtil
             return def;
         }
 
-        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue)
+        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue, string identityAnnotation = null)
         {
             var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
 
             RunUI(() =>
             {
                 dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
+                dialog.ControlAnnotation = controlGroupAnnotation;
             });
 
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
+            WaitForConditionUI(() => dialog.ControlValueOptions.Any());
 
             RunUI(() =>
             {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.RadioScopePerProtein.Checked = false;
-            });
-
-            OkDialog(dialog, dialog.OkDialog);
-
-            return FindGroupComparison(name);
-        }
-
-        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation,
-            string controlGroupValue, string compareValue, string identityAnnotation)
-        {
-            var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
-
-            RunUI(() =>
-            {
-                dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
-            });
-
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
-
-            RunUI(() =>
-            {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
+                dialog.ControlValue = controlGroupValue;
+                dialog.CaseValue = compareValue;
+                if (identityAnnotation != null)
+                {
+                    dialog.IdentityAnnotation = identityAnnotation;
+                }
                 dialog.RadioScopePerProtein.Checked = false;
             });
 
@@ -499,20 +489,49 @@ namespace pwiz.SkylineTestUtil
 
         public static void TestHttpClientWithNoNetwork(Action actionToFail, string prefix = null)
         {
+            TestHttpClientWithNoNetwork(actionToFail, (expectedMessage, actualMessage) =>
+            {
+                if (prefix != null)
+                    expectedMessage = TextUtil.LineSeparate(prefix, expectedMessage);
+
+                Assert.AreEqual(expectedMessage, actualMessage);
+            });
+        }
+
+        public static void TestHttpClientWithNoNetworkEx(Action actionToFail, params string[] extraParts)
+        {
+            TestHttpClientWithNoNetwork(actionToFail, (expectedMessage, actualMessage) =>
+            {
+                AssertEx.Contains(actualMessage, expectedMessage);
+                AssertEx.Contains(actualMessage, extraParts);
+            });
+        }
+
+        public static void TestHttpClientWithNoNetwork(Action actionToFail, Action<string, string> validateMessage)
+        {
             using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
             var expectedMessage = helper.GetExpectedMessage();
-            if (prefix != null)
-                expectedMessage = TextUtil.LineSeparate(prefix, expectedMessage);
-            TestMessageDlgShown(actionToFail, expectedMessage);
+            TestMessageDlgShown(actionToFail, actualMessage => validateMessage(expectedMessage, actualMessage));
         }
 
         public static void TestMessageDlgShown(Action actionToShow, string expectedMessage)
         {
-            RunDlg<MessageDlg>(actionToShow, errorDlg =>
-            {
-                Assert.AreEqual(expectedMessage, errorDlg.Message);
-                errorDlg.OkDialog();
-            });
+            TestMessageDlgShown(actionToShow, actualMessage =>
+                Assert.AreEqual(expectedMessage, actualMessage));
+        }
+
+        public static void TestMessageDlgShownContaining(Action actionToShow, params string[] parts)
+        {
+            TestMessageDlgShown(actionToShow, actualMessage =>
+                AssertEx.Contains(actualMessage, parts));
+        }
+
+        public static void TestMessageDlgShown(Action actionToShow, Action<string> validateMessage)
+        {
+            // Cannot use RunDlg here because it requires actionShow to complete.
+            var errDlg = ShowDialog<MessageDlg>(actionToShow);
+            RunUI(() => validateMessage(errDlg.Message));
+            OkDialog(errDlg, errDlg.OkDialog);
         }
 
         public class Tool : IDisposable

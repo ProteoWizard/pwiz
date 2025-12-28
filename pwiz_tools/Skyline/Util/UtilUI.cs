@@ -90,11 +90,6 @@ namespace pwiz.Skyline.Util
         bool IsDocumentChanged(SrmDocument docOrig);
 
         /// <summary>
-        /// Shows a dialog box on the right thread, parented to the progress form
-        /// </summary>
-        DialogResult ShowDialog(Func<IWin32Window, DialogResult> show);
-
-        /// <summary>
         /// Convenience function which calculates progress percentage and throws
         /// an OperationCanceledOperation if the user has canceled.
         /// </summary>
@@ -456,7 +451,19 @@ window.onload = submitForm;
                     seenZoom = true;
                 }
             }
-            ZedGraphClipboard.AddToContextMenu(graphControl, menuStrip);            
+            ZedGraphClipboard.AddToContextMenu(graphControl, menuStrip);
+        }
+    }
+
+    public static class BitmapExtensions
+    {
+        /// <summary>
+        /// Converts a Bitmap to an Icon.
+        /// Note: The caller is responsible for disposing the returned Icon.
+        /// </summary>
+        public static Icon ToIcon(this Bitmap bitmap)
+        {
+            return Icon.FromHandle(bitmap.GetHicon());
         }
     }
 }

@@ -159,6 +159,7 @@
     <Compile Include="AddMixedLibraryTest.cs" />
     <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
+    <Compile Include="AlertDlgIconsTest.cs" />
     <Compile Include="AlertDlgTest.cs" />
     <Compile Include="AlignedIdTimesTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
@@ -175,8 +176,12 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
+    <Compile Include="FilesTreeFileSystemTest.cs" />
+    <Compile Include="SkylineWindowEventsTest.cs" />
+    <Compile Include="FilesModelTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
+    <Compile Include="ConstantNeutralLossTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="CopyProteinGroupTest.cs" />
     <Compile Include="CrosslinkImsTest.cs" />
@@ -187,6 +192,7 @@
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EditablePivotTest.cs" />
+    <Compile Include="LookupGroupComparisonTest.cs" />
     <Compile Include="HelpDocumentationContentTest.cs" />
     <Compile Include="ManagingSearchToolsTest.cs" />
     <Compile Include="EditNeutralLossesTest.cs" />
@@ -194,6 +200,7 @@
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
     <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
     <Compile Include="ExportPropertiesTest.cs" />
+    <Compile Include="FilesTreeFormTest.cs" />
     <Compile Include="FindNodeCancelTest.cs" />
     <Compile Include="FullScanPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
@@ -269,6 +276,7 @@
     <Compile Include="NewDocumentLoadLibrariesTest.cs" />
     <Compile Include="TargetRatiosTest.cs" />
     <Compile Include="TestPeakAreaDotpGraph.cs" />
+    <Compile Include="WatersConnectMethodExportTest.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
@@ -575,6 +583,7 @@
     <None Include="ChromGraphTransformTest.zip" />
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
+    <None Include="ConstantNeutralLossTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="CrosslinkImsTest.zip" />
     <None Include="CrosslinkingTest.zip" />
@@ -730,6 +739,7 @@
     <None Include="UniquePeptidesDialogTest.zip" />
     <None Include="UpdateGlobalStandardTest.zip" />
     <None Include="VolcanoPlotLayoutTest.zip" />
+    <None Include="WatersConnectMethodExportTest.zip" />
     <None Include="ZedGraphClipboardTest.zip" />
   </ItemGroup>
   <ItemGroup>

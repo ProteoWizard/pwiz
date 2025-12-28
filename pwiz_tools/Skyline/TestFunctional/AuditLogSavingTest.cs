@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Controls.Databinding.AuditLog;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
@@ -25,9 +26,8 @@ namespace pwiz.SkylineTestFunctional
         public void TestAuditLogSaving()
         {
             TestFilesZip = "TestFunctional/AuditLogSavingTest.zip";
-            AuditLogList.IgnoreTestChecks = true;
-            RunFunctionalTest();
-            AuditLogList.IgnoreTestChecks = false;
+            using (new AuditLogList.IgnoreTestChecksScope())
+                RunFunctionalTest();
 
             Assert.IsFalse(IsRecordMode, "Successfully recorded data");
         }

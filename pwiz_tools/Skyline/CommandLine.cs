@@ -25,7 +25,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Forms; // for IWin32Window used by ILongWaitBroker
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.PanoramaClient;
@@ -2710,7 +2709,7 @@ namespace pwiz.Skyline
                 // But then set to NaN the weights that have unknown values for this dataset
                 for (int i = 0; i < initialWeights.Length; ++i)
                 {
-                    if (!targetDecoyGenerator.EligibleScores[i])
+                    if (!targetDecoyGenerator.EligibleScores[i].EnabledByDefault)
                         initialWeights[i] = double.NaN;
                 }
                 var initialParams = new LinearModelParams(initialWeights);
@@ -4579,12 +4578,12 @@ namespace pwiz.Skyline
 
             private bool PublishDocToPanorama(PanoramaServer panoramaServer, string zipFilePath, string panoramaFolder)
             {
-                var waitBroker = new CommandProgressMonitor(_statusWriter,
-                    new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));
+                IProgressStatus progressStatus = new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama);
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_statusWriter, progressStatus);
                 IPanoramaClient publishClient = new WebPanoramaClient(panoramaServer.URI, panoramaServer.Username, panoramaServer.Password);
                 try
                 {
-                    publishClient.SendZipFile(panoramaFolder, zipFilePath, waitBroker);
+                    publishClient.SendZipFile(panoramaFolder, zipFilePath, progressMonitor, progressStatus);
                     return true;
                 }
                 catch (Exception x)
@@ -4986,11 +4985,6 @@ namespace pwiz.Skyline
         public bool IsDocumentChanged(SrmDocument docOrig)
         {
             return true;
-        }
-
-        public DialogResult ShowDialog(Func<IWin32Window, DialogResult> show)
-        {
-            return DialogResult.OK;
         }
 
         public void SetProgressCheckCancel(int step, int totalSteps)

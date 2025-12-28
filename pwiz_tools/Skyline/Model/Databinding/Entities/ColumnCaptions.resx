@@ -171,6 +171,9 @@
   <data name="ApexTotalIonCountMS1">
     <value>Apex Total Ion Count MS1</value>
   </data>
+  <data name="ApexTransitionIonCount">
+    <value>Apex Transition Ion Count</value>
+  </data>
   <data name="Area">
     <value>Area</value>
   </data>
@@ -320,6 +323,9 @@
   </data>
   <data name="ConfidenceLevel">
     <value>Confidence Level</value>
+  </data>
+  <data name="ConstantNeutralLoss">
+    <value>Constant Neutral Loss</value>
   </data>
   <data name="CountTruncated">
     <value>Count Truncated</value>
@@ -674,6 +680,9 @@
   </data>
   <data name="LcPeakTotalIonCurrentAreaMS1">
     <value>LC Peak Total Ion Current Area MS1</value>
+  </data>
+  <data name="LcPeakTransitionIonCount">
+    <value>LC Peak Transition Ion Count</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>Library Collision Cross Section</value>
@@ -1562,6 +1571,9 @@
   </data>
   <data name="TransitionCount">
     <value>Transition Count</value>
+  </data>
+  <data name="TransitionIonMetrics">
+    <value>Transition Ion Metrics</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>Transition Is Decoy</value>

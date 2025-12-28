@@ -750,6 +750,7 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 <tr><td class="ColumnCaption">离子对结果为 MS1</td><td class="ColumnDescription">此结果是否从 MS1 扫描获取。</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">母离子结果（单个）</td><td class="ColumnDescription">母离子结果（单个）</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">母离子结果（单个）</a></td></tr>
 <tr><td class="ColumnCaption">离子对结果定位器</td><td class="ColumnDescription">文档内的离子对结果特殊标识符。这以“TransitionResult:”开头，并通常以重复测定名称结束，但可能包含最优步和结果文件的额外属性。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Transition Ion Metrics</td><td class="ColumnDescription">Values related to the number of ions in the mass spectrometer</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">Transition Ion Metrics</a></td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult"><span class="RowType">PrecursorQuantificationResult</span>
@@ -820,6 +821,13 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 </table>
 
 </td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">Transition Ion Metrics</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LC Peak Transition Ion Count</td><td class="ColumnDescription">Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Transition Ion Count</td><td class="ColumnDescription">Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition</td><td class="ColumnType">Double</td></tr>
 </table>
 
 

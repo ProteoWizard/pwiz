@@ -34,6 +34,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using pwiz.Common.CommonResources;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -110,7 +111,7 @@ namespace pwiz.Common.SystemUtil
         /// http://wyupdate.googlecode.com/svn-history/r401/trunk/frmFilesInUse.cs (no copyright in code at time of viewing)
         /// 
         /// </remarks>
-        static public List<Process> GetProcessesUsingFile(string fullPathToFile)
+        public static List<Process> GetProcessesUsingFile(string fullPathToFile)
         {
             uint handle;
             string key = Guid.NewGuid().ToString();
@@ -127,7 +128,7 @@ namespace pwiz.Common.SystemUtil
                     pnProcInfo = 0,
                     lpdwRebootReasons = RmRebootReasonNone;
 
-                string[] resources = new string[] { fullPathToFile }; // Just checking on one resource.
+                string[] resources = new[] { fullPathToFile }; // Just checking on one resource.
 
                 res = RmRegisterResources(handle, (uint)resources.Length, resources, 0, null, 0, null);
 
@@ -222,22 +223,25 @@ namespace pwiz.Common.SystemUtil
                 if (match.Success)
                 {
                     string lockedFileName = match.Captures[0].Value.Trim('\'');
-                    string[] lockedFilePaths = Directory.GetFiles(dirPath, lockedFileName, SearchOption.AllDirectories);
-                    if (lockedFilePaths.Length == 0)
+                    var isDirectory = Directory.Exists(lockedFileName);
+                    string[] lockedFilePaths = isDirectory ? 
+                        Array.Empty<string>() : // It's a locked directory, not a locked file
+                        Directory.GetFiles(dirPath, lockedFileName, SearchOption.AllDirectories);
+                    if (lockedFilePaths.Length == 0 && !isDirectory)
                     {
                         return new IOException(
-                            string.Format("The file '{0}' was locked but has since been deleted from '{1}'", lockedFileName, dirPath), x);
+                            string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__, lockedFileName, dirPath), x);
                     }
                     else
                     {
-                        string lockedFilePath = lockedFilePaths[0];
+                        string lockedFilePath = isDirectory ? lockedFileName : lockedFilePaths[0];
                         int currentProcessId = Process.GetCurrentProcess().Id;
                         Func<int, string> pidOrThisProcess = pid =>
-                            pid == currentProcessId ? "this process" : $"PID: {pid}";
+                            pid == currentProcessId ? MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process : $@"PID: {pid}";
                         var processesLockingFile = GetProcessesUsingFile(lockedFilePath);
                         var names = string.Join(@", ",
-                            processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
-                        return new IOException(string.Format("The file '{0}' is locked by: {1}", lockedFilePath, names), x);
+                            processesLockingFile.Select(p => $@"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                        return new IOException(string.Format(MessageResources.FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_, lockedFilePath, names), x);
                     }
                 }
             }

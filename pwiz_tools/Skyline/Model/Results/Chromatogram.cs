@@ -35,6 +35,7 @@ using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
+using Array = System.Array;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -374,6 +375,7 @@ namespace pwiz.Skyline.Model.Results
                                     results = results.UpdateCaches(documentPath, resultsLoad);
                                 docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
                                 docNew = _manager.ApplyMetadataRules(docNew);
+                                docNew = UpdateUserRevisionIndex(docCurrent, docNew);
                             }
                         }
                         catch (OperationCanceledException)
@@ -385,6 +387,22 @@ namespace pwiz.Skyline.Model.Results
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
             }
+        }
+
+        /// <summary>
+        /// If any new files have been imported, then increment UserRevisionIndex so the document is treated as dirty.
+        /// </summary>
+        private static SrmDocument UpdateUserRevisionIndex(SrmDocument docOriginal, SrmDocument docNew)
+        {
+            var oldImportTimes = docOriginal.MeasuredResults?.MSDataFileInfos.Select(file => file.ImportTime) ??
+                                 Array.Empty<DateTime?>();
+            var newImportTimes = docNew.MeasuredResults?.MSDataFileInfos.Select(file => file.ImportTime) ??
+                                 Array.Empty<DateTime?>();
+            if (oldImportTimes.SequenceEqual(newImportTimes))
+            {
+                return docNew;
+            }
+            return docNew.IncrementUserRevisionIndex();
         }
 
         public SrmDocument ApplyMetadataRules(SrmDocument document)
@@ -405,7 +423,7 @@ namespace pwiz.Skyline.Model.Results
 
     [XmlRoot("replicate")]
     [XmlRootAlias("chromatogram_group")]
-    public sealed class ChromatogramSet : XmlNamedIdElement
+    public sealed class ChromatogramSet : XmlNamedIdElement, IFile
     {
         /// <summary>
         /// Info for all files contained in this replicate
@@ -437,10 +455,10 @@ namespace pwiz.Skyline.Model.Results
             
         }
 
-        public ChromatogramSet(string name, 
-                IEnumerable<MsDataFileUri> msDataFileNames,
-                Annotations annotations,
-                OptimizableRegression optimizationFunction)
+        public ChromatogramSet(string name,
+            IEnumerable<MsDataFileUri> msDataFileNames,
+            Annotations annotations,
+            OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
             MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path));
@@ -450,6 +468,8 @@ namespace pwiz.Skyline.Model.Results
             SampleType = SampleType.DEFAULT;
             SampleDilutionFactor = DEFAULT_DILUTION_FACTOR;
         }
+
+        public string FilePath { get; }
 
         public IList<ChromFileInfo> MSDataFileInfos
         {
@@ -1043,11 +1063,9 @@ namespace pwiz.Skyline.Model.Results
     /// <summary>
     /// Identity class to allow identity equality on <see cref="ChromatogramSetId"/>.
     /// </summary>
-    public sealed class ChromatogramSetId : Identity
-    {        
-    }
+    public sealed class ChromatogramSetId : Identity { }
 
-    public sealed class ChromFileInfo : DocNode, IPathContainer
+    public sealed class ChromFileInfo : DocNode, IPathContainer, IFile
     {
         public ChromFileInfo(MsDataFileUri filePath)
             : base(new ChromFileInfoId())
@@ -1143,6 +1161,11 @@ namespace pwiz.Skyline.Model.Results
         public ChromFileInfo ChangeImportTime(DateTime? importTime)
         {
             return ChangeProp(ImClone(this), im => im.ImportTime = importTime);
+        }
+
+        public ChromFileInfo ChangeFileWriteTime(DateTime? fileWriteTime)
+        {
+            return ChangeProp(ImClone(this), im => im.FileWriteTime = fileWriteTime);
         }
 
         public ChromFileInfo ChangeSampleId(string sampleId)
@@ -1261,6 +1284,9 @@ namespace pwiz.Skyline.Model.Results
                 return ChangeFilePath(filePath);
             return this;
         }
+
+        public string Name => FilePath.GetFileName();
+        string IFile.FilePath => FilePath.GetFilePath();
     }
 
     /// <summary>

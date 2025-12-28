@@ -169,7 +169,8 @@
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
-    <Compile Include="DataBinding\Attributes\DataGridViewColumnTypeAttribute.cs" />
+  <!-- DataGridViewColumnTypeAttribute.cs removed -->
+    <Compile Include="DataBinding\Attributes\DataTypeSpecifierAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
     <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />

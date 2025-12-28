@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model
                 {"Molecule RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_RT_Results)},
                 {"Molecule Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
-                {"Detailed Info", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetDefaults_Detailed_Info)}
+                {"Detailed Log", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetDefaults_Detailed_Log)}
             };
             // ReSharper restore LocalizableElement
 
@@ -548,7 +548,7 @@ namespace pwiz.Skyline.Model
 </views>";
 
         private const string REPORTS_V14 = @"<views>
-  <view name='Detailed Info' rowsource='pwiz.Skyline.Model.AuditLog.Databinding.AuditLogRow' sublist='Details!*' uimode='proteomic'>
+  <view name='Detailed Log' rowsource='pwiz.Skyline.Model.AuditLog.Databinding.AuditLogRow' sublist='Details!*' uimode='proteomic'>
     <column name='Time' />
     <column name='Details!*.AllInfoMessage' />
     <column name='Reason' />

@@ -338,26 +338,38 @@ project pwiz
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
         <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
         <toolset>msvc:<define>BOOST_ALL_NO_LIB          # disable auto-link
+        <toolset>msvc:<cflags>/wd4100                  # warning: unreferenced formal parameter
         <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
+        <toolset>msvc:<cflags>/wd4131                   # warning: uses old style declarator
         <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
         <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
         <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
+        <toolset>msvc:<cflags>/wd4206                   # warning: nonstandard extension used: translation unit is empty
         <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
         <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
         <toolset>msvc:<cxxflags>/wd4267                 # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+        <toolset>msvc:<cflags>/wd4244                   # warning: conversion from 'int' to 'unsigned short', possible loss of data (libraries\zlib-1.2.3\inflate.c)
         <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
         <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
         <toolset>msvc:<cxxflags>/wd4714                 # warning: marked as __forceinline not inlined (boost::spirit::karma::sequence)
+        <toolset>msvc:<cflags>/wd4456                   # warning: declaration of 'type' hides previous local declaration
         <toolset>msvc:<cxxflags>/wd4456                 # warning: declaration of 'type' hides previous local declaration
         <toolset>msvc:<cxxflags>/wd4459                 # warning: declaration of 'type' hides global declaration
         <toolset>msvc:<cxxflags>/wd4458                 # warning: declaration of 'type' hides class member
+        <toolset>msvc:<cxxflags>/wd4634                 # warning: XML document comment: cannot be applied:  Discarding XML document comment for invalid target
+        <toolset>msvc:<cxxflags>/wd4828                 # warning: The file contains a character starting at offset xxxxx that is illegal in the current source character set (codepage 65001)
+        <toolset>msvc:<cflags>/wd4996                   # warning: 'xxxx': was declared deprecated
+        <toolset>msvc:<cxxflags>/wd4996                 # warning: 'xxxx': was declared deprecated
+        <toolset>msvc:<cxxflags>/wd5033                 # warning: 'register' is no longer a supported storage class
+        <toolset>msvc:<cxxflags>/utf-8                  # treat all files as UTF-8
         <toolset>msvc,<debug-symbols>off:<linkflags>"/OPT:REF,ICF"
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.3:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.5:<define>_HAS_TR1
 
         # link-time optimization for release builds
         #<variant>release:<lto>on
@@ -1000,7 +1012,8 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.2 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.3 in $(properties) )
+       ! ( <toolset-msvc:version>14.3 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.5 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
@@ -1041,7 +1054,7 @@ rule msvc-has-current-dotnet ( properties * )
 {
     # require VS 2017 or higher because of .NET Framework version
     if <toolset>msvc in $(properties) && 
-       [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.1" "14.2" "14.3"
+       [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.1" "14.2" "14.3" "14.5"
     {
         return 1 ;
     }
@@ -1222,7 +1235,7 @@ rule msparser-path ( properties * )
     }
     else if <toolset>msvc in $(properties)
     {
-        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3"
+        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3" "14.5"
         {
             lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64\\vs2015" ;
         }
@@ -1240,7 +1253,7 @@ rule msparser-path ( properties * )
     {
         lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_3_1_0_x86_linux64/gnu" ;
     }
-    else
+    else  if <toolset>* in $(properties)
     {
         if ! $(.warn-once)
         {
@@ -1261,25 +1274,25 @@ rule msparser-path ( properties * )
     # Check for msparser existence.
     else if <toolset>msvc in $(properties) && [ path.exists $(lib-location)/lib/msparser.lib ]
     {
-        if ! $(.warn-once)
+        if ! $(.warn-once-msvc)
         {
-            .warn-once = true ;
+            .warn-once-msvc = true ;
             echo "Using Mascot Parser in $(lib-location)" ;
         }
         return $(lib-location) ;
     }
     else if <toolset>gcc in $(properties) && [ path.exists $(lib-location)/lib/libmsparser.a ]
     {
-        if ! $(.warn-once)
+        if ! $(.warn-once-gcc)
         {
-            .warn-once = true ;
+            .warn-once-gcc = true ;
             echo "Using Mascot Parser in $(lib-location)" ;
         }
         return $(lib-location) ;
     }
-    else if ! $(.warn-once)
+    else if <toolset>gcc in $(properties) && ! $(.warn-once-gcc)
     {
-        .warn-once = true ;
+        .warn-once-gcc = true ;
         
         if $(lib-location)
         {
@@ -1289,7 +1302,21 @@ rule msparser-path ( properties * )
         {
             echo "Warning: No Mascot Parser found." ;
         }
-        echo "         Mascot support will be disabled." ;
+        echo "         Mascot support will be disabled in gcc builds, if any." ;
+    }
+	else if <toolset>msvc in $(properties) && ! $(.warn-once-msvc)
+    {
+        .warn-once-msvc = true ;
+        
+        if $(lib-location)
+        {
+            echo "Warning: No Mascot Parser found at $(lib-location)." ;
+        }
+        else
+        {
+            echo "Warning: No Mascot Parser found." ;
+        }
+        echo "         Mascot support will be disabled in MSVC builds, if any." ;
     }
 }
 

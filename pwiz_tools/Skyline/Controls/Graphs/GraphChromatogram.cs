@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
 
             graphControl.GraphPane = new MSGraphPane();
-            _graphHelper = GraphHelper.Attach(graphControl);
+            _graphHelper = GraphHelper.Attach(graphControl, ZoomSynchronizer.INSTANCE);
             NameSet = name;
             Icon = Resources.SkylineData;
 
@@ -240,6 +240,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     UpdateUI(false);
                 }
             }
+        }
+
+        public ImputedPeak ExemplaryPeak
+        {
+            get { return _imputedPeak; }
         }
 
 
@@ -511,15 +516,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 PickedSpectrum(this, new PickedSpectrumEventArgs(new SpectrumIdentifier(FilePath, retentionTime.MeasuredTime)));
         }
 
-        [Browsable(true)]
-        public event EventHandler<ZoomEventArgs> ZoomAll;
-
-        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
-        {
-            if (Settings.Default.AutoZoomAllChromatograms && ZoomAll != null)
-                ZoomAll.Invoke(this, new ZoomEventArgs(newState));
-        }
-
         /// <summary>
         /// Return the text of the annotations shown a chromatogram pane
         /// </summary>
@@ -530,14 +526,15 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphPanes.ElementAt(paneIndex).GetAnnotationLabelStrings();
         }
 
-        public void ZoomTo(ZoomState zoomState)
+        public void OnZoom()
         {
-            zoomState.ApplyState(GraphPanes.First());
+            _graphHelper.OnZoom();
         }
 
         /// <summary>
         /// Set min and max displayed time values, and optionally max intensity
         /// Note: this is intended for use in automated functional tests only
+        /// Note: this always zooms all graph windows, regardless of the "Synchronize Axes" setting
         /// </summary>
         public void ZoomTo(double rtStartMeasured, double rtEndMeasured, double? maxIntensity=null)
         {
@@ -546,13 +543,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 var pane = GraphPanes.First();
                 pane.XAxis.Scale.Min = rtStartMeasured;
                 pane.XAxis.Scale.Max = rtEndMeasured;
-                pane.YAxis.Scale.Max = maxIntensity ?? pane.YAxis.Scale.Max;
-                var hold = graphControl.IsSynchronizeXAxes;
-                graphControl.IsSynchronizeXAxes = false; // just this one
-                ZoomState.ApplyState(pane);
-                if (ZoomAll != null)
-                    ZoomAll.Invoke(this, new ZoomEventArgs(ZoomState));
-                graphControl.IsSynchronizeXAxes = hold;
+                if (maxIntensity.HasValue)
+                {
+                    pane.YAxis.Scale.Max = maxIntensity.Value;
+                }
+
+                bool wasSynchronizeAxes = Settings.Default.AutoZoomAllChromatograms;
+                try
+                {
+                    // Apply zoom state to all other replicates.
+                    Settings.Default.AutoZoomAllChromatograms = true;
+                    OnZoom();
+                }
+                finally
+                {
+                    Settings.Default.AutoZoomAllChromatograms = wasSynchronizeAxes;
+                }
+                GraphControl.Refresh();
             }
         }
 
@@ -568,11 +575,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             graphControl.Invalidate();
-        }
-
-        public ZoomState ZoomState
-        {
-            get { return new ZoomState(GraphPanes.First(), ZoomState.StateType.Zoom); }
         }
 
         public void LockZoom()
@@ -827,7 +829,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public void UpdateUI(bool selectionChanged = true)
-        {         
+        {
             Messages.Clear();
             IsCacheInvalidated = false;
 
@@ -2358,7 +2360,36 @@ namespace pwiz.Skyline.Controls.Graphs
             if (true == _imputedBoundsReceiver?.TryGetProduct(parameter, out var imputedBounds))
             {
                 chromGraphPrimary.ImputedBounds = imputedBounds?.PeakBounds;
+                if (IsExemplaryReplicate(chromatogramSet, chromGraphPrimary.Chromatogram.FilePath, imputedBounds?.ExemplaryPeak?.Source))
+                {
+                    Messages.Add(GraphsResources.GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate);
+                }
             }
+        }
+
+        private bool IsExemplaryReplicate(ChromatogramSet chromatogramSet, MsDataFileUri filePath, PeakSource peakSource)
+        {
+            if (peakSource == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(peakSource.LibraryName))
+            {
+                if (chromatogramSet.Name == peakSource.ReplicateName)
+                {
+                    if (chromatogramSet.FileCount <= 1)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return Path.GetFileName(peakSource.FilePath) == filePath.GetFileName();
         }
 
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,
@@ -3278,6 +3309,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            if (ModifierKeys != Keys.None)
+            {
+                return false;
+            }
             if (e.Button == MouseButtons.Left)
             {
                 PointF pt = new PointF(e.X, e.Y);
@@ -3705,7 +3740,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public static class AddTransitions
     {
         /// <summary>
-        /// Add intensitites of two transitions where they overlap in time.
+        /// Add intensities of two transitions where they overlap in time.
         /// </summary>
         /// <param name="times1">Times for first transition.</param>
         /// <param name="intensities1">Intensities for first transition.</param>

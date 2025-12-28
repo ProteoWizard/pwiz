@@ -28,18 +28,24 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding.AuditLog;
 using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -475,33 +481,10 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 viewSpec = new ViewSpec().SetRowType(columnDescriptor.PropertyType)
                     .SetColumns(columns.Select(pp => new ColumnSpec(pp)));
-                viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
+                viewSpec = viewSpec.SetSublistId(SublistPaths.GetReplicateSublist(columnDescriptor.PropertyType));
             }
 
             return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
-        }
-
-        public static PropertyPath GetReplicateSublist(Type rowType)
-        {
-            if (rowType == typeof(SkylineDocument))
-            {
-                return PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
-            }
-            if (rowType == typeof(Replicate))
-            {
-                return PropertyPath.Root.Property(nameof(Replicate.Files)).LookupAllItems();
-            }
-            if (rowType == typeof(Protein))
-            {
-                return PropertyPath.Root.Property(nameof(Protein.Results)).DictionaryValues()
-                    .Property(nameof(Replicate.Files));
-            }
-
-            if (typeof(SkylineDocNode).IsAssignableFrom(rowType))
-            {
-                return PropertyPath.Root.Property(@"Results").LookupAllItems();
-            }
-            return PropertyPath.Root;
         }
 
         public override void ExportViews(Control owner, ViewSpecList viewSpecList)
@@ -651,7 +634,8 @@ namespace pwiz.Skyline.Controls.Databinding
             {typeof (Model.Databinding.Entities.Peptide).FullName, Tuple.Create(2, 7)},
             {typeof (Model.Databinding.Entities.Precursor).FullName, Tuple.Create(3, 3)},
             {typeof (Model.Databinding.Entities.Transition).FullName, Tuple.Create(4, 4)},
-            {typeof (Model.Databinding.Entities.Replicate).FullName, Tuple.Create(5, 5)}
+            {typeof (Model.Databinding.Entities.Replicate).FullName, Tuple.Create(5, 5)},
+            {typeof (Model.AuditLog.Databinding.AuditLogRow).FullName, Tuple.Create(8, 8)}
             // ReSharper restore AssignNullToNotNullAttribute
             // ReSharper restore RedundantNameQualifier
         };
@@ -668,6 +652,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 Resources.Replicate,
                 Resources.MoleculeList,
                 Resources.Molecule,
+                Resources.AuditLog,
             };
         }
 
@@ -796,6 +781,80 @@ namespace pwiz.Skyline.Controls.Databinding
                 return UiModes.AvailableModes(SkylineDataSchema.SkylineWindow.ModeUI);
             }
         }
+
+        protected override DataGridViewColumn CreateCustomColumn(PropertyDescriptor propertyDescriptor)
+        {
+            Type columnType = null;
+
+            // First, check for DataTypeSpecifierAttribute (marker type for properties with generic types like string)
+            var dataTypeSpecifier = propertyDescriptor.Attributes.OfType<DataTypeSpecifierAttribute>().FirstOrDefault();
+            if (dataTypeSpecifier != null)
+            {
+                PropertyTypeToColumnTypeMap.TryGetValue(dataTypeSpecifier.MarkerType, out columnType);
+            }
+
+            // Second, check UI-side mapping from property type to column type
+            // Check exact type match first, then check if property type is assignable from mapped type (for base classes)
+            if (columnType == null)
+            {
+                if (!PropertyTypeToColumnTypeMap.TryGetValue(propertyDescriptor.PropertyType, out columnType))
+                {
+                    // Check if property type derives from any mapped base type
+                    foreach (var kvp in PropertyTypeToColumnTypeMap)
+                    {
+                        if (kvp.Key.IsAssignableFrom(propertyDescriptor.PropertyType))
+                        {
+                            columnType = kvp.Value;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // If we found a column type, instantiate it
+            if (columnType != null)
+            {
+                try
+                {
+                    var constructor = columnType.GetConstructor(Array.Empty<Type>());
+                    if (constructor != null)
+                    {
+                        return (DataGridViewColumn)constructor.Invoke(Array.Empty<object>());
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Assume.Fail(string.Format(@"Exception constructing column of type {0}:{1}", columnType, exception));
+                }
+            }
+
+            // Fall back to base class implementation
+            return base.CreateCustomColumn(propertyDescriptor);
+        }
+
+        /// <summary>
+        /// UI-side mapping from property types to DataGridView column types.
+        /// This mapping allows the UI to control which column types are used for specific property types,
+        /// reducing backward dependencies from Model to UI.
+        /// Marker types (used with DataTypeSpecifierAttribute) allow properties with generic types
+        /// like string to specify which UI column type should be used without changing the property type.
+        /// </summary>
+        private static readonly Dictionary<Type, Type> PropertyTypeToColumnTypeMap = new Dictionary<Type, Type>
+        {
+            // Audit log types map to AuditLogColumn
+            { typeof(AuditLogRow.AuditLogRowText), typeof(AuditLogColumn) },
+            
+            // Model types with distinct types map to their UI column types
+            { typeof(NormalizationMethod), typeof(NormalizationMethodDataGridViewColumn) },
+            { typeof(ListItem), typeof(ListLookupDataGridViewColumn) },
+            { typeof(SampleType), typeof(SampleTypeDataGridViewColumn) },
+            { typeof(StandardType), typeof(StandardTypeDataGridViewColumn) },
+            
+            // Marker types for properties with generic types (like string, bool)
+            { typeof(SurrogateStandardName), typeof(SurrogateStandardDataGridViewColumn) },
+            { typeof(AnnotationPropertyDescriptor.TrueFalseAnnotation), typeof(DataGridViewCheckBoxColumn) },
+            { typeof(AnnotationPropertyDescriptor.ValueListAnnotation), typeof(AnnotationValueListDataGridViewColumn) }
+        };
 
         public override bool CanDisplayView(ViewSpec viewSpec)
         {

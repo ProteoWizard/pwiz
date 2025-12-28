@@ -22,9 +22,17 @@
 
 #include "pwiz/utility/misc/unit.hpp"
 #include "Reader_Shimadzu.hpp"
+
+#include "Reader_Shimadzu_Detail.hpp"
 #include "pwiz/utility/misc/VendorReaderTestHarness.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/data/common/diff_std.hpp"
+
+using namespace pwiz::cv;
+using namespace pwiz::util;
+using namespace pwiz::data;
+using namespace pwiz::msdata::detail::Shimadzu;
 
 struct IsShimadzuLCD : public pwiz::util::TestPathPredicate
 {
@@ -46,6 +54,41 @@ int main(int argc, char* argv[])
 
     try
     {
+
+#ifdef PWIZ_READER_SHIMADZU
+        // test that all Shimidzu instruments have a mapping
+        {
+            vector<CVID> allInstruments, mappedInstruments, unmappedInstruments, mappedButNotInCvHierarchy;
+
+            set<CVID> brands{ MS_Shimadzu_instrument_model, MS_Shimadzu_MALDI_TOF_instrument_model, MS_Shimadzu_Scientific_Instruments_instrument_model };
+            auto isChildOfBrand = [&](CVID cvid)
+                {
+                    for (CVID brand : brands)
+                        if (cvIsA(cvid, brand))
+                            return true;
+                    return false;
+                };
+
+            for (const auto& cvid : cvids())
+            {
+                if (!isChildOfBrand(cvid))
+                    continue;
+                allInstruments.push_back(cvid);
+            }
+
+            for (const auto& mapping : nameToModelMapping)
+                mappedInstruments.push_back(translateAsInstrumentModel(mapping.name));
+
+            diff_impl::vector_diff(allInstruments, mappedInstruments, unmappedInstruments, mappedButNotInCvHierarchy);
+            unmappedInstruments.erase(std::remove_if(unmappedInstruments.begin(), unmappedInstruments.end(),
+                                                     [&](CVID cvid) { return brands.count(cvid) > 0; }),
+                                      unmappedInstruments.end());
+            auto instrumentTermNames = [](vector<CVID>& cvids) {ostringstream result; for (CVID cvid : cvids) result << cvTermInfo(cvid).name << "\n"; return result.str(); };
+            unit_assert_operator_equal("", instrumentTermNames(unmappedInstruments));
+            unit_assert_operator_equal("", instrumentTermNames(mappedButNotInCvHierarchy));
+        }
+#endif // PWIZ_READER_SHIMADZU
+
         bool requireUnicodeSupport = true;
         pwiz::msdata::Reader_Shimadzu reader;
         pwiz::util::ReaderTestConfig config;
@@ -55,6 +98,10 @@ int main(int argc, char* argv[])
 
         config.peakPicking = true;
         result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsShimadzuLCD(), config);
+
+        config.srmAsSpectra = true;
+        config.indexRange = make_pair(1240, 1260);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsNamedRawFile("20140312_六mix_column_1 (scheduled) 一个试.lcd"), config);
 
         // test globalChromatogramsAreMs1Only, but don't need to test spectra here (TODO: get a small test file with MS2 spectra)
         /*auto newConfig = config;

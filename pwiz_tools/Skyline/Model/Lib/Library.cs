@@ -1142,15 +1142,19 @@ namespace pwiz.Skyline.Model.Lib
             _libraryEntries = new LibKeyMap<TInfo>(entryList, entryList.Select(entry=>entry.Key.LibraryKey));
         }
 
-        protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries)
+        // Try to build a precursor from the information in each entry of the library. For those that fail, report the issue
+        // and remove them from the list of entries.
+        protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries, string dataSource)
         {
             var validEntries = new List<TInfo>();
             var invalidKeys = new List<LibKey>();
             foreach (var entry in entries)
             {
-                if (!IsValidLibKey(entry.Key))
+                if (!IsValidLibKey(entry.Key, out var whyNot))
                 {
                     invalidKeys.Add(entry.Key);
+                    Messages.WriteAsyncUserMessage(ModelResources.AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_, 
+                        entry.Key, dataSource, whyNot);  // Report to immediate window
                 }
                 else
                 {
@@ -1162,15 +1166,17 @@ namespace pwiz.Skyline.Model.Lib
             return validEntries;
         }
 
-        protected bool IsValidLibKey(LibKey libKey)
+        protected bool IsValidLibKey(LibKey libKey, out string errorMessage)
         {
             try
             {
+                errorMessage = null;
                 var unused = libKey.LibraryKey.CreatePeptideIdentityObj();
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                errorMessage = e.Message;
                 return false;
             }
         }
@@ -1581,8 +1587,13 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
+    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription, IFile
     {
+        /// <summary>
+        /// Identity class to allow identity equality on <see cref="LibrarySpec"/>.
+        /// </summary>
+        private sealed class LibrarySpecId : Identity { }
+
         public static readonly PeptideRankId PEP_RANK_COPIES =
             new PeptideRankId(@"Spectrum count", () => LibResources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =
@@ -1614,6 +1625,7 @@ namespace pwiz.Skyline.Model.Lib
         protected LibrarySpec(string name, string path, bool useExplicitPeakBounds = true)
             : base(name)
         {
+            Id = new LibrarySpecId();
             FilePath = path;
             UseExplicitPeakBounds = useExplicitPeakBounds;
         }
@@ -1624,6 +1636,7 @@ namespace pwiz.Skyline.Model.Lib
             get { return AuditLogPath.Create(FilePath); }
         }
 
+        public Identity Id { get; }
         public string FilePath { get; private set; }
 
         /// <summary>
@@ -1698,6 +1711,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         protected LibrarySpec()
         {
+            Id = new LibrarySpecId();
         }
 
         private enum ATTR

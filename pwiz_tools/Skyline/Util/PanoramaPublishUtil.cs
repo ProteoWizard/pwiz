@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Util
 
         public string GetKey()
         {
-            return URI + (HasUserAccount() ? string.Empty : UtilResources.Server_GetKey___anonymous_);
+            return AppendPath(URI.ToString(), FolderPath) + (HasUserAccount() ? string.Empty : UtilResources.Server_GetKey___anonymous_);
         }
 
 
@@ -71,7 +71,8 @@ namespace pwiz.Skyline.Util
             username,
             password,
             password_encrypted,
-            uri
+            uri,
+            folder_path
         }
 
         public static Server Deserialize(XmlReader reader)
@@ -121,6 +122,9 @@ namespace pwiz.Skyline.Util
             {
                 throw new InvalidDataException(UtilResources.Server_ReadXml_Server_URL_is_corrupt);
             }
+
+            FolderPath = reader.GetAttribute(ATTR.folder_path); // Optional: may be null
+
             // Consume tag
             reader.Read();
 
@@ -136,6 +140,8 @@ namespace pwiz.Skyline.Util
                 writer.WriteAttributeString(ATTR.password_encrypted, TextUtil.EncryptString(Password));
             }
             writer.WriteAttribute(ATTR.uri, URI);
+            if (!string.IsNullOrEmpty(FolderPath))
+                writer.WriteAttributeString(ATTR.folder_path, FolderPath);
         }
         #endregion
 
@@ -144,8 +150,9 @@ namespace pwiz.Skyline.Util
         private bool Equals(Server other)
         {
             return string.Equals(Username, other.Username) &&
-                string.Equals(Password, other.Password) &&
-                Equals(URI, other.URI);
+                   string.Equals(Password, other.Password) &&
+                   Equals(URI, other.URI) &&
+                   Equals(FolderPath, other.FolderPath);
         }
 
         public override bool Equals(object obj)
@@ -162,6 +169,7 @@ namespace pwiz.Skyline.Util
                 int hashCode = (Username != null ? Username.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Password != null ? Password.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (URI != null ? URI.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FolderPath != null ? FolderPath.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -297,31 +305,31 @@ namespace pwiz.Skyline.Util
             Uri result = null;
             try
             {
-                var isCanceled = false;
-                using (var waitDlg = new LongWaitDlg())
+                using var waitDlg = new LongWaitDlg();
+                waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
+                IProgressStatus progressStatus = new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama);
+                var status = waitDlg.PerformWork(parent, 1000, progressMonitor =>
                 {
-                    waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
-                    waitDlg.PerformWork(parent, 1000, longWaitBroker =>
-                    {
-                        result = PanoramaClient.SendZipFile(folderPath,
-                            zipFilePath, longWaitBroker);
-                        if (longWaitBroker.IsCanceled)
-                            isCanceled = true;
-                    });
-                }
-                if (!isCanceled) // if user not canceled 
+                    result = PanoramaClient.SendZipFile(folderPath, zipFilePath, progressMonitor, progressStatus);
+                });
+                if (status.IsCanceled)
+                    return;
+
+                _uploadedDocumentUri = result;
+                var message = UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_;
+                if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES,
+                        MultiButtonMsgDlg.BUTTON_NO, false)
+                    == DialogResult.Yes)
                 {
-                    _uploadedDocumentUri = result;
-                    var message = UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_Upload_succeeded__would_you_like_to_view_the_file_in_Panorama_;
-                    if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
-                        == DialogResult.Yes)
-                        Process.Start(result.ToString());
+                    Process.Start(result.ToString());
                 }
             }
             catch (Exception x)
             {
-                var panoramaEx = x.InnerException as PanoramaImportErrorException;
-                if (panoramaEx != null)
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+
+                if (x.InnerException is PanoramaImportErrorException panoramaEx)
                 {
                     string message;
                     if (panoramaEx.JobCancelled)
@@ -329,32 +337,32 @@ namespace pwiz.Skyline.Util
                         message = UtilResources
                             .AbstractPanoramaPublishClient_UploadSharedZipFile_Document_import_was_cancelled_on_the_server__Would_you_like_to_go_to_Panorama_;
                     }
+                    else if (string.IsNullOrWhiteSpace(panoramaEx.Error))
+                    {
+                        message = TextUtil.SpaceSeparate(
+                            string.Format(UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__,
+                                panoramaEx.ServerUrl),
+                            UtilResources
+                                .AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_
+                        );
+                    }
                     else
                     {
-                        if (string.IsNullOrWhiteSpace(panoramaEx.Error))
-                        {
-                            message = TextUtil.SpaceSeparate(
-                                string.Format(UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__,
-                                    panoramaEx.ServerUrl),
-                                UtilResources
-                                    .AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_
-                            );
-                        }
-                        else
-                        {
-                            message = TextUtil.LineSeparate(
-                                string.Format(UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__,
-                                    panoramaEx.ServerUrl),
-                                string.Format(Resources.Error___0_, panoramaEx.Error),
-                                string.Empty,
-                                UtilResources
-                                    .AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_);
-                        }
+                        message = TextUtil.LineSeparate(
+                            string.Format(UtilResources.AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__,
+                                panoramaEx.ServerUrl),
+                            string.Format(Resources.Error___0_, panoramaEx.Error),
+                            string.Empty,
+                            UtilResources
+                                .AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_);
                     }
 
-                    if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false)
+                    if (MultiButtonMsgDlg.Show(parent, message, MultiButtonMsgDlg.BUTTON_YES,
+                            MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
+                    {
                         Process.Start(panoramaEx.JobUrl.ToString());
+                    }
                 }
                 
                 else

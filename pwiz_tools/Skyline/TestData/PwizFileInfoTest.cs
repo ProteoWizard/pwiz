@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -74,8 +76,8 @@ namespace pwiz.SkylineTestData
                 "Agilent instrument model", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
 
             // Shimadzu TOF file (.lcd file)
-            VerifyInstrumentInfo(TestFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
-                "Shimadzu instrument model", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
+            VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Shimadzu, "10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
+                "Shimadzu Scientific Instruments instrument model", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
 
             // Thermo .raw|mzML file
             foreach (
@@ -268,6 +270,31 @@ namespace pwiz.SkylineTestData
             {
                 Assert.AreEqual(serialNumber, msDataFile.GetInstrumentSerialNumber());
             }
+        }
+
+        [TestMethod]
+        public void VerifyUnicodePathHandling()
+        {
+            //
+            // Verify that the logic for converting Unicode paths to 8.3 short format
+            // works the same in PathEx and it does in the pwiz CLI
+            //
+
+            // Create a temporary file with Unicode characters in its name
+            var tempFilePath = PathEx.GetTempFileNameWithExtension("test测试文件.txt");
+            File.WriteAllText(tempFilePath, @"This is a test file with Unicode characters in its name.");
+
+            // Use PathEx.GetNonUnicodePath() to get the non-Unicode path
+            var nonUnicodePath = PathEx.GetNonUnicodePath(tempFilePath);
+
+            // Use the CLI implementation to get the non-Unicode path
+            var cliEquivalentPath = MsDataFileImpl.GetNonUnicodePath(tempFilePath);
+
+            File.Delete(tempFilePath); // No longer needed
+
+            // Assert that the two (possibly 8.3 converted) paths are equivalent
+            Assert.AreEqual(cliEquivalentPath, nonUnicodePath,
+                @$"The 8.3 converted path for {tempFilePath} does not match the pwiz CLI implementation.");
         }
     }
 }

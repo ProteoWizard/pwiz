@@ -560,6 +560,10 @@ namespace pwiz.Skyline.Model.Results
                 var chromIds = new List<ChromKeyProviderIdPair>(_collectors.ChromKeys.Count);
                 for (int i = 0; i < _collectors.ChromKeys.Count; i++)
                     chromIds.Add(new ChromKeyProviderIdPair(_collectors.ChromKeys[i], i));
+                foreach (var globalChromatogram in _globalChromatogramExtractor.ListChromKeys())
+                {
+                    chromIds.Add(new ChromKeyProviderIdPair(globalChromatogram, chromIds.Count));
+                }
                 VerifyGlobalChromatograms(chromIds);
                 return chromIds;
             }
@@ -593,6 +597,7 @@ namespace pwiz.Skyline.Model.Results
             if (_isSrm)
                 return;
 
+            chromatogramRequestOrder = FilterOutGlobalChromatograms(chromatogramRequestOrder).ToList();
             if (_chromGroups != null)
                 _chromGroups.Dispose();
 
@@ -620,32 +625,49 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        private IEnumerable<IList<int>> FilterOutGlobalChromatograms(IList<IList<int>> chromatogramRequestOrder)
+        {
+            int extractedChromatogramCount = _collectors.ChromKeys.Count;
+            foreach (var group in chromatogramRequestOrder)
+            {
+                var ids = group.Where(id => id < extractedChromatogramCount).ToList();
+                if (ids.Count > 0)
+                {
+                    yield return ids;
+                }
+            }
+        }
+
         public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
-            var chromKey = _collectors.ChromKeys.Count > id ? _collectors.ChromKeys[id] : null;
-            timeIntensities = null;
+            timeIntensities = TimeIntensities.EMPTY;
             extra = null;
-            if (SignedMz.ZERO.Equals(chromKey?.Precursor ?? SignedMz.ZERO))
+            bool isTicChromatogram;
+            if (id >= _collectors.ChromKeys.Count)
             {
                 int indexFirstGlobalChromatogram =
-                    _collectors.ChromKeys.Count - _globalChromatogramExtractor.ChromatogramCount;
+                    _collectors.ChromKeys.Count;
                 int indexInGlobalChromatogramExtractor = id - indexFirstGlobalChromatogram;
+                isTicChromatogram = indexInGlobalChromatogramExtractor ==
+                                    _globalChromatogramExtractor.TicChromatogramIndex;
                 if (_globalChromatogramExtractor.GetChromatogramAt(indexInGlobalChromatogramExtractor, out float[] times, out float[] intensities))
                 {
                     timeIntensities = new TimeIntensities(times, intensities, null, null);
                     extra = new ChromExtra(0, 0);
                 }
             }
-            if (null == timeIntensities)
+            else
             {
                 var statusId = _collectors.ReleaseChromatogram(id, _chromGroups, out timeIntensities);
                 extra = new ChromExtra(statusId, 0);
                 // Each chromatogram will be read only once!
                 _readChromatograms++;
+                var chromKey = _collectors.ChromKeys[id];
+                isTicChromatogram = SignedMz.ZERO.Equals(chromKey.Precursor) &&
+                                    ChromExtractor.summed == chromKey.Extractor;
             }
 
-            if (null != chromKey && SignedMz.ZERO.Equals(chromKey.Precursor) &&
-                ChromExtractor.summed == chromKey.Extractor && timeIntensities.NumPoints > 0)
+            if (isTicChromatogram && timeIntensities.NumPoints > 0)
             {
                 _ticArea = timeIntensities.Integral(0, timeIntensities.NumPoints - 1);
             }
