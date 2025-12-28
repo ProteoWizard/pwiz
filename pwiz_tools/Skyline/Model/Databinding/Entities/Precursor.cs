@@ -31,6 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -421,7 +422,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public string SpectrumFilter { get { return DocNode.SpectrumClassFilter.ToString(); } }
+        public string SpectrumFilter
+        {
+            get { return DocNode.SpectrumClassFilter.ToFilterString(); }
+            set
+            {
+                var newFilter = SpectrumClassFilter.ParseFilterString(value);
+                ChangeDocNode(EditColumnDescription(nameof(SpectrumFilter), value), docNode=>docNode.ChangeSpectrumClassFilter(newFilter));
+            }
+        }
 
         [InvariantDisplayName("PrecursorNote")]
         [Importable]

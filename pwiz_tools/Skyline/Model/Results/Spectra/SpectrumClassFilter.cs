@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Sprache;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -359,5 +360,176 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
             return FilterPages.Blank(GenericFilterPage);
         }
+
+        #region Filter String Parsing and Serialization
+
+        /// <summary>
+        /// Returns the filter as a human-readable string that can be parsed back.
+        /// Format: FilterClauses are separated by " or ", FilterSpecs within a clause by " and ".
+        /// Multiple specs get parentheses: (spec1) and (spec2)
+        /// Multiple clauses get parentheses: (clause1) or (clause2)
+        /// </summary>
+        public string ToFilterString()
+        {
+            if (IsEmpty)
+            {
+                return string.Empty;
+            }
+
+            if (Clauses.Count == 1)
+            {
+                return FormatClause(Clauses[0]);
+            }
+
+            return string.Join(@" or ", Clauses.Select(c => @"(" + FormatClause(c) + @")"));
+        }
+
+        private static string FormatClause(FilterClause clause)
+        {
+            if (clause.FilterSpecs.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            if (clause.FilterSpecs.Count == 1)
+            {
+                return FormatFilterSpec(clause.FilterSpecs[0]);
+            }
+
+            return string.Join(@" and ", clause.FilterSpecs.Select(s => @"(" + FormatFilterSpec(s) + @")"));
+        }
+
+        private static string FormatFilterSpec(FilterSpec spec)
+        {
+            var sb = new StringBuilder();
+            sb.Append(QuoteIfNeeded(spec.Column));
+            sb.Append(@" ");
+            sb.Append(spec.Operation.OpName);
+            if (spec.Operation.GetOperandType(new DataSchema(), typeof(object)) != null)
+            {
+                sb.Append(@" ");
+                sb.Append(QuoteIfNeeded(spec.Predicate.InvariantOperandText ?? string.Empty));
+            }
+            return sb.ToString();
+        }
+
+        private static string QuoteIfNeeded(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return @"""""";
+            }
+            if (value.Any(c => char.IsWhiteSpace(c) || c == '"' || c == '(' || c == ')'))
+            {
+                return @"""" + value.Replace(@"""", @"""""") + @"""";
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Parses a filter string back into a SpectrumClassFilter.
+        /// </summary>
+        public static SpectrumClassFilter ParseFilterString(string filterString)
+        {
+            if (string.IsNullOrWhiteSpace(filterString))
+            {
+                return default;
+            }
+
+            var result = FilterParser.TryParse(filterString);
+            if (!result.WasSuccessful)
+            {
+                throw new FormatException(string.Format(
+                    SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_filter_string___0__, filterString));
+            }
+            return result.Value;
+        }
+
+        private static readonly Parser<SpectrumClassFilter> FilterParser = CreateFilterParser();
+
+        private static Parser<SpectrumClassFilter> CreateFilterParser()
+        {
+            // Whitespace parser
+            var ws = Parse.WhiteSpace.Many();
+
+            // Quoted string: "..." where "" represents a literal "
+            var escapedQuote = Parse.String(@"""""").Return('"');
+            var quotedChar = escapedQuote.Or(Parse.CharExcept('"'));
+            var quotedString = Parse.Char('"')
+                .Then(_ => quotedChar.Many().Text())
+                .Then(content => Parse.Char('"').Return(content));
+
+            // Unquoted identifier: no whitespace, parens, or quotes
+            var unquotedIdentifier = Parse.CharExcept(c => char.IsWhiteSpace(c) || c == '"' || c == '(' || c == ')', @"identifier char")
+                .AtLeastOnce().Text();
+
+            // Identifier (quoted or unquoted)
+            var identifier = quotedString.Or(unquotedIdentifier);
+
+            // Operator names
+            var opSymbols = FilterOperations.ListOperations()
+                .Where(op=>!string.IsNullOrEmpty(op.OpSymbol))
+                .Select(op => op.OpSymbol)
+                .OrderByDescending(name => name.Length) // Longer operators first to avoid partial matches
+                .ToList();
+
+            // Operator parser - try each operator name
+            var operatorParser = opSymbols
+                .Select(name => Parse.String(name).Text())
+                .Aggregate((a, b) => a.Or(b));
+
+            // FilterSpec: identifier operator value?
+            var dataSchema = new DataSchema();
+            var filterSpec = identifier
+                .Then(column => ws.Then(_ => operatorParser)
+                    .Then(opSymbol =>
+                    {
+                        var op = FilterOperations.GetOperationBySymbol(opSymbol);
+                        // Check if this operator takes an operand
+                        if (op.GetOperandType(dataSchema, typeof(object)) == null)
+                        {
+                            // No operand needed
+                            return Parse.Return(new FilterSpec(PropertyPath.Parse(column),
+                                FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), op, null)));
+                        }
+                        // Operand required
+                        return ws.Then(_ => identifier)
+                            .Select(value => new FilterSpec(PropertyPath.Parse(column),
+                                FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), op, value)));
+                    }));
+
+            // FilterSpec possibly wrapped in parentheses
+            var parenFilterSpec = Parse.Char('(')
+                .Then(_ => ws)
+                .Then(_ => filterSpec)
+                .Then(spec => ws.Then(_ => Parse.Char(')')).Return(spec));
+
+            // A single spec or parenthesized spec
+            var singleOrParenSpec = parenFilterSpec.Or(filterSpec);
+
+            // FilterClause: specs joined by " and "
+            var andKeyword = ws.Then(_ => Parse.String(@"and")).Then(_ => ws);
+            var filterClause = singleOrParenSpec
+                .Then(first => andKeyword.Then(_ => singleOrParenSpec).Many()
+                    .Select(rest => new FilterClause(new[] { first }.Concat(rest))));
+
+            // FilterClause possibly wrapped in parentheses
+            var parenClause = Parse.Char('(')
+                .Then(_ => ws)
+                .Then(_ => filterClause)
+                .Then(clause => ws.Then(_ => Parse.Char(')')).Return(clause));
+
+            // A single clause or parenthesized clause
+            var singleOrParenClause = parenClause.Or(filterClause);
+
+            // Full filter: clauses joined by " or "
+            var orKeyword = ws.Then(_ => Parse.String(@"or")).Then(_ => ws);
+            return singleOrParenClause
+                .Then(first => orKeyword.Then(_ => singleOrParenClause).Many()
+                    .Select(rest => new SpectrumClassFilter(new[] { first }.Concat(rest))))
+                .End();
+        }
+
+        #endregion
     }
 }

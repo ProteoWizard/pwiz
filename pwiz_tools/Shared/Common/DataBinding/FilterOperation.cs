@@ -31,6 +31,7 @@ namespace pwiz.Common.DataBinding
         [Track]
         string DisplayName { get; }
         string ShortDisplayName { get; }
+        string OpSymbol { get; }
         bool IsValidFor(ColumnDescriptor columnDescriptor);
         bool IsValidFor(DataSchema dataSchema, Type columnType);
         Type GetOperandType(ColumnDescriptor columnDescriptor);
@@ -105,12 +106,21 @@ namespace pwiz.Common.DataBinding
         });
 
         private static readonly IDictionary<string, IFilterOperation> DictFilterOperations =
-            LstFilterOperations.ToDictionary(op => op.OpName, op => op);
+            LstFilterOperations.ToDictionary(op => op.OpName);
+
+        private static readonly IDictionary<string, IFilterOperation> DictFilterOperationsBySymbol =
+            LstFilterOperations.Where(op => !string.IsNullOrEmpty(op.OpSymbol)).ToDictionary(op => op.OpSymbol);
 
         public static IFilterOperation GetOperation(string name)
         {
             IFilterOperation result;
             DictFilterOperations.TryGetValue(name, out result);
+            return result;
+        }
+
+        public static IFilterOperation GetOperationBySymbol(string symbol)
+        {
+            DictFilterOperationsBySymbol.TryGetValue(symbol, out var result);
             return result;
         }
 
@@ -166,6 +176,11 @@ namespace pwiz.Common.DataBinding
             public virtual string ShortDisplayName
             {
                 get { return DisplayName; }
+            }
+
+            public virtual string OpSymbol
+            {
+                get { return OpName; }
             }
 
             public bool IsValidFor(ColumnDescriptor columnDescriptor)
@@ -330,6 +345,11 @@ namespace pwiz.Common.DataBinding
             }
 
             public override string ShortDisplayName
+            {
+                get { return @"="; }
+            }
+
+            public override string OpSymbol
             {
                 get { return @"="; }
             }
