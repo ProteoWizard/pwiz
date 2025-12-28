@@ -1,8 +1,10 @@
 using CommandLine;
+using JetBrains.Annotations;
 using SkylineTool;
 
 namespace SortProteins;
 
+[UsedImplicitly]
 public class Options
 {
     [Option("connection_name", Required = true, HelpText = "The Skyline connection name.")]
@@ -15,10 +17,10 @@ public class Options
     public bool Reverse { get; set; }
 
     [Option("order_by", Required = false, HelpText = "Field to order by. Can be specified multiple times.")]
-    public IEnumerable<string> OrderBy { get; set; } = Enumerable.Empty<string>();
+    public string? OrderBy { get; set; }
 }
 
-public class Program
+public static class Program
 {
     public static void Main(string[] args)
     {
@@ -30,7 +32,7 @@ public class Program
     {
         var remoteClient = new RemoteClient(options.ConnectionName);
         var proteinSorter = new ProteinSorter(remoteClient);
-        var locators = proteinSorter.GetProteinLocators(options.OrderBy.ToArray());
+        var locators = proteinSorter.GetProteinLocators(options.OrderBy);
         if (options.Random)
         {
             var random = new Random((int)DateTime.UtcNow.Ticks);

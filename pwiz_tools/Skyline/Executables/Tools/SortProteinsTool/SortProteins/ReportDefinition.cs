@@ -5,7 +5,7 @@ namespace SortProteins
 {
     public class ReportDefinition
     {
-        private XDocument _document;
+        private XDocument _document = null!;
 
         public void ReadDefinition(Stream stream)
         {

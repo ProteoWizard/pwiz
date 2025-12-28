@@ -28,6 +28,14 @@
     <Reference Include="CsvHelper">
       <HintPath>..\lib\CsvHelper.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\..\..\..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
+    </Reference>
   </ItemGroup>
+
+<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="&quot;$(ProjectDir)..\..\..\..\..\..\libraries\7za.exe&quot; a &quot;$(ProjectDir)..\SortProteinsTool.zip&quot; &quot;$(TargetDir)*&quot;" />
+    <Exec Command="&quot;$(ProjectDir)..\..\..\..\..\..\libraries\7za.exe&quot; a &quot;$(ProjectDir)..\SortProteinsTool.zip&quot; &quot;$(ProjectDir)..\tool-inf&quot;" />
+  </Target>
 
 </Project>

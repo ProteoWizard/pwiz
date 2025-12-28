@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using CsvHelper;
@@ -7,33 +6,34 @@ using SkylineTool;
 
 namespace SortProteins
 {
-    public class ProteinSorter
+    public class ProteinSorter(RemoteClient client)
     {
-        private RemoteClient _client;
-        public ProteinSorter(RemoteClient client)
-        {
-            _client = client;
-        }
-
-        public IEnumerable<string> GetProteinLocators(string[] orderBy)
+        public IEnumerable<string> GetProteinLocators(string? orderBy)
         {
             var rows = ReadRows(orderBy).ToList();
-            for (int iCol = orderBy.Length - 1; iCol >= 0; iCol--)
+            if (!string.IsNullOrEmpty(orderBy))
             {
-                rows = SortRows(rows, iCol).ToList();
+                if (rows.All(row => row.NumberValue.HasValue))
+                {
+                    rows = rows.OrderBy(row => row.NumberValue).ToList();
+                }
+                else
+                {
+                    rows = rows.OrderBy(row => row.TextValue, StringComparer.InvariantCultureIgnoreCase).ToList();
+                }
             }
 
             return rows.Select(row => row.Locator);
         }
 
-        public IEnumerable<Row> ReadRows(string[] columns)
+        private IEnumerable<Row> ReadRows(string? column)
         {
             var queryDef = CreateQueryDef();
-            foreach (var column in columns)
+            if (!string.IsNullOrEmpty(column))
             {
                 queryDef.AddColumn(column);
             }
-            var csvText = (string)_client.RemoteCallName(nameof(IToolService.GetReportFromDefinition), [queryDef.ToString()]);
+            var csvText = (string)client.RemoteCallName(nameof(IToolService.GetReportFromDefinition), [queryDef.ToString()]);
 
             using var reader = new StringReader(csvText);
             var config = new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true };
@@ -42,14 +42,33 @@ namespace SortProteins
             csv.ReadHeader();
             while (csv.Read())
             {
-                var columnValues = Enumerable.Range(1, columns.Length).Select(csv.GetField<string>).ToImmutableList();
-                yield return new Row(csv.GetField<string>(0)!) { Columns = columnValues };
+                var row = new Row(csv.GetField<string>(0)!);
+                if (string.IsNullOrEmpty(column))
+                {
+                    yield return row;
+                }
+                else
+                {
+                    var sortColumn = csv.GetField<string>(1);
+                    if (string.IsNullOrEmpty(sortColumn))
+                    {
+                        continue;
+                    }
+
+                    row = row with { TextValue = sortColumn };
+                    if (double.TryParse(sortColumn, CultureInfo.InvariantCulture, out var doubleValue))
+                    {
+                        row = row with { NumberValue = doubleValue };
+                    }
+
+                    yield return row;
+                }
             }
         }
 
         public void SetProteinOrder(IEnumerable<string> newOrder)
         {
-            _client.RemoteCallName(nameof(IToolService.ReorderElements), [newOrder.ToArray()]);
+            client.RemoteCallName(nameof(IToolService.ReorderElements), [newOrder.ToArray()]);
         }
 
         private ReportDefinition CreateQueryDef()
@@ -62,27 +81,10 @@ namespace SortProteins
             return queryDef;
         }
 
-        public record Row(string Locator)
+        private record Row(string Locator)
         {
-            public ImmutableList<string?> Columns { get; init; } = [];
-        }
-
-        public IEnumerable<Row> SortRows(IList<Row> rows, int columnIndex)
-        {
-            if (rows.All(row =>
-                {
-                    var c = row.Columns[columnIndex];
-                    return string.IsNullOrEmpty(c) || double.TryParse(c, CultureInfo.InvariantCulture, out _);
-                }))
-            {
-                return rows.OrderBy(row =>
-                {
-                    var c = row.Columns[columnIndex];
-                    return string.IsNullOrEmpty(c) ? default(double?) : double.Parse(c, CultureInfo.InvariantCulture);
-                });
-            }
-
-            return rows.OrderBy(row => row.Columns[columnIndex], StringComparer.InvariantCultureIgnoreCase);
+            public string? TextValue { get; init; }
+            public double? NumberValue { get; init; }
         }
     }
 }
