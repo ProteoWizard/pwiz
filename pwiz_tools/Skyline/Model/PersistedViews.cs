@@ -548,7 +548,7 @@ namespace pwiz.Skyline.Model
                 {"Molecule RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_RT_Results)},
                 {"Molecule Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
-                {"Detailed Info", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetDefaults_Detailed_Info)},
+                {"Detailed Log", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetDefaults_Detailed_Log)},
                 {"Protein Abundances", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetLocalizedReportNames_Protein_Abundances)},
                 {"Peptide Normalized Areas", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas)}
             };
