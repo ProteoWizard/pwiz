@@ -40,6 +40,7 @@ namespace ToolServiceTestHarness
             btnInvokeMethod = new Button();
             lblResult = new Label();
             tbxResult = new TextBox();
+            btnUpdateMethods = new Button();
             SuspendLayout();
             // 
             // comboMethod
@@ -102,10 +103,18 @@ namespace ToolServiceTestHarness
             resources.ApplyResources(tbxResult, "tbxResult");
             tbxResult.Name = "tbxResult";
             // 
+            // btnUpdateMethods
+            // 
+            resources.ApplyResources(btnUpdateMethods, "btnUpdateMethods");
+            btnUpdateMethods.Name = "btnUpdateMethods";
+            btnUpdateMethods.UseVisualStyleBackColor = true;
+            btnUpdateMethods.Click += btnUpdateMethods_Click;
+            // 
             // ToolServiceTestHarnessForm
             // 
             resources.ApplyResources(this, "$this");
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(btnUpdateMethods);
             Controls.Add(tbxResult);
             Controls.Add(lblResult);
             Controls.Add(btnInvokeMethod);
@@ -135,5 +144,6 @@ namespace ToolServiceTestHarness
         private Button btnInvokeMethod;
         private Label lblResult;
         private TextBox tbxResult;
+        private Button btnUpdateMethods;
     }
 }

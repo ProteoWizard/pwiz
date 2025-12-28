@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../../../SkylineTool/SkylineTool.csproj" Id="3fd4e167-8f9c-4116-8122-67c7ad143490" />
+  <Project Path="SortProteins/SortProteins.csproj" />
+</Solution>
