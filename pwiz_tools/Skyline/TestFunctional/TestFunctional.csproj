@@ -416,6 +416,7 @@
     <Compile Include="ModifiedAreaProportionTest.cs" />
     <Compile Include="MultiSelectPeakAreaGraphTest.cs" />
     <Compile Include="MultiSelectRetentionTimeTest.cs" />
+    <Compile Include="TrackReplicateInSummaryGraphTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
     <Compile Include="NegativeIonChromatogramsTest.cs" />
     <Compile Include="NeutralLossLibraryTest.cs" />

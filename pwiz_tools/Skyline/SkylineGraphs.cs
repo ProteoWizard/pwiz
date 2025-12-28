@@ -2804,6 +2804,10 @@ namespace pwiz.Skyline
                             focusStart.Focus();
                     }
                 }
+                // Propagate the change to all graphs
+                TrackReplicateInSummaryZooming();
+                SynchronizeSummaryZooming();
+
             }
         }
 
@@ -4179,6 +4183,34 @@ namespace pwiz.Skyline
             barAreaGraphDisplayTypeMenuItem.Checked = (displayType == AreaGraphDisplayType.bars);
             lineAreaGraphDisplayTypeMenuItem.Checked = (displayType == AreaGraphDisplayType.lines);
             UpdatePeakAreaGraph();
+        }
+
+
+
+        public void TrackReplicateInSummaryZooming()
+        {
+            GraphSummary[] graphSummaries = new List<GraphSummary>(
+                _listGraphMassError.Concat(_listGraphPeakArea.Concat(_listGraphRetentionTime))).ToArray();
+
+            // Note: this should take "isExpectedVisible" in account, but I don't know yet where that is
+
+            foreach (var graphSummary in graphSummaries)
+            {
+                if (graphSummary.GraphControl.GraphPane is SummaryReplicateGraphPane)
+                {
+                    double add = 0;
+                    var pane = graphSummary.GraphControl.GraphPane as SummaryReplicateGraphPane;
+                    var replicateXCoord = pane.SelectedIndex + 1;
+                    if (replicateXCoord > pane.XAxis.Scale.Max)
+                        add = add + replicateXCoord - Math.Floor(pane.XAxis.Scale.Max);
+                    else if (replicateXCoord < pane.XAxis.Scale.Min)
+                        add = add + replicateXCoord - Math.Ceiling(pane.XAxis.Scale.Min);
+                    // Keep the currently selected replicate visible on the graph.
+                    // Achieve this by "scrolling" the axis into view.
+                    pane.XAxis.Scale.Min += add;
+                    pane.XAxis.Scale.Max += add;
+                }
+            }
         }
 
         public void SynchronizeSummaryZooming(GraphSummary graphSummary = null, ZoomState zoomState = null)
