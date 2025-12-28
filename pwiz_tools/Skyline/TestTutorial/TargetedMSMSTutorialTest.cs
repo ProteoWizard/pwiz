@@ -523,11 +523,14 @@ namespace pwiz.SkylineTestTutorial
 
             ValidatePeakRanks(1, 176, true);
             WaitForGraphs();
-            if (!Program.SkylineOffscreen)  // Tooltips are not rendered in offscreen mode
-                ValidatePeakTooltips();
 
-            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+            {
+                // There is no Library Match tooltip for small molecules converted as masses only
+                if (!Program.SkylineOffscreen)  // Tooltips are not rendered in offscreen mode
+                    ValidatePeakTooltips();
                 TestLibraryMatchPropertySheet();
+            }
 
             if (!AsSmallMoleculeMasses)
             {
@@ -1374,15 +1377,17 @@ namespace pwiz.SkylineTestTutorial
         private void ValidatePeakTooltips()
         {
             // Initializing localized expected values
+            var asSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
             var mzObserved = (951.6229f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
             var mzMatched = (951.4782f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
             var massError = -152.1f;
             var massErrorString = string.Format(CultureInfo.CurrentCulture, Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError);
+            var fragName = "y8" + (asSmallMolecules ? "+" : string.Empty);
             var testString = $"{GraphsResources.GraphSpectrum_ToolTip_mz}\t{mzObserved}\n" +
                              $"{GraphsResources.GraphSpectrum_ToolTip_Intensity}\t3814516\n"+
                              $"{GraphsResources.GraphSpectrum_ToolTip_Rank}\t1\n"+
                              $"{GraphsResources.GraphSpectrum_ToolTip_MatchedIons}\t{GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass}\n"+
-                             $"y8\t{mzMatched}  {massErrorString}";
+                             $"{fragName}\t{mzMatched}  {massErrorString}";
             var testData = new Dictionary<Point, string>()
             {
                 {new Point(191, 95), testString},

@@ -94,6 +94,29 @@ This applies to:
 - **Bash tool with pwsh**: Use forward slashes in the quoted path string
 - **Edit/Write/Read tools**: Use backslashes (Windows native paths)
 
+## CRITICAL: Null Device on Windows
+
+### NEVER redirect to `nul` in Git Bash
+
+In Git Bash (used by the Bash tool), redirecting to `nul` creates an actual file instead of discarding output:
+
+```bash
+# WRONG - Creates a literal file named "nul" in the working directory
+some_command > nul 2>&1
+
+# CORRECT - Git Bash understands /dev/null
+some_command > /dev/null 2>&1
+```
+
+For PowerShell commands:
+```powershell
+# CORRECT - PowerShell null handling
+some_command | Out-Null
+some_command > $null
+```
+
+**Why this matters**: The spurious `nul` file appears in `git status` as an untracked file and must be manually deleted.
+
 ## Documentation Discovery
 
 **Unsure what documentation exists?** Consult **[ai/TOC.md](TOC.md)** - a comprehensive table of contents with:

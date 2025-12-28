@@ -86,10 +86,11 @@ namespace ImageComparer
     internal class ScreenshotFile
     {
         private static readonly Regex PATTERN = new Regex(@"\\([a-zA-Z0-9\-]+)\\(\w\w-?[A-Z]*)\\s-(\d\d)\.png");
+        private static readonly Regex PATTERN_COVER = new Regex(@"\\([a-zA-Z0-9\-]+)\\(\w\w-?[A-Z]*)\\cover\.png");
 
         public static bool IsMatch(string filePath)
         {
-            return PATTERN.Match(filePath).Success;
+            return PATTERN.Match(filePath).Success || PATTERN_COVER.Match(filePath).Success;
         }
 
         public ScreenshotFile(string filePath)
@@ -102,6 +103,18 @@ namespace ImageComparer
                 Name = match.Groups[1].Value;
                 Locale = match.Groups[2].Value;
                 Number = int.Parse(match.Groups[3].Value);
+                IsCover = false;
+            }
+            else
+            {
+                match = PATTERN_COVER.Match(filePath);
+                if (match.Success)
+                {
+                    Name = match.Groups[1].Value;
+                    Locale = match.Groups[2].Value;
+                    Number = 0;
+                    IsCover = true;
+                }
             }
         }
 
@@ -109,15 +122,16 @@ namespace ImageComparer
         public string Name { get; }
         public string Locale { get; }
         public int Number { get; }
+        public bool IsCover { get; }
 
         public bool IsEmpty => string.IsNullOrEmpty(Name);
 
         private const string BASE_URL = "https://skyline.ms/tutorials/25-1";
-        public string UrlInTutorial => $"{BASE_URL}/{Name}/{Locale}/index.html#s-{Number}";
+        public string UrlInTutorial => IsCover ? $"{BASE_URL}/{Name}/{Locale}/index.html" : $"{BASE_URL}/{Name}/{Locale}/index.html#s-{Number}";
         public string UrlToDownload => $"{BASE_URL}/{RelativePath}";
         // RelativePath is used for ComboBox display
         // ReSharper disable once MemberCanBePrivate.Local
-        public string RelativePath => $"{Name}/{Locale}/s-{Number:D2}.png";
+        public string RelativePath => IsCover ? $"{Name}/{Locale}/cover.png" : $"{Name}/{Locale}/s-{Number:D2}.png";
 
         public string GetDescription(ImageSource source)
         {
@@ -135,11 +149,13 @@ namespace ImageComparer
 
         /// <summary>
         /// Generates a diff filename for saving to ai\.tmp folder.
-        /// Format: {Name}-{Locale}-s-{Number}-diff-{pixelCount}px.png
+        /// Format: {Name}-{Locale}-s-{Number}-diff-{pixelCount}px.png or {Name}-{Locale}-cover-diff-{pixelCount}px.png
         /// </summary>
         public string GetDiffFileName(int pixelCount)
         {
-            return $"{Name}-{Locale}-s-{Number:D2}-diff-{pixelCount}px.png";
+            return IsCover
+                ? $"{Name}-{Locale}-cover-diff-{pixelCount}px.png"
+                : $"{Name}-{Locale}-s-{Number:D2}-diff-{pixelCount}px.png";
         }
 
         /// <summary>

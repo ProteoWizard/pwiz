@@ -599,5 +599,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return IrtDb.ChooseUnknownScore(_dictionary.Values);
             }
         }
+
+        public static LoessRegression CreateLoessRegression(IEnumerable<double> x, IEnumerable<double> y,
+            CancellationToken cancellationToken)
+        {
+            IList<WeightedPoint> weightedPoints = x.Zip(y, (a, b) => new WeightedPoint(a, b)).ToList();
+            weightedPoints = DownsamplePoints(weightedPoints, Settings.Default.RtRegressionBinCount);
+            return new LoessRegression(weightedPoints.Select(pt => pt.X).ToArray(),
+                weightedPoints.Select(pt => pt.Y).ToArray(), true, cancellationToken);
+        }
     }
 }
