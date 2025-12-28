@@ -19,3 +19,12 @@ See ai/todos/active/TODO-YYYYMMDD_feature.md
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+## Troubleshooting
+
+**CRLF Warning**: If git shows `LF will be replaced by CRLF the next time Git touches it`:
+```powershell
+pwsh -Command "& './ai/scripts/fix-crlf.ps1'"
+git add <fixed-files>
+```
+This ensures consistent line endings before commit.

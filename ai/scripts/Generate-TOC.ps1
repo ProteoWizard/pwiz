@@ -185,6 +185,9 @@ $coreFiles = Get-ChildItem -Path (Join-Path $repoRoot "ai") -Filter "*.md" -File
 $guideFiles = Get-ChildItem -Path (Join-Path $repoRoot "ai/docs") -Filter "*.md" -File -ErrorAction SilentlyContinue |
     Select-Object -ExpandProperty FullName
 
+$mcpFiles = Get-ChildItem -Path (Join-Path $repoRoot "ai/docs/mcp") -Filter "*.md" -File -ErrorAction SilentlyContinue |
+    Select-Object -ExpandProperty FullName
+
 $skillFiles = Get-ChildItem -Path (Join-Path $repoRoot ".claude/skills") -Directory -ErrorAction SilentlyContinue |
     ForEach-Object { Join-Path $_.FullName "SKILL.md" } |
     Where-Object { Test-Path $_ }
@@ -209,6 +212,7 @@ $tocContent = @"
 |----------|-------|----------|
 | Core Documents | $($coreFiles.Count) | ``ai/*.md`` |
 | Guides | $($guideFiles.Count) | ``ai/docs/*.md`` |
+| MCP Data Sources | $($mcpFiles.Count) | ``ai/docs/mcp/*.md`` |
 | Skills | $($skillFiles.Count) | ``.claude/skills/*/SKILL.md`` |
 | Commands | $($commandFiles.Count) | ``.claude/commands/*.md`` |
 
@@ -240,6 +244,22 @@ In-depth documentation on specific topics.
 
 $guideRows = New-TableRows -Files $guideFiles -BaseDir "ai/docs" -LinkPrefix "docs/" -ExistingDescriptions $existingDescriptions
 $tocContent += "`n" + ($guideRows -join "`n")
+
+$tocContent += @"
+
+
+---
+
+## MCP Data Sources (ai/docs/mcp/*.md)
+
+Documentation for external data access via MCP servers and CLI tools.
+
+| File | Description | Lines |
+|------|-------------|------:|
+"@
+
+$mcpRows = New-TableRows -Files $mcpFiles -BaseDir "ai/docs/mcp" -LinkPrefix "docs/mcp/" -ExistingDescriptions $existingDescriptions
+$tocContent += "`n" + ($mcpRows -join "`n")
 
 $tocContent += @"
 
@@ -301,6 +321,7 @@ $tocContent | Set-Content -Path $tocPath -Encoding UTF8
 Write-Host "Generated: $tocPath"
 Write-Host "  Core documents: $($coreFiles.Count)"
 Write-Host "  Guides: $($guideFiles.Count)"
+Write-Host "  MCP data sources: $($mcpFiles.Count)"
 Write-Host "  Skills: $($skillFiles.Count)"
 Write-Host "  Commands: $($commandFiles.Count)"
 

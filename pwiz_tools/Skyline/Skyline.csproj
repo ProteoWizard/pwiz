@@ -656,6 +656,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Results\TransitionGroupIntegrator.cs" />
     <Compile Include="Model\WatersConnect\MethodModel.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\ReintegrateResultsHandler.cs" />
