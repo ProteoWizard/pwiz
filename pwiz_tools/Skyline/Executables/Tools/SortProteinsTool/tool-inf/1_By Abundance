@@ -1,0 +1,4 @@
+Title = Sort Proteins By\\Abundance
+Command = $(ToolDir)\\SortProteins.exe
+Arguments = --connection_name $(SkylineConnection) --order_by Results!*.Value.Abundance.Raw --reverse
+OutputToImmediateWindow = True
