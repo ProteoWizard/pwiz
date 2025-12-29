@@ -2313,6 +2313,13 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Compares settings that affect quantification/abundance calculations.
         /// Used to determine if cached abundance values can be reused.
+        ///
+        /// Normalization method-specific behavior:
+        /// - NONE, RatioToLabel: Only check if quantification settings match
+        /// - GLOBAL_STANDARDS: Also check if global standard peptides changed and MeasuredResults
+        /// - TIC: Check if MeasuredResults changed
+        /// - EQUALIZE_MEDIANS: Always returns false (any target change affects all abundances)
+        /// - RatioToSurrogate: TODO - check if specific surrogate has changed
         /// </summary>
         public bool HasEqualQuantificationSettings(SrmSettings other)
         {

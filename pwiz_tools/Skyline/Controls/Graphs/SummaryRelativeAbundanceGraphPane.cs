@@ -135,6 +135,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
                 }
 
+                // For median normalization, any target change affects all abundances because the
+                // median is recalculated from all values. Require exact document match.
+                var normMethod = currentDoc.Settings.PeptideSettings.Quantification.NormalizationMethod;
+                if (Equals(normMethod, NormalizationMethod.EQUALIZE_MEDIANS) &&
+                    !ReferenceEquals(cachedDoc, currentDoc))
+                {
+                    keysToRemove.Add(cacheKey);
+                    continue;
+                }
+
                 // Check if the relevant ChromatogramSet still exists
                 if (cacheKey == -1)
                 {

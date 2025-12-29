@@ -392,12 +392,35 @@ namespace pwiz.SkylineTestFunctional
                     "Changing quantification settings should recalculate all nodes");
             });
 
-            // === Test 6: Reopen document - verify document ID change triggers full recalculation ===
-            // This tests the "document identity changed" branch in CleanCacheForIncrementalUpdates
-            // Undo the quantification change first so document matches the file on disk
+            // === Test 5b: Delete peptide with median normalization - verify full recalculation ===
+            // With EQUALIZE_MEDIANS, any target change affects all abundances because the median
+            // is recalculated. Incremental updates cannot be used.
+            RunUI(() => SkylineWindow.SelectedPath =
+                SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0));
+            RunUI(SkylineWindow.EditDelete);
+            WaitForGraphs();
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                int afterMedianDeleteCount = pane.CurveList.Sum(curve => curve.NPts);
+                Assert.AreEqual(originalPeptideCount - 1, afterMedianDeleteCount,
+                    "Deleting a peptide should reduce count by 1");
+
+                // With median normalization, everything must be recalculated (no caching)
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "With median normalization, deleting a peptide should trigger full recalculation");
+                Assert.AreEqual(originalPeptideCount - 1, pane.RecalculatedNodeCount,
+                    "With median normalization, all remaining peptides should be recalculated");
+            });
+
+            // Undo both changes so document matches the file on disk
+            RunUI(SkylineWindow.Undo);
             RunUI(SkylineWindow.Undo);
             WaitForConditionUI(() => pane.IsComplete);
 
+            // === Test 6: Reopen document - verify document ID change triggers full recalculation ===
+            // This tests the "document identity changed" branch in CleanCacheForIncrementalUpdates
             // Capture the current document ID before reopening
             Identity priorDocId = null;
             RunUI(() => priorDocId = SkylineWindow.Document.Id);

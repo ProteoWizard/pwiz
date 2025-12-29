@@ -683,7 +683,33 @@ Cache cleaning happened inside `TryGetProduct`, but `TryGetCachedResult` was cal
 - `PeakAreaRelativeAbundanceGraphTest.cs` - Added TestIncrementalUpdate with 5 test cases
 - `SettingsExtensions.cs` - Added ChangePeptideQuantification extension method
 
-## Phase 10: Enhanced Test Coverage ✅ COMPLETE
+## Phase 10: Normalization-Aware Cache Invalidation ✅ COMPLETE
+
+### Problem
+The original `HasEqualQuantificationSettings` only compared `PeptideSettings.Quantification`, but cache invalidation needs to be smarter based on normalization method.
+
+### Implementation
+
+**Enhanced `HasEqualQuantificationSettings` in SrmSettings.cs:**
+- For GLOBAL_STANDARDS: Check if global standard peptides changed using `ReferenceEquals` on `GetPeptideStandards(StandardType.GLOBAL_STANDARD)` - follows the same pattern as `SrmDocument.SetChildren`
+- Added documentation for all normalization method behaviors
+- Left TODO for RatioToSurrogate (requires extracting surrogate name from normalization method)
+
+**Enhanced `CleanCacheForIncrementalUpdates` in SummaryRelativeAbundanceGraphPane.cs:**
+- For EQUALIZE_MEDIANS: Require exact document match since any target change affects the median calculation
+- This prevents incorrect caching when median normalization is active
+
+### Test Added (Test 5b)
+- Delete peptide while EQUALIZE_MEDIANS normalization is active
+- Verifies `CachedNodeCount = 0` (no caching allowed)
+- Verifies `RecalculatedNodeCount = originalPeptideCount - 1` (full recalculation)
+
+### Files Modified
+- `SrmSettings.cs` - Enhanced HasEqualQuantificationSettings with global standards check
+- `SummaryRelativeAbundanceGraphPane.cs` - Added EQUALIZE_MEDIANS document equality check
+- `PeakAreaRelativeAbundanceGraphTest.cs` - Added Test 5b for median normalization behavior
+
+## Phase 11: Enhanced Test Coverage ✅ COMPLETE
 
 ### Test 3 Enhancement: Multi-Peptide Delete
 Changed from deleting 1 peptide to deleting 4 disjoint peptides at indices 0, 10, 50, 100:
