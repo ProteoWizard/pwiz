@@ -61,6 +61,7 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Model.Serialization.DuckDb;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -1182,12 +1183,20 @@ namespace pwiz.Skyline
                         longWaitDlg.Message = Path.GetFileName(fileName);
                         longWaitDlg.PerformWork(this, 800, progressMonitor =>
                         {
-                            document.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
-                            // If the user has chosen "Save As", and the document has a
-                            // document specific spectral library, copy this library to 
-                            // the new name.
-                            if (!Equals(DocumentFilePath, fileName))
-                                SaveDocumentLibraryAs(fileName);
+                            if (fileName.EndsWith(DuckDbSerializer.EXT, StringComparison.OrdinalIgnoreCase))
+                            {
+                                var serializer = new DuckDbSerializer(document, progressMonitor);
+                                serializer.SerializeDocument(saver.SafeName);
+                            }
+                            else
+                            {
+                                document.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
+                                // If the user has chosen "Save As", and the document has a
+                                // document specific spectral library, copy this library to
+                                // the new name.
+                                if (!Equals(DocumentFilePath, fileName))
+                                    SaveDocumentLibraryAs(fileName);
+                            }
 
                             saver.Commit();
                         });
