@@ -310,11 +310,12 @@ namespace pwiz.SkylineTestFunctional
                     "After undo, only the restored protein should be recalculated");
             });
 
-            // === Test 3: Peptide mode - delete a peptide, verify incremental update ===
+            // === Test 3: Peptide mode - delete multiple disjoint peptides, verify incremental update ===
             RunUI(() => SkylineWindow.SetAreaProteinTargets(false));
             WaitForConditionUI(() => pane.IsComplete);
 
             int originalPeptideCount = 0;
+            const int peptidesToDelete = 4;
             RunUI(() =>
             {
                 originalPeptideCount = pane.CurveList.Sum(curve => curve.NPts);
@@ -324,30 +325,36 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
                     "Switching to peptide mode should recalculate all nodes");
 
-                // Select a peptide for deletion
-                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                // Select multiple disjoint peptides for deletion (indices 0, 10, 50, 100)
+                // These are spread across the document to test non-adjacent deletion
+                var peptideIndices = new[] { 0, 10, 50, 100 };
+                var paths = peptideIndices
+                    .Where(i => i < SkylineWindow.Document.MoleculeCount)
+                    .Select(i => SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, i))
+                    .ToArray();
+                SkylineWindow.SequenceTree.SelectedPaths = paths;
             });
 
-            // Delete the selected peptide
+            // Delete the selected peptides
             RunUI(SkylineWindow.EditDelete);
             WaitForConditionUI(() => pane.IsComplete);
 
             RunUI(() =>
             {
                 int afterDeleteCount = pane.CurveList.Sum(curve => curve.NPts);
-                // One fewer peptide
-                Assert.AreEqual(originalPeptideCount - 1, afterDeleteCount,
-                    "Deleting a peptide should reduce count by 1");
+                // Fewer peptides after deletion
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, afterDeleteCount,
+                    $"Deleting {peptidesToDelete} peptides should reduce count by {peptidesToDelete}");
 
                 // Verify incremental update: all remaining peptides cached, none recalculated
-                // (the deleted peptide is just removed, not recalculated)
-                Assert.AreEqual(originalPeptideCount - 1, pane.CachedNodeCount,
-                    "After deleting peptide, all remaining peptides should be cached");
+                // (the deleted peptides are just removed, not recalculated)
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, pane.CachedNodeCount,
+                    "After deleting peptides, all remaining peptides should be cached");
                 Assert.AreEqual(0, pane.RecalculatedNodeCount,
-                    "After deleting peptide, no peptides should be recalculated (just removed)");
+                    "After deleting peptides, no peptides should be recalculated (just removed)");
             });
 
-            // === Test 4: Undo - verify the restored peptide is recalculated ===
+            // === Test 4: Undo - verify the restored peptides are recalculated ===
             RunUI(SkylineWindow.Undo);
             WaitForConditionUI(() => pane.IsComplete);
 
@@ -357,11 +364,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(originalPeptideCount, afterUndoCount,
                     "Undo should restore peptide count");
 
-                // Verify incremental update: existing peptides cached, restored peptide recalculated
-                Assert.AreEqual(originalPeptideCount - 1, pane.CachedNodeCount,
+                // Verify incremental update: existing peptides cached, restored peptides recalculated
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, pane.CachedNodeCount,
                     "After undo, existing peptides should be cached");
-                Assert.AreEqual(1, pane.RecalculatedNodeCount,
-                    "After undo, only the restored peptide should be recalculated");
+                Assert.AreEqual(peptidesToDelete, pane.RecalculatedNodeCount,
+                    $"After undo, only the {peptidesToDelete} restored peptides should be recalculated");
             });
 
             // === Test 5: Change quantification settings - verify full recalculation ===
@@ -381,8 +388,39 @@ namespace pwiz.SkylineTestFunctional
                 // Quantification settings change should trigger full recalculation
                 Assert.AreEqual(0, pane.CachedNodeCount,
                     "Changing quantification settings should trigger full calculation with no cached nodes");
-                Assert.IsTrue(pane.RecalculatedNodeCount > 0,
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
                     "Changing quantification settings should recalculate all nodes");
+            });
+
+            // === Test 6: Reopen document - verify document ID change triggers full recalculation ===
+            // This tests the "document identity changed" branch in CleanCacheForIncrementalUpdates
+            // Undo the quantification change first so document matches the file on disk
+            RunUI(SkylineWindow.Undo);
+            WaitForConditionUI(() => pane.IsComplete);
+
+            // Capture the current document ID before reopening
+            Identity priorDocId = null;
+            RunUI(() => priorDocId = SkylineWindow.Document.Id);
+
+            // Reopen the same file - this creates a new document with a new ID
+            RunUI(() => SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
+            WaitForDocumentLoaded();
+
+            // Get the new graph pane (old one was disposed when document closed)
+            pane = FindGraphPane();
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                // Verify document ID actually changed
+                Assert.AreNotSame(priorDocId, SkylineWindow.Document.Id,
+                    "Reopening document should create a new document ID");
+
+                // Document ID change should trigger full recalculation (no cached data valid)
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Reopening document should trigger full calculation with no cached nodes");
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
+                    "Reopening document should recalculate all nodes");
             });
         }
     }

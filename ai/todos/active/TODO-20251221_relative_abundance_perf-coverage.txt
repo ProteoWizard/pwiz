@@ -12,6 +12,7 @@
 # ============================================================================
 # TestPeakAreaRelativeAbundanceGraph  (8-9 sec) - relative abundance graph
 # TestNonlinearRegression             (3 sec) - RT regression (score-to-run + run-to-run)
+# TestIrtTutorial                     (~60 sec) - RT regression graph coverage
 #
 # ============================================================================
 # PRODUCTION CODE - INCLUDED IN COVERAGE ANALYSIS (6 files)
