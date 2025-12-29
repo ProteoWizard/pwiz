@@ -669,6 +669,40 @@ Cache cleaning happened inside `TryGetProduct`, but `TryGetCachedResult` was cal
 - `PeakAreaRelativeAbundanceGraphTest.cs` - Added TestIncrementalUpdate with 5 test cases
 - `SettingsExtensions.cs` - Added ChangePeptideQuantification extension method
 
+## Phase 10: Enhanced Test Coverage ✅ COMPLETE
+
+### Test 3 Enhancement: Multi-Peptide Delete
+Changed from deleting 1 peptide to deleting 4 disjoint peptides at indices 0, 10, 50, 100:
+- Tests non-adjacent node deletion handling
+- Verifies `CachedNodeCount = originalPeptideCount - 4`
+- Verifies `RecalculatedNodeCount = 0` (delete doesn't recalculate)
+
+### Test 6 Addition: Document ID Change
+Added test for reopening the same document file:
+- Verifies `Document.Id` changes (new Identity object created)
+- Verifies full recalculation triggered (`CachedNodeCount = 0`)
+- Tests the "document identity changed" branch in `CleanCacheForIncrementalUpdates`
+
+### Coverage Analysis Fix
+Fixed `Analyze-Coverage.ps1` to handle generic type parameters:
+- JSON has `ReplicateCachingReceiver<TParam,TResult>` but extracted type is `ReplicateCachingReceiver`
+- Added regex to strip `<...>` suffix: `$node.Name -replace '<.*>$', ''`
+- Now correctly reports coverage for generic classes
+
+### Coverage Test List
+Added `TestIrtTutorial` to coverage test list for better RTLinearRegressionGraphPane coverage:
+- RTLinearRegressionGraphPane: 48.5% → 61.9% (+13.4%)
+
+### Key Insight: Coverage vs Testing
+Coverage measures code execution, not correctness. The existing tests already ran the incremental update code (71% coverage) but never verified the results were from incremental updates. The counter-based assertions catch both:
+- **Not efficient enough**: `CachedNodeCount=0` when expected >0 (fell back to full recalc)
+- **Too efficient**: `CachedNodeCount>0` when expected 0 (using stale cached data)
+
+### Files Modified
+- `PeakAreaRelativeAbundanceGraphTest.cs` - Enhanced Test 3, added Test 6
+- `TODO-20251221_relative_abundance_perf-coverage.txt` - Added TestIrtTutorial
+- `Analyze-Coverage.ps1` - Fixed generic type parameter handling
+
 ## Related
 - Discovered during PR #3707 (Peak Imputation DIA Tutorial) review
 - Pattern follows `RTLinearRegressionGraphPane` approach for background computation

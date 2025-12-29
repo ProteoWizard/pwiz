@@ -100,7 +100,9 @@ function FindCoverageForType {
     $results = @()
 
     if ($node.Kind -eq "Type") {
-        $fullPath = if ($path) { "$path.$($node.Name)" } else { $node.Name }
+        # Strip generic type parameters from node name (e.g., "ReplicateCachingReceiver<TParam,TResult>" -> "ReplicateCachingReceiver")
+        $typeName = $node.Name -replace '<.*>$', ''
+        $fullPath = if ($path) { "$path.$typeName" } else { $typeName }
 
         foreach ($pattern in $patterns) {
             $matched = $false
@@ -111,7 +113,7 @@ function FindCoverageForType {
                 $matched = ($fullPath -eq $pattern)
             } else {
                 # Pattern is a simple name - use wildcard match
-                $matched = ($node.Name -like "*$pattern*")
+                $matched = ($typeName -like "*$pattern*")
             }
 
             if ($matched) {
@@ -121,7 +123,7 @@ function FindCoverageForType {
                 }
                 $results += [PSCustomObject]@{
                     Path = $fullPath
-                    Type = $node.Name
+                    Type = $typeName
                     CoveredStatements = $node.CoveredStatements
                     TotalStatements = $node.TotalStatements
                     CoveragePercent = $coveragePercent
