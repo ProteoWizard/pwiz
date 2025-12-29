@@ -14,30 +14,22 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 - [x] Documented email color coding (green/yellow/red/gray) in nightly-tests.md
 - [x] Added email archiving step to keep inbox clean
 - [x] Added self-improvement reflection step
+- [x] Historical JSON storage for trend analysis (Step 6, 8 in /pw-daily)
 
 ## Backlog
 
 ### Tier 1: High Value, Achievable Now
 
-#### 1. Historical JSON Storage for Trend Analysis
-**Problem**: Each daily run starts fresh with no memory of previous days. Cannot answer "Is this new or recurring?"
-**Solution**: Save structured JSON summary alongside markdown report
-**Implementation**:
-- Write `ai/.tmp/history/daily-summary-YYYYMMDD.json` after each report
-- Include: test counts, failure list, exception signatures, missing computers
-- Next day reads last 7 days for comparison
-**Enables**: Longitudinal analysis, recurring issue detection, trend visualization
-
-#### 2. Level 1 Automation - Pattern Detection
+#### 1. Level 1 Automation - Pattern Detection
 **Problem**: Reports show data but don't highlight patterns requiring immediate attention
 **Solution**: Add pattern detection to daily report:
 - Detect NEW failures (not in yesterday's run)
 - Detect ALL-MACHINES-AFFECTED pattern → flag for immediate attention
 - Flag tests involving known external services (Koina, Panorama)
 - Track "expected fixes" and verify next day
-**Implementation**: Compare today's results to historical JSON (#1)
+**Implementation**: Compare today's results to historical JSON (now available)
 
-#### 3. Parse Installation ID from Exceptions
+#### 2. Parse Installation ID from Exceptions
 **Problem**: Cannot distinguish "1 user hit this 4 times" from "4 users hit this once each"
 **Solution**: Parse Installation ID from exception email HTML
 **Implementation**: Regex for `Installation ID: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`
@@ -45,7 +37,7 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 
 ### Tier 2: High Value, Requires C# Code Changes
 
-#### 4. Automated Stack Trace Capture for Hangs
+#### 3. Automated Stack Trace Capture for Hangs
 **Problem**: Hang alerts notify developers to RDP and attach debuggers, but developers rarely catch it in time
 **Solution**: Have SkylineNightly automatically capture thread/stack traces from hung TestRunner.exe
 **Implementation options**:
@@ -55,7 +47,7 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 **Value**: Transforms hang alerts from "notification to act" to "automated diagnosis"
 **Files**: SkylineNightly project
 
-#### 5. TestRunner Flush Logging for Hung Test Identification
+#### 4. TestRunner Flush Logging for Hung Test Identification
 **Problem**: Hang alert emails show last *completed* test, not the *hung* test (log only flushes on line completion)
 **Solution**: Flush test name immediately when starting:
 ```
@@ -66,7 +58,7 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 **Files**: TestRunner.exe output code
 **Value**: Know which test is hung immediately, not after 8 AM report
 
-#### 6. Historical Regression Detection
+#### 5. Historical Regression Detection
 **Problem**: Intermittent failures can persist for months before someone traces when they started (e.g., June bug found in October)
 **Solution**: For each failing test, query past 30/90/365 days to find introduction date
 **Output format**:
@@ -81,17 +73,17 @@ TestFoo - INTERMITTENT REGRESSION DETECTED
 
 ### Tier 3: Medium Value
 
-#### 7. Track Recurring Missing Computers
+#### 6. Track Recurring Missing Computers
 **Problem**: Same computers missing for multiple days with no investigation
 **Solution**: Track "days missing" and escalate after threshold (e.g., 3 days)
-**Depends on**: #1 (Historical JSON)
+**Depends on**: Historical JSON (now available)
 
-#### 8. Date Boundary Verification
+#### 7. Date Boundary Verification
 **Problem**: Occasional mismatch between email data and MCP data due to different time windows
 **Solution**: Log explicit date ranges from each source, flag discrepancies
 **Value**: Accuracy and trust in reports
 
-#### 9. Git Integration for Developer Attribution
+#### 8. Git Integration for Developer Attribution
 **Problem**: Reports show failures but don't identify who should investigate
 **Solution**:
 - Get commit author from git hash: `git show --format='%an <%ae>' -s <hash>`
@@ -101,12 +93,12 @@ TestFoo - INTERMITTENT REGRESSION DETECTED
 
 ### Tier 4: Low Priority / Quick Fixes
 
-#### 10. Verify Leak Type Distinction
+#### 9. Verify Leak Type Distinction
 **Problem**: Reports say "leak" but email distinguishes "Handle leak" vs "Memory and handle leak"
 **Solution**: Verify `leak_type` from `leaks_by_date` query is surfaced in reports
 **Status**: Data already available, just needs verification
 
-#### 11. Standardize Email Subject Format
+#### 10. Standardize Email Subject Format
 **Problem**: Subject lines vary slightly ("Daily Summary" vs "Daily Report")
 **Solution**: Use consistent format: `Skyline Daily Summary - Month DD, YYYY`
 **Priority**: Cosmetic
@@ -139,3 +131,7 @@ The following patterns from developer reports represent ideal automated investig
 - Implemented: email data sources, color coding docs, archiving, self-improvement step
 - Analyzed 9 real developer report examples to identify valuable patterns
 - Proved visual analysis capability (can analyze images, cannot acquire them)
+- Implemented Historical JSON storage (Steps 6 and 8 in /pw-daily)
+  - Schema: date, nightly summary/failures/leaks/hangs/missing, exceptions by signature, support
+  - Files saved to `ai/.tmp/history/daily-summary-YYYYMMDD.json`
+  - Enables trend analysis across days/weeks/months

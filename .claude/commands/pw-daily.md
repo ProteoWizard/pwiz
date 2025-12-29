@@ -117,14 +117,75 @@ Compare email data with MCP data:
 - Email is authoritative for the current nightly window
 - MCP provides deeper drill-down data
 
-### Step 6: Present Consolidated Summary
+### Step 6: Load Historical Data
+
+Read previous daily summaries from `ai/.tmp/history/` to enable trend analysis:
+
+```
+# Read last 7 days of history (or more for specific investigations)
+Glob pattern: ai/.tmp/history/daily-summary-*.json
+```
+
+For each historical file found, load and compare:
+- **NEW failures**: Tests in today's failures not in yesterday's
+- **RESOLVED failures**: Tests in yesterday's failures not in today's
+- **Recurring missing**: Computers missing for multiple consecutive days
+- **Exception trends**: Signatures appearing/increasing over time
+
+### Step 7: Present Consolidated Summary
 
 Provide a summary highlighting:
 - **Nightly**: Use email subject line counts (Err/Warn/Pass/Missing), list specific failures/leaks/hangs
 - **Exceptions**: Count exceptions, group by unique issue (location + error message), note if same user hit multiple times
 - **Support**: Unanswered threads requiring attention
 
-### Step 7: Archive Processed Emails
+Include historical insights from Step 6:
+- "NEW: TestFoo started failing today (not in previous 7 days)"
+- "RESOLVED: TestBar no longer failing (was failing yesterday)"
+- "RECURRING: COMPUTER-X missing for 3 consecutive days"
+- "TREND: ExceptionSignature appeared 2 days ago, now at 5 occurrences"
+
+### Step 8: Save Daily Summary JSON
+
+Write a structured JSON summary for future trend analysis:
+
+```
+File: ai/.tmp/history/daily-summary-YYYYMMDD.json
+```
+
+**JSON Schema:**
+```json
+{
+  "date": "YYYY-MM-DD",
+  "generated_at": "ISO timestamp",
+  "nightly": {
+    "summary": { "errors": N, "warnings": N, "passed": N, "missing": N, "total_tests": N },
+    "failures": { "TestName": ["COMPUTER1", "COMPUTER2"] },
+    "leaks": { "TestName": ["COMPUTER1"] },
+    "hangs": { "TestName": ["COMPUTER1"] },
+    "missing_computers": ["COMPUTER1", "COMPUTER2"]
+  },
+  "exceptions": {
+    "count": N,
+    "by_signature": {
+      "ExceptionType at File.cs:line": {
+        "count": N,
+        "installation_ids": ["id1", "id2"]
+      }
+    }
+  },
+  "support": {
+    "threads_needing_attention": N
+  }
+}
+```
+
+This file accumulates over time, enabling queries like:
+- "When did TestFoo start failing?" (scan backwards for first appearance)
+- "How often does this exception occur?" (count across days)
+- "Which computers are chronically missing?" (count consecutive days)
+
+### Step 9: Archive Processed Emails
 
 After completing the report, archive all processed notification emails to keep the inbox clean for the next run:
 
@@ -137,7 +198,7 @@ This ensures:
 - No duplicate processing of old notifications
 - Clear signal that inbox emails are unprocessed items
 
-### Step 8: Self-Improvement Reflection
+### Step 10: Self-Improvement Reflection
 
 After completing the report, reflect on the reporting system itself:
 
@@ -162,6 +223,10 @@ Reports saved to `ai/.tmp/`:
 - `nightly-report-YYYYMMDD.md` - Full test results from MCP
 - `exceptions-report-YYYYMMDD.md` - Exception details with stack traces
 - `support-report-YYYYMMDD.md` - Support thread summary
+
+Historical data saved to `ai/.tmp/history/`:
+- `daily-summary-YYYYMMDD.json` - Structured daily summary for trend analysis
+- Files accumulate over time; do not delete (enables longitudinal analysis)
 
 Improvement tracking:
 - `ai/todos/active/TODO-20251228_daily_report_improvements.md` - Active backlog
