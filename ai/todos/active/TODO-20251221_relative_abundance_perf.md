@@ -124,7 +124,21 @@ See `ai/docs/architecture-data-model.md` for full documentation.
 ### Settings Comparison
 - Added `SrmSettings.HasEqualQuantificationSettings()` stub method
 - Currently compares `PeptideSettings.Quantification`
-- TODO for Nick: Expand to cover all settings that affect abundance calculations
+
+#### Future Enhancement: Smarter Cache Invalidation by Normalization Type (Nick's Feedback)
+
+The current implementation invalidates all cached entries when quantification settings change. A smarter approach would consider the normalization method:
+
+1. **Median Normalization**: Any change to targets can invalidate everything due to median instability. Simplify to document reference equality (like RT graph).
+
+2. **Global Standards**: Only changes to global standard peptides invalidate everything. There's existing code to detect global standards changes for ratio recalculation.
+
+3. **Surrogate Standards**: Changes to a surrogate standard only invalidate entries that normalize to it. There's likely existing code similar to global standards detection.
+
+**Implementation Notes:**
+- Move `HasEqualQuantificationSettings()` from `SrmSettings` to `SrmDocument` (needs access to `Document.Children`)
+- Call outside the per-entry loop in `CleanCacheForIncrementalUpdates` for performance
+- Look for existing ratio recalculation code as reference for detecting standard changes
 
 ## Phase 4: Progress Bar Improvements ✅ COMPLETE
 
