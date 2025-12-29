@@ -620,6 +620,55 @@ The smart cache cleaning validates each entry:
 - Added "The Change... Pattern" section explaining ChangeProp/ImClone
 - Expanded "Identity vs DocNode" with table comparing purposes and mutability
 
+## Phase 9: Incremental Update Test Coverage ✅ COMPLETE
+
+### Problem
+Current tests pass whether incremental updates work or not - they just verify the final graph state, not *how* it was computed. If incremental update code regressed to full recalculation, tests would still pass.
+
+### Solution: Counter-Based Verification
+Instead of reference equality (which doesn't work due to PointPair recreation during merge), added diagnostic counters:
+
+```csharp
+// On GraphData class:
+public int CachedNodeCount { get; private set; }
+public int RecalculatedNodeCount { get; private set; }
+
+// Exposed on SummaryRelativeAbundanceGraphPane:
+public int CachedNodeCount => _graphData?.CachedNodeCount ?? 0;
+public int RecalculatedNodeCount => _graphData?.RecalculatedNodeCount ?? 0;
+```
+
+Full calculation: `CachedNodeCount=0`, `RecalculatedNodeCount=total`
+Incremental: `CachedNodeCount=unchanged`, `RecalculatedNodeCount=changed`
+
+### Bug Fix: Duplicate Graph Updates
+During testing, discovered that graphs were updating twice per document change:
+1. **Direct call**: `GraphSummary.OnDocumentUIChanged` called `UpdateUI()` immediately
+2. **Timer call**: `SkylineWindow.UpdateGraphPanes` called `UpdateUI()` via timer
+
+This bypassed the timer-based debouncing mechanism designed to maintain UI responsiveness during rapid selection changes.
+
+**Fix**: Removed direct `UpdateUI()` call from `GraphSummary.OnDocumentUIChanged`. All summary graphs now update only via the timer mechanism.
+
+### Bug Fix: Stale Cache Data
+Cache cleaning happened inside `TryGetProduct`, but `TryGetCachedResult` was called first, retrieving stale prior data before cleaning occurred.
+
+**Fix**: Added `CleanStaleEntries(document)` method to `ReplicateCachingReceiver`. Called before `TryGetCachedResult` in `UpdateGraph`.
+
+### Tests Added (TestIncrementalUpdate)
+1. **Protein mode delete**: Delete peptide → 47 cached, 1 recalculated
+2. **Protein mode undo**: Undo → 47 cached, 1 recalculated
+3. **Peptide mode delete**: Delete peptide → all remaining cached, 0 recalculated
+4. **Peptide mode undo**: Undo → N-1 cached, 1 recalculated
+5. **Settings change**: Change NormalizationMethod → 0 cached (full recalc)
+
+### Files Modified
+- `GraphSummary.cs` - Removed direct UpdateUI() from OnDocumentUIChanged
+- `ReplicateCachingReceiver.cs` - Added CleanStaleEntries() method
+- `SummaryRelativeAbundanceGraphPane.cs` - Added counters, call CleanStaleEntries before TryGetCachedResult
+- `PeakAreaRelativeAbundanceGraphTest.cs` - Added TestIncrementalUpdate with 5 test cases
+- `SettingsExtensions.cs` - Added ChangePeptideQuantification extension method
+
 ## Related
 - Discovered during PR #3707 (Peak Imputation DIA Tutorial) review
 - Pattern follows `RTLinearRegressionGraphPane` approach for background computation

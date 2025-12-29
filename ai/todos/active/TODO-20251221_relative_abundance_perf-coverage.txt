@@ -1,0 +1,50 @@
+# Coverage File List for Relative Abundance Performance
+# Branch: Skyline/work/20251221_relative_abundance_perf
+#
+# This file lists production .cs files modified/added by this branch for coverage analysis.
+# The Analyze-Coverage.ps1 script extracts fully-qualified type names from uncommented
+# .cs files and measures coverage for those exact types.
+#
+# Total files: 6 production code files
+#
+# ============================================================================
+# TESTS TO RUN FOR COVERAGE (copy to SkylineTester test list.txt)
+# ============================================================================
+# TestPeakAreaRelativeAbundanceGraph  (8-9 sec) - relative abundance graph
+# TestNonlinearRegression             (3 sec) - RT regression (score-to-run + run-to-run)
+#
+# ============================================================================
+# PRODUCTION CODE - INCLUDED IN COVERAGE ANALYSIS (6 files)
+# ============================================================================
+
+# NEW - Caching infrastructure
+pwiz_tools/Skyline/Controls/Graphs/ReplicateCachingReceiver.cs
+pwiz_tools/Skyline/Model/CachingContracts.cs
+
+# MODIFIED - Core relative abundance graph (incremental updates, background calc)
+pwiz_tools/Skyline/Controls/Graphs/SummaryRelativeAbundanceGraphPane.cs
+pwiz_tools/Skyline/Controls/Graphs/AreaRelativeAbundanceGraphPane.cs
+
+# MODIFIED - RT regression graph (caching pattern applied)
+pwiz_tools/Skyline/Controls/Graphs/RTLinearRegressionGraphPane.cs
+
+# MODIFIED - Settings comparison for incremental update eligibility
+pwiz_tools/Skyline/Model/DocSettings/SrmSettings.cs
+
+# ============================================================================
+# EXCLUDED FROM COVERAGE (not modified by this branch or test files)
+# ============================================================================
+# pwiz_tools/Skyline/TestFunctional/PeakAreaRelativeAbundanceGraphTest.cs  # Test file
+# pwiz_tools/Skyline/TestFunctional/NonLinearRegressionTest.cs             # Test file
+# pwiz_tools/Skyline/TestPerf/PeakImputationDiaTutorial.cs                 # Perf test
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# Key new code to cover:
+# - ReplicateCachingReceiver: TryGetProduct, CompletionListener, cache invalidation
+# - SummaryRelativeAbundanceGraphPane: CalcDataPositionsIncremental, two-phase detection
+# - ICachingParameters/ICachingResult interface implementations
+# - CleanCacheForIncrementalUpdates callback
+#
+# SrmSettings.cs is large - coverage will focus on HasEqualQuantificationSettings()

@@ -144,8 +144,34 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool IsProcessing() => _receiver.IsProcessing();
 
         /// <summary>
+        /// Removes stale cache entries using the cleanCache callback.
+        /// Call this before TryGetCachedResult to ensure prior data is valid.
+        /// </summary>
+        /// <param name="document">The current document</param>
+        public void CleanStaleEntries(SrmDocument document)
+        {
+            if (_localCache.Count == 0)
+                return;
+
+            var cachedDocuments = new ReadOnlyDictionary<int, SrmDocument>(
+                _localCache.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Document));
+            var keysToRemove = _cleanCache(document, cachedDocuments);
+            foreach (var key in keysToRemove)
+            {
+                _localCache.TryRemove(key, out _);
+                // Also clean up any pending listener for this key
+                if (_pendingListeners.TryGetValue(key, out var listener))
+                {
+                    listener.Unlisten();
+                    _pendingListeners.Remove(key);
+                }
+            }
+        }
+
+        /// <summary>
         /// Tries to get a cached result for the given cache key.
         /// Used to provide prior data for incremental updates.
+        /// Call CleanStaleEntries first to ensure prior data is valid.
         /// </summary>
         /// <param name="cacheKey">The cache key (typically replicate index)</param>
         /// <param name="result">The cached result if available</param>

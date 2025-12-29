@@ -446,6 +446,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Get prior cached data for this replicate to enable incremental updates
             var cacheKey = showReplicate == ReplicateDisplay.single ? resultsIndex : -1;
+
+            // Clean stale cache entries BEFORE retrieving prior data for incremental updates.
+            // This ensures we don't use stale prior data when settings have changed.
+            _graphDataReceiver.CleanStaleEntries(document);
             _graphDataReceiver.TryGetCachedResult(cacheKey, out var priorGraphData);
 
             GraphData newGraphData;
@@ -568,6 +572,18 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Use this in tests to wait for successful completion and fail fast on errors.
         /// </summary>
         public bool IsSuccessfullyComplete => !_graphDataReceiver.HasError && IsComplete;
+
+        /// <summary>
+        /// Number of nodes whose values were reused from the prior cache during incremental update.
+        /// Zero when full calculation was performed or no graph data is available.
+        /// </summary>
+        public int CachedNodeCount => _graphData?.CachedNodeCount ?? 0;
+
+        /// <summary>
+        /// Number of nodes whose values were calculated from scratch.
+        /// Equals total node count when full calculation was performed.
+        /// </summary>
+        public int RecalculatedNodeCount => _graphData?.RecalculatedNodeCount ?? 0;
 
         private void this_AxisChangeEvent(GraphPane pane)
         {
@@ -799,6 +815,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 productionMonitor.SetProgress(60);
                 CalcDataPositions(listPoints, productionMonitor);
+
+                // Full calculation: all nodes were calculated from scratch
+                CachedNodeCount = 0;
+                RecalculatedNodeCount = PointPairList?.Count ?? 0;
             }
 
             /// <summary>
@@ -1058,6 +1078,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 MaxY = maxY;
                 if (minY != double.MaxValue)
                     MinY = minY;
+
+                // Incremental update: track how many nodes were cached vs recalculated
+                CachedNodeCount = unchanged.Count;
+                RecalculatedNodeCount = changed.Count;
             }
 
             /// <summary>
@@ -1176,6 +1200,18 @@ namespace pwiz.Skyline.Controls.Graphs
             public double MaxY { get; private set; }
             public double? MinY { get; private set; }
             public int SelectedIndex { get; set; }
+
+            /// <summary>
+            /// Number of nodes whose values were reused from the prior cache during incremental update.
+            /// Zero when full calculation was performed.
+            /// </summary>
+            public int CachedNodeCount { get; private set; }
+
+            /// <summary>
+            /// Number of nodes whose values were calculated from scratch.
+            /// Equals total node count when full calculation was performed.
+            /// </summary>
+            public int RecalculatedNodeCount { get; private set; }
 
             public virtual double MaxValueSetting { get { return 0; } }
             public virtual double MinValueSetting { get { return 0; } }
