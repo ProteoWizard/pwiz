@@ -9,7 +9,41 @@ Generate a consolidated daily report covering:
 2. User-submitted exceptions
 3. Support board activity
 
-**Argument**: Date in YYYY-MM-DD format (optional, defaults to auto-calculated dates)
+**Arguments**:
+- Date in YYYY-MM-DD format (optional, defaults to auto-calculated dates)
+- Effort level: `quick`, `standard`, or `deep` (optional, defaults to `standard`)
+
+## Effort Levels
+
+| Level | Duration | Scope |
+|-------|----------|-------|
+| `quick` | ~1-2 min | Generate report, send email, minimal investigation |
+| `standard` | ~15-30 min | Report + investigate top issues, git blame for regressions, update TODO |
+| `deep` | Full session | Comprehensive analysis, follow every thread, learn from developer emails |
+
+**Default is `standard`** - balance between quick reporting and meaningful investigation.
+
+### Quick Mode
+- Read emails, generate MCP reports, send summary email
+- Archive processed emails
+- No investigation follow-up
+
+### Standard Mode (Default)
+- Everything in Quick, plus:
+- Investigate NEW failures (not in yesterday's data)
+- Git blame/log to identify commits that may have caused regressions
+- Check if known issues have fixes pending
+- Update TODO with improvement ideas
+- Write execution log
+
+### Deep Mode
+- Everything in Standard, plus:
+- Review ALL failures, not just new ones
+- Historical regression analysis (when did each failing test start failing?)
+- Read and learn from forwarded developer emails
+- Cross-reference exception patterns with code changes
+- Propose actionable fixes, not just observations
+- Comprehensive execution log with reasoning
 
 ## Data Sources
 
@@ -198,7 +232,45 @@ This ensures:
 - No duplicate processing of old notifications
 - Clear signal that inbox emails are unprocessed items
 
-### Step 10: Self-Improvement Reflection
+### Step 10: Investigate Regressions (Standard/Deep Mode)
+
+**Skip in Quick mode.**
+
+For NEW failures (tests failing today but not yesterday):
+
+1. **Identify the test file**: Use grep to find the test class
+2. **Find related code**: Look at files the test exercises
+3. **Git blame**: Check recent commits to those files
+   ```bash
+   git log --oneline --since="7 days ago" -- path/to/file.cs
+   ```
+4. **Cross-reference with git hash**: Compare failure start date with commit dates
+5. **Document findings**: "TestFoo likely regressed by commit abc123 (author, date)"
+
+For **Deep mode**, also:
+- Query `save_test_failure_history()` for each failing test
+- Find the exact date failures started
+- Trace back to specific commits
+
+### Step 11: Learn from Developer Emails (Deep Mode)
+
+**Skip in Quick/Standard mode.**
+
+Search for forwarded developer emails analyzing test results:
+
+```
+search_emails(query="in:inbox subject:Fwd: newer_than:7d")
+```
+
+For each forwarded email:
+1. **Read the developer's analysis**: What did they notice? What conclusions did they draw?
+2. **Compare to system report**: Did the system report this same issue? Did it reach similar conclusions?
+3. **Identify gaps**: What did the developer see that the system missed?
+4. **Learn patterns**: Add investigation patterns to TODO for future automation
+
+This creates a **feedback loop**: Developer analyses become training signal for improving the automated system.
+
+### Step 12: Self-Improvement Reflection
 
 After completing the report, reflect on the reporting system itself:
 
@@ -211,11 +283,66 @@ After completing the report, reflect on the reporting system itself:
    - Could the report format be improved?
    - Are there new patterns worth tracking?
    - Were there false positives/negatives in anomaly detection?
+   - (Deep mode) What did developers notice that the system missed?
 3. **Propose NEW improvements only** (don't repeat items already in the active TODO)
 4. **If you have new ideas**, add them to the Progress Log section of the active TODO
 5. **Report in email**:
    - "New improvement idea added to TODO: [brief description]"
    - OR "No new improvement ideas (reviewed active TODO)"
+
+### Step 13: Write Execution Log
+
+Write a log of what was analyzed and decided during this session:
+
+```
+File: ai/.tmp/logs/daily-session-YYYYMMDD.md
+```
+
+**Log contents:**
+```markdown
+# Daily Session Log - YYYY-MM-DD
+
+**Effort level**: quick | standard | deep
+**Duration**: X minutes
+**Started**: HH:MM
+**Completed**: HH:MM
+
+## Data Sources Consulted
+- [ ] Nightly email
+- [ ] Hang alert emails (count: N)
+- [ ] Exception digest email
+- [ ] Support email
+- [ ] MCP nightly report
+- [ ] MCP exceptions report
+- [ ] MCP support report
+- [ ] Historical JSON files (N days)
+- [ ] Developer forwarded emails (N)
+
+## Key Observations
+- [What was notable about today's results]
+
+## Investigations Performed
+- [What was followed up on and why]
+- [Git blame results, if any]
+- [Historical queries, if any]
+
+## Conclusions
+- [Actionable findings]
+- [Root causes identified]
+- [Recommendations made]
+
+## System Improvements Identified
+- [New ideas added to TODO, or "none"]
+
+## Comparison to Developer Analysis (Deep mode)
+- [What developers noticed that system missed]
+- [Gaps to address]
+```
+
+This log enables:
+- Reviewing what the system actually did (not just what it reported)
+- Tracking improvement over time
+- Debugging when the system misses something
 
 ## Output Files
 
@@ -228,8 +355,31 @@ Historical data saved to `ai/.tmp/history/`:
 - `daily-summary-YYYYMMDD.json` - Structured daily summary for trend analysis
 - Files accumulate over time; do not delete (enables longitudinal analysis)
 
+Session logs saved to `ai/.tmp/logs/`:
+- `daily-session-YYYYMMDD.md` - Execution log of what was analyzed and decided
+- Enables review of system behavior and improvement tracking
+
 Improvement tracking:
 - `ai/todos/active/TODO-20251228_daily_report_improvements.md` - Active backlog
+
+## Scheduled Session Configuration
+
+The daily report runs as a scheduled Claude Code session. To configure effort level:
+
+**In Claude Code settings** (scheduled task configuration):
+```
+Prompt: /pw-daily standard
+```
+
+Or for deep analysis:
+```
+Prompt: /pw-daily deep
+```
+
+**Session budget considerations:**
+- Quick: ~$0.10-0.20 (minimal API calls)
+- Standard: ~$0.50-2.00 (investigation, git queries)
+- Deep: ~$5.00-15.00 (comprehensive analysis, may approach context limits)
 
 ## Email Summary Format
 

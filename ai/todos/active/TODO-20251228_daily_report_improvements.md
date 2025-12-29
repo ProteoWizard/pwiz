@@ -16,6 +16,14 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 - [x] Added self-improvement reflection step
 - [x] Historical JSON storage for trend analysis (Step 6, 8 in /pw-daily)
 
+## Completed (2025-12-29)
+
+- [x] Added `fetch_labkey_page` MCP tool for authenticated web page access
+- [x] Effort level modes (quick/standard/deep) for controlling session depth
+- [x] Execution logging (Step 13) - writes to `ai/.tmp/logs/daily-session-YYYYMMDD.md`
+- [x] Developer email learning loop (Step 11) - analyzes forwarded developer emails as training signal
+- [x] Regression investigation step (Step 10) - git blame for new failures
+
 ## Backlog
 
 ### Tier 1: High Value, Achievable Now
@@ -125,6 +133,17 @@ The following patterns from developer reports represent ideal automated investig
 | Fix verification | Expected fix committed | High - track pending fixes |
 
 ## Progress Log
+
+### 2025-12-29
+- Added `fetch_labkey_page` MCP tool - enables fetching authenticated LabKey pages (failure details, stack traces)
+- Implemented effort level modes in `/pw-daily`:
+  - `quick`: 1-2 min, report only
+  - `standard`: 15-30 min, investigate new failures, git blame (new default)
+  - `deep`: Full session, comprehensive analysis, learn from developer emails
+- Added execution logging (Step 13) - system now records what it analyzed and decided
+- Added developer email learning loop (Step 11) - forwarded developer analyses become training signal
+- Added regression investigation step (Step 10) - git blame/log to trace failures to commits
+- Key insight: Developer email forwarding creates a feedback loop for continuous improvement
 
 ### 2025-12-28
 - Created TODO from collaborative analysis session
