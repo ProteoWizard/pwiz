@@ -926,7 +926,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     // 1. Match by identity (GlobalIndex) - like finding a database row by ID
                     // 2. Check ReferenceEquals - if same reference, entire subtree is unchanged
                     if (newDocNodes.TryGetValue(priorNodeKey, out var newNode) &&
-                        ReferenceEquals(newNode, pos.Value.DocNode))
+                        ReferenceEquals(newNode, pos.Value.DocNode) && 
+                        !AlwaysRecalculate(newNode))
                     {
                         // Same identity AND same reference - truly unchanged
                         unchanged.Add((priorData.PointPairList[i], pos.Value));
@@ -935,6 +936,30 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 return unchanged;
+            }
+
+            /// <summary>
+            /// Returns true if the area should be recalculated whenever the document has changed
+            /// despite <see cref="SrmSettings.HasEqualQuantificationSettings"/> being true.
+            /// </summary>
+            private bool AlwaysRecalculate(DocNode newNode)
+            {
+                // If the normalization method was overridden, then assume the area might have changed.
+                if (newNode is PeptideDocNode peptideDocNode)
+                {
+                    if (null != peptideDocNode.NormalizationMethod)
+                    {
+                        return true;
+                    }
+                }
+                else if (newNode is PeptideGroupDocNode peptideGroupDocNode)
+                {
+                    if (peptideGroupDocNode.Molecules.Any(molecule => null != molecule.NormalizationMethod))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             /// <summary>

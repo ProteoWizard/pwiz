@@ -21,9 +21,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
+using System.Web.UI.WebControls;
 using System.Xml;
 using System.Xml.Serialization;
+using MathNet.Numerics.Distributions;
+using MathNet.Numerics.Providers.LinearAlgebra;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -37,6 +41,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
@@ -2312,7 +2317,6 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Compares settings that affect quantification/abundance calculations.
         /// Used to determine if cached abundance values can be reused.
-        /// TODO: Nick - please review and expand this to cover all relevant settings.
         /// </summary>
         public bool HasEqualQuantificationSettings(SrmSettings other)
         {
@@ -2320,9 +2324,35 @@ namespace pwiz.Skyline.Model.DocSettings
                 return true;
             if (other == null)
                 return false;
-
             // Compare quantification settings that affect abundance calculations
-            return Equals(PeptideSettings.Quantification, other.PeptideSettings.Quantification);
+            if (!Equals(PeptideSettings.Quantification, other.PeptideSettings.Quantification))
+            {
+                return false;
+            }
+
+            var normalizationMethod = PeptideSettings.Quantification.NormalizationMethod;
+            if (NormalizationMethod.EQUALIZE_MEDIANS.Equals(normalizationMethod))
+            {
+                return false;
+            }
+
+            if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod))
+            {
+                if (!CollectionUtil.EqualsDeep(_cachedPeptideStandards, other._cachedPeptideStandards))
+                {
+                    return false;
+                }
+            }
+
+            if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod) ||
+                NormalizationMethod.TIC.Equals(normalizationMethod))
+            {
+                if (!ReferenceEquals(MeasuredResults, other.MeasuredResults))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         #endregion
