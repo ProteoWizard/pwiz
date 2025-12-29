@@ -12,6 +12,57 @@ Skyline runs nightly automated tests across the codebase. Results are stored on 
 
 Claude Code can query this data via MCP tools to assist with test failure analysis and leak investigations.
 
+## Data Sources
+
+There are **two complementary data sources** for nightly test information:
+
+### 1. Email Summary (8:00 AM Daily)
+
+A summary email is sent at 8:00 AM to the skyline-dev list (also routed to claude.c.skyline@gmail.com):
+
+**Subject format:**
+```
+TestResults MM/DD - MM/DD (8AM - 8AM) | Err: N Warn: N Pass: N Missing: N | N tests run
+```
+
+**Email content includes:**
+- Per-computer results table with color-coded status
+- Failure/Leak/Hang matrix showing which tests had issues on which computers
+- Missing computers list
+- Results for multiple folders: Nightly x64, Release Branch, Performance Tests
+
+**Color coding in email (important for interpretation):**
+
+| Color | Context | Meaning |
+|-------|---------|---------|
+| Green (#caff95) | Computer row | All metrics normal, no failures/leaks |
+| Yellow (#ffffca) | Passes column | 3-4 SDs below trained mean |
+| Yellow (#ffffca) | Memory column | 3-4 SDs above trained mean |
+| Red (#ffcaca) | Computer row | Has failures, leaks, or hangs |
+| Red (#ffcaca) | Passes column | >4 SDs below trained mean |
+| Red (#ffcaca) | Memory column | >4 SDs above trained mean |
+| Red (#ffcaca) | Duration column | Shorter than expected (540 normal, 720 perf) |
+| Red (#ffcaca) | Missing row | Expected computer did not report (activated, has training data) |
+| Gray (#cccccc) | Computer row | Unexpected computer reported (not activated, may lack training data) |
+
+**Failure matrix notation:**
+- Red X = Test failure
+- Orange X = Leak (tooltip shows "Handle leak" or "Memory and handle leak")
+- Navy X = Hang
+
+**Duration notation:** "(hang)" appended to duration value indicates the run was terminated due to a hung test.
+
+### 2. LabKey MCP Server (Detailed Data)
+
+The MCP server provides detailed programmatic access for drill-down:
+- Per-run details with statistical anomaly detection
+- Full stack traces for failures
+- Memory and handle leak measurements per test pass
+- Historical data for trend analysis
+
+**Use email for:** Quick triage, subject line summary, pass/warn/err counts
+**Use MCP for:** Detailed investigation, stack traces, historical analysis
+
 ## Architecture
 
 ```

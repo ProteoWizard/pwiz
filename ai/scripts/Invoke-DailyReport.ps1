@@ -63,7 +63,11 @@ Run /pw-daily and then email the consolidated summary to $Recipient using the Gm
 "@
 
 # Build allowed tools list
-$AllowedTools = "Read,Glob,Grep,mcp__labkey__*,mcp__gmail__send_email"
+# - Read/Write/Glob/Grep: File operations for reports and TODO files
+# - mcp__labkey__*: All LabKey MCP tools for test/exception/support data
+# - mcp__gmail__search_emails,mcp__gmail__read_email: Read inbox notifications
+# - mcp__gmail__send_email: Send the daily summary
+$AllowedTools = "Read,Write,Glob,Grep,mcp__labkey__*,mcp__gmail__search_emails,mcp__gmail__read_email,mcp__gmail__send_email"
 
 # Build the command
 $ClaudeArgs = @(
