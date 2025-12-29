@@ -6,9 +6,11 @@ This module contains:
 - Limited discovery (list_queries only - for proposing schema documentation)
 """
 
+import json
 import logging
 import base64
 import netrc
+import urllib.error
 import urllib.request
 from pathlib import Path
 from urllib.parse import quote, urlencode
@@ -228,3 +230,68 @@ def register_tools(mcp):
         except Exception as e:
             logger.error(f"Error listing queries: {e}", exc_info=True)
             return f"Error listing queries: {e}"
+
+    @mcp.tool()
+    async def fetch_labkey_page(
+        view_name: str,
+        server: str = DEFAULT_SERVER,
+        container_path: str = DEFAULT_TEST_CONTAINER,
+        params: dict = None,
+    ) -> str:
+        """**EXPLORATION**: Fetch an authenticated LabKey page (HTML).
+
+        Use this to explore LabKey pages that developers view in browsers.
+        Returns raw HTML content which can be parsed for data.
+
+        Args:
+            view_name: Page to fetch (e.g., 'project-begin.view', 'testresults-showRun.view')
+            server: LabKey server hostname (default: skyline.ms)
+            container_path: Container path (e.g., '/home/development/Nightly x64')
+            params: Optional query parameters as dict (e.g., {'runId': 12345})
+
+        Examples:
+            fetch_labkey_page('project-begin.view', container_path='/home/development/Nightly x64')
+            fetch_labkey_page('testresults-showRun.view', params={'runId': 79500})
+        """
+        try:
+            # Build URL with proper encoding for paths with spaces
+            encoded_path = quote(container_path, safe="/")
+            url = f"https://{server}{encoded_path}/{view_name}"
+            if params:
+                url = f"{url}?{urlencode(params)}"
+
+            logger.info(f"Fetching page: {url}")
+            response_bytes = make_authenticated_request(server, url, timeout=60)
+            html_content = response_bytes.decode('utf-8', errors='replace')
+
+            # Save to file to avoid overwhelming context
+            # Generate filename from view_name, params, and date
+            from datetime import datetime
+            import re
+            date_stamp = datetime.now().strftime("%Y%m%d")
+            safe_view = view_name.replace('.view', '').replace('-', '_')
+            folder = container_path.split('/')[-1].replace(' ', '_')
+            if params:
+                # Sanitize param values to be filesystem-safe
+                param_str = '_'.join(f"{k}{re.sub(r'[^a-zA-Z0-9]', '', str(v))}" for k, v in params.items())
+                filename = f"page-{safe_view}-{param_str}-{date_stamp}.html"
+            else:
+                filename = f"page-{safe_view}-{folder}-{date_stamp}.html"
+
+            filepath = get_tmp_dir() / filename
+            filepath.write_text(html_content, encoding='utf-8')
+
+            # Return summary and filepath
+            lines = [
+                f"Saved {len(html_content):,} chars to: {filepath}",
+                f"URL: {url}",
+                "",
+                "Use Read tool to examine the file content.",
+            ]
+            return "\n".join(lines)
+
+        except urllib.error.HTTPError as e:
+            return f"HTTP Error {e.code}: {e.reason}"
+        except Exception as e:
+            logger.error(f"Error fetching page: {e}", exc_info=True)
+            return f"Error fetching page: {e}"

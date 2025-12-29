@@ -297,6 +297,7 @@ query_table(
 | `query_test_runs(days, max_rows)` | Query recent test runs with summaries |
 | `get_run_failures(run_id)` | Get failed tests and stack traces for a run |
 | `get_run_leaks(run_id)` | Get memory and handle leaks for a run |
+| `fetch_labkey_page(view_name, container_path, params)` | Fetch any LabKey page (HTML), save to ai/.tmp/ |
 
 ### Daily Test Summary
 
@@ -312,6 +313,43 @@ Returns a brief summary and saves a full markdown report to `ai/.tmp/nightly-rep
 - Missing computers that didn't report
 - **Failures by Test** - which tests failed on which computers
 - **Leaks by Test** - which tests leaked on which computers
+
+### Web Page Fetching (Developer View)
+
+The `fetch_labkey_page` tool fetches authenticated LabKey pages - the same HTML that developers see in browsers. This provides richer context than API queries alone.
+
+```
+fetch_labkey_page(
+    view_name="project-begin.view",
+    container_path="/home/development/Nightly x64"
+)
+```
+
+**Saves to:** `ai/.tmp/page-project_begin-Nightly_x64-YYYYMMDD.html`
+
+**Available pages for nightly test analysis:**
+
+| Page | Description | Useful For |
+|------|-------------|------------|
+| `project-begin.view` | Main dashboard with today's results | Current status, missing computers, top failures |
+| `testresults-showRun.view?runId=N` | Single run details | Deep dive into specific run |
+| `testresults-showFailures.view?failedTest=X` | Failure history for test | Pattern detection, regression timing |
+| `testresults-longTerm.view` | Long-term trends | Historical patterns |
+| `testresults-showUser.view?userId=N` | Results by computer | Machine-specific issues |
+
+**What the HTML contains:**
+- Color-coded status (same as email: green/yellow/red/gray)
+- Training thresholds per computer (Good/Warn/Error boundaries)
+- Top failures with language breakdown pie charts
+- Missing computer list with deactivation links
+- Links to drill-down pages
+
+**Example workflow:**
+1. Fetch today's dashboard: `fetch_labkey_page("project-begin.view", "/home/development/Nightly x64")`
+2. Read the saved HTML to find specific run IDs or failure patterns
+3. Drill down with: `fetch_labkey_page("testresults-showRun.view", params={"runId": 79713})`
+
+This is equivalent to what developers do manually when triaging test results.
 
 ### Stack Trace Pattern Analysis
 
@@ -389,6 +427,7 @@ To add new custom queries (like `handleleaks_by_computer`), see [MCP Development
 - `failures_by_date` / `leaks_by_date` queries - Test names for date ranges ✓
 - `expected_computers` query - Stddev-based anomaly detection ✓
 - "Failures by Test" / "Leaks by Test" sections in daily report ✓
+- `fetch_labkey_page` - Fetch authenticated LabKey pages (HTML) for developer-level views ✓
 
 ## Related Documentation
 
