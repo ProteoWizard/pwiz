@@ -381,9 +381,13 @@ Prompt: /pw-daily deep
 - Standard: ~$0.50-2.00 (investigation, git queries)
 - Deep: ~$5.00-15.00 (comprehensive analysis, may approach context limits)
 
+## Email Configuration
+
+**Default recipient**: brendanx@proteinms.net
+
 ## Email Summary Format
 
-When sending the summary email, include:
+When sending the summary email to the configured recipient, include:
 
 ```
 Subject: Skyline Daily Summary - Month DD, YYYY
