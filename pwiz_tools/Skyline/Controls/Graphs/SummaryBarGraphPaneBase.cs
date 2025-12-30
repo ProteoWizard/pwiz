@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var axis = GetNearestXAxis(sender, mouseEventArgs);
                 if (axis != null)
                 {
-                    GraphSummary.Cursor = Cursors.Hand;
+                    sender.Cursor = Cursors.Hand;
                     return true;
                 }
                 return false;
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return false;
             }
-            GraphSummary.Cursor = Cursors.Hand;
+            sender.Cursor = Cursors.Hand;
             return true;
         }
 
