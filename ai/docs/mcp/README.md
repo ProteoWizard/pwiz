@@ -77,3 +77,21 @@ password <password>
 ## Setup
 
 See [Developer Setup Guide](../developer-setup-guide.md) for installation instructions.
+
+## Command-Line Automation
+
+**Important**: MCP tools require explicit permission to work in non-interactive mode (`claude -p`).
+
+Add to `.claude/settings.local.json`:
+```json
+{
+  "permissions": {
+    "allow": [
+      "mcp__labkey__*",
+      "mcp__gmail__*"
+    ]
+  }
+}
+```
+
+Without these permissions, automated scripts will silently fall back to cached data. See [Scheduled Tasks Guide](../scheduled-tasks-guide.md#critical-mcp-permissions-for-command-line-automation) for details.

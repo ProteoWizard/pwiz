@@ -60,6 +60,44 @@ This command uses **two complementary data sources**:
    - `save_exceptions_report()` - Full stack traces
    - `get_support_summary()` - Support thread details
 
+## CRITICAL: Data Validation Requirements
+
+**This report MUST fail if required data cannot be obtained. NEVER substitute stale data.**
+
+### Required Data (MUST have - fail if missing)
+
+| Data Source | Required? | Failure Action |
+|-------------|-----------|----------------|
+| Nightly test data (MCP) | **YES** | FAIL the report - do not send email |
+| Fresh MCP query results | **YES** | FAIL - never use cached files from prior days |
+
+### Optional Data (zero is valid)
+
+| Data Source | Zero Valid? | Notes |
+|-------------|-------------|-------|
+| Exceptions | Yes (rare) | No exceptions some days is possible |
+| Support threads | Yes (common) | No new threads is normal |
+
+### Validation Rules
+
+1. **Nightly tests**: The MCP call `get_daily_test_summary()` MUST succeed and return runs for today's date
+   - If MCP call fails: FAIL the report
+   - If MCP returns zero runs for today: FAIL (indicates either no tests ran or MCP permission issues)
+
+2. **Never use stale data**: If you cannot query fresh data from MCP:
+   - Do NOT fall back to reading old `nightly-report-*.md` files from prior days
+   - Do NOT use `daily-summary-*.json` files as the primary data source
+   - These files are for historical comparison ONLY, not substitutes for today's data
+
+3. **Failure notification**: If the report cannot complete due to missing data:
+   - Send an ERROR email with subject: `[ERROR] Skyline Daily Summary - Month DD, YYYY - Data Unavailable`
+   - Body should explain: which data source failed, likely cause (MCP permissions?), how to fix
+   - Exit with non-zero status so the scheduled task shows as failed
+
+### Why This Matters
+
+Silent fallback to cached data produces reports that look valid but contain stale information. This is worse than no report at all because it creates false confidence. A failed report is immediately visible and actionable.
+
 ## Default Date Logic
 
 Each report type has different day boundaries:
@@ -129,7 +167,7 @@ For each email found, use `read_email(messageId)` to get full content.
   - Link to view on skyline.ms
 - **Important**: Group by Installation ID to identify same user hitting repeatedly vs different users
 
-### Step 4: Generate MCP Reports (Secondary Source)
+### Step 4: Generate MCP Reports (PRIMARY Source)
 
 Run these three MCP calls for detailed data:
 
@@ -139,10 +177,26 @@ save_exceptions_report(report_date="YYYY-MM-DD")
 get_support_summary(days=1)
 ```
 
+**CRITICAL VALIDATION**: After each MCP call, verify it succeeded:
+
+1. **Nightly tests** (`get_daily_test_summary`):
+   - Check the return value indicates success
+   - Verify the generated file `ai/.tmp/nightly-report-YYYYMMDD.md` has TODAY's date in filename
+   - Confirm the report contains actual test runs (not "0 runs" or empty tables)
+   - **If validation fails**: STOP and send ERROR email (see Data Validation Requirements above)
+
+2. **Exceptions** (`save_exceptions_report`):
+   - Zero exceptions is valid - just note "0 exceptions reported"
+   - MCP failure is still an error (different from zero results)
+
+3. **Support** (`get_support_summary`):
+   - Zero threads is valid and common
+   - MCP failure is still an error
+
 Read the generated reports from `ai/.tmp/`:
-- `nightly-report-YYYYMMDD.md`
-- `exceptions-report-YYYYMMDD.md`
-- `support-report-YYYYMMDD.md`
+- `nightly-report-YYYYMMDD.md` - **MUST exist with today's date**
+- `exceptions-report-YYYYMMDD.md` - May show zero exceptions
+- `support-report-YYYYMMDD.md` - May show zero threads
 
 ### Step 5: Cross-Reference and Reconcile
 

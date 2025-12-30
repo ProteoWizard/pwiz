@@ -18,6 +18,53 @@ This enables automated daily reports without manual intervention.
 - Gmail MCP configured (see `ai/docs/mcp/gmail.md`)
 - LabKey MCP configured for skyline.ms access
 - PowerShell 7 (`pwsh`)
+- **MCP permissions configured** (see below)
+
+## CRITICAL: MCP Permissions for Command-Line Automation
+
+MCP tools require explicit permission in `.claude/settings.local.json` to work in non-interactive mode. Without these permissions, Claude Code will silently fall back to using stale cached files instead of querying live data.
+
+### Required Configuration
+
+Add these entries to `.claude/settings.local.json` in your project:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "mcp__labkey__*",
+      "mcp__gmail__*"
+    ]
+  }
+}
+```
+
+### Why This Matters
+
+- The `--allowedTools` flag only specifies what tools Claude *can* use
+- MCP tools additionally require permission grants to actually execute
+- In non-interactive mode (`-p`), Claude cannot prompt for permission
+- **Without these permissions**: MCP calls silently fail and Claude falls back to old cached data, producing invalid reports with stale information
+
+### Symptoms of Missing Permissions
+
+If your automated reports:
+- Reference data from days ago instead of today
+- Show "used prior day's data" in the output
+- Report zero exceptions/support posts when you know there should be some
+
+Then MCP permissions are likely not configured.
+
+### Verification
+
+After configuring, test interactively first:
+
+```bash
+cd C:\proj\pwiz-ai
+claude -p "Call mcp__labkey__get_daily_test_summary with today's date and tell me how many test runs it found"
+```
+
+If it returns actual run counts (not an error or cached data), permissions are working.
 
 ## Command-Line Options for Automation
 
