@@ -458,12 +458,6 @@ namespace pwiz.SkylineTestUtil
                 SaveToFile(pathToSave, shotPic);
             }
 
-            // Have to do it this way because of the limitation on OLE access from background threads.
-            var clipThread = new Thread(() => Clipboard.SetImage(shotPic));
-            clipThread.SetApartmentState(ApartmentState.STA);
-            clipThread.Start();
-            clipThread.Join();
-
             return shotPic;
         }
 
