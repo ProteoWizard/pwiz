@@ -4,8 +4,8 @@
 - **Branch**: `Skyline/work/20251221_relative_abundance_perf`
 - **Base**: `master`
 - **Created**: 2025-12-21
-- **Completed**: (pending)
-- **Status**: 🔍 In Review
+- **Completed**: 2025-12-30
+- **Status**: ✅ Complete
 - **PR**: [#3730](https://github.com/ProteoWizard/pwiz/pull/3730)
 - **Objective**: Improve Relative Abundance graph performance by moving computation to background threads
 
