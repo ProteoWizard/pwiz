@@ -1006,6 +1006,7 @@ namespace pwiz.ProteowizardWrapper
         {
             public const string Pressure = @"pressure";
             public const string FlowRate = @"volumetric flow rate";
+            public static string Temperature = @"temperature";
         }
 
         public abstract class QcTraceUnits
@@ -1014,6 +1015,8 @@ namespace pwiz.ProteowizardWrapper
             public const string Pascal = @"pascal";
             public const string PoundsPerSquareInch = @"psi";
             public const string MicrolitersPerMinute = @"uL/min";
+            public static string DegreeC = @"°C";
+            public static string DegreeF = @"°F";
         }
 
         public class QcTrace
@@ -1057,7 +1060,15 @@ namespace pwiz.ProteowizardWrapper
                     MeasuredQuality = QcTraceQuality.FlowRate;
                     IntensityUnits = unitsCVID == CVID.UO_microliters_per_minute ? QcTraceUnits.MicrolitersPerMinute : unitsString;
                 }
-                else
+                else if (chromatogramType == CVID.MS_temperature_chromatogram)
+                {
+                    MeasuredQuality = QcTraceQuality.Temperature;
+                    IntensityUnits =
+                        unitsCVID == CVID.UO_degree_Celsius ? QcTraceUnits.DegreeC :
+                        unitsCVID == CVID.UO_degree_Fahrenheit ? QcTraceUnits.DegreeF :
+                        unitsString;
+                }
+                else // absorption chromatogram and emission chromatogram, etc - probably best to use the name directly
                 {
                     MeasuredQuality = Name;
                     IntensityUnits = unitsString ?? @"unknown";
@@ -1072,6 +1083,58 @@ namespace pwiz.ProteowizardWrapper
             public double[] Intensities { get; private set; }
             public string MeasuredQuality { get; private set; }
             public string IntensityUnits { get; private set; }
+
+            public string TypeWithUnits()
+            {
+                string CapitalizeFirst(string str)
+                {
+                    if (string.IsNullOrEmpty(str))
+                        return str;
+                    if (str.Length == 1)
+                        return str.ToUpper();
+                    return char.ToUpper(str[0]) + str.Substring(1);
+                }
+
+                var type = MeasuredQuality;
+                var units = IntensityUnits;
+
+                // if units are not unknown, prefer those to any potentially buried in a custom MeasuredQuality
+                if (!string.IsNullOrEmpty(units) && !units.Equals(@"unknown", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Strip any existing units from MeasuredQuality
+                    // e.g. "Pressure (psi)" or "Pressure [bar]" becomes just "Pressure"
+                    // Only strip if the parentheses/brackets are at the end
+                    if (type.EndsWith(")"))
+                    {
+                        int openParen = type.LastIndexOf('(');
+                        if (openParen > 0)
+                        {
+                            type = type.Substring(0, openParen).TrimEnd();
+                        }
+                    }
+                    else if (type.EndsWith("]"))
+                    {
+                        int openBracket = type.LastIndexOf('[');
+                        if (openBracket > 0)
+                        {
+                            type = type.Substring(0, openBracket).TrimEnd();
+                        }
+                    }
+
+                    // Now format with proper units
+                    if (units == QcTraceUnits.Intensity)
+                    {
+                        return CapitalizeFirst(units);
+                    }
+                    else
+                    {
+                        return $"{CapitalizeFirst(type)} ({units})";
+                    }
+                }
+
+                // If units are empty, unknown, or null, return just the type
+                return CapitalizeFirst(type);
+            }
         }
 
         public List<QcTrace> GetQcTraces()

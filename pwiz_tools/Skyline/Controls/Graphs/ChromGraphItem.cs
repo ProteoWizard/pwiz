@@ -1179,9 +1179,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void CustomizeYAxis(Axis axis)
         {
-            var units = (this as ChromGraphItem)?.Chromatogram?.GroupInfo?.QcTraceUnits ??
-                        GraphsResources.AbstractChromGraphItem_CustomizeYAxis_Intensity;
-            CustomizeAxis(axis, units);
+            var chromItem = this as ChromGraphItem;
+            var groupInfo = chromItem?.Chromatogram?.GroupInfo;
+            
+            var axisTitle = groupInfo?.QcTraceTypeWithUnits;
+            if (string.IsNullOrEmpty(axisTitle))
+            {
+                axisTitle = GraphsResources.AbstractChromGraphItem_CustomizeYAxis_Intensity;
+            }
+
+            CustomizeAxis(axis, axisTitle);
         }
 
         public void CustomizeXAxis(Axis axis)

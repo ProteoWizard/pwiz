@@ -40,21 +40,21 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromatogramGroupId : Immutable, IComparable<ChromatogramGroupId>
     {
-        private ChromatogramGroupId(Target target, string qcTraceName, string qcTraceUnits, SpectrumClassFilter spectrumClassFilter)
+        private ChromatogramGroupId(Target target, string qcTraceName, string qcTraceTypeWithUnits, SpectrumClassFilter spectrumClassFilter)
         {
             Target = target;
             QcTraceName = string.IsNullOrEmpty(qcTraceName) ? null : qcTraceName;
-            QcTraceUnits = string.IsNullOrEmpty(qcTraceUnits) ? null : qcTraceUnits;
+            QcTraceTypeWithUnits = string.IsNullOrEmpty(qcTraceTypeWithUnits) ? null : qcTraceTypeWithUnits;
             SpectrumClassFilter = spectrumClassFilter;
         }
 
-        public static ChromatogramGroupId ForQcTraceName(string name, string units)
+        public static ChromatogramGroupId ForQcTraceName(string name, string traceTypeWithUnits)
         {
             if (string.IsNullOrEmpty(name))
             {
                 return null;
             }
-            return new ChromatogramGroupId(null, name, units, default);
+            return new ChromatogramGroupId(null, name, traceTypeWithUnits, default);
         }
 
         public ChromatogramGroupId(Target target, SpectrumClassFilter spectrumClassFilter) : this(target, null, null,
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Results
 
         public Target Target { get; }
         public string QcTraceName { get; }
-        public string QcTraceUnits { get;  }
+        public string QcTraceTypeWithUnits { get; }
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
 
         public ChromatogramGroupId ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Results
 
         protected bool Equals(ChromatogramGroupId other)
         {
-            return Equals(Target, other.Target) && QcTraceName == other.QcTraceName && QcTraceUnits == other.QcTraceUnits && Equals(SpectrumClassFilter, other.SpectrumClassFilter);
+            return Equals(Target, other.Target) && QcTraceName == other.QcTraceName && QcTraceTypeWithUnits == other.QcTraceTypeWithUnits && Equals(SpectrumClassFilter, other.SpectrumClassFilter);
         }
 
         public override bool Equals(object obj)
@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var hashCode = (Target != null ? Target.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (QcTraceName != null ? QcTraceName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (QcTraceUnits != null ? QcTraceUnits.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (QcTraceTypeWithUnits != null ? QcTraceTypeWithUnits.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ SpectrumClassFilter.GetHashCode();
                 return hashCode;
             }
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var id in proto.ChromatogramGroupIds)
             {
                 var spectrumClassFilter = new SpectrumClassFilter(id.FilterIndexes.Select(i => allFilters[i]));
-                yield return new ChromatogramGroupId(targets[id.TargetIndex], id.QcTraceName, id.QcTraceUnits, spectrumClassFilter);
+                yield return new ChromatogramGroupId(targets[id.TargetIndex], id.QcTraceName, id.QcTraceTypeWithUnits, spectrumClassFilter);
             }
         }
 
@@ -171,8 +171,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int CompareTo(ChromatogramGroupId other)
         {
-            return ValueTuple.Create(Target, QcTraceName, QcTraceUnits, SpectrumClassFilter)
-                .CompareTo(ValueTuple.Create(other.Target, other.QcTraceName, other.QcTraceUnits, other.SpectrumClassFilter));
+            return ValueTuple.Create(Target, QcTraceName, QcTraceTypeWithUnits, SpectrumClassFilter)
+                .CompareTo(ValueTuple.Create(other.Target, other.QcTraceName, other.QcTraceTypeWithUnits, other.SpectrumClassFilter));
         }
 
         public override string ToString()
@@ -321,7 +321,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     TargetIndex = targets.Add(id.Target),
                     QcTraceName = id.QcTraceName ?? string.Empty,
-                    QcTraceUnits = id.QcTraceUnits ?? string.Empty
+                    QcTraceTypeWithUnits = id.QcTraceTypeWithUnits ?? string.Empty
                 };
                 foreach (var filter in id.SpectrumClassFilter.Clauses)
                 {
