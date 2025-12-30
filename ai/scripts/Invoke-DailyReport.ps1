@@ -58,8 +58,23 @@ if (-not (Test-Path $LogDir)) {
 }
 
 # Build the prompt
+# Note: Slash commands (/pw-daily) and Skills don't work in -p mode.
+# Instead, we instruct Claude to read the command file and follow it directly.
 $Prompt = @"
-Run /pw-daily and then email the consolidated summary to $Recipient using the Gmail MCP. Include key findings in the email body.
+You are running as a scheduled automation task. Slash commands and skills do not work in non-interactive mode.
+
+FIRST: Read ai/CLAUDE.md to understand project rules (especially: use pwsh not powershell, backslashes for file paths).
+
+THEN: Read .claude/commands/pw-daily.md and follow those instructions to generate the daily report.
+
+Email recipient: $Recipient
+
+Key points:
+- Use MCP tools directly (mcp__labkey__*, mcp__gmail__*) - they are pre-authorized
+- Use pwsh (not powershell) for any shell commands
+- The report date is the date in your environment info
+- Include key findings in the email body
+- If MCP tools fail, send an ERROR email as specified in pw-daily.md
 "@
 
 # Build allowed tools list

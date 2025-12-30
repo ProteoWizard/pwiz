@@ -7,10 +7,12 @@ This guide covers running Claude Code automatically on a schedule using Windows 
 Claude Code can run non-interactively using the `-p` (print) flag:
 
 ```bash
-claude -p "run /pw-daily"
+claude -p "Read .claude/commands/pw-daily.md and follow it"
 ```
 
 This enables automated daily reports without manual intervention.
+
+**Note:** Slash commands (`/pw-daily`) and Skills don't work in `-p` mode. See [Non-Interactive Mode Limitations](#non-interactive-mode-limitations) for workarounds.
 
 ## Prerequisites
 
@@ -26,45 +28,80 @@ MCP tools require explicit permission in `.claude/settings.local.json` to work i
 
 ### Required Configuration
 
-Add these entries to `.claude/settings.local.json` in your project:
+MCP tools require explicit permission in `.claude/settings.local.json` to work in non-interactive mode.
+
+**IMPORTANT**: Wildcards (e.g., `mcp__labkey__*`) do NOT work in `-p` mode. Each tool must be listed explicitly by name.
+
+### How to Configure
+
+1. Start an interactive Claude Code session in your project
+2. Describe the command-line operation you want to automate
+3. Ask Claude to write the necessary `permissions.allow` entries to `.claude/settings.local.json`
+4. Review the list - remove any tools with unwanted side effects (e.g., `delete_*`, `update_*`)
+
+### Example: Daily Report Permissions
+
+The daily report (`/pw-daily`) requires these MCP tools:
 
 ```json
 {
   "permissions": {
     "allow": [
-      "mcp__labkey__*",
-      "mcp__gmail__*"
+      "mcp__labkey__get_daily_test_summary",
+      "mcp__labkey__save_exceptions_report",
+      "mcp__labkey__get_support_summary",
+      "mcp__labkey__get_run_failures",
+      "mcp__labkey__get_run_leaks",
+      "mcp__labkey__save_test_failure_history",
+      "mcp__gmail__search_emails",
+      "mcp__gmail__read_email",
+      "mcp__gmail__send_email",
+      "mcp__gmail__modify_email",
+      "mcp__gmail__batch_modify_emails"
     ]
   }
 }
 ```
 
-### Why This Matters
-
-- The `--allowedTools` flag only specifies what tools Claude *can* use
-- MCP tools additionally require permission grants to actually execute
-- In non-interactive mode (`-p`), Claude cannot prompt for permission
-- **Without these permissions**: MCP calls silently fail and Claude falls back to old cached data, producing invalid reports with stale information
-
-### Symptoms of Missing Permissions
-
-If your automated reports:
-- Reference data from days ago instead of today
-- Show "used prior day's data" in the output
-- Report zero exceptions/support posts when you know there should be some
-
-Then MCP permissions are likely not configured.
+Note: Destructive tools like `delete_email`, `update_wiki_page` are intentionally excluded.
 
 ### Verification
 
-After configuring, test interactively first:
+Test from command line before relying on scheduled tasks:
 
-```bash
-cd C:\proj\pwiz-ai
+```powershell
 claude -p "Call mcp__labkey__get_daily_test_summary with today's date and tell me how many test runs it found"
 ```
 
-If it returns actual run counts (not an error or cached data), permissions are working.
+If it returns actual run counts (not a permission error), the configuration is working.
+
+## Non-Interactive Mode Limitations
+
+When running Claude Code with `-p` (print/non-interactive mode), several features don't work:
+
+| Feature | Works in `-p` mode? | Workaround |
+|---------|---------------------|------------|
+| Slash commands (`/pw-daily`) | ❌ No | Read the command file directly and follow instructions |
+| Skills (`Skill(name)`) | ❌ No | Include relevant documentation reading in the prompt |
+| Interactive approval | ❌ No | Pre-authorize tools in `.claude/settings.local.json` |
+| MCP wildcards | ❌ No | List each tool explicitly |
+| CLAUDE.md auto-loading | ⚠️ Partial | Explicitly instruct to read it in the prompt |
+
+### Prompt Design for Non-Interactive Mode
+
+Structure your prompts to work around these limitations:
+
+```
+You are running as a scheduled automation task. Slash commands and skills do not work.
+
+FIRST: Read ai/CLAUDE.md to understand project rules.
+THEN: Read .claude/commands/your-command.md and follow those instructions.
+
+Key points:
+- Use pwsh (not powershell) for shell commands
+- MCP tools are pre-authorized: [list relevant tools]
+- [Any other context the session needs]
+```
 
 ## Command-Line Options for Automation
 
@@ -72,7 +109,7 @@ Key flags for scheduled tasks:
 
 | Flag | Purpose | Example |
 |------|---------|---------|
-| `-p "prompt"` | Run non-interactively | `claude -p "run /pw-daily"` |
+| `-p "prompt"` | Run non-interactively | `claude -p "Read .claude/commands/pw-daily.md and follow it"` |
 | `--output-format json` | Structured output for parsing | |
 | `--allowedTools "..."` | Auto-approve specific tools | `--allowedTools "Read,Glob,Grep"` |
 | `--max-turns N` | Limit iterations | `--max-turns 20` |

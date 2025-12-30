@@ -78,20 +78,80 @@ password <password>
 
 See [Developer Setup Guide](../developer-setup-guide.md) for installation instructions.
 
-## Command-Line Automation
+## MCP Server Registration
 
-**Important**: MCP tools require explicit permission to work in non-interactive mode (`claude -p`).
+### Configuration File Location
 
-Add to `.claude/settings.local.json`:
+MCP servers are registered in **`~/.claude.json`** (your home directory). This single file stores all Claude Code configuration, including per-project MCP server definitions.
+
+The structure for MCP servers:
 ```json
 {
-  "permissions": {
-    "allow": [
-      "mcp__labkey__*",
-      "mcp__gmail__*"
-    ]
+  "projects": {
+    "C:/proj/pwiz-ai": {
+      "mcpServers": {
+        "labkey": {
+          "type": "stdio",
+          "command": "python",
+          "args": ["./ai/mcp/LabKeyMcp/server.py"],
+          "env": {}
+        },
+        "gmail": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["@gongrzhe/server-gmail-autoauth-mcp"],
+          "env": {}
+        }
+      }
+    }
   }
 }
 ```
 
-Without these permissions, automated scripts will silently fall back to cached data. See [Scheduled Tasks Guide](../scheduled-tasks-guide.md#critical-mcp-permissions-for-command-line-automation) for details.
+To register a server interactively: `claude mcp add <name>`
+To list registered servers: `claude mcp list`
+
+### Context Impact of MCP Servers
+
+**Important**: Each registered MCP server consumes context tokens for tool definitions.
+
+| Component | Approximate Tokens |
+|-----------|-------------------|
+| LabKey MCP (25 tools) | ~18k tokens |
+| Gmail MCP (19 tools) | ~13k tokens |
+| **Total MCP overhead** | **~31k tokens (15% of 200k context)** |
+
+This overhead is incurred at the start of every session where MCP servers are enabled.
+
+### Recommended: Separate Directories for Different Workflows
+
+To maximize coding context, consider maintaining **two separate checkouts**:
+
+| Directory | Branch | MCP Servers | Purpose |
+|-----------|--------|-------------|---------|
+| `C:\proj\pwiz-ai` | `ai-context` | LabKey + Gmail | Daily reports, documentation, scheduled tasks |
+| `C:\proj\pwiz` | `master` or feature | None | Active coding with maximum context |
+
+**Why this helps**:
+- Coding sessions get full 200k context for code, tests, and exploration
+- Daily report sessions have the MCP tools they need
+- No context wasted on unused tools
+
+**Setup**:
+1. Keep existing `pwiz-ai` checkout with MCP servers for ai-context work
+2. Use a separate checkout (e.g., `pwiz`, `pwiz-feature`) without MCP registration for coding
+3. The MCP servers are project-specific in `~/.claude.json`, so different directories can have different configurations
+
+## Command-Line Automation
+
+**Important**: MCP tools require explicit permission to work in non-interactive mode (`claude -p`).
+
+**Wildcards do NOT work** - each tool must be listed by name in `.claude/settings.local.json`.
+
+To configure permissions for a command-line operation:
+1. Start an interactive Claude Code session
+2. Describe the automation you need
+3. Ask Claude to write the appropriate `permissions.allow` list
+4. Review and remove any destructive tools you don't want auto-approved
+
+See [Scheduled Tasks Guide](../scheduled-tasks-guide.md#critical-mcp-permissions-for-command-line-automation) for the complete example.
