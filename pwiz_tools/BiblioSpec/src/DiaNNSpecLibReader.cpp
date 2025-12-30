@@ -799,43 +799,47 @@ class DiaNNSpecLibReader::Impl
                 return boost::range::find(column_names, name) != column_names.end();
             }
 
-            void read_row_helper(std::size_t i, int& t) const
+            void read_column(std::size_t i, int& t) const
             {
                 const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
                 t = intArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i, int64_t& t) const
+            void read_column(std::size_t i, int64_t& t) const
             {
                 const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
                 t = intArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i, float& t) const
+            void read_column(std::size_t i, float& t) const
             {
                 const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
                 t = fpArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i, double& t) const
+            void read_column(std::size_t i, double& t) const
             {
                 const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
                 t = fpArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i, std::string_view& t) const
+            void read_column(std::size_t i, std::string_view& t) const
             {
                 const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
                 t = strArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i) const {}
-
-            template<class T, class ...ColType>
-            void read_row_helper(std::size_t i, T& t, ColType&...cols) const
+            void read_column(std::size_t i, std::string& t) const
             {
-                read_row_helper(i, t); // read current column i
-                read_row_helper(i + 1, cols...); // recurse to parse next column
+                const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
+                t = strArray->Value(rowIndex_);
+            }
+
+            template<class... ColType>
+            void read_row_helper(std::size_t i, ColType&... cols) const
+            {
+                std::size_t col = i;
+                ((read_column(col++, cols)), ...);
             }
 
             template<class ...ColType>
