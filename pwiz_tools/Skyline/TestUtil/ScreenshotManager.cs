@@ -458,7 +458,23 @@ namespace pwiz.SkylineTestUtil
                 SaveToFile(pathToSave, shotPic);
             }
 
+            // CopyBitmapToClipboard(shotPic);
+
             return shotPic;
+        }
+
+        /// <summary>
+        /// Places a bitmap on the clipboard. Can safely be called from background threads.
+        /// Clipboard operations must be performed from STA apartment threads, but background threads
+        /// are typically MTA. Therefore, this function creates a new thread to do the copy.
+        /// </summary>
+        public static void CopyBitmapToClipboard(Bitmap bitmap)
+        {
+            // Have to do it this way because of the limitation on OLE access from background threads.
+            var clipThread = new Thread(() => Clipboard.SetImage(bitmap));
+            clipThread.SetApartmentState(ApartmentState.STA);
+            clipThread.Start();
+            clipThread.Join();
         }
 
         private void SaveToFile(string filePath, Bitmap bmp)
