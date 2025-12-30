@@ -327,26 +327,26 @@ namespace pwiz.Skyline.Controls.Databinding
             ClipboardHelper.SetClipboardText(owner, text);
         }
 
-        public bool Export(Control owner, ViewInfo viewInfo)
+        public bool GetExportFilename(Control owner, ViewName viewName, out string fileName, out char separator)
         {
-            using (var saveFileDialog = new SaveFileDialog())
+            fileName = null;
+            separator = TextUtil.CsvSeparator;
+            using var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = GetExportDirectory();
+            saveFileDialog.OverwritePrompt = true;
+            saveFileDialog.DefaultExt = TextUtil.EXT_CSV;
+            saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV);
+            saveFileDialog.FileName = viewName.Name;
+            // TODO: If document has been saved, initial directory should be document directory
+            if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
             {
-                saveFileDialog.InitialDirectory = GetExportDirectory();
-                saveFileDialog.OverwritePrompt = true;
-                saveFileDialog.DefaultExt = TextUtil.EXT_CSV;
-                saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV);
-                saveFileDialog.FileName = GetDefaultExportFilename(viewInfo);
-                // TODO: If document has been saved, initial directory should be document directory
-                if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
-                {
-                    return false;
-                }
-                char separator = saveFileDialog.FilterIndex == 2
-                    ? TextUtil.SEPARATOR_TSV
-                    : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
-                SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
-                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, separator);
+                return false;
             }
+            separator = saveFileDialog.FilterIndex == 2
+                ? TextUtil.SEPARATOR_TSV
+                : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
+            fileName = saveFileDialog.FileName;
+            return true;
         }
 
         public bool IsInvariantLanguage()
@@ -863,6 +863,11 @@ namespace pwiz.Skyline.Controls.Databinding
                 return false;
             }
 
+            return IsUiModeSupported(viewSpec);
+        }
+
+        public bool IsUiModeSupported(ViewSpec viewSpec)
+        {
             var reportUiMode = DataSchema.NormalizeUiMode(viewSpec.UiMode);
             switch (DataSchema.DefaultUiMode)
             {
