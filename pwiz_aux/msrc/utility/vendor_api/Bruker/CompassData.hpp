@@ -283,13 +283,6 @@ struct PWIZ_API_DECL Chromatogram
 
 typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 
-struct PWIZ_API_DECL LCTraceSource
-{
-    pwiz::cv::CVID type;
-    pwiz::cv::CVID units;
-    std::string description;
-    std::string instrument;
-};
 
 struct FrameScanRange
 {
