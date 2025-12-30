@@ -373,15 +373,7 @@ namespace pwiz.SkylineTestFunctional
 
             // === Test 5: Change quantification settings - verify full recalculation ===
             // Changing NormalizationMethod should trigger full recalculation via HasEqualQuantificationSettings
-            RunUI(() =>
-            {
-                SkylineWindow.ModifyDocument("Change normalization method",
-                    doc => doc.ChangeSettings(doc.Settings.ChangePeptideQuantification(q =>
-                        q.ChangeNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS))));
-            });
-            // Wait for graph update timer to fire, triggering the new calculation
-            WaitForGraphs();
-            WaitForConditionUI(() => pane.IsComplete);
+            ChangeNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS, pane);
 
             RunUI(() =>
             {
@@ -414,7 +406,42 @@ namespace pwiz.SkylineTestFunctional
                     "With median normalization, all remaining peptides should be recalculated");
             });
 
-            // Undo both changes so document matches the file on disk
+            // Undo the delete so we have all peptides again (still in EQUALIZE_MEDIANS mode)
+            RunUI(SkylineWindow.Undo);
+            WaitForConditionUI(() => pane.IsComplete);
+
+            // === Test 5c: Change to GLOBAL_STANDARDS and add new global standard ===
+            // The document has VVLSGSDATLAYSAFK already marked as a global standard.
+            // First, change to GLOBAL_STANDARDS normalization.
+            ChangeNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS, pane);
+
+            RunUI(() =>
+            {
+                // Normalization change should trigger full recalculation
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Changing to GLOBAL_STANDARDS should trigger full calculation with no cached nodes");
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
+                    "Changing to GLOBAL_STANDARDS should recalculate all nodes");
+            });
+
+            // Now add HLNGFSVPR as another global standard - this should invalidate the cache
+            // because _cachedPeptideStandards will change
+            FindNode("HLNGFSVPR");
+            RunUI(() => SkylineWindow.SetStandardType(StandardType.GLOBAL_STANDARD));
+            WaitForGraphs();
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                // Adding a global standard changes _cachedPeptideStandards, which should
+                // cause HasEqualQuantificationSettings to return false and invalidate the cache
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Adding a global standard should trigger full calculation (cachedPeptideStandards changed)");
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
+                    "Adding a global standard should recalculate all nodes");
+            });
+
+            // Undo both changes (global standard annotation and normalization method)
             RunUI(SkylineWindow.Undo);
             RunUI(SkylineWindow.Undo);
             WaitForConditionUI(() => pane.IsComplete);
@@ -445,6 +472,19 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
                     "Reopening document should recalculate all nodes");
             });
+        }
+
+        private static void ChangeNormalizationMethod(NormalizationMethod method, SummaryRelativeAbundanceGraphPane pane)
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.ModifyDocument($"Change normalization method to {method.NormalizationMethodCaption}",
+                    doc => doc.ChangeSettings(doc.Settings.ChangePeptideQuantification(q =>
+                        q.ChangeNormalizationMethod(method))));
+            });
+            // Wait for graph update timer to fire, triggering the new calculation
+            WaitForGraphs();
+            WaitForConditionUI(() => pane.IsComplete);
         }
     }
 }

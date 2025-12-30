@@ -717,11 +717,25 @@ Changed from deleting 1 peptide to deleting 4 disjoint peptides at indices 0, 10
 - Verifies `CachedNodeCount = originalPeptideCount - 4`
 - Verifies `RecalculatedNodeCount = 0` (delete doesn't recalculate)
 
+### Test 5c Addition: Global Standards Cache Invalidation
+Added test verifying `_cachedPeptideStandards` change triggers full recalculation:
+- Changes normalization from EQUALIZE_MEDIANS to GLOBAL_STANDARDS
+- Uses `FindNode("HLNGFSVPR")` and `SetStandardType(StandardType.GLOBAL_STANDARD)`
+- Verifies `CachedNodeCount = 0` (full recalculation)
+- Tests the `_cachedPeptideStandards` equality check in `HasEqualQuantificationSettings`
+
 ### Test 6 Addition: Document ID Change
 Added test for reopening the same document file:
 - Verifies `Document.Id` changes (new Identity object created)
 - Verifies full recalculation triggered (`CachedNodeCount = 0`)
 - Tests the "document identity changed" branch in `CleanCacheForIncrementalUpdates`
+
+### HasEqualQuantificationSettings Refinements
+Based on discussion about Nick's EQUALIZE_MEDIANS check being overly conservative:
+- Removed the blanket `return false` for EQUALIZE_MEDIANS (settings can differ for reasons unrelated to abundance)
+- Per-node invalidation for median normalization is handled in `CleanCacheForIncrementalUpdates`
+- Added RatioToSurrogate check using `_cachedPeptideStandards` (conservative, same as GLOBAL_STANDARDS)
+- Updated documentation with future optimization notes (compare actual peak areas instead of DocNode equality)
 
 ### Coverage Analysis Fix
 Fixed `Analyze-Coverage.ps1` to handle generic type parameters:
@@ -739,7 +753,8 @@ Coverage measures code execution, not correctness. The existing tests already ra
 - **Too efficient**: `CachedNodeCount>0` when expected 0 (using stale cached data)
 
 ### Files Modified
-- `PeakAreaRelativeAbundanceGraphTest.cs` - Enhanced Test 3, added Test 6
+- `SrmSettings.cs` - Refined HasEqualQuantificationSettings for normalization methods
+- `PeakAreaRelativeAbundanceGraphTest.cs` - Enhanced Test 3, added Test 5c and Test 6
 - `TODO-20251221_relative_abundance_perf-coverage.txt` - Added TestIrtTutorial
 - `Analyze-Coverage.ps1` - Fixed generic type parameter handling
 

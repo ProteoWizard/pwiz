@@ -2318,8 +2318,14 @@ namespace pwiz.Skyline.Model.DocSettings
         /// - NONE, RatioToLabel: Only check if quantification settings match
         /// - GLOBAL_STANDARDS: Also check if global standard peptides changed and MeasuredResults
         /// - TIC: Check if MeasuredResults changed
-        /// - EQUALIZE_MEDIANS: Always returns false (any target change affects all abundances)
-        /// - RatioToSurrogate: TODO - check if specific surrogate has changed
+        /// - EQUALIZE_MEDIANS: Settings check only - per-node invalidation handled by cache cleanup
+        ///   (see CleanCacheForIncrementalUpdates which invalidates when any node changes)
+        /// - RatioToSurrogate: Conservatively check if any standard peptides changed
+        ///
+        /// Future optimization: When invalidating entire cache due to DocNode changes (not ReferenceEquals
+        /// but matching Id), we could compare actual peak area values and only invalidate if they differ.
+        /// This would avoid cache invalidation for minor node changes (e.g., adding a note to a transition)
+        /// that don't affect abundance calculations.
         /// </summary>
         public bool HasEqualQuantificationSettings(SrmSettings other)
         {
@@ -2334,12 +2340,21 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             var normalizationMethod = PeptideSettings.Quantification.NormalizationMethod;
-            if (NormalizationMethod.EQUALIZE_MEDIANS.Equals(normalizationMethod))
-            {
-                return false;
-            }
+            // Note: EQUALIZE_MEDIANS is not checked here. Settings can differ for reasons
+            // unrelated to abundance (annotations, replicate names, etc.). Per-node invalidation
+            // for median normalization is handled in CleanCacheForIncrementalUpdates.
 
             if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod))
+            {
+                if (!CollectionUtil.EqualsDeep(_cachedPeptideStandards, other._cachedPeptideStandards))
+                {
+                    return false;
+                }
+            }
+
+            // For surrogate standard normalization, conservatively invalidate if any surrogate standard changed.
+            // Surrogate standards are typically used in smaller documents, so the performance impact is minimal.
+            if (normalizationMethod is NormalizationMethod.RatioToSurrogate)
             {
                 if (!CollectionUtil.EqualsDeep(_cachedPeptideStandards, other._cachedPeptideStandards))
                 {
