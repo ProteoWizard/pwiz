@@ -1219,7 +1219,7 @@ bool DiaNNSpecLibReader::parseFile()
             if (findItr2 == speclib.entryByModPeptideAndCharge.end())
                 throw BlibException(false, "could not find precursorId '%s' in speclib; is '%s' the correct report TSV file?", precursorId, bfs::path(diannReportFilepath).filename().string().c_str());
 
-            psm->score = redundantPSM.score;
+            psm->score = globalQValue;
             psm->fileId = retentionTimes.back().fileId;
 
             auto& speclibEntry = findItr2->second.get();
