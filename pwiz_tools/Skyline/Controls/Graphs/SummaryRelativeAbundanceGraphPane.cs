@@ -1045,7 +1045,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 int totalCount = unchanged.Count + changed.Count;
                 var pointPairList = new PointPairList();
                 var xscalePaths = new List<IdentityPath>(totalCount);
-                var identityToIndex = new Dictionary<Identity, int>(totalCount);
+                var identityToIndex = new Dictionary<int, int>(totalCount);
                 var nodePositions = new Dictionary<int, NodePosition>(totalCount);
 
                 // Track min/max Y
@@ -1091,8 +1091,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     xscalePaths.Add(dataPoint.IdentityPath);
 
                     var groupIdentity = dataPoint.IdentityPath.GetIdentity(0);
-                    if (!identityToIndex.ContainsKey(groupIdentity))
-                        identityToIndex.Add(groupIdentity, outputIndex);
+                    if (!identityToIndex.ContainsKey(groupIdentity.GlobalIndex))
+                        identityToIndex.Add(groupIdentity.GlobalIndex, outputIndex);
 
                     var nodeKey = docNode.Id.GlobalIndex;
                     nodePositions.Add(nodeKey, new NodePosition
@@ -1146,7 +1146,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 pointPairList.Sort(CompareYValues);
 
                 productionMonitor.SetProgress(90);
-                var identityToIndex = new Dictionary<Identity, int>(pointPairList.Count);
+                var identityToIndex = new Dictionary<int, int>(pointPairList.Count);
                 var nodePositions = new Dictionary<int, NodePosition>(pointPairList.Count);
                 for (var i = 0; i < pointPairList.Count; i++)
                 {
@@ -1154,10 +1154,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     // 1-index the proteins
                     pointPairList[i].X = i + 1;
                     xscalePaths.Add(dataPoint.IdentityPath);
-                    // Build map for O(1) selection lookup
+                    // Build map for O(1) selection lookup (use GlobalIndex for reference equality)
                     var groupIdentity = dataPoint.IdentityPath.GetIdentity(0);
-                    if (!identityToIndex.ContainsKey(groupIdentity))
-                        identityToIndex[groupIdentity] = i;
+                    if (!identityToIndex.ContainsKey(groupIdentity.GlobalIndex))
+                        identityToIndex[groupIdentity.GlobalIndex] = i;
                     // Build map for incremental update support
                     // Use peptide DocNode in peptide mode, protein DocNode in protein mode
                     var docNode = dataPoint.Peptide?.DocNode ?? (DocNode)dataPoint.Protein.DocNode;
@@ -1190,13 +1190,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (selectedProtein == null || _identityToIndex == null)
                     return -1;
 
-                if (_identityToIndex.TryGetValue(selectedProtein.PeptideGroup, out var index))
+                if (_identityToIndex.TryGetValue(selectedProtein.PeptideGroup.GlobalIndex, out var index))
                     return index - 1;
 
                 return -1;
             }
 
-            private Dictionary<Identity, int> _identityToIndex;
+            private Dictionary<int, int> _identityToIndex;
 
             /// <summary>
             /// Maps doc node reference (via Id.GlobalIndex - guaranteed unique per object) to its position and Y value in the sorted list.

@@ -758,6 +758,50 @@ Coverage measures code execution, not correctness. The existing tests already ra
 - `TODO-20251221_relative_abundance_perf-coverage.txt` - Added TestIrtTutorial
 - `Analyze-Coverage.ps1` - Fixed generic type parameter handling
 
+## Phase 12: Review Feedback Fixes ✅ COMPLETE
+
+### Nick's Review Comments (2025-12-30)
+
+Two issues identified:
+
+1. **ZedGraphControl.Events.cs copyright symbol corruption**
+   - Claude's tools created extensive diff with encoding issues
+   - Reverted file to master, manually reapplied minimal cursor fix
+   - Fix: Move `SetCursor(mousePt)` after `MouseMoveEvent` check (lines 709→719-721)
+
+2. **Dictionary<Identity, int> uses content equality instead of reference equality**
+   - `Identity.Equals()` returns true for all Identity objects of the same type
+   - `Identity.GetHashCode()` returns 0 for base class
+   - Nick recommended `ReferenceValue<T>` wrapper or `GlobalIndex`
+
+### Fix Applied
+
+Changed `_identityToIndex` from `Dictionary<Identity, int>` to `Dictionary<int, int>` using `GlobalIndex`:
+
+```csharp
+// Before: Content equality - all Identity objects hash to same bucket
+var identityToIndex = new Dictionary<Identity, int>();
+identityToIndex[groupIdentity] = i;
+
+// After: Reference equality via guaranteed-unique GlobalIndex
+var identityToIndex = new Dictionary<int, int>();
+identityToIndex[groupIdentity.GlobalIndex] = i;
+```
+
+### Documentation Update
+
+Added section to `ai/docs/architecture-data-model.md` explaining two approaches for reference equality:
+
+1. **GlobalIndex** (preferred for DocNodes) - guaranteed unique integer
+2. **ReferenceValue<T>** (general purpose) - wrapper using `RuntimeHelpers.GetHashCode()` as hash function with `ReferenceEquals()` for equality
+
+Key insight documented: `RuntimeHelpers.GetHashCode()` works correctly as a **hash function** (bucket selection) but fails when used as **the key itself** (collisions cause duplicate key exceptions).
+
+### Files Modified
+- `ZedGraphControl.Events.cs` - Minimal cursor fix (committed separately)
+- `SummaryRelativeAbundanceGraphPane.cs` - Changed to `Dictionary<int, int>` with GlobalIndex
+- `ai/docs/architecture-data-model.md` - Added ReferenceValue<T> documentation
+
 ## Related
 - Discovered during PR #3707 (Peak Imputation DIA Tutorial) review
 - Pattern follows `RTLinearRegressionGraphPane` approach for background computation

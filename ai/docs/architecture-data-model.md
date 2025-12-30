@@ -203,20 +203,77 @@ foreach (var protein in doc.MoleculeGroups)
 
 **IMPORTANT**: Matching by GlobalIndex tells you the nodes have the same *identity* - it does NOT tell you they are the same object reference. Two different DocNode objects can share the same Identity if one is a modified clone of the other.
 
-### WARNING: Do NOT Use RuntimeHelpers.GetHashCode()
+### WARNING: Do NOT Use RuntimeHelpers.GetHashCode() as a Key
 
 `RuntimeHelpers.GetHashCode()` returns a 32-bit identity hash code, but it is **NOT guaranteed unique**:
 
 - On 64-bit Windows, object addresses don't fit in 32 bits, so collisions are inevitable
-- With thousands of objects, collisions become common (observed with ~5,000 proteins in PR #3730)
-- Using it as a dictionary key causes intermittent "duplicate key" exceptions
+- With thousands of objects, collisions become common
+- Using it directly as a set/dictionary key causes intermittent "duplicate key" exceptions
 
 ```csharp
-// WRONG: RuntimeHelpers.GetHashCode() can have collisions!
+// WRONG: RuntimeHelpers.GetHashCode() as a key - collisions cause duplicate key exceptions!
 var nodeSet = new HashSet<int>();
 foreach (var protein in doc.MoleculeGroups)
-    nodeSet.Add(RuntimeHelpers.GetHashCode(protein)); // COLLISIONS POSSIBLE!
+    nodeSet.Add(RuntimeHelpers.GetHashCode(protein)); // DUPLICATE KEY POSSIBLE!
 ```
+
+### Correct Approaches for Reference Equality in Collections
+
+There are two correct approaches for reference equality in sets and dictionaries:
+
+#### Approach 1: Use Identity.GlobalIndex (Preferred for DocNodes)
+
+For any object with an `Identity Id` property, use `GlobalIndex` as the key:
+
+```csharp
+// CORRECT: GlobalIndex is guaranteed unique per Identity instance
+var nodeSet = new HashSet<int>();
+foreach (var protein in doc.MoleculeGroups)
+    nodeSet.Add(protein.Id.GlobalIndex); // Always works!
+```
+
+This is the preferred approach for `DocNode` and `XmlNamedIdElement` objects because `GlobalIndex` was specifically designed for this purpose.
+
+#### Approach 2: Use ReferenceValue<T> Wrapper (General Purpose)
+
+For any reference type (not just those with Identity), the `ReferenceValue<T>` wrapper provides reference equality:
+
+```csharp
+// From pwiz.Common.Collections.ReferenceValue
+public readonly struct ReferenceValue<T> where T : class
+{
+    public T Value { get; }
+
+    public override bool Equals(object obj) =>
+        obj is ReferenceValue<T> other && ReferenceEquals(Value, other.Value);
+
+    public override int GetHashCode() =>
+        Value == null ? 0 : RuntimeHelpers.GetHashCode(Value);
+}
+```
+
+**Why this works**: Hash collisions are normal for hash-based collections. The hash code finds the *bucket*, then `Equals()` finds the exact match within the bucket. `ReferenceValue<T>` uses:
+- `RuntimeHelpers.GetHashCode()` for the **hash function** (bucket selection)
+- `ReferenceEquals()` for **equality** (exact match within bucket)
+
+```csharp
+// CORRECT: ReferenceValue<T> handles collisions via ReferenceEquals
+var nodeSet = new HashSet<ReferenceValue<PeptideDocNode>>();
+nodeSet.Add(peptide1);
+nodeSet.Add(peptide2); // Works even if same hash - ReferenceEquals distinguishes
+```
+
+**The key insight**: Using `RuntimeHelpers.GetHashCode()` as **the key itself** fails when collisions occur. The correct pattern uses it as **the hash function for a wrapper** that uses `ReferenceEquals` for equality.
+
+#### Comparison
+
+| Approach | Collection Type | When to Use |
+|----------|-----------------|-------------|
+| `GlobalIndex` | `HashSet<int>` | DocNodes, XmlNamedIdElement, anything with Identity |
+| `ReferenceValue<T>` | `HashSet<ReferenceValue<T>>` | Any reference type without Identity |
+
+See `pwiz_tools/Shared/CommonUtil/Collections/ReferenceValue.cs` for the full implementation.
 
 ### Identity Subclasses
 
