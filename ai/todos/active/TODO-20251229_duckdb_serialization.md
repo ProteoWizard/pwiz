@@ -131,3 +131,16 @@ Extension method `AppendNullableValue()` handles nullable types:
 - Added dynamic schema feature to only include used columns
 - Fixed reserved word issue with "semi" column
 - Build successful, basic serialization working
+
+### 2025-12-29 - Session 2
+- Refactored to use attributes and reflection for column metadata
+- Created `ColumnAttribute` class with `Name`, `SqlType`, `IsRequired`, `IsPrimaryKey`
+- Created non-generic `ColumnDef` class using `PropertyInfo`
+- Modified `TableSchema` to use reflection to discover columns from properties
+- Refactored info classes (`MoleculeGroupInfo`, `MoleculeInfo`, `TransitionGroupInfo`, `TransitionInfo`):
+  - Each property decorated with `[Column]` attribute
+  - Properties compute values from underlying DocNode
+  - Column names auto-derived from PascalCase property names to snake_case
+  - SQL types inferred from property types
+- Simplified InitializeSchemas to just specify table name and type
+- Build successful

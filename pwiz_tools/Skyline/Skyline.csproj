@@ -2232,7 +2232,16 @@
     <Compile Include="Model\Serialization\DocumentSerializer.cs" />
     <Compile Include="Model\Serialization\DocumentFormat.cs" />
     <Compile Include="Model\Serialization\DocumentWriter.cs" />
+    <Compile Include="Model\Serialization\DuckDb\AppenderRowExtensions.cs" />
+    <Compile Include="Model\Serialization\DuckDb\ColumnAttribute.cs" />
+    <Compile Include="Model\Serialization\DuckDb\ColumnDef.cs" />
     <Compile Include="Model\Serialization\DuckDb\DuckDbSerializer.cs" />
+    <Compile Include="Model\Serialization\DuckDb\MoleculeGroupRecord.cs" />
+    <Compile Include="Model\Serialization\DuckDb\MoleculeRecord.cs" />
+    <Compile Include="Model\Serialization\DuckDb\Record.cs" />
+    <Compile Include="Model\Serialization\DuckDb\TableSchema.cs" />
+    <Compile Include="Model\Serialization\DuckDb\TransitionGroupRecord.cs" />
+    <Compile Include="Model\Serialization\DuckDb\TransitionRecord.cs" />
     <Compile Include="Model\SkylineVersion.cs" />
     <Compile Include="Model\SmallMoleculeTransitionListReader.cs" />
     <Compile Include="Model\SrmDocument.cs" />
