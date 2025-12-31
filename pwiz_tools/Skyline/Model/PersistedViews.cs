@@ -29,7 +29,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model
 {
     /// <summary>
-    /// Holds all of the Skyline views (aka "reports") that get saved in <see cref="Settings.PersistedViews"/>, and
+    /// Holds all the Skyline views (aka "reports") that get saved in <see cref="Settings.PersistedViews"/>, and
     /// thus appear in the Document Grid "Reports" dropdown button.
     /// 
     /// This class replaces <see cref="Settings.ViewSpecList"/> and <see cref="Settings.ReportSpecList"/>.
@@ -37,12 +37,12 @@ namespace pwiz.Skyline.Model
     /// TO ADD OR CHANGE A DEFAULT REPORT
     ///
     /// 1) increase the number that is returned by "PersistedViews.RevisionIndexCurrent" (necessary even mid-release-cycle if there has been an official Daily release).
-    /// 2) add a new string constant defining the new or revised report. If there's already a report by that name, the more recent one is what shows up in Skyline.
-    /// 3) change the PersistedViews.GetDefaults(int revisionIndex) method so that it adds the new string to "reportString".
+    /// 2) add a new yield return to end of <see cref="GetReportListsByVersion"/>. The string returned should have a views element with all the reports you want to add or change.
+    /// 3) if it is a new report name, then add an entry to <see cref="GetLocalizedReportNames"/>. If the new report has the same name as a report from an earlier version, then the newest report definition will be what shows up in Skyline
     /// 
     /// A convenient way to create the string constant defining a report is to build the report in Skyline, then export the report
     /// definition with "File > Export > Report > Edit List > Share" (or you can do it from "Manage Views" on the Document Grid).
-    /// Then open the.skyr file in Notepad and replace all of the double quotes with single quotes and paste the contents of the file into
+    /// Then open the.skyr file in Notepad and replace all the double quotes with single quotes and paste the contents of the file into
     /// a @"" string constant. Find the commit in which this comment was added for an example.
     ///
     /// Note that if you skip step 1, users who have installed the current Skyline-daily will not see the new report(s) when they upgrade.
@@ -130,9 +130,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        // v12 adds small mol peak boundaries report
-        // v13 adds small mol transitions report and small mol RT Results report
-        public int RevisionIndexCurrent { get { return 14; } } 
+        public int RevisionIndexCurrent { get { return 15; } } 
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -148,63 +146,7 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<KeyValuePair<ViewGroupId, ViewSpec>> GetDefaults(int revisionIndex)
         {
-            List<string> reportStrings = new List<string>();
-            if (revisionIndex >= 1)
-            {
-                reportStrings.Add(REPORTS_V1);
-            }
-            if (revisionIndex >= 2)
-            {
-                reportStrings.Add(REPORTS_V2);
-            }
-            if (revisionIndex >= 3)
-            {
-                reportStrings.Add(REPORTS_V3);
-            }
-            if (revisionIndex >= 4)
-            {
-                reportStrings.Add(REPORTS_V4);
-            }
-            if (revisionIndex >= 5)
-            {
-                reportStrings.Add(REPORTS_V5);
-            }
-            if (revisionIndex >= 6)
-            {
-                reportStrings.Add(REPORTS_V6);
-            }
-            if (revisionIndex >= 7)
-            {
-                reportStrings.Add(REPORTS_V7);
-            }
-            if (revisionIndex >= 8)
-            {
-                reportStrings.Add(REPORTS_V8);
-            }
-            if (revisionIndex >= 10)
-            {
-                reportStrings.Add(REPORTS_V10);
-            }
-
-            if (revisionIndex >= 11)
-            {
-                reportStrings.Add(REPORTS_V11);
-            }
-
-            if (revisionIndex >= 12)
-            {
-                reportStrings.Add(REPORTS_V12); // Including molecule peak boundaries export
-            }
-
-            if (revisionIndex >= 13)
-            {
-                reportStrings.Add(REPORTS_V13); // Including molecule RT results and molecule transitions result report
-            }
-
-            if (revisionIndex >= 14)
-            {
-                reportStrings.Add(REPORTS_V14);
-            }
+            List<string> reportStrings = GetReportListsByVersion().Take(revisionIndex).Where(s=>!string.IsNullOrEmpty(s)).ToList();
 
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
@@ -227,7 +169,7 @@ namespace pwiz.Skyline.Model
                 {"Molecule RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_RT_Results)},
                 {"Molecule Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results)},
                 {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
-                {"Detailed Info", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetDefaults_Detailed_Info)}
+                {"Detailed Log", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetDefaults_Detailed_Log)}
             };
             // ReSharper restore LocalizableElement
 
@@ -267,7 +209,14 @@ namespace pwiz.Skyline.Model
         }
 
         // ReSharper disable LocalizableElement
-        private const string REPORTS_V1 = @"<views>
+
+        /// <summary>
+        /// Lists of reports that were added in each version of Skyline.
+        /// </summary>
+        public static IEnumerable<string> GetReportListsByVersion()
+        {
+            // Version 1:
+            yield return @"<views>
   <view name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='Sequence' />
     <column name='Protein.Name' />
@@ -302,7 +251,8 @@ namespace pwiz.Skyline.Model
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </view>
 </views>";
-        private const string REPORTS_V2 = @"<views>
+            // Version 2:
+            yield return @"<views>
   <view name='SRM Collider Input' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist=''>
     <column name='Precursor.Peptide.Sequence' />
     <column name='Precursor.ModifiedSequence' />
@@ -314,7 +264,8 @@ namespace pwiz.Skyline.Model
     <column name='FragmentIon' />
   </view>
 </views>";
-        private const string REPORTS_V3 = @"<views>
+            // Version 3:
+            yield return @"<views>
   <view name='Peak Boundaries' rowsource='pwiz.Skyline.Model.Databinding.Entities.Precursor' sublist='Results!*'>
     <column name='Results!*.Value.PeptideResult.ResultFile.FileName' />
     <column name='Peptide.ModifiedSequence' />
@@ -325,7 +276,8 @@ namespace pwiz.Skyline.Model
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </view>
 </views>";
-        private const string REPORTS_V4 = @"<views>
+            // Version 4:
+            yield return @"<views>
   <view name='Peptide Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>
     <column name='Precursor.Peptide.Protein.Name' />
     <column name='Precursor.Peptide.ModifiedSequence' />
@@ -369,7 +321,8 @@ namespace pwiz.Skyline.Model
     <column name='ProductAdduct' />
   </view>
 </views>";
-        private const string REPORTS_V5 = @"<views>
+            // Version 5:
+            yield return @"<views>
 <view name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='Sequence' />
     <column name='Protein.Name' />
@@ -393,7 +346,8 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
-        private const string REPORTS_V6 = @"<views>
+            // Version 6:
+            yield return @"<views>
   <view name='Peptide Quantification' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='' />
     <column name='Protein' />
@@ -406,7 +360,8 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
-        private const string REPORTS_V7 = @"<views>
+            // Version 7:
+            yield return @"<views>
   <view name='Peptide Quantification' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='' />
     <column name='Protein' />
@@ -420,8 +375,8 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
-
-        private const string REPORTS_V8 = @"<views>
+            // Version 8:
+            yield return @"<views>
   <view name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
     <column name='' />
     <column name='Protein' />
@@ -458,10 +413,11 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
-
-        // There is no REPORTS_V9 in order to work around a problem where V4 was changed.
-
-        private const string REPORTS_V10 = @"<views>
+            // Version 9:
+            // There are no reports associated with version 9 to work around a problem where the reports in Version 4 were changed.
+            yield return @"<views></views>";
+            // Version 10:
+            yield return @"<views>
   <view name='Small Molecule Transition List' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*' uimode='small_molecules'>
     <column name='Precursor.Peptide.Protein.Name' />
     <column name='Precursor.Peptide.MoleculeName' />
@@ -483,8 +439,8 @@ namespace pwiz.Skyline.Model
   </view>
 </views>
 ";
-
-        private const string REPORTS_V11 = @"<views>
+            // Version 11:
+            yield return @"<views>
   <view name='Molecule Quantification' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
     <column name='' />
     <column name='Protein' />
@@ -506,8 +462,8 @@ namespace pwiz.Skyline.Model
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </view>
 </views>";
-
-        private const string REPORTS_V12 = @"<views>
+            // Version 12:
+            yield return @"<views>
   <view name='Molecule Peak Boundaries' rowsource='pwiz.Skyline.Model.Databinding.Entities.Precursor' sublist='Results!*' uimode='small_molecules'>
     <column name='Results!*.Value.PeptideResult.ResultFile.FileName' />
     <column name='Peptide' />
@@ -517,8 +473,8 @@ namespace pwiz.Skyline.Model
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </view>
 </views>";
-
-        private const string REPORTS_V13 = @"<views>
+            // Version 13:
+            yield return @"<views>
   <view name='Molecule RT Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
     <column name='' />
     <column name='Protein.Name' />
@@ -546,9 +502,9 @@ namespace pwiz.Skyline.Model
     <filter column='Results!*.Value' opname='isnotnullorblank' />
   </view>
 </views>";
-
-        private const string REPORTS_V14 = @"<views>
-  <view name='Detailed Info' rowsource='pwiz.Skyline.Model.AuditLog.Databinding.AuditLogRow' sublist='Details!*' uimode='proteomic'>
+            // Version 14:
+            yield return @"<views>
+  <view name='Detailed Log' rowsource='pwiz.Skyline.Model.AuditLog.Databinding.AuditLogRow' sublist='Details!*' uimode='proteomic'>
     <column name='Time' />
     <column name='Details!*.AllInfoMessage' />
     <column name='Reason' />
@@ -556,6 +512,47 @@ namespace pwiz.Skyline.Model
     <column name='SkylineVersion' />
   </view>
 </views>";
+            // Version 15:
+            yield return @"<views>
+  <view name='Peptide Normalized Areas' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='' uimode='proteomic'>
+    <column name='' />
+    <column name='ModifiedSequence' />
+    <column name='Protein' />
+    <column name='Protein.Name' />
+    <column name='Protein.Description' />
+    <column name='Protein.Accession' />
+    <column name='Results!*.Value.Quantification.NormalizedArea' />
+  </view>
+  <view name='Protein Abundances' rowsource='pwiz.Skyline.Model.Databinding.Entities.Protein' sublist='' uimode='proteomic'>
+    <column name='' />
+    <column name='Description' />
+    <column name='Gene' />
+    <column name='Results!*.Value.Abundance' />
+  </view>
+</views>";
+        }
+
+        public static Dictionary<string, ViewName> GetLocalizedReportNames()
+        {
+            return new Dictionary<string, ViewName>{
+                {"Peptide Ratio Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results)},
+                {"Peptide Quantification", MainGroup.Id.ViewName(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification)},
+                {"Peptide RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peptide_RT_Results)},
+                {"Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Transition_Results)},
+                {"Peak Boundaries", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Peak_Boundaries)},
+                {"Molecule Peak Boundaries", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_Peak_Boundaries)},
+                {"Peptide Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List)},
+                {"Small Molecule Transition List", MainGroup.Id.ViewName(Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List)},
+                {"Molecule Quantification", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Quantification)},
+                {"Molecule Ratio Results", MainGroup.Id.ViewName(Resources.PersistedViews_GetDefaults_Molecule_Ratio_Results)},
+                {"Molecule RT Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_RT_Results)},
+                {"Molecule Transition Results", MainGroup.Id.ViewName(Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results)},
+                {"SRM Collider Input", ExternalToolsGroup.Id.ViewName("SRM Collider Input")},
+                {"Detailed Log", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetDefaults_Detailed_Log)},
+                {"Protein Abundances", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetLocalizedReportNames_Protein_Abundances)},
+                {"Peptide Normalized Areas", MainGroup.Id.ViewName(ModelResources.PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas)}
+            };
+        }
 
 
         // ReSharper restore LocalizableElement

@@ -1157,6 +1157,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exemplary Replicate.
+        /// </summary>
+        public static string GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All.
         /// </summary>
         public static string GraphChromatogram_UpdateToolbar_All {

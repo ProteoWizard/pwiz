@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioSingle.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 66</value>
+    <value>13, 58</value>
   </data>
   <data name="radioSingle.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 17</value>
@@ -154,13 +154,13 @@ make sure your instrument can handle the full set of transitions.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioSingle.ZOrder" xml:space="preserve">
-    <value>34</value>
+    <value>35</value>
   </data>
   <data name="radioProtein.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="radioProtein.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 89</value>
+    <value>13, 82</value>
   </data>
   <data name="radioProtein.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 17</value>
@@ -185,13 +185,13 @@ make sure your instrument can handle the number of transitions in each file.</va
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioProtein.ZOrder" xml:space="preserve">
-    <value>33</value>
+    <value>34</value>
   </data>
   <data name="radioBuckets.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="radioBuckets.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 111</value>
+    <value>13, 106</value>
   </data>
   <data name="radioBuckets.Size" type="System.Drawing.Size, System.Drawing">
     <value>104, 17</value>
@@ -217,23 +217,20 @@ make sure your instrument can handle the number of transitions in each file.</va
   <data name="&gt;&gt;radioBuckets.ZOrder" xml:space="preserve">
     <value>32</value>
   </data>
-
-  
   <data name="wcDecideBuckets.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="wcDecideBuckets.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 134</value>
+    <value>13, 130</value>
   </data>
   <data name="wcDecideBuckets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>104, 17</value>
+    <value>154, 17</value>
   </data>
   <data name="wcDecideBuckets.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="wcDecideBuckets.Text" xml:space="preserve">
     <value>&amp;Let waters_connect decide</value>
-    <comment>Lower case is intentional branding.</comment>
   </data>
   <data name="wcDecideBuckets.ToolTip" xml:space="preserve">
     <value>Create as many files as needed, given constraints on transition count.</value>
@@ -248,10 +245,8 @@ make sure your instrument can handle the number of transitions in each file.</va
     <value>$this</value>
   </data>
   <data name="&gt;&gt;wcDecideBuckets.ZOrder" xml:space="preserve">
-    <value>32</value>
+    <value>33</value>
   </data>
-
-
   <data name="textMaxTransitions.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 174</value>
   </data>
@@ -1271,7 +1266,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelThermoColumns.ZOrder" xml:space="preserve">
-    <value>36</value>
+    <value>37</value>
   </data>
   <data name="panelAbSciexTOF.Location" type="System.Drawing.Point, System.Drawing">
     <value>532, 289</value>
@@ -1295,7 +1290,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelAbSciexTOF.ZOrder" xml:space="preserve">
-    <value>35</value>
+    <value>36</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1397,7 +1392,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelThermoRt.ZOrder" xml:space="preserve">
-    <value>37</value>
+    <value>38</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1472,7 +1467,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelWaters.ZOrder" xml:space="preserve">
-    <value>38</value>
+    <value>39</value>
   </data>
   <data name="labelPolarityFilter.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1865,7 +1860,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.353, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.346, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1877,6 +1872,6 @@ If unchecked, zeros will be written in their place.</value>
     <value>ExportMethodDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline-daily, Version=24.1.1.353, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline-daily, Version=25.1.1.346, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

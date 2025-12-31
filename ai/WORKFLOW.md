@@ -77,8 +77,7 @@ Rules:
 2. Developer can override: "Let's work on TODO-feature.md and base it on ai-context"
 3. Default to `master` if not specified
 
-**Create feature branch from appropriate base:**
-> **Note:** Backlog TODOs live on `ai-context` branch. You'll copy (not move) to your feature branch.
+**Step 1: Create feature branch from appropriate base:**
 ```bash
 # Use base from TODO file, developer override, or default to master
 git checkout <base-branch>  # master, ai-context, or Skyline/skyline_YY_N
@@ -86,17 +85,22 @@ git pull origin <base-branch>
 git checkout -b Skyline/work/20251105_feature_name
 ```
 
-**Copy TODO from ai-context to active:**
+**Step 2: Move TODO on ai-context (claims the work):**
+> **Note:** Backlog TODOs live on `ai-context` branch. Move there first, then cherry-pick.
 ```bash
-git checkout ai-context -- ai/todos/backlog/TODO-feature_name.md
+git checkout ai-context
+git pull origin ai-context
 git mv ai/todos/backlog/TODO-feature_name.md ai/todos/active/TODO-20251105_feature_name.md
+# Edit TODO: update Branch, Created, Status fields
+git add ai/todos/active/TODO-20251105_feature_name.md
+git commit -m "Start feature_name work - move TODO to active"
+git push origin ai-context
 ```
 
-**Update TODO header and commit:**
+**Step 3: Cherry-pick to feature branch:**
 ```bash
-# Edit TODO: add Branch, Base, Created, PR fields
-git add ai/todos/active/TODO-20251105_feature_name.md
-git commit -m "Update TODO with branch information"
+git checkout Skyline/work/20251105_feature_name
+git cherry-pick <commit-hash-from-step-2>
 git push -u origin Skyline/work/20251105_feature_name
 ```
 
@@ -118,19 +122,29 @@ git push
 1. Add completion summary to TODO
 2. Add PR reference to TODO (`**PR**: #1234` or `**PR**: [#1234](https://github.com/ProteoWizard/pwiz/pull/1234)`)
 3. Mark all completed tasks as `[x]`
-4. Commit TODO updates to branch
-
-**PR URL format:** `https://github.com/ProteoWizard/pwiz/pull/{PR_NUMBER}`
-
-**After PR merge:**
+4. Update Status to `✅ Completed`
+5. Move TODO to completed and commit:
 ```bash
-# On branch
 git mv ai/todos/active/TODO-YYYYMMDD_feature.md ai/todos/completed/
-git commit -m "Move TODO to completed - PR #1234 merged"
+git commit -m "Move TODO to completed - ready for merge"
 git push
 ```
 
-**On master after merge:**
+**PR URL format:** `https://github.com/ProteoWizard/pwiz/pull/{PR_NUMBER}`
+
+**Before merging to master (CRITICAL):**
+> Sync TODO state to ai-context to prevent merge conflicts. See [ai-context-branch-strategy.md](docs/ai-context-branch-strategy.md#syncing-todo-changes-to-ai-context).
+
+```bash
+# Cherry-pick the TODO completion commit to ai-context
+git checkout ai-context
+git pull origin ai-context
+git cherry-pick <commit-hash-of-TODO-move>
+git push origin ai-context
+git checkout Skyline/work/YYYYMMDD_feature
+```
+
+**After PR merge:**
 ```bash
 git checkout master
 git pull origin master
@@ -249,23 +263,28 @@ When switching LLM tools/sessions:
 
 **Keep commit messages concise (≤10 lines)** - digestible in TortoiseGit's multi-line textbox view.
 
-**Pattern:**
+**Required Format:**
 ```
-Brief summary of change (report mood - what was done)
+<Title in past tense>
 
-Optional 2-3 line explanation if needed.
-Details belong in TODO file, not commit message.
+* bullet point 1
+* bullet point 2
+* bullet point 3
 
-See ai/todos/active/TODO-YYYYMMDD_feature.md for complete details.
+See ai/todos/active/TODO-YYYYMMDD_feature.md
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Rules:**
-- **Maximum 10 lines total** including blank lines and attribution
-- **Always include `Co-Authored-By` line** when an LLM agent contributed to the commit
-- **Reference TODO file** for detailed context and decisions
-- **Report mood** - "Added feature" not "Add feature" (like research paper methods section)
+- **Past tense title** - "Added feature" not "Add feature" (report mood)
+- **Bullet points** - 1-5 points, each starting with `* `
+- **TODO reference** - always include `See ai/todos/active/TODO-...`
+- **Co-Authored-By** - always include when LLM contributed
+- **Maximum 10 lines total** including blank lines
+- **No emojis or markdown links**
+
+**See:** [ai/docs/version-control-guide.md](docs/version-control-guide.md) for complete details.
 
 **Examples:**
 ```bash

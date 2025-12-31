@@ -84,7 +84,7 @@ namespace pwiz.Skyline
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
         private CandidatePeakForm _candidatePeakForm;
-        public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
+        public static int MAX_GRAPH_CHROM => Settings.Default.MaxChromatogramGraphs; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
         private bool _alignToPrediction;
@@ -1879,11 +1879,7 @@ namespace pwiz.Skyline
 
             if (zoomAll)
             {
-                var activeForm = dockPanel.ActiveContent;
-                int iActive = _listGraphChrom.IndexOf(chrom => ReferenceEquals(chrom, activeForm));
-                ZoomState zoomState = (iActive != -1 ? _listGraphChrom[iActive].ZoomState : null);
-                if (zoomState != null)
-                    graphChromatogram_ZoomAll(null, new ZoomEventArgs(zoomState));
+                (dockPanel.ActiveContent as GraphChromatogram)?.OnZoom();
             }
         }
 
@@ -2031,7 +2027,6 @@ namespace pwiz.Skyline
             graphChrom.ClickedChromatogram += graphChromatogram_ClickedChromatogram;
             graphChrom.ChangedPeakBounds += graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum += graphChromatogram_PickedSpectrum;
-            graphChrom.ZoomAll += graphChromatogram_ZoomAll;
             _listGraphChrom.Add(graphChrom);
             return graphChrom;
         }
@@ -2046,7 +2041,6 @@ namespace pwiz.Skyline
             graphChrom.ClickedChromatogram -= graphChromatogram_ClickedChromatogram;
             graphChrom.ChangedPeakBounds -= graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum -= graphChromatogram_PickedSpectrum;
-            graphChrom.ZoomAll -= graphChromatogram_ZoomAll;
             graphChrom.HideOnClose = false;
             graphChrom.Close();
         }
@@ -2513,18 +2507,6 @@ namespace pwiz.Skyline
             }
             if (_graphSpectrum != null)
                 _graphSpectrum.SelectSpectrum(e.SpectrumId);
-        }
-
-        private void graphChromatogram_ZoomAll(object sender, ZoomEventArgs e)
-        {
-            foreach (var graphChrom in _listGraphChrom)
-            {
-                if (!ReferenceEquals(sender, graphChrom))
-                {
-                    graphChrom.ZoomTo(e.ZoomState);
-                    graphChrom.UpdateUI();
-                }
-            }
         }
 
         private void UpdateChromGraphs()

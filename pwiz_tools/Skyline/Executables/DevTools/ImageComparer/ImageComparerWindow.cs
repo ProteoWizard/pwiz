@@ -115,7 +115,54 @@ namespace ImageComparer
 
         private void RefreshAll()
         {
+            var previousSelection = toolStripFileList.SelectedItem as ScreenshotFile;
+
             OpenFolder(Settings.Default.LastOpenFolder);
+
+            int restoredIndex = FindBestSelectionIndex(previousSelection);
+            if (toolStripFileList.SelectedIndex != restoredIndex)
+                toolStripFileList.SelectedIndex = restoredIndex;
+        }
+
+        /// <summary>
+        /// Finds the best index to select after a refresh, using hierarchical matching:
+        /// 1. Exact match, 2. Closest number in same tutorial/locale, 3. Start of same tutorial, 4. Beginning
+        /// </summary>
+        private int FindBestSelectionIndex(ScreenshotFile previous)
+        {
+            if (previous == null || toolStripFileList.Items.Count == 0)
+                return 0;
+
+            int? closestInTutorialLocale = null;
+            int closestNumberDiff = int.MaxValue;
+            int? tutorialStart = null;
+
+            for (int i = 0; i < toolStripFileList.Items.Count; i++)
+            {
+                if (!(toolStripFileList.Items[i] is ScreenshotFile sf))
+                    continue;
+
+                // 1. Exact match - return immediately
+                if (sf.RelativePath == previous.RelativePath)
+                    return i;
+
+                // 2. Closest number within same tutorial/locale
+                if (sf.Name == previous.Name && sf.Locale == previous.Locale)
+                {
+                    int diff = Math.Abs(sf.Number - previous.Number);
+                    if (diff < closestNumberDiff)
+                    {
+                        closestNumberDiff = diff;
+                        closestInTutorialLocale = i;
+                    }
+                }
+
+                // 3. Start of same tutorial (any locale)
+                if (sf.Name == previous.Name && tutorialStart == null)
+                    tutorialStart = i;
+            }
+
+            return closestInTutorialLocale ?? tutorialStart ?? 0;
         }
 
         private void FormStateChangedBackground()
@@ -624,6 +671,80 @@ namespace ImageComparer
             }
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // Handle all keyboard shortcuts at the form level to prevent them from
+            // being processed by child controls (e.g., combo box jumping to 'S' on Ctrl+S)
+            switch (keyData)
+            {
+                // Navigation
+                case Keys.Control | Keys.Tab:
+                    NextOldImageSource();
+                    return true;
+                case Keys.Control | Keys.Down:
+                case Keys.Control | Keys.Right:
+                case Keys.PageDown:
+                case Keys.F11:
+                    Next();
+                    return true;
+                case Keys.Control | Keys.Up:
+                case Keys.Control | Keys.Left:
+                case Keys.PageUp:
+                case Keys.Shift | Keys.F11:
+                    Previous();
+                    return true;
+
+                // Actions
+                case Keys.Control | Keys.Z:
+                case Keys.F12:
+                    Revert();
+                    return true;
+                case Keys.Control | Keys.R:
+                    RefreshScreenshots();
+                    return true;
+                case Keys.F5:
+                    RefreshAll();
+                    return true;
+                case Keys.Control | Keys.G:
+                    GotoLink();
+                    return true;
+
+                // Clipboard
+                case Keys.Control | Keys.C:
+                    lock (_lock)
+                    {
+                        CopyBitmap(_newScreenshot.Image);
+                    }
+                    return true;
+                case Keys.Control | Keys.Shift | Keys.C:
+                    lock (_lock)
+                    {
+                        CopyBitmap(_oldScreenshot.Image);
+                    }
+                    return true;
+                case Keys.Control | Keys.Alt | Keys.C:
+                    lock (_lock)
+                    {
+                        var diffImage = _diff?.HighlightedImage;
+                        if (diffImage == null)
+                        {
+                            ShowMessage("No diff image available.");
+                            return true;
+                        }
+                        CopyBitmap(diffImage);
+                    }
+                    return true;
+                case Keys.Control | Keys.S:
+                    SaveDiffImage();
+                    return true;
+                case Keys.Control | Keys.V:
+                    Paste();
+                    return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         private void StoreFormBoundsState()
         {
             // Only store sizing information when not automatically resizing the form
@@ -756,103 +877,6 @@ namespace ImageComparer
                 UpdateScreenshotsAsync(OldImageSource, HighlightColor); // On foreground thread because the screenshots are already loaded - just updating the diff
         }
 
-        private void ScreenshotPreviewForm_KeyDown(object sender, KeyEventArgs e)
-        {
-            switch (e.KeyCode)
-            {
-                case Keys.Tab:
-                    if (e.Control)
-                    {
-                        NextOldImageSource();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.F11:
-                    if (e.Shift)
-                    {
-                        Previous();
-                    }
-                    else
-                    {
-                        Next();
-                    }
-                    e.Handled = true;
-                    break;
-                case Keys.Down:
-                case Keys.Right:
-                    if (e.Control)
-                    {
-                        Next();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.Up:
-                case Keys.Left:
-                    if (e.Control)
-                    {
-                        Previous();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.PageDown:
-                    Next();
-                    e.Handled = true;
-                    break;
-                case Keys.PageUp:
-                    Previous();
-                    e.Handled = true;
-                    break;
-                case Keys.Z:
-                    if (e.Control)
-                    {
-                        Revert();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.F12:
-                    Revert();
-                    e.Handled = true;
-                    break;
-                case Keys.F5:
-                    RefreshAll();
-                    e.Handled = true;
-                    return;
-                case Keys.R:
-                    if (e.Control)
-                    {
-                        RefreshScreenshots();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.G:
-                    if (e.Control)
-                    {
-                        GotoLink();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.C:
-                    if (e.Control)
-                    {
-                        Bitmap imageToCopy;
-                        lock (_lock)
-                        {
-                            imageToCopy = e.Shift ? _oldScreenshot.Image : _newScreenshot.Image;
-                        }
-                        CopyBitmap(imageToCopy);
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.V:
-                    if (e.Control)
-                    {
-                        Paste();
-                        e.Handled = true;
-                    }
-                    break;
-            }
-        }
-
         private void Paste()
         {
             try
@@ -887,6 +911,59 @@ namespace ImageComparer
             catch (Exception e)
             {
                 ShowMessageWithException("Failed clipboard operation.", e);
+            }
+        }
+
+        private void SaveDiffImage()
+        {
+            try
+            {
+                ScreenshotFile file;
+                ScreenshotDiff diff;
+                lock (_lock)
+                {
+                    file = _fileToShow;
+                    diff = _diff;
+                }
+
+                if (file == null)
+                {
+                    ShowMessage("No screenshot selected.");
+                    return;
+                }
+
+                if (diff?.HighlightedImage == null)
+                {
+                    ShowMessage("No diff image available to save.");
+                    return;
+                }
+
+                var aiTmpFolder = file.GetAiTmpFolder();
+                if (aiTmpFolder == null)
+                {
+                    ShowMessage("Could not locate ai\\.tmp folder.");
+                    return;
+                }
+
+                // Ensure the folder exists
+                if (!Directory.Exists(aiTmpFolder))
+                {
+                    Directory.CreateDirectory(aiTmpFolder);
+                }
+
+                var fileName = file.GetDiffFileName(diff.PixelCount);
+                var fullPath = Path.Combine(aiTmpFolder, fileName);
+
+                lock (diff.HighlightedImage)
+                {
+                    diff.HighlightedImage.Save(fullPath, ImageFormat.Png);
+                }
+
+                ShowMessage($"Diff image saved to:\n{fullPath}");
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException("Failed to save diff image.", e);
             }
         }
 

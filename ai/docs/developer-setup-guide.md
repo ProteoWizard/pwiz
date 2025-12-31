@@ -3,6 +3,9 @@
   =================================================
   This document lives inside the pwiz repository (ai/docs/).
   Audience: Human developers preparing their machine for LLM-assisted workflows.
+
+  MAINTENANCE: When updating prerequisites in this document, also update
+  ai/scripts/Verify-Environment.ps1 to check for the new requirements.
 -->
 
 # Developer Environment Setup for LLM-Assisted IDEs
@@ -21,20 +24,34 @@ This guide helps Skyline developers configure a Windows workstation so that AI-a
 > 8. Configure Git and global line ending settings
 > 9. Install a Markdown viewer for browser-based docs
 > 10. Optional: Install additional helpers (Everything Search, Diff tools)
+> 11. **Verify setup**: `pwsh -File ai\scripts\Verify-Environment.ps1`
 
 ---
 
 ## Using an LLM to Automate Setup
 
-Much of this workstation prep can be delegated to an AI assistant (Cursor, Copilot Chat, Claude Code, etc.). Open a chat alongside your workspace and paste the following prompt:
+Much of this workstation prep can be delegated to an AI assistant. In Claude Code, simply run:
+
+```
+/pw-configure
+```
+
+This slash command walks through setup verification and helps fix any missing components.
+
+Alternatively, run the verification script directly to see current status:
+
+```powershell
+pwsh -File ai\scripts\Verify-Environment.ps1
+```
+
+For other AI assistants (Cursor, Copilot Chat, etc.), paste this prompt:
 
 ```
 You are configuring a Skyline development workstation for LLM-assisted IDE workflows.
 Work inside the pwiz repository at C:\proj\pwiz.
-Follow the checklist in ai/docs/developer-setup-guide.md and report progress after each step.
-Automate any terminal commands you can run safely (PowerShell 7 install, dotnet tool installs, git config, etc.).
+First run: pwsh -File ai\scripts\Verify-Environment.ps1
+Then help fix any [MISSING] items shown in the output.
 Call out any steps that require human action (Visual Studio workloads, browser extensions, antivirus exclusions).
-Stop if you encounter errors and describe how to resolve them.
 ```
 
 The assistant can then execute commands (or suggest them) directly within the IDE terminal. Remember to confirm actions that require elevated privileges or system restarts.
@@ -231,29 +248,38 @@ pip install mcp labkey
 
 **Configure credentials:**
 
-Create a netrc file in your home directory with your skyline.ms credentials:
+Create a personal `+claude` account for MCP access:
+- **Team members**: `yourname+claude@proteinms.net`
+- **Interns/others**: `yourname+claude@gmail.com`
+- Ask a team lead to add your account to the "Agents" group on skyline.ms
+
+> **Important**: The `+claude` suffix only works with Gmail-backed email providers (@proteinms.net, @gmail.com). It will **not** work with @uw.edu or similar providers.
+
+Create a netrc file in your home directory:
 
 - **Windows**: `C:\Users\<YourName>\.netrc` or `C:\Users\<YourName>\_netrc`
 - **Unix/macOS**: `~/.netrc`
 
 ```
 machine skyline.ms
-login your-email@example.com
-password your-password
+login yourname+claude@domain.com
+password <password>
 ```
 
+> **Why +claude accounts?** Individual accounts provide attribution for edits made via Claude, while the Agents group restricts permissions to least-privilege access.
+>
 > **Security note:** The netrc file contains credentials in plain text. Ensure appropriate file permissions and never commit it to version control.
 
 **Register MCP server with Claude Code:**
 ```powershell
 # Replace <repo-root> with your actual repository path
-claude mcp add labkey -- python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/server.py
+claude mcp add labkey -- python <repo-root>/ai/mcp/LabKeyMcp/server.py
 ```
 
 **Verify setup:**
 ```powershell
 # Replace <repo-root> with your actual repository path
-python <repo-root>/pwiz_tools/Skyline/Executables/DevTools/LabKeyMcp/test_connection.py
+python <repo-root>/ai/mcp/LabKeyMcp/test_connection.py
 ```
 
 Expected output shows successful connection and recent exception data.
@@ -262,7 +288,7 @@ Expected output shows successful connection and recent exception data.
 - Exception reports (`/home/issues/exceptions`)
 - Nightly test results (`/home/development/Nightly x64`)
 
-See `ai/docs/exception-triage-system.md` for exception documentation.
+See `ai/docs/mcp/exceptions.md` for exception documentation.
 
 ### Git Configuration (line endings)
 
@@ -318,13 +344,53 @@ LLM tooling frequently references markdown files (`ai/README.md`, `ai/docs/…`)
 
 ## 6. Environment Validation
 
-Run these scripts after setup to confirm everything works:
+### Quick Check: Verify Prerequisites
+
+Run the environment verification script to check all prerequisites at once:
+
+```powershell
+pwsh -File C:\proj\pwiz\ai\scripts\Verify-Environment.ps1
+```
+
+This checks: PowerShell 7, UTF-8 encoding, Claude Code CLI, ReSharper CLI, dotCover, GitHub CLI, Python packages, LabKey MCP server, netrc credentials, and Git configuration.
+
+Example output:
+```
+========================================
+Environment Check Results
+========================================
+
+  PowerShell                    [OK]      7.5.4
+  Console Encoding              [OK]      UTF-8 (CP65001)
+  Claude Code CLI               [OK]      2.0.69
+  ReSharper CLI (jb)            [OK]      2025.2.4
+  dotCover CLI                  [OK]      2025.1.7
+  GitHub CLI (gh)               [OK]      2.83.1
+  GitHub CLI Auth               [OK]      authenticated
+  Python                        [OK]      3.13.6
+  Python packages (labkey, mcp) [OK]      installed
+  netrc credentials             [OK]      .netrc exists
+  LabKey MCP Server             [OK]      registered and connected
+  Git core.autocrlf             [OK]      true
+  Git pull.rebase               [OK]      false
+
+----------------------------------------
+  OK: 13 | Warnings: 0 | Missing: 0 | Errors: 0
+
+[OK] Environment is fully configured for LLM-assisted development
+```
+
+Any `[MISSING]` items will show the command needed to fix them.
+
+### Full Validation: Build and Test
+
+After prerequisites pass, validate the build toolchain:
 
 ```powershell
 cd C:\proj\pwiz\pwiz_tools\Skyline
-\ai\Build-Skyline.ps1 -RunTests -QuickInspection
-\ai\Build-Skyline.ps1 -RunInspection         # Full validation (~20-25 min)
-\ai\Run-Tests.ps1 -TestName CodeInspection
+.\ai\Build-Skyline.ps1 -RunTests -QuickInspection
+.\ai\Build-Skyline.ps1 -RunInspection         # Full validation (~20-25 min)
+.\ai\Run-Tests.ps1 -TestName CodeInspection
 ```
 
 Expected output:
@@ -351,7 +417,7 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 | `TestRunner.exe` missing | Build not run | `.\ai\Build-Skyline.ps1` |
 | `inspectcode` builds solution again | `--no-build` flag missing | Use latest script (already includes `--no-build`) |
 | LabKey MCP tools not available | MCP server not registered | Run `claude mcp add labkey -- python <path>/server.py` and restart Claude Code |
-| LabKey authentication fails | Missing or incorrect `_netrc` | Create `C:\Users\<Name>\_netrc` with skyline.ms credentials |
+| LabKey authentication fails | Missing or incorrect `.netrc` | Create `C:\Users\<Name>\.netrc` with shared agent credentials (see LabKey MCP section) |
 | `labkey` or `mcp` package not found | Python dependencies missing | `pip install mcp labkey` |
 
 ---

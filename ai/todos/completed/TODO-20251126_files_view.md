@@ -605,3 +605,37 @@ These items were identified during development but deferred for future phases:
 
 1. ✅ ~~**Test readability improvement**~~ - COMPLETED (2025-12-07): Improve test readability with a helper that gets node by model type - Implemented `ValidateSingleEntry<TFileModel, TSettings>()` helper method
 
+## Bug Fixes (Post-Merge)
+
+### 2025-12-17: CancellationTokenSource disposed while worker thread still running
+
+**Branch**: `Skyline/work/20251217_files_view_bugfix`
+
+**Problem**: TeamCity test failures with `ObjectDisposedException` in `FileSystemHealthMonitor.MonitorLoop`:
+```
+System.ObjectDisposedException: The CancellationTokenSource has been disposed.
+   at System.Threading.CancellationTokenSource.get_WaitHandle()
+   at pwiz.Skyline.Controls.FilesTree.FileSystemHealthMonitor.MonitorLoop(CancellationToken cancellationToken)
+```
+
+**Root Cause**: In `Stop()`, the `CancellationTokenSource` was disposed **before** calling `_workerThread.Join()`. The worker thread's `MonitorLoop` was still accessing `cancellationToken.WaitHandle` in the `WaitHandle.WaitAny()` call, causing `ObjectDisposedException`.
+
+**Fix**: Moved `_cancellationTokenSource?.Dispose()` to after `_workerThread?.Join()` completes. The worker thread must exit before disposing resources it accesses.
+
+**Files Modified**:
+- `pwiz_tools/Skyline/Controls/FilesTree/FileSystemHealthMonitor.cs` - Reordered disposal in `Stop()` method
+
+### 2025-12-17: TestFilesTreeFileSystem race condition with FileSystemWatcher
+
+**Problem**: Nightly test failure in `TestFilesTreeFileSystem.TestFileSystemService()` at line 123:
+```
+Assert.AreEqual failed. Expected:<missing>. Actual:<available>.
+```
+
+**Root Cause**: Test deleted a file and immediately asserted the node state was `missing`, but the `FileSystemWatcher` event hadn't been processed yet. `WaitForFilesTree()` only waits for `BackgroundActionService.IsComplete`, not for pending FileSystemWatcher events.
+
+**Fix**: Added `WaitForFileState(string filePath, FileState expectedState)` helper that explicitly waits for the node state to change before proceeding with assertions. Applied to file delete and rename test sections.
+
+**Files Modified**:
+- `pwiz_tools/Skyline/TestFunctional/FilesTreeFileSystemTest.cs` - Added `WaitForFileState` helper and used it in delete/rename tests
+

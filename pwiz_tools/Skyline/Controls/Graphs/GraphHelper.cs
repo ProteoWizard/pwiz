@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
@@ -36,18 +37,71 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private DisplayState _displayState;
         private bool _zoomLocked;
+        private ZoomSynchronizer _zoomSynchronizer;
 
         public const string SCIENTIFIC_NOTATION_FORMAT_STRING = "0.0#####e0";
 
-        public GraphHelper(MSGraphControl msGraphControl)
+        public GraphHelper(MSGraphControl msGraphControl, ZoomSynchronizer zoomSynchronizer)
         {
             GraphControl = msGraphControl;
+            _zoomSynchronizer = zoomSynchronizer;
             _displayState = new ErrorDisplayState();
+            GraphControl.HandleCreated += GraphControlOnHandleCreated;
+            GraphControl.HandleDestroyed += GraphControlOnHandleDestroyed;
+            GraphControl.ZoomEvent += GraphControlOnZoomEvent;
+            if (GraphControl.IsHandleCreated)
+            {
+                OnHandleCreated();
+            }
+        }
+
+        private void GraphControlOnHandleCreated(object sender, EventArgs e)
+        {
+            OnHandleCreated();
+        }
+
+        private void OnHandleCreated()
+        {
+            if (_zoomSynchronizer != null)
+            {
+                _zoomSynchronizer.RegisterGraph(this);
+                OnSynchronizedZoom();
+            }
+        }
+
+        public void OnSynchronizedZoom()
+        {
+            ZoomTo(_zoomSynchronizer.SynchronizedDisplayState, _zoomSynchronizer.SynchronizedZoomState);
+        }
+
+        private void GraphControlOnZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
+        {
+            OnZoom();
+        }
+
+        public void OnZoom()
+        {
+            _zoomSynchronizer?.OnZoom(this);
+        }
+
+        public DisplayState GetDisplayState()
+        {
+            return _displayState;
+        }
+
+        private void GraphControlOnHandleDestroyed(object sender, EventArgs e)
+        {
+            _zoomSynchronizer?.UnregisterGraph(this);
         }
 
         public static GraphHelper Attach(MSGraphControl msGraphControl)
         {
-            GraphHelper graphHelper = new GraphHelper(msGraphControl);
+            return Attach(msGraphControl, null);
+        }
+
+        public static GraphHelper Attach(MSGraphControl msGraphControl, ZoomSynchronizer zoomSynchronizer)
+        {
+            GraphHelper graphHelper = new GraphHelper(msGraphControl, zoomSynchronizer);
             msGraphControl.MasterPane.Border.IsVisible = false;
             msGraphControl.GraphPane.Border.IsVisible = false;
             msGraphControl.GraphPane.AllowCurveOverlap = true;
@@ -59,14 +113,15 @@ namespace pwiz.Skyline.Controls.Graphs
         public PaneKey GetPaneKey(GraphPane graphPane) { return _displayState.GraphPaneKeys.FirstOrDefault(paneKey => ReferenceEquals(GetGraphPane(paneKey), graphPane)); }
         public IEnumerable<KeyValuePair<PaneKey, ChromGraphItem>> ListPrimaryGraphItems()
         {
-            var chromDisplayState = _displayState as ChromDisplayState;
-            if (null == chromDisplayState)
+            if (!(_displayState is ChromDisplayState chromDisplayState))
             {
-                return new KeyValuePair<PaneKey, ChromGraphItem>[0];
+                return Array.Empty<KeyValuePair<PaneKey, ChromGraphItem>>();
             }
-            return chromDisplayState.ChromGraphItems.Where(kvp => kvp.Value.Chromatogram != null && kvp.Value.TransitionGroupNode != null)
-                                                    .ToLookup(kvp => kvp.Key)
-                                                    .Select(grouping => grouping.Last());
+
+            return chromDisplayState.ChromGraphItems
+                .Where(kvp => kvp.Value.Chromatogram != null && kvp.Value.TransitionGroupNode != null)
+                .GroupBy(kvp => kvp.Key)
+                .Select(grouping => grouping.Last());
         }
 
         public void LockZoom()
@@ -88,7 +143,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     pane.CurveList.Clear();
                     pane.GraphObjList.Clear();
                 }
-                _displayState.ZoomStateValid = true;
+                _displayState = _displayState.ChangeZoomStateValid(true);
                 return;
             }
             while (GraphControl.MasterPane.PaneList.Count > 1)
@@ -102,7 +157,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             GraphControl.GraphPane.CurveList.Clear();
             GraphControl.GraphPane.GraphObjList.Clear();
-            newDisplayState.ZoomStateValid = newDisplayState.CanUseZoomStateFrom(_displayState);
+            newDisplayState = newDisplayState.ChangeZoomStateValid(newDisplayState.CanUseZoomStateFrom(_displayState));
             newDisplayState.ApplySettingsToGraphPane(GraphControl.GraphPane);
             _displayState = newDisplayState;
         }
@@ -383,7 +438,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ZoomXAxis(bestStartTime, bestEndTime);
         }
 
-        public abstract class DisplayState
+        public abstract class DisplayState : Immutable
         {
             protected DisplayState(IEnumerable<TransitionGroup> transitionGroups)
             {
@@ -392,7 +447,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             protected TransitionGroup[] TransitionGroups { get; private set; }
             public abstract bool CanUseZoomStateFrom(DisplayState displayStatePrev);
-            public bool ZoomStateValid { get; set; }
+            public bool ZoomStateValid { get; private set; }
+
+            public DisplayState ChangeZoomStateValid(bool value)
+            {
+                return ChangeProp(ImClone(this), im => im.ZoomStateValid = value);
+            }
             public List<PaneKey> GraphPaneKeys { get; private set; }
             public bool AllowSplitPanes { get; protected set; }
             public bool ShowLegend { get; protected set; }
@@ -655,6 +715,61 @@ namespace pwiz.Skyline.Controls.Graphs
                 (int)(baseColor.R * (1 - blendAmount) + blendColor.R * blendAmount),
                 (int)(baseColor.G * (1 - blendAmount) + blendColor.G * blendAmount),
                 (int)(baseColor.B * (1 - blendAmount) + blendColor.B * blendAmount));
+        }
+
+        public Dictionary<PaneKey, ZoomStateStack> GetZoomStates()
+        {
+            var dict = new Dictionary<PaneKey, ZoomStateStack>();
+            foreach (var graphPane in GraphControl.MasterPane.PaneList)
+            {
+                var paneKey = GetPaneKey(graphPane);
+                var zoomStack = graphPane.ZoomStack.Clone();
+                zoomStack.Push(new ZoomState(graphPane, ZoomState.StateType.Zoom));
+                dict.Add(paneKey, zoomStack);
+            }
+
+            return dict;
+        }
+
+        public void ZoomTo(DisplayState displayState, Dictionary<PaneKey, ZoomStateStack> zoomStacks)
+        {
+            if (zoomStacks == null)
+            {
+                return;
+            }
+            _displayState = displayState;
+            int count = 0;
+            foreach (var pane in GraphPanes)
+            {
+                var paneKey = GetPaneKey(pane);
+                if (zoomStacks.TryGetValue(paneKey, out var state))
+                {
+                    ApplyState(state, pane);
+                    count++;
+                }
+            }
+
+            if (count == 0)
+            {
+                ApplyState(zoomStacks.Values.FirstOrDefault(), GraphPanes.First());
+            }
+
+            using var g = GraphControl.CreateGraphics();
+            foreach (var pane in GraphPanes)
+            {
+                pane.SetScale(g);
+            }
+            GraphControl.Refresh();
+        }
+
+        public static void ApplyState(ZoomStateStack state, MSGraphPane pane)
+        {
+            if (state.Count >= 1)
+            {
+                pane.ZoomStack.Clear();
+                pane.ZoomStack.AddRange(state.Take(state.Count - 1));
+                state.Top.ApplyState(pane);
+            }
         }
     }
 
