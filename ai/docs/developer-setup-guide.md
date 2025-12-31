@@ -128,28 +128,52 @@ This ensures *all* terminal sessions launched inside Cursor/VS Code use PowerShe
 
 Claude Code is Anthropic's agentic coding tool that runs in the terminal. It understands your codebase and can execute commands, edit files, and handle git workflows through natural language.
 
-**Install (run in PowerShell 7 as Administrator):**
+**Install via npm (recommended):**
+
+```powershell
+npm install -g @anthropic-ai/claude-code
+```
+
+This installs to your npm global folder (typically `%APPDATA%\npm`), which is usually already in your PATH.
+
+**Alternative: Standalone installer**
 
 ```powershell
 irm https://claude.ai/install.ps1 | iex
 ```
 
-**Known Issue: PATH not updated**
+This installs to `%USERPROFILE%\.local\bin\claude.exe`.
 
-The installer may not add Claude Code to your PATH. If `claude` is not recognized after installation, add it manually:
-
+**Verify installation:**
 ```powershell
+claude --version
+```
+
+**Troubleshooting: `claude` not recognized**
+
+First, find where Claude Code is installed (or if it exists at all):
+```powershell
+where.exe claude
+# Or check the expected locations directly:
+Test-Path "$env:APPDATA\npm\claude.cmd"           # npm install location
+Test-Path "$env:USERPROFILE\.local\bin\claude.exe" # standalone installer location
+```
+
+If the file doesn't exist despite the installer claiming success, try the npm installation method instead.
+
+If the file exists but isn't in PATH, add the appropriate path:
+```powershell
+# For npm installation:
+$claudePath = "$env:APPDATA\npm"
+
+# For standalone installer:
+# $claudePath = "$env:USERPROFILE\.local\bin"
+
 # Add to user PATH permanently
-$claudePath = "$env:USERPROFILE\.local\bin"
 [Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$claudePath", "User")
 
 # Refresh current session's PATH
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-```
-
-**Verify:**
-```powershell
-claude --version
 ```
 
 **Authenticate:**
@@ -407,7 +431,7 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Emoji/Unicode characters render as `â✓…` | Terminal using CP1252/CP437 | Install PowerShell 7, add UTF-8 config to `$PROFILE` |
-| `claude` not found after install | PATH not updated by installer | Add `$env:USERPROFILE\.local\bin` to PATH (see Claude Code section) |
+| `claude` not found after install | Installer failed or PATH not updated | Check if file exists with `Test-Path`; try npm install; see Claude Code section |
 | `jb` not found | ReSharper CLI tools missing | `dotnet tool install -g JetBrains.ReSharper.GlobalTools` |
 | `dotCover` not found | dotCover CLI tools missing | `dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7` |
 | dotCover JSON export fails with "Object reference not set" | dotCover 2025.3.0+ bug | Uninstall and install 2025.1.7: `dotnet tool uninstall --global JetBrains.dotCover.CommandLineTools && dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7` |
