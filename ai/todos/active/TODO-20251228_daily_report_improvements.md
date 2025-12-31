@@ -153,6 +153,22 @@ The following patterns from developer reports represent ideal automated investig
     - ✅ RESOLVED: Issues fixed since yesterday
   - Updated `/pw-daily` command (Steps 6 and 8) to use new MCP tools
   - Registered patterns module in tools/__init__.py
+  - Added new tools to reporting machine's `.claude/settings.local.json`
+
+- **Investigation needed**: `--allowedTools` vs `settings.local.json` interaction
+  - The script `Invoke-DailyReport.ps1` passes `--allowedTools` with wildcards (e.g., `mcp__labkey__*`)
+  - Wildcards don't work - we've confirmed tools must be listed explicitly
+  - Currently, permissions work via `settings.local.json` on the reporting machine
+  - **Question**: Does `--allowedTools` do anything useful? Options:
+    1. `--allowedTools` alone is sufficient (no settings.local.json needed)
+    2. Both are required (settings.local.json grants permission, --allowedTools filters)
+    3. `--allowedTools` is ignored in `-p` mode, only settings.local.json matters
+  - **Test plan**: After tomorrow's successful report with settings.local.json, try:
+    - Remove a tool from settings.local.json but keep it in --allowedTools
+    - If it still works → --allowedTools is sufficient
+    - If it fails → settings.local.json is required
+  - **If --allowedTools works**: Update script to use explicit tool list instead of wildcards
+  - **If settings.local.json required**: Document this clearly, possibly remove --allowedTools from script
 
 ### 2025-12-29
 - Added `fetch_labkey_page` MCP tool - enables fetching authenticated LabKey pages (failure details, stack traces)
