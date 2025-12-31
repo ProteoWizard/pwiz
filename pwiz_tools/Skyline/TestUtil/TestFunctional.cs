@@ -1844,10 +1844,10 @@ namespace pwiz.SkylineTestUtil
         /// painting over the animated progress bar with a static representation.
         /// Call SetFrozenProgress on the form before calling this method.
         /// </summary>
-        public void PauseForAllChromatogramsGraphScreenShot(string description, int? timeout = null)
+        public void PauseForAllChromatogramsGraphScreenShot(string description)
         {
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            PauseForScreenShot(allChrom, description, timeout,
+            PauseForScreenShot(allChrom, description,
                 processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChrom.ProgressBarTotal));
         }
 

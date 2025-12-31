@@ -132,11 +132,62 @@ public class TestTimeProvider : AuditLogEntry.ITimeProvider
 - [x] Add PauseForAllChromatogramsGraphScreenShot() shortcut
 - [x] Add ScreenshotPreviewForm Ctrl+Alt+S to save diff images
 - [x] Add focus rectangle removal before screenshots
+- [x] Block ChromatogramManager background thread while ACG is frozen
 - [ ] Address X-axis label orientation inconsistency
 - [ ] Enhance ImageComparer with diff amplification features
 - [ ] Fix CleanupBorder algorithm for consistent 1px borders
+- [ ] Remove unused `timeout` parameter from all PauseFor*ScreenShot functions
+- [ ] Disable graph animation when ACG is frozen
 
 ## Progress Log
+
+### 2025-12-31: ChromatogramManager Freeze and Screenshot Updates
+
+**Major fix: Background thread blocking for ACG screenshots**
+
+When ACG is frozen for screenshot capture, the ChromatogramManager background thread was still completing document updates, which triggered auto-training and showed EditPeakScoringModelDlg on top of the frozen ACG.
+
+**Solution:** Added freeze mechanism to ChromatogramManager using `ManualResetEventSlim`:
+- `FreezeProgressForScreenshot()` - blocks background thread before completing document updates
+- `ReleaseProgressFreeze()` - allows background thread to continue
+- `WaitIfProgressFrozen()` - called before `CompleteProcessing` to block if frozen
+
+**Files changed:**
+- `pwiz_tools/Skyline/Model/Results/Chromatogram.cs` - Added freeze mechanism
+- `pwiz_tools/Skyline/Controls/Graphs/AllChromatogramsGraph.cs` - Calls freeze/release on ChromatogramManager
+- `pwiz_tools/Skyline/Skyline.cs` - Restored IsProgressFrozen() check in UpdateProgressUI
+
+**Other improvements:**
+- Removed unused `timeout` parameter from `PauseForAllChromatogramsGraphScreenShot()`
+- Added variant-specific frozen progress values to DiaSwathTutorialTest (TTOF, QE, PASEF)
+- Updated frozen progress values in DriftTimePredictorTutorialTest and DiaUmpireTutorialTest
+
+**Screenshots updated (26 files):**
+- DIA-PASEF s-14, DIA-QE s-13 (en/ja/zh-CHS), DIA-TTOF s-13 (en/ja/zh-CHS)
+- DIA-Umpire-TTOF s-17, s-27
+- GroupedStudies s-03 (en/ja/zh-CHS), IMSFiltering s-05
+- MS1Filtering s-09 (en/ja/zh-CHS), s-44 (zh-CHS)
+- MethodRefine s-03 (en/ja/zh-CHS), PRM s-15 (en/ja/zh-CHS)
+- SmallMoleculeIMSLibraries s-08 (en)
+
+### 2025-12-30: Frozen Progress Values from Screenshot Analysis
+
+Values extracted by reading actual tutorial screenshots to determine exact frozen progress settings:
+
+| Test | Screenshot | Elapsed | Total % | File Progress | Verified |
+|------|------------|---------|---------|---------------|----------|
+| **MethodRefinementTutorialTest** | MethodRefine s-03 | `00:00:01` | 19% | {worm_0001: 96%, worm_0002: 98%, worm_0003: 98%} | ✅ |
+| **GroupedStudies1TutorialTest** | GroupedStudies s-03 | `00:00:06` | 5% | {D_102_REP1: 72%, D_102_REP2: 71%, D_102_REP3: 72%} | ✅ |
+| **Ms1FullScanFilteringTutorial** | MS1Filtering s-09 | `00:00:02` | 90% | {100803_0001_MCF7_TiB_L: 85%, 100803_0005b_MCF7_TiTip3: 95%} | ✅ |
+| **TargetedMSMSTutorialTest** | PRM s-15 | `00:00:01` | 10% | {20fmol_uL_tech1: 34%, 20fmol_uL_tech2: 31%} | |
+| **SmallMolLibrariesTutorialTest** | SmallMolIMSLibraries s-08 | `00:00:35` | 33% | {Flies_Ctrl_F_A_018: 44%, Flies_Ctrl_M_A_001: 40%} | ✅ |
+| **DriftTimePredictorTutorialTest** | IMSFiltering s-05 | `00:01:10` | 35% | {BSA_Frag_100nM_18: 44%, Yeast_0pt1ug_BSA_1: 28%} | |
+| **DiaUmpireTutorialTest** | DIA-Umpire-TTOF s-17 | `00:00:22` | 40% | {collinsb_I180316_001: 40%, collinsb_I180316_002: 41%} | |
+| **DiaSwathTutorialTest (TTOF)** | DIA-TTOF s-13 | `00:00:22` | 15% | {collinsb_I180316_001: 41%, ...002: 41%, ...003: 41%} | |
+| **DiaSwathTutorialTest (QE)** | DIA-QE s-13 | `00:00:12` | 15% | {collinsb_X1803_171-A: 42%, ...172-B: 43%, ...173-A: 43%} | |
+| **DiaSwathTutorialTest (PASEF)** | DIA-PASEF s-14 | `00:00:11` | 15% | {A210331_bcc_1180: 44%, ...1181: 44%, ...1182: 42%} | |
+
+**Note:** DiaSwathTutorialTest uses variant-specific values via `InstrumentSpecificValues.FrozenFileProgress` dictionary.
 
 ### 2025-12-20: API Standardization
 

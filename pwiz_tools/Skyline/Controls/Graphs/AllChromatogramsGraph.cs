@@ -390,8 +390,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             lock (_missedProgressStatusList)
             {
-                // If a freeze percent is set, freeze once all status is 
-                if (IsProgressFrozen(status))
+                // If a freeze percent is set, freeze once any file exceeds threshold
+                var frozen = IsProgressFrozen(status);
+                if (frozen)
                 {
                     // Play this back later when progress is unfrozen
                     _missedProgressStatusList.Add(status);
@@ -792,6 +793,7 @@ namespace pwiz.Skyline.Controls.Graphs
         #region Testing Support
 
         private int? _freezeProgressPercent;
+        private bool _isProgressFrozen; // Once frozen, stays frozen until ReleaseFrozenProgress
         private string _elapsedTimeAtFreeze;
         private DateTime? _timeAtFreeze;
         private Tuple<string, string> _replacementText;
@@ -809,6 +811,9 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Files not in the dictionary will display 0% when frozen.</param>
         public void SetFrozenProgress(int freezeThreshold, string elapsedTime, int totalProgress, Dictionary<string, int> fileProgress = null)
         {
+            // Block background thread from completing document update while frozen
+            ChromatogramManager?.FreezeProgressForScreenshot();
+
             lock (_missedProgressStatusList)
             {
                 _freezeProgressPercent = freezeThreshold;
@@ -827,11 +832,15 @@ namespace pwiz.Skyline.Controls.Graphs
             lock (_missedProgressStatusList)
             {
                 _freezeProgressPercent = null;
+                _isProgressFrozen = false;
                 _elapsedTimeAtFreeze = null;
                 _frozenFileProgress = null;
                 _frozenTotalProgress = null;
                 importFinished = Finished;
             }
+
+            // Allow background thread to complete document update
+            ChromatogramManager?.ReleaseProgressFreeze();
 
             // If import completed while frozen, complete the UI updates now
             if (importFinished)
@@ -884,11 +893,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!_freezeProgressPercent.HasValue)
                     return false;
 
-                if (status == null)
-                    return _missedProgressStatusList.Count > 0;
+                // Once frozen, stay frozen until ReleaseFrozenProgress is called
+                if (_isProgressFrozen)
+                    return true;
 
-                // Stop when anything goes over the limit
-                return status.ProgressList.Any(loadingStatus => loadingStatus.PercentComplete > _freezeProgressPercent);
+                if (status == null)
+                    return false; // Not yet frozen, waiting for threshold
+
+                // Check if anything goes over the limit to trigger freeze
+                if (status.ProgressList.Any(loadingStatus => loadingStatus.PercentComplete > _freezeProgressPercent))
+                {
+                    _isProgressFrozen = true;
+                    return true;
+                }
+
+                return false;
             }
         }
 

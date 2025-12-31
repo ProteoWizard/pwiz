@@ -464,10 +464,10 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFrozenProgress(15, "00:00:01", 10, new Dictionary<string, int>
+            allChromGraph.SetFrozenProgress(35, "00:00:01", 32, new Dictionary<string, int>
             {
                 { "20fmol_uL_tech1", 34 },
-                { "20fmol_uL_tech2", 31 }
+                { "80fmol_uL_tech1", 31 }
             });
             doc = WaitForDocumentChange(doc);
 

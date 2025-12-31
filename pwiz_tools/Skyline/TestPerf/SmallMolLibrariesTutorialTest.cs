@@ -248,7 +248,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
                 OkDialog(importResultsNameDlg, importResultsNameDlg.OkDialog);
                 var allChromatograms = WaitForOpenForm<AllChromatogramsGraph>();
-                allChromatograms.SetFrozenProgress(42, "00:00:35", 33, new Dictionary<string, int>
+                allChromatograms.SetFrozenProgress(43, "00:00:35", 33, new Dictionary<string, int>
                 {
                     { Path.GetFileNameWithoutExtension(Flies_F), 44 },
                     { Path.GetFileNameWithoutExtension(Flies_M), 40 }

@@ -19,6 +19,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -152,7 +153,11 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
             string yeastReplicateName = Path.GetFileNameWithoutExtension(Yeast_BSA);
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFrozenProgress(35, "00:01:10", 35);
+            allChromGraph.SetFrozenProgress(43, "00:01:10", 35, new Dictionary<string, int>
+            {
+                { "BSA_Frag_100nM_18", 44 },
+                { "Yeast_0pt1ug_BSA_1", 28 }
+            });
             WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
             PauseForAllChromatogramsGraphScreenShot("Importing results form");
             allChromGraph.ReleaseFrozenProgress();

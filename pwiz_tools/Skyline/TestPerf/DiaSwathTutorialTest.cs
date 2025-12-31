@@ -75,6 +75,12 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public string ExamplePeptide;
+
+            // Frozen progress values for consistent AllChromatogramsGraph screenshots
+            public string FrozenElapsedTime;
+            public int FrozenThreshold;
+            public int FrozenTotalProgress;
+            public Dictionary<string, int> FrozenFileProgress;
         }
 
         public class AnalysisValues
@@ -150,7 +156,16 @@ namespace TestPerf
                 IsolationSchemeName = "ETH TTOF (64 variable)",
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
-                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
+                FrozenElapsedTime = "00:00:22",
+                FrozenThreshold = 41,
+                FrozenTotalProgress = 20,
+                FrozenFileProgress = new Dictionary<string, int>
+                {
+                    { "collinsb_I180316_001", 41 },
+                    { "collinsb_I180316_002", 41 },
+                    { "collinsb_I180316_003", 41 }
+                }
             });
 
             if (fullSet)
@@ -209,7 +224,16 @@ namespace TestPerf
                 IsolationSchemeName = "ETH QE (18 variable)",
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
-                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
+                FrozenElapsedTime = "00:00:12",
+                FrozenThreshold = 40,
+                FrozenTotalProgress = 21,
+                FrozenFileProgress = new Dictionary<string, int>
+                {
+                    { "collinsb_X1803_171-A", 42 },
+                    { "collinsb_X1803_172-B", 43 },
+                    { "collinsb_X1803_173-A", 43 }
+                }
             });
 
             if (fullSet)
@@ -346,7 +370,17 @@ namespace TestPerf
                     IsolationSchemeName = "diaPASEF (24 fixed)",
                     IsolationSchemeFile = "diaPASEF_24fix.csv",
                     IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
-                    ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+                    ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
+                    // May not be necessary
+                    FrozenElapsedTime = "00:00:11",
+                    FrozenThreshold = 41,
+                    FrozenTotalProgress = 20,
+                    FrozenFileProgress = new Dictionary<string, int>
+                    {
+                        { "A210331_bcc_1180", 44 },
+                        { "A210331_bcc_1181", 44 },
+                        { "A210331_bcc_1182", 42 }
+                    }
                 });
             }
             else
@@ -385,7 +419,16 @@ namespace TestPerf
                     IsolationSchemeName = "diaPASEF (24 fixed)",
                     IsolationSchemeFile = "diaPASEF_24fix.csv",
                     IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
-                    ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+                    ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
+                    FrozenElapsedTime = "00:00:11",
+                    FrozenThreshold = 41,
+                    FrozenTotalProgress = 20,
+                    FrozenFileProgress = new Dictionary<string, int>
+                    {
+                        { "A210331_bcc_1180", 44 },
+                        { "A210331_bcc_1181", 44 },
+                        { "A210331_bcc_1182", 42 }
+                    }
                 });
             }
 
@@ -906,14 +949,10 @@ namespace TestPerf
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            allChrom.SetFrozenProgress(41, @"00:00:22", 15, new Dictionary<string, int>
-            {
-                { "collinsb_X1803_171-A", 42 },
-                { "collinsb_X1803_172-B", 43 },
-                { "collinsb_X1803_173-A", 43 }
-            });
+            allChrom.SetFrozenProgress(_instrumentValues.FrozenThreshold, _instrumentValues.FrozenElapsedTime,
+                _instrumentValues.FrozenTotalProgress, _instrumentValues.FrozenFileProgress);
             WaitForCondition(10 * 60 * 1000, () => allChrom.IsProgressFrozen());
-            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
+            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window");
             allChrom.ReleaseFrozenProgress();
             WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
 
