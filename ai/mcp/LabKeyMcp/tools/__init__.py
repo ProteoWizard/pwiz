@@ -12,6 +12,9 @@ Modules:
 - attachments: Attachment handling tools
 - issues: Issue tracking tools
 - patterns: Pattern detection for daily reports
+
+Internal utilities (no MCP tools):
+- stacktrace: Stack trace normalization for pattern matching
 """
 
 from . import common
@@ -22,6 +25,7 @@ from . import support
 from . import attachments
 from . import issues
 from . import patterns
+from . import stacktrace  # Internal utility, no MCP tools
 
 
 def register_all_tools(mcp):

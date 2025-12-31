@@ -21,6 +21,7 @@
 |-------|-------------|------|----------|
 | testruns_detail | Extended run info with date filtering | testruns_detail.sql | `get_daily_test_summary()` |
 | failures_by_date | Failures in date range with computer info | failures_by_date.sql | `get_daily_test_summary()`, `save_test_failure_history()` |
+| failures_with_traces_by_date | Failures with stack traces for 8AM window | failures_with_traces_by_date.sql | `save_daily_failures()` |
 | leaks_by_date | Memory/handle leaks in date range | leaks_by_date.sql | `get_daily_test_summary()` |
 
 ## Proposed Queries (Not Yet Used)

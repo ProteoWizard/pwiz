@@ -23,6 +23,7 @@ from .common import (
     DEFAULT_TEST_CONTAINER,
     TESTRESULTS_SCHEMA,
 )
+from .stacktrace import normalize_stack_trace, group_by_fingerprint
 
 logger = logging.getLogger("labkey_mcp")
 
@@ -878,3 +879,195 @@ def register_tools(mcp):
             f"\n"
             f"See {output_file} for full stack traces."
         )
+
+    @mcp.tool()
+    async def save_daily_failures(
+        report_date: str,
+        server: str = DEFAULT_SERVER,
+    ) -> str:
+        """**PRIMARY**: All test failures with stack traces for a date. Saves to ai/.tmp/failures-YYYYMMDD.md.
+
+        Queries all 6 test folders, normalizes stack traces, and groups by fingerprint
+        to identify unique bugs vs duplicate reports.
+
+        Args:
+            report_date: Date YYYY-MM-DD (end of 8AM-8AM nightly window)
+
+        Returns:
+            Summary with fingerprint groupings. Full details in saved file.
+        """
+        # Parse report_date as the END of the nightly window
+        # Nightly "day" runs from 8:01 AM day before to 8:00 AM report_date
+        end_dt = datetime.strptime(report_date, "%Y-%m-%d")
+        start_dt = end_dt - timedelta(days=1)
+
+        # Define the 8AM boundaries
+        window_start = start_dt.replace(hour=8, minute=1, second=0)
+        window_end = end_dt.replace(hour=8, minute=0, second=0)
+
+        # Format for LabKey TIMESTAMP parameters
+        window_start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        window_end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+
+        # All 6 test folders
+        folders = [
+            "/home/development/Nightly x64",
+            "/home/development/Release Branch",
+            "/home/development/Performance Tests",
+            "/home/development/Release Branch Performance Tests",
+            "/home/development/Integration",
+            "/home/development/Integration with Perf Tests",
+        ]
+
+        all_failures = []
+
+        for container_path in folders:
+            folder_name = container_path.split("/")[-1]
+            try:
+                server_context = get_server_context(server, container_path)
+
+                result = labkey.query.select_rows(
+                    server_context=server_context,
+                    schema_name=TESTRESULTS_SCHEMA,
+                    query_name="failures_with_traces_by_date",
+                    max_rows=500,
+                    parameters={
+                        "WindowStart": window_start_str,
+                        "WindowEnd": window_end_str,
+                    },
+                )
+
+                if result and result.get("rows"):
+                    for row in result["rows"]:
+                        all_failures.append({
+                            "testname": row.get("testname", "?"),
+                            "computer": row.get("computer", "?"),
+                            "folder": folder_name,
+                            "posttime": str(row.get("posttime", "?"))[:16],
+                            "passnum": row.get("passnum", "?"),
+                            "stacktrace": row.get("stacktrace", ""),
+                        })
+
+            except Exception as e:
+                logger.error(f"Error querying {folder_name}: {e}")
+
+        if not all_failures:
+            return f"No failures found for {report_date} (window: {window_start_str} to {window_end_str})"
+
+        # Normalize stack traces and group by fingerprint
+        traces = [f["stacktrace"] for f in all_failures]
+        fingerprint_groups = group_by_fingerprint(traces)
+
+        # Build fingerprint -> failures mapping
+        fingerprint_data = {}
+        for fingerprint, indices in fingerprint_groups.items():
+            failures_in_group = [all_failures[i] for i in indices]
+            # Get normalized info from first trace
+            norm = normalize_stack_trace(failures_in_group[0]["stacktrace"])
+            fingerprint_data[fingerprint] = {
+                "failures": failures_in_group,
+                "signature": norm.signature_frames,
+                "normalized": norm.normalized,
+                "count": len(failures_in_group),
+            }
+
+        # Sort by count (most common first)
+        sorted_fingerprints = sorted(
+            fingerprint_data.items(),
+            key=lambda x: -x[1]["count"]
+        )
+
+        # Build the report
+        lines = [
+            f"# Daily Failures Report: {report_date}",
+            "",
+            f"**Window**: {window_start_str} to {window_end_str}",
+            f"**Total failures**: {len(all_failures)}",
+            f"**Unique bugs (by fingerprint)**: {len(fingerprint_groups)}",
+            "",
+            "## Summary by Fingerprint",
+            "",
+            "| Fingerprint | Count | Tests | Computers | Signature |",
+            "|-------------|-------|-------|-----------|-----------|",
+        ]
+
+        for fingerprint, data in sorted_fingerprints:
+            tests = sorted(set(f["testname"] for f in data["failures"]))
+            computers = sorted(set(f["computer"] for f in data["failures"]))
+            sig = " → ".join(data["signature"][:3]) if data["signature"] else "(no signature)"
+            lines.append(
+                f"| {fingerprint} | {data['count']} | {', '.join(tests[:2])}{'...' if len(tests) > 2 else ''} | "
+                f"{', '.join(computers[:3])}{'...' if len(computers) > 3 else ''} | {sig} |"
+            )
+
+        lines.extend(["", "## Details by Fingerprint", ""])
+
+        # Detailed section for each fingerprint
+        for fingerprint, data in sorted_fingerprints:
+            tests = sorted(set(f["testname"] for f in data["failures"]))
+            computers = sorted(set(f["computer"] for f in data["failures"]))
+            folders_hit = sorted(set(f["folder"] for f in data["failures"]))
+
+            lines.extend([
+                f"### Fingerprint: {fingerprint}",
+                "",
+                f"**Count**: {data['count']} failures",
+                f"**Tests**: {', '.join(tests)}",
+                f"**Computers**: {', '.join(computers)}",
+                f"**Folders**: {', '.join(folders_hit)}",
+                "",
+                "**Signature frames**:",
+                "```",
+            ])
+            for frame in data["signature"]:
+                lines.append(f"  {frame}")
+            lines.extend([
+                "```",
+                "",
+                "**Normalized stack trace**:",
+                "```",
+                data["normalized"] if data["normalized"] else "(empty)",
+                "```",
+                "",
+                "**Raw stack trace (first occurrence)**:",
+                "```",
+                data["failures"][0]["stacktrace"][:2000] if data["failures"][0]["stacktrace"] else "(empty)",
+                "```",
+                "",
+            ])
+
+        # Write to file
+        report_content = "\n".join(lines)
+        output_dir = get_tmp_dir()
+        date_str = report_date.replace("-", "")
+        output_file = output_dir / f"failures-{date_str}.md"
+        output_file.write_text(report_content, encoding="utf-8")
+
+        # Build brief summary
+        brief_lines = [
+            f"Daily failures saved to: {output_file}",
+            "",
+            f"**{report_date}** (8AM window): {len(all_failures)} failures, {len(fingerprint_groups)} unique bugs",
+            "",
+        ]
+
+        if len(sorted_fingerprints) <= 5:
+            brief_lines.append("Fingerprints:")
+            for fingerprint, data in sorted_fingerprints:
+                tests = sorted(set(f["testname"] for f in data["failures"]))
+                computers = sorted(set(f["computer"] for f in data["failures"]))
+                brief_lines.append(
+                    f"  - {fingerprint}: {data['count']}x on {len(computers)} machines - {', '.join(tests[:2])}"
+                )
+        else:
+            brief_lines.append(f"Top fingerprints (of {len(sorted_fingerprints)}):")
+            for fingerprint, data in sorted_fingerprints[:5]:
+                tests = sorted(set(f["testname"] for f in data["failures"]))
+                computers = sorted(set(f["computer"] for f in data["failures"]))
+                brief_lines.append(
+                    f"  - {fingerprint}: {data['count']}x on {len(computers)} machines - {', '.join(tests[:2])}"
+                )
+
+        brief_lines.extend(["", f"See {output_file} for full details."])
+
+        return "\n".join(brief_lines)

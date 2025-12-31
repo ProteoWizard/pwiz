@@ -21,6 +21,7 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 - [x] Pattern detection MCP tools (`analyze_daily_patterns`, `save_daily_summary`)
 - [x] Prioritized Action Items output (SYSTEMIC, NEW, EXTERNAL, MISSING, RESOLVED)
 - [x] Updated `/pw-daily` Steps 6 and 8 to use new MCP tools
+- [x] Stack trace normalization utility (`stacktrace.py`) - internal module, no MCP tools
 
 ## Completed (2025-12-29)
 
@@ -49,7 +50,7 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 **Implementation**: Regex for `Installation ID: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`
 **Value**: Prioritize bugs blocking multiple users vs one-off issues
 
-#### 3. Stack Trace Normalization for Pattern Matching
+#### 3. ~~Stack Trace Normalization for Pattern Matching~~ ✅ COMPLETED 2025-12-30
 **Problem**: Same underlying bug produces slightly different stack traces due to:
 - Line number changes between versions
 - Minor call stack variations (async state machines, lambda wrappers)
@@ -85,6 +86,13 @@ def normalize_stack_trace(raw_trace: str) -> dict:
 - Dramatically reduce noise in daily reports
 - Identify that 10 "different" exceptions are really 1 bug
 - Connect production issues to test coverage gaps
+
+**Implementation**: Created `ai/mcp/LabKeyMcp/tools/stacktrace.py` as internal utility (no MCP tools).
+- `normalize_stack_trace()` returns `NormalizedTrace` dataclass with fingerprint, signature_frames, normalized text
+- `fingerprint_matches()` convenience function for comparing two traces
+- `group_by_fingerprint()` groups list of traces by their fingerprint
+- Filters async noise (MoveNext, d__, AsyncMethodBuilder), framework frames
+- Collapses lambdas (<Method>b__0 → Method) and closures
 
 ### Tier 2: High Value, Requires C# Code Changes
 
@@ -178,6 +186,22 @@ The following patterns from developer reports represent ideal automated investig
 ## Progress Log
 
 ### 2025-12-30
+- Implemented Stack Trace Normalization (Item 3):
+  - Created `ai/mcp/LabKeyMcp/tools/stacktrace.py` as internal utility (not MCP-exposed)
+  - Key decision: Internal utility keeps MCP API footprint lean, preserves context
+  - Functions: `normalize_stack_trace()`, `fingerprint_matches()`, `group_by_fingerprint()`
+  - Returns `NormalizedTrace` dataclass with fingerprint, signature_frames, normalized text
+  - Filters: async noise (MoveNext, d__, AsyncMethodBuilder), framework frames
+  - Normalizes: lambdas (<Method>b__0 → Method), closures (<>c__DisplayClass)
+  - Path normalization: uses `pwiz_tools` as anchor to strip machine-specific prefixes
+
+- Added `save_daily_failures` MCP tool:
+  - Queries all 6 test folders for failures with stack traces
+  - Uses new server-side query `failures_with_traces_by_date` (8AM-8AM window)
+  - Groups failures by fingerprint to identify unique bugs
+  - Tested with 2025-12-05 data: 27 failures grouped into 4 unique bugs
+  - Systemic issues (TestScheduleMethodDlg, TestWatersConnectExportMethodDlg) correctly grouped
+
 - Implemented Level 1 Automation - Pattern Detection:
   - Created `ai/mcp/LabKeyMcp/tools/patterns.py` with two new MCP tools:
     - `analyze_daily_patterns(report_date, days_back)` - Compares today vs history, returns prioritized Action Items
