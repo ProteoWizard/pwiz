@@ -451,7 +451,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             public ImmutableList<PointInfo> Outliers => _outlierPoints;
         }
     }
-    public class RetentionTimeRegressionSettings : Immutable
+    public class RetentionTimeRegressionSettings : Immutable, ICachingParameters
     {
         private Lazy<RetentionScoreCalculatorSpec> _calculator;
         public RetentionTimeRegressionSettings(SrmDocument document, int targetIndex, int originalIndex, bool bestResult,
@@ -540,5 +540,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         public bool IsRunToRun { get; private set; }
+
+        // ICachingParameters implementation
+        int ICachingParameters.CacheKey => TargetIndex;
+
+        object ICachingParameters.CacheSettings => new
+        {
+            BestResult, Threshold, Refine, PointsType,
+            RegressionMethod, CalculatorName, IsRunToRun, OriginalIndex
+        };
     }
 }

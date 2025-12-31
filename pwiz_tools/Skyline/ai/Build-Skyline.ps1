@@ -122,6 +122,29 @@ if ($repoRoot) {
     }
 }
 
+# Check for running test processes that would block the build
+$testProcesses = Get-Process -Name 'SkylineTester', 'TestRunner', 'Skyline*' -ErrorAction SilentlyContinue
+if ($testProcesses) {
+    $processNames = ($testProcesses | Select-Object -ExpandProperty Name -Unique) -join ', '
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host "⚠️  BUILD BLOCKED - Running processes detected" -ForegroundColor Yellow
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "The following processes may lock build output files:" -ForegroundColor Yellow
+    $testProcesses | ForEach-Object {
+        Write-Host "  - $($_.Name) (PID: $($_.Id))" -ForegroundColor Gray
+    }
+    Write-Host ""
+    Write-Host "[LLM-AGENT-ACTION-REQUIRED]" -ForegroundColor Cyan
+    Write-Host "Ask the developer: 'May I stop $processNames to proceed with the build?'" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "If approved, run:" -ForegroundColor Gray
+    Write-Host "  Get-Process -Name 'SkylineTester','TestRunner','Skyline*' -ErrorAction SilentlyContinue | Stop-Process -Force" -ForegroundColor White
+    Write-Host ""
+    exit 2  # Special exit code indicating process block (not build failure)
+}
+
 # Find MSBuild using vswhere
 $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (-not (Test-Path $vswherePath)) {
