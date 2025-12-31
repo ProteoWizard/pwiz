@@ -16,6 +16,12 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 - [x] Added self-improvement reflection step
 - [x] Historical JSON storage for trend analysis (Step 6, 8 in /pw-daily)
 
+## Completed (2025-12-30)
+
+- [x] Pattern detection MCP tools (`analyze_daily_patterns`, `save_daily_summary`)
+- [x] Prioritized Action Items output (SYSTEMIC, NEW, EXTERNAL, MISSING, RESOLVED)
+- [x] Updated `/pw-daily` Steps 6 and 8 to use new MCP tools
+
 ## Completed (2025-12-29)
 
 - [x] Added `fetch_labkey_page` MCP tool for authenticated web page access
@@ -28,14 +34,14 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 
 ### Tier 1: High Value, Achievable Now
 
-#### 1. Level 1 Automation - Pattern Detection
+#### 1. ~~Level 1 Automation - Pattern Detection~~ ✅ COMPLETED 2025-12-30
 **Problem**: Reports show data but don't highlight patterns requiring immediate attention
 **Solution**: Add pattern detection to daily report:
 - Detect NEW failures (not in yesterday's run)
 - Detect ALL-MACHINES-AFFECTED pattern → flag for immediate attention
 - Flag tests involving known external services (Koina, Panorama)
 - Track "expected fixes" and verify next day
-**Implementation**: Compare today's results to historical JSON (now available)
+**Implementation**: Created `patterns.py` MCP module with `analyze_daily_patterns` and `save_daily_summary` tools
 
 #### 2. Parse Installation ID from Exceptions
 **Problem**: Cannot distinguish "1 user hit this 4 times" from "4 users hit this once each"
@@ -133,6 +139,20 @@ The following patterns from developer reports represent ideal automated investig
 | Fix verification | Expected fix committed | High - track pending fixes |
 
 ## Progress Log
+
+### 2025-12-30
+- Implemented Level 1 Automation - Pattern Detection:
+  - Created `ai/mcp/LabKeyMcp/tools/patterns.py` with two new MCP tools:
+    - `analyze_daily_patterns(report_date, days_back)` - Compares today vs history, returns prioritized Action Items
+    - `save_daily_summary(...)` - Saves structured JSON for historical comparison
+  - Pattern detection includes:
+    - 🔴 SYSTEMIC: Issues affecting 3+ machines (code bug, not environment)
+    - 🆕 NEW: First appearance since yesterday (regression)
+    - 🌐 EXTERNAL: Tests involving Koina, Panorama, UniProt, Prosit
+    - ⚠️ MISSING N DAYS: Computers absent for consecutive days
+    - ✅ RESOLVED: Issues fixed since yesterday
+  - Updated `/pw-daily` command (Steps 6 and 8) to use new MCP tools
+  - Registered patterns module in tools/__init__.py
 
 ### 2025-12-29
 - Added `fetch_labkey_page` MCP tool - enables fetching authenticated LabKey pages (failure details, stack traces)

@@ -11,6 +11,7 @@ Modules:
 - support: Support board tools
 - attachments: Attachment handling tools
 - issues: Issue tracking tools
+- patterns: Pattern detection for daily reports
 """
 
 from . import common
@@ -20,6 +21,7 @@ from . import wiki
 from . import support
 from . import attachments
 from . import issues
+from . import patterns
 
 
 def register_all_tools(mcp):
@@ -32,6 +34,7 @@ def register_all_tools(mcp):
     exceptions.register_tools(mcp)   # save_exceptions_report
     support.register_tools(mcp)      # get_support_summary
     issues.register_tools(mcp)       # save_issues_report
+    patterns.register_tools(mcp)     # analyze_daily_patterns, save_daily_summary
 
     # DRILL-DOWN tools
     wiki.register_tools(mcp)
