@@ -453,8 +453,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
         private static void ValidateClickTime(GraphFullScan fullScanGraph, double clickTime)
         {
             string clickTimeText = clickTime.ToString(CultureInfo.CurrentCulture);
-            RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTimeText),
-                String.Format("Full-scan graph title '{0}' does not contain '{1}'", fullScanGraph.TitleText, clickTimeText)));
+            WaitForConditionUI(() => fullScanGraph.TitleText.Contains(clickTimeText),
+                String.Format("Full-scan graph title '{0}' does not contain '{1}'", fullScanGraph.TitleText, clickTimeText));
         }
 
         protected override bool IsRecordMode => false;
