@@ -914,6 +914,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (status == null || status.ProgressList.Count == 0)
                     return false; // Not yet frozen, waiting for threshold
 
+                // Capture X-axis max early (when any file reaches threshold/2) to avoid
+                // non-determinism from the race to completion between parallel file imports
+                int xAxisCaptureThreshold = _freezeProgressPercent.Value / 2;
+                foreach (var progressStatus in status.ProgressList)
+                {
+                    if (progressStatus.PercentComplete >= xAxisCaptureThreshold)
+                    {
+                        graphChromatograms.CaptureXAxisMax();
+                        break;
+                    }
+                }
+
                 // Check if file at index 0 reaches threshold (100%) to trigger freeze
                 // We use file at index 0 because that's the one shown in the graph
                 if (status.ProgressList[0].PercentComplete >= _freezeProgressPercent)

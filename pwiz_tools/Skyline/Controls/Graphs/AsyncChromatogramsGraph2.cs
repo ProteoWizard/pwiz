@@ -72,6 +72,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _backgroundInitialized;
         private float? _frozenGraphTime;  // For screenshot consistency - exact RT for progress line
         private float? _frozenIntensityMax;  // For screenshot consistency - lock Y-axis maximum
+        private float? _frozenTimeMax;  // For screenshot consistency - lock X-axis maximum
 
         public AsyncChromatogramsGraph2()
             : base(@"AllChromatograms background render")
@@ -204,6 +205,10 @@ namespace pwiz.Skyline.Controls.Graphs
             // If frozen with intensity max, lock the Y-axis scale
             if (_frozenIntensityMax.HasValue)
                 maxY = _frozenIntensityMax.Value;
+
+            // If frozen, lock the X-axis scale
+            if (_frozenTimeMax.HasValue)
+                maxX = _frozenTimeMax.Value;
 
             // Start scaling animation if necessary.
             _xAxisAnimation.SetTarget(info.GraphPane.XAxis.Scale.Max, maxX, STEPS_FOR_TIME_AXIS_ANIMATION);
@@ -358,12 +363,31 @@ namespace pwiz.Skyline.Controls.Graphs
             // The frozen graph time ensures consistent progress line position
             _frozenGraphTime = graphTime;
             _frozenIntensityMax = intensityMax;
+            // Note: X-axis max is captured separately via CaptureXAxisMax() when called
+            // at an earlier point in the import process
+        }
+
+        /// <summary>
+        /// Capture the current X-axis maximum to freeze it for consistent screenshots.
+        /// This should be called early in the import process (e.g., when any file reaches 50%)
+        /// before the non-deterministic race to completion begins.
+        /// </summary>
+        public void CaptureXAxisMax()
+        {
+            if (_frozenTimeMax.HasValue)
+                return; // Already captured
+
+            var info = GetInfo(Key);
+            if (info != null)
+            {
+                _frozenTimeMax = (float)info.GraphPane.XAxis.Scale.Max;
+            }
         }
 
         /// <summary>
         /// Whether the graph has frozen values set for screenshot capture.
         /// </summary>
-        public bool IsGraphFrozen => _frozenGraphTime.HasValue || _frozenIntensityMax.HasValue;
+        public bool IsGraphFrozen => _frozenGraphTime.HasValue || _frozenIntensityMax.HasValue || _frozenTimeMax.HasValue;
 
         /// <summary>
         /// Whether the graph has data loaded and ready to display.
@@ -377,6 +401,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _frozenGraphTime = null;
             _frozenIntensityMax = null;
+            _frozenTimeMax = null;
         }
 
         /// <summary>
@@ -396,6 +421,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 // If frozen with intensity max, lock the Y-axis scale
                 if (_frozenIntensityMax.HasValue)
                     maxY = _frozenIntensityMax.Value;
+                // If frozen, lock the X-axis scale
+                if (_frozenTimeMax.HasValue)
+                    maxX = _frozenTimeMax.Value;
                 info.GraphPane.XAxis.Scale.Max = maxX;
                 info.GraphPane.YAxis.Scale.Max = maxY;
                 info.GraphPane.AxisChange();
