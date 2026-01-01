@@ -32,10 +32,10 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
             _node = node;
         }
 
-        [Column(IsRequired = true)]
+        [Column]
         public string MoleculeGroupType => _node.IsProtein ? "protein" : "peptide_list";
 
-        [Column(IsRequired = true)]
+        [Column]
         public string Name => _node.Name;
 
         [Column]

@@ -32,10 +32,10 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
             TransitionGroupId = transitionGroupId;
         }
 
-        [Column(IsRequired = true)]
+        [Column]
         public long TransitionGroupId { get; }
 
-        [Column(IsRequired = true)]
+        [Column]
         public string TransitionType => _node.Transition.IsCustom() ? "non_proteomic" : "proteomic";
 
         [Column]
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
         [Column]
         public double? PrecursorMz => null;
 
-        [Column(IsRequired = true)]
+        [Column]
         public double ProductMz => _node.Mz.Value;
 
         [Column]

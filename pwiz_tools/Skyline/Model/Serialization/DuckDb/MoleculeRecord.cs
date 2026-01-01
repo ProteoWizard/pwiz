@@ -32,10 +32,10 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
             MoleculeGroupId = moleculeGroupId;
         }
 
-        [Column(IsRequired = true)]
+        [Column]
         public long MoleculeGroupId { get; }
 
-        [Column(IsRequired = true)]
+        [Column]
         public string MoleculeType => _node.Peptide.IsCustomMolecule ? "molecule" : "peptide";
 
         [Column]

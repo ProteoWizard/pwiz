@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Reflection;
+using DuckDB.NET.Native;
 
 namespace pwiz.Skyline.Model.Serialization.DuckDb
 {
@@ -27,16 +29,25 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
     public class ColumnDef
     {
         public string Name { get; }
-        public string SqlType { get; }
+        public DuckDBType DuckDbType { get; }
         public PropertyInfo Property { get; }
-        public bool IsRequired { get; }
+        public Type PropertyType { get; }
+        public object DefaultValue { get; }
 
-        public ColumnDef(string name, string sqlType, PropertyInfo property, bool isRequired)
+        public ColumnDef(string name, DuckDBType duckDbType, PropertyInfo property)
         {
             Name = name;
-            SqlType = sqlType;
+            DuckDbType = duckDbType;
             Property = property;
-            IsRequired = isRequired;
+            PropertyType = property.PropertyType;
+            if (PropertyType.IsValueType)
+            {
+                DefaultValue = Activator.CreateInstance(PropertyType);
+            }
+            else
+            {
+                DefaultValue = null;
+            }
         }
 
         /// <summary>
@@ -45,6 +56,16 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
         public object GetValue(object item)
         {
             return Property.GetValue(item);
+        }
+
+        /// <summary>
+        /// Returns true if the value equals default(PropertyType).
+        /// For reference types and nullable types, default is null.
+        /// For value types, default is 0/false/etc.
+        /// </summary>
+        public bool IsDefaultValue(object value)
+        {
+            return value == null || Equals(value, DefaultValue);
         }
     }
 }

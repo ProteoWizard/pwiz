@@ -62,28 +62,19 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
             ItemType = itemType;
             _allColumns = DiscoverColumnsFromType(itemType);
             _usedColumns = new HashSet<string>();
-
-            // Id (primary key) and required columns are always used
-            _usedColumns.Add(nameof(Record.Id));
-            foreach (var col in _allColumns.Where(c => c.IsRequired))
-                _usedColumns.Add(col.Name);
         }
 
         /// <summary>
         /// Discovers column definitions from properties with ColumnAttribute.
+        /// Does not include the Id column, which is handled separately.
         /// </summary>
         private static List<ColumnDef> DiscoverColumnsFromType(Type type)
         {
             var columns = new List<ColumnDef>();
 
-            // Add Id column first (from Record base class)
-            var idProp = typeof(Record).GetProperty(nameof(Record.Id));
-            columns.Add(new ColumnDef(nameof(Record.Id), "BIGINT PRIMARY KEY", idProp, true));
-
-            // Add columns from properties with ColumnAttribute
             foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                // Skip Id since we already added it
+                // Skip Id - it's handled separately as the primary key
                 if (prop.Name == nameof(Record.Id))
                     continue;
 
@@ -92,38 +83,38 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
                     continue;
 
                 var name = attr.Name ?? prop.Name;
-                var sqlType = attr.SqlType ?? InferSqlType(prop.PropertyType);
-                columns.Add(new ColumnDef(name, sqlType, prop, attr.IsRequired));
+                var duckDbType = attr.DuckDbType != DuckDBType.Invalid ? attr.DuckDbType : InferDuckDbType(prop.PropertyType);
+                columns.Add(new ColumnDef(name, duckDbType, prop));
             }
 
             return columns;
         }
 
         /// <summary>
-        /// Infers SQL type from a C# property type.
+        /// Infers DuckDB type from a C# property type.
         /// </summary>
-        private static string InferSqlType(Type type)
+        private static DuckDBType InferDuckDbType(Type type)
         {
             // Handle nullable types
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
             if (underlyingType == typeof(long))
-                return "BIGINT";
+                return DuckDBType.BigInt;
             if (underlyingType == typeof(int))
-                return "INTEGER";
+                return DuckDBType.Integer;
             if (underlyingType == typeof(double))
-                return "DOUBLE";
+                return DuckDBType.Double;
             if (underlyingType == typeof(bool))
-                return "BOOLEAN";
+                return DuckDBType.Boolean;
             if (underlyingType == typeof(string))
-                return "VARCHAR";
+                return DuckDBType.Varchar;
 
-            // Default to VARCHAR for unknown types
-            return "VARCHAR";
+            // Default to Varchar for unknown types
+            return DuckDBType.Varchar;
         }
 
         /// <summary>
-        /// Scans an item to discover which columns have non-null values.
+        /// Scans an item to discover which columns have non-default values.
         /// </summary>
         public void DiscoverColumns(Record item)
         {
@@ -133,7 +124,7 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
                     continue;
 
                 var value = col.GetValue(item);
-                if (value != null)
+                if (!col.IsDefaultValue(value))
                     _usedColumns.Add(col.Name);
             }
         }
@@ -155,14 +146,17 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
             var sb = new StringBuilder();
             sb.AppendLine($@"CREATE TABLE {TableName} (");
 
+            // Id column is always first as primary key
+            var hasMoreColumns = usedColumns.Count > 0;
+            sb.AppendLine($@"    ""{nameof(Record.Id)}"" {DuckDbTypeToSql(DuckDBType.BigInt)} PRIMARY KEY{(hasMoreColumns ? "," : "")}");
+
             for (int i = 0; i < usedColumns.Count; i++)
             {
                 var col = usedColumns[i];
-                // Id column already has PRIMARY KEY in its SqlType, don't add NOT NULL
-                var notNull = col.IsRequired && col.Name != nameof(Record.Id) ? " NOT NULL" : "";
+                var typeStr = DuckDbTypeToSql(col.DuckDbType);
                 var comma = i < usedColumns.Count - 1 ? "," : "";
                 // Quote column name to handle reserved words
-                sb.AppendLine($@"    ""{col.Name}"" {col.SqlType}{notNull}{comma}");
+                sb.AppendLine($@"    ""{col.Name}"" {typeStr}{comma}");
             }
 
             sb.AppendLine(")");
@@ -170,10 +164,21 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
         }
 
         /// <summary>
+        /// Converts a DuckDBType to its SQL string representation.
+        /// </summary>
+        private static string DuckDbTypeToSql(DuckDBType type)
+        {
+            return type.ToString().ToUpperInvariant();
+        }
+
+        /// <summary>
         /// Appends a row using only the used columns.
         /// </summary>
         public void AppendRow(IDuckDBAppenderRow row, Record item)
         {
+            // Id column is always first
+            row.AppendValue(item.Id);
+
             foreach (var col in GetUsedColumns())
             {
                 var value = col.GetValue(item);

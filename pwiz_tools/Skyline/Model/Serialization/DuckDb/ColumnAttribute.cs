@@ -18,6 +18,7 @@
  */
 
 using System;
+using DuckDB.NET.Native;
 
 namespace pwiz.Skyline.Model.Serialization.DuckDb
 {
@@ -28,19 +29,13 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
     public class ColumnAttribute : Attribute
     {
         /// <summary>
-        /// The column name in the database. If null, uses the property name converted to snake_case.
+        /// The column name in the database. If null, uses the property name.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The SQL type for the column (e.g., "VARCHAR", "BIGINT", "DOUBLE", "BOOLEAN").
-        /// If null, inferred from the property type.
+        /// The DuckDB type for the column. If not set, inferred from the property type.
         /// </summary>
-        public string SqlType { get; set; }
-
-        /// <summary>
-        /// Whether this column is required (NOT NULL). Default is false.
-        /// </summary>
-        public bool IsRequired { get; set; }
+        public DuckDBType DuckDbType { get; set; }
     }
 }

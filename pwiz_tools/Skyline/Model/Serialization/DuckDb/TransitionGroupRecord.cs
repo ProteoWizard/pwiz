@@ -34,16 +34,16 @@ namespace pwiz.Skyline.Model.Serialization.DuckDb
             MoleculeId = moleculeId;
         }
 
-        [Column(IsRequired = true)]
+        [Column]
         public long MoleculeId { get; }
 
-        [Column(IsRequired = true)]
+        [Column]
         public string TransitionGroupType => _node.TransitionGroup.IsCustomIon ? "non_proteomic" : "proteomic";
 
-        [Column(IsRequired = true)]
+        [Column]
         public int Charge => _node.TransitionGroup.PrecursorAdduct.AdductCharge;
 
-        [Column(IsRequired = true)]
+        [Column]
         public double PrecursorMz => _node.PrecursorMz.Value;
 
         [Column]
