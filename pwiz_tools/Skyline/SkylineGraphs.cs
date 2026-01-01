@@ -833,6 +833,7 @@ namespace pwiz.Skyline
             listUpdateGraphs.AddRange(_listGraphRetentionTime.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphPeakArea.Where(g => g.Visible));
             listUpdateGraphs.AddRange(_listGraphMassError.Where(g => g.Visible));
+            listUpdateGraphs.AddRange(_listGraphDetections.Where(g => g.Visible));
             if (_calibrationForm != null && _calibrationForm.Visible)
                 listUpdateGraphs.Add(_calibrationForm);
 
