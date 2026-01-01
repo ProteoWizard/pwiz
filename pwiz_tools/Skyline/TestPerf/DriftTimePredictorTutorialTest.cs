@@ -152,15 +152,12 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             }
 
             string yeastReplicateName = Path.GetFileNameWithoutExtension(Yeast_BSA);
-            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFrozenProgress(43, "00:01:10", 35, new Dictionary<string, int>
-            {
-                { "BSA_Frag_100nM_18", 44 },
-                { "Yeast_0pt1ug_BSA_1", 28 }
-            });
-            WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
-            PauseForAllChromatogramsGraphScreenShot("Importing results form");
-            allChromGraph.ReleaseFrozenProgress();
+            PauseForAllChromatogramsGraphScreenShot("Importing Results form", 58f, "00:01:10", 35,
+                new Dictionary<string, int>
+                {
+                    { "BSA_Frag_100nM_18", 44 },
+                    { "Yeast_0pt1ug_BSA_1", 28 }
+                });
             WaitForDocumentChangeLoaded(document, 1000 * 60 * 60 * 10); // 10 minutes
 
             string BSAFragName = Path.GetFileNameWithoutExtension(BSA_Frag);

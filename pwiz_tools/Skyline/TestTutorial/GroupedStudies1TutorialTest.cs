@@ -197,16 +197,14 @@ namespace pwiz.SkylineTestTutorial
             if (Settings.Default.AutoShowAllChromatogramsGraph)
             {
                 allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-
-                allChrom.SetFrozenProgress(72, @"00:00:06", 5, new Dictionary<string, int>
-                {
-                    { "D_102_REP1", 72 },
-                    { "D_102_REP2", 71 },
-                    { "D_102_REP3", 72 }
-                });
-                WaitForCondition(() => allChrom.IsProgressFrozen());
-                PauseForAllChromatogramsGraphScreenShot("Loading Chromatograms form");
-                allChrom.ReleaseFrozenProgress();
+                // SRM data - no progress line shown, use 0 for graphTime
+                PauseForAllChromatogramsGraphScreenShot("Loading Chromatograms form", 0f, @"00:00:06", 5,
+                    new Dictionary<string, int>
+                    {
+                        { "D_102_REP1", 72 },
+                        { "D_102_REP2", 71 },
+                        { "D_102_REP3", 72 }
+                    });
             }
 
             RunUI(() =>

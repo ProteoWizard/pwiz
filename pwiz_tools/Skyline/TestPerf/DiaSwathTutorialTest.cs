@@ -78,7 +78,7 @@ namespace TestPerf
 
             // Frozen progress values for consistent AllChromatogramsGraph screenshots
             public string FrozenElapsedTime;
-            public int FrozenThreshold;
+            public float FrozenGraphTime;
             public int FrozenTotalProgress;
             public Dictionary<string, int> FrozenFileProgress;
         }
@@ -158,7 +158,7 @@ namespace TestPerf
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
                 ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
                 FrozenElapsedTime = "00:00:22",
-                FrozenThreshold = 41,
+                FrozenGraphTime = 39f,
                 FrozenTotalProgress = 20,
                 FrozenFileProgress = new Dictionary<string, int>
                 {
@@ -226,7 +226,7 @@ namespace TestPerf
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                 ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
                 FrozenElapsedTime = "00:00:12",
-                FrozenThreshold = 40,
+                FrozenGraphTime = 35f,
                 FrozenTotalProgress = 21,
                 FrozenFileProgress = new Dictionary<string, int>
                 {
@@ -373,7 +373,7 @@ namespace TestPerf
                     ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
                     // May not be necessary
                     FrozenElapsedTime = "00:00:11",
-                    FrozenThreshold = 41,
+                    FrozenGraphTime = 11.5f,
                     FrozenTotalProgress = 20,
                     FrozenFileProgress = new Dictionary<string, int>
                     {
@@ -421,7 +421,7 @@ namespace TestPerf
                     IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                     ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
                     FrozenElapsedTime = "00:00:11",
-                    FrozenThreshold = 41,
+                    FrozenGraphTime = 11.5f,
                     FrozenTotalProgress = 20,
                     FrozenFileProgress = new Dictionary<string, int>
                     {
@@ -948,12 +948,9 @@ namespace TestPerf
 
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            allChrom.SetFrozenProgress(_instrumentValues.FrozenThreshold, _instrumentValues.FrozenElapsedTime,
+            PauseForAllChromatogramsGraphScreenShot("Importing Results form",
+                _instrumentValues.FrozenGraphTime, _instrumentValues.FrozenElapsedTime,
                 _instrumentValues.FrozenTotalProgress, _instrumentValues.FrozenFileProgress);
-            WaitForCondition(10 * 60 * 1000, () => allChrom.IsProgressFrozen());
-            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window");
-            allChrom.ReleaseFrozenProgress();
             WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
 
             if (importPeptideSearchDlg.ImportFastaControl.AutoTrain)

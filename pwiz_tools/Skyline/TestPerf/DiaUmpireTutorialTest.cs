@@ -669,15 +669,12 @@ namespace TestPerf
             PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form");
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            allChrom.SetFrozenProgress(41, @"00:00:22", 40, new Dictionary<string, int>
-            {
-                { "collinsb_I180316_001", 40 },
-                { "collinsb_I180316_002", 41 }
-            });
-            WaitForCondition(() => allChrom.IsProgressFrozen());
-            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window");
-            allChrom.ReleaseFrozenProgress();
+            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 39f, @"00:00:22", 40,
+                new Dictionary<string, int>
+                {
+                    { "collinsb_I180316_001", 40 },
+                    { "collinsb_I180316_002", 41 }
+                });
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();

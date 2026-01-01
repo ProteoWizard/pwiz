@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private double _lastTime;
         private DateTime _lastRender;
         private bool _backgroundInitialized;
+        private float? _frozenGraphTime;  // For screenshot consistency - exact RT for progress line
 
         public AsyncChromatogramsGraph2()
             : base(@"AllChromatograms background render")
@@ -275,7 +276,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (info != null)
             {
                 _graphPane = info.GraphPane.Clone();
-                AddUnfinishedLine(_graphPane, info.CurrentTime);
+                // If frozen for screenshot, use exact graph time
+                // Otherwise use the current progress time
+                float? currentTime = _frozenGraphTime ?? info.CurrentTime;
+                AddUnfinishedLine(_graphPane, currentTime);
             }
         }
 
@@ -321,6 +325,27 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
+        /// Freeze the graph for consistent screenshot capture. Sets the progress line position
+        /// to an exact retention time. The timer continues running to ensure the graph renders,
+        /// but with a fixed progress line position.
+        /// </summary>
+        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.</param>
+        public void FreezeForScreenshot(float graphTime)
+        {
+            // Don't stop the timer - it's needed to drive rendering
+            // The frozen graph time ensures consistent progress line position
+            _frozenGraphTime = graphTime;
+        }
+
+        /// <summary>
+        /// Resume normal graph animation after screenshot capture.
+        /// </summary>
+        public void ThawForScreenshot()
+        {
+            _frozenGraphTime = null;
+        }
+
+        /// <summary>
         /// Redraw a graph entirely when we switch between graphs.
         /// </summary>
         public void Redraw()
@@ -362,7 +387,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     Color.White, Color.White)
                 {
                     Location = {CoordinateFrame = CoordType.AxisXYScale},
-                    ZOrder = ZOrder.F_BehindGrid
+                    // D_BehindAxis puts box in front of curves but behind axis tick marks
+                    ZOrder = ZOrder.D_BehindAxis
                 };
 
                 var unfinishedLine = new LineObj(
@@ -377,8 +403,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     ZOrder = ZOrder.D_BehindAxis
                 };
 
-                graphPane.GraphObjList.Add(unfinishedBox);
+                // Add line first so it paints on top of box (same ZOrder, first added = drawn last)
                 graphPane.GraphObjList.Add(unfinishedLine);
+                graphPane.GraphObjList.Add(unfinishedBox);
             }
             else
             {

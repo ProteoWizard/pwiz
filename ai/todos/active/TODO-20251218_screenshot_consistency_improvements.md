@@ -179,13 +179,13 @@ Values extracted by reading actual tutorial screenshots to determine exact froze
 | **MethodRefinementTutorialTest** | MethodRefine s-03 | `00:00:01` | 19% | {worm_0001: 96%, worm_0002: 98%, worm_0003: 98%} | ✅ |
 | **GroupedStudies1TutorialTest** | GroupedStudies s-03 | `00:00:06` | 5% | {D_102_REP1: 72%, D_102_REP2: 71%, D_102_REP3: 72%} | ✅ |
 | **Ms1FullScanFilteringTutorial** | MS1Filtering s-09 | `00:00:02` | 90% | {100803_0001_MCF7_TiB_L: 85%, 100803_0005b_MCF7_TiTip3: 95%} | ✅ |
-| **TargetedMSMSTutorialTest** | PRM s-15 | `00:00:01` | 10% | {20fmol_uL_tech1: 34%, 20fmol_uL_tech2: 31%} | |
+| **TargetedMSMSTutorialTest** | PRM s-15 | `00:00:01` | 10% | {20fmol_uL_tech1: 34%, 20fmol_uL_tech2: 31%} | ✅ |
 | **SmallMolLibrariesTutorialTest** | SmallMolIMSLibraries s-08 | `00:00:35` | 33% | {Flies_Ctrl_F_A_018: 44%, Flies_Ctrl_M_A_001: 40%} | ✅ |
-| **DriftTimePredictorTutorialTest** | IMSFiltering s-05 | `00:01:10` | 35% | {BSA_Frag_100nM_18: 44%, Yeast_0pt1ug_BSA_1: 28%} | |
-| **DiaUmpireTutorialTest** | DIA-Umpire-TTOF s-17 | `00:00:22` | 40% | {collinsb_I180316_001: 40%, collinsb_I180316_002: 41%} | |
-| **DiaSwathTutorialTest (TTOF)** | DIA-TTOF s-13 | `00:00:22` | 15% | {collinsb_I180316_001: 41%, ...002: 41%, ...003: 41%} | |
-| **DiaSwathTutorialTest (QE)** | DIA-QE s-13 | `00:00:12` | 15% | {collinsb_X1803_171-A: 42%, ...172-B: 43%, ...173-A: 43%} | |
-| **DiaSwathTutorialTest (PASEF)** | DIA-PASEF s-14 | `00:00:11` | 15% | {A210331_bcc_1180: 44%, ...1181: 44%, ...1182: 42%} | |
+| **DriftTimePredictorTutorialTest** | IMSFiltering s-05 | `00:01:10` | 35% | {BSA_Frag_100nM_18: 44%, Yeast_0pt1ug_BSA_1: 28%} | ✅ |
+| **DiaUmpireTutorialTest** | DIA-Umpire-TTOF s-17 | `00:00:22` | 40% | {collinsb_I180316_001: 40%, collinsb_I180316_002: 41%} | ✅ |
+| **DiaSwathTutorialTest (TTOF)** | DIA-TTOF s-13 | `00:00:22` | 15% | {collinsb_I180316_001: 41%, ...002: 41%, ...003: 41%} | ✅ |
+| **DiaSwathTutorialTest (QE)** | DIA-QE s-13 | `00:00:12` | 15% | {collinsb_X1803_171-A: 42%, ...172-B: 43%, ...173-A: 43%} | ✅ |
+| **DiaSwathTutorialTest (PASEF)** | DIA-PASEF s-14 | `00:00:11` | 15% | {A210331_bcc_1180: 44%, ...1181: 44%, ...1182: 42%} | ✅ |
 
 **Note:** DiaSwathTutorialTest uses variant-specific values via `InstrumentSpecificValues.FrozenFileProgress` dictionary.
 

@@ -1840,15 +1840,34 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Takes a screenshot of the AllChromatogramsGraph (Importing Results form),
-        /// painting over the animated progress bar with a static representation.
-        /// Call SetFrozenProgress on the form before calling this method.
+        /// Takes a screenshot of the AllChromatogramsGraph (Importing Results form) with frozen
+        /// progress display. Handles the complete freeze/wait/screenshot/release cycle.
+        /// The freeze is only performed in screenshot mode - in normal test runs the screenshot
+        /// is skipped and no freezing occurs.
+        /// Also makes the AllChromatogramsGraph form accessible to the SkylineTester Forms tab.
         /// </summary>
-        public void PauseForAllChromatogramsGraphScreenShot(string description)
+        /// <param name="description">Screenshot description for the tutorial</param>
+        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.
+        /// Use 0 for SRM data that doesn't show a progress line.</param>
+        /// <param name="elapsedTime">Elapsed time text to display (e.g., "00:00:01")</param>
+        /// <param name="totalProgress">Total progress bar percentage to display</param>
+        /// <param name="fileProgress">Optional dictionary mapping filename to progress percentage</param>
+        public void PauseForAllChromatogramsGraphScreenShot(
+            string description,
+            float graphTime,
+            string elapsedTime,
+            int totalProgress,
+            Dictionary<string, int> fileProgress = null)
         {
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            PauseForScreenShot(allChrom, description,
-                processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChrom.ProgressBarTotal));
+            if (!IsPauseForScreenShots)
+                return;
+
+            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
+            allChromGraph.SetFrozenProgress(graphTime, elapsedTime, totalProgress, fileProgress);
+            WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
+            PauseForScreenShot(allChromGraph, description,
+                processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChromGraph.ProgressBarTotal));
+            allChromGraph.ReleaseFrozenProgress();
         }
 
         protected ZedGraphControl FindZedGraph(Control graphContainer)

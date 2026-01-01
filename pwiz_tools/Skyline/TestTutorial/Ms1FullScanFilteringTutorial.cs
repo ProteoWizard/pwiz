@@ -318,19 +318,17 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFrozenProgress(26, "00:00:02", 90, new Dictionary<string, int>
-            {
-                { "100803_0001_MCF7_TiB_L", 85 },
-                { "100803_0005b_MCF7_TiTip3", 95 }
-            });
             RunUI(() =>
             {
                 allChromGraph.Left = SkylineWindow.Right + 20;
                 allChromGraph.Activate();
             });
-            WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
-            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window");
-            allChromGraph.ReleaseFrozenProgress();
+            PauseForAllChromatogramsGraphScreenShot("Importing Results form", 70f, "00:00:02", 90,
+                new Dictionary<string, int>
+                {
+                    { "100803_0001_MCF7_TiB_L", 85 },
+                    { "100803_0005b_MCF7_TiTip3", 95 }
+                });
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(documentBaseName));

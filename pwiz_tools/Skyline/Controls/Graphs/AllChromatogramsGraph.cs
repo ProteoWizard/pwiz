@@ -804,19 +804,25 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Freeze progress display for consistent screenshots.
         /// </summary>
-        /// <param name="freezeThreshold">Progress percentage threshold - freezes when any file exceeds this</param>
+        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear in the graph.
+        /// Use 0 for SRM data that doesn't show a progress line.</param>
         /// <param name="elapsedTime">Elapsed time text to display</param>
         /// <param name="totalProgress">Total progress bar percentage to display</param>
         /// <param name="fileProgress">Optional dictionary mapping filename to progress percentage.
         /// Files not in the dictionary will display 0% when frozen.</param>
-        public void SetFrozenProgress(int freezeThreshold, string elapsedTime, int totalProgress, Dictionary<string, int> fileProgress = null)
+        public void SetFrozenProgress(float graphTime, string elapsedTime, int totalProgress, Dictionary<string, int> fileProgress = null)
         {
             // Block background thread from completing document update while frozen
             ChromatogramManager?.FreezeProgressForScreenshot();
 
+            // Freeze graph animation and set progress line position (only for non-SRM data with progressive rendering)
+            if (graphTime > 0)
+                graphChromatograms.FreezeForScreenshot(graphTime);
+
             lock (_missedProgressStatusList)
             {
-                _freezeProgressPercent = freezeThreshold;
+                // Use first file's progress as freeze threshold (that's the file shown in the graph)
+                _freezeProgressPercent = fileProgress?.Values.FirstOrDefault() ?? 50;
                 _elapsedTimeAtFreeze = elapsedTime;
                 _frozenFileProgress = fileProgress;
                 _frozenTotalProgress = totalProgress;
@@ -838,6 +844,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 _frozenTotalProgress = null;
                 importFinished = Finished;
             }
+
+            // Resume graph animation
+            graphChromatograms.ThawForScreenshot();
 
             // Allow background thread to complete document update
             ChromatogramManager?.ReleaseProgressFreeze();
