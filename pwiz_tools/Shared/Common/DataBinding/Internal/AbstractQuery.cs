@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
@@ -85,7 +86,7 @@ namespace pwiz.Common.DataBinding.Internal
             return input;
         }
 
-        protected IEnumerable<RowItem> Filter(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter filter, ReportResults pivotedRows)
+        protected BigList<RowItem> Filter(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter filter, ReportResults pivotedRows)
         {
             if (filter.IsEmptyFilter)
             {
@@ -162,7 +163,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 return pivotedRows.RowItems;
             }
-            return filteredRows;
+            return filteredRows.ToBigList();
         }
 
         protected ReportResults Sort(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter rowFilter,
@@ -180,19 +181,27 @@ namespace pwiz.Common.DataBinding.Internal
             return pivotedRows.ChangeRowItems(Sort(cancellationToken, dataSchema, sortDescriptions, pivotedRows));
         }
 
-        protected IEnumerable<RowItem> Sort(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sortDescriptions, ReportResults pivotedRows)
+        protected BigList<RowItem> Sort(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sortDescriptions, ReportResults pivotedRows)
         {
             var unsortedRows = pivotedRows.RowItems;
             if (sortDescriptions == null || sortDescriptions.Count == 0)
             {
                 return unsortedRows;
             }
+
+            long rowIndex = 0;
+            var sortRows = unsortedRows.Select(row =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return new SortRow(cancellationToken, )
+            })
             var sortRows = new SortRow[unsortedRows.Count];
             for (int iRow = 0; iRow < sortRows.Length; iRow++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sortRows[iRow] = new SortRow(cancellationToken, dataSchema, sortDescriptions, unsortedRows[iRow], iRow);
             }
+
             Array.Sort(sortRows);
             return Array.AsReadOnly(sortRows.Select(sr => sr.RowItem).ToArray());
         }

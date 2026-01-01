@@ -86,6 +86,11 @@ namespace pwiz.Common.DataBinding.Internal
                 return TransformResults.PivotedRows.RowItems;
             }
         }
+
+        public BigList<RowItem> AllResultRows
+        {
+            get { return TransformResults.PivotedRows.AllRowItems; }
+        }
     }
 
     internal class QueryParameters : Immutable
