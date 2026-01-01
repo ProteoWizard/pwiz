@@ -278,11 +278,35 @@ This ensures:
 - No duplicate processing of old notifications
 - Clear signal that inbox emails are unprocessed items
 
-### Step 10: Investigate Regressions (Standard/Deep Mode)
+### Step 10: Check for Already-Fixed Failures
+
+**Important**: Nightly tests run on multiple machines that may build from different commits. A failure may be a "stale echo" - the test failed on a machine that built from an older commit, but the fix has already been merged.
+
+For each failing test:
+
+1. **Compare commit hashes**: Note the Git hash from the failing run (shown in email and MCP report)
+2. **Check current branch HEAD**:
+   ```bash
+   git log --oneline -1 master  # or the relevant branch
+   ```
+3. **If commits differ**: The run may be stale. Search for fix PRs:
+   ```bash
+   gh pr list --repo ProteoWizard/pwiz --state merged --search "TestName" --limit 5 --json number,title,mergedAt,mergeCommit
+   ```
+4. **If a fix PR was merged after the failing run's commit**:
+   - Note in report: "Already fixed by PR#XXXX, expect resolution in tomorrow's runs"
+   - Skip further investigation for this failure
+   - Check if any runs with the fix commit passed (confirms the fix works)
+
+**Example**: If TestFoo fails on COMPUTER-A (commit `abc123`) but passes on COMPUTER-B (commit `def456`), and PR#1234 merged between those commits with a fix for TestFoo, the failure is a stale echo.
+
+**Why GitHub PRs are the source of truth**: The fix information lives permanently in Git history and GitHub PRs. While TODO files may track work in progress, the merged PR is the authoritative record of what was fixed and when.
+
+### Step 11: Investigate True Regressions (Standard/Deep Mode)
 
 **Skip in Quick mode.**
 
-For NEW failures (tests failing today but not yesterday):
+For failures that are NOT stale echoes (running on current HEAD and still failing):
 
 1. **Identify the test file**: Use grep to find the test class
 2. **Find related code**: Look at files the test exercises
@@ -298,7 +322,7 @@ For **Deep mode**, also:
 - Find the exact date failures started
 - Trace back to specific commits
 
-### Step 11: Learn from Developer Emails (Deep Mode)
+### Step 12: Learn from Developer Emails (Deep Mode)
 
 **Skip in Quick/Standard mode.**
 
@@ -316,7 +340,7 @@ For each forwarded email:
 
 This creates a **feedback loop**: Developer analyses become training signal for improving the automated system.
 
-### Step 12: Self-Improvement Reflection
+### Step 13: Self-Improvement Reflection
 
 After completing the report, reflect on the reporting system itself:
 
@@ -336,7 +360,7 @@ After completing the report, reflect on the reporting system itself:
    - "New improvement idea added to TODO: [brief description]"
    - OR "No new improvement ideas (reviewed active TODO)"
 
-### Step 13: Write Execution Log
+### Step 14: Write Execution Log
 
 Write a log of what was analyzed and decided during this session:
 
@@ -445,6 +469,10 @@ Subject: Skyline Daily Summary - Month DD, YYYY
 
 ## Key Findings
 [Prioritized list of issues requiring attention]
+
+## Already Fixed (Stale Echoes)
+[Failures from old commits that have been fixed by merged PRs]
+- TestName: Fixed by PR#XXXX, merged YYYY-MM-DD. Expect resolution tomorrow.
 
 ## Details
 [Expandable sections for each category]
