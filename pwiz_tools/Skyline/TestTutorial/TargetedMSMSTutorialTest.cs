@@ -127,9 +127,9 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            LowResTest();
-            if (!IsCoverShotMode)
-                TofTest();
+            if (!LowResTest())
+                return;
+            TofTest();
         }
 
         private void LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode asSmallMoleculesTestMode, string documentFile)
@@ -333,7 +333,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(exportReportDlg);
         }
 
-        private void LowResTest()
+        private bool LowResTest()
         {
             string documentFile = GetTestPath(@"Low Res\BSA_Protea_label_free_meth3.sky");
 
@@ -471,12 +471,13 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(importPeptideSearchDlg);
             RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
 
-            PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 50f, "00:00:01", 32,
+            if (!PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 32, "00:00:01", 50f, 2.14e7f,
                 new Dictionary<string, int>
                 {
                     { "20fmol_uL_tech1", 34 },
                     { "80fmol_uL_tech1", 31 }
-                });
+                }))
+                return false;
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
 
@@ -660,7 +661,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
                 RunUI(() => selectedNode.Nodes[0].Expand());
                 TakeCoverShot();
-                return;
+                return false;
             }
 
             RunUI(() =>
@@ -718,6 +719,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             WaitForCondition(() => SkylineWindow.GraphPeakArea.IsHidden);
             RunUI(() => SkylineWindow.SaveDocument());
+
+            return true;
         }
 
         private void TofTest()

@@ -71,6 +71,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private DateTime _lastRender;
         private bool _backgroundInitialized;
         private float? _frozenGraphTime;  // For screenshot consistency - exact RT for progress line
+        private float? _frozenIntensityMax;  // For screenshot consistency - lock Y-axis maximum
 
         public AsyncChromatogramsGraph2()
             : base(@"AllChromatograms background render")
@@ -197,9 +198,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (maxY == 0.0)
                 return;
 
+            // Add 10% headroom to intensity scale
+            maxY *= 1.1f;
+
+            // If frozen with intensity max, lock the Y-axis scale
+            if (_frozenIntensityMax.HasValue)
+                maxY = _frozenIntensityMax.Value;
+
             // Start scaling animation if necessary.
             _xAxisAnimation.SetTarget(info.GraphPane.XAxis.Scale.Max, maxX, STEPS_FOR_TIME_AXIS_ANIMATION);
-            _yAxisAnimation.SetTarget(info.GraphPane.YAxis.Scale.Max, maxY * 1.1, STEPS_FOR_INTENSITY_ANIMATION);
+            _yAxisAnimation.SetTarget(info.GraphPane.YAxis.Scale.Max, maxY, STEPS_FOR_INTENSITY_ANIMATION);
 
             // Tell Zedgraph if axes are being changed.
             double nextTime = info.CurrentTime ?? 0;
@@ -311,6 +319,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool IsCanceled { get; set; }
 
+        /// <summary>
+        /// Gets the current Y-axis intensity maximum of the displayed graph.
+        /// </summary>
+        public float? CurrentIntensityMax
+        {
+            get
+            {
+                var info = GetInfo(Key);
+                return (float?)info?.GraphPane.YAxis.Scale.Max;
+            }
+        }
+
         public bool ScaleIsLocked
         {
             get { return _scaleIsLocked; }
@@ -329,13 +349,26 @@ namespace pwiz.Skyline.Controls.Graphs
         /// to an exact retention time. The timer continues running to ensure the graph renders,
         /// but with a fixed progress line position.
         /// </summary>
-        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.</param>
-        public void FreezeForScreenshot(float graphTime)
+        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.
+        /// Null for SRM data that doesn't show a progress line.</param>
+        /// <param name="intensityMax">Y-axis maximum to lock the scale. Null to leave scale unlocked.</param>
+        public void FreezeForScreenshot(float? graphTime, float? intensityMax)
         {
             // Don't stop the timer - it's needed to drive rendering
             // The frozen graph time ensures consistent progress line position
             _frozenGraphTime = graphTime;
+            _frozenIntensityMax = intensityMax;
         }
+
+        /// <summary>
+        /// Whether the graph has frozen values set for screenshot capture.
+        /// </summary>
+        public bool IsGraphFrozen => _frozenGraphTime.HasValue || _frozenIntensityMax.HasValue;
+
+        /// <summary>
+        /// Whether the graph has data loaded and ready to display.
+        /// </summary>
+        public bool HasGraphData => Key != null && GetInfo(Key) != null;
 
         /// <summary>
         /// Resume normal graph animation after screenshot capture.
@@ -343,6 +376,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void ThawForScreenshot()
         {
             _frozenGraphTime = null;
+            _frozenIntensityMax = null;
         }
 
         /// <summary>
@@ -357,8 +391,13 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 float maxX, maxY;
                 Rescale(info, out maxX, out maxY);
+                // Add 10% headroom to intensity scale
+                maxY *= 1.1f;
+                // If frozen with intensity max, lock the Y-axis scale
+                if (_frozenIntensityMax.HasValue)
+                    maxY = _frozenIntensityMax.Value;
                 info.GraphPane.XAxis.Scale.Max = maxX;
-                info.GraphPane.YAxis.Scale.Max = maxY * 1.1;
+                info.GraphPane.YAxis.Scale.Max = maxY;
                 info.GraphPane.AxisChange();
                 StartRender();
             }

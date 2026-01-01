@@ -1840,6 +1840,14 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Set this value to true to have PauseForAllChromatogramsGraphScreenShot
+        /// cancel the import after taking the screenshot, and then return false.
+        /// The calling test should return early when false is returned from
+        /// PauseForAllChromatogramsGraphScreenShot.
+        /// </summary>
+        protected bool IsTestingResultsProgressOnly => true;
+
+        /// <summary>
         /// Takes a screenshot of the AllChromatogramsGraph (Importing Results form) with frozen
         /// progress display. Handles the complete freeze/wait/screenshot/release cycle.
         /// The freeze is only performed in screenshot mode - in normal test runs the screenshot
@@ -1847,27 +1855,47 @@ namespace pwiz.SkylineTestUtil
         /// Also makes the AllChromatogramsGraph form accessible to the SkylineTester Forms tab.
         /// </summary>
         /// <param name="description">Screenshot description for the tutorial</param>
-        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.
-        /// Use 0 for SRM data that doesn't show a progress line.</param>
-        /// <param name="elapsedTime">Elapsed time text to display (e.g., "00:00:01")</param>
         /// <param name="totalProgress">Total progress bar percentage to display</param>
-        /// <param name="fileProgress">Optional dictionary mapping filename to progress percentage</param>
-        public void PauseForAllChromatogramsGraphScreenShot(
+        /// <param name="elapsedTime">Elapsed time text to display (e.g., "00:00:01")</param>
+        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.
+        /// Null for SRM data that doesn't show a progress line.</param>
+        /// <param name="graphIntensityMax">Y-axis maximum to lock the scale. Null to leave scale unlocked.</param>
+        /// <param name="fileProgress">Dictionary mapping filename to progress percentage</param>
+        /// <returns>True to continue the test, false to end early (when IsTestingResultsProgressOnly is true)</returns>
+        public bool PauseForAllChromatogramsGraphScreenShot(
             string description,
-            float graphTime,
-            string elapsedTime,
             int totalProgress,
+            string elapsedTime,
+            float? graphTime = null,
+            float? graphIntensityMax = null,
             Dictionary<string, int> fileProgress = null)
         {
             if (!IsPauseForScreenShots)
-                return;
+                return true;
 
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFrozenProgress(graphTime, elapsedTime, totalProgress, fileProgress);
-            WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
+            allChromGraph.SetFrozenProgress(totalProgress, elapsedTime, graphTime, graphIntensityMax, fileProgress);
+            WaitForConditionUI(() => allChromGraph.IsReadyForScreenshot());
+
+            // Output the current intensity max to help determine what value to use
+            if (!graphIntensityMax.HasValue)
+            {
+                var currentMax = allChromGraph.CurrentIntensityMax;
+                Console.WriteLine($@"AllChromatogramsGraph graphIntensityMax: {currentMax:0.00e0}f");
+            }
+
             PauseForScreenShot(allChromGraph, description,
                 processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChromGraph.ProgressBarTotal));
             allChromGraph.ReleaseFrozenProgress();
+
+            if (IsTestingResultsProgressOnly)
+            {
+                RunUI(() => allChromGraph.ClickCancel());
+                WaitForConditionUI(() => allChromGraph.Finished);
+                OkDialog(allChromGraph, allChromGraph.Close);
+                return false;
+            }
+            return true;
         }
 
         protected ZedGraphControl FindZedGraph(Control graphContainer)

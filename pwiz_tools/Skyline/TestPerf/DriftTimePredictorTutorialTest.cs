@@ -152,12 +152,13 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             }
 
             string yeastReplicateName = Path.GetFileNameWithoutExtension(Yeast_BSA);
-            PauseForAllChromatogramsGraphScreenShot("Importing Results form", 58f, "00:01:10", 35,
+            if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form", 35, "00:01:10", 58f, 1.2e7f,
                 new Dictionary<string, int>
                 {
                     { "BSA_Frag_100nM_18", 44 },
                     { "Yeast_0pt1ug_BSA_1", 28 }
-                });
+                }))
+                return;
             WaitForDocumentChangeLoaded(document, 1000 * 60 * 60 * 10); // 10 minutes
 
             string BSAFragName = Path.GetFileNameWithoutExtension(BSA_Frag);

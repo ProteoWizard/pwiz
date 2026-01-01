@@ -77,10 +77,16 @@ namespace TestPerf
             public string ExamplePeptide;
 
             // Frozen progress values for consistent AllChromatogramsGraph screenshots
-            public string FrozenElapsedTime;
-            public float FrozenGraphTime;
-            public int FrozenTotalProgress;
-            public Dictionary<string, int> FrozenFileProgress;
+            public ImportProgressFreezeValues FrozenImportValues;
+        }
+
+        public class ImportProgressFreezeValues
+        {
+            public int TotalProgress;
+            public string ElapsedTime;
+            public float? GraphTime;
+            public float? GraphIntensityMax;
+            public Dictionary<string, int> FileProgress;
         }
 
         public class AnalysisValues
@@ -157,14 +163,18 @@ namespace TestPerf
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
                 ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
-                FrozenElapsedTime = "00:00:22",
-                FrozenGraphTime = 39f,
-                FrozenTotalProgress = 20,
-                FrozenFileProgress = new Dictionary<string, int>
+                FrozenImportValues = new ImportProgressFreezeValues
                 {
-                    { "collinsb_I180316_001", 41 },
-                    { "collinsb_I180316_002", 41 },
-                    { "collinsb_I180316_003", 41 }
+                    TotalProgress = 20,
+                    ElapsedTime = "00:00:22",
+                    GraphTime = 39f,
+                    GraphIntensityMax = 1.00e4f,
+                    FileProgress = new Dictionary<string, int>
+                    {
+                        { "collinsb_I180316_001", 41 },
+                        { "collinsb_I180316_002", 41 },
+                        { "collinsb_I180316_003", 41 }
+                    }
                 }
             });
 
@@ -225,14 +235,18 @@ namespace TestPerf
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                 ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
-                FrozenElapsedTime = "00:00:12",
-                FrozenGraphTime = 35f,
-                FrozenTotalProgress = 21,
-                FrozenFileProgress = new Dictionary<string, int>
+                FrozenImportValues = new ImportProgressFreezeValues
                 {
-                    { "collinsb_X1803_171-A", 42 },
-                    { "collinsb_X1803_172-B", 43 },
-                    { "collinsb_X1803_173-A", 43 }
+                    TotalProgress = 21,
+                    ElapsedTime = "00:00:12",
+                    GraphTime = 35f,
+                    GraphIntensityMax = 3e7f,
+                    FileProgress = new Dictionary<string, int>
+                    {
+                        { "collinsb_X1803_171-A", 42 },
+                        { "collinsb_X1803_172-B", 43 },
+                        { "collinsb_X1803_173-A", 43 }
+                    }
                 }
             });
 
@@ -333,6 +347,22 @@ namespace TestPerf
         public void TestPasefData(bool fullSet)
         {
             ReadExpectedValues(nameof(TestPasefData), fullSet);
+
+            // Freeze values are the same for both full and small PASEF data sets
+            var frozenImportValues = new ImportProgressFreezeValues
+            {
+                TotalProgress = 20,
+                ElapsedTime = "00:00:11",
+                GraphTime = 11.5f,
+                GraphIntensityMax =1.8e5f,
+                FileProgress = new Dictionary<string, int>
+                {
+                    { "A210331_bcc_1180", 44 },
+                    { "A210331_bcc_1181", 44 },
+                    { "A210331_bcc_1182", 42 }
+                }
+            };
+
             if (fullSet)
             {
                 _analysisValues = new AnalysisValues
@@ -371,16 +401,7 @@ namespace TestPerf
                     IsolationSchemeFile = "diaPASEF_24fix.csv",
                     IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                     ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
-                    // May not be necessary
-                    FrozenElapsedTime = "00:00:11",
-                    FrozenGraphTime = 11.5f,
-                    FrozenTotalProgress = 20,
-                    FrozenFileProgress = new Dictionary<string, int>
-                    {
-                        { "A210331_bcc_1180", 44 },
-                        { "A210331_bcc_1181", 44 },
-                        { "A210331_bcc_1182", 42 }
-                    }
+                    FrozenImportValues = frozenImportValues
                 });
             }
             else
@@ -420,15 +441,7 @@ namespace TestPerf
                     IsolationSchemeFile = "diaPASEF_24fix.csv",
                     IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                     ExamplePeptide = "LPQVEGTGGDVQPSQDLVR",
-                    FrozenElapsedTime = "00:00:11",
-                    FrozenGraphTime = 11.5f,
-                    FrozenTotalProgress = 20,
-                    FrozenFileProgress = new Dictionary<string, int>
-                    {
-                        { "A210331_bcc_1180", 44 },
-                        { "A210331_bcc_1181", 44 },
-                        { "A210331_bcc_1182", 42 }
-                    }
+                    FrozenImportValues = frozenImportValues
                 });
             }
 
@@ -948,9 +961,10 @@ namespace TestPerf
 
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
-            PauseForAllChromatogramsGraphScreenShot("Importing Results form",
-                _instrumentValues.FrozenGraphTime, _instrumentValues.FrozenElapsedTime,
-                _instrumentValues.FrozenTotalProgress, _instrumentValues.FrozenFileProgress);
+            var fv = _instrumentValues.FrozenImportValues;
+            if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form",
+                fv.TotalProgress, fv.ElapsedTime, fv.GraphTime, fv.GraphIntensityMax, fv.FileProgress))
+                return;
             WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
 
             if (importPeptideSearchDlg.ImportFastaControl.AutoTrain)

@@ -390,7 +390,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             lock (_missedProgressStatusList)
             {
-                // If a freeze percent is set, freeze once any file exceeds threshold
+                // If a freeze percent is set, freeze once file at index 0 reaches threshold
                 var frozen = IsProgressFrozen(status);
                 if (frozen)
                 {
@@ -487,7 +487,8 @@ namespace pwiz.Skyline.Controls.Graphs
             graphChromatograms.ScaleIsLocked = !Settings.Default.ImportResultsAutoScaleGraph;
 
             // If a file is successfully completed, automatically select another loading file.
-            if (!_selectionIsSticky && (SelectedControl == null || SelectedControl.Progress == 100))
+            // Don't advance when frozen for screenshot - keep showing the first file.
+            if (!_selectionIsSticky && !_isProgressFrozen && (SelectedControl == null || SelectedControl.Progress == 100))
             {
                 for (int i = Selected + 1; i < flowFileStatus.Controls.Count; i++)
                 {
@@ -804,25 +805,26 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Freeze progress display for consistent screenshots.
         /// </summary>
-        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear in the graph.
-        /// Use 0 for SRM data that doesn't show a progress line.</param>
-        /// <param name="elapsedTime">Elapsed time text to display</param>
         /// <param name="totalProgress">Total progress bar percentage to display</param>
-        /// <param name="fileProgress">Optional dictionary mapping filename to progress percentage.
+        /// <param name="elapsedTime">Elapsed time text to display</param>
+        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.
+        /// Use null for SRM data that doesn't show a progress line.</param>
+        /// <param name="graphIntensityMax">Y-axis maximum to lock the scale. If null, scale is not locked.</param>
+        /// <param name="fileProgress">Dictionary mapping filename to progress percentage.
         /// Files not in the dictionary will display 0% when frozen.</param>
-        public void SetFrozenProgress(float graphTime, string elapsedTime, int totalProgress, Dictionary<string, int> fileProgress = null)
+        public void SetFrozenProgress(int totalProgress, string elapsedTime,
+            float? graphTime = null, float? graphIntensityMax = null, Dictionary<string, int> fileProgress = null)
         {
             // Block background thread from completing document update while frozen
             ChromatogramManager?.FreezeProgressForScreenshot();
 
-            // Freeze graph animation and set progress line position (only for non-SRM data with progressive rendering)
-            if (graphTime > 0)
-                graphChromatograms.FreezeForScreenshot(graphTime);
+            // Freeze graph animation and set progress line position and/or intensity scale
+            graphChromatograms.FreezeForScreenshot(graphTime, graphIntensityMax);
 
             lock (_missedProgressStatusList)
             {
-                // Use first file's progress as freeze threshold (that's the file shown in the graph)
-                _freezeProgressPercent = fileProgress?.Values.FirstOrDefault() ?? 50;
+                // Freeze when first file reaches 100% to ensure graph is fully rendered
+                _freezeProgressPercent = 100;
                 _elapsedTimeAtFreeze = elapsedTime;
                 _frozenFileProgress = fileProgress;
                 _frozenTotalProgress = totalProgress;
@@ -892,8 +894,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (fileName.Contains(kvp.Key))
                     return kvp.Value;
             }
-            return 0;
+            // File not in frozen list - return null (FileProgressControl checks IsProgressFrozen separately)
+            return null;
         }
+
+        bool FileProgressControl.IStateProvider.IsProgressFrozen => _frozenFileProgress != null;
 
         public bool IsProgressFrozen(MultiProgressStatus status = null)
         {
@@ -906,17 +911,44 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_isProgressFrozen)
                     return true;
 
-                if (status == null)
+                if (status == null || status.ProgressList.Count == 0)
                     return false; // Not yet frozen, waiting for threshold
 
-                // Check if anything goes over the limit to trigger freeze
-                if (status.ProgressList.Any(loadingStatus => loadingStatus.PercentComplete > _freezeProgressPercent))
+                // Check if file at index 0 reaches threshold (100%) to trigger freeze
+                // We use file at index 0 because that's the one shown in the graph
+                if (status.ProgressList[0].PercentComplete >= _freezeProgressPercent)
                 {
                     _isProgressFrozen = true;
                     return true;
                 }
 
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if the graph is ready for screenshot capture.
+        /// This verifies that:
+        /// 1. Progress has reached the freeze threshold (file at index 0 at 100%)
+        /// 2. The graph control is visible and has data loaded
+        /// </summary>
+        public bool IsReadyForScreenshot()
+        {
+            lock (_missedProgressStatusList)
+            {
+                // Must be frozen (first file reached 100%)
+                if (!_isProgressFrozen)
+                    return false;
+
+                // Graph control must be visible
+                if (!graphChromatograms.Visible)
+                    return false;
+
+                // Graph must have data loaded
+                if (!graphChromatograms.HasGraphData)
+                    return false;
+
+                return true;
             }
         }
 
@@ -934,6 +966,12 @@ namespace pwiz.Skyline.Controls.Graphs
         /// the animated progress bar with a static representation.
         /// </summary>
         public ProgressBar ProgressBarTotal => progressBarTotal;
+
+        /// <summary>
+        /// Gets the current Y-axis intensity maximum of the displayed graph.
+        /// Useful for determining what value to use for graphIntensityMax parameter.
+        /// </summary>
+        public float? CurrentIntensityMax => graphChromatograms.CurrentIntensityMax;
 
         // Click the button for this named file - first click is cancel, which toggles to retry
         public void FileButtonClick(string name)
