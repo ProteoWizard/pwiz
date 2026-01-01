@@ -4,7 +4,9 @@
 - **Branch**: `Skyline/work/20251231_testdetectionsplot_fix`
 - **Base**: `master`
 - **Created**: 2025-12-31
-- **Status**: In Progress
+- **Completed**: 2025-12-31
+- **Status**: Complete
+- **PR**: [#3742](https://github.com/ProteoWizard/pwiz/pull/3742)
 - **Objective**: Fix TestDetectionsPlot nightly test failure caused by missing timer-driven update
 
 ## Background
