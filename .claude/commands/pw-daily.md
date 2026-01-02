@@ -457,6 +457,19 @@ Prompt: /pw-daily deep
 
 ## Email Summary Format
 
+**IMPORTANT: Use HTML formatting, not Markdown.** Gmail does not render Markdown, so raw Markdown syntax appears as plain text. When using the Gmail MCP tools:
+
+```
+draft_email(
+    ...
+    body="Plain text fallback version",
+    htmlBody="<p>HTML formatted version with <strong>bold</strong>, <ul><li>lists</li></ul>, etc.</p>",
+    mimeType="multipart/alternative"
+)
+```
+
+Using `mimeType="multipart/alternative"` provides both plain text (for simple clients) and HTML (for Gmail and most modern clients).
+
 When sending the summary email to the configured recipient, include:
 
 ```
