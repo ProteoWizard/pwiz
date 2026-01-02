@@ -95,6 +95,56 @@ def normalize_stack_trace(raw_trace: str) -> dict:
 - Filters async noise (MoveNext, d__, AsyncMethodBuilder), framework frames
 - Collapses lambdas (<Method>b__0 → Method) and closures
 
+#### 12. ~~Test Failure Fingerprinting in Daily Reports~~ ✅ COMPLETED 2026-01-02
+**Problem**: Test failures in daily reports lack context - no stack trace info, no clickable links, no fingerprint for correlation
+
+#### 13. ~~Run Timing Comparison Tool~~ ✅ COMPLETED 2026-01-02
+**Problem**: When test counts drop significantly, no easy way to identify which tests are responsible
+**Solution**: Created `save_run_comparison(run_id_before, run_id_after, container_path)` MCP tool
+- Uses existing `compare_run_timings` query deployed on skyline.ms
+- Categorizes tests as NEW, REMOVED, SLOWDOWN (>50%), SPEEDUP (>20%)
+- Ranks by total time impact to highlight biggest contributors
+- Saves detailed report to `ai/.tmp/run-comparison-{before}-{after}.md`
+**Value**: Immediately identifies root cause of test count anomalies (e.g., TestImportHundredsOfReplicates +2524%)
+
+**Solution** (for item 12): For each failing test:
+1. Call `get_run_failures(run_id)` to fetch the stack trace
+2. Generate fingerprint using existing `stacktrace.py` normalization
+3. Extract brief exception info (type, message, location)
+4. Include clickable URL to skyline.ms failure view
+5. Store fingerprint in daily summary JSON for historical tracking
+
+**Email format enhancement**:
+```html
+<li><strong>TestPeakAreaRelativeAbundanceGraph</strong> - KAIPOT-PC1
+  <br><code>Assert.AreEqual: Expected:&lt;0&gt;. Actual:&lt;125&gt;</code>
+  <br>at PeakAreaRelativeAbundanceGraphTest.cs:472
+  <br><a href="https://skyline.ms/...">View full stack trace</a>
+</li>
+```
+
+**Enhanced JSON schema**:
+```json
+{
+  "nightly_failures": {
+    "TestName": {
+      "computers": ["COMPUTER1"],
+      "fingerprint": "a3f8b2c1...",
+      "exception_type": "AssertFailedException",
+      "exception_brief": "Assert.AreEqual: Expected:<0>. Actual:<125>",
+      "location": "File.cs:472"
+    }
+  }
+}
+```
+
+**URL pattern**: `https://skyline.ms/home/development/{folder}/testresults-showFailures.view?end={MM}%2F{DD}%2F{YYYY}&failedTest={TestName}`
+
+**Value**:
+- Immediate actionability - see exception without clicking through
+- Historical correlation - "this fingerprint has failed 5 times in 7 days"
+- Pattern detection - identify flaky tests vs new regressions by fingerprint
+
 ### Tier 2: High Value, Requires C# Code Changes
 
 #### 4. Automated Stack Trace Capture for Hangs
@@ -186,6 +236,35 @@ The following patterns from developer reports represent ideal automated investig
 | Fix verification | Expected fix committed | High - track pending fixes |
 
 ## Progress Log
+
+### 2026-01-02 (continued)
+- Implemented Test Failure Fingerprinting (Item 12): ✅ COMPLETED
+  - Goal: Include exception fingerprints, brief error info, and clickable URLs in daily report emails
+  - Data validation: `get_run_failures(run_id)` returns full stack traces with exception messages
+  - URL pattern confirmed: `testresults-showFailures.view?end={date}&failedTest={TestName}`
+  - Updated `/pw-daily` workflow:
+    - Added Step 5 (Fetch Failure Details and Fingerprints) - calls `get_run_failures()` for each failing run
+    - Added Enhanced Test Failure Format section with HTML template showing exception details and clickable URLs
+    - Updated Step 9 (Save Daily Summary) with enhanced JSON schema including fingerprint, exception_type, exception_brief, location
+  - Updated `daily-summary-20260102.json` with enhanced failure data as example:
+    - TestPeakAreaRelativeAbundanceGraph: `Assert.AreEqual failed. Expected:<0>. Actual:<125>` at line 472
+    - TestPeakPickingTutorial: `NullReferenceException: Object reference not set` at line 544
+  - Tomorrow's automated report will follow this enhanced workflow
+
+- Implemented `save_run_comparison` MCP tool (Item 13): ✅ COMPLETED
+  - Purpose: Compare test durations between two runs to identify slowdowns, new tests, removed tests
+  - Use case: When daily report shows significant test count drop, compare baseline vs changed run
+  - Query: Uses `compare_run_timings` parameterized query (already deployed on skyline.ms)
+  - Output: Saves to `ai/.tmp/run-comparison-{before}-{after}.md` with:
+    - Summary table (total time before/after, net change, counts by category)
+    - Major slowdowns section (>50% slower)
+    - New/removed tests sections
+    - Top impact analysis (which tests contributed most to time change)
+  - Example: Identified `TestImportHundredsOfReplicates` as cause of 12/15 test count drop
+    - Run 79482 (12/14): 9,507 tests, 136s avg duration
+    - Run 79497 (12/15): 8,391 tests, 3,568s avg duration (+2524%)
+    - This single test consumed ~57 extra minutes per pass, crowding out ~1,100 other tests
+  - Updated `/pw-daily` Follow-up Investigation section with usage documentation
 
 ### 2026-01-02
 - Implemented Computer Status Management (Item 7):

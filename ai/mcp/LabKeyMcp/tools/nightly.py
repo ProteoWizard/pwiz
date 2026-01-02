@@ -1071,3 +1071,259 @@ def register_tools(mcp):
         brief_lines.extend(["", f"See {output_file} for full details."])
 
         return "\n".join(brief_lines)
+
+    @mcp.tool()
+    async def save_run_comparison(
+        run_id_before: int,
+        run_id_after: int,
+        server: str = DEFAULT_SERVER,
+        container_path: str = DEFAULT_TEST_CONTAINER,
+    ) -> str:
+        """**ANALYSIS**: Compare test durations between two runs. Saves to ai/.tmp/run-comparison-{before}-{after}.md.
+
+        Identifies tests that got slower, faster, were added, or were removed.
+        Essential for diagnosing why test counts or durations changed between runs.
+
+        Use case: When daily report shows a significant drop in test count or
+        anomalous duration, compare a "good" baseline run with the "changed" run
+        to identify which tests are responsible.
+
+        Args:
+            run_id_before: Baseline run ID (the "good" state)
+            run_id_after: Comparison run ID (the "changed" state)
+            container_path: Test folder (must match where the runs are located)
+
+        Returns:
+            Summary of timing differences with detailed breakdown in saved file.
+        """
+        folder_name = container_path.split("/")[-1]
+
+        try:
+            server_context = get_server_context(server, container_path)
+
+            result = labkey.query.select_rows(
+                server_context=server_context,
+                schema_name=TESTRESULTS_SCHEMA,
+                query_name="compare_run_timings",
+                max_rows=1000,
+                parameters={
+                    "RunIdBefore": str(run_id_before),
+                    "RunIdAfter": str(run_id_after),
+                },
+            )
+
+            if not result or not result.get("rows"):
+                return f"No timing data found for runs {run_id_before} vs {run_id_after} in {folder_name}"
+
+            rows = result["rows"]
+
+            # Categorize tests
+            new_tests = []      # Only in after (before duration is None/0)
+            gone_tests = []     # Only in before (after duration is None/0)
+            slowdowns = []      # Got significantly slower (>50% or >10s delta)
+            speedups = []       # Got significantly faster
+            unchanged = []      # Minor changes
+
+            total_delta = 0
+            total_before = 0
+            total_after = 0
+
+            for row in rows:
+                testname = row.get("testname", "?")
+                passes = row.get("passes") or 0
+                duration_before = row.get("duration_before")
+                duration_after = row.get("duration_after")
+                delta_avg = row.get("delta_avg") or 0
+                delta_total = row.get("delta_total") or 0
+                delta_percent = row.get("delta_percent")
+
+                # Handle None values
+                before_val = duration_before if duration_before is not None else 0
+                after_val = duration_after if duration_after is not None else 0
+
+                total_before += before_val * passes if before_val else 0
+                total_after += after_val * passes if after_val else 0
+                total_delta += delta_total
+
+                test_data = {
+                    "testname": testname,
+                    "passes": passes,
+                    "before": before_val,
+                    "after": after_val,
+                    "delta_avg": delta_avg,
+                    "delta_total": delta_total,
+                    "delta_percent": delta_percent,
+                }
+
+                if duration_before is None or duration_before == 0:
+                    if duration_after and duration_after > 0:
+                        new_tests.append(test_data)
+                elif duration_after is None or duration_after == 0:
+                    gone_tests.append(test_data)
+                elif delta_percent is not None and delta_percent > 50 and delta_avg > 1:
+                    slowdowns.append(test_data)
+                elif delta_percent is not None and delta_percent < -20 and delta_avg < -1:
+                    speedups.append(test_data)
+                else:
+                    unchanged.append(test_data)
+
+            # Sort by delta_total (biggest impact first for slowdowns, biggest savings for speedups)
+            slowdowns.sort(key=lambda x: -x["delta_total"])
+            speedups.sort(key=lambda x: x["delta_total"])
+            new_tests.sort(key=lambda x: -x["after"] * x["passes"])
+            gone_tests.sort(key=lambda x: -x["before"] * x["passes"])
+
+            # Build the report
+            lines = [
+                f"# Run Timing Comparison: {run_id_before} vs {run_id_after}",
+                "",
+                f"**Folder**: {folder_name}",
+                f"**Baseline run**: {run_id_before}",
+                f"**Comparison run**: {run_id_after}",
+                "",
+                "## Summary",
+                "",
+                f"| Metric | Value |",
+                f"|--------|-------|",
+                f"| Total time before | {total_before:,.0f}s ({total_before/3600:.1f}h) |",
+                f"| Total time after | {total_after:,.0f}s ({total_after/3600:.1f}h) |",
+                f"| Net change | {total_delta:+,.0f}s ({total_delta/60:+,.0f}m) |",
+                f"| Tests added | {len(new_tests)} |",
+                f"| Tests removed | {len(gone_tests)} |",
+                f"| Tests slowed (>50%) | {len(slowdowns)} |",
+                f"| Tests sped up (>20%) | {len(speedups)} |",
+                "",
+            ]
+
+            # Major slowdowns section
+            if slowdowns:
+                lines.extend([
+                    "## Major Slowdowns (>50% slower)",
+                    "",
+                    "| Test | Passes | Before | After | Delta | Total Impact | % Change |",
+                    "|------|--------|--------|-------|-------|--------------|----------|",
+                ])
+                for t in slowdowns[:20]:
+                    pct = f"+{t['delta_percent']:.0f}%" if t['delta_percent'] else "N/A"
+                    lines.append(
+                        f"| {t['testname'][:45]} | {t['passes']} | {t['before']:.0f}s | {t['after']:.0f}s | "
+                        f"+{t['delta_avg']:.0f}s | +{t['delta_total']:.0f}s | {pct} |"
+                    )
+                if len(slowdowns) > 20:
+                    lines.append(f"| ... and {len(slowdowns) - 20} more | | | | | | |")
+                lines.append("")
+
+            # New tests section
+            if new_tests:
+                lines.extend([
+                    "## New Tests (not in baseline)",
+                    "",
+                    "| Test | Passes | Duration | Total Time |",
+                    "|------|--------|----------|------------|",
+                ])
+                for t in new_tests[:20]:
+                    total_time = t['after'] * t['passes']
+                    lines.append(
+                        f"| {t['testname'][:50]} | {t['passes']} | {t['after']:.0f}s | {total_time:.0f}s |"
+                    )
+                if len(new_tests) > 20:
+                    lines.append(f"| ... and {len(new_tests) - 20} more | | | |")
+                lines.append("")
+
+            # Gone tests section
+            if gone_tests:
+                lines.extend([
+                    "## Removed Tests (not in comparison)",
+                    "",
+                    "| Test | Passes | Duration | Time Saved |",
+                    "|------|--------|----------|------------|",
+                ])
+                for t in gone_tests[:20]:
+                    total_time = t['before'] * t['passes']
+                    lines.append(
+                        f"| {t['testname'][:50]} | {t['passes']} | {t['before']:.0f}s | -{total_time:.0f}s |"
+                    )
+                if len(gone_tests) > 20:
+                    lines.append(f"| ... and {len(gone_tests) - 20} more | | | |")
+                lines.append("")
+
+            # Speedups section
+            if speedups:
+                lines.extend([
+                    "## Major Speedups (>20% faster)",
+                    "",
+                    "| Test | Passes | Before | After | Delta | Total Saved | % Change |",
+                    "|------|--------|--------|-------|-------|-------------|----------|",
+                ])
+                for t in speedups[:10]:
+                    pct = f"{t['delta_percent']:.0f}%" if t['delta_percent'] else "N/A"
+                    lines.append(
+                        f"| {t['testname'][:45]} | {t['passes']} | {t['before']:.0f}s | {t['after']:.0f}s | "
+                        f"{t['delta_avg']:.0f}s | {t['delta_total']:.0f}s | {pct} |"
+                    )
+                lines.append("")
+
+            # Top impact analysis
+            lines.extend([
+                "## Top Time Impact Analysis",
+                "",
+                "The following tests contributed most to the time change:",
+                "",
+            ])
+
+            # Combine all tests and sort by absolute delta_total
+            all_changes = slowdowns + speedups + new_tests + gone_tests
+            all_changes.sort(key=lambda x: abs(x["delta_total"]), reverse=True)
+
+            for i, t in enumerate(all_changes[:5], 1):
+                if t in new_tests:
+                    impact_type = "NEW"
+                    desc = f"added {t['after']:.0f}s × {t['passes']} passes"
+                elif t in gone_tests:
+                    impact_type = "REMOVED"
+                    desc = f"saved {t['before']:.0f}s × {t['passes']} passes"
+                elif t["delta_total"] > 0:
+                    impact_type = "SLOWER"
+                    desc = f"{t['before']:.0f}s → {t['after']:.0f}s (+{t['delta_percent']:.0f}%)"
+                else:
+                    impact_type = "FASTER"
+                    desc = f"{t['before']:.0f}s → {t['after']:.0f}s ({t['delta_percent']:.0f}%)"
+
+                lines.append(f"{i}. **{t['testname']}** [{impact_type}]: {desc} = {t['delta_total']:+,.0f}s total")
+
+            lines.append("")
+
+            # Write to file
+            report_content = "\n".join(lines)
+            output_dir = get_tmp_dir()
+            output_file = output_dir / f"run-comparison-{run_id_before}-{run_id_after}.md"
+            output_file.write_text(report_content, encoding="utf-8")
+
+            # Build brief summary for return
+            brief = [
+                f"Run comparison saved to: {output_file}",
+                "",
+                f"**{folder_name}**: Run {run_id_before} vs {run_id_after}",
+                f"  Net time change: {total_delta:+,.0f}s ({total_delta/60:+,.0f} minutes)",
+                f"  Tests added: {len(new_tests)}, removed: {len(gone_tests)}",
+                f"  Slowdowns (>50%): {len(slowdowns)}, Speedups (>20%): {len(speedups)}",
+                "",
+            ]
+
+            if all_changes:
+                brief.append("Top impacts:")
+                for t in all_changes[:3]:
+                    if t in new_tests:
+                        brief.append(f"  - {t['testname']}: NEW (+{t['after'] * t['passes']:.0f}s)")
+                    elif t in gone_tests:
+                        brief.append(f"  - {t['testname']}: REMOVED (-{t['before'] * t['passes']:.0f}s)")
+                    else:
+                        brief.append(f"  - {t['testname']}: {t['delta_total']:+,.0f}s ({t['delta_percent']:+.0f}%)")
+
+            brief.extend(["", f"See {output_file} for full details."])
+
+            return "\n".join(brief)
+
+        except Exception as e:
+            logger.error(f"Error comparing run timings: {e}", exc_info=True)
+            return f"Error comparing run timings: {e}"
