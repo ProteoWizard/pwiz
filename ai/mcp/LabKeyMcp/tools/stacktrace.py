@@ -38,28 +38,46 @@ class NormalizedTrace:
 # Patterns for C# stack trace parsing
 # Example: "   at pwiz.Skyline.Model.Foo.DoSomething() in C:\proj\pwiz\File.cs:line 123"
 # Note: Windows paths have drive letters (C:) so we can't just use [^:] for file path
-#
-# Localized stack traces use different keywords:
-#   English:  at method() in file:line 123
-#   Chinese:  在 method() 位置 file:行号 123
-#   Japanese: 場所 method() 場所 file:行 123
-#   German:   bei method() in file:Zeile 123.
-#   French:   à method() dans file:ligne 123
-#   Spanish:  en method() en file:línea 123
-#   Turkish:  konum: method() file içinde: satır 123
-#   Korean:   위치: method() 파일 file:줄 123
 
-# Localized keywords
-AT_KEYWORDS = r'(?:at|在|場所|bei|à|en|konum:|위치:)'  # "at" - start of frame
-IN_KEYWORDS = r'(?:in|位置|場所|dans|en|içinde:|파일)'  # "in" - before file path
-LINE_KEYWORDS = r'(?:line|行号|行|Zeile|ligne|línea|satır|줄)'  # "line" - before line number
+# Localized stack trace keywords by language
+# Format: (language, at_keyword, in_keyword, line_keyword)
+# Note: Some languages use the same word for "at" and "in" (e.g., Japanese 場所, Russian в)
+LOCALE_KEYWORDS = [
+    # Language           "at"        "in"        "line"
+    ("English",          "at",       "in",       "line"),
+    ("Chinese-Simpl",    "在",       "位置",      "行号"),
+    ("Chinese-Trad",     "於",       "於",       "行"),
+    ("Japanese",         "場所",     "場所",      "行"),
+    ("German",           "bei",      "in",       "Zeile"),
+    ("French",           "à",        "dans",     "ligne"),
+    ("Spanish",          "en",       "en",       "línea"),
+    ("Turkish",          "konum:",   "içinde:",  "satır"),
+    ("Korean",           "위치:",    "파일",      "줄"),
+    ("Russian",          "в",        "в",        "строка"),
+    ("Czech",            "v",        "v",        "řádek"),
+    ("Italian",          "in",       "in",       "riga"),
+    ("Portuguese",       "em",       "na",       "linha"),
+    ("Polish",           "w",        "w",        "wiersz"),
+    ("Hebrew",           "ב-",       "ב-",       "שורה"),
+]
+
+# Build regex alternation patterns from the locale table
+def _build_keyword_pattern(keyword_index: int) -> str:
+    """Build regex alternation from locale keywords at given index (1=at, 2=in, 3=line)."""
+    keywords = set(locale[keyword_index] for locale in LOCALE_KEYWORDS)
+    # Sort by length descending so longer matches are tried first (e.g., "konum:" before "ko")
+    sorted_keywords = sorted(keywords, key=len, reverse=True)
+    return r'(?:' + '|'.join(re.escape(k) for k in sorted_keywords) + r')'
+
+AT_KEYWORDS = _build_keyword_pattern(1)   # "at" - start of frame
+IN_KEYWORDS = _build_keyword_pattern(2)   # "in" - before file path
+LINE_KEYWORDS = _build_keyword_pattern(3) # "line" - before line number
 
 # File/line patterns vary by locale:
-#   Standard: AT method() IN file:LINE number  (English, Chinese, Japanese, German, French, Spanish)
-#   Turkish:  AT method() file IN LINE number  (file before IN keyword, space before LINE)
-#   Korean:   AT method() FILE file:LINE number (FILE keyword before path)
+#   Standard: AT method() IN file:LINE number  (most languages)
+#   Turkish:  AT method() file IN LINE number  (file before IN keyword)
 # We handle this by matching file as "everything up to line marker", where line marker is:
-#   - :LINE (colon before line keyword) - English, etc.
+#   - :LINE (colon before line keyword) - most languages
 #   - IN LINE (IN keyword before line keyword, no colon) - Turkish
 FRAME_PATTERN = re.compile(
     r'^\s*(?:&nbsp;)?\s*'  # Optional &nbsp; HTML entity and whitespace
@@ -67,12 +85,12 @@ FRAME_PATTERN = re.compile(
     r'(?P<method>[^\(]+)'  # Method name (everything before the parenthesis)
     r'\([^)]*\)'  # Parameters in parentheses
     r'(?:'  # Start of optional file:line group
-        r'\s+(?:' + IN_KEYWORDS + r'\s+)?'  # Optional IN keyword (may come before or after file)
+        r'[^\S\n]+(?:' + IN_KEYWORDS + r'[^\S\n]+)?'  # Space (not newline), optional IN keyword
         r'(?P<file>.+?)'  # File path
-        r'(?::|(?:\s+' + IN_KEYWORDS + r'))\s*'  # Colon OR space+IN before line keyword
-        + LINE_KEYWORDS + r'\s+(?P<line>\d+)\.?'  # LINE keyword and number
+        r'(?::|(?:[^\S\n]+' + IN_KEYWORDS + r'))[^\S\n]*'  # Colon OR space+IN before line keyword
+        + LINE_KEYWORDS + r'[^\S\n]+(?P<line>\d+)\.?'  # LINE keyword and number
     r')?',  # End optional group
-    re.MULTILINE
+    re.MULTILINE | re.UNICODE
 )
 
 # Pattern to split stack trace at "Exception caught at:" boundary

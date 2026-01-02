@@ -186,6 +186,14 @@ The following patterns from developer reports represent ideal automated investig
 
 ## Progress Log
 
+### 2026-01-01
+- Fixed localized stack trace parsing - now parses 100% of exceptions (was 21% unparseable):
+  - Refactored `LOCALE_KEYWORDS` table in `stacktrace.py` for maintainability
+  - Added 15 locales: English, Chinese-Simplified, Chinese-Traditional, Japanese, German, French, Spanish, Turkish, Korean, Russian, Czech, Italian, Portuguese, Polish, Hebrew
+  - Fixed regex bug: `\s+` in optional file/line group was matching newlines, causing one frame's match to consume the next line; changed to `[^\S\n]+`
+  - Fixed LabKey QueryFilter: `isblank` filter requires empty string `""` not `None`
+  - Added unparseable RowId tracking to `backfill_exception_history` for debugging
+
 ### 2025-12-31
 - Enhanced Exception Reporting with Stack Trace Normalization and History Tracking:
   - Applied `stacktrace.py` normalization to `save_exceptions_report`
@@ -212,16 +220,6 @@ The following patterns from developer reports represent ideal automated investig
     - 👥 Multi-user history (X reports from Y users since date)
     - ✅ KNOWN - Fixed in PR# (merged date)
     - 🔴 REGRESSION? - Report from version after fix
-  - Known issue: 151 exceptions (21%) have unparseable stack traces (empty fingerprint)
-    - **Root causes identified**:
-      1. **Localized stack traces** (e.g., Chinese Windows uses `在` instead of `at`, `位置` instead of `in`, `行号` instead of `line`) - See exception #73671
-      2. **Developer-edited posts** - Original stack trace replaced with notes like "I have sent email" - See exception #73656
-    - **Fix needed**: Update `FRAME_PATTERN` in `stacktrace.py` to match localized keywords:
-      - Chinese: `在 ... 位置 ... 行号`
-      - German: `bei ... in ... Zeile`
-      - French: `à ... dans ... ligne`
-      - Spanish: `en ... en ... línea`
-    - Developer-edited posts may need separate handling (detect missing separator)
 
 ### 2025-12-30
 - Implemented Stack Trace Normalization (Item 3):

@@ -311,7 +311,7 @@ def register_tools(mcp):
             since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
             filter_array = [
                 QueryFilter("Created", since_date, "dategte"),
-                QueryFilter("Parent", None, "isblank"),
+                QueryFilter("Parent", "", "isblank"),
             ]
 
             result = labkey.query.select_rows(
@@ -430,7 +430,7 @@ def register_tools(mcp):
             filter_array = [
                 QueryFilter("Created", start_date, "dategte"),
                 QueryFilter("Created", end_date, "datelt"),
-                QueryFilter("Parent", None, "isblank"),
+                QueryFilter("Parent", "", "isblank"),
             ]
 
             result = labkey.query.select_rows(
@@ -830,7 +830,7 @@ def register_tools(mcp):
             # Filter for Parent IS NULL to get only original posts, not responses
             filter_array = [
                 QueryFilter("Created", since_date, "dategte"),
-                QueryFilter("Parent", None, "isblank"),
+                QueryFilter("Parent", "", "isblank"),
             ]
 
             result = labkey.query.select_rows(
@@ -861,6 +861,7 @@ def register_tools(mcp):
             }
 
             exceptions_db = history['exceptions']
+            unparseable_rows = []  # Track RowIds we can't parse
 
             # Process each exception
             for row in rows:
@@ -880,6 +881,12 @@ def register_tools(mcp):
                 norm = normalize_stack_trace(parsed['stack_trace'])
                 fp = norm.fingerprint
                 sig_frames = norm.signature_frames
+
+                # Track unparseable rows (empty fingerprint = no frames parsed)
+                if norm.frame_count == 0:
+                    row_id = row.get("RowId")
+                    if row_id:
+                        unparseable_rows.append(row_id)
 
                 install_id = parsed.get('installation_id')
                 version = parsed.get('version')
@@ -928,6 +935,10 @@ def register_tools(mcp):
                 if email and email not in entry.get('emails', []):
                     entry.setdefault('emails', []).append(email)
 
+            # Save unparseable RowIds in history for investigation
+            if unparseable_rows:
+                history['_unparseable_rowids'] = unparseable_rows
+
             # Save the history
             today = datetime.now().strftime("%Y-%m-%d")
             _save_exception_history(history, today)
@@ -969,6 +980,19 @@ def register_tools(mcp):
                 lines.append(f"{i}. `{fp}` - {reports} reports, {users} users")
                 lines.append(f"   {sig[:60]}{'...' if len(sig) > 60 else ''}")
                 lines.append(f"   First: {first} | Last: {last}")
+                lines.append("")
+
+            # Add unparseable RowIds section if any
+            if unparseable_rows:
+                lines.append("## Unparseable Exceptions")
+                lines.append(f"")
+                lines.append(f"{len(unparseable_rows)} rows could not be parsed. RowIds:")
+                lines.append(f"")
+                # Show up to 20, or all if fewer
+                display_rows = unparseable_rows[:20]
+                lines.append(", ".join(str(r) for r in display_rows))
+                if len(unparseable_rows) > 20:
+                    lines.append(f"... and {len(unparseable_rows) - 20} more (see _unparseable_rowids in history file)")
                 lines.append("")
 
             return "\n".join(lines)
