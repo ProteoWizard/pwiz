@@ -962,9 +962,11 @@ namespace TestPerf
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             var fv = _instrumentValues.FrozenImportValues;
-            if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form",
-                fv.TotalProgress, fv.ElapsedTime, fv.GraphTime, fv.GraphIntensityMax, fv.FileProgress))
+            if (fv != null && !PauseForAllChromatogramsGraphScreenShot("Importing Results form",
+                    fv.TotalProgress, fv.ElapsedTime, fv.GraphTime, fv.GraphIntensityMax, fv.FileProgress))
+            {
                 return;
+            }
             WaitForDocumentChangeLoaded(doc, 40 * 60 * 1000); // 40 minutes
 
             if (importPeptideSearchDlg.ImportFastaControl.AutoTrain)
