@@ -12,6 +12,7 @@ Modules:
 - attachments: Attachment handling tools
 - issues: Issue tracking tools
 - patterns: Pattern detection for daily reports
+- computers: Computer status management (deactivate/reactivate)
 
 Internal utilities (no MCP tools):
 - stacktrace: Stack trace normalization for pattern matching
@@ -25,6 +26,7 @@ from . import support
 from . import attachments
 from . import issues
 from . import patterns
+from . import computers
 from . import stacktrace  # Internal utility, no MCP tools
 
 
@@ -43,6 +45,7 @@ def register_all_tools(mcp):
     # DRILL-DOWN tools
     wiki.register_tools(mcp)
     attachments.register_tools(mcp)
+    computers.register_tools(mcp)    # deactivate_computer, reactivate_computer, etc.
 
     # Limited discovery (list_queries only - guides toward schema docs)
     common.register_tools(mcp)

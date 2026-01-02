@@ -133,10 +133,11 @@ TestFoo - INTERMITTENT REGRESSION DETECTED
 
 ### Tier 3: Medium Value
 
-#### 7. Track Recurring Missing Computers
+#### 7. ~~Track Recurring Missing Computers~~ ⚠️ PARTIAL 2026-01-02
 **Problem**: Same computers missing for multiple days with no investigation
 **Solution**: Track "days missing" and escalate after threshold (e.g., 3 days)
 **Depends on**: Historical JSON (now available)
+**Implementation**: Created `computers.py` MCP module - `list_computer_status` works, but `deactivate/reactivate` blocked by admin-only permission on `setUserActive` endpoint (requires LabKey Server testresults module change)
 
 #### 8. Date Boundary Verification
 **Problem**: Occasional mismatch between email data and MCP data due to different time windows
@@ -185,6 +186,22 @@ The following patterns from developer reports represent ideal automated investig
 | Fix verification | Expected fix committed | High - track pending fixes |
 
 ## Progress Log
+
+### 2026-01-02
+- Implemented Computer Status Management (Item 7):
+  - Created `ai/mcp/LabKeyMcp/tools/computers.py` with 4 MCP tools:
+    - `deactivate_computer(computer_name, reason, alarm_date, alarm_note)` - Flips `userdata.active=false` in LabKey
+    - `reactivate_computer(computer_name)` - Flips `userdata.active=true` in LabKey
+    - `list_computer_status(container_path)` - Shows active/inactive computers with alarm info
+    - `check_computer_alarms()` - Shows due/upcoming reactivation reminders
+  - Created `all_computers.sql` server-side query (LEFT OUTER JOIN user+userdata, includes active flag)
+  - Uses LabKey's existing `testresults-setUserActive.view` API endpoint
+  - Reuses `LabKeySession` from wiki.py for CSRF token handling
+  - Local alarm tracking in `ai/.tmp/history/computer-status.json`
+  - **BLOCKED**: `setUserActive` endpoint requires admin permission (even full editor can't call it)
+    - Requires LabKey Server testresults module modification to change permission level
+    - `list_computer_status` works (read-only), deactivate/reactivate blocked until permissions fixed
+  - Use case examples: BRENDANX-UW6 (tutorial screenshots), DSHTEYN-DEV01 (debugging)
 
 ### 2026-01-01
 - Fixed localized stack trace parsing - now parses 100% of exceptions (was 21% unparseable):
