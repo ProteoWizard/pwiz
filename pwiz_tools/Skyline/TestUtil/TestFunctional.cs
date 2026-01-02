@@ -1845,7 +1845,7 @@ namespace pwiz.SkylineTestUtil
         /// The calling test should return early when false is returned from
         /// PauseForAllChromatogramsGraphScreenShot.
         /// </summary>
-        protected bool IsTestingResultsProgressOnly => true;
+        protected bool IsTestingResultsProgressOnly => false;
 
         /// <summary>
         /// Takes a screenshot of the AllChromatogramsGraph (Importing Results form) with frozen

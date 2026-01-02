@@ -795,6 +795,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private int? _freezeProgressPercent;
         private bool _isProgressFrozen; // Once frozen, stays frozen until ReleaseFrozenProgress
+        private bool _isProgressiveMode; // True for progressive data (DIA), false for SRM
         private string _elapsedTimeAtFreeze;
         private DateTime? _timeAtFreeze;
         private Tuple<string, string> _replacementText;
@@ -828,6 +829,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 _elapsedTimeAtFreeze = elapsedTime;
                 _frozenFileProgress = fileProgress;
                 _frozenTotalProgress = totalProgress;
+                // Progressive mode (DIA) has a progress line; SRM does not
+                _isProgressiveMode = graphTime.HasValue;
             }
         }
 
@@ -841,6 +844,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _freezeProgressPercent = null;
                 _isProgressFrozen = false;
+                _isProgressiveMode = false;
                 _elapsedTimeAtFreeze = null;
                 _frozenFileProgress = null;
                 _frozenTotalProgress = null;
@@ -914,15 +918,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (status == null || status.ProgressList.Count == 0)
                     return false; // Not yet frozen, waiting for threshold
 
-                // Capture X-axis max early (when any file reaches threshold/2) to avoid
-                // non-determinism from the race to completion between parallel file imports
-                int xAxisCaptureThreshold = _freezeProgressPercent.Value / 2;
-                foreach (var progressStatus in status.ProgressList)
+                // For progressive data (DIA), capture X-axis max early (when any file reaches threshold/2)
+                // to avoid non-determinism from the race to completion between parallel file imports.
+                // SRM data doesn't have this issue since there's no progress line.
+                if (_isProgressiveMode)
                 {
-                    if (progressStatus.PercentComplete >= xAxisCaptureThreshold)
+                    int xAxisCaptureThreshold = _freezeProgressPercent.Value / 2;
+                    foreach (var progressStatus in status.ProgressList)
                     {
-                        graphChromatograms.CaptureXAxisMax();
-                        break;
+                        if (progressStatus.PercentComplete >= xAxisCaptureThreshold)
+                        {
+                            graphChromatograms.CaptureXAxisMax();
+                            break;
+                        }
                     }
                 }
 

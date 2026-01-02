@@ -4,7 +4,7 @@
 - **Branch**: `Skyline/work/20251218_screenshot_consistency`
 - **Base**: `master`
 - **Created**: 2025-12-18
-- **Status**: 🚧 In Progress
+- **Status**: ✅ Complete
 - **PR**: [#3727](https://github.com/ProteoWizard/pwiz/pull/3727)
 - **Objective**: Make tutorial screenshot captures deterministic to eliminate false-positive diffs
 
@@ -133,6 +133,11 @@ public class TestTimeProvider : AuditLogEntry.ITimeProvider
 - [x] Add ScreenshotPreviewForm Ctrl+Alt+S to save diff images
 - [x] Add focus rectangle removal before screenshots
 - [x] Block ChromatogramManager background thread while ACG is frozen
+- [x] Freeze X-axis for progressive data to avoid non-determinism from parallel file import race
+- [x] Add Y-axis (graphIntensityMax) locking for consistent intensity scales
+- [x] Add IsTestingResultsProgressOnly for faster screenshot test cycles
+
+**Deferred to future work (see ai/todos/backlog/TODO-screenshot_consistency_followup.md):**
 - [ ] Address X-axis label orientation inconsistency
 - [ ] Enhance ImageComparer with diff amplification features
 - [ ] Fix CleanupBorder algorithm for consistent 1px borders
@@ -140,6 +145,25 @@ public class TestTimeProvider : AuditLogEntry.ITimeProvider
 - [ ] Disable graph animation when ACG is frozen
 
 ## Progress Log
+
+### 2026-01-01: X-Axis Freezing for Progressive Data and SRM Fix
+
+**Problem:** DIA-QE tutorial s-13.png was showing X-axis inconsistency between runs due to non-deterministic race condition when parallel file imports complete.
+
+**Root cause:** When multiple files import in parallel, whichever file reaches 100% first can affect the X-axis scale. The slight variations in which file finishes first caused the X-axis maximum to vary.
+
+**Solution:** Added X-axis freezing mechanism for progressive (DIA) data:
+1. Added `_frozenTimeMax` field to `AsyncChromatogramsGraph2` to lock X-axis scale
+2. Added `CaptureXAxisMax()` method to capture current X-axis value
+3. For progressive data, capture X-axis when any file reaches 50% (threshold/2) - well before the race to 100%
+4. Added `_isProgressiveMode` flag to distinguish DIA (progressive) from SRM data
+5. SRM data does not capture X-axis early (was causing SRM graphs to freeze at X=0)
+
+**Bug fix:** SRM data (MethodRefine, GroupedStudies) was showing blank graphs because X-axis was being captured too early when the graph hadn't rendered yet, freezing it at 0. Fixed by only capturing X-axis for progressive mode data.
+
+**Files changed:**
+- `AsyncChromatogramsGraph2.cs` - Added `_frozenTimeMax`, `CaptureXAxisMax()`, updated `IsGraphFrozen`, `ThawForScreenshot()`, `timer_Tick()`, `Redraw()`
+- `AllChromatogramsGraph.cs` - Added `_isProgressiveMode` flag, call `CaptureXAxisMax()` only for progressive data
 
 ### 2025-12-31: ChromatogramManager Freeze and Screenshot Updates
 
