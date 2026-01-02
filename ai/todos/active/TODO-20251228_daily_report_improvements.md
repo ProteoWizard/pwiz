@@ -44,11 +44,12 @@ This TODO captures improvements to the scheduled daily analysis system (`/pw-dai
 - Track "expected fixes" and verify next day
 **Implementation**: Created `patterns.py` MCP module with `analyze_daily_patterns` and `save_daily_summary` tools
 
-#### 2. Parse Installation ID from Exceptions
+#### 2. ~~Parse Installation ID from Exceptions~~ ✅ COMPLETED 2025-12-31
 **Problem**: Cannot distinguish "1 user hit this 4 times" from "4 users hit this once each"
 **Solution**: Parse Installation ID from exception email HTML
 **Implementation**: Regex for `Installation ID: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`
 **Value**: Prioritize bugs blocking multiple users vs one-off issues
+**Completed**: Enhanced `save_exceptions_report` with full exception history tracking (see Progress Log)
 
 #### 3. ~~Stack Trace Normalization for Pattern Matching~~ ✅ COMPLETED 2025-12-30
 **Problem**: Same underlying bug produces slightly different stack traces due to:
@@ -184,6 +185,43 @@ The following patterns from developer reports represent ideal automated investig
 | Fix verification | Expected fix committed | High - track pending fixes |
 
 ## Progress Log
+
+### 2025-12-31
+- Enhanced Exception Reporting with Stack Trace Normalization and History Tracking:
+  - Applied `stacktrace.py` normalization to `save_exceptions_report`
+  - Added `Parent IS NULL` filter to exclude developer responses from exception counts
+  - Implemented persistent exception history (`ai/.tmp/history/exception-history.json`):
+    - Tracks unique bugs by fingerprint across days/weeks/months
+    - Tracks unique users (Installation ID) per fingerprint
+    - Tracks user email addresses for follow-up
+    - Tracks Skyline versions affected
+    - 9-month retention aligned to release cycle
+  - Added `backfill_exception_history` MCP tool:
+    - One-time backfill from major release (2025-05-22)
+    - Populated with 730 exceptions → 195 unique fingerprints
+    - 68 multi-user bugs, 47 bugs with contact emails
+  - Added `record_exception_fix` MCP tool:
+    - Record PR#, commit, version when fixing a bug
+    - Future reports annotate known fixes and detect regressions
+  - Added `query_exception_history` MCP tool:
+    - Query "what should I focus on?" across all tracked exceptions
+    - Priority scoring by user count, email availability, report frequency
+  - Enhanced report output with status annotations:
+    - 🆕 NEW - First seen today
+    - 📧 Has user email (contact for follow-up)
+    - 👥 Multi-user history (X reports from Y users since date)
+    - ✅ KNOWN - Fixed in PR# (merged date)
+    - 🔴 REGRESSION? - Report from version after fix
+  - Known issue: 151 exceptions (21%) have unparseable stack traces (empty fingerprint)
+    - **Root causes identified**:
+      1. **Localized stack traces** (e.g., Chinese Windows uses `在` instead of `at`, `位置` instead of `in`, `行号` instead of `line`) - See exception #73671
+      2. **Developer-edited posts** - Original stack trace replaced with notes like "I have sent email" - See exception #73656
+    - **Fix needed**: Update `FRAME_PATTERN` in `stacktrace.py` to match localized keywords:
+      - Chinese: `在 ... 位置 ... 行号`
+      - German: `bei ... in ... Zeile`
+      - French: `à ... dans ... ligne`
+      - Spanish: `en ... en ... línea`
+    - Developer-edited posts may need separate handling (detect missing separator)
 
 ### 2025-12-30
 - Implemented Stack Trace Normalization (Item 3):
