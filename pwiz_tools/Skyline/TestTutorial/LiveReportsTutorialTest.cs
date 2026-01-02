@@ -102,6 +102,7 @@ namespace pwiz.SkylineTestTutorial
             HideReportsDropdown();
             RunUI(()=>
             {
+                documentGrid.Parent.Parent.Height = 405; // Use 25.1 height which had a smaller menu
                 documentGrid.DataboundGridControl.ChooseView(
                     ViewGroup.BUILT_IN.Id.ViewName(Resources
                         .SkylineViewContext_GetDocumentGridRowSources_Proteins));
