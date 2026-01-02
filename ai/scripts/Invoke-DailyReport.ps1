@@ -46,6 +46,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Ensure UTF-8 encoding throughout the pipeline
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 # Configuration
 $WorkDir = "C:\proj\pwiz-ai"
 $LogDir = Join-Path $WorkDir "ai\.tmp\scheduled"
@@ -125,12 +129,12 @@ finally {
 Push-Location $WorkDir
 
 try {
-    # Run Claude Code
-    $Output = & claude @ClaudeArgs 2>&1
+    # Run Claude Code with real-time logging
+    "[$(Get-Date)] Starting Claude Code..." | Out-File -FilePath $LogFile -Append -Encoding UTF8
+    & claude @ClaudeArgs 2>&1 | ForEach-Object {
+        $_ | Out-File -FilePath $LogFile -Append -Encoding UTF8
+    }
     $ExitCode = $LASTEXITCODE
-
-    # Log output
-    $Output | Out-File -FilePath $LogFile -Append -Encoding UTF8
 
     # Log completion
     $EndTime = Get-Date
