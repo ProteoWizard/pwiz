@@ -30,16 +30,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_SUPPORT_CONTAINER,
     ) -> str:
-        """Query recent support board threads.
-
-        Returns thread summaries including title, creation date, and response count.
-        Use get_support_thread() to retrieve full thread with all posts.
+        """**DRILL-DOWN**: Browse recent support threads. Prefer get_support_summary for daily review.
 
         Args:
-            days: Number of days back to query (default: 30)
-            max_rows: Maximum threads to return (default: 50)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/support)
+            days: Days back to query (default: 30)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -89,18 +83,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_SUPPORT_CONTAINER,
     ) -> str:
-        """Get full support thread with all posts and save to ai/.tmp/support-thread-{id}.md.
-
-        Thread posts can be lengthy and contain code samples, data examples, etc.
-        Content is saved to a file for exploration with Grep/Read tools.
+        """**DRILL-DOWN**: Full thread with all posts. Saves to ai/.tmp/support-thread-{id}.md.
 
         Args:
-            thread_id: The RowId of the thread to retrieve
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/support)
-
-        Returns:
-            Metadata about the thread and file path. Use Read tool to view content.
+            thread_id: RowId from get_support_summary
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -198,18 +184,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_SUPPORT_CONTAINER,
     ) -> str:
-        """Generate a summary of support board activity and save to ai/.tmp/support-report-YYYYMMDD.md.
-
-        Similar to get_daily_test_summary, this provides an overview of support board
-        activity for a given time period. Useful for daily or weekly review.
+        """**PRIMARY**: Support board activity summary. Saves to ai/.tmp/support-report-YYYYMMDD.md.
 
         Args:
-            days: Number of days back to query (default: 1)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/support)
-
-        Returns:
-            Brief summary with file path. Full details are in the saved file.
+            days: Days back to query (default: 1)
         """
         try:
             server_context = get_server_context(server, container_path)

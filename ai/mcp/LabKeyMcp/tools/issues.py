@@ -32,19 +32,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_ISSUES_CONTAINER,
     ) -> str:
-        """Query issues from the Skyline issue tracker.
-
-        Returns issue summaries without comments (use get_issue_details for full content).
+        """**DRILL-DOWN**: Browse issues. Prefer save_issues_report for overview.
 
         Args:
-            status: Filter by status ('open' or 'closed'). If None, returns all.
-            issue_type: Filter by type ('Defect' or 'Todo'). If None, returns all.
-            max_rows: Maximum issues to return (default: 50)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/issues)
-
-        Returns:
-            Table of issues with metadata. Use get_issue_details(issue_id) for full content.
+            status: 'open' or 'closed' (default: all)
+            issue_type: 'Defect' or 'Todo' (default: all)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -136,18 +128,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_ISSUES_CONTAINER,
     ) -> str:
-        """Get full issue details with all comments and save to ai/.tmp/issue-{id}.md.
-
-        Issue comments can be large. Content is saved to a file for exploration
-        with Grep/Read tools.
+        """**DRILL-DOWN**: Full issue with comments. Saves to ai/.tmp/issue-{id}.md.
 
         Args:
-            issue_id: The IssueId to retrieve
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/issues)
-
-        Returns:
-            Metadata about the issue and file path. Use Read tool to view content.
+            issue_id: IssueId from query_issues
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -298,17 +282,10 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_ISSUES_CONTAINER,
     ) -> str:
-        """Generate an issues summary report and save to ai/.tmp/issues-report-{status}-YYYYMMDD.md.
-
-        Creates a comprehensive report of issues, useful for review and planning.
+        """**PRIMARY**: Issue tracker summary. Saves to ai/.tmp/issues-report-{status}-YYYYMMDD.md.
 
         Args:
-            status: Issue status to report on ('open' or 'closed', default: 'open')
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/issues)
-
-        Returns:
-            Brief summary with file path. Full details are in the saved file.
+            status: 'open' or 'closed' (default: 'open')
         """
         try:
             server_context = get_server_context(server, container_path)

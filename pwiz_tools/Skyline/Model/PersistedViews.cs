@@ -521,12 +521,14 @@ namespace pwiz.Skyline.Model
     <column name='Protein.Name' />
     <column name='Protein.Description' />
     <column name='Protein.Accession' />
+    <column name='Results!*.Value.ResultFile.Replicate' />
     <column name='Results!*.Value.Quantification.NormalizedArea' />
   </view>
   <view name='Protein Abundances' rowsource='pwiz.Skyline.Model.Databinding.Entities.Protein' sublist='' uimode='proteomic'>
     <column name='' />
     <column name='Description' />
     <column name='Gene' />
+    <column name='Results!*.Value.Replicate' />
     <column name='Results!*.Value.Abundance' />
   </view>
 </views>";

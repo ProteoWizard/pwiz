@@ -12,6 +12,57 @@ Skyline runs nightly automated tests across the codebase. Results are stored on 
 
 Claude Code can query this data via MCP tools to assist with test failure analysis and leak investigations.
 
+## Data Sources
+
+There are **two complementary data sources** for nightly test information:
+
+### 1. Email Summary (8:00 AM Daily)
+
+A summary email is sent at 8:00 AM to the skyline-dev list (also routed to claude.c.skyline@gmail.com):
+
+**Subject format:**
+```
+TestResults MM/DD - MM/DD (8AM - 8AM) | Err: N Warn: N Pass: N Missing: N | N tests run
+```
+
+**Email content includes:**
+- Per-computer results table with color-coded status
+- Failure/Leak/Hang matrix showing which tests had issues on which computers
+- Missing computers list
+- Results for multiple folders: Nightly x64, Release Branch, Performance Tests
+
+**Color coding in email (important for interpretation):**
+
+| Color | Context | Meaning |
+|-------|---------|---------|
+| Green (#caff95) | Computer row | All metrics normal, no failures/leaks |
+| Yellow (#ffffca) | Passes column | 3-4 SDs below trained mean |
+| Yellow (#ffffca) | Memory column | 3-4 SDs above trained mean |
+| Red (#ffcaca) | Computer row | Has failures, leaks, or hangs |
+| Red (#ffcaca) | Passes column | >4 SDs below trained mean |
+| Red (#ffcaca) | Memory column | >4 SDs above trained mean |
+| Red (#ffcaca) | Duration column | Shorter than expected (540 normal, 720 perf) |
+| Red (#ffcaca) | Missing row | Expected computer did not report (activated, has training data) |
+| Gray (#cccccc) | Computer row | Unexpected computer reported (not activated, may lack training data) |
+
+**Failure matrix notation:**
+- Red X = Test failure
+- Orange X = Leak (tooltip shows "Handle leak" or "Memory and handle leak")
+- Navy X = Hang
+
+**Duration notation:** "(hang)" appended to duration value indicates the run was terminated due to a hung test.
+
+### 2. LabKey MCP Server (Detailed Data)
+
+The MCP server provides detailed programmatic access for drill-down:
+- Per-run details with statistical anomaly detection
+- Full stack traces for failures
+- Memory and handle leak measurements per test pass
+- Historical data for trend analysis
+
+**Use email for:** Quick triage, subject line summary, pass/warn/err counts
+**Use MCP for:** Detailed investigation, stack traces, historical analysis
+
 ## Architecture
 
 ```
@@ -246,6 +297,7 @@ query_table(
 | `query_test_runs(days, max_rows)` | Query recent test runs with summaries |
 | `get_run_failures(run_id)` | Get failed tests and stack traces for a run |
 | `get_run_leaks(run_id)` | Get memory and handle leaks for a run |
+| `fetch_labkey_page(view_name, container_path, params)` | Fetch any LabKey page (HTML), save to ai/.tmp/ |
 
 ### Daily Test Summary
 
@@ -261,6 +313,43 @@ Returns a brief summary and saves a full markdown report to `ai/.tmp/nightly-rep
 - Missing computers that didn't report
 - **Failures by Test** - which tests failed on which computers
 - **Leaks by Test** - which tests leaked on which computers
+
+### Web Page Fetching (Developer View)
+
+The `fetch_labkey_page` tool fetches authenticated LabKey pages - the same HTML that developers see in browsers. This provides richer context than API queries alone.
+
+```
+fetch_labkey_page(
+    view_name="project-begin.view",
+    container_path="/home/development/Nightly x64"
+)
+```
+
+**Saves to:** `ai/.tmp/page-project_begin-Nightly_x64-YYYYMMDD.html`
+
+**Available pages for nightly test analysis:**
+
+| Page | Description | Useful For |
+|------|-------------|------------|
+| `project-begin.view` | Main dashboard with today's results | Current status, missing computers, top failures |
+| `testresults-showRun.view?runId=N` | Single run details | Deep dive into specific run |
+| `testresults-showFailures.view?failedTest=X` | Failure history for test | Pattern detection, regression timing |
+| `testresults-longTerm.view` | Long-term trends | Historical patterns |
+| `testresults-showUser.view?userId=N` | Results by computer | Machine-specific issues |
+
+**What the HTML contains:**
+- Color-coded status (same as email: green/yellow/red/gray)
+- Training thresholds per computer (Good/Warn/Error boundaries)
+- Top failures with language breakdown pie charts
+- Missing computer list with deactivation links
+- Links to drill-down pages
+
+**Example workflow:**
+1. Fetch today's dashboard: `fetch_labkey_page("project-begin.view", "/home/development/Nightly x64")`
+2. Read the saved HTML to find specific run IDs or failure patterns
+3. Drill down with: `fetch_labkey_page("testresults-showRun.view", params={"runId": 79713})`
+
+This is equivalent to what developers do manually when triaging test results.
 
 ### Stack Trace Pattern Analysis
 
@@ -338,6 +427,7 @@ To add new custom queries (like `handleleaks_by_computer`), see [MCP Development
 - `failures_by_date` / `leaks_by_date` queries - Test names for date ranges ✓
 - `expected_computers` query - Stddev-based anomaly detection ✓
 - "Failures by Test" / "Leaks by Test" sections in daily report ✓
+- `fetch_labkey_page` - Fetch authenticated LabKey pages (HTML) for developer-level views ✓
 
 ## Related Documentation
 

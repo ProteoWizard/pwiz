@@ -341,6 +341,54 @@ git merge master
 git push origin ai-context
 ```
 
+## Critical: Complete the Sync Loop After PR Merge
+
+### The Problem
+
+When you sync ai-context → master via a PR, a merge commit is created on master. But ai-context doesn't know about this merge commit. If you continue working on ai-context without syncing back, you'll get **add/add conflicts** on your next FromMaster sync—even though the conflicting files are your own changes!
+
+```
+ai-context:  A--B--C--D--E  (continued development, doesn't know about M)
+                  ↓
+master:          M  (merge commit from your PR)
+
+Next FromMaster sync: CONFLICT! Git sees both branches adding the same files.
+```
+
+### The Solution
+
+**Immediately after your ai-context → master PR merges on GitHub, run:**
+
+```powershell
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
+```
+
+This "closes the loop" by merging M back into ai-context:
+
+```
+ai-context:  A--B--C--D--E--F  (F = merge of M, loop closed)
+                  ↓       ↗
+master:          M-------
+
+Future FromMaster syncs: Clean! Git knows ai-context has seen M.
+```
+
+### Why This Happens
+
+Git tracks merge relationships, not file content. When both branches have files that were introduced via different commit paths, Git sees them as independent additions—even if the content is identical or one is a superset of the other.
+
+### The Rule
+
+> **After any ai-context → master PR merges, immediately sync back before making new commits on ai-context.**
+
+This is the most important workflow rule for avoiding painful conflict resolution.
+
+### Lesson Learned (December 2025)
+
+This was discovered the hard way when a weekly sync PR (#3737) merged to master, but the FromMaster sync wasn't run afterward. Subsequent ai-context development added improvements to the same files. The next FromMaster sync showed 12 add/add conflicts for files that were logically the same—master had the older synced versions, ai-context had improved versions. Resolution required manually choosing ai-context versions for all conflicts.
+
+The fix was simple in hindsight: run `/pw-aicontextupdate` right after the PR merged.
+
 ## Troubleshooting
 
 ### "Working tree is not clean"

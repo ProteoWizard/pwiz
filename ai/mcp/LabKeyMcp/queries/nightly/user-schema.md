@@ -44,3 +44,26 @@ Per-computer baseline statistics for anomaly detection. This is the underlying t
 - One row per computer per test folder
 - Used for anomaly detection in `get_daily_test_summary()`
 - The `expected_computers` query joins this with `user` to get computer names
+- When `active=false`, the computer won't appear as "missing" in daily reports
+
+## API Endpoints
+
+**Deactivate a computer:**
+```
+POST testresults-setUserActive.view?active=false&userId={user.id}
+```
+
+**Reactivate a computer:**
+```
+POST testresults-setUserActive.view?active=true&userId={user.id}
+```
+
+Parameters:
+- `userId`: The `user.id` value (not the computer name)
+- `active`: `true` or `false`
+- Requires CSRF token in POST body
+
+To find userId for a computer name, query `user` table:
+```sql
+SELECT id FROM testresults.user WHERE username = 'BRENDANX-UW6'
+```

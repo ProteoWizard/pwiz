@@ -34,6 +34,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             DateTime Time { get; }
             string PrepareErrorText(string errorText);
+            int? GetFrozenProgress(MsDataFileUri filePath);
+            bool IsProgressFrozen { get; }
         }
 
         private readonly IStateProvider _stateProvider;
@@ -174,20 +176,41 @@ namespace pwiz.Skyline.Controls.Graphs
                         btnRetry.Visible = true;
                         _backColor = _cancelColor;
                     }
-                    else if (status.IsComplete)
+                    else
                     {
-                        Finish();
-                    }
-                    else if (status.PercentComplete > 0)
-                    {
-                        progressBar.Visible = true;
-                        labelPercent.Visible = true;
-                        progressBar.Value = status.PercentComplete;
-                        labelPercent.Text = (status.PercentComplete / 100.0).ToString(@"P0");
-                        labelStatus.Visible = false;
-                        btnRetry.Text = GraphsResources.FileProgressControl_SetStatus_Cancel;
-                        btnRetry.Visible = true;
-                        _backColor = _okColor;
+                        // Check for frozen progress first - if frozen, show the frozen value
+                        // even if the file has completed (to prevent "imported" from showing)
+                        var frozenProgress = _stateProvider.GetFrozenProgress(_filePath);
+                        if (frozenProgress.HasValue)
+                        {
+                            progressBar.Visible = true;
+                            labelPercent.Visible = true;
+                            progressBar.Value = frozenProgress.Value;
+                            labelPercent.Text = (frozenProgress.Value / 100.0).ToString(@"P0");
+                            labelStatus.Visible = false;
+                            btnRetry.Text = GraphsResources.FileProgressControl_SetStatus_Cancel;
+                            btnRetry.Visible = true;
+                            _backColor = _okColor;
+                        }
+                        else if (_stateProvider.IsProgressFrozen)
+                        {
+                            // Frozen but this file is not in the frozen list - stay gray/no progress
+                        }
+                        else if (status.IsComplete)
+                        {
+                            Finish();
+                        }
+                        else if (status.PercentComplete > 0)
+                        {
+                            progressBar.Visible = true;
+                            labelPercent.Visible = true;
+                            progressBar.Value = status.PercentComplete;
+                            labelPercent.Text = (status.PercentComplete / 100.0).ToString(@"P0");
+                            labelStatus.Visible = false;
+                            btnRetry.Text = GraphsResources.FileProgressControl_SetStatus_Cancel;
+                            btnRetry.Visible = true;
+                            _backColor = _okColor;
+                        }
                     }
                 }
                 Invalidate();

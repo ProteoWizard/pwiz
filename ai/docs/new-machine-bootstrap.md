@@ -14,7 +14,13 @@ Press <kbd>Win</kbd> + <kbd>X</kbd>, then click **Windows PowerShell** (or **Ter
 
 ## Step 2: Install Claude Code
 
-Copy and paste this command into PowerShell:
+**Option A: npm (recommended if you have Node.js installed)**
+
+```powershell
+npm install -g @anthropic-ai/claude-code
+```
+
+**Option B: Standalone installer**
 
 ```powershell
 irm https://claude.ai/install.ps1 | iex
@@ -22,7 +28,7 @@ irm https://claude.ai/install.ps1 | iex
 
 Wait for the installation to complete.
 
-## Step 3: Fix PATH (if needed)
+## Step 3: Verify Installation
 
 Try running:
 
@@ -30,15 +36,9 @@ Try running:
 claude --version
 ```
 
-If you see "claude is not recognized", run these commands to fix your PATH:
+If you see "claude is not recognized", see Troubleshooting below.
 
-```powershell
-$claudePath = "$env:USERPROFILE\.local\bin"
-[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$claudePath", "User")
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-```
-
-Then verify: `claude --version`
+If successful, skip to Step 4.
 
 ## Step 4: Start Claude Code
 
@@ -111,10 +111,43 @@ This adds: PowerShell 7 (UTF-8 support), ReSharper CLI, GitHub CLI, LabKey MCP s
 | Problem | Solution |
 |---------|----------|
 | `irm` not recognized | You're in Command Prompt, not PowerShell. Close and open PowerShell. |
-| `claude` not recognized after install | See Step 3 above to fix PATH |
+| `npm` not recognized | Install Node.js first: `winget install OpenJS.NodeJS.LTS` then restart PowerShell |
+| `claude` not recognized after install | See detailed steps below |
 | Authentication fails | Ensure you have a Claude Pro/Max/Team subscription or valid API key |
 | Claude Code can't fetch the setup page | Check your internet connection. The AI will still help with general guidance. |
 
+### `claude` not recognized - Detailed Fix
+
+First, check if Claude Code was actually installed:
+
+```powershell
+# Check both possible locations
+Test-Path "$env:APPDATA\npm\claude.cmd"            # npm install location
+Test-Path "$env:USERPROFILE\.local\bin\claude.exe" # standalone installer location
+```
+
+**If neither file exists:** The installer failed silently. Try the npm method instead:
+```powershell
+npm install -g @anthropic-ai/claude-code
+```
+
+**If a file exists but `claude` isn't recognized:** Add the path to your environment:
+```powershell
+# For npm installation:
+$claudePath = "$env:APPDATA\npm"
+
+# For standalone installer:
+# $claudePath = "$env:USERPROFILE\.local\bin"
+
+# Add to PATH permanently
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$claudePath", "User")
+
+# Refresh current session
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+```
+
+Then verify: `claude --version`
+
 ---
 
-*Last updated:* 2025-12-23
+*Last updated:* 2025-12-31

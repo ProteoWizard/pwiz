@@ -150,11 +150,15 @@ namespace pwiz.SkylineTestTutorial
                     new[] {new KeyValuePair<string, MsDataFileUri[]>(replicateName, namedPathSets[0].Value.Take(15).ToArray())};
                 importResultsDlg.OkDialog();
             });
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();   // To make the AllChromatogramsGraph form accessible to the SkylineTester forms tab
-            allChrom.SetFreezeProgressPercent(98, @"00:00:01");
-            WaitForConditionUI(() => allChrom.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms: Take screenshot at about 25% loaded...");
-            allChrom.SetFreezeProgressPercent(null, null);
+            // SRM data - no progress line shown
+            if (!PauseForAllChromatogramsGraphScreenShot("Loading Chromatograms form",
+                19, @"00:00:01", null, 2.19e7f, new Dictionary<string, int>
+                {
+                    { "worm_0001", 96 },
+                    { "worm_0002", 98 },
+                    { "worm_0003", 98 }
+                }))
+                return;
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 15 minutes
 
             Assert.IsTrue(SkylineWindow.Document.Settings.HasResults);

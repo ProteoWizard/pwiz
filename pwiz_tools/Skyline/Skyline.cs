@@ -4252,7 +4252,6 @@ namespace pwiz.Skyline
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
                     if (!ImportingResultsWindow.HasErrors &&
-                        !ImportingResultsWindow.IsProgressFrozen() &&
                         Settings.Default.ImportResultsAutoCloseWindow)
                     {
                         DestroyAllChromatogramsGraph();
