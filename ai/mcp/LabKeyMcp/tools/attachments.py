@@ -31,18 +31,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_SUPPORT_CONTAINER,
     ) -> str:
-        """List attachments for a support post or wiki page.
-
-        Queries the corex.documents table to find attachments linked to a parent entity.
-        Does NOT retrieve file contents - use get_attachment() for that.
+        """**DRILL-DOWN**: List attachments for a support post or wiki page.
 
         Args:
-            parent_entity_id: The EntityId of the parent object (announcement post or wiki page)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/support)
-
-        Returns:
-            List of attachments with filename, size, and type.
+            parent_entity_id: EntityId from thread/wiki page
+            container_path: Container (default: /home/support)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -101,19 +94,12 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_SUPPORT_CONTAINER,
     ) -> str:
-        """Download an attachment from a support post or wiki page.
-
-        For text files (.bat, .py, .txt, .csv, .xml, .json, .md, .log), returns content directly.
-        For binary files (.png, .jpg, .sky, .skyd, .pdf), saves to ai/.tmp/ and returns path.
+        """**DRILL-DOWN**: Download attachment. Text returns content; binary saves to ai/.tmp/.
 
         Args:
-            parent_entity_id: The EntityId of the parent object
-            filename: The attachment filename to download
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/support)
-
-        Returns:
-            File content (for text files) or file path (for binary files).
+            parent_entity_id: EntityId from list_attachments
+            filename: Attachment filename
+            container_path: Container (default: /home/support)
         """
         import base64
 

@@ -23,6 +23,7 @@ from .common import (
     DEFAULT_TEST_CONTAINER,
     TESTRESULTS_SCHEMA,
 )
+from .stacktrace import normalize_stack_trace, group_by_fingerprint
 
 logger = logging.getLogger("labkey_mcp")
 
@@ -37,19 +38,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Query recent test runs from Skyline nightly testing.
-
-        Returns test run summaries including:
-        - Run date and duration
-        - Passed/failed/leaked test counts
-        - Average memory usage
-        - Git revision
+        """**DRILL-DOWN**: Browse test runs in a folder. Prefer get_daily_test_summary for daily review.
 
         Args:
-            days: Number of days back to query (default: 7)
-            max_rows: Maximum rows to return (default: 20)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            days: Days back to query (default: 7)
+            container_path: Test folder (default: Nightly x64)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -104,17 +97,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Get failed tests for a specific test run.
-
-        Returns details about each failed test including:
-        - Test name
-        - Stack trace
-        - Pass number (which attempt failed)
+        """**DRILL-DOWN**: Get stack traces for failed tests in a specific run.
 
         Args:
-            run_id: The test run ID to look up
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            run_id: Test run ID from get_daily_test_summary
+            container_path: Test folder (must match the run's folder)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -156,21 +143,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Fetch test run log and save to ai/.tmp/testrun-log-{run_id}.txt for grep/search.
-
-        The log contains the full 9-12 hour test run output including git checkout,
-        build output, and all test execution output. This is useful for deep investigation
-        when stack traces from testfails aren't sufficient.
-
-        Returns metadata only (not the log content) to avoid context bloat:
-        - file_path: where the log was saved
-        - size_bytes: file size
-        - line_count: number of lines
+        """**DRILL-DOWN**: Full test run log (9-12 hours output). Saves to ai/.tmp/testrun-log-{run_id}.txt.
 
         Args:
-            run_id: The test run ID to fetch the log for
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            run_id: Test run ID
+            container_path: Test folder (must match the run's folder)
         """
         try:
             # URL-encode the container path for the URL
@@ -217,21 +194,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Fetch test run XML and save to ai/.tmp/testrun-xml-{run_id}.xml for analysis.
-
-        The XML contains structured test results including all test passes, failures,
-        and timing data. This is an alternative to querying the testpasses table directly,
-        which has 700M+ rows and requires careful filtering.
-
-        Returns metadata only (not the XML content) to avoid context bloat:
-        - file_path: where the XML was saved
-        - size_bytes: file size
-        - line_count: number of lines
+        """**DRILL-DOWN**: Structured test results XML. Saves to ai/.tmp/testrun-xml-{run_id}.xml.
 
         Args:
-            run_id: The test run ID to fetch the XML for
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            run_id: Test run ID
+            container_path: Test folder (must match the run's folder)
         """
         try:
             # URL-encode the container path for the URL
@@ -278,17 +245,11 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Get memory and handle leaks for a specific test run.
-
-        Returns details about each leaked test including:
-        - Test name
-        - Bytes leaked (for memory leaks)
-        - Leak type
+        """**DRILL-DOWN**: Get memory/handle leaks for a specific run.
 
         Args:
-            run_id: The test run ID to look up
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
+            run_id: Test run ID from get_daily_test_summary
+            container_path: Test folder (must match the run's folder)
         """
         try:
             server_context = get_server_context(server, container_path)
@@ -346,20 +307,10 @@ def register_tools(mcp):
         report_date: str,
         server: str = DEFAULT_SERVER,
     ) -> str:
-        """Query all 6 nightly test folders and save a consolidated report for one day.
-
-        This is the primary tool for daily test review. It queries all folders
-        in one call and saves a full report to ai/.tmp/nightly-report-YYYYMMDD.md.
-
-        The nightly test "day" runs from 8:01 AM to 8:00 AM the next day.
-        So report_date="2025-12-17" queries runs from Dec 16 8:01 AM to Dec 17 8:00 AM.
+        """**PRIMARY**: Daily nightly test report. Queries all 6 folders. Saves to ai/.tmp/nightly-report-YYYYMMDD.md.
 
         Args:
-            report_date: Date in YYYY-MM-DD format - the END of the nightly window
-            server: LabKey server hostname (default: skyline.ms)
-
-        Returns:
-            Brief summary with file path. Full details are in the saved file.
+            report_date: Date YYYY-MM-DD (end of 8AM-8AM nightly window)
         """
         # Parse report_date as the END of the nightly window
         # Nightly "day" runs from 8:01 AM day before to 8:00 AM report_date
@@ -775,24 +726,13 @@ def register_tools(mcp):
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """Save failure history for a specific test to a file for analysis.
-
-        Collects stack traces and saves to ai/.tmp/test-failures-{testname}.md.
-
-        This enables:
-        - Comparing stack traces across multiple failures
-        - Pattern recognition to determine if failures share the same root cause
-        - Historical analysis to see when a failure started
+        """**DRILL-DOWN**: Compare stack traces for recurring failures. Saves to ai/.tmp/test-failures-{testname}.md.
 
         Args:
-            test_name: The test name to search for (e.g., "TestPanoramaDownloadFile")
-            start_date: Start date in YYYY-MM-DD format
-            end_date: End date in YYYY-MM-DD format (default: same as start_date)
-            server: LabKey server hostname (default: skyline.ms)
-            container_path: Container path (default: /home/development/Nightly x64)
-
-        Returns:
-            Summary with file path. Full stack traces are in the saved file.
+            test_name: Test name (e.g., "TestPanoramaDownloadFile")
+            start_date: Start date YYYY-MM-DD
+            end_date: End date YYYY-MM-DD (default: same as start_date)
+            container_path: Test folder to search
         """
         # Use same date for start and end if not specified (single day query)
         if not end_date:
@@ -939,3 +879,451 @@ def register_tools(mcp):
             f"\n"
             f"See {output_file} for full stack traces."
         )
+
+    @mcp.tool()
+    async def save_daily_failures(
+        report_date: str,
+        server: str = DEFAULT_SERVER,
+    ) -> str:
+        """**PRIMARY**: All test failures with stack traces for a date. Saves to ai/.tmp/failures-YYYYMMDD.md.
+
+        Queries all 6 test folders, normalizes stack traces, and groups by fingerprint
+        to identify unique bugs vs duplicate reports.
+
+        Args:
+            report_date: Date YYYY-MM-DD (end of 8AM-8AM nightly window)
+
+        Returns:
+            Summary with fingerprint groupings. Full details in saved file.
+        """
+        # Parse report_date as the END of the nightly window
+        # Nightly "day" runs from 8:01 AM day before to 8:00 AM report_date
+        end_dt = datetime.strptime(report_date, "%Y-%m-%d")
+        start_dt = end_dt - timedelta(days=1)
+
+        # Define the 8AM boundaries
+        window_start = start_dt.replace(hour=8, minute=1, second=0)
+        window_end = end_dt.replace(hour=8, minute=0, second=0)
+
+        # Format for LabKey TIMESTAMP parameters
+        window_start_str = window_start.strftime("%Y-%m-%d %H:%M:%S")
+        window_end_str = window_end.strftime("%Y-%m-%d %H:%M:%S")
+
+        # All 6 test folders
+        folders = [
+            "/home/development/Nightly x64",
+            "/home/development/Release Branch",
+            "/home/development/Performance Tests",
+            "/home/development/Release Branch Performance Tests",
+            "/home/development/Integration",
+            "/home/development/Integration with Perf Tests",
+        ]
+
+        all_failures = []
+
+        for container_path in folders:
+            folder_name = container_path.split("/")[-1]
+            try:
+                server_context = get_server_context(server, container_path)
+
+                result = labkey.query.select_rows(
+                    server_context=server_context,
+                    schema_name=TESTRESULTS_SCHEMA,
+                    query_name="failures_with_traces_by_date",
+                    max_rows=500,
+                    parameters={
+                        "WindowStart": window_start_str,
+                        "WindowEnd": window_end_str,
+                    },
+                )
+
+                if result and result.get("rows"):
+                    for row in result["rows"]:
+                        all_failures.append({
+                            "testname": row.get("testname", "?"),
+                            "computer": row.get("computer", "?"),
+                            "folder": folder_name,
+                            "posttime": str(row.get("posttime", "?"))[:16],
+                            "passnum": row.get("passnum", "?"),
+                            "stacktrace": row.get("stacktrace", ""),
+                        })
+
+            except Exception as e:
+                logger.error(f"Error querying {folder_name}: {e}")
+
+        if not all_failures:
+            return f"No failures found for {report_date} (window: {window_start_str} to {window_end_str})"
+
+        # Normalize stack traces and group by fingerprint
+        traces = [f["stacktrace"] for f in all_failures]
+        fingerprint_groups = group_by_fingerprint(traces)
+
+        # Build fingerprint -> failures mapping
+        fingerprint_data = {}
+        for fingerprint, indices in fingerprint_groups.items():
+            failures_in_group = [all_failures[i] for i in indices]
+            # Get normalized info from first trace
+            norm = normalize_stack_trace(failures_in_group[0]["stacktrace"])
+            fingerprint_data[fingerprint] = {
+                "failures": failures_in_group,
+                "signature": norm.signature_frames,
+                "normalized": norm.normalized,
+                "count": len(failures_in_group),
+            }
+
+        # Sort by count (most common first)
+        sorted_fingerprints = sorted(
+            fingerprint_data.items(),
+            key=lambda x: -x[1]["count"]
+        )
+
+        # Build the report
+        lines = [
+            f"# Daily Failures Report: {report_date}",
+            "",
+            f"**Window**: {window_start_str} to {window_end_str}",
+            f"**Total failures**: {len(all_failures)}",
+            f"**Unique bugs (by fingerprint)**: {len(fingerprint_groups)}",
+            "",
+            "## Summary by Fingerprint",
+            "",
+            "| Fingerprint | Count | Tests | Computers | Signature |",
+            "|-------------|-------|-------|-----------|-----------|",
+        ]
+
+        for fingerprint, data in sorted_fingerprints:
+            tests = sorted(set(f["testname"] for f in data["failures"]))
+            computers = sorted(set(f["computer"] for f in data["failures"]))
+            sig = " → ".join(data["signature"][:3]) if data["signature"] else "(no signature)"
+            lines.append(
+                f"| {fingerprint} | {data['count']} | {', '.join(tests[:2])}{'...' if len(tests) > 2 else ''} | "
+                f"{', '.join(computers[:3])}{'...' if len(computers) > 3 else ''} | {sig} |"
+            )
+
+        lines.extend(["", "## Details by Fingerprint", ""])
+
+        # Detailed section for each fingerprint
+        for fingerprint, data in sorted_fingerprints:
+            tests = sorted(set(f["testname"] for f in data["failures"]))
+            computers = sorted(set(f["computer"] for f in data["failures"]))
+            folders_hit = sorted(set(f["folder"] for f in data["failures"]))
+
+            lines.extend([
+                f"### Fingerprint: {fingerprint}",
+                "",
+                f"**Count**: {data['count']} failures",
+                f"**Tests**: {', '.join(tests)}",
+                f"**Computers**: {', '.join(computers)}",
+                f"**Folders**: {', '.join(folders_hit)}",
+                "",
+                "**Signature frames**:",
+                "```",
+            ])
+            for frame in data["signature"]:
+                lines.append(f"  {frame}")
+            lines.extend([
+                "```",
+                "",
+                "**Normalized stack trace**:",
+                "```",
+                data["normalized"] if data["normalized"] else "(empty)",
+                "```",
+                "",
+                "**Raw stack trace (first occurrence)**:",
+                "```",
+                data["failures"][0]["stacktrace"][:2000] if data["failures"][0]["stacktrace"] else "(empty)",
+                "```",
+                "",
+            ])
+
+        # Write to file
+        report_content = "\n".join(lines)
+        output_dir = get_tmp_dir()
+        date_str = report_date.replace("-", "")
+        output_file = output_dir / f"failures-{date_str}.md"
+        output_file.write_text(report_content, encoding="utf-8")
+
+        # Build brief summary
+        brief_lines = [
+            f"Daily failures saved to: {output_file}",
+            "",
+            f"**{report_date}** (8AM window): {len(all_failures)} failures, {len(fingerprint_groups)} unique bugs",
+            "",
+        ]
+
+        if len(sorted_fingerprints) <= 5:
+            brief_lines.append("Fingerprints:")
+            for fingerprint, data in sorted_fingerprints:
+                tests = sorted(set(f["testname"] for f in data["failures"]))
+                computers = sorted(set(f["computer"] for f in data["failures"]))
+                brief_lines.append(
+                    f"  - {fingerprint}: {data['count']}x on {len(computers)} machines - {', '.join(tests[:2])}"
+                )
+        else:
+            brief_lines.append(f"Top fingerprints (of {len(sorted_fingerprints)}):")
+            for fingerprint, data in sorted_fingerprints[:5]:
+                tests = sorted(set(f["testname"] for f in data["failures"]))
+                computers = sorted(set(f["computer"] for f in data["failures"]))
+                brief_lines.append(
+                    f"  - {fingerprint}: {data['count']}x on {len(computers)} machines - {', '.join(tests[:2])}"
+                )
+
+        brief_lines.extend(["", f"See {output_file} for full details."])
+
+        return "\n".join(brief_lines)
+
+    @mcp.tool()
+    async def save_run_comparison(
+        run_id_before: int,
+        run_id_after: int,
+        server: str = DEFAULT_SERVER,
+        container_path: str = DEFAULT_TEST_CONTAINER,
+    ) -> str:
+        """**ANALYSIS**: Compare test durations between two runs. Saves to ai/.tmp/run-comparison-{before}-{after}.md.
+
+        Identifies tests that got slower, faster, were added, or were removed.
+        Essential for diagnosing why test counts or durations changed between runs.
+
+        Use case: When daily report shows a significant drop in test count or
+        anomalous duration, compare a "good" baseline run with the "changed" run
+        to identify which tests are responsible.
+
+        Args:
+            run_id_before: Baseline run ID (the "good" state)
+            run_id_after: Comparison run ID (the "changed" state)
+            container_path: Test folder (must match where the runs are located)
+
+        Returns:
+            Summary of timing differences with detailed breakdown in saved file.
+        """
+        folder_name = container_path.split("/")[-1]
+
+        try:
+            server_context = get_server_context(server, container_path)
+
+            result = labkey.query.select_rows(
+                server_context=server_context,
+                schema_name=TESTRESULTS_SCHEMA,
+                query_name="compare_run_timings",
+                max_rows=1000,
+                parameters={
+                    "RunIdBefore": str(run_id_before),
+                    "RunIdAfter": str(run_id_after),
+                },
+            )
+
+            if not result or not result.get("rows"):
+                return f"No timing data found for runs {run_id_before} vs {run_id_after} in {folder_name}"
+
+            rows = result["rows"]
+
+            # Categorize tests
+            new_tests = []      # Only in after (before duration is None/0)
+            gone_tests = []     # Only in before (after duration is None/0)
+            slowdowns = []      # Got significantly slower (>50% or >10s delta)
+            speedups = []       # Got significantly faster
+            unchanged = []      # Minor changes
+
+            total_delta = 0
+            total_before = 0
+            total_after = 0
+
+            for row in rows:
+                testname = row.get("testname", "?")
+                passes = row.get("passes") or 0
+                duration_before = row.get("duration_before")
+                duration_after = row.get("duration_after")
+                delta_avg = row.get("delta_avg") or 0
+                delta_total = row.get("delta_total") or 0
+                delta_percent = row.get("delta_percent")
+
+                # Handle None values
+                before_val = duration_before if duration_before is not None else 0
+                after_val = duration_after if duration_after is not None else 0
+
+                total_before += before_val * passes if before_val else 0
+                total_after += after_val * passes if after_val else 0
+                total_delta += delta_total
+
+                test_data = {
+                    "testname": testname,
+                    "passes": passes,
+                    "before": before_val,
+                    "after": after_val,
+                    "delta_avg": delta_avg,
+                    "delta_total": delta_total,
+                    "delta_percent": delta_percent,
+                }
+
+                if duration_before is None or duration_before == 0:
+                    if duration_after and duration_after > 0:
+                        new_tests.append(test_data)
+                elif duration_after is None or duration_after == 0:
+                    gone_tests.append(test_data)
+                elif delta_percent is not None and delta_percent > 50 and delta_avg > 1:
+                    slowdowns.append(test_data)
+                elif delta_percent is not None and delta_percent < -20 and delta_avg < -1:
+                    speedups.append(test_data)
+                else:
+                    unchanged.append(test_data)
+
+            # Sort by delta_total (biggest impact first for slowdowns, biggest savings for speedups)
+            slowdowns.sort(key=lambda x: -x["delta_total"])
+            speedups.sort(key=lambda x: x["delta_total"])
+            new_tests.sort(key=lambda x: -x["after"] * x["passes"])
+            gone_tests.sort(key=lambda x: -x["before"] * x["passes"])
+
+            # Build the report
+            lines = [
+                f"# Run Timing Comparison: {run_id_before} vs {run_id_after}",
+                "",
+                f"**Folder**: {folder_name}",
+                f"**Baseline run**: {run_id_before}",
+                f"**Comparison run**: {run_id_after}",
+                "",
+                "## Summary",
+                "",
+                f"| Metric | Value |",
+                f"|--------|-------|",
+                f"| Total time before | {total_before:,.0f}s ({total_before/3600:.1f}h) |",
+                f"| Total time after | {total_after:,.0f}s ({total_after/3600:.1f}h) |",
+                f"| Net change | {total_delta:+,.0f}s ({total_delta/60:+,.0f}m) |",
+                f"| Tests added | {len(new_tests)} |",
+                f"| Tests removed | {len(gone_tests)} |",
+                f"| Tests slowed (>50%) | {len(slowdowns)} |",
+                f"| Tests sped up (>20%) | {len(speedups)} |",
+                "",
+            ]
+
+            # Major slowdowns section
+            if slowdowns:
+                lines.extend([
+                    "## Major Slowdowns (>50% slower)",
+                    "",
+                    "| Test | Passes | Before | After | Delta | Total Impact | % Change |",
+                    "|------|--------|--------|-------|-------|--------------|----------|",
+                ])
+                for t in slowdowns[:20]:
+                    pct = f"+{t['delta_percent']:.0f}%" if t['delta_percent'] else "N/A"
+                    lines.append(
+                        f"| {t['testname'][:45]} | {t['passes']} | {t['before']:.0f}s | {t['after']:.0f}s | "
+                        f"+{t['delta_avg']:.0f}s | +{t['delta_total']:.0f}s | {pct} |"
+                    )
+                if len(slowdowns) > 20:
+                    lines.append(f"| ... and {len(slowdowns) - 20} more | | | | | | |")
+                lines.append("")
+
+            # New tests section
+            if new_tests:
+                lines.extend([
+                    "## New Tests (not in baseline)",
+                    "",
+                    "| Test | Passes | Duration | Total Time |",
+                    "|------|--------|----------|------------|",
+                ])
+                for t in new_tests[:20]:
+                    total_time = t['after'] * t['passes']
+                    lines.append(
+                        f"| {t['testname'][:50]} | {t['passes']} | {t['after']:.0f}s | {total_time:.0f}s |"
+                    )
+                if len(new_tests) > 20:
+                    lines.append(f"| ... and {len(new_tests) - 20} more | | | |")
+                lines.append("")
+
+            # Gone tests section
+            if gone_tests:
+                lines.extend([
+                    "## Removed Tests (not in comparison)",
+                    "",
+                    "| Test | Passes | Duration | Time Saved |",
+                    "|------|--------|----------|------------|",
+                ])
+                for t in gone_tests[:20]:
+                    total_time = t['before'] * t['passes']
+                    lines.append(
+                        f"| {t['testname'][:50]} | {t['passes']} | {t['before']:.0f}s | -{total_time:.0f}s |"
+                    )
+                if len(gone_tests) > 20:
+                    lines.append(f"| ... and {len(gone_tests) - 20} more | | | |")
+                lines.append("")
+
+            # Speedups section
+            if speedups:
+                lines.extend([
+                    "## Major Speedups (>20% faster)",
+                    "",
+                    "| Test | Passes | Before | After | Delta | Total Saved | % Change |",
+                    "|------|--------|--------|-------|-------|-------------|----------|",
+                ])
+                for t in speedups[:10]:
+                    pct = f"{t['delta_percent']:.0f}%" if t['delta_percent'] else "N/A"
+                    lines.append(
+                        f"| {t['testname'][:45]} | {t['passes']} | {t['before']:.0f}s | {t['after']:.0f}s | "
+                        f"{t['delta_avg']:.0f}s | {t['delta_total']:.0f}s | {pct} |"
+                    )
+                lines.append("")
+
+            # Top impact analysis
+            lines.extend([
+                "## Top Time Impact Analysis",
+                "",
+                "The following tests contributed most to the time change:",
+                "",
+            ])
+
+            # Combine all tests and sort by absolute delta_total
+            all_changes = slowdowns + speedups + new_tests + gone_tests
+            all_changes.sort(key=lambda x: abs(x["delta_total"]), reverse=True)
+
+            for i, t in enumerate(all_changes[:5], 1):
+                if t in new_tests:
+                    impact_type = "NEW"
+                    desc = f"added {t['after']:.0f}s × {t['passes']} passes"
+                elif t in gone_tests:
+                    impact_type = "REMOVED"
+                    desc = f"saved {t['before']:.0f}s × {t['passes']} passes"
+                elif t["delta_total"] > 0:
+                    impact_type = "SLOWER"
+                    desc = f"{t['before']:.0f}s → {t['after']:.0f}s (+{t['delta_percent']:.0f}%)"
+                else:
+                    impact_type = "FASTER"
+                    desc = f"{t['before']:.0f}s → {t['after']:.0f}s ({t['delta_percent']:.0f}%)"
+
+                lines.append(f"{i}. **{t['testname']}** [{impact_type}]: {desc} = {t['delta_total']:+,.0f}s total")
+
+            lines.append("")
+
+            # Write to file
+            report_content = "\n".join(lines)
+            output_dir = get_tmp_dir()
+            output_file = output_dir / f"run-comparison-{run_id_before}-{run_id_after}.md"
+            output_file.write_text(report_content, encoding="utf-8")
+
+            # Build brief summary for return
+            brief = [
+                f"Run comparison saved to: {output_file}",
+                "",
+                f"**{folder_name}**: Run {run_id_before} vs {run_id_after}",
+                f"  Net time change: {total_delta:+,.0f}s ({total_delta/60:+,.0f} minutes)",
+                f"  Tests added: {len(new_tests)}, removed: {len(gone_tests)}",
+                f"  Slowdowns (>50%): {len(slowdowns)}, Speedups (>20%): {len(speedups)}",
+                "",
+            ]
+
+            if all_changes:
+                brief.append("Top impacts:")
+                for t in all_changes[:3]:
+                    if t in new_tests:
+                        brief.append(f"  - {t['testname']}: NEW (+{t['after'] * t['passes']:.0f}s)")
+                    elif t in gone_tests:
+                        brief.append(f"  - {t['testname']}: REMOVED (-{t['before'] * t['passes']:.0f}s)")
+                    else:
+                        brief.append(f"  - {t['testname']}: {t['delta_total']:+,.0f}s ({t['delta_percent']:+.0f}%)")
+
+            brief.extend(["", f"See {output_file} for full details."])
+
+            return "\n".join(brief)
+
+        except Exception as e:
+            logger.error(f"Error comparing run timings: {e}", exc_info=True)
+            return f"Error comparing run timings: {e}"
