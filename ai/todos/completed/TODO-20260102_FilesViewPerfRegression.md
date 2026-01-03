@@ -58,3 +58,17 @@ After both fixes, profiling shows:
 - `BackgroundActionService`: ~205,000 ms (24%) - 47% reduction
 
 Test time: 213s (baseline without Files view: 215s)
+
+### 2026-01-02 - Test Fixes
+
+Initial debouncing implementation broke FilesTree tests (TestFilesTreeForm, TestFilesTreeFileSystem)
+because FilesTree-initiated document changes (drag-drop, delete, rename) were now debounced,
+delaying UI feedback and breaking test assertions.
+
+Fix: Added `SkipNextDebounce()` mechanism:
+- FilesTree-initiated changes call `SkipNextDebounce()` before `ModifyDocument`
+- `OnDocumentChanged` checks the flag and handles immediately if set
+- Added `ModifyDocument` wrapper in FilesTreeForm for cleaner usage
+- Updated `IsComplete()` to wait for pending debounced updates
+
+All FilesTree tests now pass.
