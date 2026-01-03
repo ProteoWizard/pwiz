@@ -52,12 +52,28 @@ namespace pwiz.Common.SystemUtil
             Messages.WriteAsyncDebugMessage(@"Unhandled Exception: {0}", exception); // N.B. see TraceWarningListener for output details
         }
 
+        /// <summary>
+        /// Safely invokes an action on the UI thread via BeginInvoke.
+        /// Returns false if the control is null, has no handle, or its parent form
+        /// is closing/disposing (to avoid deadlock from handle recreation).
+        /// </summary>
         public static bool SafeBeginInvoke(Control control, Action action)
         {
             if (control == null || !control.IsHandleCreated)
             {
                 return false;
             }
+
+            // Check for CommonFormEx early shutdown signal to avoid deadlock.
+            // When BeginInvoke is called on a closing form, .NET may try to recreate
+            // the handle, which requires the UI thread - causing deadlock if the UI
+            // thread is waiting for the background thread to complete.
+            var parentForm = control.FindForm();
+            if (parentForm is CommonFormEx formEx && formEx.IsClosingOrDisposing)
+            {
+                return false;
+            }
+
             try
             {
                 control.BeginInvoke(action);
