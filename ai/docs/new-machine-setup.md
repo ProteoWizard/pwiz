@@ -28,9 +28,25 @@ You are helping a developer set up a Windows machine for Skyline development. Fo
 
 ---
 
-## Phase 1: Git and Repository Access
+## Phase 1: Prerequisites
 
-### 1.1 Check for Git
+### 1.1 Check for Node.js
+
+Node.js provides npm, used for installing Claude Code and other development tools.
+
+```powershell
+node --version
+npm --version
+```
+
+If not found, install Node.js LTS:
+```powershell
+winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+```
+
+After installation, **restart the terminal** to get node/npm in PATH.
+
+### 1.2 Check for Git
 
 ```powershell
 git --version
@@ -43,7 +59,7 @@ winget install Git.Git --accept-source-agreements --accept-package-agreements
 
 After installation, **restart the terminal** to get git in PATH.
 
-### 1.2 Configure Git Line Endings
+### 1.3 Configure Git Line Endings
 
 ```powershell
 git config --global core.autocrlf true
@@ -56,7 +72,7 @@ git config --global core.autocrlf
 # Should output: true
 ```
 
-### 1.3 SSH Key Setup
+### 1.4 SSH Key Setup
 
 Check for existing SSH key:
 ```powershell
@@ -72,7 +88,7 @@ If no key exists, guide the user:
 4. Tell user: "Copy this key and add it to GitHub at https://github.com/settings/keys"
 5. **Wait for user to confirm** they've added the key before proceeding
 
-### 1.4 Test GitHub SSH Access
+### 1.5 Test GitHub SSH Access
 
 ```powershell
 ssh -T git@github.com
@@ -82,7 +98,7 @@ Expected: "Hi username! You've successfully authenticated..."
 
 If it fails with host key verification, the user needs to type "yes" to accept GitHub's fingerprint.
 
-### 1.5 Clone the Repository
+### 1.6 Clone the Repository
 
 ```powershell
 # Create project directory
