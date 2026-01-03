@@ -56,6 +56,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// </summary>
         private System.Windows.Forms.Timer _timerUpdate;
         private bool _pendingChangeAll;
+        private bool _skipDebounce;
         private const int UPDATE_DELAY_MS = 100;
 
         public FilesTree()
@@ -119,7 +120,17 @@ namespace pwiz.Skyline.Controls.FilesTree
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         private BackgroundActionService BackgroundActionService { get; }
-        public bool IsComplete() => BackgroundActionService.IsComplete;
+        public bool IsComplete() => !_timerUpdate.Enabled && BackgroundActionService.IsComplete;
+
+        /// <summary>
+        /// Call before modifying the document from within FilesTree/FilesTreeForm to skip
+        /// debouncing for that update. This ensures immediate UI feedback for user-initiated
+        /// actions like drag-drop, delete, or rename.
+        /// </summary>
+        public void SkipNextDebounce()
+        {
+            _skipDebounce = true;
+        }
 
         /// <summary>
         /// Returns true if file system watching is completely shut down.
@@ -202,8 +213,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             var changeAll = args.DocumentPrevious != null && !ReferenceEquals(args.DocumentPrevious.Id, DocumentContainer.Document.Id);
 
             // Initial call from InitializeTree passes null for DocumentPrevious - handle immediately
-            if (args.DocumentPrevious == null)
+            // Also skip debouncing if FilesTree itself initiated the document change (e.g., drag-drop, delete, rename)
+            if (args.DocumentPrevious == null || _skipDebounce)
             {
+                _skipDebounce = false;
                 HandleDocumentEvent(isSaveAs: false, changeAll);
                 return;
             }
