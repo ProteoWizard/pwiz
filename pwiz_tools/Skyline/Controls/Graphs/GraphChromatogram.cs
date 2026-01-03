@@ -3700,6 +3700,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
+Console.WriteLine($@"# TestMouseMove({x}, {y}) => {mouse.X}, {mouse.Y}");
             HandleMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)mouse.X, (int)mouse.Y, 0));
         }
 
