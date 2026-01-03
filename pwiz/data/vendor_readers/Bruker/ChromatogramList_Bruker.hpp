@@ -69,6 +69,7 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramListBase
     struct IndexEntry : public ChromatogramIdentity
     {
         CVID chromatogramType;
+        CVID units;
         size_t declaration;
         long trace;
     };
@@ -77,6 +78,8 @@ class PWIZ_API_DECL ChromatogramList_Bruker : public ChromatogramListBase
 
     // idToIndexMap_["scan=<#>" or "file=<sourceFile::id>"] == index
     map<string, size_t> idToIndexMap_;
+
+    std::vector<vendor_api::Bruker::ChromatogramPtr> lcTraces_; // As read from chromatography-data.sqlite when available
 
     void createIndex();
 #endif // PWIZ_READER_BRUKER
