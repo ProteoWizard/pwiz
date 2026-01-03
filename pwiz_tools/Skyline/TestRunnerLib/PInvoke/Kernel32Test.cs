@@ -37,7 +37,8 @@ namespace TestRunnerLib.PInvoke
         {
             awaymode_required = 0x00000040,
             continuous = 0x80000000,
-            system_required = 0x00000001
+            system_required = 0x00000001,
+            display_required = 0x00000002
         }
 
         /// <summary>Checks whether our child process is being debugged.</summary>
@@ -75,13 +76,20 @@ namespace TestRunnerLib.PInvoke
         {
             private readonly EXECUTION_STATE _previousState;
 
-            public SystemSleep()
+            public SystemSleep(bool displayRequired)
             {
+                var newState = EXECUTION_STATE.continuous |
+                               EXECUTION_STATE.system_required;
+                if (displayRequired)
+                {
+                    newState |= EXECUTION_STATE.display_required;
+                }
+                else
+                {
+                    newState |= EXECUTION_STATE.awaymode_required;
+                }
                 // Prevent system sleep.
-                _previousState = SetThreadExecutionState(
-                    EXECUTION_STATE.awaymode_required |
-                    EXECUTION_STATE.continuous |
-                    EXECUTION_STATE.system_required);
+                _previousState = SetThreadExecutionState(newState);
             }
 
             public void Dispose()
