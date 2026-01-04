@@ -325,8 +325,8 @@ Write-Host "  MCP data sources: $($mcpFiles.Count)"
 Write-Host "  Skills: $($skillFiles.Count)"
 Write-Host "  Commands: $($commandFiles.Count)"
 
-# Report any NEW items
-$newCount = ($tocContent | Select-String -Pattern '\*\*NEW\*\*' -AllMatches).Matches.Count
+# Report any NEW items (only count table rows with NEW marker, not instruction text)
+$newCount = ($tocContent -split "`n" | Where-Object { $_ -match '^\|.*\*\*NEW\*\*' }).Count
 if ($newCount -gt 0) {
     Write-Host ""
     Write-Host "NOTE: $newCount items marked as **NEW** need descriptions" -ForegroundColor Yellow
