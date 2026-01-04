@@ -224,6 +224,9 @@ Old Localized:フォルダを開く(&amp;C)</comment>
   <data name="openAuditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
+  <data name="editMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
   <data name="removeAllMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
@@ -236,8 +239,14 @@ Old Localized:フォルダを開く(&amp;C)</comment>
   <data name="debugRefreshTreeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
+  <data name="contextMenuSeparator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>198, 6</value>
+  </data>
+  <data name="showFileNamesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
   <data name="filesTreeContextMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>202, 224</value>
+    <value>202, 252</value>
   </data>
   <data name="&gt;&gt;filesTreeContextMenu.Name" xml:space="preserve">
     <value>filesTreeContextMenu</value>
@@ -326,6 +335,12 @@ Old Localized:フォルダを開く(&amp;C)</comment>
   <data name="&gt;&gt;openAuditLogMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;editMenuItem.Name" xml:space="preserve">
+    <value>editMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;removeAllMenuItem.Name" xml:space="preserve">
     <value>removeAllMenuItem</value>
   </data>
@@ -342,6 +357,18 @@ Old Localized:フォルダを開く(&amp;C)</comment>
     <value>debugRefreshTreeMenuItem</value>
   </data>
   <data name="&gt;&gt;debugRefreshTreeMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;contextMenuSeparator.Name" xml:space="preserve">
+    <value>contextMenuSeparator</value>
+  </data>
+  <data name="&gt;&gt;contextMenuSeparator.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showFileNamesMenuItem.Name" xml:space="preserve">
+    <value>showFileNamesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showFileNamesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

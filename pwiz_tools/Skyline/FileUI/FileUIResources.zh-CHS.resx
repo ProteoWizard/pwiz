@@ -661,4 +661,16 @@
   <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
     <value>不可用：未找到匹配的 iRT 标准品。</value>
   </data>
+  <data name="WatersConnectSaveMethodFileDialog_SaveButtonText" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_OpenButtonText" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="WatersConnectSelectMethodFileDialog_SelectButtonText" xml:space="preserve">
+    <value>选择</value>
+  </data>
+  <data name="ExportDlgProperties_PerformLongExport_message" xml:space="preserve">
+    <value>消息</value>
+  </data>
 </root>

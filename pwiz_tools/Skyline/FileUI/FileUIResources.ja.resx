@@ -659,4 +659,19 @@
   <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
     <value>利用不可: 一致するiRT標準がありません</value>
   </data>
+  <data name="WatersConnectSaveMethodFileDialog_SaveButtonText" xml:space="preserve">
+    <value>エクスポート</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_OpenButtonText" xml:space="preserve">
+    <value>Open</value>
+    <comment>Needs Review:Inconsistent translation
+Candidate Translation:開
+Candidate Translation:開く</comment>
+  </data>
+  <data name="WatersConnectSelectMethodFileDialog_SelectButtonText" xml:space="preserve">
+    <value>選択</value>
+  </data>
+  <data name="ExportDlgProperties_PerformLongExport_message" xml:space="preserve">
+    <value>メッセージ</value>
+  </data>
 </root>

@@ -205,6 +205,9 @@
   <data name="SpectrumCount" xml:space="preserve">
     <value>スペクトル数</value>
   </data>
+  <data name="TotalIC">
+    <value>総イオン電流</value>
+  </data>
   <data name="KoinaDotpMatch" xml:space="preserve">
     <value>Koinaドット積</value>
   </data>
