@@ -73,7 +73,46 @@ if ($encoding.CodePage -eq 65001) {
     Add-Result "Console Encoding" "WARN" "$($encoding.EncodingName) (CP$($encoding.CodePage)) - recommend UTF-8" $false
 }
 
-# 3. Claude Code CLI
+# 3. Node.js
+Write-Host "Checking Node.js..." -ForegroundColor Gray
+if (Test-Command "node") {
+    try {
+        $nodeVersion = & node --version 2>$null
+        if ($nodeVersion -match 'v?(\d+\.\d+\.\d+)') {
+            $version = [version]$Matches[1]
+            if ($version -ge [version]"18.0.0") {
+                Add-Result "Node.js" "OK" $Matches[1] $true
+            } else {
+                Add-Result "Node.js" "WARN" "$($Matches[1]) (recommend 18+ LTS)" $false
+            }
+        } else {
+            Add-Result "Node.js" "OK" $nodeVersion $true
+        }
+    } catch {
+        Add-Result "Node.js" "ERROR" "node found but version check failed" $false
+    }
+} else {
+    Add-Result "Node.js" "MISSING" "Run: winget install OpenJS.NodeJS.LTS" $false
+}
+
+# 4. npm
+Write-Host "Checking npm..." -ForegroundColor Gray
+if (Test-Command "npm") {
+    try {
+        $npmVersion = & npm --version 2>$null
+        if ($npmVersion -match '(\d+\.\d+\.\d+)') {
+            Add-Result "npm" "OK" $Matches[1] $true
+        } else {
+            Add-Result "npm" "OK" $npmVersion $true
+        }
+    } catch {
+        Add-Result "npm" "ERROR" "npm found but version check failed" $false
+    }
+} else {
+    Add-Result "npm" "MISSING" "Install Node.js: winget install OpenJS.NodeJS.LTS" $false
+}
+
+# 5. Claude Code CLI
 Write-Host "Checking Claude Code CLI..." -ForegroundColor Gray
 try {
     $claudeVersion = & claude --version 2>$null
@@ -92,7 +131,7 @@ try {
         Add-Result "Claude Code CLI" "OK" $claudeVersion $true
     }
 } catch {
-    Add-Result "Claude Code CLI" "MISSING" "Run: irm https://claude.ai/install.ps1 | iex" $false
+    Add-Result "Claude Code CLI" "MISSING" "Run: npm install -g @anthropic-ai/claude-code" $false
 }
 
 # 4. ReSharper CLI (jb inspectcode)
