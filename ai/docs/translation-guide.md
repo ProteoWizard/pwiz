@@ -49,7 +49,7 @@ SQLite database containing resources from the last major release. Used to:
 **How to run**:
 ```cmd
 cd C:\proj\pwiz
-bjam pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//IncrementalUpdateResxFiles
+quickbuild.bat address-model=64 pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//IncrementalUpdateResxFiles
 ```
 
 ### FinalizeResxFiles
@@ -64,7 +64,21 @@ bjam pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//IncrementalUpda
 **How to run**:
 ```cmd
 cd C:\proj\pwiz
-bjam pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//FinalizeResxFiles
+quickbuild.bat address-model=64 pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//FinalizeResxFiles
+```
+
+## Post-Processing: Revert Whitespace-Only Changes
+
+After running the Boost Build targets, some files may have whitespace-only changes (e.g., tab-to-space conversion in XML comments). These should be reverted to keep the diff clean.
+
+**Script**: `ai/scripts/revert-whitespace-only-files.ps1`
+
+```powershell
+# Preview which files would be reverted
+pwsh -Command "& './ai/scripts/revert-whitespace-only-files.ps1' -WhatIf"
+
+# Revert whitespace-only changes
+pwsh -Command "& './ai/scripts/revert-whitespace-only-files.ps1'"
 ```
 
 ## Generating Translation CSVs
@@ -102,19 +116,21 @@ libraries\7za.exe x -y pwiz_tools\Skyline\Translation\Scratch\resxFiles.zip
 
 ## Workflow Summary
 
-### During Development
+### During Development (Incremental Update)
 
-Run `IncrementalUpdateResxFiles` periodically to keep localized RESX files in sync:
-- Syncs control positions and sizes
-- Keeps existing translations intact
-- New strings show in English
+1. Create a working branch from master
+2. Run `IncrementalUpdateResxFiles`
+3. Run `revert-whitespace-only-files.ps1` to clean up whitespace-only changes
+4. Review changes and commit
+5. Create PR
 
 ### At Feature Complete
 
 1. Run `FinalizeResxFiles` - adds "NeedsReview:" comments
-2. Run `GenerateLocalizationCsvFiles.bat` - creates CSV files
-3. Send CSV files to translators
-4. Wait for translations
+2. Run `revert-whitespace-only-files.ps1` to clean up
+3. Run `GenerateLocalizationCsvFiles.bat` - creates CSV files
+4. Send CSV files to translators
+5. Wait for translations
 
 ### After Receiving Translations
 
@@ -133,6 +149,7 @@ Run `IncrementalUpdateResxFiles` periodically to keep localized RESX files in sy
 | `Translation/Scratch/` | Working directory for CSV and DB files |
 | `Executables/DevTools/ResourcesOrganizer/scripts/` | Batch scripts |
 | `Executables/DevTools/ResourcesOrganizer/Jamfile.jam` | Boost Build targets |
+| `ai/scripts/revert-whitespace-only-files.ps1` | Clean up whitespace-only changes |
 
 ## Related Documentation
 
