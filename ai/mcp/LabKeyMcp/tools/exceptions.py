@@ -39,15 +39,29 @@ VERSION_PATTERN = re.compile(
 EMAIL_PATTERN = re.compile(
     r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
 )
+# User comments pattern - between "User comments:" and "Skyline version:"
+USER_COMMENTS_PATTERN = re.compile(
+    r'User comments:\s*(.*?)\s*(?=Skyline version:|Installation ID:|$)',
+    re.DOTALL
+)
 STACK_TRACE_SEPARATOR = '--------------------'
 
 # History settings
 HISTORY_FILE = 'exception-history.json'
 RETENTION_MONTHS = 9  # Cover full release cycle + buffer
+HISTORY_SCHEMA_VERSION = 2  # v2: stores individual reports with row_ids
 
 # Current major release anchor for backfill
 MAJOR_RELEASE_VERSION = "25.1"
 MAJOR_RELEASE_DATE = "2025-05-22"
+
+# URL format for exception details
+EXCEPTION_URL_TEMPLATE = "https://skyline.ms/home/issues/exceptions/announcements-thread.view?rowId={row_id}"
+
+
+def _get_exception_url(row_id: int) -> str:
+    """Generate URL to view exception details on skyline.ms."""
+    return EXCEPTION_URL_TEMPLATE.format(row_id=row_id)
 
 
 def _parse_exception_body(body: str) -> dict:
@@ -58,6 +72,7 @@ def _parse_exception_body(body: str) -> dict:
         version: Skyline version string (e.g., "25.1.0.237-519d29babc")
         bitness: "64-bit" or "32-bit"
         email: User's email if provided
+        user_comment: User's description of the issue (normalized to single line)
         stack_trace: The actual stack trace after the separator
     """
     result = {
@@ -65,6 +80,7 @@ def _parse_exception_body(body: str) -> dict:
         'version': None,
         'bitness': None,
         'email': None,
+        'user_comment': None,
         'stack_trace': '',
     }
 
@@ -84,6 +100,17 @@ def _parse_exception_body(body: str) -> dict:
     email_match = EMAIL_PATTERN.search(header)
     if email_match:
         result['email'] = email_match.group(0)
+
+    # Extract user comments and normalize to single line
+    comment_match = USER_COMMENTS_PATTERN.search(header)
+    if comment_match:
+        raw_comment = comment_match.group(1).strip()
+        if raw_comment:
+            # Normalize: collapse whitespace/newlines to single spaces, truncate
+            normalized = ' '.join(raw_comment.split())
+            if len(normalized) > 300:
+                normalized = normalized[:300] + "..."
+            result['user_comment'] = normalized
 
     # Extract stack trace (after the separator line)
     if STACK_TRACE_SEPARATOR in body:
@@ -113,15 +140,40 @@ def _load_exception_history() -> dict:
         except (json.JSONDecodeError, IOError) as e:
             logger.warning(f"Could not load exception history: {e}")
 
-    # Return empty structure
+    # Return empty structure (schema v2: individual reports with row_ids)
     return {
-        '_schema_version': 1,
+        '_schema_version': HISTORY_SCHEMA_VERSION,
         '_last_updated': None,
         '_retention_months': RETENTION_MONTHS,
         '_release_anchor': MAJOR_RELEASE_VERSION,
         '_release_date': MAJOR_RELEASE_DATE,
         'exceptions': {}
     }
+
+
+def _extract_fix_annotations(old_history: dict) -> dict:
+    """Extract fix annotations from old history format.
+
+    Returns dict mapping fingerprint -> fix info.
+    """
+    fixes = {}
+    for fp, entry in old_history.get('exceptions', {}).items():
+        if entry.get('fix'):
+            fixes[fp] = entry['fix']
+    return fixes
+
+
+def _apply_fix_annotations(history: dict, fixes: dict) -> int:
+    """Apply fix annotations to history entries.
+
+    Returns count of fixes applied.
+    """
+    applied = 0
+    for fp, fix_info in fixes.items():
+        if fp in history.get('exceptions', {}):
+            history['exceptions'][fp]['fix'] = fix_info
+            applied += 1
+    return applied
 
 
 def _save_exception_history(history: dict, report_date: str):
@@ -161,6 +213,9 @@ def _age_out_old_entries(history: dict, current_date: str) -> int:
 def _update_history_with_exceptions(history: dict, parsed_exceptions: list, report_date: str):
     """Merge new exceptions into history.
 
+    Schema v2: Stores individual reports with row_id, date, version, installation_id, email.
+    Computed fields (total_reports, unique_users, etc.) are derived from reports list.
+
     Args:
         history: The history dict to update (modified in place)
         parsed_exceptions: List of parsed exception dicts with fingerprint, etc.
@@ -170,51 +225,71 @@ def _update_history_with_exceptions(history: dict, parsed_exceptions: list, repo
 
     for exc in parsed_exceptions:
         fp = exc['fingerprint']
+        row_id = exc.get('row_id')
         install_id = exc.get('installation_id')
         version = exc.get('version')
         email = exc.get('email')
         sig_frames = exc.get('signature_frames', [])
 
         if fp not in exceptions_db:
-            # New fingerprint - create entry
+            # New fingerprint - create entry with v2 schema
             exceptions_db[fp] = {
                 'fingerprint': fp,
                 'signature': ' → '.join(sig_frames) if sig_frames else '(unknown)',
                 'exception_type': exc.get('title', '').split('|')[0].strip() if exc.get('title') else None,
                 'first_seen': report_date,
                 'last_seen': report_date,
-                'versions_affected': [],
-                'users': {},
-                'total_reports': 0,
-                'unique_users': 0,
-                'emails': [],
+                'reports': [],  # v2: list of individual reports
                 'fix': None,
             }
 
         entry = exceptions_db[fp]
         entry['last_seen'] = report_date
-        entry['total_reports'] = entry.get('total_reports', 0) + 1
 
-        # Track version
-        if version and version not in entry.get('versions_affected', []):
-            entry.setdefault('versions_affected', []).append(version)
+        # Add individual report (v2 schema)
+        report_entry = {
+            'row_id': row_id,
+            'date': report_date,
+            'version': version,
+            'installation_id': install_id,
+            'email': email,
+        }
+        entry['reports'].append(report_entry)
 
-        # Track user
-        if install_id:
-            users = entry.setdefault('users', {})
-            if install_id not in users:
-                users[install_id] = {
-                    'first_seen': report_date,
-                    'last_seen': report_date,
-                    'report_count': 0,
-                }
-            users[install_id]['last_seen'] = report_date
-            users[install_id]['report_count'] = users[install_id].get('report_count', 0) + 1
-            entry['unique_users'] = len(users)
 
-        # Track email
-        if email and email not in entry.get('emails', []):
-            entry.setdefault('emails', []).append(email)
+def _get_entry_stats(entry: dict) -> dict:
+    """Compute derived statistics from an exception entry's reports list.
+
+    Returns dict with: total_reports, unique_users, emails, versions, replies_count, comments_count
+    """
+    reports = entry.get('reports', [])
+
+    unique_users = set()
+    emails = set()
+    versions = set()
+    replies_count = 0
+    comments_count = 0
+
+    for r in reports:
+        if r.get('installation_id'):
+            unique_users.add(r['installation_id'])
+        if r.get('email'):
+            emails.add(r['email'])
+        if r.get('version'):
+            versions.add(r['version'])
+        if r.get('reply'):
+            replies_count += 1
+        if r.get('comment'):
+            comments_count += 1
+
+    return {
+        'total_reports': len(reports),
+        'unique_users': len(unique_users),
+        'emails': sorted(emails),
+        'versions': sorted(versions),
+        'replies_count': replies_count,
+        'comments_count': comments_count,
+    }
 
 
 def _get_priority_score(entry: dict) -> int:
@@ -222,19 +297,18 @@ def _get_priority_score(entry: dict) -> int:
 
     Higher score = higher priority.
     """
+    stats = _get_entry_stats(entry)
     score = 0
 
     # More users = higher priority
-    unique_users = entry.get('unique_users', 0)
-    score += unique_users * 10
+    score += stats['unique_users'] * 10
 
     # Has email = actionable
-    if entry.get('emails'):
+    if stats['emails']:
         score += 20
 
     # More reports = more impact
-    total_reports = entry.get('total_reports', 0)
-    score += min(total_reports, 10)  # Cap at 10 to not over-weight
+    score += min(stats['total_reports'], 10)  # Cap at 10 to not over-weight
 
     # Fixed but still appearing = critical (regression check done separately)
     if entry.get('fix'):
@@ -249,6 +323,7 @@ def _get_status_annotations(entry: dict, today_reports: int, today_users: int, r
 
     Returns list of annotation strings with emoji.
     """
+    stats = _get_entry_stats(entry)
     annotations = []
 
     # New today?
@@ -256,16 +331,13 @@ def _get_status_annotations(entry: dict, today_reports: int, today_users: int, r
         annotations.append("🆕 NEW - First seen today")
 
     # Has email?
-    emails = entry.get('emails', [])
-    if emails:
-        annotations.append(f"📧 Has user email ({len(emails)} contact(s) for follow-up)")
+    if stats['emails']:
+        annotations.append(f"📧 Has user email ({len(stats['emails'])} contact(s) for follow-up)")
 
     # Multi-user?
-    unique_users = entry.get('unique_users', 0)
-    total_reports = entry.get('total_reports', 0)
     first_seen = entry.get('first_seen', report_date)
-    if unique_users > 1 or total_reports > today_reports:
-        annotations.append(f"👥 {total_reports} total reports from {unique_users} users since {first_seen}")
+    if stats['unique_users'] > 1 or stats['total_reports'] > today_reports:
+        annotations.append(f"👥 {stats['total_reports']} total reports from {stats['unique_users']} users since {first_seen}")
 
     # Known fix?
     fix = entry.get('fix')
@@ -277,10 +349,9 @@ def _get_status_annotations(entry: dict, today_reports: int, today_users: int, r
         annotations.append(f"✅ KNOWN - Fixed in {pr} (merged {merge_date})")
 
         # Check for regression - if reports are from versions after fix
-        versions_affected = entry.get('versions_affected', [])
-        if fixed_version and versions_affected:
+        if fixed_version and stats['versions']:
             # Simple version comparison (could be improved)
-            for v in versions_affected:
+            for v in stats['versions']:
                 if v > fixed_version:  # String comparison works for semver-ish
                     annotations.append(f"🔴 REGRESSION? Report from {v} (AFTER fix in {fixed_version})")
                     break
@@ -583,7 +654,9 @@ def register_tools(mcp):
                     else:
                         time_str = str(created)
 
-                    lines.append(f"- **#{row_id}** at {time_str}")
+                    # Include clickable URL for direct access
+                    url = _get_exception_url(row_id)
+                    lines.append(f"- [**#{row_id}**]({url}) at {time_str}")
                     user_info = f"User: `{install_id[:8]}...`"
                     if email:
                         user_info += f" ({email})"
@@ -734,6 +807,7 @@ def register_tools(mcp):
         """Query exception history to find high-priority bugs.
 
         Use this to answer "what should I focus on?" across all tracked exceptions.
+        Schema v2: Uses reports list with row_ids for direct linking.
 
         Args:
             top_n: Number of top-priority exceptions to return (default: 10)
@@ -745,13 +819,18 @@ def register_tools(mcp):
             exceptions_db = history.get('exceptions', {})
 
             if not exceptions_db:
-                return "No exceptions in history. Run save_exceptions_report to populate."
+                return "No exceptions in history. Run backfill_exception_history to populate."
+
+            schema_version = history.get('_schema_version', 1)
 
             # Filter and score
             scored = []
             for fp, entry in exceptions_db.items():
+                # Compute stats from reports list (v2) or use legacy fields (v1)
+                stats = _get_entry_stats(entry)
+
                 # Skip if below user threshold
-                if entry.get('unique_users', 0) < min_users:
+                if stats['unique_users'] < min_users:
                     continue
 
                 # Skip fixed unless requested
@@ -759,7 +838,7 @@ def register_tools(mcp):
                     continue
 
                 score = _get_priority_score(entry)
-                scored.append((score, fp, entry))
+                scored.append((score, fp, entry, stats))
 
             # Sort by score descending
             scored.sort(key=lambda x: -x[0])
@@ -770,35 +849,56 @@ def register_tools(mcp):
             lines = [
                 f"# Top {min(top_n, len(scored))} Priority Exceptions",
                 "",
-                f"History contains {len(exceptions_db)} tracked bugs.",
+                f"History contains {len(exceptions_db)} tracked bugs (schema v{schema_version}).",
                 f"Last updated: {history.get('_last_updated', 'Unknown')}",
                 "",
             ]
 
-            for i, (score, fp, entry) in enumerate(scored[:top_n], 1):
+            for i, (score, fp, entry, stats) in enumerate(scored[:top_n], 1):
                 sig = entry.get('signature', '(unknown)')
-                users = entry.get('unique_users', 0)
-                reports = entry.get('total_reports', 0)
                 first_seen = entry.get('first_seen', '?')
                 last_seen = entry.get('last_seen', '?')
-                emails = entry.get('emails', [])
                 fix = entry.get('fix')
 
                 lines.append(f"## {i}. `{fp}` (score: {score})")
                 lines.append("")
                 lines.append(f"**Signature**: {sig}")
-                lines.append(f"**Users**: {users} | **Reports**: {reports}")
+                lines.append(f"**Users**: {stats['unique_users']} | **Reports**: {stats['total_reports']}")
                 lines.append(f"**First seen**: {first_seen} | **Last seen**: {last_seen}")
 
-                if emails:
-                    lines.append(f"📧 **Contact emails**: {', '.join(emails)}")
+                if stats['emails']:
+                    lines.append(f"📧 **Contact emails**: {', '.join(stats['emails'])}")
+                    # Show URLs for reports with emails (v2 schema)
+                    reports = entry.get('reports', [])
+                    for r in reports:
+                        if r.get('email') and r.get('row_id'):
+                            url = _get_exception_url(r['row_id'])
+                            reply_marker = " 💬" if r.get('reply') else ""
+                            lines.append(f"   - {r['email']} ({r.get('date', '?')}): {url}{reply_marker}")
+                            # Show user comment if present
+                            if r.get('comment'):
+                                lines.append(f"     \"{r['comment']}\"")
+                            # Show reply if present
+                            if r.get('reply'):
+                                reply = r['reply']
+                                lines.append(f"     ↳ Reply ({reply.get('date', '?')}): \"{reply.get('text', '')}\"")
+
+                # Show reply summary
+                if stats['replies_count'] > 0:
+                    lines.append(f"💬 **Has replies**: {stats['replies_count']} post(s) with responses")
 
                 if fix:
                     lines.append(f"✅ **Fixed in**: {fix.get('pr_number', '?')} ({fix.get('merge_date', '?')})")
 
-                versions = entry.get('versions_affected', [])
-                if versions:
-                    lines.append(f"**Versions**: {', '.join(sorted(versions)[:5])}")
+                if stats['versions']:
+                    lines.append(f"**Versions**: {', '.join(stats['versions'][:5])}")
+
+                # Show latest report URL (v2 schema)
+                reports = entry.get('reports', [])
+                if reports and reports[-1].get('row_id'):
+                    latest = reports[-1]
+                    url = _get_exception_url(latest['row_id'])
+                    lines.append(f"**Latest report**: {url}")
 
                 lines.append("")
 
@@ -820,10 +920,19 @@ def register_tools(mcp):
         Queries all exceptions since the specified date (default: major release),
         normalizes stack traces, and builds the history database.
 
+        Schema v2: Stores individual reports with row_id for direct linking.
+        Preserves fix annotations from existing history file.
+
         Args:
             since_date: Start date YYYY-MM-DD (default: current major release 2025-05-22)
         """
         try:
+            # Load existing history to preserve fix annotations
+            old_history = _load_exception_history()
+            preserved_fixes = _extract_fix_annotations(old_history)
+            if preserved_fixes:
+                logger.info(f"Preserving {len(preserved_fixes)} fix annotations from existing history")
+
             server_context = get_server_context(server, container_path)
 
             # Query all exceptions since the anchor date
@@ -840,6 +949,7 @@ def register_tools(mcp):
                 max_rows=10000,  # Should be plenty
                 sort="Created",  # Oldest first for proper first_seen tracking
                 filter_array=filter_array,
+                columns="RowId,EntityId,Title,Created,Modified,Status,AssignedTo,FormattedBody,Parent",
             )
 
             if not result or not result.get("rows"):
@@ -848,9 +958,64 @@ def register_tools(mcp):
             rows = result["rows"]
             logger.info(f"Backfilling {len(rows)} exceptions since {since_date}")
 
-            # Start fresh history
+            # Query all replies (Parent IS NOT NULL) to match with parent posts
+            reply_filter = [
+                QueryFilter("Created", since_date, "dategte"),
+                QueryFilter("Parent", "", "isnonblank"),
+            ]
+
+            reply_result = labkey.query.select_rows(
+                server_context=server_context,
+                schema_name=EXCEPTION_SCHEMA,
+                query_name=EXCEPTION_QUERY,
+                max_rows=10000,
+                sort="Created",
+                filter_array=reply_filter,
+            )
+
+            # Build lookup: parent RowId -> reply info
+            replies_by_parent = {}
+            if reply_result and reply_result.get("rows"):
+                for reply in reply_result["rows"]:
+                    # Parent might be a dict with value or just an int
+                    parent_raw = reply.get("Parent")
+                    if isinstance(parent_raw, dict):
+                        parent_id = parent_raw.get("value") or parent_raw.get("RowId")
+                    else:
+                        parent_id = parent_raw
+                    if parent_id:
+                        # Extract just the text content, skip stack traces
+                        body = reply.get("FormattedBody", "")
+                        # Replies typically don't have stack traces, just text
+                        reply_text = body.strip()
+                        # Truncate long replies for storage
+                        if len(reply_text) > 500:
+                            reply_text = reply_text[:500] + "..."
+
+                        created = reply.get("Created", "")
+                        if isinstance(created, str) and "T" in created:
+                            reply_date = created.split("T")[0]
+                        else:
+                            reply_date = str(created)[:10]
+
+                        # CreatedBy might be a dict with displayValue or just an int
+                        created_by = reply.get("CreatedBy")
+                        if isinstance(created_by, dict):
+                            author = created_by.get("displayValue", "Unknown")
+                        else:
+                            author = str(created_by) if created_by else "Unknown"
+
+                        replies_by_parent[parent_id] = {
+                            'text': reply_text,
+                            'date': reply_date,
+                            'author': author,
+                        }
+
+                logger.info(f"Found {len(replies_by_parent)} replies to exception posts")
+
+            # Start fresh history with v2 schema
             history = {
-                '_schema_version': 1,
+                '_schema_version': HISTORY_SCHEMA_VERSION,
                 '_last_updated': None,
                 '_retention_months': RETENTION_MONTHS,
                 '_release_anchor': MAJOR_RELEASE_VERSION,
@@ -865,6 +1030,8 @@ def register_tools(mcp):
 
             # Process each exception
             for row in rows:
+                row_id = row.get("RowId")
+                entity_id = row.get("EntityId")  # Used for reply matching
                 body = row.get("FormattedBody", "")
                 parsed = _parse_exception_body(body)
                 created = row.get("Created", "")
@@ -884,27 +1051,23 @@ def register_tools(mcp):
 
                 # Track unparseable rows (empty fingerprint = no frames parsed)
                 if norm.frame_count == 0:
-                    row_id = row.get("RowId")
                     if row_id:
                         unparseable_rows.append(row_id)
 
                 install_id = parsed.get('installation_id')
                 version = parsed.get('version')
                 email = parsed.get('email')
+                user_comment = parsed.get('user_comment')
 
                 if fp not in exceptions_db:
-                    # New fingerprint - create entry
+                    # New fingerprint - create entry with v2 schema
                     exceptions_db[fp] = {
                         'fingerprint': fp,
                         'signature': ' → '.join(sig_frames) if sig_frames else '(unknown)',
                         'exception_type': row.get('Title', '').split('|')[0].strip() if row.get('Title') else None,
                         'first_seen': report_date,
                         'last_seen': report_date,
-                        'versions_affected': [],
-                        'users': {},
-                        'total_reports': 0,
-                        'unique_users': 0,
-                        'emails': [],
+                        'reports': [],  # v2: list of individual reports
                         'fix': None,
                     }
 
@@ -912,28 +1075,28 @@ def register_tools(mcp):
 
                 # Update last_seen (rows are sorted by Created ascending)
                 entry['last_seen'] = report_date
-                entry['total_reports'] = entry.get('total_reports', 0) + 1
 
-                # Track version
-                if version and version not in entry.get('versions_affected', []):
-                    entry.setdefault('versions_affected', []).append(version)
+                # Add individual report (v2 schema)
+                report_entry = {
+                    'row_id': row_id,
+                    'date': report_date,
+                    'version': version,
+                    'installation_id': install_id,
+                    'email': email,
+                }
 
-                # Track user
-                if install_id:
-                    users = entry.setdefault('users', {})
-                    if install_id not in users:
-                        users[install_id] = {
-                            'first_seen': report_date,
-                            'last_seen': report_date,
-                            'report_count': 0,
-                        }
-                    users[install_id]['last_seen'] = report_date
-                    users[install_id]['report_count'] = users[install_id].get('report_count', 0) + 1
-                    entry['unique_users'] = len(users)
+                # Add user comment if present
+                if user_comment:
+                    report_entry['comment'] = user_comment
 
-                # Track email
-                if email and email not in entry.get('emails', []):
-                    entry.setdefault('emails', []).append(email)
+                # Add reply if one exists for this post (matched by EntityId)
+                if entity_id and entity_id in replies_by_parent:
+                    report_entry['reply'] = replies_by_parent[entity_id]
+
+                entry['reports'].append(report_entry)
+
+            # Re-apply preserved fix annotations
+            fixes_applied = _apply_fix_annotations(history, preserved_fixes)
 
             # Save unparseable RowIds in history for investigation
             if unparseable_rows:
@@ -943,43 +1106,66 @@ def register_tools(mcp):
             today = datetime.now().strftime("%Y-%m-%d")
             _save_exception_history(history, today)
 
-            # Generate summary
+            # Generate summary using stats helper
             total_fingerprints = len(exceptions_db)
-            multi_user = sum(1 for e in exceptions_db.values() if e.get('unique_users', 0) > 1)
-            with_email = sum(1 for e in exceptions_db.values() if e.get('emails'))
+            multi_user = sum(1 for e in exceptions_db.values()
+                             if _get_entry_stats(e)['unique_users'] > 1)
+            with_email = sum(1 for e in exceptions_db.values()
+                             if _get_entry_stats(e)['emails'])
+            with_replies = sum(1 for e in exceptions_db.values()
+                               if _get_entry_stats(e)['replies_count'] > 0)
+            total_replies = len(replies_by_parent)
+            with_comments = sum(1 for e in exceptions_db.values()
+                                if _get_entry_stats(e)['comments_count'] > 0)
 
             # Find top issues by report count
             top_issues = sorted(
                 exceptions_db.values(),
-                key=lambda e: e.get('total_reports', 0),
+                key=lambda e: _get_entry_stats(e)['total_reports'],
                 reverse=True
             )[:5]
 
             lines = [
                 f"# Exception History Backfill Complete",
                 "",
+                f"**Schema**: v{HISTORY_SCHEMA_VERSION} (individual reports with row_ids)",
                 f"**Source**: {len(rows)} exceptions since {since_date}",
+                f"**Replies found**: {total_replies}",
                 f"**Unique bugs**: {total_fingerprints} fingerprints",
                 f"**Multi-user bugs**: {multi_user}",
                 f"**Bugs with contact email**: {with_email}",
+                f"**Bugs with user comments**: {with_comments}",
+                f"**Bugs with replies**: {with_replies}",
+            ]
+
+            if fixes_applied > 0:
+                lines.append(f"**Fix annotations preserved**: {fixes_applied}")
+
+            lines.extend([
                 "",
                 f"Saved to: {_get_history_path()}",
                 "",
                 "## Top 5 Most Reported Issues",
                 "",
-            ]
+            ])
 
             for i, entry in enumerate(top_issues, 1):
                 fp = entry.get('fingerprint', '?')
                 sig = entry.get('signature', '(unknown)')
-                reports = entry.get('total_reports', 0)
-                users = entry.get('unique_users', 0)
+                stats = _get_entry_stats(entry)
                 first = entry.get('first_seen', '?')
                 last = entry.get('last_seen', '?')
 
-                lines.append(f"{i}. `{fp}` - {reports} reports, {users} users")
+                lines.append(f"{i}. `{fp}` - {stats['total_reports']} reports, {stats['unique_users']} users")
                 lines.append(f"   {sig[:60]}{'...' if len(sig) > 60 else ''}")
                 lines.append(f"   First: {first} | Last: {last}")
+
+                # Show sample row_id for direct linking
+                if entry.get('reports'):
+                    sample_report = entry['reports'][-1]  # Most recent
+                    url = _get_exception_url(sample_report['row_id'])
+                    lines.append(f"   Latest: {url}")
+
                 lines.append("")
 
             # Add unparseable RowIds section if any
