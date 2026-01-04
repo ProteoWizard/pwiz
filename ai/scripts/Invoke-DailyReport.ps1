@@ -83,10 +83,30 @@ Key points:
 
 # Build allowed tools list
 # - Read/Write/Glob/Grep: File operations for reports and TODO files
-# - mcp__labkey__*: All LabKey MCP tools for test/exception/support data
-# - mcp__gmail__search_emails,mcp__gmail__read_email: Read inbox notifications
-# - mcp__gmail__send_email: Send the daily summary
-$AllowedTools = "Read,Write,Glob,Grep,mcp__labkey__*,mcp__gmail__search_emails,mcp__gmail__read_email,mcp__gmail__send_email"
+# - LabKey MCP tools: Test/exception/support data (wildcards don't work - must be explicit)
+# - Gmail MCP tools: Read inbox, send summary, archive processed emails
+$AllowedTools = @(
+    "Read",
+    "Write",
+    "Glob",
+    "Grep",
+    # LabKey MCP - nightly tests, exceptions, support
+    "mcp__labkey__check_computer_alarms",
+    "mcp__labkey__get_daily_test_summary",
+    "mcp__labkey__save_exceptions_report",
+    "mcp__labkey__get_support_summary",
+    "mcp__labkey__get_run_failures",
+    "mcp__labkey__get_run_leaks",
+    "mcp__labkey__save_test_failure_history",
+    "mcp__labkey__analyze_daily_patterns",
+    "mcp__labkey__save_daily_summary",
+    # Gmail MCP - read notifications, send report, archive
+    "mcp__gmail__search_emails",
+    "mcp__gmail__read_email",
+    "mcp__gmail__send_email",
+    "mcp__gmail__modify_email",
+    "mcp__gmail__batch_modify_emails"
+) -join ","
 
 # Build the command
 $ClaudeArgs = @(

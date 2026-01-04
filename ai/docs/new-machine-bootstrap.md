@@ -12,23 +12,30 @@ Press <kbd>Win</kbd> + <kbd>X</kbd>, then click **Windows PowerShell** (or **Ter
 
 *Note: You're using the built-in Windows PowerShell. We'll upgrade to PowerShell 7 later.*
 
-## Step 2: Install Claude Code
+## Step 2: Install Node.js
 
-**Option A: npm (recommended if you have Node.js installed)**
+Node.js provides the npm package manager needed for Claude Code and other development tools.
+
+```powershell
+winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+```
+
+**Close and reopen PowerShell** after installation to get `npm` in your PATH.
+
+Verify:
+```powershell
+npm --version
+```
+
+## Step 3: Install Claude Code
 
 ```powershell
 npm install -g @anthropic-ai/claude-code
 ```
 
-**Option B: Standalone installer**
-
-```powershell
-irm https://claude.ai/install.ps1 | iex
-```
-
 Wait for the installation to complete.
 
-## Step 3: Verify Installation
+## Step 4: Verify Installation
 
 Try running:
 
@@ -38,9 +45,9 @@ claude --version
 
 If you see "claude is not recognized", see Troubleshooting below.
 
-If successful, skip to Step 4.
+If successful, continue to Step 5.
 
-## Step 4: Start Claude Code
+## Step 5: Start Claude Code
 
 ```powershell
 claude
@@ -50,7 +57,7 @@ Follow the prompts to authenticate with your Anthropic account. You'll need:
 - Claude Pro, Max, or Team subscription, **OR**
 - An Anthropic API key
 
-## Step 5: Let Claude Code Guide the Rest
+## Step 6: Let Claude Code Guide the Rest
 
 Once authenticated, paste this prompt into Claude Code:
 
@@ -110,8 +117,8 @@ This adds: PowerShell 7 (UTF-8 support), ReSharper CLI, GitHub CLI, LabKey MCP s
 
 | Problem | Solution |
 |---------|----------|
-| `irm` not recognized | You're in Command Prompt, not PowerShell. Close and open PowerShell. |
-| `npm` not recognized | Install Node.js first: `winget install OpenJS.NodeJS.LTS` then restart PowerShell |
+| `winget` not recognized | You're on older Windows. Download Node.js from https://nodejs.org instead. |
+| `npm` not recognized after install | Close and reopen PowerShell to refresh PATH. |
 | `claude` not recognized after install | See detailed steps below |
 | Authentication fails | Ensure you have a Claude Pro/Max/Team subscription or valid API key |
 | Claude Code can't fetch the setup page | Check your internet connection. The AI will still help with general guidance. |
@@ -121,26 +128,19 @@ This adds: PowerShell 7 (UTF-8 support), ReSharper CLI, GitHub CLI, LabKey MCP s
 First, check if Claude Code was actually installed:
 
 ```powershell
-# Check both possible locations
-Test-Path "$env:APPDATA\npm\claude.cmd"            # npm install location
-Test-Path "$env:USERPROFILE\.local\bin\claude.exe" # standalone installer location
+Test-Path "$env:APPDATA\npm\claude.cmd"
 ```
 
-**If neither file exists:** The installer failed silently. Try the npm method instead:
+**If the file doesn't exist:** The npm install failed. Try again:
 ```powershell
 npm install -g @anthropic-ai/claude-code
 ```
 
-**If a file exists but `claude` isn't recognized:** Add the path to your environment:
+**If the file exists but `claude` isn't recognized:** Add npm to your PATH:
 ```powershell
-# For npm installation:
-$claudePath = "$env:APPDATA\npm"
-
-# For standalone installer:
-# $claudePath = "$env:USERPROFILE\.local\bin"
-
-# Add to PATH permanently
-[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$claudePath", "User")
+# Add npm global folder to PATH permanently
+$npmPath = "$env:APPDATA\npm"
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$npmPath", "User")
 
 # Refresh current session
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
@@ -150,4 +150,4 @@ Then verify: `claude --version`
 
 ---
 
-*Last updated:* 2025-12-31
+*Last updated:* 2026-01-02

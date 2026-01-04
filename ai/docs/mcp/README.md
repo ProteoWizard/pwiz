@@ -19,6 +19,7 @@ Access skyline.ms data via the LabKey MCP server.
 
 | Document | Container | Description |
 |----------|-----------|-------------|
+| [announcements.md](announcements.md) | (multiple) | General-purpose table: release notes, support, exceptions |
 | [wiki.md](wiki.md) | `/home/software/Skyline` | Wiki pages, tutorials, documentation |
 | [support.md](support.md) | `/home/support` | Support board threads and user questions |
 | [exceptions.md](exceptions.md) | `/home/issues/exceptions` | User-reported crash reports |

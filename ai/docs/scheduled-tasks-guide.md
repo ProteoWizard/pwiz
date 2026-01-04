@@ -24,46 +24,35 @@ This enables automated daily reports without manual intervention.
 
 ## CRITICAL: MCP Permissions for Command-Line Automation
 
-MCP tools require explicit permission in `.claude/settings.local.json` to work in non-interactive mode. Without these permissions, Claude Code will silently fall back to using stale cached files instead of querying live data.
+MCP tools require explicit permission to work in non-interactive mode. There are two ways to grant this:
 
-### Required Configuration
+1. **Via `--allowedTools` parameter** (preferred for scheduled tasks) - specified in the automation script
+2. **Via `.claude/settings.local.json`** - for interactive sessions or as fallback
 
-MCP tools require explicit permission in `.claude/settings.local.json` to work in non-interactive mode.
+**IMPORTANT**: Wildcards (e.g., `mcp__labkey__*`) do NOT work. Each tool must be listed explicitly by name.
 
-**IMPORTANT**: Wildcards (e.g., `mcp__labkey__*`) do NOT work in `-p` mode. Each tool must be listed explicitly by name.
+### Daily Report Tool Permissions
 
-### How to Configure
+The daily report uses `--allowedTools` in the automation script. The authoritative list is maintained in:
+
+**`ai/scripts/Invoke-DailyReport.ps1`** (version controlled)
+
+This includes:
+- **LabKey MCP**: `get_daily_test_summary`, `save_exceptions_report`, `get_support_summary`, `get_run_failures`, `get_run_leaks`, `save_test_failure_history`, `analyze_daily_patterns`, `save_daily_summary`, `check_computer_alarms`
+- **Gmail MCP**: `search_emails`, `read_email`, `send_email`, `modify_email`, `batch_modify_emails`
+
+When adding new MCP functionality to `/pw-daily`, update the `$AllowedTools` array in `Invoke-DailyReport.ps1`.
+
+Note: Destructive tools like `delete_email`, `update_wiki_page` are intentionally excluded.
+
+### Custom Automation Permissions
+
+For other automated tasks, configure `.claude/settings.local.json`:
 
 1. Start an interactive Claude Code session in your project
 2. Describe the command-line operation you want to automate
-3. Ask Claude to write the necessary `permissions.allow` entries to `.claude/settings.local.json`
-4. Review the list - remove any tools with unwanted side effects (e.g., `delete_*`, `update_*`)
-
-### Example: Daily Report Permissions
-
-The daily report (`/pw-daily`) requires these MCP tools:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "mcp__labkey__get_daily_test_summary",
-      "mcp__labkey__save_exceptions_report",
-      "mcp__labkey__get_support_summary",
-      "mcp__labkey__get_run_failures",
-      "mcp__labkey__get_run_leaks",
-      "mcp__labkey__save_test_failure_history",
-      "mcp__gmail__search_emails",
-      "mcp__gmail__read_email",
-      "mcp__gmail__send_email",
-      "mcp__gmail__modify_email",
-      "mcp__gmail__batch_modify_emails"
-    ]
-  }
-}
-```
-
-Note: Destructive tools like `delete_email`, `update_wiki_page` are intentionally excluded.
+3. Ask Claude to write the necessary `permissions.allow` entries
+4. Review the list - remove any tools with unwanted side effects
 
 ### Verification
 
