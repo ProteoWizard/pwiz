@@ -19,6 +19,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Xml.Linq;
+using ResourcesOrganizer;
 
 namespace ResourcesOrganizer.ResourcesModel
 {
@@ -102,9 +103,7 @@ namespace ResourcesOrganizer.ResourcesModel
             }
             document.Root.RemoveAll();
             document.Root.Add(otherNodes.Cast<object>().ToArray());
-            var stringWriter = new StringWriter();
-            document.Save(stringWriter);
-            var xmlContent = stringWriter.ToString();
+            var xmlContent = TextUtil.SerializeDocument(document);
 
             var baseName = Path.GetFileNameWithoutExtension(absolutePath);
             var baseExtension = Path.GetExtension(absolutePath);

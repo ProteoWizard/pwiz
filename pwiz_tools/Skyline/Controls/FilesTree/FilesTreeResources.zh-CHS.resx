@@ -134,7 +134,10 @@
     <value>名称</value>
   </data>
   <data name="FilesTreeNode_TreeNode_Tooltip_ReplicateCount" xml:space="preserve">
-    <value>重复测定</value>
+    <value>Replicates</value>
+    <comment>Needs Review:Inconsistent translation
+Candidate Translation:Replicates
+Candidate Translation:重复测定</comment>
   </data>
   <data name="FilesTree_TreeNode_Tooltip_FileName" xml:space="preserve">
     <value>File Name</value>
