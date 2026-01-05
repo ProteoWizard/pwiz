@@ -71,6 +71,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
 
     int numSpectraOfScanType(pwiz::vendor_api::Thermo::ScanType scanType) const;
     int numSpectraOfMSOrder(pwiz::vendor_api::Thermo::MSOrder msOrder) const;
+    int numSpectraOfController(pwiz::vendor_api::Thermo::ControllerType controllerType) const;
 
     private:
 
@@ -80,6 +81,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListIonMobilityBase
     size_t size_;
     vector<int> spectraByScanType;
     vector<int> spectraByMSOrder;
+    vector<int> spectraByController;
     mutable boost::mutex readMutex;
     map<long, vector<double> > fillIndex;
 
