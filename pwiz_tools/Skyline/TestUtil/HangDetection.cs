@@ -33,21 +33,21 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static void InterruptWhenHung(Action action)
         {
-            InterruptAfter(action, TimeSpan.FromSeconds(1), 1800);
+            InterruptAfter(action, TimeSpan.FromMinutes(30));
         }
         
         /// <summary>
-        /// If action takes longer than <paramref name="cycleCount"/> times <paramref name="cycleDuration"/> then
+        /// If action takes longer than <paramref name="duration"/> then
         /// interrupt this thread and dump callstacks to the console.
         /// </summary>
-        public static void InterruptAfter(Action action, TimeSpan cycleDuration, int cycleCount)
+        public static void InterruptAfter(Action action, TimeSpan duration)
         {
             bool[] completed = new bool[1];
             var currentThread = Thread.CurrentThread;
             try
             {
                 ActionUtil.RunAsync(() =>
-                    InterruptThreadAfter(completed, currentThread, cycleDuration, cycleCount), nameof(HangDetection));
+                    InterruptThreadAfter(completed, currentThread, duration), nameof(HangDetection));
                 try
                 {
                     action();
@@ -74,27 +74,31 @@ namespace pwiz.SkylineTestUtil
                 {
                     Console.Out.WriteLine("Unable to get thread dump: {0}", ex);
                 }
-                throw new AssertFailedException(string.Format("Timeout waiting {0} for action to complete", TimeSpan.FromTicks(cycleDuration.Ticks * cycleCount)), interruptedException);
+                throw new AssertFailedException(string.Format("Timeout waiting {0} for action to complete", duration), interruptedException);
             }
         }
 
-        private static void InterruptThreadAfter(bool[] completed, Thread thread, TimeSpan cycleDuration, int cycleCount)
+        private static void InterruptThreadAfter(bool[] completed, Thread thread, TimeSpan duration)
         {
+            var stopWatch = Stopwatch.StartNew();
+            TimeSpan cycleDuration = TimeSpan.FromTicks(100);
+            long minCycleCount = duration.Ticks / cycleDuration.Ticks;
             lock (completed)
             {
-                for (int i = 0; i < cycleCount; i++)
+                for (long cycleIndex = 0; ; cycleIndex++)
                 {
                     if (completed[0])
                     {
                         return;
                     }
 
-                    Monitor.Wait(completed, cycleDuration);
-                }
+                    if (cycleIndex > minCycleCount && stopWatch.Elapsed > duration)
+                    {
+                        thread.Interrupt();
+                        return;
+                    }
 
-                if (!completed[0])
-                {
-                    thread.Interrupt();
+                    Monitor.Wait(completed, cycleDuration);
                 }
             }
         }
