@@ -49,6 +49,16 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// </summary>
         private CancellationTokenSource _cancellationTokenSource;
 
+        /// <summary>
+        /// Timer for debouncing document change events. During rapid changes (like importing
+        /// many files), this coalesces multiple updates into a single tree refresh after
+        /// a quiet period, similar to the graph update pattern in SkylineGraphs.
+        /// </summary>
+        private System.Windows.Forms.Timer _timerUpdate;
+        private bool _pendingChangeAll;
+        private bool _skipDebounce;
+        private const int UPDATE_DELAY_MS = 100;
+
         public FilesTree()
         {
             _cancellationTokenSource = new CancellationTokenSource();
@@ -59,6 +69,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             FileSystemService.FileDeletedAction += FileDeleted;
             FileSystemService.FileCreatedAction += FileCreated;
             FileSystemService.FileRenamedAction += FileRenamed;
+
+            // Timer for debouncing document changes during rapid updates (e.g., importing many files)
+            _timerUpdate = new System.Windows.Forms.Timer { Interval = UPDATE_DELAY_MS };
+            _timerUpdate.Tick += OnUpdateTimer;
 
             // Icons size is 16x16
             ImageList = new ImageList
@@ -106,7 +120,17 @@ namespace pwiz.Skyline.Controls.FilesTree
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         private BackgroundActionService BackgroundActionService { get; }
-        public bool IsComplete() => BackgroundActionService.IsComplete;
+        public bool IsComplete() => !_timerUpdate.Enabled && BackgroundActionService.IsComplete;
+
+        /// <summary>
+        /// Call before modifying the document from within FilesTree/FilesTreeForm to skip
+        /// debouncing for that update. This ensures immediate UI feedback for user-initiated
+        /// actions like drag-drop, delete, or rename.
+        /// </summary>
+        public void SkipNextDebounce()
+        {
+            _skipDebounce = true;
+        }
 
         /// <summary>
         /// Returns true if file system watching is completely shut down.
@@ -188,7 +212,34 @@ namespace pwiz.Skyline.Controls.FilesTree
             // document foo.sky is open and user either creates a new (empty) document or opens a different document (bar.sky).
             var changeAll = args.DocumentPrevious != null && !ReferenceEquals(args.DocumentPrevious.Id, DocumentContainer.Document.Id);
 
-            HandleDocumentEvent(isSaveAs:false, changeAll);
+            // Initial call from InitializeTree passes null for DocumentPrevious - handle immediately
+            // Also skip debouncing if FilesTree itself initiated the document change (e.g., drag-drop, delete, rename)
+            if (args.DocumentPrevious == null || _skipDebounce)
+            {
+                _skipDebounce = false;
+                HandleDocumentEvent(isSaveAs: false, changeAll);
+                return;
+            }
+
+            // Debounce subsequent document changes to avoid excessive updates during rapid changes
+            // (e.g., importing many files). Track if any pending change requires a full refresh.
+            _pendingChangeAll = _pendingChangeAll || changeAll;
+
+            // Restart the timer - this coalesces rapid changes into a single update
+            _timerUpdate.Stop();
+            _timerUpdate.Start();
+        }
+
+        private void OnUpdateTimer(object sender, EventArgs e)
+        {
+            // Stop the timer immediately to prevent re-entry
+            _timerUpdate.Stop();
+
+            // Process the pending document change
+            var changeAll = _pendingChangeAll;
+            _pendingChangeAll = false;
+
+            HandleDocumentEvent(isSaveAs: false, changeAll);
         }
 
         private void HandleDocumentEvent(bool isSaveAs = false, bool changeAll = false)
@@ -767,6 +818,14 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
+
+            if (_timerUpdate != null)
+            {
+                _timerUpdate.Stop();
+                _timerUpdate.Tick -= OnUpdateTimer;
+                _timerUpdate.Dispose();
+                _timerUpdate = null;
+            }
 
             if (BackgroundActionService != null)
             {

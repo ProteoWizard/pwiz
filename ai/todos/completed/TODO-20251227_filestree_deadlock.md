@@ -3,7 +3,7 @@
 ## Branch Information
 - **Branch**: `Skyline/work/20251227_filestree_deadlock`
 - **Created**: 2025-12-27
-- **Status**: Complete - PR Created
+- **Status**: ✅ Complete (Sprint 1) - PR Merged
 - **GitHub Issue**: [#3738](https://github.com/ProteoWizard/pwiz/issues/3738)
 - **PR**: [#3739](https://github.com/ProteoWizard/pwiz/pull/3739)
 - **Related**: PR #3867 (Files view feature), TODO-20251126_files_view.md
@@ -104,7 +104,7 @@ During disposal:
 - [x] Review where BeginInvoke is called from FSW callbacks
 - [x] Implement fix (remove SynchronizingObject - see Solution below)
 - [x] Test with Files view test suite (4 tests passing)
-- [ ] Create PR
+- [x] Create PR #3739 - merged
 
 ## Key Files
 
@@ -132,3 +132,10 @@ During disposal:
   - TestFilesTreeForm (40s)
   - TestSkylineWindowEvents (0s)
 - Ready for PR creation
+- PR #3739 created and merged
+
+### 2025-12-27 - Session 3
+- PR review discussion with Nick identified a deeper race condition in `SafeBeginInvoke`
+- Issue #3738 reopened and updated with full analysis for Sprint 2
+- Sprint 2 will add `IsClosingOrDisposing` flag to `CommonFormEx`
+- This TODO complete; use `/pw-startissue 3738` for Sprint 2

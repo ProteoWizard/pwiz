@@ -205,6 +205,9 @@
   <data name="SpectrumCount" xml:space="preserve">
     <value>谱图计数</value>
   </data>
+  <data name="TotalIC">
+    <value>总离子电流</value>
+  </data>
   <data name="KoinaDotpMatch" xml:space="preserve">
     <value>Koina 点积</value>
   </data>

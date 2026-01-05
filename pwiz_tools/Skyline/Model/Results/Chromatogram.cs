@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Model.Results
     public sealed class ChromatogramManager : BackgroundLoader, IDisposable
     {
         private readonly MultiFileLoader _multiFileLoader;
+        private readonly ManualResetEventSlim _progressFreezeEvent = new ManualResetEventSlim(true);
 
         public bool SupportAllGraphs { get; set; }
         public int? LoadingThreads { get; set; }
@@ -51,6 +53,32 @@ namespace pwiz.Skyline.Model.Results
         {
             IsMultiThreadAware = true;
             _multiFileLoader = new MultiFileLoader(synchronousMode);
+        }
+
+        /// <summary>
+        /// Freeze progress completion for screenshot capture.
+        /// When frozen, background threads will block before completing document updates.
+        /// </summary>
+        public void FreezeProgressForScreenshot()
+        {
+            _progressFreezeEvent.Reset();
+        }
+
+        /// <summary>
+        /// Release progress freeze, allowing background threads to complete.
+        /// </summary>
+        public void ReleaseProgressFreeze()
+        {
+            _progressFreezeEvent.Set();
+        }
+
+        /// <summary>
+        /// Block if progress is frozen for screenshot capture.
+        /// Called by background threads before completing document updates.
+        /// </summary>
+        private void WaitIfProgressFrozen()
+        {
+            _progressFreezeEvent.Wait();
         }
 
         public MultiProgressStatus ChangeStatus(ChromatogramLoadingStatus loadingStatus)
@@ -384,6 +412,9 @@ namespace pwiz.Skyline.Model.Results
                             docNew = null;
                         }
                     }
+
+                    // Block if frozen for screenshot capture before completing
+                    _manager.WaitIfProgressFrozen();
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
             }
