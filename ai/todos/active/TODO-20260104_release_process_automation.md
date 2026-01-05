@@ -6,7 +6,7 @@
 - **Created**: 2026-01-04
 - **Completed**: (pending)
 - **Status**: 🚧 In Progress
-- **PR**: (pending)
+- **PR**: [#3757](https://github.com/ProteoWizard/pwiz/pull/3757)
 - **Objective**: Improve and automate Skyline release process with reproducible versioning
 
 ## Background
