@@ -59,7 +59,14 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
     # when releasing a patch for a previous year, the day-of-year component will be incremented by 365 for each year difference
     # (figuring out leap year here seems like overkill)
-    constant SKYLINE_DOY : [ CALC [ CALC [ CALC $(year_2digit) - $(SKYLINE_YEAR) ] * 365 ] + [ day_of_year $(ymd) ] ] ;
+    local doy = [ CALC [ CALC [ CALC $(year_2digit) - $(SKYLINE_YEAR) ] * 365 ] + [ day_of_year $(ymd) ] ] ;
+
+    # Zero-pad day-of-year to 3 digits for chronological sorting (e.g., 004 not 4)
+    local doy_padded = $(doy) ;
+    if [ MATCH "^(.)$" : $(doy) ] { doy_padded = "00$(doy)" ; }
+    else if [ MATCH "^(..)$" : $(doy) ] { doy_padded = "0$(doy)" ; }
+
+    constant SKYLINE_DOY : $(doy_padded) ;
     constant SKYLINE_TIMESTAMP : $(SKYLINE_BRANCH) $(SKYLINE_DOY) ;
 
     local v = $(SKYLINE_YEAR) $(SKYLINE_ORDINAL) $(SKYLINE_BRANCH) $(SKYLINE_DOY) ;
