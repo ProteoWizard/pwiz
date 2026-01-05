@@ -46,8 +46,9 @@ The Skyline release process involves multiple manual steps and has some historic
 - [x] Update wiki download pages
 - [x] Send MailChimp release email
 - [x] Notify dev team via Zoom meeting
-- [x] Update cherry-pick workflow to target new branch (pending commit)
-- [ ] Update master to 26.1.1 versioning, commit and push
+- [x] Update cherry-pick workflow to target new branch
+- [x] Update master to 26.1.1 versioning (PR #3757)
+- [x] Fix UpgradeDlg version display for FEATURE COMPLETE (PR #3757)
 
 ### Phase 3: Documentation
 
@@ -91,10 +92,17 @@ rule ZeroPad3 val {
 
 ## Files Modified
 
-- `pwiz_tools/Skyline/Jamfile.jam` - Version computation rules (git-based date, zero-padding)
+**On master (PR #3757):**
+- `pwiz_tools/Skyline/Jamfile.jam` - Version update (SKYLINE_YEAR 25→26)
+- `.github/workflows/cherrypick-pr-to-release.yml` - Updated target branch
+- `pwiz_tools/Skyline/UpgradeManager.cs` - Fixed GetVersionDiff() for FEATURE COMPLETE
+
+**On release branch (Skyline/skyline_26_1):**
+- `pwiz_tools/Skyline/Jamfile.jam` - Version 26.0.9 (git-based date, zero-padding)
 - `Jamroot.jam` - ProteoWizard version (git-based MAKE_BUILD_TIMESTAMP)
-- `pwiz_tools/Skyline/Skyline.csproj` - Version 26.0.9.004 on release branch
-- `.github/workflows/cherrypick-pr-to-release.yml` - Updated target branch (pending commit)
+- `pwiz_tools/Skyline/Skyline.csproj` - Version 26.0.9.004
+
+**On ai-context:**
 - `ai/docs/release-guide.md` - Comprehensive release workflow documentation
 - `ai/docs/mcp/wiki.md` - Wiki container documentation
 
@@ -183,45 +191,28 @@ rule ZeroPad3 val {
   - **Pending commit to master**
 - Identified UpgradeDlg version display fix (documented in Follow-up Tasks)
 
-### Remaining Tasks - Completion Workflow
+### 2026-01-05 (continued) - PR Creation
 
-**Step 0: Revert local cherry-pick workflow change** (noted below, will re-apply in PR)
+**Completed workflow:**
+1. Reverted local cherry-pick workflow change on release branch
+2. Stashed ai/ changes, switched to ai-context
+3. Committed documentation to ai-context:
+   - `fbb9902508` - release-guide.md + mcp/wiki.md updates
+   - `2705bb74b0` - TODO file
+4. Switched to master, pulled, created work branch `Skyline/work/20260104_release_process_automation`
+5. Cherry-picked TODO commit from ai-context (`3d34842ecd`)
+6. Created 3 code commits:
+   - `831bb6c089` - Updated master to 26.1.1 versioning (SKYLINE_YEAR 25→26)
+   - `68c9098412` - Updated cherry-pick workflow (skyline_25_1→skyline_26_1)
+   - `573fed2e90` - Fixed UpgradeDlg version display for FEATURE COMPLETE
+7. Pushed and created PR #3757
+8. Added PR reference to TODO (`a617b1ed84`)
 
-**Step 1: Commit documentation to ai-context**
-```bash
-git stash
-git checkout ai-context
-git pull origin ai-context
-git stash pop
-# Commit a) ai/docs/release-guide.md + ai/docs/mcp/wiki.md
-# Commit b) ai/todos/active/TODO-20260104_release_process_automation.md
-git push origin ai-context
-```
+### Remaining Tasks
 
-**Step 2: Create work branch from master**
-```bash
-git checkout master
-git pull origin master
-git checkout -b Skyline/work/20260104_release_process_automation
-git cherry-pick <TODO-commit-from-ai-context>
-```
-
-**Step 3: Create 3 code commits on work branch**
-
-See "Code Changes for PR" section below for exact changes.
-
-1. **Version update** - Update master to 26.1.1 versioning
-2. **Cherry-pick workflow** - Target new release branch
-3. **UpgradeDlg fix** - Fix version display for FEATURE COMPLETE
-
-**Step 4: Push and create PR**
-```bash
-git push -u origin Skyline/work/20260104_release_process_automation
-gh pr create --base master --title "..." --body "..."
-```
-
-**Step 5: Verify Docker deployment**
-- [ ] Check DockerHub for new proteowizard/pwiz-skyline-i-agree images
+- [ ] Verify Docker deployment at DockerHub (proteowizard/pwiz-skyline-i-agree)
+- [ ] Sync TODO updates to ai-context after PR merge
+- [ ] Move TODO to completed/ after PR merge
 
 ---
 
