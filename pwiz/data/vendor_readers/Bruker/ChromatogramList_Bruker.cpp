@@ -128,7 +128,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
             if (ci.trace < lcTraces_.size())
             {
                 vendor_api::Bruker::ChromatogramPtr lcTrace = lcTraces_[ci.trace];
-                result->setTimeIntensityArrays(lcTrace->times, lcTrace->intensities, UO_second, lcTrace->units);
+                double dummy;
+                result->setTimeIntensityArrays(lcTrace->times, lcTrace->intensities, UO_second, traceUnitToCVID(lcTrace->units, dummy));
                 if (!lcTrace->description.empty())
                     result->cvParams.push_back(CVParam(MS_chromatogram_title, lcTrace->description));
                 if (!lcTrace->instrument.empty())
@@ -192,8 +193,9 @@ PWIZ_API_DECL void ChromatogramList_Bruker::createIndex()
             IndexEntry& ie = index_.back();
             ie.index = index_.size() - 1;
             ie.id = chrom->description;
-            ie.chromatogramType = chrom->type;
-            ie.units = chrom->units;
+            ie.chromatogramType = traceTypeToCVID(chrom->type, chrom->units, chrom->description);
+            double dummy;
+            ie.units = traceUnitToCVID(chrom->units, dummy);
             ie.trace = static_cast<long>(i);
             idToIndexMap_[ie.id] = ie.index;
         }

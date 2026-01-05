@@ -452,7 +452,6 @@
     <ClCompile Include="pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Agilent\SpectrumList_Agilent.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\ChromatogramList_Bruker.cpp" />
-    <ClCompile Include="pwiz\data\vendor_readers\Bruker\ChromatographyDataSqliteReader.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\Reader_Bruker.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\Reader_Bruker_Detail.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.cpp" />
@@ -478,6 +477,7 @@
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UNIFI\ChromatogramList_UNIFI.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\ChromatographyDataSqliteReader.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">true</CompileAsManaged>
     </ClCompile>
@@ -1021,6 +1021,7 @@
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\ChromatogramList_UNIFI.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassDataEnums.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Detail.hpp" />

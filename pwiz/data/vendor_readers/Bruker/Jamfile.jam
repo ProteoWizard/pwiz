@@ -126,7 +126,6 @@ lib pwiz_reader_bruker
         Reader_Bruker.cpp
         SpectrumList_Bruker.cpp
         ChromatogramList_Bruker.cpp
-        ChromatographyDataSqliteReader.cpp
         Reader_Bruker_Detail
     : # requirements
         <conditional>@vendor-api-requirements
