@@ -799,43 +799,47 @@ class DiaNNSpecLibReader::Impl
                 return boost::range::find(column_names, name) != column_names.end();
             }
 
-            void read_row_helper(std::size_t i, int& t) const
+            void read_column(std::size_t i, int& t) const
             {
                 const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
                 t = intArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i, int64_t& t) const
+            void read_column(std::size_t i, int64_t& t) const
             {
                 const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
                 t = intArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i, float& t) const
+            void read_column(std::size_t i, float& t) const
             {
                 const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
                 t = fpArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i, double& t) const
+            void read_column(std::size_t i, double& t) const
             {
                 const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
                 t = fpArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i, std::string_view& t) const
+            void read_column(std::size_t i, std::string_view& t) const
             {
                 const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
                 t = strArray->Value(rowIndex_);
             }
 
-            void read_row_helper(std::size_t i) const {}
-
-            template<class T, class ...ColType>
-            void read_row_helper(std::size_t i, T& t, ColType&...cols) const
+            void read_column(std::size_t i, std::string& t) const
             {
-                read_row_helper(i, t); // read current column i
-                read_row_helper(i + 1, cols...); // recurse to parse next column
+                const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
+                t = strArray->Value(rowIndex_);
+            }
+
+            template<class... ColType>
+            void read_row_helper(std::size_t i, ColType&... cols) const
+            {
+                std::size_t col = i;
+                ((read_column(col++, cols)), ...);
             }
 
             template<class ...ColType>
@@ -1133,15 +1137,16 @@ bool DiaNNSpecLibReader::parseFile()
     }
 
     auto& speclib = impl_->specLib;
-    Impl::Reader<9> reader;
+    Impl::Reader<10> reader;
     reader.open_file(diannReportFilepath);
     Verbosity::debug("Opened report file %s.", diannReportFilepath.c_str());
     const char* fileNameColumn = reader.is_parquet(diannReportFilepath) ? "Run" : "File.Name"; // DIANN v2 doesn't provide File.Name column
     Verbosity::status("Reading report headers.");
-    reader.read_header(io::ignore_extra_column, "Run", fileNameColumn, "Protein.Group", "Precursor.Id", "Global.Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
+    reader.read_header(io::ignore_extra_column, "Run", fileNameColumn, "Protein.Group", "Precursor.Id", "Global.Q.Value", "Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
     Verbosity::debug("Read report headers.");
 
     std::string_view run, fileName, proteinGrp, precursorId;
+    float globalQValue;
     RtPSM redundantPSM;
     string firstRun; // used as a placeholder for setSpecFileName; SpectrumSourceFile/fileId is actually managed while reading rows
     int64_t redundantPsmCount = 0;
@@ -1166,7 +1171,7 @@ bool DiaNNSpecLibReader::parseFile()
 
     Verbosity::status("Reading %d rows from report.", reader.num_rows());
     readAddProgress_ = parentProgress_->newNestedIndicator(reader.num_rows());
-    while (reader.read_row(run, fileName, proteinGrp, precursorId, redundantPSM.score, redundantPSM.rt, redundantPSM.rtStart, redundantPSM.rtEnd, redundantPSM.ionMobility))
+    while (reader.read_row(run, fileName, proteinGrp, precursorId, globalQValue, redundantPSM.score, redundantPSM.rt, redundantPSM.rtStart, redundantPSM.rtEnd, redundantPSM.ionMobility))
     {
         string precursorIdStr(precursorId);
         auto findItr = psmByPrecursorId.find(precursorIdStr);
@@ -1186,7 +1191,7 @@ bool DiaNNSpecLibReader::parseFile()
         if (firstRun.empty())
             firstRun = currentRunFilename;
 
-        bool rowPassesFilter = redundantPSM.score <= getScoreThreshold(GENERIC_QVALUE_INPUT);
+        bool rowPassesFilter = globalQValue <= getScoreThreshold(GENERIC_QVALUE_INPUT);
 
         auto& retentionTimes = retentionTimesByPrecursorId[precursorIdStr];
         if (rowPassesFilter)
@@ -1212,17 +1217,17 @@ bool DiaNNSpecLibReader::parseFile()
         }
 
         // update bestQValue and bestPSM if this row is better than any previous one
-        if (rowPassesFilter && redundantPSM.score < psm->score)
+        if (rowPassesFilter && globalQValue < psm->score)
         {
             auto findItr2 = speclib.entryByModPeptideAndCharge.find(precursorIdStr);
             if (findItr2 == speclib.entryByModPeptideAndCharge.end())
                 throw BlibException(false, "could not find precursorId '%s' in speclib; is '%s' the correct report TSV file?", precursorId, bfs::path(diannReportFilepath).filename().string().c_str());
 
-            psm->score = redundantPSM.score;
+            psm->score = globalQValue;
             psm->fileId = retentionTimes.back().fileId;
 
             auto& speclibEntry = findItr2->second.get();
-            speclibEntry.bestQValue = redundantPSM.score;
+            speclibEntry.bestQValue = globalQValue;
             speclibEntry.bestPSM = &retentionTimes.back();
         }
 
