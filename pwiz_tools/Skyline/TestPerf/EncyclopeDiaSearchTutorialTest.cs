@@ -79,7 +79,7 @@ namespace TestPerf
                     new[] {-0.2, 2.5 },
                     new[] {-0.2, 2.5 },
                 },
-                ChromatogramClickPoint = new PointF(32.2f, 12.5f)
+                ChromatogramClickPoint = new PointF(32.175f, 3.184607E+07f)  // MS1 chromatogram peak
             };
 
             RunTest();
@@ -125,7 +125,7 @@ namespace TestPerf
                     new[] {-0.4, 2.3},
                     new[] {-0.3, 2.4},
                 },
-                ChromatogramClickPoint = new PointF(32.2f, 12.5f)
+                ChromatogramClickPoint = new PointF(32.175f, 3.184607E+07f)  // MS1 chromatogram peak
             };
 
             RunTest();
