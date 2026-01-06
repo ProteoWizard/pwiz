@@ -1012,12 +1012,13 @@ namespace pwiz.ProteowizardWrapper
         public abstract class QcTraceUnits
         {
             public const string Intensity = @"intensity";
-            public const string Pascal = @"pascal";
+            public const string Pascal = @"Pa";
             public const string PoundsPerSquareInch = @"psi";
             public const string MicrolitersPerMinute = @"uL/min";
             public static string DegreeC = @"°C";
             public static string DegreeF = @"°F";
             public static string Percent = @"%";
+            public static string Unknown = @"unknown";
         }
 
         public class QcTrace
@@ -1033,52 +1034,66 @@ namespace pwiz.ProteowizardWrapper
                 string unitsString = null;
                 if (intensityArray != null)
                 {
-                    var typeParam = intensityArray.cvParamChild(CVID.MS_intensity_array);
+                    using var typeParam = intensityArray.cvParamChild(CVID.MS_intensity_array);
                     unitsCVID = typeParam.units;
-                    unitsString = typeParam.unitsName;
-                    if (unitsCVID == CVID.MS_number_of_detector_counts ||
-                        unitsCVID == CVID.CVID_Unknown)
-                    {
-                        using var userParam = c.userParam("units");
-                        if (!userParam.empty())
-                        {
-                            unitsString = userParam.value;
-                        }
-                        else
-                        {
-                            unitsString = QcTraceUnits.Intensity;
-                        }
-                    }
+                    unitsString = typeParam.unitsName; // Default to the raw units name from MS OBO
                 }
 
-                if (unitsCVID == CVID.UO_percent)
+                switch (unitsCVID)
                 {
-                    unitsString = QcTraceUnits.Percent; // Show "%" instead of "percent"
+                    case CVID.MS_number_of_detector_counts:
+                    case CVID.CVID_Unknown:
+                    {
+                        using var userParam = c.userParam(@"units");
+                        if (!userParam.empty())
+                        {
+                            unitsString = userParam.value; // Show custom units if provided
+                        }
+                        if (string.IsNullOrEmpty(unitsString) ||
+                            unitsCVID == CVID.MS_number_of_detector_counts)
+                        {
+                            unitsString = QcTraceUnits.Intensity; // Show "intensity" instead of "" or "number of detector counts"
+                        }
+                        break;
+                    }
+                    case CVID.UO_percent:
+                        unitsString = QcTraceUnits.Percent; // Show "%" instead of "percent"
+                        break;
+                    case CVID.UO_pounds_per_square_inch:
+                        unitsString = QcTraceUnits.PoundsPerSquareInch; // Show "psi" instead of "pounds per square inch"
+                        break;
+                    case CVID.UO_pascal:
+                        unitsString = QcTraceUnits.Pascal; // Show "Pa" instead of "pascal"
+                        break;
+                    case CVID.UO_microliters_per_minute:
+                        unitsString = QcTraceUnits.MicrolitersPerMinute; // Show "uL/min" instead of "microliters per minute"
+                        break;
+                    case CVID.UO_degree_Celsius:
+                        unitsString = QcTraceUnits.DegreeC; // Show "°C" instead of "degree Celsius"
+                        break;
+                    case CVID.UO_degree_Fahrenheit:
+                        unitsString = QcTraceUnits.DegreeF; // Show "°F" instead of "degree Fahrenheit"
+                        break;
                 }
 
                 if (chromatogramType == CVID.MS_pressure_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.Pressure;
-                    IntensityUnits = unitsCVID == CVID.UO_pounds_per_square_inch ? QcTraceUnits.PoundsPerSquareInch : unitsString;
                 }
                 else if (chromatogramType == CVID.MS_flow_rate_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.FlowRate;
-                    IntensityUnits = unitsCVID == CVID.UO_microliters_per_minute ? QcTraceUnits.MicrolitersPerMinute : unitsString;
                 }
                 else if (chromatogramType == CVID.MS_temperature_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.Temperature;
-                    IntensityUnits =
-                        unitsCVID == CVID.UO_degree_Celsius ? QcTraceUnits.DegreeC :
-                        unitsCVID == CVID.UO_degree_Fahrenheit ? QcTraceUnits.DegreeF :
-                        unitsString;
                 }
-                else // absorption chromatogram and emission chromatogram, etc - probably best to use the name directly
+                else // Generalized chromatogram, or absorption chromatogram, or emission chromatogram, etc - probably best to use the name directly
                 {
                     MeasuredQuality = Name;
-                    IntensityUnits = unitsString ?? @"unknown";
                 }
+
+                IntensityUnits = string.IsNullOrEmpty(unitsString) ? QcTraceUnits.Unknown : unitsString;
                 Times = c.getTimeArray().data.Storage();
                 Intensities = c.binaryDataArrays[1].data.Storage();
             }
