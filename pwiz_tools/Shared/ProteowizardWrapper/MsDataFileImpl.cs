@@ -1017,6 +1017,7 @@ namespace pwiz.ProteowizardWrapper
             public const string MicrolitersPerMinute = @"uL/min";
             public static string DegreeC = @"°C";
             public static string DegreeF = @"°F";
+            public static string Percent = @"%";
         }
 
         public class QcTrace
@@ -1048,6 +1049,11 @@ namespace pwiz.ProteowizardWrapper
                             unitsString = QcTraceUnits.Intensity;
                         }
                     }
+                }
+
+                if (unitsCVID == CVID.UO_percent)
+                {
+                    unitsString = QcTraceUnits.Percent; // Show "%" instead of "percent"
                 }
 
                 if (chromatogramType == CVID.MS_pressure_chromatogram)
