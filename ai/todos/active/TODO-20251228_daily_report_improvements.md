@@ -237,6 +237,25 @@ The following patterns from developer reports represent ideal automated investig
 
 ## Progress Log
 
+### 2026-01-03
+- Enhanced Exception History with Schema v2:
+  - **Problem**: Large LabKey queries (25,000+ tokens) were burning context to answer simple questions like "which report has this email?"
+  - **Solution**: Store richer, normalized data locally so queries can be answered from history file
+  - Schema v2 stores individual reports with:
+    - `row_id` for direct URL generation (no more guessing URLs)
+    - `email` per report (not just aggregated)
+    - `comment` - user's description normalized to single line (max 300 chars)
+    - `reply` - developer response text, date, and author
+  - URL template fixed: `announcements-thread.view` (not `details.view`)
+  - Reply matching required EntityId (not RowId) - Parent field uses GUIDs
+  - Fix annotation preservation during backfill migration (2 existing fixes retained)
+  - Updated `query_exception_history` output:
+    - Shows user comments under each email contact
+    - Shows developer replies with 💬 marker and full text
+    - Direct clickable URLs to each report
+  - Backfill stats: 703 exceptions, 31 replies found, 21 bugs with replies, 38 with user comments
+  - **Value**: Can now answer "what did the developer reply to this user?" without any LabKey query
+
 ### 2026-01-02 (continued)
 - Implemented Test Failure Fingerprinting (Item 12): ✅ COMPLETED
   - Goal: Include exception fingerprints, brief error info, and clickable URLs in daily report emails

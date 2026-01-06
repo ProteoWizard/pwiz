@@ -2,6 +2,40 @@
 
 This guide covers patterns and best practices for extending Claude Code's data access capabilities via MCP (Model Context Protocol) servers.
 
+## Technology Choice: Python vs TypeScript
+
+### Why This Section Exists
+
+The LabKeyMcp server was implemented in Python. This was **not a deliberate architectural decision** - it was an initial suggestion from an LLM that wasn't challenged. Neither the developer nor the LLM evaluated alternatives or considered the existing Node.js tooling in the project.
+
+Note: The Skyline team has deep expertise in C-style syntax languages (C++, C#, Java) with JavaScript experience primarily for DHTML (dynamic web pages). Modern JavaScript/TypeScript for CLI tooling and MCP servers wasn't on the radar when this decision was made.
+
+### What We Know Now
+
+**LabKey provides both APIs:**
+- JavaScript API: https://www.labkey.org/Documentation/wiki-page.view?name=viewApis
+- Python API: Both appear equally capable
+
+**The project already uses Node.js:**
+- DocumentConverter (`pwiz_tools/Skyline/Executables/DevTools/DocumentConverter`)
+- Claude Code CLI (npm install)
+- Other MCP servers (Gmail, episodic-memory) use npm/TypeScript
+
+**Current state:** Developers need BOTH runtimes - Node.js for multiple tools, Python solely for LabKeyMcp.
+
+### Recommendation for Future MCP Servers
+
+**Don't default to Python just because LabKeyMcp uses it.** When creating a new MCP server:
+
+1. Check if an npm-based MCP server already exists for the service
+2. If building from scratch, evaluate TypeScript first - it's the MCP ecosystem norm
+3. Only choose Python if the service lacks a JavaScript SDK or requires scientific libraries
+4. Document the choice and rationale
+
+The LabKeyMcp server works well and doesn't need to be rewritten. But if significant changes are ever needed, migrating to TypeScript would eliminate the Python dependency.
+
+---
+
 ## General Principles
 
 ### Use Official SDKs Where Possible
