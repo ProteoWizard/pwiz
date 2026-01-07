@@ -47,9 +47,6 @@ set(pwiz_LIBS_DEBUG
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_data_proteome.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_data_proteome_examples.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_data_proteome_version.lib
-    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_data_tradata.lib
-    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_data_tradata_examples.lib
-    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_data_tradata_version.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_data_vendor_readers.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_reader_abi.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/libpwiz_reader_abi_t2d.lib
@@ -125,9 +122,6 @@ set(pwiz_LIBS_RELEASE
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_data_proteome.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_data_proteome_examples.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_data_proteome_version.lib
-    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_data_tradata.lib
-    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_data_tradata_examples.lib
-    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_data_tradata_version.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_data_vendor_readers.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_reader_abi.lib
     ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/libpwiz_reader_abi_t2d.lib
