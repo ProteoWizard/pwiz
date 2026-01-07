@@ -78,9 +78,9 @@ debug_lib_paths = [x for x in lib_system_paths if '\\rls\\' not in x]
 
 with open('copy_lib.cmd', 'w') as f:
     for file in release_lib_paths:
-        f.write('copy /y ' +  os.path.abspath(file) + ' ' + os.path.abspath(release_bin_dir) + '\n')
+        f.write('copy /y ' + '"' + os.path.abspath(file) + '"' + ' ' + '"' +  os.path.abspath(release_bin_dir) + '"'  + '\n')
     for file in debug_lib_paths:
-        f.write('copy /y ' +  os.path.abspath(file) + ' ' + os.path.abspath(debug_bin_dir) + '\n')
+        f.write('copy /y ' + '"' + os.path.abspath(file) + '"  "' + os.path.abspath(debug_bin_dir) + '"' + '\n')
 
 # Find common prefix of all lib files
 
@@ -118,8 +118,7 @@ for i in range(len(lib_files)):
 
 # prepend '${pwiz_LIB_PREFIX}/' to all lib files
 
-for i in range(len(lib_files)):
-    lib_files[i] = '${pwiz_LIB_PREFIX}/' + lib_files[i]
+
 
 # remove all files with 'test' in the name from the list
 
@@ -135,8 +134,22 @@ lib_files = [x for x in lib_files if
 
 print('Number of lib files: ' + str(len(lib_files)))
 
-release_lib_files = [x for x in lib_files if '/msvc-debug-x86_64/' not in x]
-debug_lib_files = [x for x in lib_files if '/msvc-release-x86_64/' not in x]
+debug_lib_files = [x for x in lib_files if 'msvc-release-x86_64/' not in x]
+release_lib_files = [x for x in lib_files if  'msvc-debug-x86_64/' not in x]
+
+for i in range(len(release_lib_files)):
+    release_lib_files[i] = '${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/' + release_lib_files[i][20:]
+
+for i in range(len(debug_lib_files)):
+    debug_lib_files[i] = '${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/' + debug_lib_files[i][18:]
+
+
+# for i in range(len(release_lib_files)):
+#     release_lib_files[i] = ' ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_LIBS@/' + release_lib_files[i]
+
+# for i in range(len(debug_lib_files)):
+#     debug_lib_files[i] = ' ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_LIBS@/' + debug_lib_files[i].replace("/msvc-debug-x86_64/", "")
+
 
 
 if os.path.exists(release_bin_dir):
@@ -145,26 +158,29 @@ if os.path.exists(release_bin_dir):
 release_dll_files = get_dlls(release_bin_dir);
 debug_dll_files = get_dlls(debug_bin_dir);
 
+release_dll_files.append("msconvert.exe")
+debug_dll_files.append("msconvert.exe")
+
+
 print('Number of release dll files: ' + str(len(release_dll_files)))
 print('Number of debug dll files: ' + str(len(debug_dll_files)))
 
 for i in range(len(release_dll_files)):
-    release_dll_files[i] = '${pwiz_LIB_PREFIX}/msvc-release-x86_64/' + release_dll_files[i]
+    release_dll_files[i] = '${CMAKE_CURRENT_LIST_DIR}/@VCPKG_RELEASE_BIN@/' + release_dll_files[i]
 
 for i in range(len(debug_dll_files)):
-    debug_dll_files[i] = '${pwiz_LIB_PREFIX}/msvc-debug-x86_64/' + debug_dll_files[i]
+    debug_dll_files[i] = '${CMAKE_CURRENT_LIST_DIR}/@VCPKG_DEBUG_BIN@/' + debug_dll_files[i]
 
 # write pwiz-config.cmake   
 
 with open('pwiz-config.cmake', 'w') as f:
     f.write('set(pwiz_INCLUDE_DIRS\n') 
-    f.write('    ${CMAKE_CURRENT_LIST_DIR}\n')
-    f.write('    ${CMAKE_CURRENT_LIST_DIR}/libraries/boost_1_76_0\n')
-    f.write('    ${CMAKE_CURRENT_LIST_DIR}/libraries/boost_aux\n')
+    f.write('    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_INCLUDE_DIR@\n')
+    f.write('    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_INCLUDE_DIR@/libraries/boost_1_76_0\n')
+    f.write('    ${CMAKE_CURRENT_LIST_DIR}/@VCPKG_INCLUDE_DIR@/libraries/boost_aux\n')
     f.write('    )\n')
     f.write('\n')
- 
-    f.write('set(pwiz_LIB_PREFIX ${CMAKE_CURRENT_LIST_DIR}/build-nt-x86)\n')
+
     f.write('set(pwiz_LIBS_DEBUG\n')
 
     for lib_file in debug_lib_files:
