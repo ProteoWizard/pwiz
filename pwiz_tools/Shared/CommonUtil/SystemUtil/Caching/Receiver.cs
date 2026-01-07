@@ -28,6 +28,7 @@ namespace pwiz.Common.SystemUtil.Caching
     public class Receiver : IDisposable
     {
         private bool _notificationPending;
+        private bool _progressNotificationPending;
         private WorkOrder _workOrder;
         private readonly IProductionListener _listener;
         public Receiver(ProductionFacility cache, Control ownerControl, Producer factory)
@@ -67,14 +68,27 @@ namespace pwiz.Common.SystemUtil.Caching
 
         private void OnProductStatusChanged()
         {
+            Action progressChange;
+
             lock (this)
             {
-                var progressChange = ProgressChange;
-                if (progressChange != null)
+                progressChange = ProgressChange;
+                if (progressChange == null || _progressNotificationPending)
                 {
-                    CommonActionUtil.SafeBeginInvoke(OwnerControl, () => { progressChange(); });
+                    return;
                 }
+                _progressNotificationPending = true;
             }
+
+            CommonActionUtil.SafeBeginInvoke(OwnerControl, () =>
+            {
+                lock (this)
+                {
+                    _progressNotificationPending = false;
+                }
+
+                progressChange();
+            });
         }
 
         public event Action ProductAvailable;
