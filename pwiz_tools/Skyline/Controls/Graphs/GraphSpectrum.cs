@@ -1285,12 +1285,43 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed)
                 return;
 
+            var document = _documentContainer.DocumentUI;
+
+            try
+            {
+                DoUpdateDocument(document);
+            }
+            finally
+            {
+                var newDocument = _documentContainer.Document;
+                // If the libraries in the document have changed then close any streams that are not in the new document
+                if (!ReferenceEquals(document.Settings.PeptideSettings.Libraries, newDocument.Settings.PeptideSettings.Libraries))
+                {
+                    var newStreamGlobalIndexes = newDocument.Settings.PeptideSettings.Libraries.Libraries
+                        .SelectMany(lib => lib?.ReadStreams.Select(stream=>stream.GlobalIndex) ?? Array.Empty<int>()).ToHashSet();
+                    foreach (var lib in document.Settings.PeptideSettings.Libraries.Libraries.Where(lib=>lib != null))
+                    {
+                        foreach (var stream in lib.ReadStreams)
+                        {
+                            if (!newStreamGlobalIndexes.Contains(stream.GlobalIndex))
+                            {
+                                stream.CloseStream();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void DoUpdateDocument(SrmDocument document)
+        {
+
             // Try to find a tree node with spectral library info associated
             // with the current selection.
             var selection = SpectrumNodeSelection.GetCurrent(_stateProvider);
 
             // Check for appropriate spectrum to load
-            var settings = DocumentUI.Settings;
+            var settings = document.Settings;
             var libraries = settings.PeptideSettings.Libraries;
             var available = false;
 
@@ -1308,7 +1339,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 _updateManager.CalculatePrecursors(selection, settings, usingKoina);
-                if (Precursors == null || (!Precursors.Any(p => p.DocNode.HasLibInfo) && !libraries.HasMidasLibrary && !usingKoina))
+                if (Precursors == null || (!Precursors.Any(p => p.DocNode.HasLibInfo) && !libraries.HasMidasLibrary &&
+                                           !usingKoina))
                 {
                     _updateManager.ClearPrecursors();
                     KoinaSpectrum = null;
@@ -1330,13 +1362,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     try
                     {
-                        var loadFromLib = libraries.HasLibraries && libraries.IsLoaded && (!usingKoina || Settings.Default.LibMatchMirror);
+                        var loadFromLib = libraries.HasLibraries && libraries.IsLoaded &&
+                                          (!usingKoina || Settings.Default.LibMatchMirror);
                         if (loadFromLib)
                         {
                             // For a mirrored spectrum, make sure the isotope label types between library and Koina match
                             if (usingKoina && Settings.Default.LibMatchMirror && koinaEx == null)
-                                KoinaSpectrum = UpdateKoinaPrediction(selection, SelectedPrecursor?.DocNode.LabelType, out koinaEx);
+                                KoinaSpectrum = UpdateKoinaPrediction(selection, SelectedPrecursor?.DocNode.LabelType,
+                                    out koinaEx);
                         }
+
                         UpdateToolbar();
                     }
                     catch (Exception)
@@ -1367,7 +1402,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     var spectrumChanged = !Equals(_spectrum?.SpectrumInfo, spectrum?.SpectrumInfo);
                     _spectrum = spectrum;
-                    if(spectrumChanged)
+                    if (spectrumChanged)
                         HasChromatogramData = _spectrum?.LoadChromatogramData() != null;
 
                     ClearGraphPane();
@@ -1460,13 +1495,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.NodeTranGroup);
 
-                        if (GraphItem != null && GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                        if (GraphItem != null && GraphItem.PeptideDocNode != null &&
+                            GraphItem.TransitionGroupNode != null &&
+                            spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
                         {
                             var pepInfo = new ViewLibraryPepInfo(
-                                GraphItem.PeptideDocNode.ModifiedTarget.GetLibKey(GraphItem.TransitionGroupNode.PrecursorAdduct), 
+                                    GraphItem.PeptideDocNode.ModifiedTarget.GetLibKey(GraphItem.TransitionGroupNode
+                                        .PrecursorAdduct),
                                     libInfo.SpectrumHeaderInfo)
                                 .ChangePeptideNode(selection.NodePep);
-                            var props = libInfo.CreateProperties(pepInfo, spectrum.Precursor, new LibKeyModificationMatcher());
+                            var props = libInfo.CreateProperties(pepInfo, spectrum.Precursor,
+                                new LibKeyModificationMatcher());
                             if (GraphItem != null)
                             {
                                 props.PeakCount = GraphItem.SpectrumInfo.Peaks.Count(mi => mi.Intensity > 0)
@@ -1474,6 +1513,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 props.TotalIC = GraphItem.SpectrumInfo.Peaks.Sum(mi => mi.Intensity)
                                     .ToString(@"0.0000E+0", CultureInfo.CurrentCulture);
                             }
+
                             if (MirrorGraphItem != null)
                             {
                                 props.MirrorPeakCount = MirrorGraphItem.SpectrumInfo.Peaks.Count(mi => mi.Intensity > 0)
@@ -1483,7 +1523,8 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
 
                             if (dotp.HasValue)
-                                props.KoinaDotpMatch = string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp);
+                                props.KoinaDotpMatch =
+                                    string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp);
                             if (fullDotp.HasValue)
                                 props.KoinaDotpMatchFull =
                                     string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, fullDotp);
