@@ -7,10 +7,12 @@ This guide covers running Claude Code automatically on a schedule using Windows 
 Claude Code can run non-interactively using the `-p` (print) flag:
 
 ```bash
-claude -p "run /pw-daily"
+claude -p "Read .claude/commands/pw-daily.md and follow it"
 ```
 
 This enables automated daily reports without manual intervention.
+
+**Note:** Slash commands (`/pw-daily`) and Skills don't work in `-p` mode. See [Non-Interactive Mode Limitations](#non-interactive-mode-limitations) for workarounds.
 
 ## Prerequisites
 
@@ -18,6 +20,77 @@ This enables automated daily reports without manual intervention.
 - Gmail MCP configured (see `ai/docs/mcp/gmail.md`)
 - LabKey MCP configured for skyline.ms access
 - PowerShell 7 (`pwsh`)
+- **MCP permissions configured** (see below)
+
+## CRITICAL: MCP Permissions for Command-Line Automation
+
+MCP tools require explicit permission to work in non-interactive mode. There are two ways to grant this:
+
+1. **Via `--allowedTools` parameter** (preferred for scheduled tasks) - specified in the automation script
+2. **Via `.claude/settings.local.json`** - for interactive sessions or as fallback
+
+**IMPORTANT**: Wildcards (e.g., `mcp__labkey__*`) do NOT work. Each tool must be listed explicitly by name.
+
+### Daily Report Tool Permissions
+
+The daily report uses `--allowedTools` in the automation script. The authoritative list is maintained in:
+
+**`ai/scripts/Invoke-DailyReport.ps1`** (version controlled)
+
+This includes:
+- **LabKey MCP**: `get_daily_test_summary`, `save_exceptions_report`, `get_support_summary`, `get_run_failures`, `get_run_leaks`, `save_test_failure_history`, `analyze_daily_patterns`, `save_daily_summary`, `check_computer_alarms`
+- **Gmail MCP**: `search_emails`, `read_email`, `send_email`, `modify_email`, `batch_modify_emails`
+
+When adding new MCP functionality to `/pw-daily`, update the `$AllowedTools` array in `Invoke-DailyReport.ps1`.
+
+Note: Destructive tools like `delete_email`, `update_wiki_page` are intentionally excluded.
+
+### Custom Automation Permissions
+
+For other automated tasks, configure `.claude/settings.local.json`:
+
+1. Start an interactive Claude Code session in your project
+2. Describe the command-line operation you want to automate
+3. Ask Claude to write the necessary `permissions.allow` entries
+4. Review the list - remove any tools with unwanted side effects
+
+### Verification
+
+Test from command line before relying on scheduled tasks:
+
+```powershell
+claude -p "Call mcp__labkey__get_daily_test_summary with today's date and tell me how many test runs it found"
+```
+
+If it returns actual run counts (not a permission error), the configuration is working.
+
+## Non-Interactive Mode Limitations
+
+When running Claude Code with `-p` (print/non-interactive mode), several features don't work:
+
+| Feature | Works in `-p` mode? | Workaround |
+|---------|---------------------|------------|
+| Slash commands (`/pw-daily`) | ❌ No | Read the command file directly and follow instructions |
+| Skills (`Skill(name)`) | ❌ No | Include relevant documentation reading in the prompt |
+| Interactive approval | ❌ No | Pre-authorize tools in `.claude/settings.local.json` |
+| MCP wildcards | ❌ No | List each tool explicitly |
+| CLAUDE.md auto-loading | ⚠️ Partial | Explicitly instruct to read it in the prompt |
+
+### Prompt Design for Non-Interactive Mode
+
+Structure your prompts to work around these limitations:
+
+```
+You are running as a scheduled automation task. Slash commands and skills do not work.
+
+FIRST: Read ai/CLAUDE.md to understand project rules.
+THEN: Read .claude/commands/your-command.md and follow those instructions.
+
+Key points:
+- Use pwsh (not powershell) for shell commands
+- MCP tools are pre-authorized: [list relevant tools]
+- [Any other context the session needs]
+```
 
 ## Command-Line Options for Automation
 
@@ -25,7 +98,7 @@ Key flags for scheduled tasks:
 
 | Flag | Purpose | Example |
 |------|---------|---------|
-| `-p "prompt"` | Run non-interactively | `claude -p "run /pw-daily"` |
+| `-p "prompt"` | Run non-interactively | `claude -p "Read .claude/commands/pw-daily.md and follow it"` |
 | `--output-format json` | Structured output for parsing | |
 | `--allowedTools "..."` | Auto-approve specific tools | `--allowedTools "Read,Glob,Grep"` |
 | `--max-turns N` | Limit iterations | `--max-turns 20` |
@@ -45,6 +118,7 @@ All outputs stay within the project under `ai/.tmp/`:
 ## The Daily Report Script
 
 The script `ai/scripts/Invoke-DailyReport.ps1` handles:
+- Pulling latest `ai-context` branch (ensures latest scripts/commands)
 - Running Claude Code with `/pw-daily`
 - Emailing results via Gmail MCP
 - Logging to `ai/.tmp/scheduled/`
@@ -77,7 +151,7 @@ pwsh -Command "& './ai/scripts/Invoke-DailyReport.ps1' -DryRun"
 ### Step 1: Test the Script Manually
 
 ```powershell
-cd C:\proj\pwiz
+cd C:\proj\pwiz-ai
 pwsh -Command "& './ai/scripts/Invoke-DailyReport.ps1' -DryRun"
 ```
 
@@ -92,10 +166,10 @@ Run as Administrator:
 ```powershell
 $taskAction = New-ScheduledTaskAction `
     -Execute "pwsh" `
-    -Argument "-NoProfile -File C:\proj\pwiz\ai\scripts\Invoke-DailyReport.ps1" `
-    -WorkingDirectory "C:\proj\pwiz"
+    -Argument "-NoProfile -File C:\proj\pwiz-ai\ai\scripts\Invoke-DailyReport.ps1" `
+    -WorkingDirectory "C:\proj\pwiz-ai"
 
-$taskTrigger = New-ScheduledTaskTrigger -Daily -At 9:00AM
+$taskTrigger = New-ScheduledTaskTrigger -Daily -At 8:30AM
 
 $taskSettings = New-ScheduledTaskSettingsSet `
     -RunOnlyIfNetworkAvailable `
@@ -121,11 +195,11 @@ Register-ScheduledTask `
 1. Open "Task Scheduler" (search in Start menu)
 2. Click "Create Basic Task"
 3. Name: "Claude-Daily-Report"
-4. Trigger: Daily at 9:00 AM
+4. Trigger: Daily at 8:30 AM
 5. Action: Start a program
    - Program: `pwsh`
-   - Arguments: `-NoProfile -File C:\proj\pwiz\ai\scripts\Invoke-DailyReport.ps1`
-   - Start in: `C:\proj\pwiz`
+   - Arguments: `-NoProfile -File C:\proj\pwiz-ai\ai\scripts\Invoke-DailyReport.ps1`
+   - Start in: `C:\proj\pwiz-ai`
 6. Finish, then edit task properties:
    - Check "Run with highest privileges"
    - Check "Run only when network is available"
@@ -139,8 +213,8 @@ Pass the `-Recipient` parameter:
 ```powershell
 $taskAction = New-ScheduledTaskAction `
     -Execute "pwsh" `
-    -Argument "-NoProfile -File C:\proj\pwiz\ai\scripts\Invoke-DailyReport.ps1 -Recipient 'team@example.com'" `
-    -WorkingDirectory "C:\proj\pwiz"
+    -Argument "-NoProfile -File C:\proj\pwiz-ai\ai\scripts\Invoke-DailyReport.ps1 -Recipient 'team@example.com'" `
+    -WorkingDirectory "C:\proj\pwiz-ai"
 ```
 
 ### Change Schedule

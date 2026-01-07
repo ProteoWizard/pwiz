@@ -121,6 +121,17 @@ namespace pwiz.Skyline.Controls.FilesTree
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; }
 
+        /// <summary>
+        /// Wrapper for SkylineWindow.ModifyDocument that skips debouncing in FilesTree.
+        /// Use this for document modifications initiated by FilesTree/FilesTreeForm to ensure
+        /// immediate UI feedback (e.g., after drag-drop, delete, rename operations).
+        /// </summary>
+        private void ModifyDocument(string description, IDocumentModifier documentModifier)
+        {
+            FilesTree.SkipNextDebounce();
+            SkylineWindow.ModifyDocument(description, documentModifier);
+        }
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DockPane ParentDockPane => Parent as DockPane;
@@ -221,7 +232,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var newBgProteome = editBackgroundProteomeDlg.BackgroundProteomeSpec;
                 var modifier = DocumentModifier.Create(doc => BackgroundProteome.Edit(doc, newBgProteome));
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_BackgroundProteome, modifier);
+                ModifyDocument(FilesTreeResources.FilesTreeForm_Update_BackgroundProteome, modifier);
 
                 // Update the settings list to persist the change
                 Settings.Default.BackgroundProteomeList.ReplaceValue(docBgProteome, newBgProteome);
@@ -243,7 +254,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var newCalc = editIrtCalcDlg.Calculator;
                 var modifier = DocumentModifier.Create(doc => RTCalc.Edit(doc, newCalc));
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_RTCalculator, modifier);
+                ModifyDocument(FilesTreeResources.FilesTreeForm_Update_RTCalculator, modifier);
 
                 // Update the settings list to persist the change
                 Settings.Default.RTScoreCalculatorList.ReplaceValue(docCalc, newCalc);
@@ -269,7 +280,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var newLib = editOptLibDlg.Library;
                 var modifier = DocumentModifier.Create(doc => OptimizationLibrary.Edit(doc, newLib));
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_OptimizationLibrary, modifier);
+                ModifyDocument(FilesTreeResources.FilesTreeForm_Update_OptimizationLibrary, modifier);
 
                 // Update the settings list to persist the change
                 Settings.Default.OptimizationLibraryList.ReplaceValue(docOptLib, newLib);
@@ -293,7 +304,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var newLib = editIonMobilityLibDlg.IonMobilityLibrary;
                 var modifier = DocumentModifier.Create(doc => IonMobilityLibrary.Edit(doc, newLib));
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_IonMobilityLibrary, modifier);
+                ModifyDocument(FilesTreeResources.FilesTreeForm_Update_IonMobilityLibrary, modifier);
 
                 // Update the settings list to persist the change
                 Settings.Default.IonMobilityLibraryList.ReplaceValue(docIonMobilityLib, newLib);
@@ -314,7 +325,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var newLibSpec = editLibDlg.LibrarySpec;
                 var modifier = DocumentModifier.Create(doc => SpectralLibrary.Edit(doc, docLibSpec, newLibSpec));
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.FilesTreeForm_Update_SpectralLibrary, modifier);
+                ModifyDocument(FilesTreeResources.FilesTreeForm_Update_SpectralLibrary, modifier);
 
                 // Update the settings list to persist the change
                 Settings.Default.SpectralLibraryList.ReplaceValue(docLibSpec, newLibSpec);
@@ -357,7 +368,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (modifiedDoc == null) 
                     return;
 
-                SkylineWindow.ModifyDocument(messages.Item2, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+                ModifyDocument(messages.Item2, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
         }
 
@@ -403,7 +414,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (modifiedDoc == null)
                     return;
 
-                SkylineWindow.ModifyDocument(messages.Item3, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+                ModifyDocument(messages.Item3, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
         }
 
@@ -448,7 +459,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     modifiedDoc = renameable.PerformRename(originalDoc, monitor, newLabel);
                 });
 
-                SkylineWindow.ModifyDocument(renameable.AuditLogMessageResource, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+                ModifyDocument(renameable.AuditLogMessageResource, DocumentModifier.FromResult(originalDoc, modifiedDoc));
             }
 
             return false;
@@ -491,7 +502,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     if (modifiedDoc == null)
                         return;
 
-                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop, DocumentModifier.FromResult(originalDoc, modifiedDoc));
+                    ModifyDocument(FilesTreeResources.Drag_and_Drop, DocumentModifier.FromResult(originalDoc, modifiedDoc));
                 }
 
                 // After the drop, re-select the dragged nodes to paint the nodes blue and maintain the user's selection.

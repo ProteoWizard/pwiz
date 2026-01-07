@@ -4,8 +4,8 @@
 - **Branch**: `ai-context`
 - **Base**: `ai-context`
 - **Created**: 2025-12-25
-- **Completed**: (pending)
-- **Status**: 🚧 In Progress
+- **Completed**: 2025-12-27
+- **Status**: ✅ Complete
 - **PR**: N/A (documentation and analysis sprint)
 - **Objective**: Strategic analysis of Skyline issues lists and planning for ai/todos integration
 
@@ -75,12 +75,19 @@ The Skyline project has two underutilized issue tracking systems:
 - [x] Document migration considerations
 - [x] Provide recommendations
 
-### Phase 3: Experimental Workflow (Optional Next Step)
-- [ ] Pick a backlog item for test case
-- [ ] Create GitHub Issue from backlog item
-- [ ] Work through full workflow cycle
-- [ ] Evaluate: Was the overhead worth it?
-- [ ] Decide on direction
+### Phase 3: Experimental Workflow ✅
+- [x] Pick backlog items for test cases (#3732, #3733, #3738)
+- [x] Create GitHub Issues and work through full cycle
+- [x] Evaluate: Worth it - GitHub Issues approach validated
+- [x] Decide on direction: GitHub Issues replaces ai/todos/backlog
+
+### Phase 4: Documentation & Tooling ✅
+- [x] Create /pw-startissue command (zero-prompt issue startup)
+- [x] Create /pw-issue command (transfer from backlog archive or skyline.ms)
+- [x] Create /pw-auditdocs command (documentation audit)
+- [x] Draft WORKFLOW-v2.md (swap-in ready)
+- [x] Draft workflow-guide-v2.md (swap-in ready)
+- [x] Create follow-up TODO for transition completion
 
 ## Technical Notes
 
@@ -120,6 +127,20 @@ Try GitHub Issues workflow before committing to LabKey write operations:
 4. Defers MCP write operations until we know they're needed
 
 ## Progress Log
+
+### 2025-12-27 (Session 5) - Documentation & Completion
+- Created WORKFLOW-v2.md and workflow-guide-v2.md (swap-in ready)
+  - Merged workflow-guide.md + workflow-issues-guide.md
+  - GitHub Issues as sole backlog (no ai/todos/backlog)
+  - /pw-startissue as primary workflow entry point
+  - Label-based branch strategy (ai-context label → ai-context branch)
+  - Ownership signaling requirement (push TODO + comment on issue)
+- Discussed MCP server requirements simplification:
+  - gh.exe is only required tool for all developers
+  - LabKeyMcp/Gmail MCP are optional power-user tools
+  - +claude accounts only needed for wiki editing (not critical)
+- Created follow-up TODO for transition completion
+- Marked this strategic analysis TODO complete
 
 ### 2025-12-26 (Session 4) - Workflow Testing & Tooling
 - Tested GitHub Issues workflow with Issue #3733 (Gmail MCP) - SUCCESSFUL
@@ -170,3 +191,26 @@ Try GitHub Issues workflow before committing to LabKey write operations:
 - Generated initial issues report (300 open: 147 Defects, 150 Todos)
 - Enhanced save_issues_report() with Area, Milestone, Assignee, Age
 - Created ai/docs/issues-strategy.md
+
+## Completion Summary
+
+**What Was Decided:**
+- GitHub Issues replaces ai/todos/backlog as sole backlog system
+- ai/todos/active and ai/todos/completed remain for engineering context
+- /pw-startissue command for zero-prompt workflow startup
+- Label-based branch strategy: `ai-context` label → ai-context branch, others → master
+- Ownership signaling required: push TODO to ai-context + comment on issue
+- gh.exe is only required tool; MCP servers are optional power-user tools
+
+**Deliverables Created:**
+- `.claude/commands/pw-startissue.md` - Zero-prompt issue startup
+- `.claude/commands/pw-issue.md` - Transfer from archive or skyline.ms
+- `.claude/commands/pw-auditdocs.md` - Documentation audit command
+- `ai/scripts/audit-docs.ps1` - Comprehensive audit script
+- `ai/WORKFLOW-v2.md` - Quick reference (swap-in ready)
+- `ai/docs/workflow-guide-v2.md` - Comprehensive guide (swap-in ready)
+- `ai/docs/workflow-issues-guide.md` - GitHub Issues workflow documentation
+- GitHub labels: `ai-context`, `todo`
+
+**Follow-up Work:**
+- See `ai/todos/backlog/TODO-issues_transition_completion.md`

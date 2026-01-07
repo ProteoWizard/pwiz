@@ -155,11 +155,16 @@ namespace ResourcesOrganizer.ResourcesModel
             using var zipArchive = new ZipArchive(stream, ZipArchiveMode.Create);
             foreach (var file in ResourcesFiles)
             {
-                var entry = zipArchive.CreateEntry(file.Key);
-                using (var entryStream = entry.Open())
+                // Only export English (invariant) files when overrideAll is true
+                // In incremental mode, we only update localized files to avoid whitespace reformatting
+                if (overrideAll)
                 {
-                    using var writer = new StreamWriter(entryStream, TextUtil.Utf8Encoding);
-                    writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null, overrideAll)));
+                    var entry = zipArchive.CreateEntry(file.Key);
+                    using (var entryStream = entry.Open())
+                    {
+                        using var writer = new StreamWriter(entryStream, TextUtil.Utf8Encoding);
+                        writer.Write(TextUtil.SerializeDocument(file.Value.ExportResx(null, overrideAll)));
+                    }
                 }
                 foreach (var language in file.Value.Entries
                              .SelectMany(resourceEntry => resourceEntry.LocalizedValues.Keys).Distinct())

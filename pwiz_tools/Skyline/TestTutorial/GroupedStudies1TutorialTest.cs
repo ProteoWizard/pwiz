@@ -99,7 +99,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            OpenImportArrange();
+            if (!OpenImportArrange())
+                return;
 
             ExploreTopPeptides();
 
@@ -114,7 +115,7 @@ namespace pwiz.SkylineTestTutorial
             SimpleGroupComparisons();
         }
 
-        private void OpenImportArrange()
+        private bool OpenImportArrange()
         {
             // Open the file
             RunUI(() => SkylineWindow.OpenFile(GetHfRawTestPath("Rat_plasma.sky")));
@@ -197,11 +198,15 @@ namespace pwiz.SkylineTestTutorial
             if (Settings.Default.AutoShowAllChromatogramsGraph)
             {
                 allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-
-                allChrom.SetFreezeProgressPercent(72, @"00:00:06");
-                WaitForCondition(() => allChrom.IsProgressFrozen());
-                PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms form");
-                allChrom.SetFreezeProgressPercent(null, null);
+                // SRM data - no progress line shown
+                if (!PauseForAllChromatogramsGraphScreenShot("Loading Chromatograms form", 5, @"00:00:06", null, 1.65e7f,
+                    new Dictionary<string, int>
+                    {
+                        { "D_102_REP1", 72 },
+                        { "D_102_REP2", 71 },
+                        { "D_102_REP3", 72 }
+                    }))
+                    return false;
             }
 
             RunUI(() =>
@@ -288,6 +293,8 @@ namespace pwiz.SkylineTestTutorial
 
             if (IsPauseForScreenShots)
                 RunUI(() => SkylineWindow.Bounds = savedBounds);
+
+            return true;
         }
 
         private void PlaceTargetsAndGraph(Control graphForm)

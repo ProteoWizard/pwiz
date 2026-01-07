@@ -226,16 +226,7 @@ namespace TestPerf
         {
             var scoreToRunGraphPane = GetScoreToRunGraphPane();
             Assert.IsNotNull(scoreToRunGraphPane);
-            // WARNING: Using WaitForConditionUI here causes an unexplained deadlock.
-            //          The call to Program.MainWindow.Invoke blocks waiting for the UI thread,
-            //          while the Skyline window remains responsive to mouse and keyboard input.
-            //          The UI thread is actively pumping messages, yet the Invoke message is
-            //          never dispatched. This occurs after ProductAvailableAction runs via
-            //          BeginInvoke from the caching system. Using WaitForCondition works because
-            //          IsCalculating is thread-safe (reads _graphDataReceiver.IsProcessing()).
-            //          This pattern was previously established in RunToRunAlignmentTest.
-            // WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
-            WaitForCondition(() => !scoreToRunGraphPane.IsCalculating);
+            WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
         }
 
         public static RTLinearRegressionGraphPane GetScoreToRunGraphPane()

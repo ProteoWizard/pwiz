@@ -88,6 +88,7 @@ Detailed reference for building, testing, and analyzing Skyline from LLM-assiste
 - **Works from any directory** - scripts auto-change to correct project directory
 - **Finds MSBuild automatically** using vswhere
 - **Fixes line endings** in modified files (CRLF standard)
+- **Detects running test processes** - prompts LLM to ask before stopping (exit code 2)
 - **Clear success/failure output** with exit codes
 - **Default behavior**: Builds entire solution (all projects including tests)
 
@@ -608,6 +609,30 @@ Skyline requires zero warnings - fix all warnings before committing
 
 ### Tests fail with "File not found"
 Ensure you're running TestRunner.exe from the output directory (`bin\x64\Debug`)
+
+### Build blocked by running processes (Exit code 2)
+
+**Symptom**: Build script exits with code 2 and displays `[LLM-AGENT-ACTION-REQUIRED]` message.
+
+**Root cause**: SkylineTester, TestRunner, or Skyline processes are running and may have filesystem locks on DLLs/EXEs that MSBuild needs to overwrite.
+
+**What the script does**: The build script automatically detects running test processes before attempting the build. It does NOT automatically stop them - it outputs guidance for the LLM agent to ask the developer for permission first.
+
+**For LLM agents**: When you see `[LLM-AGENT-ACTION-REQUIRED]`, you MUST ask the developer before stopping processes:
+- Ask: "May I stop [process names] to proceed with the build?"
+- Wait for explicit approval
+- Only then run the stop command shown in the script output
+
+**For developers**: If you're actively testing and don't want processes stopped, either:
+1. Stop them yourself when ready, then re-run the build
+2. Tell the LLM to wait while you finish testing
+
+**To stop processes manually** (after approval):
+```powershell
+Get-Process -Name 'SkylineTester','TestRunner','Skyline*' -ErrorAction SilentlyContinue | Stop-Process -Force
+```
+
+**Note**: During an established dev-build-test loop (like debugging with SkylineTester --autorun), the developer may grant blanket permission to stop test processes as needed. See [skylinetester-debugging-guide.md](skylinetester-debugging-guide.md) for automated debugging workflows.
 
 ## Pre-Commit Validation (Recommended)
 

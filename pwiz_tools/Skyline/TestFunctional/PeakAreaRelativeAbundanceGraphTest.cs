@@ -26,6 +26,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -62,6 +63,9 @@ namespace pwiz.SkylineTestFunctional
                     graph.Type == GraphTypeSummary.abundance && graph.Controller is AreaGraphController);
                 Assert.IsNotNull(peakAreaGraph);
 
+                // Initial calculation should be full (no cache)
+                Assert.AreEqual(0, graphPane.CachedNodeCount, "Initial graph should have no cached nodes");
+
                 // Verify that setting the targets to Proteins or Peptides produces the correct number of points
                 SkylineWindow.SetAreaProteinTargets(true);
             });
@@ -69,12 +73,16 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.AreEqual(48, graphPane.CurveList.Sum(curve => curve.NPts));
+                // Mode change requires full recalculation
+                Assert.AreEqual(0, graphPane.CachedNodeCount, "Switching to protein mode should trigger full calculation");
                 SkylineWindow.SetAreaProteinTargets(false);
             });
             WaitForConditionUI(() => graphPane.IsComplete);
             RunUI(() =>
             {
                 Assert.AreEqual(125, graphPane.CurveList.Sum(curve => curve.NPts));
+                // Mode change requires full recalculation
+                Assert.AreEqual(0, graphPane.CachedNodeCount, "Switching to peptide mode should trigger full calculation");
 
                 // Verify that excluding peptide lists reduces the number of points
                 SkylineWindow.SetExcludePeptideListsFromAbundanceGraph(true);
@@ -83,10 +91,13 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.AreEqual(45, graphPane.CurveList.Sum(curve => curve.NPts));
-                //CONSIDER add quantitative checks for relative abundance results
+                // Excluding peptide lists uses incremental update - remaining peptides are cached
+                Assert.AreEqual(45, graphPane.CachedNodeCount, "Remaining peptides should be cached");
+                Assert.AreEqual(0, graphPane.RecalculatedNodeCount, "No peptides should need recalculation");
             });
 
             TestFormattingDialog();
+            TestIncrementalUpdate();
         }
 
         private void TestFormattingDialog()
@@ -235,6 +246,245 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Tests that incremental updates correctly reuse cached calculations when possible.
+        /// Uses CachedNodeCount and RecalculatedNodeCount to verify the incremental update path was taken.
+        /// </summary>
+        private void TestIncrementalUpdate()
+        {
+            var pane = FindGraphPane();
+
+            // === Test 1: Protein mode - delete a peptide, verify incremental update ===
+            RunUI(() => SkylineWindow.SetAreaProteinTargets(true));
+            WaitForConditionUI(() => pane.IsComplete);
+
+            int originalProteinCount = 0;
+            RunUI(() =>
+            {
+                originalProteinCount = pane.CurveList.Sum(curve => curve.NPts);
+                // Verify this was a full calculation (first time in protein mode)
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Initial protein mode calculation should have no cached nodes");
+                Assert.AreEqual(originalProteinCount, pane.RecalculatedNodeCount,
+                    "Initial protein mode calculation should recalculate all nodes");
+
+                // Select a peptide in the first protein group for deletion
+                var peptidePath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                SkylineWindow.SelectedPath = peptidePath;
+            });
+
+            // Delete the selected peptide
+            RunUI(SkylineWindow.EditDelete);
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                int afterDeleteCount = pane.CurveList.Sum(curve => curve.NPts);
+                // Same number of proteins (we deleted a peptide, not a protein)
+                Assert.AreEqual(originalProteinCount, afterDeleteCount,
+                    "Deleting a peptide should not change protein count");
+
+                // Verify incremental update: most proteins cached, only 1 recalculated
+                Assert.AreEqual(originalProteinCount - 1, pane.CachedNodeCount,
+                    "After deleting peptide, all but one protein should be cached");
+                Assert.AreEqual(1, pane.RecalculatedNodeCount,
+                    "After deleting peptide, only the affected protein should be recalculated");
+            });
+
+            // === Test 2: Undo - verify incremental update restores protein ===
+            RunUI(SkylineWindow.Undo);
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                int afterUndoCount = pane.CurveList.Sum(curve => curve.NPts);
+                Assert.AreEqual(originalProteinCount, afterUndoCount,
+                    "Undo should restore protein count");
+
+                // Verify incremental update: most proteins cached, only 1 recalculated (the restored one)
+                Assert.AreEqual(originalProteinCount - 1, pane.CachedNodeCount,
+                    "After undo, all but one protein should be cached");
+                Assert.AreEqual(1, pane.RecalculatedNodeCount,
+                    "After undo, only the restored protein should be recalculated");
+            });
+
+            // === Test 3: Peptide mode - delete multiple disjoint peptides, verify incremental update ===
+            RunUI(() => SkylineWindow.SetAreaProteinTargets(false));
+            WaitForConditionUI(() => pane.IsComplete);
+
+            int originalPeptideCount = 0;
+            const int peptidesToDelete = 4;
+            RunUI(() =>
+            {
+                originalPeptideCount = pane.CurveList.Sum(curve => curve.NPts);
+                // Verify this was a full calculation (switching to peptide mode)
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Switching to peptide mode should trigger full calculation with no cached nodes");
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
+                    "Switching to peptide mode should recalculate all nodes");
+
+                // Select multiple disjoint peptides for deletion (indices 0, 10, 50, 100)
+                // These are spread across the document to test non-adjacent deletion
+                var peptideIndices = new[] { 0, 10, 50, 100 };
+                var paths = peptideIndices
+                    .Where(i => i < SkylineWindow.Document.MoleculeCount)
+                    .Select(i => SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, i))
+                    .ToArray();
+                SkylineWindow.SequenceTree.SelectedPaths = paths;
+            });
+
+            // Delete the selected peptides
+            RunUI(SkylineWindow.EditDelete);
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                int afterDeleteCount = pane.CurveList.Sum(curve => curve.NPts);
+                // Fewer peptides after deletion
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, afterDeleteCount,
+                    $"Deleting {peptidesToDelete} peptides should reduce count by {peptidesToDelete}");
+
+                // Verify incremental update: all remaining peptides cached, none recalculated
+                // (the deleted peptides are just removed, not recalculated)
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, pane.CachedNodeCount,
+                    "After deleting peptides, all remaining peptides should be cached");
+                Assert.AreEqual(0, pane.RecalculatedNodeCount,
+                    "After deleting peptides, no peptides should be recalculated (just removed)");
+            });
+
+            // === Test 4: Undo - verify the restored peptides are recalculated ===
+            RunUI(SkylineWindow.Undo);
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                int afterUndoCount = pane.CurveList.Sum(curve => curve.NPts);
+                Assert.AreEqual(originalPeptideCount, afterUndoCount,
+                    "Undo should restore peptide count");
+
+                // Verify incremental update: existing peptides cached, restored peptides recalculated
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, pane.CachedNodeCount,
+                    "After undo, existing peptides should be cached");
+                Assert.AreEqual(peptidesToDelete, pane.RecalculatedNodeCount,
+                    $"After undo, only the {peptidesToDelete} restored peptides should be recalculated");
+            });
+
+            // === Test 5: Change quantification settings - verify full recalculation ===
+            // Changing NormalizationMethod should trigger full recalculation via HasEqualQuantificationSettings
+            ChangeNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS, pane);
+
+            RunUI(() =>
+            {
+                // Quantification settings change should trigger full recalculation
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Changing quantification settings should trigger full calculation with no cached nodes");
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
+                    "Changing quantification settings should recalculate all nodes");
+            });
+
+            // === Test 5b: Delete peptide with median normalization - verify full recalculation ===
+            // With EQUALIZE_MEDIANS, any target change affects all abundances because the median
+            // is recalculated. Incremental updates cannot be used.
+            RunUI(() => SkylineWindow.SelectedPath =
+                SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0));
+            RunUI(SkylineWindow.EditDelete);
+            WaitForGraphs();
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                int afterMedianDeleteCount = pane.CurveList.Sum(curve => curve.NPts);
+                Assert.AreEqual(originalPeptideCount - 1, afterMedianDeleteCount,
+                    "Deleting a peptide should reduce count by 1");
+
+                // With median normalization, everything must be recalculated (no caching)
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "With median normalization, deleting a peptide should trigger full recalculation");
+                Assert.AreEqual(originalPeptideCount - 1, pane.RecalculatedNodeCount,
+                    "With median normalization, all remaining peptides should be recalculated");
+            });
+
+            // Undo the delete so we have all peptides again (still in EQUALIZE_MEDIANS mode)
+            RunUI(SkylineWindow.Undo);
+            WaitForConditionUI(() => pane.IsComplete);
+
+            // === Test 5c: Change to GLOBAL_STANDARDS and add new global standard ===
+            // The document has VVLSGSDATLAYSAFK already marked as a global standard.
+            // First, change to GLOBAL_STANDARDS normalization.
+            ChangeNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS, pane);
+
+            RunUI(() =>
+            {
+                // Normalization change should trigger full recalculation
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Changing to GLOBAL_STANDARDS should trigger full calculation with no cached nodes");
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
+                    "Changing to GLOBAL_STANDARDS should recalculate all nodes");
+            });
+
+            // Now add HLNGFSVPR as another global standard - this should invalidate the cache
+            // because _cachedPeptideStandards will change
+            FindNode("HLNGFSVPR");
+            RunUI(() => SkylineWindow.SetStandardType(StandardType.GLOBAL_STANDARD));
+            WaitForGraphs();
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                // Adding a global standard changes _cachedPeptideStandards, which should
+                // cause HasEqualQuantificationSettings to return false and invalidate the cache
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Adding a global standard should trigger full calculation (cachedPeptideStandards changed)");
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
+                    "Adding a global standard should recalculate all nodes");
+            });
+
+            // Undo both changes (global standard annotation and normalization method)
+            RunUI(SkylineWindow.Undo);
+            RunUI(SkylineWindow.Undo);
+            WaitForConditionUI(() => pane.IsComplete);
+
+            // === Test 6: Reopen document - verify document ID change triggers full recalculation ===
+            // This tests the "document identity changed" branch in CleanCacheForIncrementalUpdates
+            // Capture the current document ID before reopening
+            Identity priorDocId = null;
+            RunUI(() => priorDocId = SkylineWindow.Document.Id);
+
+            // Reopen the same file - this creates a new document with a new ID
+            RunUI(() => SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
+            WaitForDocumentLoaded();
+
+            // Get the new graph pane (old one was disposed when document closed)
+            pane = FindGraphPane();
+            WaitForConditionUI(() => pane.IsComplete);
+
+            RunUI(() =>
+            {
+                // Verify document ID actually changed
+                Assert.AreNotSame(priorDocId, SkylineWindow.Document.Id,
+                    "Reopening document should create a new document ID");
+
+                // Document ID change should trigger full recalculation (no cached data valid)
+                Assert.AreEqual(0, pane.CachedNodeCount,
+                    "Reopening document should trigger full calculation with no cached nodes");
+                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
+                    "Reopening document should recalculate all nodes");
+            });
+        }
+
+        private static void ChangeNormalizationMethod(NormalizationMethod method, SummaryRelativeAbundanceGraphPane pane)
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.ModifyDocument($"Change normalization method to {method.NormalizationMethodCaption}",
+                    doc => doc.ChangeSettings(doc.Settings.ChangePeptideQuantification(q =>
+                        q.ChangeNormalizationMethod(method))));
+            });
+            // Wait for graph update timer to fire, triggering the new calculation
+            WaitForGraphs();
+            WaitForConditionUI(() => pane.IsComplete);
         }
     }
 }

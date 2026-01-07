@@ -17,14 +17,15 @@ This guide helps Skyline developers configure a Windows workstation so that AI-a
 > 1. Install PowerShell 7 (UTF-8 terminal support)
 > 2. Configure PowerShell 7 profile for permanent UTF-8 encoding
 > 3. Update Cursor/VS Code terminal settings to use PowerShell 7 + UTF-8
-> 4. Install Claude Code CLI for agentic coding workflows
-> 5. Install ReSharper command-line tools (`jb inspectcode`)
-> 6. Install GitHub CLI (`gh`) for agentic PR workflows
-> 7. Install LabKey MCP server (skyline.ms data access)
-> 8. Configure Git and global line ending settings
-> 9. Install a Markdown viewer for browser-based docs
-> 10. Optional: Install additional helpers (Everything Search, Diff tools)
-> 11. **Verify setup**: `pwsh -File ai\scripts\Verify-Environment.ps1`
+> 4. Install Node.js LTS (provides npm for tool installation)
+> 5. Install Claude Code CLI for agentic coding workflows
+> 6. Install ReSharper command-line tools (`jb inspectcode`)
+> 7. Install GitHub CLI (`gh`) for agentic PR workflows
+> 8. Install LabKey MCP server (skyline.ms data access)
+> 9. Configure Git and global line ending settings
+> 10. Install a Markdown viewer for browser-based docs
+> 11. Optional: Install additional helpers (Everything Search, Diff tools)
+> 12. **Verify setup**: `pwsh -File ai\scripts\Verify-Environment.ps1`
 
 ---
 
@@ -124,32 +125,79 @@ This ensures *all* terminal sessions launched inside Cursor/VS Code use PowerShe
 
 ## 2. Required Command-Line Tools
 
+### Node.js (npm)
+
+Node.js provides the npm package manager used by Claude Code and many other development tools.
+
+**Install via winget:**
+```powershell
+winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+```
+
+**Restart your terminal** after installation to get `node` and `npm` in PATH.
+
+**Verify:**
+```powershell
+node --version   # Should show v20.x or higher
+npm --version    # Should show 10.x or higher
+```
+
+> **Why Node.js?** Many LLM-assisted development tools are built with JavaScript/TypeScript:
+> - Claude Code CLI (npm install)
+> - DocumentConverter (Word-to-HTML for tutorials)
+> - episodic-memory (semantic search across Claude Code conversations)
+> - Various MCP servers and plugins
+
 ### Claude Code CLI
 
 Claude Code is Anthropic's agentic coding tool that runs in the terminal. It understands your codebase and can execute commands, edit files, and handle git workflows through natural language.
 
-**Install (run in PowerShell 7 as Administrator):**
+**Install via npm (recommended):**
+
+```powershell
+npm install -g @anthropic-ai/claude-code
+```
+
+This installs to your npm global folder (typically `%APPDATA%\npm`), which is usually already in your PATH.
+
+**Alternative: Standalone installer**
 
 ```powershell
 irm https://claude.ai/install.ps1 | iex
 ```
 
-**Known Issue: PATH not updated**
+This installs to `%USERPROFILE%\.local\bin\claude.exe`.
 
-The installer may not add Claude Code to your PATH. If `claude` is not recognized after installation, add it manually:
-
+**Verify installation:**
 ```powershell
+claude --version
+```
+
+**Troubleshooting: `claude` not recognized**
+
+First, find where Claude Code is installed (or if it exists at all):
+```powershell
+where.exe claude
+# Or check the expected locations directly:
+Test-Path "$env:APPDATA\npm\claude.cmd"           # npm install location
+Test-Path "$env:USERPROFILE\.local\bin\claude.exe" # standalone installer location
+```
+
+If the file doesn't exist despite the installer claiming success, try the npm installation method instead.
+
+If the file exists but isn't in PATH, add the appropriate path:
+```powershell
+# For npm installation:
+$claudePath = "$env:APPDATA\npm"
+
+# For standalone installer:
+# $claudePath = "$env:USERPROFILE\.local\bin"
+
 # Add to user PATH permanently
-$claudePath = "$env:USERPROFILE\.local\bin"
 [Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$claudePath", "User")
 
 # Refresh current session's PATH
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-```
-
-**Verify:**
-```powershell
-claude --version
 ```
 
 **Authenticate:**
@@ -352,7 +400,7 @@ Run the environment verification script to check all prerequisites at once:
 pwsh -File C:\proj\pwiz\ai\scripts\Verify-Environment.ps1
 ```
 
-This checks: PowerShell 7, UTF-8 encoding, Claude Code CLI, ReSharper CLI, dotCover, GitHub CLI, Python packages, LabKey MCP server, netrc credentials, and Git configuration.
+This checks: PowerShell 7, UTF-8 encoding, Node.js/npm, Claude Code CLI, ReSharper CLI, dotCover, GitHub CLI, Python packages, LabKey MCP server, netrc credentials, and Git configuration.
 
 Example output:
 ```
@@ -362,6 +410,8 @@ Environment Check Results
 
   PowerShell                    [OK]      7.5.4
   Console Encoding              [OK]      UTF-8 (CP65001)
+  Node.js                       [OK]      22.16.0
+  npm                           [OK]      10.9.2
   Claude Code CLI               [OK]      2.0.69
   ReSharper CLI (jb)            [OK]      2025.2.4
   dotCover CLI                  [OK]      2025.1.7
@@ -375,7 +425,7 @@ Environment Check Results
   Git pull.rebase               [OK]      false
 
 ----------------------------------------
-  OK: 13 | Warnings: 0 | Missing: 0 | Errors: 0
+  OK: 15 | Warnings: 0 | Missing: 0 | Errors: 0
 
 [OK] Environment is fully configured for LLM-assisted development
 ```
@@ -407,7 +457,8 @@ If you see warning/errors, the scripts will fail with `[FAILED]` and clear messa
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Emoji/Unicode characters render as `â✓…` | Terminal using CP1252/CP437 | Install PowerShell 7, add UTF-8 config to `$PROFILE` |
-| `claude` not found after install | PATH not updated by installer | Add `$env:USERPROFILE\.local\bin` to PATH (see Claude Code section) |
+| `npm` not found | Node.js not installed | `winget install OpenJS.NodeJS.LTS` then restart terminal |
+| `claude` not found after install | Installer failed or PATH not updated | Check if file exists with `Test-Path`; try npm install; see Claude Code section |
 | `jb` not found | ReSharper CLI tools missing | `dotnet tool install -g JetBrains.ReSharper.GlobalTools` |
 | `dotCover` not found | dotCover CLI tools missing | `dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7` |
 | dotCover JSON export fails with "Object reference not set" | dotCover 2025.3.0+ bug | Uninstall and install 2025.1.7: `dotnet tool uninstall --global JetBrains.dotCover.CommandLineTools && dotnet tool install --global JetBrains.dotCover.CommandLineTools --version 2025.1.7` |

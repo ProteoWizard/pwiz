@@ -461,6 +461,7 @@
       <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
+    <Compile Include="Controls\Graphs\ReplicateCachingReceiver.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\SummaryRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\ImageListBox.cs">
@@ -1581,6 +1582,7 @@
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\ColorGenerator.cs" />
+    <Compile Include="Model\CachingContracts.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
     <Compile Include="Controls\PopupPickList.cs">
