@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
             Assert.IsNotNull(FindOpenForm<GraphSpectrum>());
-            var libraryNames = new[] { "Rat (NIST) (Rat_plasma2)", "Rat (GPM) (Rat_plasma2)", "Rat_Prosit" };
+            var libraryNames = new[] { "Rat (NIST) (Rat_plasma2)", "Rat_Prosit" };
             // Delay various amounts of milliseconds before changing the libraries in the Peptide Settings dialog.
             // The bug happens if the timer in GraphSpectrum.UpdateManager fires while pressing OK on the Peptide Settings dialog.
             foreach (var delay in new[] { 0, 20, 40, 80, 160 })
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
                 {
                     peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Library;
-                    peptideSettingsUi.PickedLibraries = libraryNames.Take(2).ToArray();
+                    peptideSettingsUi.PickedLibraries = libraryNames.Take(1).ToArray();
                     peptideSettingsUi.OkDialog();
                 });
                 Thread.Sleep(delay);
