@@ -175,6 +175,7 @@
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
+    <Compile Include="ChangePickedLibrariesTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
