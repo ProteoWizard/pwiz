@@ -46,7 +46,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using pwiz.Skyline.Util;
 using static pwiz.Skyline.Model.Files.FileModel;
 using BackgroundProteome = pwiz.Skyline.Model.Files.BackgroundProteome;
 using IonMobilityLibrary = pwiz.Skyline.Model.Files.IonMobilityLibrary;
@@ -71,7 +70,6 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestFilesTreeForm()
         {
-            ConnectionPool.TestHasFinished = false;
             // These test files are large (30MB) so reuse rather than duplicate
             TestFilesZipPaths = new[]
             {
@@ -100,8 +98,6 @@ namespace pwiz.SkylineTestFunctional
             TestSaveAs();
             TestRatPlasmaDocument();
             TestUpgradeExistingDocumentWithFilesTree();
-            ConnectionPool.TestHasFinished = true;
-            Console.Out.WriteLine("Test has finished");
         }
 
         protected void TestFileSystemWatcherIgnoreList()
@@ -691,7 +687,6 @@ namespace pwiz.SkylineTestFunctional
                     dlg.OkDialog();
                 });
                 OkDialog(libListDlg, libListDlg.OkDialog);
-                PauseTest();
                 RunUI(() => peptideSettingsUI.PickedLibraries = peptideSettingsUI.PickedLibraries.Append(name).ToArray());
                 OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             }
