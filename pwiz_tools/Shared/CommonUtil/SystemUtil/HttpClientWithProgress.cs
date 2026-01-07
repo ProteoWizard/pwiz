@@ -1103,6 +1103,8 @@ namespace pwiz.Common.SystemUtil
 
         public static bool IsNetworkReallyAvailable()
         {
+            if (TestBehavior != null)
+                return true;
             if (!NetworkInterface.GetIsNetworkAvailable())
                 return false;
 
