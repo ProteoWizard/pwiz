@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // test that the auto-installed tool was copied to the current version's tools directory
             StringAssert.StartsWith(Settings.Default.SearchToolList[SearchToolType.EncyclopeDIA].Path, ToolDescriptionHelpers.GetToolsDirectory());
-            AssertEx.FileExists(Settings.Default.SearchToolList[SearchToolType.EncyclopeDIA].Path);
+            Assert.IsTrue(File.Exists(Settings.Default.SearchToolList[SearchToolType.EncyclopeDIA].Path));
 
             EditToolListDlg = ShowDialog<EditListDlg<SettingsListBase<SearchTool>, SearchTool>>(SkylineWindow.ShowSearchToolsDlg);
             
