@@ -688,6 +688,10 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(libListDlg, libListDlg.OkDialog);
                 RunUI(() => peptideSettingsUI.PickedLibraries = peptideSettingsUI.PickedLibraries.Append(name).ToArray());
+
+                // TODO(nicksh): If GraphSpectrum updates while the OK button is being pressed it might leak a PooledSqliteConnection
+                WaitForConditionUI(() => !SkylineWindow.GraphSpectrum.IsGraphUpdatePending);
+
                 OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             }
 
