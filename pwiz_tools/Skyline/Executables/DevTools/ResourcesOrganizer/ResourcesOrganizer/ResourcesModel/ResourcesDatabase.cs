@@ -485,12 +485,12 @@ namespace ResourcesOrganizer.ResourcesModel
                 var uniqueFiles = groupList.Select(x => x.FilePath).Distinct().OrderBy(f => f).ToList();
                 var fileCount = uniqueFiles.Count;
 
-                // Create individual records WITHOUT file path first (for proper deduplication)
-                var individualRecords = groupList
-                    .Select(x => MakeLocalizationCsvRecord(x.Entry, language))
+                // Create records with file path association preserved
+                var recordsWithFiles = groupList
+                    .Select(x => (FilePath: x.FilePath, Record: MakeLocalizationCsvRecord(x.Entry, language)))
                     .ToList();
 
-                if (individualRecords.Count > 1)
+                if (recordsWithFiles.Count > 1)
                 {
                     var uniqueIssues = groupList.Select(x => x.Entry.GetTranslation(language)?.Issue)
                         .OfType<LocalizationIssue>()
@@ -498,7 +498,8 @@ namespace ResourcesOrganizer.ResourcesModel
                         .ToList();
                     if (uniqueIssues.Count == 1)
                     {
-                        individualRecords = individualRecords.Select(record => uniqueIssues[0].StoreInCsvRecord(record))
+                        recordsWithFiles = recordsWithFiles
+                            .Select(x => (x.FilePath, Record: uniqueIssues[0].StoreInCsvRecord(x.Record)))
                             .Distinct().ToList();
                     }
 
@@ -507,7 +508,7 @@ namespace ResourcesOrganizer.ResourcesModel
                         ? string.Join("; ", uniqueFiles)
                         : string.Join("; ", uniqueFiles.Take(3)) + "; ...";
 
-                    var unqualifiedRecords = individualRecords.Select(record => record with
+                    var unqualifiedRecords = recordsWithFiles.Select(x => x.Record with
                     {
                         File = fileList,
                         Name = string.Empty,
@@ -520,8 +521,8 @@ namespace ResourcesOrganizer.ResourcesModel
                     }
                 }
 
-                // For non-consolidated entries, add file info
-                records.AddRange(individualRecords.Select(r => r with { FileCount = fileCount, File = uniqueFiles[0] }));
+                // For non-consolidated entries, each record keeps its own file path with FileCount=1
+                records.AddRange(recordsWithFiles.Select(x => x.Record with { FileCount = 1, File = x.FilePath }));
             }
             using var stream = new FileStream(path, FileMode.Create);
             using var writer = new StreamWriter(stream, new UTF8Encoding(false));
