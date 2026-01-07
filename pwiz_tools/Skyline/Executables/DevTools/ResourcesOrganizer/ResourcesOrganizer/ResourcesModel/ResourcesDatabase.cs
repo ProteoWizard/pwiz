@@ -471,16 +471,28 @@ namespace ResourcesOrganizer.ResourcesModel
         public void ExportLocalizationCsv(string path, string language, out int entryCount)
         {
             var records = new List<LocalizationCsvRecord>();
-            foreach (var textGroup in GetInvariantResources().Values.SelectMany(list=>list)
-                         .Where(resourceEntry=>resourceEntry.Invariant.IsLocalizableText && NeedsLocalizationHelp(resourceEntry, language))
-                         .GroupBy(resourceEntry=>resourceEntry.Invariant with {File = string.Empty, Name = string.Empty}))
+
+            // Iterate over ResourcesFiles directly to preserve file path information
+            var entriesWithFiles = ResourcesFiles
+                .SelectMany(kvp => kvp.Value.Entries
+                    .Where(entry => entry.Invariant.IsLocalizableText && NeedsLocalizationHelp(entry, language))
+                    .Select(entry => (FilePath: kvp.Key, Entry: entry)))
+                .GroupBy(x => x.Entry.Invariant with { File = string.Empty, Name = string.Empty });
+
+            foreach (var textGroup in entriesWithFiles)
             {
-                var individualRecords =
-                    textGroup.Select(resourceEntry => MakeLocalizationCsvRecord(resourceEntry, language)).ToList();
+                var groupList = textGroup.ToList();
+                var uniqueFiles = groupList.Select(x => x.FilePath).Distinct().OrderBy(f => f).ToList();
+                var fileCount = uniqueFiles.Count;
+
+                // Create individual records WITHOUT file path first (for proper deduplication)
+                var individualRecords = groupList
+                    .Select(x => MakeLocalizationCsvRecord(x.Entry, language))
+                    .ToList();
 
                 if (individualRecords.Count > 1)
                 {
-                    var uniqueIssues = textGroup.Select(entry => entry.GetTranslation(language)?.Issue)
+                    var uniqueIssues = groupList.Select(x => x.Entry.GetTranslation(language)?.Issue)
                         .OfType<LocalizationIssue>()
                         .Where(issue => issue != LocalizationIssue.MissingTranslation).Distinct()
                         .ToList();
@@ -489,10 +501,17 @@ namespace ResourcesOrganizer.ResourcesModel
                         individualRecords = individualRecords.Select(record => uniqueIssues[0].StoreInCsvRecord(record))
                             .Distinct().ToList();
                     }
+
+                    // Build a file list for context (show up to 3 files, with "..." if more)
+                    var fileList = uniqueFiles.Count <= 3
+                        ? string.Join("; ", uniqueFiles)
+                        : string.Join("; ", uniqueFiles.Take(3)) + "; ...";
+
                     var unqualifiedRecords = individualRecords.Select(record => record with
                     {
-                        File = string.Empty,
-                        Name = string.Empty
+                        File = fileList,
+                        Name = string.Empty,
+                        FileCount = fileCount
                     }).Distinct().ToList();
                     if (unqualifiedRecords.Count == 1)
                     {
@@ -500,7 +519,9 @@ namespace ResourcesOrganizer.ResourcesModel
                         continue;
                     }
                 }
-                records.AddRange(individualRecords);
+
+                // For non-consolidated entries, add file info
+                records.AddRange(individualRecords.Select(r => r with { FileCount = fileCount, File = uniqueFiles[0] }));
             }
             using var stream = new FileStream(path, FileMode.Create);
             using var writer = new StreamWriter(stream, new UTF8Encoding(false));
