@@ -1016,9 +1016,10 @@ namespace TestPerf
             RunUI(() => foldChangeGridWithGraph.ShowGraph());
             RestoreViewOnScreen(38);
             var foldChangeGraph = WaitForOpenForm<FoldChangeBarGraph>();
-            WaitForConditionUI(() => foldChangeGraph.ZedGraphControl.GraphPane.CurveList.Any());
+            WaitForConditionUI(() => foldChangeGraph.IsComplete);
             RunUI(() =>
             {
+                Assert.AreNotEqual(0, foldChangeGraph.ZedGraphControl.GraphPane.CurveList.Count);
                 Assert.AreEqual(foldChangeGridWithGraph.DataboundGridControl.RowCount,
                     foldChangeGraph.ZedGraphControl.GraphPane.CurveList.First().Points.Count);
             });
