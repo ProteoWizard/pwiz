@@ -25,6 +25,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz_aux/msrc/utility/vendor_api/Bruker/CompassDataEnums.hpp"
 #include <string>
 #include <boost/shared_ptr.hpp>
 
@@ -64,6 +65,9 @@ PWIZ_API_DECL enum Reader_Bruker_Format
 /// otherwise returns empty string
 PWIZ_API_DECL Reader_Bruker_Format format(const std::string& path);
 
+// CVID mapping for trace type/unit and scaling helper
+PWIZ_API_DECL pwiz::cv::CVID traceTypeToCVID(pwiz::vendor_api::Bruker::TraceType type, pwiz::vendor_api::Bruker::TraceUnit unit, const std::string& description);
+PWIZ_API_DECL pwiz::cv::CVID traceUnitToCVID(pwiz::vendor_api::Bruker::TraceUnit unit, double& value);
 
 PWIZ_API_DECL std::vector<InstrumentConfiguration> createInstrumentConfigurations(pwiz::vendor_api::Bruker::CompassDataPtr rawfile);
 PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(pwiz::vendor_api::Bruker::CompassDataPtr rawfile);
@@ -80,6 +84,5 @@ PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(pwiz::vendor_api::Bruker::
 #include "pwiz_aux/msrc/utility/vendor_api/Bruker/CompassData.hpp"
 using namespace pwiz::vendor_api::Bruker;
 #endif
-
 
 #endif // _READER_BRUKER_DETAIL_HPP_

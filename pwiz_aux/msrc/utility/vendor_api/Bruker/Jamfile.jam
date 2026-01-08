@@ -162,6 +162,7 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
             Baf2Sql.cpp
             TimsData.cpp
             TsfData.cpp
+            ChromatographyDataSqliteReader.cpp
             $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker//Reader_Bruker_Detail
         : # requirements
 
