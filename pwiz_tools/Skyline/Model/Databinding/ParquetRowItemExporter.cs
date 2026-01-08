@@ -43,8 +43,8 @@ namespace pwiz.Skyline.Model.Databinding
 
             using (var writer = new ParquetWriter(schema, stream))
             {
-                int totalRows = rowItemEnumerator.Count;
-                int rowsProcessed = 0;
+                long totalRows = rowItemEnumerator.Count;
+                long rowsProcessed = 0;
 
                 // Process in chunks
                 while (rowsProcessed < totalRows)
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Databinding
                         return;
                     }
 
-                    int rowsInChunk = Math.Min(ROWS_PER_GROUP, totalRows - rowsProcessed);
+                    int rowsInChunk = (int) Math.Min(ROWS_PER_GROUP, totalRows - rowsProcessed);
 
                     // Resize arrays for this chunk
                     foreach (var column in columns)
@@ -63,8 +63,8 @@ namespace pwiz.Skyline.Model.Databinding
                     }
 
                     // Populate chunk data
-                    if (!PopulateChunk(progressMonitor, ref status, rowItemEnumerator, columns,
-                        rowsInChunk, rowsProcessed, totalRows))
+                    if (!PopulateChunk(progressMonitor, ref status, rowItemEnumerator, columns, rowsInChunk,
+                            rowsProcessed, totalRows))
                     {
                         return; // Canceled
                     }
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         private bool PopulateChunk(IProgressMonitor progressMonitor, ref IProgressStatus status,
             RowItemEnumerator rowItemEnumerator, List<ColumnData> columns, int rowsInChunk,
-            int rowsProcessed, int totalRows)
+            long rowsProcessed, long totalRows)
         {
             int rowIndex = 0;
             while (rowIndex < rowsInChunk && rowItemEnumerator.MoveNext())
@@ -109,8 +109,8 @@ namespace pwiz.Skyline.Model.Databinding
                     return false;
                 }
 
-                int overallRowIndex = rowsProcessed + rowIndex;
-                int percentComplete = overallRowIndex * 100 / totalRows;
+                long overallRowIndex = rowsProcessed + rowIndex;
+                int percentComplete = (int) (overallRowIndex * 100 / totalRows);
                 if (percentComplete > status.PercentComplete)
                 {
                     status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,

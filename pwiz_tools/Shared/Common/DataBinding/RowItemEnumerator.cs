@@ -31,26 +31,36 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class RowItemEnumerator : IEnumerator<RowItem>
     {
-        private RowItem[] _rowItems;
+        private ImmutableList<RowItem[]> _rowItems;
         private RowItem _current;
-        private int _index;
-        public RowItemEnumerator(IEnumerable<RowItem> rowItems, ItemProperties itemProperties,
+        private int _listIndex;
+        private int _indexInList;
+
+        public RowItemEnumerator(IEnumerable<IEnumerable<RowItem>> rowItemLists, ItemProperties itemProperties,
             ColumnFormats columnFormats)
         {
-            _rowItems = rowItems.ToArray();
+            _rowItems = ImmutableList.ValueOf(rowItemLists.Select(list => list.ToArray()));
+            Count = _rowItems.Sum(list => (long) list.Length);
             ItemProperties = itemProperties;
             ColumnFormats = columnFormats;
         }
 
-        public static RowItemEnumerator FromBindingListSource(BindingListSource source)
+        public RowItemEnumerator(BigList<RowItem> bigList, ItemProperties itemProperties, ColumnFormats columnFormats) : this(bigList.InnerLists, itemProperties, columnFormats)
         {
-            return new RowItemEnumerator(source.Cast<RowItem>(), source.ItemProperties, source.ColumnFormats);
+
         }
 
-        public int Count
+        public static RowItemEnumerator FromBindingListSource(BindingListSource source)
         {
-            get { return _rowItems.Length; }
+            return new RowItemEnumerator(source.ReportResults.RowItems, source.ItemProperties, source.ColumnFormats);
         }
+
+        public long Count
+        {
+            get;
+        }
+
+        public long Index { get; private set; }
 
         public ItemProperties ItemProperties { get; }
         public ColumnFormats ColumnFormats { get; }
@@ -66,15 +76,30 @@ namespace pwiz.Common.DataBinding
 
         public bool MoveNext()
         {
-            if (_index >= _rowItems.Length)
+            if (_listIndex >= _rowItems.Count)
             {
                 return false;
             }
 
-            _current = _rowItems[_index];
-            _rowItems[_index] = null;
-            _index++;
+            _current = _rowItems[_listIndex][_indexInList];
+            _rowItems[_listIndex][_indexInList] = null;
+            _indexInList++;
+            if (_indexInList >= _rowItems[_listIndex].Length)
+            {
+                _indexInList = 0;
+                _listIndex++;
+            }
+
+            Index++;
             return true;
+        }
+
+        public int PercentComplete
+        {
+            get
+            {
+                return (int)(Index * 100 / Count);
+            }
         }
 
         object IEnumerator.Current => Current;
@@ -87,9 +112,9 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public ImmutableList<RowItem> GetRowItems()
+        public BigList<RowItem> GetRowItems()
         {
-            return _rowItems.ToImmutable();
+            return _rowItems.SelectMany(list => list).ToBigList();
         }
     }
 }

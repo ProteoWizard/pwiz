@@ -217,5 +217,10 @@ namespace pwiz.Common.Collections
                 }
             }
         }
+
+        public ImmutableList<ImmutableList<T>> InnerLists
+        {
+            get { return _lists; }
+        }
     }
 }

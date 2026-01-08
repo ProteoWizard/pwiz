@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     return;
                 }
-                int percentComplete = startPercent + (rowIndex * (100 - startPercent) / rowCount);
+                int percentComplete = (int) (startPercent + rowIndex * (100 - startPercent) / rowCount);
                 if (percentComplete > status.PercentComplete)
                 {
                     status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))

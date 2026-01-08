@@ -206,14 +206,14 @@ namespace pwiz.Common.DataBinding
             dsvWriter.WriteHeaderRow(writer, rowItemEnumerator.ItemProperties);
             var rowCount = rowItemEnumerator.Count;
             int startPercent = status.PercentComplete;
-            int rowIndex = 0;
+            long rowIndex = 0;
             while (rowItemEnumerator.MoveNext())
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return;
                 }
-                int percentComplete = startPercent + (rowIndex * (100 - startPercent) / rowCount);
+                int percentComplete = startPercent + (int) (rowIndex * (100 - startPercent) / rowCount);
                 if (percentComplete > status.PercentComplete)
                 {
                     status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
