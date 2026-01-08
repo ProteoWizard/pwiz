@@ -165,6 +165,7 @@ namespace pwiz.Skyline.FileUI
                 CreateKnownHeaderDocType(@"InChi", SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(@"SMILES", SrmDocument.DOCUMENT_TYPE.small_molecules),
                 CreateKnownHeaderDocType(@"KEGG", SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType("Spectrum Filter", SrmDocument.DOCUMENT_TYPE.mixed)
             };
         }
 
@@ -602,6 +603,7 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.PrecursorChargeColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
             SetComboBoxText(columns.NoteColumn, Resources.PasteDlg_UpdateMoleculeType_Note);
             SetComboBoxText(columns.PrecursorNoteColumn, Resources.PasteDlg_UpdateMoleculeType_PrecursorNote);
+            SetComboBoxText(columns.SpectrumFilterColumn, "Spectrum Filter");
             SetComboBoxText(columns.MoleculeNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeNote);
             SetComboBoxText(columns.MoleculeListNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote);
             var headers = Importer.RowReader.Indices.Headers;
