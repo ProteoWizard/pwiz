@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -832,6 +833,22 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
+            // Wrapper around native HeapWalk that catches any exceptions thrown during the call
+            // and returns false to indicate the walk should stop. Report the exception to the log.
+            private static bool TryHeapWalk(IntPtr hHeap, ref PROCESS_HEAP_ENTRY lpEntry)
+            {
+                try
+                {
+                    return HeapWalk(hHeap, ref lpEntry);
+                }
+                catch (Exception ex)
+                {
+                    // Report exceptions from HeapWalk so they are visible in logs, then stop iteration.
+                    RunTests.Log(null, "[WARNING] HeapWalk threw {0}: {1}\r\n", ex.GetType().Name, ex);
+                    return false;
+                }
+            }
+
             public static bool HeapDiagnostics { get; set; }
 
             public struct HeapAllocationSizes
@@ -941,6 +958,7 @@ namespace TestRunnerLib
 
             public static HeapAllocationSizes[] GetProcessHeapSizes(string dmpDir)
             {
+                const int MAX_COPY_BYTES = 1024 * 1024; // 1 MB - tune if you need more
                 if (HeapDiagnostics && dmpDir != null)
                 {
                     SizeTracker.NextDump();
@@ -958,10 +976,11 @@ namespace TestRunnerLib
                     var h = buffer[i];
                     HeapLock(h);
                     var e = new PROCESS_HEAP_ENTRY();
-                    while (HeapWalk(h, ref e))
+                    while (TryHeapWalk(h, ref e))
                     {
                         if ((e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_ENTRY_BUSY) != 0)
                         {
+                            // Always account totals (we do this regardless of whether we extract bytes)
                             sizes[i].Committed += e.cbData + e.cbOverhead;
 
                             if (committedSizes != null)
@@ -972,18 +991,57 @@ namespace TestRunnerLib
                                 committedSizes[e.cbData]++;
                             }
 
+                            // Only attempt to read user bytes for string-finding if it's likely safe
                             if (stringCounts != null)
                             {
-                                // Find string(s)
-                                var byteData = new byte[e.cbData];
+                                bool isMoveable = (e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_ENTRY_MOVEABLE) != 0;
+                                bool isRegion = (e.wFlags & PROCESS_HEAP_ENTRY_WFLAGS.PROCESS_HEAP_REGION) != 0;
+                                uint dataSize = e.cbData;
                                 IntPtr pData = e.lpData;
-                                Marshal.Copy(pData, byteData, 0, byteData.Length);
-                                TRACK_SIZES.ForEach(t => t.DumpUnseenSize(pData, byteData));
-                                foreach (var byteString in FindStrings(byteData))
+
+                                var canCopy = !isMoveable &&
+                                              !isRegion &&
+                                              pData != IntPtr.Zero &&
+                                              dataSize > 0 &&
+                                              dataSize <= int.MaxValue &&
+                                              dataSize <= (uint)MAX_COPY_BYTES;
+
+                                if (canCopy)
                                 {
-                                    if (!stringCounts.ContainsKey(byteString))
-                                        stringCounts[byteString] = 0;
-                                    stringCounts[byteString]++;
+                                    try
+                                    {
+                                        var byteData = new byte[(int)dataSize];
+                                        Marshal.Copy(pData, byteData, 0, byteData.Length);
+                                        TRACK_SIZES.ForEach(t => t.DumpUnseenSize(pData, byteData));
+                                        foreach (var byteString in FindStrings(byteData))
+                                        {
+                                            if (!stringCounts.ContainsKey(byteString))
+                                                stringCounts[byteString] = 0;
+                                            stringCounts[byteString]++;
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        // Avoid crashing the process on corrupted heaps. Log when diagnostics enabled.
+                                        if (HeapDiagnostics && dmpDir != null)
+                                        {
+                                            try
+                                            {
+                                                File.AppendAllText(Path.Combine(dmpDir, "HeapScanErrors.log"),
+                                                    $"[{DateTime.UtcNow:O}] Heap[{i}] skip string-extract size={dataSize} ptr={pData} err={ex.GetType().Name}: {ex.Message}\r\n");
+                                            }
+                                            catch
+                                            {
+                                                // best-effort logging only
+                                            }
+                                        }
+                                        // Skip string extraction for this block
+                                    }
+                                }
+                                else
+                                {
+                                    // Skip extraction for moveable/region/huge/zero/NULL pointer blocks.
+                                    // They are still counted above in sizes[i].Committed.
                                 }
                             }
                         }

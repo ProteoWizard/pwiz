@@ -1172,7 +1172,14 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                Program.MainWindow.Invoke(new Action(() => isCondition = func()));
+
+                // Avoid System.InvalidOperationException: Invoke or BeginInvoke cannot be called on a control until the window handle has been created.
+                if (Program.MainWindow.IsHandleCreated && !Program.MainWindow.IsDisposed)
+                {
+                    Program.MainWindow.Invoke(new Action(() => isCondition = func()));
+                }
+else
+Assert.Fail("Program.MainWindow in unexpected state");
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);

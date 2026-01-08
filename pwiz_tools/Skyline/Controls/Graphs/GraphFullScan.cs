@@ -310,7 +310,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Only set the title to Loading... when it takes more than 200 miliseconds to get scans
             var fullScans = _msDataFileScanHelper.MsDataSpectra;
             Thread.Sleep(200);
-            if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
+            if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra) && !Disposing && !IsDisposed)
             {
                 Invoke(new Action(() =>
                 {
