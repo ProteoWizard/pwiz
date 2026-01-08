@@ -333,6 +333,10 @@ namespace pwiz.MSGraph
                 item.CustomizeXAxis( pane.XAxis );
                 item.CustomizeYAxis( pane.YAxis );
             }
+            else if (item.GraphItemType == MSGraphItemType.chromatogram)
+            {
+                item.CustomizeYAxis(pane.YAxis); // Update units if needed
+            }
 
             CurveItem newItem = makeMSGraphItem( item );
             pane.CurveList.Add( newItem );
