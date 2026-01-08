@@ -37,18 +37,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.precursor)]
     public class Precursor : SkylineDocNode<TransitionGroupDocNode>
     {
-        private readonly Lazy<Peptide> _peptide;
+        private Peptide _peptide;
         private readonly CachedValues _cachedValues = new CachedValues();
         public Precursor(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
-            _peptide = new Lazy<Peptide>(() => new Peptide(DataSchema, IdentityPath.Parent));
+        }
+
+        public Precursor(Peptide peptide, Identity transitionGroup) : this(peptide.DataSchema, new IdentityPath(peptide.IdentityPath, transitionGroup))
+        {
+            _peptide = peptide;
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
         [InvariantDisplayName("Molecule", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Peptide Peptide
         {
-            get { return _peptide.Value; }
+            get
+            {
+                lock (this)
+                {
+                    return _peptide ??= new Peptide(DataSchema, IdentityPath.Parent);
+                }
+            }
         }
 
         [OneToMany(ForeignKey = "Precursor")]
@@ -581,7 +591,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             protected override ImmutableList<Transition> CalculateValue(Precursor owner)
             {
                 return ImmutableList.ValueOf(owner.DocNode.Children
-                    .Select(child => new Transition(owner.DataSchema, new IdentityPath(owner.IdentityPath, child.Id))));
+                    .Select(child => new Transition(owner, child.Id)));
             }
 
             protected override IDictionary<ResultKey, PrecursorResult> CalculateValue1(Precursor owner)

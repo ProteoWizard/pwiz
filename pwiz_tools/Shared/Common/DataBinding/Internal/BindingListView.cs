@@ -48,6 +48,7 @@ namespace pwiz.Common.DataBinding.Internal
     [DebuggerTypeProxy(typeof(object))]
     internal class BindingListView : BindingList<RowItem>, ITypedList, IBindingListView, IRaiseItemChangedEvents, IDisposable
     {
+        public const int MaxRowCount = 10_000_000;
         private readonly HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
         private ReportResults _reportResults = ReportResults.EMPTY;
         private QueryResults _queryResults;
@@ -366,7 +367,7 @@ namespace pwiz.Common.DataBinding.Internal
                 CancelNew(newRowPos);
             }
             RowItemList.Clear();
-            RowItemList.AddRange(QueryResults.ResultRows);
+            RowItemList.AddRange(QueryResults.ResultRows.Take(MaxRowCount));
             if (newRow != null && !NewRowHandler.IsNewRowEmpty(newRow))
             {
                 _newRow = newRow;

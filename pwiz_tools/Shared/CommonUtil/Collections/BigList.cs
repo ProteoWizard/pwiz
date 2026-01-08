@@ -11,7 +11,7 @@ namespace pwiz.Common.Collections
         public static int GetDefaultChunkSize<T>()
         {
             int itemSize = typeof(T).IsValueType ? Marshal.SizeOf<T>() : IntPtr.Size;
-            return Math.Max((1 << 30) / itemSize, 1);
+            return Math.Max((1 << 29) / itemSize, 1);
         }
 
         public static BigList<T> ToBigList<T>(this IEnumerable<T> source)
@@ -105,28 +105,19 @@ namespace pwiz.Common.Collections
             return _lists.SelectMany(list => list).GetEnumerator();
         }
 
-        public IList<T> ToSubList(long startIndex, long endIndex)
+        public ImmutableList<T> Truncate(int count)
         {
-            var count = endIndex - startIndex;
-            if (count >= int.MaxValue)
+            if (_lists.Count == 0)
             {
-                throw new ArgumentException();
+                return ImmutableList<T>.EMPTY;
             }
 
-            return ReadOnlyList.Create((int) count, i => this[startIndex + i]);
-        }
-
-        public IList<T> Truncate(int count)
-        {
-            return ToSubList(0, Math.Min(Count, count));
-        }
-
-        public ImmutableList<T> FirstChunk
-        {
-            get
+            if (count <= _lists[0].Count)
             {
-                return _lists.FirstOrDefault() ?? ImmutableList.Empty<T>();
+                return _lists[0];
             }
+
+            return ImmutableList.ValueOf(this.Take(count));
         }
 
         public BigList<T> Sort(IComparer<T> comparer)

@@ -193,22 +193,17 @@ namespace pwiz.Common.DataBinding.Internal
             var sortRows = unsortedRows.Select(row =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                return new SortRow(cancellationToken, )
-            })
-            var sortRows = new SortRow[unsortedRows.Count];
-            for (int iRow = 0; iRow < sortRows.Length; iRow++)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                sortRows[iRow] = new SortRow(cancellationToken, dataSchema, sortDescriptions, unsortedRows[iRow], iRow);
-            }
+                var sortRow = new SortRow(cancellationToken, dataSchema, sortDescriptions, row, rowIndex);
+                rowIndex++;
+                return sortRow;
+            }).ToBigList();
 
-            Array.Sort(sortRows);
-            return Array.AsReadOnly(sortRows.Select(sr => sr.RowItem).ToArray());
+            return sortRows.Sort(Comparer<SortRow>.Default).Select(sortRow=>sortRow.RowItem).ToBigList();
         }
         class SortRow : IComparable<SortRow>
         {
             private readonly object[] _keys;
-            public SortRow(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sorts, RowItem rowItem, int rowIndex)
+            public SortRow(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sorts, RowItem rowItem, long rowIndex)
             {
                 CancellationToken = cancellationToken;
                 DataSchema = dataSchema;
@@ -225,7 +220,7 @@ namespace pwiz.Common.DataBinding.Internal
             public CancellationToken CancellationToken { get; private set; }
             public DataSchema DataSchema { get; private set; }
             public RowItem RowItem { get; private set; }
-            public int OriginalRowIndex { get; private set; }
+            public long OriginalRowIndex { get; private set; }
             public ListSortDescriptionCollection Sorts { get; private set; }
 // ReSharper restore MemberCanBePrivate.Local
             public int CompareTo(SortRow other)

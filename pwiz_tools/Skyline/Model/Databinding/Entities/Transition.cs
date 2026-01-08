@@ -37,11 +37,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition)]
     public class Transition : SkylineDocNode<TransitionDocNode>
     {
-        private readonly Lazy<Precursor> _precursor;
+        private Precursor _precursor;
         private readonly CachedValue<IDictionary<ResultKey, TransitionResult>> _results;
         public Transition(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
-            _precursor = new Lazy<Precursor>(() => new Precursor(DataSchema, IdentityPath.Parent));
+        }
+
+        public Transition(Precursor precursor, Identity transition) : this(precursor.DataSchema, new IdentityPath(precursor.IdentityPath, transition))
+        {
+            _precursor = precursor;
             _results = CachedValue.Create(DataSchema, MakeResults);
         }
 
@@ -50,7 +54,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return _precursor.Value;
+                lock (this)
+                {
+                    return _precursor ??= new Precursor(DataSchema, IdentityPath.Parent);
+                }
             }
         }
 

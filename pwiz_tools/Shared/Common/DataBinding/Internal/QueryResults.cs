@@ -79,17 +79,12 @@ namespace pwiz.Common.DataBinding.Internal
             });
         }
 
-        public IList<RowItem> ResultRows
+        public BigList<RowItem> ResultRows
         {
             get
             {
                 return TransformResults.PivotedRows.RowItems;
             }
-        }
-
-        public BigList<RowItem> AllResultRows
-        {
-            get { return TransformResults.PivotedRows.AllRowItems; }
         }
     }
 

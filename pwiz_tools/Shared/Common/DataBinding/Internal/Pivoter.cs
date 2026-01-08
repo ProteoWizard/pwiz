@@ -342,7 +342,7 @@ namespace pwiz.Common.DataBinding.Internal
                 }
             }
             return new ReportResults(allReportRows.SelectMany(entry=>entry.Value.Select(
-                reportRow=>new RowItem(reportRow))), 
+                reportRow=>new RowItem(reportRow))).ToBigList(), 
                 reportItemProperties);
         }
 
@@ -372,12 +372,11 @@ namespace pwiz.Common.DataBinding.Internal
             return PivotColumns.LastOrDefault(col => columnDescriptor.PropertyPath.StartsWith(col.PropertyPath));
         }
 
-        public IEnumerable<DataPropertyDescriptor> GetItemProperties(IEnumerable<RowItem> rowItems)
+        public IEnumerable<DataPropertyDescriptor> GetItemProperties(BigList<RowItem> rowItems)
         {
             var columnNames = new HashSet<string>();
             var propertyDescriptors = new List<DataPropertyDescriptor>();
             var pivotDisplayColumns = new Dictionary<PivotKey, List<DisplayColumn>>();
-            var rowItemsArray = rowItems as RowItem[] ?? rowItems.ToArray();
             foreach (var displayColumn in ViewInfo.DisplayColumns)
             {
                 if (displayColumn.ColumnSpec.Hidden)
@@ -388,7 +387,7 @@ namespace pwiz.Common.DataBinding.Internal
                 ICollection<PivotKey> pivotKeys = null;
                 if (pivotColumn != null)
                 {
-                    pivotKeys = GetPivotKeys(pivotColumn.PropertyPath, rowItemsArray);
+                    pivotKeys = GetPivotKeys(pivotColumn.PropertyPath, rowItems);
                 }
 
                 if (pivotKeys == null)

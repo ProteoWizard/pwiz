@@ -153,9 +153,9 @@ namespace pwiz.Common.DataBinding.Controls
                                 }
                             }
 
-                            if (queryResults.AllResultRows.Count != queryResults.ResultRows.Count)
+                            if (queryResults.ResultRows.Count != BindingListSource.Count)
                             {
-                                filterMessages.Add(string.Format("(Truncated from {0})", queryResults.AllResultRows.Count));
+                                filterMessages.Add(string.Format("(Truncated from {0})", queryResults.ResultRows.Count));
                             }
 
                             if (filterMessages.Count > 0)

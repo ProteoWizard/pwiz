@@ -43,10 +43,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [InvariantDisplayName("Molecule")]
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
+        private Protein _protein;
         private readonly CachedValues _cachedValues = new CachedValues();
         public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath)
             : base(dataSchema, identityPath)
         {
+        }
+
+        public Peptide(Protein protein, Identity peptide) : this(protein.DataSchema, new IdentityPath(protein.IdentityPath, peptide))
+        {
+            _protein = protein;
         }
 
         [OneToMany(ForeignKey = "Peptide")]
@@ -87,7 +93,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [InvariantDisplayName("MoleculeList", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Protein Protein
         {
-            get { return new Protein(DataSchema, IdentityPath.Parent); }
+            get
+            {
+                lock (this)
+                {
+                    return _protein ??= new Protein(DataSchema, IdentityPath.Parent);
+                }
+            }
         }
 
         [InvariantDisplayName("PeptideSequence")]
@@ -567,7 +579,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             protected override ImmutableList<Precursor> CalculateValue1(Peptide owner)
             {
                 return ImmutableList.ValueOf(owner.DocNode.Children.Select(child =>
-                    new Precursor(owner.DataSchema, new IdentityPath(owner.IdentityPath, child.Id))));
+                    new Precursor(owner, child.Id)));
             }
 
             protected override IDictionary<ResultKey, PeptideResult> CalculateValue2(Peptide owner)
