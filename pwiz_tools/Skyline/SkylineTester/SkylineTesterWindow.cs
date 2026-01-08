@@ -105,6 +105,7 @@ namespace SkylineTester
 
         private readonly string _resultsDir;
         private readonly string _openFile;
+        private readonly bool _autoRun;
 
         private Button[] _runButtons;
         private TabBase _runningTab;
@@ -123,6 +124,7 @@ namespace SkylineTester
 
         private int _findPosition;
         private string _findText;
+        private Dictionary<string, string> _treeViewStateFromSettings = new Dictionary<string, string>();
 
         private ZedGraphControl graphMemory;
 
@@ -160,6 +162,10 @@ namespace SkylineTester
         public SkylineTesterWindow(string[] args)
             : this()
         {
+            // Check for --autorun flag
+            _autoRun = args.Contains("--autorun");
+            args = args.Where(a => a != "--autorun").ToArray();
+
             // Grab some critical config values to avoid some timing issues in the initialization process
             string settings = args.Length > 0 ? File.ReadAllText(args[0]) : Settings.Default.SavedSettings;
             if (!string.IsNullOrEmpty(settings))
@@ -355,7 +361,14 @@ namespace SkylineTester
         {
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
+            loader.RunWorkerCompleted += BackgroundLoadCompleted;
             loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
+        }
+
+        private void BackgroundLoadCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (_autoRun)
+                BeginInvoke(new System.Action(Run));
         }
 
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
@@ -444,6 +457,14 @@ namespace SkylineTester
                     // More common to choose just one tutorial to run on the tutorials tab
                     // tutorialsTree.Nodes[0].Checked = true;
                     // TabTests.CheckAllChildNodes(tutorialsTree.Nodes[0], true);
+
+                    // Restore checked tutorials from settings after tree is populated
+                    if (_treeViewStateFromSettings.TryGetValue(tutorialsTree.Name, out var tutorialNames) &&
+                        !string.IsNullOrEmpty(tutorialNames))
+                    {
+                        CheckNodes(tutorialsTree, tutorialNames.Split(','));
+                        UpdateAllParentNodeCheckStates(tutorialsTree);
+                    }
 
                     // Add forms to forms tree view.
                     _tabForms.CreateFormsGrid();
@@ -612,9 +633,12 @@ namespace SkylineTester
         }
 
         private int _previousTab;
+        private int _lastActiveActionTabIndex; // Tab to restore on startup (not Output tab)
 
         private void TabChanged(object sender, EventArgs e)
         {
+            StoreLastActiveTab();
+
             if (_tabs == null)
                 return;
 
@@ -624,6 +648,13 @@ namespace SkylineTester
             _findPosition = 0;
 
             RunUI(() => _tabs[_previousTab].Enter(), 500);
+        }
+
+        private void StoreLastActiveTab()
+        {
+            // Track workflow tab (not Output tab) for smart tab restoration
+            if (tabs.SelectedTab != tabOutput)
+                _lastActiveActionTabIndex = tabs.SelectedIndex;
         }
 
         public void ShowOutput()
@@ -1111,6 +1142,7 @@ namespace SkylineTester
                 modeTutorialsCoverShots,
                 pauseTutorialsDelay,
                 pauseTutorialsSeconds,
+                pauseStartingScreenshot,
                 tutorialsDemoMode,
                 tutorialsLanguage,
                 showFormNamesTutorial,
@@ -1129,7 +1161,8 @@ namespace SkylineTester
                 testsFrench,
                 testsJapanese,
                 testsTurkish,
-                testsTree,
+                // testsTree,  // Don't save testsTree to settings - prefer "SkylineTester test list.txt" file
+                                // to avoid confusion between two sources of truth for checked tests
                 runCheckedTests,
                 skipCheckedTests,
                 testSet,
@@ -1261,6 +1294,7 @@ namespace SkylineTester
                 if (tab != null)
                 {
                     tab.SelectTab(element.Value);
+                    StoreLastActiveTab();
                     continue;
                 }
 
@@ -1296,7 +1330,8 @@ namespace SkylineTester
                 var treeView = control as TreeView;
                 if (treeView != null)
                 {
-                    CheckNodes(treeView, element.Value.Split(','));
+                    // Trees may not be populated yet during LoadSettings, save names for later
+                    _treeViewStateFromSettings[treeView.Name] = element.Value;
                     continue;
                 }
 
@@ -1340,7 +1375,10 @@ namespace SkylineTester
                 var tab = child as TabControl;
                 if (tab != null)
                 {
-                    element.Add(new XElement(tab.Name, tab.SelectedTab.Name));
+                    // Save workflow tab (not Output tab) for smart tab restoration
+                    var tabIndexToSave = _lastActiveActionTabIndex;
+                    var tabNameToSave = tab.TabPages[tabIndexToSave].Name;
+                    element.Add(new XElement(tab.Name, tabNameToSave));
                     continue;
                 }
 
@@ -1525,7 +1563,7 @@ namespace SkylineTester
         /// Updates all parent nodes in a tree to reflect their children's check states.
         /// Call this after programmatically checking/unchecking child nodes.
         /// </summary>
-        private void UpdateAllParentNodeCheckStates(TreeView treeView)
+        public void UpdateAllParentNodeCheckStates(TreeView treeView)
         {
             foreach (TreeNode rootNode in treeView.Nodes)
             {

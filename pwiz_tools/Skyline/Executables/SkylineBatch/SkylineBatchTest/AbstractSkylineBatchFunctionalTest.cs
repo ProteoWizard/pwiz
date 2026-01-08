@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
 using SkylineBatch;
 using SharedBatchTest;
@@ -16,13 +15,13 @@ namespace SkylineBatchTest
     /// </summary>
     public abstract class AbstractSkylineBatchFunctionalTest : AbstractBaseFunctionalTest
     {
-        // Helper: test-specific results path
+        // Helper: test-specific results path (uses TestUtils for backward compatibility)
         protected string GetTestResultsPath(string relativePath = null)
         {
             return TestUtils.GetTestResultsPath(TestContext, relativePath);
         }
 
-        // Helper: logger rooted in TestResults
+        // Helper: logger rooted in TestResults (returns SkylineBatch Logger instance)
         protected Logger GetTestLogger(string logSubfolder = "")
         {
             return TestUtils.GetTestLogger(TestContext, logSubfolder);

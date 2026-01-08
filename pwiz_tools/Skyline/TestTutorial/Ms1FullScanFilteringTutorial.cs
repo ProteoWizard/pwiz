@@ -317,15 +317,19 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(153, transitionCount);
             });
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
-
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             RunUI(() =>
             {
                 allChromGraph.Left = SkylineWindow.Right + 20;
                 allChromGraph.Activate();
             });
-            WaitForConditionUI(() => allChromGraph.ProgressTotalPercent > 24);
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window");
+            if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form", 90, "00:00:02", 70f, 6.05e3f,
+                new Dictionary<string, int>
+                {
+                    { "100803_0001_MCF7_TiB_L", 85 },
+                    { "100803_0005b_MCF7_TiTip3", 95 }
+                }))
+                return;
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(documentBaseName));
@@ -742,7 +746,8 @@ namespace pwiz.SkylineTestTutorial
                     minimizeResultsDlg.LimitNoiseTime = true;
                     minimizeResultsDlg.NoiseTimeRange = 2; // Not L10N
                 });
-                PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form (percentages vary slightly)");   // old p. 23
+                WaitForConditionUI(() => minimizeResultsDlg.IsComplete);
+                PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form");   // old p. 23
 
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));
                 WaitForCondition(() => File.Exists(cacheFile));

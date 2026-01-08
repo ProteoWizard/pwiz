@@ -61,15 +61,6 @@ namespace pwiz.Skyline.Controls.SeqNode {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred displaying a tooltip..
-        /// </summary>
-        public static string NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_ {
-            get {
-                return ResourceManager.GetString("NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} Peptides.
         /// </summary>
         public static string PeptideGroupTreeNode_ChildHeading__0__ {

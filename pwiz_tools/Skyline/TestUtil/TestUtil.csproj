@@ -166,12 +166,15 @@
     <Compile Include="AuditLogUtil.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
+    <Compile Include="CompareDocuments.cs" />
     <Compile Include="DllFinderTestUtil.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="GitFileHelper.cs" />
+    <Compile Include="HangDetection.cs" />
     <Compile Include="HttpClientTestHelper.cs" />
     <Compile Include="KoinaTestUtil.cs" />
+    <Compile Include="MockHttpMessageHandler.cs" />
     <Compile Include="MultiFormActivator.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -206,6 +209,7 @@
     <Compile Include="ProcessKiller.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResultsUtil.cs" />
+    <Compile Include="ScopedAction.cs" />
     <Compile Include="AbstractUnitTest.cs" />
     <Compile Include="Schemas\SchemaDocuments.cs" />
     <Compile Include="ScreenshotManager.cs" />

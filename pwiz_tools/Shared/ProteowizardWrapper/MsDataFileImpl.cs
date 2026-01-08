@@ -348,7 +348,20 @@ namespace pwiz.ProteowizardWrapper
                        isoMzLow <= IsoMzHigh && IsoMzHigh >= isoMzLow;
             }
         }
-        
+
+        /// <summary>
+        /// Attempt to get a non-unicode path for use with launched processes that have trouble with Unicode paths
+        ///
+        /// N.B should give same result as PathEx.GetNonUnicodePath, primary use of this method is to test that. Prefer PathEx.GetNonUnicodePath when possible.
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>path with Unicode-containing segments replaced with Windows 8.3 equivalent, if possible</returns>
+        public static string GetNonUnicodePath(string path)
+        {
+            return CLI.util.FileSystem.GetNonUnicodePath(path);
+        }
+
         private class InstrumentConfigurationCacheValues
         {
             public InstrumentConfigurationCacheValues(string ionSource, string analyzer, string detector, Dictionary<int, List<DiaFrameMsMsWindowItem>> diaFrameMsMsWindowInfo)
@@ -993,32 +1006,94 @@ namespace pwiz.ProteowizardWrapper
         {
             public const string Pressure = @"pressure";
             public const string FlowRate = @"volumetric flow rate";
+            public static string Temperature = @"temperature";
         }
 
         public abstract class QcTraceUnits
         {
+            public const string Intensity = @"intensity";
+            public const string Pascal = @"Pa";
             public const string PoundsPerSquareInch = @"psi";
             public const string MicrolitersPerMinute = @"uL/min";
+            public static string DegreeC = @"°C";
+            public static string DegreeF = @"°F";
+            public static string Percent = @"%";
+            public static string Unknown = @"unknown";
         }
 
         public class QcTrace
         {
-            public QcTrace(Chromatogram c, CVID chromatogramType)
+            public QcTrace(Chromatogram c)
             {
                 Name = c.id;
                 Index = c.index;
+                var param = c.cvParamChild(CVID.MS_chromatogram_type);
+                var chromatogramType = param.cvid;
+                var intensityArray = c.getIntensityArray();
+                var unitsCVID = CVID.CVID_Unknown;
+                string unitsString = null;
+                if (intensityArray != null)
+                {
+                    using var typeParam = intensityArray.cvParamChild(CVID.MS_intensity_array);
+                    unitsCVID = typeParam.units;
+                    unitsString = typeParam.unitsName; // Default to the raw units name from MS OBO
+                }
+
+                switch (unitsCVID)
+                {
+                    case CVID.MS_number_of_detector_counts:
+                    case CVID.CVID_Unknown:
+                    {
+                        using var userParam = c.userParam(@"units");
+                        if (!userParam.empty())
+                        {
+                            unitsString = userParam.value; // Show custom units if provided
+                        }
+                        if (string.IsNullOrEmpty(unitsString) ||
+                            unitsCVID == CVID.MS_number_of_detector_counts)
+                        {
+                            unitsString = QcTraceUnits.Intensity; // Show "intensity" instead of "" or "number of detector counts"
+                        }
+                        break;
+                    }
+                    case CVID.UO_percent:
+                        unitsString = QcTraceUnits.Percent; // Show "%" instead of "percent"
+                        break;
+                    case CVID.UO_pounds_per_square_inch:
+                        unitsString = QcTraceUnits.PoundsPerSquareInch; // Show "psi" instead of "pounds per square inch"
+                        break;
+                    case CVID.UO_pascal:
+                        unitsString = QcTraceUnits.Pascal; // Show "Pa" instead of "pascal"
+                        break;
+                    case CVID.UO_microliters_per_minute:
+                        unitsString = QcTraceUnits.MicrolitersPerMinute; // Show "uL/min" instead of "microliters per minute"
+                        break;
+                    case CVID.UO_degree_Celsius:
+                        unitsString = QcTraceUnits.DegreeC; // Show "°C" instead of "degree Celsius"
+                        break;
+                    case CVID.UO_degree_Fahrenheit:
+                        unitsString = QcTraceUnits.DegreeF; // Show "°F" instead of "degree Fahrenheit"
+                        break;
+                }
+
                 if (chromatogramType == CVID.MS_pressure_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.Pressure;
-                    IntensityUnits = QcTraceUnits.PoundsPerSquareInch;
                 }
                 else if (chromatogramType == CVID.MS_flow_rate_chromatogram)
                 {
                     MeasuredQuality = QcTraceQuality.FlowRate;
-                    IntensityUnits = QcTraceUnits.MicrolitersPerMinute;
                 }
-                else
-                    throw new InvalidDataException($"unsupported chromatogram type (not pressure or flow rate): {c.id}");
+                else if (chromatogramType == CVID.MS_temperature_chromatogram)
+                {
+                    MeasuredQuality = QcTraceQuality.Temperature;
+                }
+                else // Generalized chromatogram, or absorption chromatogram, or emission chromatogram, etc - probably best to use the name directly
+                {
+                    MeasuredQuality = Name;
+                }
+
+                IntensityUnits = string.IsNullOrEmpty(unitsString) ? QcTraceUnits.Unknown : unitsString;
                 Times = c.getTimeArray().data.Storage();
                 Intensities = c.binaryDataArrays[1].data.Storage();
             }
@@ -1029,6 +1104,58 @@ namespace pwiz.ProteowizardWrapper
             public double[] Intensities { get; private set; }
             public string MeasuredQuality { get; private set; }
             public string IntensityUnits { get; private set; }
+
+            public string TypeWithUnits()
+            {
+                string CapitalizeFirst(string str)
+                {
+                    if (string.IsNullOrEmpty(str))
+                        return str;
+                    if (str.Length == 1)
+                        return str.ToUpper();
+                    return char.ToUpper(str[0]) + str.Substring(1);
+                }
+
+                var type = MeasuredQuality;
+                var units = IntensityUnits;
+
+                // if units are not unknown, prefer those to any potentially buried in a custom MeasuredQuality
+                if (!string.IsNullOrEmpty(units) && !units.Equals(@"unknown", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Strip any existing units from MeasuredQuality
+                    // e.g. "Pressure (psi)" or "Pressure [bar]" becomes just "Pressure"
+                    // Only strip if the parentheses/brackets are at the end
+                    if (type.EndsWith(")"))
+                    {
+                        int openParen = type.LastIndexOf('(');
+                        if (openParen > 0)
+                        {
+                            type = type.Substring(0, openParen).TrimEnd();
+                        }
+                    }
+                    else if (type.EndsWith("]"))
+                    {
+                        int openBracket = type.LastIndexOf('[');
+                        if (openBracket > 0)
+                        {
+                            type = type.Substring(0, openBracket).TrimEnd();
+                        }
+                    }
+
+                    // Now format with proper units
+                    if (units == QcTraceUnits.Intensity)
+                    {
+                        return CapitalizeFirst(units);
+                    }
+                    else
+                    {
+                        return $"{CapitalizeFirst(type)} ({units})";
+                    }
+                }
+
+                // If units are empty, unknown, or null, return just the type
+                return CapitalizeFirst(type);
+            }
         }
 
         public List<QcTrace> GetQcTraces()
@@ -1044,13 +1171,11 @@ namespace pwiz.ProteowizardWrapper
             var result = new List<QcTrace>();
             for (int i = 0; i < ChromatogramList.size(); ++i)
             {
-                CVID chromatogramType;
                 using (var chromMetaData = ChromatogramList.chromatogram(i, minDetailLevel))
                 {
-                    using var cvParamChild = chromMetaData.cvParamChild(CVID.MS_chromatogram_type);
-                    chromatogramType = cvParamChild.cvid;
-                    if (chromatogramType != CVID.MS_pressure_chromatogram &&
-                        chromatogramType != CVID.MS_flow_rate_chromatogram)
+                    // Skip over TIC, BPC, SIC, SIM, SRM, etc as they are not QC traces
+                    using var cvParamChild = chromMetaData.cvParamChild(CVID.MS_ion_current_chromatogram);
+                    if (cvParamChild.cvid != CVID.CVID_Unknown)
                         continue;
                 }
 
@@ -1059,7 +1184,7 @@ namespace pwiz.ProteowizardWrapper
                     if (chromatogram == null)
                         return null;
 
-                    result.Add(new QcTrace(chromatogram, chromatogramType));
+                    result.Add(new QcTrace(chromatogram));
                 }
             }
             return result;

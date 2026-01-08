@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -284,7 +283,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var axis = GetNearestXAxis(sender, mouseEventArgs);
                 if (axis != null)
                 {
-                    GraphSummary.Cursor = Cursors.Hand;
+                    sender.Cursor = Cursors.Hand;
                     return true;
                 }
                 return false;
@@ -305,7 +304,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return false;
             }
-            GraphSummary.Cursor = Cursors.Hand;
+            sender.Cursor = Cursors.Hand;
             return true;
         }
 

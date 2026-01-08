@@ -566,6 +566,40 @@ string safeField = text.ToDsvField(separator);
 - We develop with Visual Studio 2022 and ReSharper; aim for warning-free under its inspections.
 - Follow the Skyline build guide for environment setup: https://skyline.ms/wiki/home/software/Skyline/page.view?name=HowToBuildSkylineTip
 
+## Icon resources for UI development
+
+### Visual Studio Image Catalog (16x16 icons)
+When you need 16x16 PNG icons for Skyline UI elements, a library of 4,000+ icons extracted from Visual Studio's ImageCatalog is available at:
+
+**`ai\.tmp\icons\` (4,048 PNG files, 4.2MB total)**
+
+These icons were extracted using the `ImageExtractor` tool in `pwiz_tools\Skyline\Executables\DevTools\ImageExtractor`. You can browse this folder to find icons or icon elements to compose into custom Skyline icons.
+
+**To regenerate the icon library** (if needed):
+1. Export the RESX from Visual Studio's ImageCatalog DLL using [JetBrains dotPeek](https://www.jetbrains.com/decompiler/):
+   - Open `C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\en\Microsoft.VisualStudio.ImageCatalog.resources.dll`
+   - Navigate to Resources → Microsoft.VisualStudio.ImageCatalog.g.en.resources
+   - Right-click → "Export to Project" → Save as RESX format to `ai\.tmp\VisualStudio.ImageCatalog.resx`
+2. Run the extractor:
+   ```bash
+   cd pwiz_tools/Skyline/Executables/DevTools/ImageExtractor
+   dotnet run -c Release
+   ```
+   This extracts all 16x16 PNGs to `ai\.tmp\icons\`
+
+**Finding icons:**
+- Browse `ai\.tmp\icons\` in Windows Explorer (thumbnail view works well)
+- Icon names are descriptive (e.g., `database.16.16.png`, `calculator.16.16.png`, `folder.16.16.png`)
+- Use search/filter in Explorer to find relevant icons by keyword
+
+**Composing custom icons:**
+You can combine elements from multiple icons to create custom Skyline icons. For example:
+- Background Proteome icon: Database icon with `>` symbol (FASTA file indicator)
+- iRT Calculator icon: Calculator icon with modifications for retention time context
+- Library icons: Database icon with relevant overlay symbols
+
+This is much more efficient than trying to view icons one-by-one in dotPeek or creating icons from scratch.
+
 ## Executables solutions
 Projects under `pwiz_tools/Skyline/Executables` are independent solutions (stand-alone EXEs, developer tools, or utilities included with Skyline). They are not built by `Skyline.sln`. Prefer the same conventions as Skyline unless a local project requires an override.
 
@@ -585,6 +619,24 @@ EditorConfig
   - Example: "Keyboard Shortcuts" → `Keyboard_Shortcuts`; "File > New" → `File_New`.
 - Prefer reusing existing keys when text matches; avoid near-duplicate strings.
 
+### UTF-8 Encoding for Localized Files
+
+**For AI agents and developers working with `.ja.resx` and `.zh-CHS.resx` files:**
+
+Skyline is translated to Japanese and Chinese. Git diffs of localized RESX files contain Japanese (日本語) and Chinese (中文) characters that require UTF-8 encoding to display correctly.
+
+**Setup:** Developers who followed `ai/docs/developer-setup-guide.md` already have permanent UTF-8 configured in their PowerShell profile. No additional configuration needed.
+
+**Troubleshooting:** If characters display as garbled text (e.g., `πâçπâòπé⌐` instead of `デフォルト`):
+```powershell
+# Verify UTF-8 is configured
+[Console]::OutputEncoding   # Should show CodePage: 65001
+
+# If not, add to your $PROFILE (see developer-setup-guide.md):
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+```
+
 
 ## User interface guidelines
 
@@ -603,10 +655,10 @@ All source files should include the standard header with copyright and license i
 /*
  * Original author: [Author Name] <[email] .at. [domain]>,
  *                  [Affiliation]
- * AI assistance: Cursor ([model names]) <cursor .at. anysphere.co>
+ * AI assistance: [Tool] ([Model]) <[email]>
  *
  * Copyright [Year] University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -623,7 +675,9 @@ All source files should include the standard header with copyright and license i
 
 ### AI attribution guidelines
 - **Always include AI assistance line** when code is created or significantly modified with AI tools
-- **Specify the tool and models used**: `Cursor (Claude Sonnet 4)` or `Cursor (Claude Sonnet 4, ChatGPT-4)`
+- **Specify the tool and models used**:
+  - Cursor: `Cursor (Claude Sonnet 4)` or `Cursor (Claude Sonnet 4, ChatGPT-4)`
+  - Claude Code: `Claude Code (Claude Opus 4.5)` with email `noreply .at. anthropic.com`
 - **Use current year** for copyright when creating new files
 - **Use .at. format** for email addresses to avoid spam harvesting
 - **Position AI assistance** after original author but before copyright

@@ -282,8 +282,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                     Environment.NewLine);
 
                 string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, "comet-output");
+                defaultOutputDirectory = PathEx.GetNonUnicodePath(defaultOutputDirectory);  // Convert unicode path to 8.3 if needed
 
                 string paramsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"comet.params") : Path.GetTempFileName();
+                paramsFile = PathEx.GetNonUnicodePath(paramsFile); // Convert unicode path to 8.3 if needed
                 _intermediateFiles.Add(paramsFile);
                 File.WriteAllText(paramsFile, paramsFileText.ToString());
 
@@ -295,12 +297,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                     UseShellExecute = false
                 };
                 foreach (var filename in SpectrumFileNames)
-                    psi.Arguments += $@" ""{filename}""";
-                psi.Arguments += $@" ""{_fastaFilepath}""";
+                    psi.Arguments += $@" ""{PathEx.GetNonUnicodePath(filename.GetFilePath())}""";
+                psi.Arguments += $@" ""{PathEx.GetNonUnicodePath(_fastaFilepath)}""";
                 pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
 
                 string cruxOutputDir = defaultOutputDirectory;
-                string cruxParamsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"crux.params") : Path.GetTempFileName();
+                string cruxParamsFile = PathEx.GetNonUnicodePath(KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"crux.params") : Path.GetTempFileName());
                 _intermediateFiles.Add(cruxParamsFile);
                 var cruxParamsFileText = GetCruxParamsText();
                 File.WriteAllText(cruxParamsFile, cruxParamsFileText);
@@ -727,16 +729,19 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
         private string GetCometSearchResultFilepath(MsDataFileUri searchFilepath, string extension = ".pep.xml")
         {
+            string result;
             if (SpectrumFileNames.Length > 1)
             {
-                return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
+                result = Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
                     @"comet." + Path.ChangeExtension(searchFilepath.GetFileName(), extension));
             }
             else
             {
-                return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
+                result = Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
                     Path.ChangeExtension(@"comet", extension));
             }
+
+            return PathEx.GetNonUnicodePath(result); // Convert to 8.3 format if needed
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".raw" };

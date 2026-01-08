@@ -1,0 +1,366 @@
+# MCP Development Guide
+
+This guide covers patterns and best practices for extending Claude Code's data access capabilities via MCP (Model Context Protocol) servers.
+
+## Technology Choice: Python vs TypeScript
+
+### Why This Section Exists
+
+The LabKeyMcp server was implemented in Python. This was **not a deliberate architectural decision** - it was an initial suggestion from an LLM that wasn't challenged. Neither the developer nor the LLM evaluated alternatives or considered the existing Node.js tooling in the project.
+
+Note: The Skyline team has deep expertise in C-style syntax languages (C++, C#, Java) with JavaScript experience primarily for DHTML (dynamic web pages). Modern JavaScript/TypeScript for CLI tooling and MCP servers wasn't on the radar when this decision was made.
+
+### What We Know Now
+
+**LabKey provides both APIs:**
+- JavaScript API: https://www.labkey.org/Documentation/wiki-page.view?name=viewApis
+- Python API: Both appear equally capable
+
+**The project already uses Node.js:**
+- DocumentConverter (`pwiz_tools/Skyline/Executables/DevTools/DocumentConverter`)
+- Claude Code CLI (npm install)
+- Other MCP servers (Gmail, episodic-memory) use npm/TypeScript
+
+**Current state:** Developers need BOTH runtimes - Node.js for multiple tools, Python solely for LabKeyMcp.
+
+### Recommendation for Future MCP Servers
+
+**Don't default to Python just because LabKeyMcp uses it.** When creating a new MCP server:
+
+1. Check if an npm-based MCP server already exists for the service
+2. If building from scratch, evaluate TypeScript first - it's the MCP ecosystem norm
+3. Only choose Python if the service lacks a JavaScript SDK or requires scientific libraries
+4. Document the choice and rationale
+
+The LabKeyMcp server works well and doesn't need to be rewritten. But if significant changes are ever needed, migrating to TypeScript would eliminate the Python dependency.
+
+---
+
+## General Principles
+
+### Use Official SDKs Where Possible
+
+When connecting to external services, prefer official SDKs over direct HTTP/REST calls:
+
+- **LabKey**: Use the `labkey` Python package for data queries
+- **Gmail**: Use Google's official Python client libraries
+- **Other services**: Check for official SDK support first
+
+**Why?**
+- SDKs handle authentication, retries, and edge cases
+- They receive updates and security fixes from maintainers
+- Less code to maintain in our MCP server
+
+**Exception**: Discovery APIs (like LabKey's `getSchemas`, `getQueries`, `getContainers`) may not be exposed by SDKs and require direct HTTP calls.
+
+### Keep MCP Server Code Simple
+
+The MCP server should be a thin adapter layer. Avoid implementing complex business logic in Python. Instead:
+
+- Use server-side capabilities where available (views, stored procedures, custom queries)
+- Let the data source handle joins, aggregations, and filtering
+- Keep Python code focused on protocol translation and formatting
+- **Save large content to files** - see File-Based Data Exploration Pattern below
+
+### File-Based Data Exploration Pattern
+
+**Critical for context management**: When MCP responses exceed a few KB, write data to disk instead of returning it directly. Large responses blow up conversation token budgets and can cause context overflow.
+
+**Pattern:**
+1. MCP tool writes large data to `ai/.tmp/{descriptive-name}.md` or `.txt`
+2. Tool returns brief summary + file path (not the data itself)
+3. Claude uses Grep/Read tools to explore the file as needed
+
+**Example implementation:**
+```python
+@mcp.tool()
+async def save_large_data(query_params):
+    # Fetch data
+    large_result = fetch_from_server(query_params)
+
+    # Write to file instead of returning
+    output_file = repo_root / "ai" / ".tmp" / "result.md"
+    output_file.write_text(format_as_markdown(large_result))
+
+    # Return metadata only
+    return f"Data saved to: {output_file}\nRows: {len(large_result)}\nUse Grep/Read to explore."
+```
+
+**When to use this pattern:**
+- Test run logs (9-12 hours of output)
+- Stack trace collections (multiple failures)
+- Daily reports aggregating multiple data sources
+- Wiki page content (HTML/markup can be large)
+- Support thread posts (multiple responses)
+- Any response > 5-10 KB
+
+**Key insight**: Searching files on disk (using Grep/Read) preserves conversation context far longer than ingesting large query results directly. Let the MCP server do the heavy lifting of fetching and formatting, then explore the saved file as needed.
+
+**Benefits:**
+- Preserves conversation context for reasoning
+- Enables targeted exploration (grep for patterns, read specific sections)
+- Data persists across conversation restarts
+- Multiple tools can build on the same file
+
+## LabKey Server Patterns
+
+### Schema-First Development
+
+Before adding MCP tools for a new data source, document the schema first:
+
+1. **Explore the schema** - Use `list_schemas` and `list_queries` to discover available tables
+2. **Query sample data** - Use `query_table` with small `max_rows` to see column names and sample values
+3. **Document in `queries/`** - Create `{schema}/{table}-schema.md` files with:
+   - Container path, schema name, table name
+   - All columns with types, lookups, and descriptions
+   - Key values for enum-like fields (Status, Type, etc.)
+   - Usage notes (row counts, relationships, gotchas)
+
+**Why schema-first?**
+- Provides reference for MCP tool development
+- Documents lookup relationships (e.g., `AssignedTo` → `issues.UsersData.UserId`)
+- Identifies large columns that need file-based handling
+- Captures institutional knowledge about the data model
+
+**Example: Adding issues schema support**
+```
+ai/mcp/LabKeyMcp/queries/issues/
+├── issues-schema.md       # Main issue tracking table
+├── comments-schema.md     # Issue comments
+└── issuelistdef-schema.md # Issue list definitions
+```
+
+**To populate schema documentation:**
+1. Go to LabKey Schema Browser: `https://skyline.ms/{container}/query-begin.view`
+2. Navigate to the schema and table
+3. Click "view raw table metadata" for column details
+4. Copy the metadata and format into markdown tables
+
+### Server-Side Custom Queries
+
+When Claude Code needs aggregated or joined data, create **custom queries on the LabKey server** rather than implementing complex joins in Python.
+
+**Why server-side queries?**
+- Runs on the database server (faster)
+- Claude Code queries it like any other table via `query_table`
+- No complex Python code to maintain
+- Reusable by other tools and users
+- Easier to modify without updating the MCP server
+
+**How to create a custom query:**
+
+1. Go to skyline.ms → Query Schema Browser → select your schema
+2. Click "Create New Query"
+3. Name it descriptively (e.g., `handleleaks_by_computer`)
+4. Select the base table
+5. Replace the default SQL with your JOIN/GROUP BY query
+6. Click "Execute Query" to test
+7. Click "Save & Finish"
+
+The new query immediately becomes available to the MCP server via the existing `query_table` tool.
+
+### Example: Aggregating by Computer
+
+A common need is to see which computers are experiencing a problem. Raw tables store `userid` which must be joined to the `user` table to get the computer name.
+
+**handleleaks_by_computer:**
+```sql
+SELECT
+    u.username AS computer,
+    h.testname,
+    COUNT(*) AS leak_count,
+    AVG(h.handles) AS avg_handles,
+    MAX(t.posttime) AS last_seen
+FROM handleleaks h
+JOIN testruns t ON h.testrunid = t.id
+JOIN "user" u ON t.userid = u.id
+GROUP BY u.username, h.testname
+ORDER BY leak_count DESC
+```
+
+**testfails_by_computer:**
+```sql
+SELECT
+    u.username AS computer,
+    f.testname,
+    COUNT(*) AS failure_count,
+    MAX(t.posttime) AS last_seen
+FROM testfails f
+JOIN testruns t ON f.testrunid = t.id
+JOIN "user" u ON t.userid = u.id
+GROUP BY u.username, f.testname
+ORDER BY failure_count DESC
+```
+
+### Parameterized Queries for Large Tables
+
+Some tables are too large for unfiltered queries. The `testpasses` table has 700M+ rows - a join without filtering would timeout. Use **parameterized queries** to filter BEFORE joining.
+
+**How to create a parameterized query:**
+
+1. Add a `PARAMETERS` clause at the top of your SQL
+2. Use the parameter in a `WHERE` clause to filter the large table
+3. The MCP server passes parameters via `param_name` and `param_value`
+
+**Example: testpasses_detail**
+```sql
+PARAMETERS (RunId INTEGER)
+
+SELECT
+    t.posttime AS run_date,
+    u.username AS computer,
+    p.testrunid,
+    p.testname,
+    p.pass AS passnum,
+    p.handles,
+    p.userandgdihandles,
+    p.managedmemory,
+    p.totalmemory,
+    p.duration
+FROM testpasses p
+JOIN testruns t ON p.testrunid = t.id
+JOIN "user" u ON t.userid = u.id
+WHERE p.testrunid = RunId
+ORDER BY p.testname, p.pass
+```
+
+**Calling from Claude Code:**
+```
+query_table(
+    schema_name="testresults",
+    query_name="testpasses_detail",
+    parameters={"RunId": "74829"},
+    filter_column="testname",
+    filter_value="TestMethodRefinementTutorial"
+)
+```
+
+**Date Range Queries:**
+
+For queries that filter by date, use two parameters:
+
+```sql
+PARAMETERS (StartDate TIMESTAMP, EndDate TIMESTAMP)
+
+SELECT ...
+FROM testruns t
+WHERE CAST(t.posttime AS DATE) >= StartDate
+  AND CAST(t.posttime AS DATE) <= EndDate
+```
+
+Note: Use `CAST(posttime AS DATE)` to ensure date-only comparisons (inclusive on both ends).
+
+**Calling date range queries:**
+```
+query_table(
+    schema_name="testresults",
+    query_name="testruns_detail",
+    parameters={"StartDate": "2025-12-14", "EndDate": "2025-12-14"}
+)
+```
+
+**When to use parameterized queries:**
+- Table has millions of rows
+- You always filter by a specific column (like run ID or date)
+- Non-parameterized query times out or is slow
+
+### Authentication
+
+LabKey authentication uses netrc files in standard locations:
+- **Unix/macOS**: `~/.netrc`
+- **Windows**: `~/.netrc` or `~/_netrc`
+
+The `labkey` SDK reads these automatically. Do not implement custom netrc handling.
+
+### Container Paths
+
+LabKey organizes data in containers (folders). Always use the `container_path` parameter to specify which folder to query:
+
+- `/home/issues` - Issue tracking (bugs, TODOs, feature requests)
+- `/home/issues/exceptions` - Exception reports
+- `/home/support` - Support board discussions
+- `/home/software/Skyline` - Wiki pages and documentation
+- `/home/development/Nightly x64` - Nightly test results
+- `/home/development/Integration` - Integration test results
+
+Note: The `testresults` schema may need to be enabled per-container by a LabKey administrator.
+
+### Troubleshooting
+
+**"Query does not exist" error**: If a custom query reports it doesn't exist but you've verified it's on the server, check the query properties. In LabKey's query editor, ensure **"Available in child folders?"** is set to **Yes**. Without this, queries created in a parent container won't be visible from child containers.
+
+**Large column errors**: Some columns contain large binary or text data (logs, XML, documents). Never query these directly - use dedicated MCP tools that save content to `ai/.tmp/` files. See the schema documentation for columns marked **⚠️ LARGE**.
+
+### Sorting Results (Critical)
+
+**ORDER BY in LabKey SQL custom queries is unreliable.** The query is processed as a subquery within a parent "view layer" that can override the sort order.
+
+**Always use the API `sort` parameter in `select_rows()`:**
+
+```python
+result = labkey.query.select_rows(
+    server_context=server_context,
+    schema_name="issues",
+    query_name="issues_list",
+    max_rows=50,
+    sort="-Modified",  # Minus prefix = descending
+)
+```
+
+**Sort parameter syntax:**
+- `-ColumnName` - Descending order
+- `ColumnName` - Ascending order
+- `-Col1,Col2` - Multi-column sort (Col1 desc, Col2 asc)
+
+**Note:** You may still include `ORDER BY` in `.sql` files for documentation purposes, but the API `sort` parameter is what actually controls the order. See `ai/.tmp/labkey-orderby-findings.md` for detailed research.
+
+### Schema Documentation Conventions
+
+The `queries/` directory contains schema documentation for all tables used by the MCP server. When documenting table schemas:
+
+**Large columns**: Mark columns that should never be queried directly with **⚠️ LARGE** in the Description column. These require MCP tools that save to disk rather than returning content.
+
+Example:
+| Column | Type | Description |
+|--------|------|-------------|
+| log | Other | **⚠️ LARGE** - Full test log, use `save_run_log()` |
+| document | Other | **⚠️ LARGE** - Binary blob up to 50MB |
+
+## Future Data Sources
+
+### Gmail Integration
+
+*(To be documented when implemented)*
+
+A Gmail MCP server could enable:
+- Reading exception report notifications
+- Reading nightly test result summaries
+- Other automated email alerts
+
+Will require Gmail MCP server setup with OAuth2.
+
+### Panoramaweb.org
+
+*(To be documented when implemented)*
+
+Another LabKey server with proteomics datasets. The same patterns apply:
+- Use the `labkey` SDK
+- Create server-side queries for complex joins
+- Configure netrc for authentication
+
+## MCP Server Location
+
+```
+ai/mcp/LabKeyMcp/
+├── server.py        # MCP server with all tools
+├── pyproject.toml   # Dependencies
+├── test_connection.py
+├── queries/         # Server-side query documentation
+└── README.md
+```
+
+## Related Documentation
+
+- [Developer Setup Guide](../developer-setup-guide.md) - Environment configuration
+- [Exceptions](exceptions.md) - Exception data access
+- [Nightly Tests](nightly-tests.md) - Test results data access

@@ -23,7 +23,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
 using System.Linq;
-using System.Threading;
 using SharedBatch.Properties;
 using System.Text.RegularExpressions;
 
@@ -86,7 +85,7 @@ namespace SkylineBatchTest
                 currentPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
             }
 
-            var batchTestPath = Path.Combine(currentPath, "Test");
+            var batchTestPath = Path.Combine(currentPath ?? string.Empty, "Test");
             if (!Directory.Exists(batchTestPath))
                 throw new DirectoryNotFoundException("Unable to find test data directory at: " + batchTestPath);
             return Path.Combine(batchTestPath, fileName);
@@ -250,7 +249,7 @@ namespace SkylineBatchTest
 
         /// <summary>
         /// Replaces R version references in a line with the current installed version.
-        /// Handles both formats: <r_script> and <script_path>.
+        /// Handles both formats: &lt;r_script&gt; and &lt;script_path&gt;.
         /// </summary>
         public static string ReplaceRVersionWithCurrent(string line)
         {
@@ -419,19 +418,6 @@ namespace SkylineBatchTest
                     logFiles.Add(fullName);
             }
             return logFiles;
-        }
-
-        public delegate bool ConditionDelegate();
-
-        public static void WaitForCondition(ConditionDelegate condition, TimeSpan timeout, int timestep, string errorMessage)
-        {
-            var startTime = DateTime.Now;
-            while (DateTime.Now - startTime < timeout)
-            {
-                if (condition()) return;
-                Thread.Sleep(timestep);
-            }
-            throw new Exception(errorMessage);
         }
 
         public static void CompareFiles(string expectedFilePath, string actualFilePath, List<Regex> skipLines = null)

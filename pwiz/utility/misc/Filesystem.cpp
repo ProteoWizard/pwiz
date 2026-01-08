@@ -254,6 +254,97 @@ PWIZ_API_DECL bool running_on_wine()
 }
 
 
+/// <summary>
+/// We often encounter tools that can't deal with Unicode characters in file paths, this method
+/// will try to convert such paths to a non-Unicode version using the 8.3 format short path name.
+/// Converts only the segments that need it, to avoid trashing filename extensions.
+/// e.g. "C:\Program Files\Common Files\my files with ünicode\foo.mzml" (note the umlaut U) => ""C:\Program Files\Common Files\MYFILE~1\foo.mzml"
+///
+/// Only works on NTFS volumes, with 8.3 support enabled. So, for example, not on Docker instances.
+/// </summary>
+/// <param name="utf8Path">Path to an existing file or directory</param>
+/// <returns>Path with unicode segments changed to 8.3 representation, if possible</returns>
+PWIZ_API_DECL string get_non_unicode_path(const std::string& utf8Path)
+{
+#ifdef _WIN32
+    if (utf8Path.empty() ||
+        std::all_of(utf8Path.begin(), utf8Path.end(), [](unsigned char c) { return c >= 32 && c <= 126; }))
+    {
+        return utf8Path; // No unicode found
+    }
+
+    // UTF-8 -> UTF-16
+    int wideLen = MultiByteToWideChar(CP_UTF8, 0, utf8Path.c_str(), -1, nullptr, 0);
+    if (wideLen <= 0)
+        return utf8Path; // No conversion possible
+
+    std::wstring widePath(wideLen, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, utf8Path.c_str(), -1, &widePath[0], wideLen);
+    widePath.resize(wcslen(widePath.c_str()));
+    if (widePath.empty())
+        return utf8Path; // No conversion possible
+
+    bfs::path fsPath(widePath);
+    bfs::path root = fsPath.root_path();
+    bfs::path result = root;
+
+    bfs::path current = root;
+    auto rel = fsPath.relative_path();
+    for (auto it = rel.begin(); it != rel.end(); ++it)
+    {
+        const bfs::path& part = *it;
+        current /= part; // For path existence checks
+
+        // Detect non-printable / non-ASCII characters in this component
+        bool needsShort = std::any_of(part.native().begin(), part.native().end(),
+            [](wchar_t ch) { return ch < 32 || ch > 126; });
+
+        bfs::path usePart = part;
+        if (needsShort && bfs::exists(current))
+        {
+            // Query Windows short (8.3) name for the accumulated path
+            DWORD len = GetShortPathNameW(current.c_str(), nullptr, 0);
+            if (len > 0)
+            {
+                std::wstring shortBuf(len, L'\0');
+                DWORD copied = GetShortPathNameW(current.c_str(), &shortBuf[0], len);
+                if (copied > 0)
+                {
+                    // Resize to the actual returned length to drop trailing nulls
+                    shortBuf.resize(copied);
+                    bfs::path shortFs(shortBuf);
+                    usePart = shortFs.filename();
+                }
+            }
+        }
+
+        // Add (possibly 8.3'ed) section to path
+        result /= usePart;
+
+        // If the accumulated path doesn't exist, append remaining parts unchanged
+        // and stop trying to query short names (they can't exist).
+        if (!bfs::exists(current))
+        {
+            ++it;
+            for (; it != rel.end(); ++it)
+                result /= *it;
+            break;
+        }
+    }
+
+    // UTF-16 -> UTF-8
+    std::wstring resultW = result.wstring();
+    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, resultW.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    if (utf8Len <= 0)
+        return utf8Path;
+    std::string utf8(utf8Len, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, resultW.c_str(), -1, &utf8[0], utf8Len, nullptr, nullptr);
+    utf8.resize(strlen(utf8.c_str()));
+    return utf8;
+#else
+    return utf8Path;
+#endif
+}
 PWIZ_API_DECL void force_close_handles_to_filepath(const std::string& filepath, bool closeMemoryMappedSections) noexcept(true)
 {
 #ifdef WIN32

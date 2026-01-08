@@ -187,8 +187,10 @@ namespace pwiz.SkylineTestFunctional
             viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() => AssertEx.IsTrue(viewLibUI.GraphItem.IonLabels.Any()));
             // Add All should cause some notifications since one of them is bad
-            var filterMatchedDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => viewLibUI.AddAllPeptides());
-            OkDialog(filterMatchedDlg, filterMatchedDlg.CancelDialog);
+            RunDlg<FilterMatchedPeptidesDlg>(viewLibUI.AddAllPeptides, filterMatchedDlg =>
+            {
+                filterMatchedDlg.CancelDialog();
+            });
             OkDialog(viewLibUI, viewLibUI.CancelDialog);
 
             // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index

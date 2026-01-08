@@ -573,7 +573,7 @@
     <value>ドキュメントをアップロード</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers" xml:space="preserve">
-    <value>サーバーから情報を取得中</value>
+    <value>リモートサーバーのフォルダを読み込み中</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
     <value>以下のサーバーから情報を取得しようとした際に失敗しました：</value>
@@ -658,5 +658,20 @@
   </data>
   <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
     <value>利用不可: 一致するiRT標準がありません</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_SaveButtonText" xml:space="preserve">
+    <value>エクスポート</value>
+  </data>
+  <data name="WatersConnectSaveMethodFileDialog_OpenButtonText" xml:space="preserve">
+    <value>Open</value>
+    <comment>Needs Review:Inconsistent translation
+Candidate Translation:開
+Candidate Translation:開く</comment>
+  </data>
+  <data name="WatersConnectSelectMethodFileDialog_SelectButtonText" xml:space="preserve">
+    <value>選択</value>
+  </data>
+  <data name="ExportDlgProperties_PerformLongExport_message" xml:space="preserve">
+    <value>メッセージ</value>
   </data>
 </root>

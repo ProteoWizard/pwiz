@@ -101,6 +101,35 @@ namespace pwiz.Skyline.Model.DocSettings
             return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz);
         }
 
+        public bool HasOptimizationLibrary
+        {
+            get
+            {
+                return Prediction != null && Prediction.OptimizedLibrary != null && !Prediction.OptimizedLibrary.IsNone;
+            }
+        }
+
+        public bool HasOptimizationLibraryPersisted
+        {
+            get
+            {
+                return HasOptimizationLibrary && Prediction.OptimizedLibrary.PersistencePath != null;
+            }
+        }
+
+        public bool HasDriftTimePrediction { get { return IonMobilityFiltering != null && IonMobilityFiltering.IonMobilityLibrary != null; } }
+
+        public bool HasIonMobilityLibraryPersisted
+        {
+            get
+            {
+                return HasDriftTimePrediction &&
+                       IonMobilityFiltering.IonMobilityLibrary != null &&
+                       !IonMobilityFiltering.IonMobilityLibrary.IsNone &&
+                       IonMobilityFiltering.IonMobilityLibrary.FilePath != null;
+            }
+        }
+
         #region Property change methods
 
         public TransitionSettings ChangePrediction(TransitionPrediction prop)

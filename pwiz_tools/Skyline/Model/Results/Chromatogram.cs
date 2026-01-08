@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
@@ -35,12 +36,14 @@ using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
+using Array = System.Array;
 
 namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramManager : BackgroundLoader, IDisposable
     {
         private readonly MultiFileLoader _multiFileLoader;
+        private readonly ManualResetEventSlim _progressFreezeEvent = new ManualResetEventSlim(true);
 
         public bool SupportAllGraphs { get; set; }
         public int? LoadingThreads { get; set; }
@@ -50,6 +53,32 @@ namespace pwiz.Skyline.Model.Results
         {
             IsMultiThreadAware = true;
             _multiFileLoader = new MultiFileLoader(synchronousMode);
+        }
+
+        /// <summary>
+        /// Freeze progress completion for screenshot capture.
+        /// When frozen, background threads will block before completing document updates.
+        /// </summary>
+        public void FreezeProgressForScreenshot()
+        {
+            _progressFreezeEvent.Reset();
+        }
+
+        /// <summary>
+        /// Release progress freeze, allowing background threads to complete.
+        /// </summary>
+        public void ReleaseProgressFreeze()
+        {
+            _progressFreezeEvent.Set();
+        }
+
+        /// <summary>
+        /// Block if progress is frozen for screenshot capture.
+        /// Called by background threads before completing document updates.
+        /// </summary>
+        private void WaitIfProgressFrozen()
+        {
+            _progressFreezeEvent.Wait();
         }
 
         public MultiProgressStatus ChangeStatus(ChromatogramLoadingStatus loadingStatus)
@@ -383,6 +412,9 @@ namespace pwiz.Skyline.Model.Results
                             docNew = null;
                         }
                     }
+
+                    // Block if frozen for screenshot capture before completing
+                    _manager.WaitIfProgressFrozen();
                 }
                 while (docNew == null || !_manager.CompleteProcessing(_container, docNew, docCurrent));
             }
@@ -422,7 +454,7 @@ namespace pwiz.Skyline.Model.Results
 
     [XmlRoot("replicate")]
     [XmlRootAlias("chromatogram_group")]
-    public sealed class ChromatogramSet : XmlNamedIdElement
+    public sealed class ChromatogramSet : XmlNamedIdElement, IFile
     {
         /// <summary>
         /// Info for all files contained in this replicate
@@ -454,10 +486,10 @@ namespace pwiz.Skyline.Model.Results
             
         }
 
-        public ChromatogramSet(string name, 
-                IEnumerable<MsDataFileUri> msDataFileNames,
-                Annotations annotations,
-                OptimizableRegression optimizationFunction)
+        public ChromatogramSet(string name,
+            IEnumerable<MsDataFileUri> msDataFileNames,
+            Annotations annotations,
+            OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
             MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path));
@@ -467,6 +499,8 @@ namespace pwiz.Skyline.Model.Results
             SampleType = SampleType.DEFAULT;
             SampleDilutionFactor = DEFAULT_DILUTION_FACTOR;
         }
+
+        public string FilePath { get; }
 
         public IList<ChromFileInfo> MSDataFileInfos
         {
@@ -1060,11 +1094,9 @@ namespace pwiz.Skyline.Model.Results
     /// <summary>
     /// Identity class to allow identity equality on <see cref="ChromatogramSetId"/>.
     /// </summary>
-    public sealed class ChromatogramSetId : Identity
-    {        
-    }
+    public sealed class ChromatogramSetId : Identity { }
 
-    public sealed class ChromFileInfo : DocNode, IPathContainer
+    public sealed class ChromFileInfo : DocNode, IPathContainer, IFile
     {
         public ChromFileInfo(MsDataFileUri filePath)
             : base(new ChromFileInfoId())
@@ -1283,6 +1315,9 @@ namespace pwiz.Skyline.Model.Results
                 return ChangeFilePath(filePath);
             return this;
         }
+
+        public string Name => FilePath.GetFileName();
+        string IFile.FilePath => FilePath.GetFilePath();
     }
 
     /// <summary>

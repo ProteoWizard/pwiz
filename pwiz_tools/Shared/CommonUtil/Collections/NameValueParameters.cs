@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Web;
+using Newtonsoft.Json;
 
 namespace pwiz.Common.Collections
 {
@@ -129,12 +131,42 @@ namespace pwiz.Common.Collections
             return null != GetValue(key);
         }
 
+        public IEnumerable<KeyValuePair<string, string>> GetEnumerable()
+        {
+            foreach (var key in _nameValueCollection.AllKeys)
+            {
+                yield return new KeyValuePair<string, string>(key, _nameValueCollection[key]);
+            }
+        }
+
         public override string ToString()
         {
             return string.Join(@"&",
                 Enumerable.Range(0, _nameValueCollection.Count).Select(i =>
                     Uri.EscapeDataString(_nameValueCollection.Keys[i]) + @"=" +
                     Uri.EscapeDataString(_nameValueCollection.Get(i))));
+        }
+
+        // we need serialization methods because URLs can be stored in properties as strings
+        public string Serialize()
+        {
+            var keyValues = new Dictionary<string, string>();
+            foreach(var key in  _nameValueCollection.AllKeys)
+            {
+                keyValues[key] = _nameValueCollection[key];
+            }
+
+            return JsonConvert.SerializeObject(keyValues);
+        }
+        public static NameValueParameters Deserialize(string json)
+        {
+            var keyValues = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            var nameValueCollection = new NameValueCollection();
+            foreach (var kvp in keyValues)
+            {
+                nameValueCollection[kvp.Key] = kvp.Value;
+            }
+            return new NameValueParameters(nameValueCollection);
         }
     }
 }

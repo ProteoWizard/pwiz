@@ -43,7 +43,7 @@ namespace TestPerf
     [TestClass]
     public class DdaTutorialTest : AbstractFunctionalTest
     {
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -449,7 +449,7 @@ namespace TestPerf
             DirectoryEx.SafeDelete(Path.Combine(Path.GetDirectoryName(SearchFiles.First())!, "converted"));
             foreach (var searchFile in SearchFiles)
             {
-                FileEx.SafeDelete(Path.ChangeExtension(searchFile, ".mzid.gz"));
+                FileEx.SafeDelete(Path.ChangeExtension(searchFile, ".mzid.gz"), true);
             }
         }
 

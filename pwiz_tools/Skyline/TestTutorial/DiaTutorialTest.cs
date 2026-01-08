@@ -325,6 +325,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RestoreViewOnScreen(27);
+            WaitForDocumentLoaded();    // Retention time alignment before screenshot
             PauseForScreenShot("Skyline window");
 
             RunUI(() =>

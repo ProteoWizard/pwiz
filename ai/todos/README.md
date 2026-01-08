@@ -9,8 +9,18 @@ todos/
   active/           # Currently being worked on (committed to branch)
   completed/        # Recently completed (keep 1-3 months for reference)
   backlog/          # Ready to start, fully planned
+    <github-username>/  # Developer-specific TODOs (optional)
   archive/          # Old completed work (>3 months old or as needed)
 ```
+
+### Developer-Specific Folders
+
+The `backlog/` directory may contain subdirectories named after GitHub usernames (e.g., `brendanx67/`). These folders contain TODOs that are assigned to or being worked on by specific developers.
+
+- **Root `backlog/` folder**: TODOs that can be claimed by any developer
+- **Developer-specific folders** (e.g., `backlog/brendanx67/`): TODOs assigned to or being worked on by a specific developer
+
+When creating a TODO you plan to work on yourself, place it in your developer-specific folder. When a TODO is ready to be claimed by anyone, place it in the root backlog folder.
 
 ## File Lifecycle
 

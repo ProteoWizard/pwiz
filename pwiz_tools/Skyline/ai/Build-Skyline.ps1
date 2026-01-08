@@ -7,7 +7,7 @@
     iterative builds and tests without requiring manual Visual Studio interaction.
 
 .PARAMETER Target
-    What to build: Skyline, Test, TestFunctional, All, Clean, Rebuild
+    What to build: Solution, Skyline, Test, TestData, TestFunctional, TestConnected, TestTutorial, TestPerf, Clean, Rebuild
 
 .PARAMETER Configuration
     Debug or Release (default: Debug)
@@ -57,7 +57,7 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [ValidateSet("Solution", "Skyline", "Test", "TestData", "TestFunctional", "Clean", "Rebuild")]
+    [ValidateSet("Solution", "Skyline", "Test", "TestData", "TestFunctional", "TestConnected", "TestTutorial", "TestPerf", "Clean", "Rebuild")]
     [string]$Target = "Solution",
     
     [Parameter(Mandatory=$false)]
@@ -88,6 +88,15 @@ $initialLocation = Get-Location
 try {
     Set-Location $skylineRoot
 
+    # Synchronize ReSharper DotSettings (canonical baseline Skyline -> batch tools)
+    $syncScript = Join-Path $scriptRoot 'scripts/Sync-DotSettings.ps1'
+    if (Test-Path $syncScript) {
+        Write-Host 'Synchronizing DotSettings...' -ForegroundColor Cyan
+        & $syncScript
+    } else {
+        Write-Host 'Sync-DotSettings.ps1 not found; skipping settings sync.' -ForegroundColor Yellow
+    }
+
 # Ensure UTF-8 output for status symbols regardless of terminal settings
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
@@ -111,6 +120,29 @@ if ($repoRoot) {
             Pop-Location
         }
     }
+}
+
+# Check for running test processes that would block the build
+$testProcesses = Get-Process -Name 'SkylineTester', 'TestRunner', 'Skyline*' -ErrorAction SilentlyContinue
+if ($testProcesses) {
+    $processNames = ($testProcesses | Select-Object -ExpandProperty Name -Unique) -join ', '
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host "⚠️  BUILD BLOCKED - Running processes detected" -ForegroundColor Yellow
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "The following processes may lock build output files:" -ForegroundColor Yellow
+    $testProcesses | ForEach-Object {
+        Write-Host "  - $($_.Name) (PID: $($_.Id))" -ForegroundColor Gray
+    }
+    Write-Host ""
+    Write-Host "[LLM-AGENT-ACTION-REQUIRED]" -ForegroundColor Cyan
+    Write-Host "Ask the developer: 'May I stop $processNames to proceed with the build?'" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "If approved, run:" -ForegroundColor Gray
+    Write-Host "  Get-Process -Name 'SkylineTester','TestRunner','Skyline*' -ErrorAction SilentlyContinue | Stop-Process -Force" -ForegroundColor White
+    Write-Host ""
+    exit 2  # Special exit code indicating process block (not build failure)
 }
 
 # Find MSBuild using vswhere
@@ -148,6 +180,9 @@ if ($Target -ne "Solution") {
         "Test" { "Test" }
         "TestData" { "TestData" }
         "TestFunctional" { "TestFunctional" }
+        "TestConnected" { "TestConnected" }
+        "TestTutorial" { "TestTutorial" }
+        "TestPerf" { "TestPerf" }
         "Clean" { "Clean" }
         "Rebuild" { "Rebuild" }
     }
@@ -195,6 +230,9 @@ if ($RunTests -and $Target -ne "Clean") {
         "Test" { "Test.dll" }
         "TestData" { "TestData.dll" }
         "TestFunctional" { "TestFunctional.dll" }
+        "TestConnected" { "TestConnected.dll" }
+        "TestTutorial" { "TestTutorial.dll" }
+        "TestPerf" { "TestPerf.dll" }
         default { "Test.dll" }
     }
     
