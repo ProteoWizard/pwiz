@@ -92,7 +92,8 @@ namespace pwiz.SkylineTest
                 new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath,
                     FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1)),
                 new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1)),
-                new FilterSpec(SpectrumClassColumn.PresetScanConfiguration.PropertyPath, FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_BLANK, null as object))
+                new FilterSpec(SpectrumClassColumn.PresetScanConfiguration.PropertyPath, FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_BLANK, null as object)),
+                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath, FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "hello"))
             };
             var clauses = Enumerable.Range(1, filterSpecs.Length - 1).SelectMany(count => new[]
             {

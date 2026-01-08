@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -402,18 +403,21 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private static string FormatFilterSpec(FilterSpec spec)
         {
             var sb = new StringBuilder();
-            sb.Append(QuoteIfNeeded(spec.Column));
+            sb.Append(QuoteColumnIfNeeded(spec.Column));
             sb.Append(@" ");
             sb.Append(spec.Operation.OpSymbol);
             if (spec.Operation.GetOperandType(new DataSchema(), typeof(object)) != null)
             {
                 sb.Append(@" ");
-                sb.Append(QuoteIfNeeded(spec.Predicate.InvariantOperandText ?? string.Empty));
+                sb.Append(FormatOperandValue(spec.Predicate.InvariantOperandText ?? string.Empty));
             }
             return sb.ToString();
         }
 
-        private static string QuoteIfNeeded(string value)
+        /// <summary>
+        /// Quote column names with double quotes if needed.
+        /// </summary>
+        private static string QuoteColumnIfNeeded(string value)
         {
             if (string.IsNullOrEmpty(value))
             {
@@ -424,6 +428,49 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return @"""" + value.Replace(@"""", @"""""") + @"""";
             }
             return value;
+        }
+
+        /// <summary>
+        /// Format operand values: numbers are unquoted, strings use single quotes.
+        /// Arrays of values use square brackets: [value1, value2, ...]
+        /// </summary>
+        private static string FormatOperandValue(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return @"''";
+            }
+            // If it looks like a number, don't quote it
+            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+            {
+                return value;
+            }
+            // Check if this is a comma-separated list (array)
+            if (value.Contains(@","))
+            {
+                var elements = value.Split(',').Select(s => FormatSingleValue(s.Trim()));
+                return @"[" + string.Join(@", ", elements) + @"]";
+            }
+            // Otherwise, use single quotes with '' as escape for literal single quote
+            return @"'" + value.Replace(@"'", @"''") + @"'";
+        }
+
+        /// <summary>
+        /// Format a single value (not an array): numbers are unquoted, strings use single quotes.
+        /// </summary>
+        private static string FormatSingleValue(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return @"''";
+            }
+            // If it looks like a number, don't quote it
+            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+            {
+                return value;
+            }
+            // Otherwise, use single quotes with '' as escape for literal single quote
+            return @"'" + value.Replace(@"'", @"''") + @"'";
         }
 
         /// <summary>
@@ -452,19 +499,41 @@ namespace pwiz.Skyline.Model.Results.Spectra
             // Whitespace parser
             var ws = Parse.WhiteSpace.Many();
 
-            // Quoted string: "..." where "" represents a literal "
-            var escapedQuote = Parse.String(@"""""").Return('"');
-            var quotedChar = escapedQuote.Or(Parse.CharExcept('"'));
-            var quotedString = Parse.Char('"')
-                .Then(_ => quotedChar.Many().Text())
+            // Double-quoted string for column names: "..." where "" represents a literal "
+            var escapedDoubleQuote = Parse.String(@"""""").Return('"');
+            var doubleQuotedChar = escapedDoubleQuote.Or(Parse.CharExcept('"'));
+            var doubleQuotedString = Parse.Char('"')
+                .Then(_ => doubleQuotedChar.Many().Text())
                 .Then(content => Parse.Char('"').Return(content));
 
-            // Unquoted identifier: no whitespace, parens, or quotes
-            var unquotedIdentifier = Parse.CharExcept(c => char.IsWhiteSpace(c) || c == '"' || c == '(' || c == ')', @"identifier char")
+            // Unquoted identifier for column names: no whitespace, parens, or quotes
+            var unquotedIdentifier = Parse.CharExcept(c => char.IsWhiteSpace(c) || c == '"' || c == '\'' || c == '(' || c == ')', @"identifier char")
                 .AtLeastOnce().Text();
 
-            // Identifier (quoted or unquoted)
-            var identifier = quotedString.Or(unquotedIdentifier);
+            // Column name identifier (double-quoted or unquoted)
+            var identifier = doubleQuotedString.Or(unquotedIdentifier);
+
+            // Single-quoted string for operand values: '...' where '' represents a literal '
+            var escapedSingleQuote = Parse.String(@"''").Return('\'');
+            var singleQuotedChar = escapedSingleQuote.Or(Parse.CharExcept('\''));
+            var singleQuotedString = Parse.Char('\'')
+                .Then(_ => singleQuotedChar.Many().Text())
+                .Then(content => Parse.Char('\'').Return(content));
+
+            // Unquoted number for operand values: optional minus, digits, optional decimal
+            var unquotedNumber = Parse.Regex(@"-?[0-9]+\.?[0-9]*");
+
+            // Single operand value (single-quoted string or unquoted number)
+            var singleOperandValue = singleQuotedString.Or(unquotedNumber);
+
+            // Array of values: [value1, value2, ...] - returns comma-separated string
+            var arrayValue = Parse.Char('[')
+                .Then(_ => ws)
+                .Then(_ => singleOperandValue.DelimitedBy(ws.Then(_ => Parse.Char(',')).Then(_ => ws)))
+                .Then(values => ws.Then(_ => Parse.Char(']')).Return(string.Join(@", ", values)));
+
+            // Operand value (array, single-quoted string, or unquoted number)
+            var operandValue = arrayValue.Or(singleQuotedString).Or(unquotedNumber);
 
             // Operator names
             var opSymbols = FilterOperations.ListOperations()
@@ -493,7 +562,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                                 FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), op, null)));
                         }
                         // Operand required
-                        return ws.Then(_ => identifier)
+                        return ws.Then(_ => operandValue)
                             .Select(value => new FilterSpec(PropertyPath.Parse(column),
                                 FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), op, value)));
                     }));
