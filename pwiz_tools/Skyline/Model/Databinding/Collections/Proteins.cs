@@ -27,11 +27,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         {
         }
 
-        protected override Protein ConstructItem(IdentityPath identityPath)
-        {
-            return new Protein(DataSchema, identityPath);
-        }
-
         protected override int NodeDepth
         {
             get { return 1; }

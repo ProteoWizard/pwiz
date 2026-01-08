@@ -38,10 +38,5 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         {
             get { return 4; }
         }
-
-        protected override Entities.Transition ConstructItem(IdentityPath identityPath)
-        {
-            return new Entities.Transition(DataSchema, identityPath);
-        }
     }
 }

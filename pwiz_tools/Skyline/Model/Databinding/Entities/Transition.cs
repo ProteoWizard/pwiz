@@ -39,11 +39,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private Precursor _precursor;
         private readonly CachedValue<IDictionary<ResultKey, TransitionResult>> _results;
-        public Transition(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
+        public Transition(SkylineDataSchema dataSchema, IdentityPath identityPath) : this(new Precursor(dataSchema, identityPath.GetPathTo(2)), identityPath.Child)
         {
         }
 
-        public Transition(Precursor precursor, Identity transition) : this(precursor.DataSchema, new IdentityPath(precursor.IdentityPath, transition))
+        public Transition(Precursor precursor, Identity transition) : base(precursor.DataSchema, new IdentityPath(precursor.IdentityPath, transition))
         {
             _precursor = precursor;
             _results = CachedValue.Create(DataSchema, MakeResults);

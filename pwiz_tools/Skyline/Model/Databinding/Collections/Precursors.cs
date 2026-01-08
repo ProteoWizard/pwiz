@@ -31,11 +31,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         {
         }
 
-        protected override Precursor ConstructItem(IdentityPath identityPath)
-        {
-            return new Precursor(DataSchema, identityPath);
-        }
-
         protected override int NodeDepth
         {
             get { return 3; }

@@ -37,13 +37,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.precursor)]
     public class Precursor : SkylineDocNode<TransitionGroupDocNode>
     {
-        private Peptide _peptide;
+        private readonly Peptide _peptide;
         private readonly CachedValues _cachedValues = new CachedValues();
-        public Precursor(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
+        public Precursor(SkylineDataSchema dataSchema, IdentityPath identityPath) : this(new Peptide(dataSchema, identityPath.GetPathTo(1)), identityPath.Child)
         {
         }
 
-        public Precursor(Peptide peptide, Identity transitionGroup) : this(peptide.DataSchema, new IdentityPath(peptide.IdentityPath, transitionGroup))
+        public Precursor(Peptide peptide, Identity transitionGroup) : base(peptide.DataSchema, new IdentityPath(peptide.IdentityPath, transitionGroup))
         {
             _peptide = peptide;
         }
@@ -54,10 +54,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                lock (this)
-                {
-                    return _peptide ??= new Peptide(DataSchema, IdentityPath.Parent);
-                }
+                return _peptide;
             }
         }
 

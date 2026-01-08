@@ -31,11 +31,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         {
         }
 
-        protected override Entities.Peptide ConstructItem(IdentityPath identityPath)
-        {
-            return new Entities.Peptide(DataSchema, identityPath);
-        }
-
         protected override int NodeDepth 
         {
             get { return 2; }

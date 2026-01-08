@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,18 +53,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                 FireListChanged();
             }
         }
-        public void SetAncestorIdentityPaths(IEnumerable<IdentityPath> identityPaths)
-        {
-            var newPaths = ImmutableList.ValueOf(identityPaths);
-            if (Equals(newPaths, _ancestorIdentityPaths))
-            {
-                return;
-            }
-            _ancestorIdentityPaths = newPaths;
-            FireListChanged();
-        }
-
-
+        
         protected IEnumerable<IdentityPath> ListKeys()
         {
             return RecurseListingKeys(IdentityPath.ROOT, SrmDocument);
@@ -72,7 +62,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         protected IEnumerable<IdentityPath> RecurseListingKeys(IdentityPath identityPath, DocNode docNode)
         {
             CancellationToken.ThrowIfCancellationRequested();
-            bool includeThis = AncestorIdentityPaths.Any(ancestoryIdPath => StartsWith(identityPath, ancestoryIdPath));
+            bool includeThis = AncestorIdentityPaths.Any(ancestorIdPath => StartsWith(identityPath, ancestorIdPath));
             if (identityPath.Length == NodeDepth)
             {
                 if (includeThis)
@@ -83,7 +73,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             var docNodeParent = docNode as DocNodeParent;
             if (null == docNodeParent || identityPath.Length >= NodeDepth)
             {
-                return new IdentityPath[0];
+                return Array.Empty<IdentityPath>();
             }
 
             var result = new List<IdentityPath>();
@@ -119,11 +109,61 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             return true;
         }
 
-        protected abstract TNode ConstructItem(IdentityPath key);
-
         public override IEnumerable GetItems()
         {
-            return ListKeys().Select(ConstructItem);
+            return ConstructItems(ListKeys());
+        }
+
+        protected IEnumerable ConstructItems(IEnumerable<IdentityPath> keys)
+        {
+            var proteins = new Dictionary<IdentityPath, Protein>();
+            var peptides = new Dictionary<IdentityPath, Entities.Peptide>();
+            var precursors = new Dictionary<IdentityPath, Precursor>();
+            foreach (var key in keys)
+            {
+                Protein protein;
+                var proteinPath = key.Depth == 0 ? key : key.GetPathTo(0);
+                if (key.Depth == 0 || !proteins.TryGetValue(proteinPath, out protein))
+                {
+                    protein = new Protein(DataSchema, proteinPath);
+                    if (key.Depth == 0)
+                    {
+                        yield return protein;
+                        continue;
+                    }
+                    proteins[protein.IdentityPath] = protein;
+                }
+
+                Entities.Peptide peptide;
+                if (key.Depth == 1 || !peptides.TryGetValue(key.GetPathTo(1), out peptide))
+                {
+                    peptide = new Entities.Peptide(protein, key.GetIdentity(1));
+                    if (key.Depth == 1)
+                    {
+                        yield return peptide;
+                        continue;
+                    }
+                    peptides[peptide.IdentityPath] = peptide;
+                }
+
+                Precursor precursor;
+                if (key.Depth == 2 || !precursors.TryGetValue(key.GetPathTo(2), out precursor))
+                {
+                    precursor = new Precursor(peptide, key.GetIdentity(2));
+                    if (key.Depth == 2)
+                    {
+                        yield return precursor;
+                        continue;
+                    }
+
+                    precursors[precursor.IdentityPath] = precursor;
+                }
+
+                if (key.Depth == 3)
+                {
+                    yield return new Entities.Transition(precursor, key.GetIdentity(3));
+                }
+            }
         }
     }
 }

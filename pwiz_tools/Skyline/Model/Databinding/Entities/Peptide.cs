@@ -43,14 +43,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [InvariantDisplayName("Molecule")]
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
-        private Protein _protein;
+        private readonly Protein _protein;
         private readonly CachedValues _cachedValues = new CachedValues();
-        public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath)
-            : base(dataSchema, identityPath)
+        public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath) : this(new Protein(dataSchema, identityPath.GetPathTo(0)), identityPath.Child)
         {
         }
 
-        public Peptide(Protein protein, Identity peptide) : this(protein.DataSchema, new IdentityPath(protein.IdentityPath, peptide))
+        public Peptide(Protein protein, Identity peptide) : base(protein.DataSchema, new IdentityPath(protein.IdentityPath, peptide))
         {
             _protein = protein;
         }
@@ -95,10 +94,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                lock (this)
-                {
-                    return _protein ??= new Protein(DataSchema, IdentityPath.Parent);
-                }
+                return _protein;
             }
         }
 

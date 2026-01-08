@@ -54,25 +54,17 @@ namespace pwiz.Skyline.Model.Databinding
 
         public IEnumerable<Model.Databinding.Entities.Peptide> ListPeptides()
         {
-            return DataSchema.Document.MoleculeGroups.SelectMany(protein => protein.Molecules.Select(mol =>
-                new Model.Databinding.Entities.Peptide(DataSchema,
-                    new IdentityPath(protein.PeptideGroup, mol.Peptide))));
+            return ListProteins().SelectMany(protein => protein.Peptides);
         }
 
         public IEnumerable<Precursor> ListPrecursors()
         {
-            return DataSchema.Document.MoleculeGroups.SelectMany(protein => protein.Molecules.SelectMany(mol =>
-                mol.TransitionGroups.Select(prec => new Precursor(DataSchema,
-                    new IdentityPath(protein.PeptideGroup, mol.Peptide, prec.TransitionGroup)))));
+            return ListPeptides().SelectMany(peptide => peptide.Precursors);
         }
 
         public IEnumerable<Model.Databinding.Entities.Transition> ListTransitions()
         {
-            return DataSchema.Document.MoleculeGroups.SelectMany(protein => protein.Molecules.SelectMany(mol =>
-                mol.TransitionGroups.SelectMany(prec => prec.Transitions.Select(tran =>
-                    new Model.Databinding.Entities.Transition(DataSchema,
-                        new IdentityPath(protein.PeptideGroup, mol.Peptide, prec.TransitionGroup, tran.Transition))
-                ))));
+            return ListPrecursors().SelectMany(precursor => precursor.Transitions);
         }
 
         public IEnumerable<Replicate> ListReplicates()
