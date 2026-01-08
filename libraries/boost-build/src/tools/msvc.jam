@@ -2593,8 +2593,10 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
     ;
 .version-14.3-env = VS170COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 .version-14.5-path =
-    "../../VC/Tools/MSVC/*/bin/Host*/*"
-    "Microsoft Visual Studio/18/*/VC/Tools/MSVC/*/bin/Host*/*"
+    "../../VC/Tools/MSVC/*/bin/Hostx64/x64"
+    "../../VC/Tools/MSVC/*/bin/Hostx86/x86"
+    "Microsoft Visual Studio/18/*/VC/Tools/MSVC/*/bin/Hostx64/x64"
+    "Microsoft Visual Studio/18/*/VC/Tools/MSVC/*/bin/Hostx86/x86"
     ;
 .version-14.5-env = VS180COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
