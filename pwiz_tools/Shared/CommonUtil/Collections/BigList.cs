@@ -38,6 +38,7 @@ namespace pwiz.Common.Collections
                 if (currentList.Count >= chunkSize)
                 {
                     lists.Add(currentList.ToImmutable());
+                    currentList = new List<T>();
                 }
             }
 
