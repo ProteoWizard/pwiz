@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -2453,6 +2454,11 @@ namespace pwiz.Skyline.Model
         /// A column specifying a spectral library intensity for the transition
         /// </summary>
         public int LibraryColumn { get; set; }
+        /// <summary>
+        /// A column containing something which can be parsed by
+        /// <see cref="pwiz.Skyline.Model.Results.Spectra.SpectrumClassFilter.ParseFilterString"/>
+        /// </summary>
+        public int SpectrumFilterColumn { get; set; }
 
         // After this point are new columns added that were initially only supported for small molecule transition lists
 
@@ -2636,6 +2642,7 @@ namespace pwiz.Skyline.Model
             SetPropertyValue(nameof(FragmentNameColumn), headers.IndexOf(col => FragmentNameNames.Contains(FormatHeader(col))));
             SetPropertyValue(nameof(ProteinDescriptionColumn), headers.IndexOf(col => ProteinDescriptionNames.Contains(FormatHeader(col))));
             SetPropertyValue(nameof(PeptideColumn), headers.IndexOf(col => PeptideNames.Contains(FormatHeader(col))));
+            SetPropertyValue(nameof(SpectrumFilterColumn), headers.IndexOf(col=>SpectrumFilterNames.Contains(FormatHeader(col))));
 
             // Now make sure that no column has been forgotten
             foreach (var property in GetType().GetProperties())
@@ -2709,6 +2716,7 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> ProductNameNames { get { return new[] { @"productname", @"fragmenttype", @"transitionname" }; } }
         public static IEnumerable<string> ProductNeutralLossNames { get { return new[] { @"productneutralloss" }; } }
         public static IEnumerable<string> MoleculeNameNames { get { return new[] { @"moleculename", @"precursorname" }; } }
+        public static IEnumerable<string> SpectrumFilterNames { get { return new[] { @"spectrumfilter" }; } }
         // ReSharper restore StringLiteralTypo
     }
 

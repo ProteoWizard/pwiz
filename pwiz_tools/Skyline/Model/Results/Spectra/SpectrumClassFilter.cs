@@ -404,7 +404,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             var sb = new StringBuilder();
             sb.Append(QuoteIfNeeded(spec.Column));
             sb.Append(@" ");
-            sb.Append(spec.Operation.OpName);
+            sb.Append(spec.Operation.OpSymbol);
             if (spec.Operation.GetOperandType(new DataSchema(), typeof(object)) != null)
             {
                 sb.Append(@" ");
@@ -520,7 +520,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 .Then(clause => ws.Then(_ => Parse.Char(')')).Return(clause));
 
             // A single clause or parenthesized clause
-            var singleOrParenClause = parenClause.Or(filterClause);
+            // Try filterClause first so that "(spec1) and (spec2)" is parsed as a single clause with multiple specs,
+            // rather than "(spec1)" being parsed as a parenthesized clause.
+            var singleOrParenClause = filterClause.Or(parenClause);
 
             // Full filter: clauses joined by " or "
             var orKeyword = ws.Then(_ => Parse.String(@"or")).Then(_ => ws);

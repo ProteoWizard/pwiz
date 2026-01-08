@@ -148,6 +148,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
             });
             WaitForDocumentLoaded();
+            PauseTest();
         }
 
         private ChromatogramGroupInfo LoadChromatogram(SrmDocument document, PeptideDocNode peptideDocNode,
