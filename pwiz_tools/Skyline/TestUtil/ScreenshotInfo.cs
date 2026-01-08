@@ -121,9 +121,9 @@ namespace pwiz.SkylineTestUtil
         }
 
         public string Path { get; }
-        private string Name { get; }
-        private string Locale { get; }
-        private int Number { get; }
+        internal string Name { get; }
+        internal string Locale { get; }
+        internal int Number { get; }
 
         public bool IsEmpty => string.IsNullOrEmpty(Name);
 
@@ -146,6 +146,37 @@ namespace pwiz.SkylineTestUtil
                 default:
                     return Path;
             }
+        }
+
+        /// <summary>
+        /// Generates a diff filename for saving to ai\.tmp folder.
+        /// Format: {Name}-{Locale}-s-{Number}-diff-{pixelCount}px.png
+        /// </summary>
+        public string GetDiffFileName(int pixelCount)
+        {
+            return $"{Name}-{Locale}-s-{Number:D2}-diff-{pixelCount}px.png";
+        }
+
+        /// <summary>
+        /// Gets the path to the ai\.tmp folder relative to this screenshot's location.
+        /// Navigates up from the Tutorials folder to find the repository root.
+        /// </summary>
+        public string GetAiTmpFolder()
+        {
+            // Path is like: ...\pwiz_tools\Skyline\Documentation\Tutorials\{Name}\{Locale}\s-{Number}.png
+            // Need to navigate up to repository root and then to ai\.tmp
+            var dir = System.IO.Path.GetDirectoryName(Path);
+            while (dir != null)
+            {
+                var parent = System.IO.Path.GetDirectoryName(dir);
+                if (parent != null && System.IO.Path.GetFileName(dir) == "pwiz_tools")
+                {
+                    // Found pwiz_tools, parent is repository root
+                    return System.IO.Path.Combine(parent, "ai", ".tmp");
+                }
+                dir = parent;
+            }
+            return null;
         }
     }
 

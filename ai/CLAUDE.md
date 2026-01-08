@@ -134,9 +134,16 @@ Before writing code, read these files:
 2. **ai/MEMORY.md** - Project context and gotchas
 3. **ai/docs/build-and-test-guide.md** - Detailed build and test instructions
 
-## Skills
+## Skills - Load Before Starting Work
 
-Load the `skyline-development` skill for comprehensive project context:
-- Provides access to all documentation
-- Explains TODO workflow
-- Contains testing patterns
+**Load the appropriate skill BEFORE diving into work:**
+
+- **skyline-development** → Any C# code changes, test writing, building, or codebase questions
+- **version-control** → Before `git commit`, `git push`, `gh pr create`, or any git operations
+- **debugging** → When investigating bugs, test failures, crashes, or "why is this happening?"
+- **skyline-nightlytests** → For nightly test failures, handle/memory leaks, or test run queries
+- **skyline-exceptions** → For exception reports, triage, or LabKey exception queries
+- **tutorial-documentation** → For tutorial HTML, tutorial tests (TestTutorial/), or screenshots
+- **skyline-screenshots** → For ImageComparer, screenshot diffs, or s-XX.png references
+- **skyline-wiki** → For reading/updating wiki pages on skyline.ms
+- **ai-context-documentation** → For ai/ folder docs, TODOs, .claude/ files, or ai-context branch work

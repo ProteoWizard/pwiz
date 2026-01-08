@@ -98,7 +98,10 @@ namespace seems
             if( dp == null )
                 dp = c.dataProcessing;
 
-            row.Type = c.cvParamChild( CVID.MS_chromatogram_type ).name;
+            var type = c.cvParamChild(CVID.MS_chromatogram_type);
+            if (type.cvid == CVID.CVID_Unknown) // No specific chromatogram type given, try generic
+                type = c.cvParam(CVID.MS_chromatogram);
+            row.Type = type.name;
             row.DataPoints = c.defaultArrayLength;
             row.DpId = ( dp == null || dp.id.Length == 0 ? "unknown" : dp.id );
         }

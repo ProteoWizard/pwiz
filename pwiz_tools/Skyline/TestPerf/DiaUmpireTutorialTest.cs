@@ -669,11 +669,16 @@ namespace TestPerf
             PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form");
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
-            WaitForCondition(() => allChrom.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
-            allChrom.SetFreezeProgressPercent(null, null);
+            if (!PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 40, @"00:00:22", 39f, 1e4f,
+                    new Dictionary<string, int>
+                    {
+                        { "collinsb_I180316_001", 40 },
+                        { "collinsb_I180316_002", 41 }
+                    }))
+            {
+                CleanUpPersistentDir(diaDir);
+                return;
+            }
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
@@ -845,8 +850,7 @@ namespace TestPerf
             // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
             if (!IsRecordMode)
             {
-                foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
-                    FileEx.SafeDelete(file);
+                CleanUpPersistentDir(diaDir);
             }
 
             if (IsRecordMode)
@@ -860,6 +864,12 @@ namespace TestPerf
                     Formatting = Formatting.Indented
                 }).Serialize(jsonTextWriter, _expectedValues);
             }
+        }
+
+        private static void CleanUpPersistentDir(string diaDir)
+        {
+            foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
+                FileEx.SafeDelete(file);
         }
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)

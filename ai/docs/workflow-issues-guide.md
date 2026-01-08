@@ -58,9 +58,14 @@ When beginning work (new session):
    ai/todos/active/TODO-YYYYMMDD_feature_name.md
    ```
 
-2. **Link issue in TODO file**:
+2. **Link issue in TODO file** (use linked format):
    ```markdown
-   - **GitHub Issue**: https://github.com/ProteoWizard/pwiz/issues/NNNN
+   - **GitHub Issue**: [#NNNN](https://github.com/ProteoWizard/pwiz/issues/NNNN)
+   ```
+
+   When PR is created, add:
+   ```markdown
+   - **PR**: [#NNNN](https://github.com/ProteoWizard/pwiz/pull/NNNN)
    ```
 
 3. **Signal ownership immediately** (two places):
