@@ -634,5 +634,13 @@ namespace pwiz.Skyline.Model.Databinding
             public IUndoState UndoState { get; }
             public List<EditDescription> EditDescriptions { get; }
         }
+
+        public override int MaxGridRowCount
+        {
+            get
+            {
+                return Settings.Default.MaxGridRowCount;
+            }
+        }
     }
 }

@@ -32,13 +32,19 @@ namespace pwiz.Common.Collections
         {
             var lists = new List<ImmutableList<T>>();
             var currentList = new List<T>();
+            bool checkCapacity = true;
             foreach (var item in source)
             {
                 currentList.Add(item);
+                if (checkCapacity && currentList.Count > chunkSize / 2)
+                {
+                    checkCapacity = false;
+                    currentList.Capacity = Math.Max(currentList.Capacity, chunkSize);
+                }
                 if (currentList.Count >= chunkSize)
                 {
                     lists.Add(currentList.ToImmutable());
-                    currentList = new List<T>();
+                    currentList.Clear();
                 }
             }
 

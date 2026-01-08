@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
@@ -48,7 +49,6 @@ namespace pwiz.Common.DataBinding.Internal
     [DebuggerTypeProxy(typeof(object))]
     internal class BindingListView : BindingList<RowItem>, ITypedList, IBindingListView, IRaiseItemChangedEvents, IDisposable
     {
-        public const int MaxRowCount = 10_000_000;
         private readonly HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
         private ReportResults _reportResults = ReportResults.EMPTY;
         private QueryResults _queryResults;
@@ -367,7 +367,7 @@ namespace pwiz.Common.DataBinding.Internal
                 CancelNew(newRowPos);
             }
             RowItemList.Clear();
-            RowItemList.AddRange(QueryResults.ResultRows.Take(MaxRowCount));
+            RowItemList.AddRange(QueryResults.ResultRows.Take(ViewInfo?.DataSchema.MaxGridRowCount ?? int.MaxValue));
             if (newRow != null && !NewRowHandler.IsNewRowEmpty(newRow))
             {
                 _newRow = newRow;
@@ -393,6 +393,19 @@ namespace pwiz.Common.DataBinding.Internal
                 OnAllRowsChanged();
             }
         }
+
+        private void SetItems(BigList<RowItem> rowItems)
+        {
+            var list = (List<RowItem>)Items;
+            list.Clear();
+            int count = (int)Math.Min(ViewInfo.DataSchema.MaxGridRowCount, rowItems.Count);
+            if (count > list.Capacity)
+            {
+                list.Capacity = count;
+            }
+            list.AddRange(rowItems.Take(count));
+        }
+
         public string Filter
         {
             get

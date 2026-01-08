@@ -222,6 +222,11 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     value = value as string ?? value.ToString();
                 }
+                else if (StorageType == typeof(DateTimeOffset?) && value is DateTime dateTime)
+                {
+                    // Parquet library expects DateTimeOffset for timestamps
+                    value = new DateTimeOffset(dateTime);
+                }
                 Values.SetValue(value, rowIndex);
             }
 
@@ -235,11 +240,17 @@ namespace pwiz.Skyline.Model.Databinding
 
         private static HashSet<Type> _primitiveTypes = new HashSet<Type>
         {
-            typeof(int), typeof(long), typeof(double), typeof(float), typeof(bool), typeof(DateTime),
+            typeof(int), typeof(long), typeof(double), typeof(float), typeof(bool),
             typeof(decimal)
         };
         public static Type DecideStorageType(Type type)
         {
+            // Parquet library expects DateTimeOffset for timestamps, not DateTime
+            if (type == typeof(DateTime))
+            {
+                return typeof(DateTimeOffset?);
+            }
+
             if (_primitiveTypes.Contains(type))
             {
                 return typeof(Nullable<>).MakeGenericType(new[] { type });

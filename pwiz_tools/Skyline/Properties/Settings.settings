@@ -914,5 +914,8 @@
     <Setting Name="MaxChromatogramGraphs" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">100</Value>
     </Setting>
+	<Setting Name="MaxGridRowCount" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">10000000</Value>
+	</Setting>
   </Settings>
 </SettingsFile>
