@@ -3700,7 +3700,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
         {
             var mouse = TransformCoordinates(x, y, paneKey);
-            HandleMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)mouse.X, (int)mouse.Y, 0));
+            HandleMouseMove(new MouseEventArgs(MouseButtons.None, 0, (int)Math.Round(mouse.X), (int)Math.Round(mouse.Y), 0));
         }
 
         public bool IsOverHighlightPoint(double x, double y, PaneKey? paneKey)
