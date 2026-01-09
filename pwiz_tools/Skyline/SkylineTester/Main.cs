@@ -639,13 +639,22 @@ namespace SkylineTester
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
             };
-            string[] pathTrials = 
+            string[] pathTrials =
             {
-                @"Microsoft Visual Studio\{0}\Enterprise\Common7\IDE",  
+                @"Microsoft Visual Studio\{0}\Enterprise\Common7\IDE",
                 @"Microsoft Visual Studio\{0}\Professional\Common7\IDE",
-                @"Microsoft Visual Studio\{0}\Community\Common7\IDE",   
+                @"Microsoft Visual Studio\{0}\Community\Common7\IDE",
             };
-            for (var version = 2040; version >= MINIMUM_VISUAL_STUDIO; version--) // 2040 is completely arbitrary
+            // Check both marketing years (2017-2040) and internal version numbers (15-30)
+            // VS 2017-2022 use year-based folders (2017, 2019, 2022)
+            // VS 2026+ may use internal version numbers (18 for VS 2026)
+            var versionsToCheck = new List<int>();
+            for (var year = 2040; year >= MINIMUM_VISUAL_STUDIO; year--)
+                versionsToCheck.Add(year);
+            for (var version = 30; version >= 15; version--) // Internal versions: VS2017=15, VS2019=16, VS2022=17, VS2026=18
+                versionsToCheck.Add(version);
+
+            foreach (var version in versionsToCheck)
             {
                 foreach (var pathTrial in pathTrials)
                 {
