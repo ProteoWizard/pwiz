@@ -46,6 +46,7 @@ pwiz_dir = args.pwiz_dir
 build_dir = pwiz_dir + '/build-nt-x86'
 release_bin_dir = build_dir + '/msvc-release-x86_64'
 debug_bin_dir = build_dir + '/msvc-debug-x86_64'
+vendor_dir = pwiz_dir + '/pwiz_aux/msrc/utility/vendor_api'
 
 
 print(build_dir)
@@ -70,11 +71,26 @@ lib_system_paths = lib_files.copy()
 lib_system_paths = [x for x in lib_system_paths if 
              'Test.lib' not in x and 
              'test.lib' not in x and 
-             '_cli' not in x
+             '_cli' not in x and
+             '_test_harness.lib' not in x and
+             '_examples.lib' not in x
             ]
 
 release_lib_paths = [x for x in lib_system_paths if '\\dbg\\' not in x]
 debug_lib_paths = [x for x in lib_system_paths if '\\rls\\' not in x]
+
+
+vendors_lib = []
+for root, dirs, files in os.walk(vendor_dir):
+    for file in files:
+        if file.endswith('.lib'):
+            vendors_lib.append(os.path.join(root, file))            
+vendors_lib_x64 =  [x for x in vendors_lib if 'x86' not in x]
+
+for i in range(len(vendors_lib_x64)):
+    release_lib_paths.append(vendors_lib_x64[i])
+
+
 
 with open('copy_lib.cmd', 'w') as f:
     for file in release_lib_paths:
@@ -156,7 +172,7 @@ if os.path.exists(release_bin_dir):
     print('release_bin_dir directory  exist')
 
 release_dll_files = get_dlls(release_bin_dir);
-debug_dll_files = get_dlls(debug_bin_dir);
+debug_dll_files = get_dlls(release_bin_dir);
 
 release_dll_files.append("msconvert.exe")
 debug_dll_files.append("msconvert.exe")
