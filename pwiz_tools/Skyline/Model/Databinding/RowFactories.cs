@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             var rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
-            rowItemExporter.Export(progressMonitor, ref status, stream, rowItemEnumerator);
+            rowItemExporter.Export(progressMonitor, ref status, stream, rowItemEnumerator, bindingListSource.ColumnFormats);
             if (!progressMonitor.IsCanceled)
             {
                 progressMonitor.UpdateProgress(status = status.Complete());

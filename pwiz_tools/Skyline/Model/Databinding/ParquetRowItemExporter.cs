@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Databinding
         private const int ROWS_PER_GROUP = 100_000;
 
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
-            RowItemEnumerator rowItemEnumerator)
+            RowItemEnumerator rowItemEnumerator, ColumnFormats columnFormats)
         {
             // Build columns and schema from item properties
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);

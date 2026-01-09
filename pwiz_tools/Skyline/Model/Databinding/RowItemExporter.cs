@@ -35,9 +35,10 @@ namespace pwiz.Skyline.Model.Databinding
         public DsvWriter DsvWriter { get; }
 
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
-            RowItemEnumerator rowItemEnumerator)
+            RowItemEnumerator rowItemEnumerator, ColumnFormats columnFormats)
         {
             using var writer = new StreamWriter(stream);
+            DsvWriter.ColumnFormats = columnFormats;
             Export(progressMonitor, ref status, writer, rowItemEnumerator);
         }
 
