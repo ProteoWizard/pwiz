@@ -816,12 +816,18 @@ PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfMSOrder(MSOrder msOrder) cons
     return spectraByMSOrder[(size_t) msOrder+3];
 }
 
+PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfController(ControllerType controllerType) const
+{
+    return spectraByController[(size_t) controllerType];
+}
+
 PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 {
     using namespace boost::spirit::karma;
 
     spectraByScanType.resize(ScanType_Count, 0);
     spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
+    spectraByController.resize(Controller_Count, 0);
 
     auto raw = rawfile_->getRawByThread(0);
 
@@ -869,6 +875,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         // the +3 offset is because MSOrder_NeutralLoss == -3
                         ++spectraByMSOrder[msOrder+3];
                         ++spectraByScanType[scanType];
+                        ++spectraByController[controllerType];
                         maxMsLevel_ = max(maxMsLevel_, msOrder+3);
 
                         switch (scanType)
@@ -936,6 +943,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         ie.controllerNumber = n;
                         ie.scan = scan;
                         ie.index = index_.size()-1;
+                        ++spectraByController[controllerType];
 
                         std::back_insert_iterator<std::string> sink(ie.id);
                         generate(sink,
