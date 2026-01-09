@@ -557,6 +557,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="AccessServerTest.zip" />
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
     <None Include="AddIrtStandardsTest.zip" />

@@ -3381,9 +3381,6 @@ namespace pwiz.Skyline
             var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, commandArgs.IsReportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            // Make sure invariant report format uses a true comma if a tab separator was not specified.
-            if (commandArgs.IsReportInvariant && commandArgs.ReportColumnSeparator != TextUtil.SEPARATOR_TSV)
-                reportColSeparator = TextUtil.SEPARATOR_CSV;
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
             var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
             if (null == viewSpecList.GetView(commandArgs.ReportName))
@@ -3395,7 +3392,7 @@ namespace pwiz.Skyline
             var success = true;
             var exceptionThrown = !HandleExceptions(commandArgs, () => 
             {
-                using (var saver = new FileSaver(commandArgs.ReportFile))
+                using (var saver = new FileSaver(commandArgs.ReportFile, true))
                 {
                     if (!saver.CanSave())
                     {
