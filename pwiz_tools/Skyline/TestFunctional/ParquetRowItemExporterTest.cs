@@ -6,8 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NHibernate.Dialect.Schema;
 using Parquet;
+using Parquet.Schema;
+using Parquet.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -33,7 +34,12 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestParquetArrays()
         {
-            var items = new[]{Array.Empty<float>(), new float[1], null }.Select(array=>new MyObject(){FloatArray = new FormattableList<float>(array)}).ToList();
+            var items = new[]
+            {
+                new FormattableList<float>(Array.Empty<float>()),
+                new FormattableList<float>(new float[1]),
+                null
+            }.Select(array=>new MyObject{FloatArray = array}).ToList();
             var viewSpec = new ViewSpec().SetColumns(new[]
             {
                 new ColumnSpec(PropertyPath.Root.Property(nameof(MyObject.FloatArray)))
@@ -46,8 +52,26 @@ namespace pwiz.SkylineTest
             IProgressStatus status = new ProgressStatus();
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items), rowItemExporter, new SilentProgressMonitor(), ref status);
             stream.Position = 0;
-            var table = ParquetReader.ReadTableFromStream(stream);
-            Assert.AreEqual(1, table.Schema.Fields.Count);
+
+            // Read using the new ParquetReader API
+            using var reader = ParquetReader.CreateAsync(stream).Result;
+            Assert.AreEqual(1, reader.Schema.Fields.Count);
+
+            // Read the row group
+            using var rowGroupReader = reader.OpenRowGroupReader(0);
+            var listField = reader.Schema.Fields[0] as ListField;
+            Assert.IsNotNull(listField, "Schema field should be a ListField");
+
+            var dataColumn = rowGroupReader.ReadColumnAsync(listField.Item).Result;
+
+            // Verify definition levels distinguish empty vs null arrays
+            // Row 0: empty array (def level 1) - list exists but no elements
+            // Row 1: array with one element (def level 2) - list exists and element is non-null
+            // Row 2: null array (def level 0) - list is null
+            Assert.AreEqual(3, dataColumn.DefinitionLevels.Length);
+            Assert.AreEqual(1, dataColumn.DefinitionLevels[0], "Empty array should have definition level 1");
+            Assert.AreEqual(2, dataColumn.DefinitionLevels[1], "Array with element should have definition level 2");
+            Assert.AreEqual(0, dataColumn.DefinitionLevels[2], "Null array should have definition level 0");
         }
 
         class MyObject

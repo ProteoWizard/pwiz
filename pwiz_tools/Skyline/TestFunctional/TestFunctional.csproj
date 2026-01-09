@@ -126,8 +126,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
-    <Reference Include="ParquetNet, Version=3.0.0.0, Culture=neutral, PublicKeyToken=de28deb604dd91c9, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Parquet">
       <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />

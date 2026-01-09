@@ -159,8 +159,27 @@
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="ParquetNet">
+    <Reference Include="IronCompress">
+      <HintPath>..\Shared\Lib\Parquet\IronCompress.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream">
+      <HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="ParquetNet, Version=3.0.0.0, Culture=neutral, PublicKeyToken=de28deb604dd91c9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.AsyncEnumerable">
+      <HintPath>..\Shared\Lib\Parquet\System.Linq.AsyncEnumerable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Pipelines">
+      <HintPath>..\Shared\Lib\Parquet\System.IO.Pipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Encodings.Web.dll</HintPath>
     </Reference>
     <Reference Include="System.Reflection.Emit.Lightweight">
       <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
@@ -3991,6 +4010,10 @@
     </Content>
     <Content Include="..\Shared\Lib\grpc_csharp_ext.x86.dll">
       <Link>grpc_csharp_ext.x86.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\Lib\Parquet\runtimes\win-x64\native\nironcompress.dll">
+      <Link>runtimes\win-x64\native\nironcompress.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\SQLite.Interop.dll">
