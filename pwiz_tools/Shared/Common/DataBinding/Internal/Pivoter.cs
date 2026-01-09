@@ -102,26 +102,24 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 return new[] {rowItem};
             }
-            var items = sublistColumn.CollectionInfo.GetItems(parentValue).Cast<object>().ToBigList();
+            var items = sublistColumn.CollectionInfo.GetItems(parentValue).Cast<object>().ToList();
             if (items.Count == 0)
             {
                 return new[] {rowItem};
             }
             cancellationToken.ThrowIfCancellationRequested();
-            BigList<object> keys = null;
+            IList<object> keys = null;
             if (sublistColumn.CollectionInfo.IsDictionary)
             {
-                keys = sublistColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToBigList();
+                keys = sublistColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToList();
             }
-            var expandedItems = new List<RowItem>();
-            for (int index = 0; index < items.Count; index++)
+            return Enumerable.Range(0, items.Count).SelectMany(index =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 object key = keys == null ? index : keys[index];
                 var child = rowItem.SetRowKey(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key));
-                expandedItems.AddRange(Expand(cancellationToken, child, sublistColumnIndex + 1));
-            }
-            return expandedItems;
+                return Expand(cancellationToken, child, sublistColumnIndex + 1);
+            });
         }
 
         public RowItem Pivot(CancellationToken cancellationToken, RowItem rowItem)
@@ -150,8 +148,8 @@ namespace pwiz.Common.DataBinding.Internal
                     var parentValue = pivotColumn.Parent.GetPropertyValue(rowItem, pivotKey);
                     if (null != parentValue)
                     {
-                        var keys = pivotColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToBigList();
-                        if (keys.Length > 0)
+                        var keys = pivotColumn.CollectionInfo.GetKeys(parentValue).Cast<object>().ToList();
+                        if (keys.Count > 0)
                         {
                             var newPivotKeys = rowItem.PivotKeys.Except(new[] {pivotKey}).ToList();
                             var pivotKeyLocal = pivotKey ?? PivotKey.EMPTY;
@@ -172,33 +170,30 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 return rowItems;
             }
-            var filteredRows = new List<RowItem>();
-            foreach (var rowItem in rowItems)
+
+            return rowItems.Select(rowItem =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var filteredRowItem = rowItem;
                 foreach (var filter in ViewInfo.Filters)
                 {
-                    filteredRowItem = filter.ApplyFilter(filteredRowItem);
-                    if (null == filteredRowItem)
+                    rowItem = filter.ApplyFilter(rowItem);
+                    if (null == rowItem)
                     {
-                        break;
+                        return null;
                     }
                 }
-                if (null != filteredRowItem)
-                {
-                    filteredRows.Add(filteredRowItem);
-                }
-            }
-            return filteredRows;
+                return rowItem;
+            }).Where(rowItem => rowItem != null);
         }
 
-        public ReportResults ExpandAndPivot(CancellationToken cancellationToken, IEnumerable<RowItem> rowItems)
+        public ReportResults ExpandAndPivot(CancellationToken cancellationToken, IList<RowItem> rowItems)
         {
-            var expandedItems = rowItems.SelectMany(rowItem => Expand(cancellationToken, rowItem, 0));
-            var pivotedItems = expandedItems.Select(item => Pivot(cancellationToken, item));
-            var filteredItems = Filter(cancellationToken, pivotedItems);
-            var rows = filteredItems.ToBigList();
+            var bigLists = new BigList<RowItem>[rowItems.Count];
+            ParallelEx.For(0, rowItems.Count, i =>
+            {
+                bigLists[i] = Filter(cancellationToken, Expand(cancellationToken, rowItems[i], 0).Select(rowItem=>Pivot(cancellationToken, rowItem))).ToBigList();
+            }, threadName: nameof(ExpandAndPivot));
+            var rows = bigLists.Length == 1 ? bigLists[0] : bigLists.SelectMany(list => list).ToBigList();
             var result = new ReportResults(rows, GetItemProperties(rows));
             if (ViewInfo.HasTotals)
             {

@@ -94,28 +94,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Accession
         {
-            get { return DocNode.ProteinMetadata.Accession; }
+            get { return DocNode.ProteinMetadataOverrides.Accession; }
         }
 
         [InvariantDisplayName("ProteinPreferredName")]
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string PreferredName
         {
-            get { return DocNode.ProteinMetadata.PreferredName; }
+            get { return DocNode.ProteinMetadataOverrides.PreferredName; }
         }
 
         [InvariantDisplayName("ProteinGene")]
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Gene
         {
-            get { return DocNode.ProteinMetadata.Gene; }
+            get { return DocNode.ProteinMetadataOverrides.Gene; }
         }
 
         [InvariantDisplayName("ProteinSpecies")]
         [Hidden(InUiMode = UiModes.SMALL_MOLECULES)]
         public string Species
         {
-            get { return DocNode.ProteinMetadata.Species; }
+            get { return DocNode.ProteinMetadataOverrides.Species; }
         }
 
         // We don't want this to appear in the Document Grid

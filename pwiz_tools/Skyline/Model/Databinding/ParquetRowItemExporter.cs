@@ -61,12 +61,16 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         column.SetRowCount(rowsInChunk);
                     }
+                    progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
+                            rowsProcessed, totalRows))
+                        .ChangePercentComplete((int)(rowsProcessed * 100 / totalRows)));
 
                     // Populate chunk data
-                    if (!PopulateChunk(progressMonitor, ref status, rowItemEnumerator, columns, rowsInChunk,
-                            rowsProcessed, totalRows))
+                    PopulateChunk(progressMonitor, ref status, rowItemEnumerator, columns, rowsInChunk, rowsProcessed,
+                        totalRows);
+                    if (progressMonitor.IsCanceled)
                     {
-                        return; // Canceled
+                        return;
                     }
 
                     // Write chunk
@@ -74,6 +78,10 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         foreach (var column in columns)
                         {
+                            if (progressMonitor.IsCanceled)
+                            {
+                                return;
+                            }
                             groupWriter.WriteColumn(column.GetDataColumn());
                         }
                     }
@@ -97,38 +105,49 @@ namespace pwiz.Skyline.Model.Databinding
             return columns;
         }
 
-        private bool PopulateChunk(IProgressMonitor progressMonitor, ref IProgressStatus status,
+        private void PopulateChunk(IProgressMonitor progressMonitor, ref IProgressStatus status,
             RowItemEnumerator rowItemEnumerator, List<ColumnData> columns, int rowsInChunk,
             long rowsProcessed, long totalRows)
         {
-            int rowIndex = 0;
-            while (rowIndex < rowsInChunk && rowItemEnumerator.MoveNext())
+            var rowItems = new RowItem[rowsInChunk];
+            for (int i = 0; i < rowsInChunk; i++)
             {
                 if (progressMonitor.IsCanceled)
                 {
-                    return false;
+                    return;
                 }
-
-                long overallRowIndex = rowsProcessed + rowIndex;
-                int percentComplete = (int) (overallRowIndex * 100 / totalRows);
-                if (percentComplete > status.PercentComplete)
+                if (!rowItemEnumerator.MoveNext())
                 {
-                    status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
-                        overallRowIndex + 1, totalRows))
-                        .ChangePercentComplete(percentComplete);
-                    progressMonitor.UpdateProgress(status);
+                    throw new InvalidOperationException(string.Format(@"Unable to get row {0}", i));
                 }
 
-                var currentItem = rowItemEnumerator.Current!;
-                foreach (var column in columns)
-                {
-                    column.StoreValue(currentItem, rowIndex);
-                }
-
-                rowIndex++;
+                rowItems[i] = rowItemEnumerator.Current;
             }
 
-            return true;
+            // Update progress
+            long overallRowIndex = rowsProcessed + rowItems.Length;
+            int percentComplete = (int)(overallRowIndex * 100 / totalRows);
+            if (percentComplete > status.PercentComplete)
+            {
+                status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
+                        overallRowIndex, totalRows))
+                    .ChangePercentComplete(percentComplete);
+                progressMonitor.UpdateProgress(status);
+            }
+
+            ParallelEx.For(0, rowItems.Length, rowIndex =>
+            {
+                if (progressMonitor.IsCanceled)
+                {
+                    return;
+                }
+                var rowItem = rowItems[rowIndex];
+                rowItems[rowIndex] = null;
+                foreach (var column in columns)
+                {
+                    column.StoreValue(rowItem, rowIndex);
+                }
+            });
         }
 
         private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)
@@ -234,28 +253,26 @@ namespace pwiz.Skyline.Model.Databinding
 
             public DataColumn GetDataColumn()
             {
-                return new DataColumn(DataField, Values, null);
+                return new DataColumn(DataField, Values);
             }
         }
 
-        private static HashSet<Type> _primitiveTypes = new HashSet<Type>
+        private static Dictionary<Type, Type> _storageTypes = new Dictionary<Type, Type>
         {
-            typeof(int), typeof(long), typeof(double), typeof(float), typeof(bool),
-            typeof(decimal)
+            { typeof(int), typeof(int?) },
+            { typeof(long), typeof(long?) },
+            { typeof(double), typeof(double?) },
+            { typeof(float), typeof(float?) },
+            { typeof(bool), typeof(bool?) },
+            { typeof(decimal), typeof(decimal?) },
+            { typeof(DateTime), typeof(DateTimeOffset?) }
         };
         public static Type DecideStorageType(Type type)
         {
-            // Parquet library expects DateTimeOffset for timestamps, not DateTime
-            if (type == typeof(DateTime))
+            if (_storageTypes.TryGetValue(type, out var storageType))
             {
-                return typeof(DateTimeOffset?);
+                return storageType;
             }
-
-            if (_primitiveTypes.Contains(type))
-            {
-                return typeof(Nullable<>).MakeGenericType(new[] { type });
-            }
-
             return typeof(string);
         }
     }
