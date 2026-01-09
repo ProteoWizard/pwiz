@@ -233,6 +233,7 @@ import rc ;
 import regex ;
 import sequence ;
 import set ;
+import targets ;
 import testing ;
 import toolset ;
 import type ;
