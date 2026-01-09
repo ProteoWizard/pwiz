@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parquet;
 using Parquet.Schema;
-using Parquet.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -62,7 +58,7 @@ namespace pwiz.SkylineTest
             var listField = reader.Schema.Fields[0] as ListField;
             Assert.IsNotNull(listField, "Schema field should be a ListField");
 
-            var dataColumn = rowGroupReader.ReadColumnAsync(listField.Item).Result;
+            var dataColumn = rowGroupReader.ReadColumnAsync(listField.Item as DataField).Result;
 
             // Verify definition levels distinguish empty vs null arrays
             // Row 0: empty array (def level 1) - list exists but no elements

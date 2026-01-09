@@ -215,8 +215,9 @@ namespace pwiz.Skyline.Model.Databinding
                     // Use nullable storage type so the array can hold nulls for absent lists
                     ElementStorageType = DecideStorageType(ListElementType);
                     StorageType = typeof(IEnumerable<>).MakeGenericType(ElementStorageType);
-                    // Create DataField with CLR type and explicit hasNulls:true to represent null lists
-                    var elementField = new DataField(@"element", ElementStorageType, isNullable: true);
+                    // For DataField, use non-nullable type since nulls are encoded in definition levels
+                    var nonNullableElementType = Nullable.GetUnderlyingType(ElementStorageType) ?? ElementStorageType;
+                    var elementField = new DataField(@"element", nonNullableElementType, isNullable: true);
                     SchemaField = new ListField(Name, elementField);
                     DataField = elementField;
                 }
@@ -293,14 +294,20 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                 }
 
-                // Create flattened array of the element storage type
-                var flattenedArray = Array.CreateInstance(ElementStorageType, allElements.Count);
+                // Create flattened array of the non-nullable element type
+                // When using definition levels, Parquet expects non-nullable array - nulls are encoded in definition levels
+                var nonNullableElementType = Nullable.GetUnderlyingType(ElementStorageType) ?? ElementStorageType;
+                var flattenedArray = Array.CreateInstance(nonNullableElementType, allElements.Count);
                 for (int i = 0; i < allElements.Count; i++)
                 {
-                    flattenedArray.SetValue(allElements[i], i);
+                    var element = allElements[i];
+                    if (element != null)
+                    {
+                        flattenedArray.SetValue(element, i);
+                    }
                 }
 
-                // New API: DataColumn(field, data, definitionLevels, repetitionLevels)
+                // Parquet.Net 4.x API: DataColumn(field, data, definitionLevels, repetitionLevels)
                 return new DataColumn(DataField, flattenedArray, definitionLevels.ToArray(), repetitionLevels.ToArray());
             }
 

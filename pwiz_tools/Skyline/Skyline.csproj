@@ -165,21 +165,11 @@
     <Reference Include="Microsoft.IO.RecyclableMemoryStream">
       <HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
     </Reference>
-    <Reference Include="ParquetNet, Version=3.0.0.0, Culture=neutral, PublicKeyToken=de28deb604dd91c9, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    <Reference Include="..\Shared\Lib\Parquet\ParquetNet.dll">
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Text.Json">
       <HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Linq.AsyncEnumerable">
-      <HintPath>..\Shared\Lib\Parquet\System.Linq.AsyncEnumerable.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.Pipelines">
-      <HintPath>..\Shared\Lib\Parquet\System.IO.Pipelines.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Encodings.Web">
-      <HintPath>..\Shared\Lib\Parquet\System.Text.Encodings.Web.dll</HintPath>
     </Reference>
     <Reference Include="System.Reflection.Emit.Lightweight">
       <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>

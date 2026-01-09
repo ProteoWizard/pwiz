@@ -127,6 +127,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
+    <Reference Include="Parquet">
+      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -263,6 +266,7 @@
     <Compile Include="MSstats\WithRunQuantification\GroupComparisonRunQuantificationTest.cs" />
     <Compile Include="NormalizeProductIonTest.cs" />
     <Compile Include="PasteTest.cs" />
+    <Compile Include="ParquetRowItemExporterTest.cs" />
     <Compile Include="PcaTest.cs" />
     <Compile Include="PeakBoundaryTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
