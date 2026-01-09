@@ -489,3 +489,7 @@ cout.txt
 cerrd.txt
 cerr.txt
 
+mt_tools/copy_lib.cmd
+mt_tools/pwiz-config-version.cmake
+mt_tools/pwiz-config.cmake
+
