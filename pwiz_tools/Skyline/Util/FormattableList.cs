@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Util.Extensions;
 
@@ -55,6 +56,11 @@ namespace pwiz.Skyline.Util
             }
             return SeparateValues(TextUtil.CsvSeparator, 
                 _list.Select(item => ((object) item ?? string.Empty).ToString()));
+        }
+
+        public T[] ToArray()
+        {
+            return _list?.ToArray();
         }
 
         private static string SeparateValues(char separator, IEnumerable<string> values)

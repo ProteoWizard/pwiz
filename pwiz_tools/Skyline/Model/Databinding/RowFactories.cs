@@ -16,8 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
@@ -172,22 +174,34 @@ namespace pwiz.Skyline.Model.Databinding
 
             var layout = viewSpecList.GetViewLayouts(viewName.Name).DefaultLayout;
             var viewInfo = new ViewInfo(DataSchema, factory.ItemType, viewSpec);
-            using var bindingListSource = new BindingListSource(CancellationToken);
-            bindingListSource.SetView(viewInfo, factory);
-            if (layout != null)
-            {
-                foreach (var column in layout.ColumnFormats)
-                {
-                    bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
-                }
-            }
+            ExportReport(CancellationToken, stream, viewInfo, layout, factory, rowItemExporter, progressMonitor, ref status);
+        }
 
-            var rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
-            rowItemExporter.Export(progressMonitor, ref status, stream, rowItemEnumerator, bindingListSource.ColumnFormats);
+        public static void ExportReport(CancellationToken cancellationToken, Stream stream, ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
+            IRowItemExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        {
+            RowItemEnumerator rowItemEnumerator;
+            ColumnFormats columnFormats;
+            using (var bindingListSource = new BindingListSource(cancellationToken))
+            {
+                bindingListSource.SetView(viewInfo, rowSource);
+                if (layout != null)
+                {
+                    foreach (var column in layout.ColumnFormats)
+                    {
+                        bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
+                    }
+                }
+                rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
+                columnFormats = bindingListSource.ColumnFormats;
+            }
+            
+            rowItemExporter.Export(progressMonitor, ref status, stream, rowItemEnumerator, columnFormats);
             if (!progressMonitor.IsCanceled)
             {
                 progressMonitor.UpdateProgress(status = status.Complete());
             }
+
         }
     }
 }

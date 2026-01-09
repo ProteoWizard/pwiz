@@ -16,16 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using Parquet;
-using Parquet.Data;
-using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Web.UI;
+using Parquet;
+using Parquet.Data;
+using pwiz.Common.DataBinding;
 using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             // Build columns and schema from item properties
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
-            var schema = new Schema(columns.Select(col => col.DataField).ToArray());
+            var schema = new Schema(columns.Select(col => col.SchemaField).ToArray());
 
             using var writer = new ParquetWriter(schema, stream);
             using var writeWorker = new QueueWorker<DataColumn[]>(
@@ -85,7 +86,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var dataColumns = new DataColumn[columns.Count];
                 for (int i = 0; i < columns.Count; i++)
                 {
-                    dataColumns[i] = new DataColumn(columns[i].DataField, chunkArrays[i]);
+                    dataColumns[i] = columns[i].CreateDataColumn(chunkArrays[i]);
                 }
                 writeWorker.Add(dataColumns);
 
@@ -205,13 +206,35 @@ namespace pwiz.Skyline.Model.Databinding
                 Name = name;
                 PropertyDescriptor = propertyDescriptor;
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
-                StorageType = DecideStorageType(valueType);
-                DataField = new DataField(Name, StorageType);
+
+                // Check if this is a FormattableList<T>
+                ListElementType = GetFormattableListElementType(valueType);
+                if (ListElementType != null)
+                {
+                    // This is a list column
+                    // Use nullable storage type so the array can hold nulls for absent lists
+                    ElementStorageType = DecideStorageType(ListElementType);
+                    StorageType = typeof(IEnumerable<>).MakeGenericType(ElementStorageType);
+                    // Create DataField with explicit hasNulls:true to represent null lists
+                    var elementField = new DataField(@"element", GetParquetDataType(ListElementType),
+                        hasNulls: true, isArray: false);
+                    SchemaField = new ListField(Name, elementField);
+                    DataField = elementField;
+                }
+                else
+                {
+                    StorageType = DecideStorageType(valueType);
+                    DataField = new DataField(Name, StorageType);
+                    SchemaField = DataField;
+                }
             }
 
             public string Name { get; }
             public DataPropertyDescriptor PropertyDescriptor { get; }
             public Type StorageType { get; }
+            public Type ListElementType { get; }
+            public Type ElementStorageType { get; }
+            public Field SchemaField { get; }
             public DataField DataField { get; }
 
             public object GetValue(RowItem rowItem)
@@ -225,6 +248,47 @@ namespace pwiz.Skyline.Model.Databinding
                 return Array.CreateInstance(StorageType, rowCount);
             }
 
+            public DataColumn CreateDataColumn(Array chunkArray)
+            {
+                if (ListElementType == null)
+                {
+                    // Simple column - no flattening needed
+                    return new DataColumn(DataField, chunkArray);
+                }
+
+                // List column - need to flatten data and create repetition levels
+                var allElements = new List<object>();
+                var repetitionLevels = new List<int>();
+
+                for (int rowIndex = 0; rowIndex < chunkArray.Length; rowIndex++)
+                {
+                    var listValue = chunkArray.GetValue(rowIndex) as Array;
+                    if (listValue == null || listValue.Length == 0)
+                    {
+                        // Empty or null list - still need to represent this row
+                        allElements.Add(null);
+                        repetitionLevels.Add(0);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < listValue.Length; i++)
+                        {
+                            allElements.Add(listValue.GetValue(i));
+                            repetitionLevels.Add(i == 0 ? 0 : 1); // 0 = start of new list, 1 = continuation
+                        }
+                    }
+                }
+
+                // Create flattened array of the element storage type
+                var flattenedArray = Array.CreateInstance(ElementStorageType, allElements.Count);
+                for (int i = 0; i < allElements.Count; i++)
+                {
+                    flattenedArray.SetValue(allElements[i], i);
+                }
+
+                return new DataColumn(DataField, flattenedArray, repetitionLevels.ToArray());
+            }
+
             public void StoreValue(RowItem rowItem, int rowIndex, Array values)
             {
                 var value = GetValue(rowItem);
@@ -233,16 +297,57 @@ namespace pwiz.Skyline.Model.Databinding
                     return;
                 }
 
-                if (StorageType == typeof(string))
+                if (ListElementType != null)
                 {
-                    value = value as string ?? value.ToString();
+                    // Extract the list from FormattableList<T>
+                    value = ConvertListValue(value);
                 }
-                else if (StorageType == typeof(DateTimeOffset?) && value is DateTime dateTime)
+                else 
                 {
-                    // Parquet library expects DateTimeOffset for timestamps
-                    value = new DateTimeOffset(dateTime);
+                    value = ConvertToStorageType(value, StorageType);
                 }
                 values.SetValue(value, rowIndex);
+            }
+
+            private Array ConvertListValue(object formattableList)
+            {
+                // Get the underlying list via ToImmutableList() method
+                var toArrayMethod = formattableList.GetType().GetMethod(nameof(FormattableList<object>.ToArray));
+                if (toArrayMethod == null)
+                {
+                    return null;
+                }
+                Array array = (Array)toArrayMethod.Invoke(formattableList, null);
+                if (array == null)
+                {
+                    return null;
+                }
+
+                if (array.GetType().GetElementType() == ListElementType)
+                {
+                    return array;
+                }
+
+                var convertedArray = Array.CreateInstance(ListElementType, array.Length);
+                for (int i = 0; i < array.Length; i++)
+                {
+                    var value = ConvertToStorageType(array.GetValue(i), ListElementType);
+                    if (value != null)
+                    {
+                        convertedArray.SetValue(value, i);
+                    }
+                }
+
+                return convertedArray;
+            }
+
+            private static Type GetFormattableListElementType(Type type)
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(FormattableList<>))
+                {
+                    return DecideStorageType(type.GetGenericArguments()[0]);
+                }
+                return null;
             }
         }
 
@@ -256,6 +361,27 @@ namespace pwiz.Skyline.Model.Databinding
             { typeof(decimal), typeof(decimal?) },
             { typeof(DateTime), typeof(DateTimeOffset?) }
         };
+
+        static ParquetRowItemExporter()
+        {
+            foreach (var value in _storageTypes.Values.ToArray())
+            {
+                _storageTypes[value] = value;
+            }
+        }
+
+        private static Dictionary<Type, DataType> _parquetDataTypes = new Dictionary<Type, DataType>
+        {
+            { typeof(int), DataType.Int32 },
+            { typeof(long), DataType.Int64 },
+            { typeof(double), DataType.Double },
+            { typeof(float), DataType.Float },
+            { typeof(bool), DataType.Boolean },
+            { typeof(decimal), DataType.Decimal },
+            { typeof(DateTime), DataType.DateTimeOffset },
+            { typeof(string), DataType.String }
+        };
+
         public static Type DecideStorageType(Type type)
         {
             if (_storageTypes.TryGetValue(type, out var storageType))
@@ -263,6 +389,42 @@ namespace pwiz.Skyline.Model.Databinding
                 return storageType;
             }
             return typeof(string);
+        }
+
+        public static DataType GetParquetDataType(Type type)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                type = type.GetGenericArguments()[0];
+            }
+            if (_parquetDataTypes.TryGetValue(type, out var dataType))
+            {
+                return dataType;
+            }
+            return DataType.String;
+        }
+
+        public static object ConvertToStorageType(object value, Type type)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            if (value.GetType() == type)
+            {
+                return value;
+            }
+            if (type == typeof(DateTimeOffset) && value is DateTime dateTime)
+            {
+                return new DateTimeOffset(dateTime);
+            }
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                return Activator.CreateInstance(type, Convert.ChangeType(value, type.GetGenericArguments()[0]));
+            }
+            return Convert.ChangeType(value, type);
         }
     }
 }
