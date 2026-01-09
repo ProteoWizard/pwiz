@@ -1887,7 +1887,9 @@ namespace pwiz.SkylineTestUtil
             }
 
             PauseForScreenShot(allChromGraph, description,
-                processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChromGraph.ProgressBarTotal));
+                processShot: bmp => bmp.CleanupBorder()
+                    .FillProgressBar(allChromGraph.ProgressBarTotal)
+                    .FillProgressBars(allChromGraph.GetVisibleFileProgressBars()));
             allChromGraph.ReleaseFrozenProgress();
 
             if (IsTestingResultsProgressOnly)

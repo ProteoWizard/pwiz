@@ -399,6 +399,12 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         private void HideSensitiveFocusDisplay(Control screenshotControl)
         {
+            // Hide focus rectangles and mnemonic underscores by sending WM_CHANGEUISTATE
+            // to the top-level form. Windows tracks keyboard vs mouse mode and shows these
+            // UI cues when in keyboard mode. This can happen even when tests are started
+            // with a mouse click if any key is pressed on the machine.
+            HideKeyboardCues(screenshotControl);
+
             var focusControl = screenshotControl.GetFocus();
             if (focusControl is TextBox focusText)
             {
@@ -413,6 +419,19 @@ namespace pwiz.SkylineTestUtil
             else if (focusControl is TabControl focusTabControl)
             {
                 focusTabControl.SelectedTab.Focus();
+            }
+        }
+
+        /// <summary>
+        /// Hides keyboard-triggered UI cues (focus rectangles and mnemonic underscores)
+        /// by sending WM_CHANGEUISTATE to the top-level form.
+        /// </summary>
+        private static void HideKeyboardCues(Control control)
+        {
+            var form = control.FindForm();
+            if (form != null)
+            {
+                User32.SendMessage(form.Handle, User32.WinMessageType.WM_CHANGEUISTATE, User32.UISF_HIDEALL, IntPtr.Zero);
             }
         }
 
