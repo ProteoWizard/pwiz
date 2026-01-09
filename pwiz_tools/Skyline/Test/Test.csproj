@@ -170,6 +170,7 @@
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="AntivirusExclusionTest.cs" />
     <Compile Include="AuditLogListTest.cs" />
+    <Compile Include="BigListTest.cs" />
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BilinearFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
