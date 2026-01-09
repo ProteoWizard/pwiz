@@ -212,14 +212,14 @@ namespace pwiz.Skyline.Model.Databinding
                 if (ListElementType != null)
                 {
                     // This is a list column
-                    // Use nullable storage type so the array can hold nulls for absent lists
-                    ElementStorageType = DecideStorageType(ListElementType);
-                    StorageType = typeof(IEnumerable<>).MakeGenericType(ElementStorageType);
-                    // For DataField, use non-nullable type since nulls are encoded in definition levels
-                    var nonNullableElementType = Nullable.GetUnderlyingType(ElementStorageType) ?? ElementStorageType;
-                    var elementField = new DataField(@"element", nonNullableElementType, isNullable: true);
-                    SchemaField = new ListField(Name, elementField);
-                    DataField = elementField;
+                    // Use non-nullable element type since Parquet handles nulls via definition levels
+                    var nonNullableElementType = Nullable.GetUnderlyingType(ListElementType) ?? ListElementType;
+                    ElementStorageType = nonNullableElementType;
+                    StorageType = typeof(IEnumerable<>).MakeGenericType(nonNullableElementType);
+                    // Use DataField with IEnumerable type for array support (works better than ListField)
+                    var arrayType = typeof(IEnumerable<>).MakeGenericType(nonNullableElementType);
+                    DataField = new DataField(Name, arrayType);
+                    SchemaField = DataField;
                 }
                 else
                 {
@@ -256,59 +256,37 @@ namespace pwiz.Skyline.Model.Databinding
                     return new DataColumn(DataField, chunkArray);
                 }
 
-                // List column - need to flatten data and create repetition/definition levels
-                // Definition levels encode null vs empty vs non-null:
-                //   0 = list is null
-                //   1 = list exists (empty list, or element is null)
-                //   2 = list exists and element is non-null
+                // List column - flatten data and create repetition levels
+                // Repetition levels: 0 = start of new list, 1 = continuation within list
+                // Empty/null lists are skipped (they contribute no data elements)
                 var allElements = new List<object>();
                 var repetitionLevels = new List<int>();
-                var definitionLevels = new List<int>();
 
                 for (int rowIndex = 0; rowIndex < chunkArray.Length; rowIndex++)
                 {
                     var listValue = chunkArray.GetValue(rowIndex) as Array;
-                    if (listValue == null)
-                    {
-                        // Null list - definition level 0
-                        allElements.Add(null);
-                        repetitionLevels.Add(0);
-                        definitionLevels.Add(0);
-                    }
-                    else if (listValue.Length == 0)
-                    {
-                        // Empty list - definition level 1 (list exists but no elements)
-                        allElements.Add(null);
-                        repetitionLevels.Add(0);
-                        definitionLevels.Add(1);
-                    }
-                    else
+                    if (listValue != null && listValue.Length > 0)
                     {
                         for (int i = 0; i < listValue.Length; i++)
                         {
                             var element = listValue.GetValue(i);
-                            allElements.Add(element);
+                            // Use default value if element is null (shouldn't happen for non-nullable arrays)
+                            allElements.Add(element ?? GetDefaultValue(ElementStorageType));
                             repetitionLevels.Add(i == 0 ? 0 : 1); // 0 = start of new list, 1 = continuation
-                            definitionLevels.Add(element != null ? 2 : 1);
                         }
                     }
+                    // Empty/null lists are not represented in the flattened data
                 }
 
-                // Create flattened array of the non-nullable element type
-                // When using definition levels, Parquet expects non-nullable array - nulls are encoded in definition levels
-                var nonNullableElementType = Nullable.GetUnderlyingType(ElementStorageType) ?? ElementStorageType;
-                var flattenedArray = Array.CreateInstance(nonNullableElementType, allElements.Count);
+                // Create data array
+                var flattenedArray = Array.CreateInstance(ElementStorageType, allElements.Count);
                 for (int i = 0; i < allElements.Count; i++)
                 {
-                    var element = allElements[i];
-                    if (element != null)
-                    {
-                        flattenedArray.SetValue(element, i);
-                    }
+                    flattenedArray.SetValue(allElements[i], i);
                 }
 
-                // Parquet.Net 4.x API: DataColumn(field, data, definitionLevels, repetitionLevels)
-                return new DataColumn(DataField, flattenedArray, definitionLevels.ToArray(), repetitionLevels.ToArray());
+                // Parquet.Net 4.x API for arrays: DataColumn(field, data, repetitionLevels)
+                return new DataColumn(DataField, flattenedArray, repetitionLevels.ToArray());
             }
 
             public void StoreValue(RowItem rowItem, int rowIndex, Array values)
@@ -333,7 +311,7 @@ namespace pwiz.Skyline.Model.Databinding
 
             private Array ConvertListValue(object formattableList)
             {
-                // Get the underlying list via ToImmutableList() method
+                // Get the underlying array from FormattableList<T>
                 var toArrayMethod = formattableList.GetType().GetMethod(nameof(FormattableList<object>.ToArray));
                 if (toArrayMethod == null)
                 {
@@ -345,15 +323,17 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType)
+                // Check if array already has the correct element type
+                if (array.GetType().GetElementType() == ElementStorageType)
                 {
                     return array;
                 }
 
-                var convertedArray = Array.CreateInstance(ListElementType, array.Length);
+                // Convert array elements to the storage type
+                var convertedArray = Array.CreateInstance(ElementStorageType, array.Length);
                 for (int i = 0; i < array.Length; i++)
                 {
-                    var value = ConvertToStorageType(array.GetValue(i), ListElementType);
+                    var value = ConvertToStorageType(array.GetValue(i), ElementStorageType);
                     if (value != null)
                     {
                         convertedArray.SetValue(value, i);
@@ -367,7 +347,17 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(FormattableList<>))
                 {
-                    return DecideStorageType(type.GetGenericArguments()[0]);
+                    // Return the raw element type - caller will decide on storage type
+                    return type.GetGenericArguments()[0];
+                }
+                return null;
+            }
+
+            private static object GetDefaultValue(Type type)
+            {
+                if (type.IsValueType)
+                {
+                    return Activator.CreateInstance(type);
                 }
                 return null;
             }

@@ -30,10 +30,11 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestParquetArrays()
         {
+            var floats = new[] { 5.3f };
             var items = new[]
             {
                 new FormattableList<float>(Array.Empty<float>()),
-                new FormattableList<float>(new float[1]),
+                new FormattableList<float>(floats),
                 null
             }.Select(array=>new MyObject{FloatArray = array}).ToList();
             var viewSpec = new ViewSpec().SetColumns(new[]
@@ -55,19 +56,18 @@ namespace pwiz.SkylineTest
 
             // Read the row group
             using var rowGroupReader = reader.OpenRowGroupReader(0);
-            var listField = reader.Schema.Fields[0] as ListField;
-            Assert.IsNotNull(listField, "Schema field should be a ListField");
+            var dataField = reader.Schema.Fields[0] as DataField;
+            Assert.IsNotNull(dataField, "Schema field should be a DataField");
+            Assert.IsTrue(dataField.IsArray, "DataField should be an array type");
 
-            var dataColumn = rowGroupReader.ReadColumnAsync(listField.Item as DataField).Result;
+            var dataColumn = rowGroupReader.ReadColumnAsync(dataField).Result;
 
-            // Verify definition levels distinguish empty vs null arrays
-            // Row 0: empty array (def level 1) - list exists but no elements
-            // Row 1: array with one element (def level 2) - list exists and element is non-null
-            // Row 2: null array (def level 0) - list is null
-            Assert.AreEqual(3, dataColumn.DefinitionLevels.Length);
-            Assert.AreEqual(1, dataColumn.DefinitionLevels[0], "Empty array should have definition level 1");
-            Assert.AreEqual(2, dataColumn.DefinitionLevels[1], "Array with element should have definition level 2");
-            Assert.AreEqual(0, dataColumn.DefinitionLevels[2], "Null array should have definition level 0");
+            // With DataField array type, empty/null arrays produce no data elements
+            // Only the non-empty array (row 1 with [5.3f]) contributes data
+            Assert.AreEqual(1, dataColumn.Data.Length, "Should have 1 data element");
+            Assert.AreEqual(floats[0], (float)dataColumn.Data.GetValue(0), "Data value should match");
+            Assert.AreEqual(1, dataColumn.RepetitionLevels.Length, "Should have 1 rep level");
+            Assert.AreEqual(0, dataColumn.RepetitionLevels[0], "Rep level 0 indicates start of list");
         }
 
         class MyObject

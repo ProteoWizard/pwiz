@@ -155,24 +155,31 @@
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="IronCompress">
       <HintPath>..\Shared\Lib\Parquet\IronCompress.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.IO.RecyclableMemoryStream">
-      <HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="..\Shared\Lib\Parquet\ParquetNet.dll">
       <Private>True</Private>
     </Reference>
+    <Reference Include="Snappier">
+      <HintPath>..\Shared\Lib\Parquet\Snappier.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Text.Json">
       <HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Reflection.Emit.Lightweight">
       <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>

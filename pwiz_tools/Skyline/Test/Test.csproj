@@ -127,8 +127,27 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
-    <Reference Include="Parquet">
-      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    <Reference Include="IronCompress">
+      <HintPath>..\..\Shared\Lib\Parquet\IronCompress.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="..\..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="..\..\Shared\Lib\Parquet\ParquetNet.dll">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Snappier">
+      <HintPath>..\..\Shared\Lib\Parquet\Snappier.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Text.Json">
+      <HintPath>..\..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reflection.Emit.Lightweight">
+      <HintPath>..\..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -454,6 +473,10 @@
     <Content Include="ProtocolBuffers\GeneratedCode\readme.txt" />
     <Content Include="ProtocolBuffers\grpc_csharp_plugin.exe" />
     <Content Include="ProtocolBuffers\protoc.exe" />
+    <Content Include="..\..\Shared\Lib\Parquet\runtimes\win-x64\native\nironcompress.dll">
+      <Link>runtimes\win-x64\native\nironcompress.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
