@@ -1,3 +1,6 @@
+## Claude Code junction (points to ai/claude/)
+.claude
+
 ## Ignore C++ intermediates and outputs
 ## https://raw.githubusercontent.com/github/gitignore/master/C%2B%2B.gitignore
 

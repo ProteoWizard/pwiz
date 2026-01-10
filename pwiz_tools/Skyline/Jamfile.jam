@@ -46,6 +46,13 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
        echo "Updating submodules for Hardklor etc..." ;
        SHELL "git submodule update --init --recursive" ;
+
+       # Create .claude junction to ai/claude if it doesn't exist
+       if ! [ path.exists $(PWIZ_ROOT_PATH)/.claude ]
+       {
+          echo "Creating .claude junction to ai/claude..." ;
+          SHELL "mklink /J \"$(PWIZ_ROOT_PATH)\\.claude\" \"$(PWIZ_ROOT_PATH)\\ai\\claude\"" ;
+       }
     }
 
     # Use Git commit date for version day-of-year (reproducible versioning)
