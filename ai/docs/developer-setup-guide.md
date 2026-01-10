@@ -143,7 +143,7 @@ npm --version    # Should show 10.x or higher
 ```
 
 > **Why Node.js?** Many LLM-assisted development tools are built with JavaScript/TypeScript:
-> - Claude Code CLI (npm install)
+> - Claude Code CLI (fallback installation method if standalone installer fails)
 > - DocumentConverter (Word-to-HTML for tutorials)
 > - episodic-memory (semantic search across Claude Code conversations)
 > - Various MCP servers and plugins
@@ -152,21 +152,23 @@ npm --version    # Should show 10.x or higher
 
 Claude Code is Anthropic's agentic coding tool that runs in the terminal. It understands your codebase and can execute commands, edit files, and handle git workflows through natural language.
 
-**Install via npm (recommended):**
-
-```powershell
-npm install -g @anthropic-ai/claude-code
-```
-
-This installs to your npm global folder (typically `%APPDATA%\npm`), which is usually already in your PATH.
-
-**Alternative: Standalone installer**
+**Install via standalone installer (recommended):**
 
 ```powershell
 irm https://claude.ai/install.ps1 | iex
 ```
 
-This installs to `%USERPROFILE%\.local\bin\claude.exe`.
+This installs to `%USERPROFILE%\.local\bin\claude.exe` and automatically adds it to your PATH.
+
+**Alternative: Install via npm**
+
+If the standalone installer fails, use npm instead:
+
+```powershell
+npm install -g @anthropic-ai/claude-code
+```
+
+This installs to your npm global folder (typically `%APPDATA%\npm`).
 
 **Verify installation:**
 ```powershell
@@ -349,7 +351,7 @@ git config --global pull.rebase false
 
 ### Visual Studio Components
 
-Ensure VS 2022 has the **.NET Desktop Development** and **Desktop Development with C++** workloads. Run `quickbuild.bat` once to pull vendor SDKs.
+Ensure Visual Studio (2026 recommended, 2022 also supported) has the **.NET Desktop Development** and **Desktop Development with C++** workloads. Run `quickbuild.bat` once to pull vendor SDKs.
 
 ---
 
@@ -364,9 +366,9 @@ Ensure VS 2022 has the **.NET Desktop Development** and **Desktop Development wi
   - Markdown All in One (for inline preview)
 - Enable EditorConfig support (`"editorconfig.enable": true`).
 - Optional (highly recommended):
-  - **Markdown Viewer** browser extension (Chrome/Edge) for external viewing of `ai/` docs.
+  - **Markdown Reader** browser extension (Chrome/Edge) for external viewing of `ai/` docs.
 
-### Visual Studio 2022
+### Visual Studio (2022/2026)
 
 - Install ReSharper Ultimate (IDE integration).
 - Configure MSTest runsettings (see skyline.ms build guide).
@@ -377,8 +379,10 @@ Ensure VS 2022 has the **.NET Desktop Development** and **Desktop Development wi
 
 LLM tooling frequently references markdown files (`ai/README.md`, `ai/docs/…`). Improve readability by installing a Markdown viewer with GitHub-style rendering:
 
-- Chrome/Edge: [Markdown Viewer (yzane)](https://chrome.google.com/webstore/detail/markdown-viewer/ckkdlimhmcjmikdlpkmbgfkaikojcbjk)
-- Configure it to allow local file access for `C:\proj\pwiz`.
+- Chrome/Edge: [Markdown Reader](https://chromewebstore.google.com/detail/markdown-reader/medapdbncneneejhbgcjceippjlfkmkg)
+- **Critical**: After installing, click the Extensions icon (puzzle piece) > find Markdown Reader > click "⋮" > "Manage Extension" > enable **"Allow access to file URLs"**. Without this, local `.md` files won't render.
+- On Windows 11, you can associate `.md` files with Chrome for one-click viewing
+- On Windows 10, drag-and-drop `.md` files from File Explorer into Chrome (requires a bit more window arranging)
 
 ---
 

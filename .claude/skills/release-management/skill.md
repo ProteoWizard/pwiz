@@ -17,18 +17,27 @@ description: Use when discussing Skyline releases, version numbers, release note
 
 ### Version Format
 
-`YY.n.p.D` where:
-- `YY` = Year (24, 25, etc.)
-- `n` = Release counter (typically 1)
-- `p` = Patch level (0=major, 1+=daily)
-- `D` = Day of year (not zero-padded)
+`YY.N.B.DDD` where:
+- `YY` = Year - 2000 (25, 26, etc.)
+- `N` = Release ordinal within year (0=unreleased, 1=first official)
+- `B` = Branch type: 0=release, 1=daily, 9=feature complete
+- `DDD` = Day of year, **zero-padded** (001-365), from git commit date
+
+### Release Types
+
+| Type | Version | Branch |
+|------|---------|--------|
+| Daily (beta) | `YY.N.1.DDD` | master |
+| Feature Complete | `YY.N.9.DDD` | Skyline/skyline_YY_N |
+| Major Release | `YY.N.0.DDD` | Skyline/skyline_YY_N |
+| Patch | `YY.N.0.DDD` | Skyline/skyline_YY_N |
 
 ### Git Tags
 
 | Type | Format | Example |
 |------|--------|---------|
-| Major | `Skyline-YY.n.0.D` | `Skyline-25.1.0.237` |
-| Daily | `Skyline-daily-YY.n.p.D` | `Skyline-daily-25.1.1.147` |
+| Major | `Skyline-YY.N.0.DDD` | `Skyline-26.1.0.045` |
+| Daily | `Skyline-daily-YY.N.B.DDD` | `Skyline-daily-26.0.9.004` |
 
 ### Finding Releases
 
@@ -63,4 +72,10 @@ get_wiki_page(page_name="Release%20Notes", container_path="/home/software/Skylin
 
 ## Slash Commands
 
-(None yet - release-specific commands to be added)
+**Planned**: `/pw-release <type>` where type is:
+- `complete` - FEATURE COMPLETE release (fully documented)
+- `major` - Major release (26.1.0)
+- `patch` - Patch to existing release
+- `rc` - Release candidate
+
+See ai/docs/release-guide.md "Future Automation" section for details.
