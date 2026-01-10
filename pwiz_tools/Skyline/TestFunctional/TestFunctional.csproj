@@ -126,7 +126,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
-    <Reference Include="Parquet">
+    <Reference Include="ParquetNet, Version=3.0.0.0, Culture=neutral, PublicKeyToken=de28deb604dd91c9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -180,6 +181,7 @@
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
+    <Compile Include="ParquetRowItemExporterTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
