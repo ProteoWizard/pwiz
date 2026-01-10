@@ -2,11 +2,13 @@
 
 This module provides tools for detecting patterns across daily test results,
 comparing today's data against historical data to identify:
-- NEW failures (not in previous day)
+- NEW failures (not in previous day, or truly new in full history)
 - RESOLVED failures (fixed since yesterday)
 - SYSTEMIC issues (affecting all machines)
 - EXTERNAL service issues (Koina, Panorama, etc.)
 - RECURRING missing computers
+- CHRONIC intermittent failures (from nightly history)
+- REGRESSION after fix (from nightly history)
 """
 
 import json
@@ -16,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 from .common import get_tmp_dir
+from .nightly_history import _load_nightly_history
 
 logger = logging.getLogger("labkey_mcp")
 
@@ -98,7 +101,23 @@ def _extract_test_computers(data: dict, category: str) -> dict:
     if category not in nightly:
         return {}
 
-    return nightly[category]
+    raw_data = nightly[category]
+    result = {}
+
+    for test_name, value in raw_data.items():
+        # Handle both old format (list of computers) and new enhanced format (dict with 'computers' key)
+        if isinstance(value, list):
+            # Old format: {"TestName": ["COMPUTER1", "COMPUTER2"]}
+            result[test_name] = value
+        elif isinstance(value, dict) and "computers" in value:
+            # New enhanced format: {"TestName": {"computers": [...], "fingerprint": ..., ...}}
+            result[test_name] = value["computers"]
+        else:
+            # Unknown format, try to handle gracefully
+            logger.warning(f"Unknown format for {test_name} in {category}: {type(value)}")
+            result[test_name] = []
+
+    return result
 
 
 def _detect_external_service(test_name: str) -> Optional[str]:
@@ -117,6 +136,95 @@ def _detect_external_service(test_name: str) -> Optional[str]:
     return None
 
 
+def _get_test_history_context(test_name: str, nightly_history: dict, report_date: str) -> dict:
+    """Get historical context for a test from nightly history.
+
+    Args:
+        test_name: Name of the test
+        nightly_history: Loaded nightly history dict
+        report_date: Current report date YYYY-MM-DD
+
+    Returns:
+        Dict with historical context:
+        - total_failures: Total failure count in history
+        - fingerprint_count: Number of unique fingerprints
+        - first_seen: Date of first failure
+        - last_seen: Date of last failure
+        - has_fix: Whether any fingerprint has a recorded fix
+        - is_regression: Whether this is failing after a known fix
+        - is_chronic: Whether this is a long-standing intermittent issue
+    """
+    result = {
+        'total_failures': 0,
+        'fingerprint_count': 0,
+        'first_seen': None,
+        'last_seen': None,
+        'has_fix': False,
+        'is_regression': False,
+        'is_chronic': False,
+        'machines': set(),
+    }
+
+    if not nightly_history:
+        return result
+
+    failures = nightly_history.get('test_failures', {})
+    if test_name not in failures:
+        return result
+
+    entry = failures[test_name]
+    by_fp = entry.get('by_fingerprint', {})
+
+    result['fingerprint_count'] = len(by_fp)
+
+    for fp, fp_entry in by_fp.items():
+        reports = fp_entry.get('reports', [])
+        result['total_failures'] += len(reports)
+
+        # Track machines
+        for r in reports:
+            if r.get('computer'):
+                result['machines'].add(r['computer'])
+
+        # Track first/last seen
+        fp_first = fp_entry.get('first_seen')
+        fp_last = fp_entry.get('last_seen')
+
+        if fp_first:
+            # Clean up timestamp format
+            if isinstance(fp_first, str) and ' ' in fp_first:
+                fp_first = fp_first.split(' ')[0]
+            if not result['first_seen'] or fp_first < result['first_seen']:
+                result['first_seen'] = fp_first
+
+        if fp_last:
+            if isinstance(fp_last, str) and ' ' in fp_last:
+                fp_last = fp_last.split(' ')[0]
+            if not result['last_seen'] or fp_last > result['last_seen']:
+                result['last_seen'] = fp_last
+
+        # Check for fix
+        fix = fp_entry.get('fix')
+        if fix:
+            result['has_fix'] = True
+            # Check for regression - failure after fix date
+            merge_date = fix.get('merge_date')
+            if merge_date and fp_last and fp_last > merge_date:
+                result['is_regression'] = True
+
+    # Determine if chronic (failures spanning > 30 days)
+    if result['first_seen'] and result['last_seen']:
+        try:
+            first_dt = datetime.strptime(result['first_seen'][:10], "%Y-%m-%d")
+            last_dt = datetime.strptime(result['last_seen'][:10], "%Y-%m-%d")
+            if (last_dt - first_dt).days > 30:
+                result['is_chronic'] = True
+        except ValueError:
+            pass
+
+    return result
+
+
 def _get_expected_computers(data: dict) -> set:
     """Get the set of computers that reported in a daily summary.
 
@@ -130,10 +238,11 @@ def _get_expected_computers(data: dict) -> set:
     nightly = data["nightly"]
 
     # Collect computers from failures, leaks, and hangs
+    # Use _extract_test_computers to handle both old and new formats
     for category in ["failures", "leaks", "hangs"]:
-        if category in nightly:
-            for test_name, comps in nightly[category].items():
-                computers.update(comps)
+        test_computers = _extract_test_computers(data, category)
+        for test_name, comps in test_computers.items():
+            computers.update(comps)
 
     # Also include missing computers
     if "missing_computers" in nightly:
@@ -158,6 +267,8 @@ def register_tools(mcp):
         - SYSTEMIC: Issues affecting all machines (high priority)
         - EXTERNAL: Issues involving external services (Koina, Panorama)
         - RECURRING: Computers missing for multiple consecutive days
+        - CHRONIC: Intermittent failures spanning 30+ days (from nightly history)
+        - REGRESSION: Failures after a known fix (from nightly history)
 
         Args:
             report_date: Date to analyze in YYYY-MM-DD format
@@ -166,6 +277,10 @@ def register_tools(mcp):
         Returns:
             Structured pattern analysis with prioritized action items.
         """
+        # Load nightly history for enhanced context
+        nightly_history = _load_nightly_history()
+        has_nightly_history = bool(nightly_history and nightly_history.get('test_failures'))
+
         today = _load_daily_summary(report_date)
 
         if not today:
@@ -257,27 +372,75 @@ def register_tools(mcp):
             "",
             f"Comparing against: {yesterday_date}" + (" (no data)" if not yesterday else ""),
             f"Historical data: {len(history)} additional days loaded",
-            "",
         ]
+
+        # Add nightly history status
+        if has_nightly_history:
+            total_failures = sum(
+                len(fp.get('reports', []))
+                for test_data in nightly_history.get('test_failures', {}).values()
+                for fp in test_data.get('by_fingerprint', {}).values()
+            )
+            lines.append(f"Nightly history: {total_failures} failures from {len(nightly_history.get('test_failures', {}))} tests loaded")
+        else:
+            lines.append("Nightly history: Not available (run backfill_nightly_history to enable)")
+        lines.append("")
 
         # Priority Action Items section
         action_items = []
+        chronic_tests = []  # Track for separate section
+        regression_tests = []  # Track regressions
 
-        # Systemic issues are highest priority
+        # Systemic issues are highest priority - enhance with history
         for test, comps in systemic_failures.items():
-            action_items.append(f"🔴 SYSTEMIC FAILURE: {test} (failing on {len(comps)} machines: {', '.join(sorted(comps))})")
+            hist = _get_test_history_context(test, nightly_history, report_date) if has_nightly_history else {}
+            hist_note = ""
+            if hist.get('total_failures'):
+                hist_note = f" [history: {hist['total_failures']} failures since {hist.get('first_seen', '?')[:10]}]"
+            if hist.get('is_regression'):
+                regression_tests.append(test)
+                action_items.append(f"🔴⚠️ SYSTEMIC REGRESSION: {test} (failing on {len(comps)} machines after fix){hist_note}")
+            else:
+                action_items.append(f"🔴 SYSTEMIC FAILURE: {test} (failing on {len(comps)} machines: {', '.join(sorted(comps))}){hist_note}")
+            if hist.get('is_chronic'):
+                chronic_tests.append(test)
 
         for test, comps in systemic_leaks.items():
-            action_items.append(f"🔴 SYSTEMIC LEAK: {test} (leaking on {len(comps)} machines: {', '.join(sorted(comps))})")
+            hist = _get_test_history_context(test, nightly_history, report_date) if has_nightly_history else {}
+            hist_note = ""
+            if hist.get('total_failures'):
+                hist_note = f" [history: {hist['total_failures']} reports since {hist.get('first_seen', '?')[:10]}]"
+            action_items.append(f"🔴 SYSTEMIC LEAK: {test} (leaking on {len(comps)} machines: {', '.join(sorted(comps))}){hist_note}")
 
-        # New failures (regressions)
+        # New failures - check if truly new vs recurring
         for test in sorted(new_failures):
             if test not in systemic_failures:  # Don't duplicate
+                hist = _get_test_history_context(test, nightly_history, report_date) if has_nightly_history else {}
                 service = _detect_external_service(test)
-                if service:
-                    action_items.append(f"🆕 NEW + EXTERNAL ({service}): {test}")
+
+                # Check if this is a regression (failure after fix)
+                if hist.get('is_regression'):
+                    regression_tests.append(test)
+                    hist_note = f" [REGRESSED after fix, {hist['total_failures']} prior failures]"
+                    if service:
+                        action_items.append(f"⚠️🔄 REGRESSION + EXTERNAL ({service}): {test}{hist_note}")
+                    else:
+                        action_items.append(f"⚠️🔄 REGRESSION: {test}{hist_note}")
+                # Truly new - never seen in history
+                elif not hist.get('total_failures'):
+                    if service:
+                        action_items.append(f"🆕 NEW + EXTERNAL ({service}): {test} [first time ever]")
+                    else:
+                        action_items.append(f"🆕 NEW FAILURE: {test} [first time ever]")
+                # Recurring - seen before in history
                 else:
-                    action_items.append(f"🆕 NEW FAILURE: {test}")
+                    hist_note = f" [recurring: {hist['total_failures']} failures since {hist.get('first_seen', '?')[:10]}]"
+                    if hist.get('is_chronic'):
+                        chronic_tests.append(test)
+                    if service:
+                        action_items.append(f"🔄 RECURRING + EXTERNAL ({service}): {test}{hist_note}")
+                    else:
+                        action_items.append(f"🔄 RECURRING FAILURE: {test}{hist_note}")
 
         # New leaks
         for test in sorted(new_leaks):
@@ -310,14 +473,34 @@ def register_tools(mcp):
             lines.append("No new issues or patterns requiring attention.")
             lines.append("")
 
-        # Resolved section (good news)
+        # Resolved section - with historical context to distinguish true fixes from intermittent
         if resolved_failures or resolved_leaks:
-            lines.append("## ✅ Resolved Since Yesterday")
+            lines.append("## 📉 Not Failing Today")
             lines.append("")
+
             for test in sorted(resolved_failures):
-                lines.append(f"- ✅ {test} (failure resolved)")
+                hist = _get_test_history_context(test, nightly_history, report_date) if has_nightly_history else {}
+                total = hist.get('total_failures', 0)
+                first = hist.get('first_seen', '')[:10] if hist.get('first_seen') else ''
+                last = hist.get('last_seen', '')[:10] if hist.get('last_seen') else ''
+
+                if total == 0:
+                    # No history - truly new yesterday and now gone
+                    lines.append(f"- ✅ {test} (failure) - one-time, likely intermittent")
+                elif total == 1:
+                    lines.append(f"- ✅ {test} (failure) - only 1 failure in history, likely intermittent")
+                elif first == last:
+                    # All failures on same day - single incident
+                    lines.append(f"- ✅ {test} (failure) - single incident on {first}, likely intermittent")
+                else:
+                    # Multi-day pattern - could be a real fix
+                    lines.append(f"- ⏸️ {test} (failure) - had {total} failures from {first} to {last}, check PRs for fix")
+
             for test in sorted(resolved_leaks):
-                lines.append(f"- ✅ {test} (leak resolved)")
+                hist = _get_test_history_context(test, nightly_history, report_date) if has_nightly_history else {}
+                # Note: leaks are in test_leaks, not test_failures - use a simpler check
+                lines.append(f"- ⏸️ {test} (leak) - not leaking today, may be intermittent")
+
             lines.append("")
 
         # Summary statistics
@@ -331,14 +514,28 @@ def register_tools(mcp):
         lines.append(f"| Missing | {len(today_missing)} | {len(yesterday_missing)} | - | - |")
         lines.append("")
 
+        # Add chronic tests section if any
+        if chronic_tests:
+            lines.append("## ⏳ Chronic Intermittent Issues")
+            lines.append("")
+            lines.append("These tests have been failing intermittently for 30+ days:")
+            for test in sorted(set(chronic_tests)):
+                hist = _get_test_history_context(test, nightly_history, report_date)
+                lines.append(f"- {test}: {hist.get('total_failures', '?')} failures since {hist.get('first_seen', '?')[:10] if hist.get('first_seen') else '?'}")
+            lines.append("")
+
         # Pattern explanations
         lines.append("## Pattern Legend")
         lines.append("")
         lines.append("- 🔴 **SYSTEMIC**: Affects 3+ machines - likely code issue, not environment")
-        lines.append("- 🆕 **NEW**: First appearance since yesterday - likely regression")
+        lines.append("- 🆕 **NEW**: First time ever in history - truly new failure")
+        lines.append("- 🔄 **RECURRING**: Seen before in history, returned after being absent")
+        lines.append("- ⚠️🔄 **REGRESSION**: Failing again after a recorded fix")
+        lines.append("- ⏳ **CHRONIC**: Intermittent failure spanning 30+ days")
         lines.append("- 🌐 **EXTERNAL**: Test involves external service (may be service issue)")
         lines.append("- ⚠️ **MISSING N DAYS**: Computer hasn't reported for multiple days")
-        lines.append("- ✅ **RESOLVED**: Issue no longer present (fixed or intermittent)")
+        lines.append("- ✅ **INTERMITTENT**: Single incident, likely not a real fix needed")
+        lines.append("- ⏸️ **CHECK PRs**: Multi-day pattern stopped, search merged PRs for potential fix")
         lines.append("")
 
         return "\n".join(lines)

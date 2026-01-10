@@ -22,171 +22,161 @@ This document outlines the Git branch strategy and workflow for the Skyline proj
 - **Lifecycle**: Created from master, merged to master when complete
 - **Usage**: All development work, including LLM-assisted changes
 
-## TODO File System
+### AI-Context Branch
+- **Purpose**: Rapid iteration on AI tooling and documentation
+- **Naming**: `ai-context`
+- **Lifecycle**: Long-lived branch, merges to master periodically
+- **Usage**: ai/ folder changes, MCP tools, skills, commands
+
+## Backlog and TODO System
 
 ### Overview
-The TODO file system enables seamless context management for LLM-assisted development, from initial planning through branch completion and archival.
 
-### TODO Directory Structure
+**GitHub Issues** serves as the single backlog system. TODO files are created only when work actively starts, providing detailed engineering context during development.
 
 ```
-<root>/ai/
-  todos/
-    active/           # Currently being worked on (committed to branch)
-    completed/        # Recently completed (keep 1-3 months for reference)
-    backlog/          # Ready to start, fully planned
-    archive/          # Old completed work (>3 months old or as needed)
+GitHub Issue (backlog)
+    |
+    | /pw-startissue <number>
+    v
+ai/todos/active/TODO-*.md created, linked to issue
+    |
+    | work completes, PR merges
+    v
+ai/todos/completed/TODO-*.md (moved)
+GitHub Issue closed with link to completed TODO
 ```
+
+### Why Both Systems? (Design Rationale)
+
+**Q: Can't we just use GitHub Issues for everything?**
+
+GitHub Issues is excellent for backlog management (categorization, prioritization, assignment, visibility). But TODO files serve a different purpose optimized for **LLM-assisted development**:
+
+**Why ai/todos/active/ exists:**
+- **Living documents** - TODOs are edited alongside code with every commit, tracking decisions, progress, and context
+- **Immediate LLM context** - The project folder is the most immediate context for LLM tools. Active TODOs get diffs applied just like code
+- **Version-controlled engineering notes** - Git tracks the evolution of understanding, not just the final state
+- **Session handoff** - When switching between LLM sessions, the TODO provides continuity
+
+**Why ai/todos/completed/ exists:**
+- **LLM context restoration** - When starting related work or fixing bugs from a sprint, the detailed progress log helps LLMs understand "why was it done this way?"
+- **Decision rationale** - Commit messages are concise; TODOs capture the full reasoning, alternatives considered, and lessons learned
+- **Grepable history** - Local search across all completed work without API calls
+- **Bug fix context** - When a sprint causes issues, the detailed TODO helps diagnose root causes
+
+**The division of labor:**
+- **GitHub Issues** = Index, assignment, prioritization, lifecycle tracking, team visibility, categorization
+- **ai/todos/** = Detailed engineering record, LLM context, version-controlled notes
+
+The file system IS the context. That's the key insight for LLM-assisted development.
+
+### Where Work Lives
+
+| Stage | Location | Description |
+|-------|----------|-------------|
+| **Backlog** | GitHub Issues | All planned work items |
+| **Active** | `ai/todos/active/` | Work in progress (committed to branch) |
+| **Completed** | `ai/todos/completed/` | Historical record, archived to `completed/YYYY/` when folder grows |
+
+### GitHub Issue Labels
+
+#### Component Labels
+| Label | Description | Branch Strategy |
+|-------|-------------|-----------------|
+| `skyline` | Skyline application issues | Create Skyline/work branch from master |
+| `pwiz` | ProteoWizard/msconvert issues | Create Skyline/work branch from master |
+| `ai-context` | AI tooling and context | Work directly on ai-context branch |
+
+#### Workflow Labels
+| Label | Description |
+|-------|-------------|
+| `todo` | Tracked via ai/todos system |
+| `bug` | Something isn't working |
+| `enhancement` | New feature or request |
 
 ### TODO File Naming Convention
 
-**Format**: `TODO-[YYYYMMDD_]<branch_specifier>.md`
+**Format**: `TODO-YYYYMMDD_<branch_specifier>.md`
 
 - **Branch specifier**: Lowercase words separated by underscores (matches branch name after date)
-- **No date prefix**: Branch-ready, planning phase (lives in `ai/todos/backlog/`)
-- **With date prefix**: Active branch, dated with branch creation date (lives in `ai/todos/active/`, committed to branch)
+- **Date prefix**: Active branch creation date
 
 **Examples**:
-- `ai/todos/backlog/TODO-utf8_no_bom.md` - Branch-ready, not yet created
-- `ai/todos/active/TODO-20251015_utf8_no_bom.md` - Active branch created 2025-10-15
+- `ai/todos/active/TODO-20251227_filestree_deadlock.md` - Active branch created 2025-12-27
 - `ai/todos/completed/TODO-20251010_webclient_replacement.md` - Recently merged work
 
-### TODO File Lifecycle
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Phase 1: Planning (ai/todos/backlog/)                       │
-├─────────────────────────────────────────────────────────────┤
-│ File: TODO-<branch_specifier>.md                            │
-│ Status: Branch-ready, contains scope and task breakdown     │
-│ Location: ai/todos/backlog/, committed to master            │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         ▼ Create branch
-┌─────────────────────────────────────────────────────────────┐
-│ Phase 2: Active Development (ai/todos/active/)              │
-├─────────────────────────────────────────────────────────────┤
-│ File: TODO-YYYYMMDD_<branch_specifier>.md                   │
-│ Status: Renamed with date, moved to active/, on branch      │
-│ Updates: Modified with every commit                         │
-│ Purpose: Track progress, enable LLM context switching       │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         ▼ Work complete, PR merged
-┌─────────────────────────────────────────────────────────────┐
-│ Phase 3: Completed (ai/todos/completed/)                    │
-├─────────────────────────────────────────────────────────────┤
-│ File: Moved to ai/todos/completed/ as final commit on branch│
-│ Status: Includes completion summary, merged to master       │
-│ Purpose: Documentation, reference for future work           │
-│ Retention: Keep 1-3 months for reference                    │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         ▼ After 1-3 months
-┌─────────────────────────────────────────────────────────────┐
-│ Phase 4: Archived (ai/todos/archive/)                       │
-├─────────────────────────────────────────────────────────────┤
-│ File: Moved to ai/todos/archive/ or deleted (in Git history)│
-│ Status: Historical reference only                           │
-│ Purpose: Reduce clutter, preserved in Git forever           │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### TODO File Structure (Backlog)
-
-For files **in ai/todos/backlog/** (planning phase):
-
-```markdown
-# TODO-<branch_specifier>.md
-
-## Branch Information (Future)
-- **Branch**: Not yet created - will be `Skyline/work/YYYYMMDD_<branch_specifier>`
-- **Objective**: Brief description
-
-## Background
-Context and rationale for the work
-
-## Task Checklist
-### Phase 1: [Name]
-- [ ] Task 1
-- [ ] Task 2
-
-### Phase 2: [Name]
-- [ ] Task 3
-- [ ] Task 4
-
-## Tools & Scripts
-References to existing tools/scripts
-
-## Risks & Considerations
-Potential issues and mitigation
-
-## Success Criteria
-How to know work is complete
-
-## Handoff Prompt for Branch Creation
-Template for LLM to create branch and begin work
-```
+**Auxiliary files** (non-markdown files associated with a TODO) must:
+1. Use the TODO filename as a prefix (e.g., `TODO-20251227_feature-coverage.txt`)
+2. Move with their TODO when transitioning between directories
+3. Be deleted or archived with their TODO
 
 ### TODO File Structure (Active)
 
-For files **in ai/todos/active/** (active branch):
+For files **in ai/todos/active/** (work in progress):
 
 ```markdown
 # TODO-YYYYMMDD_<branch_specifier>.md
 
 ## Branch Information
-- **Branch**: Skyline/work/YYYYMMDD_<branch_specifier>
+- **Branch**: `Skyline/work/YYYYMMDD_<branch_specifier>` | `ai-context`
+- **Base**: `master` | `ai-context` | `Skyline/skyline_YY_N`
 - **Created**: YYYY-MM-DD
-- **Objective**: Brief description
+- **Status**: In Progress | Completed
+- **GitHub Issue**: [#NNNN](https://github.com/ProteoWizard/pwiz/issues/NNNN)
+- **PR**: [#NNNN](https://github.com/ProteoWizard/pwiz/pull/NNNN) | (pending)
+
+## Objective
+
+Single concise sentence describing the end goal.
 
 ## Task Checklist
-### ✅ Completed
+### Completed
 - [x] Task 1
 - [x] Task 2
 
-### 🔄 In Progress
+### In Progress
 - [ ] Task 3
 
-### 📋 Remaining
+### Remaining
 - [ ] Task 4
 - [ ] Task 5
 
+## Key Files
+
+- `path/to/file1.cs` - Description
+- `path/to/file2.cs` - Description
+
+## Progress Log
+
+### YYYY-MM-DD - Session N
+- What was done
+- Decisions made
+- Next steps
+
 ## Context for Next Session
 Current state, key decisions, important files
-
-## Handoff Prompt for New LLM Session
-Template for seamless context transfer
-
-## Notes for Future Sessions
-Patterns established, key decisions made
 ```
 
 ### TODO File Structure (Completed)
 
-For files **in ai/todos/completed/** (after merge):
-
 Add this **final section** before moving to ai/todos/completed/:
 
 ```markdown
-## ✅ Completion Summary
+## Completion Summary
 
-**Branch**: `Skyline/work/YYYYMMDD_<branch_specifier>`  
-**PR**: #XXXX  
-**Merged**: YYYY-MM-DD  
-**TeamCity Results**: [Summary of test results]  
+**Branch**: `Skyline/work/YYYYMMDD_<branch_specifier>`
+**PR**: [#XXXX](https://github.com/ProteoWizard/pwiz/pull/XXXX)
+**Merged**: YYYY-MM-DD
 
 **What Was Actually Done**:
-- (Brief summary of actual changes, may differ from plan)
-
-**Unexpected Findings**:
-- (Bugs found, scope changes, lessons learned)
+- Brief summary of actual changes
 
 **Follow-up Work Created**:
-- (Links to new TODO files spawned from this work)
+- Links to new issues spawned from this work
 
 **Key Files Modified**:
-- (List of primary files changed)
+- List of primary files changed
 ```
 
 ## LLM Tool Guidelines
@@ -212,147 +202,87 @@ Add this **final section** before moving to ai/todos/completed/:
 1. **Ask the developer to inspect the changes** in Visual Studio 2022
 2. **Ask the developer to build the solution** (Ctrl+Shift+B or F6)
 3. **Ask the developer to run relevant tests** in Test Explorer
-4. **For larger changes: Ask the developer to run ReSharper inspection** (ReSharper > Inspect > Code Issues in Solution)
-
-#### Why This Matters
-- **Large project**: Full Skyline build can take 5-10 minutes even on fast machines
-- **Complex dependencies**: C++ libraries, vendor SDKs, .NET Framework, test data files
-- **Visual Studio integration**: Better error messages, IntelliSense, debugger
-- **Resource intensive**: Builds/tests consume significant CPU/memory/disk
-- **Agent limitations**: Command-line builds have limited context and diagnostics
-- **ReSharper analysis**: Project-wide static analysis catches naming violations, code smells, and style issues
+4. **For larger changes: Ask the developer to run ReSharper inspection**
 
 #### What AI Agents Should Do
-✅ **DO**: Generate code, write tests, update files, suggest changes
-✅ **DO**: Explain what needs to be tested and why
-✅ **DO**: Update TODO file with what was changed
-✅ **DO**: Point to specific files/lines for developer review
-✅ **DO**: Wait for developer confirmation before proposing commits for larger changes
-
-❌ **DON'T**: Run msbuild, invoke test runners, attempt full builds
-❌ **DON'T**: Wait for long-running build processes
-❌ **DON'T**: Parse incomplete build output (truncated after 100 lines)
-❌ **DON'T**: Commit or propose commits before developer has reviewed, tested, and run ReSharper inspection
-
-#### Example Developer Handoff
-After making changes, tell the developer:
-
-```
-I've made the following changes:
-1. Added NetworkRequestException to HttpClientWithProgress.cs (lines 468-498)
-2. Updated MapHttpException to throw NetworkRequestException (line 419)
-3. Refactored SkypSupport.GetErrorStatusCode() to use exception properties (lines 207-226)
-
-Please review before committing:
-1. Review the changes in Visual Studio
-2. Build the Skyline solution (Ctrl+Shift+B)
-3. Fix any compilation errors that appear
-4. Run TestFunctional.SkypTest in Test Explorer
-5. Run ReSharper > Inspect > Code Issues in Solution
-6. Address any new warnings in the modified files
-7. Let me know the results so I can help fix any issues
-
-The changes should eliminate message parsing and use structured exception properties instead.
-Once everything passes, I can help prepare the commit message.
-```
-
-This approach leverages the developer's IDE tools while keeping the AI focused on code generation and design.
+- **DO**: Generate code, write tests, update files, suggest changes
+- **DO**: Explain what needs to be tested and why
+- **DO**: Update TODO file with what was changed
+- **DO**: Point to specific files/lines for developer review
+- **DON'T**: Run msbuild, invoke test runners, attempt full builds
+- **DON'T**: Commit before developer has reviewed and tested
 
 ### Context Switching
 When switching between LLM tools or sessions:
-
 1. **Document current state** - Update TODO file with exact progress
 2. **Note key decisions** - Record architectural choices and rationale
 3. **List modified files** - Help next session understand scope
 4. **Provide handoff prompt** - Include context for seamless transition
 
-### Example Handoff Prompt Template
-```
-I'm working on [branch_name] implementing [objective]. 
-
-Current status: [what's been completed]
-Next steps: [what remains to be done]
-Key files: [list of important files]
-Decisions made: [architectural choices]
-
-The TODO file in ai/todos/active/ contains full context. Please read it first, then continue with [specific next task].
-```
-
 ## Branch Lifecycle Workflows
 
-**IMPORTANT**: All TODO files in `ai/todos/` are Git-tracked. Always use Git commands (`git mv`, `git add`, `git commit`) when creating, moving, or modifying TODO files. Using regular file system operations (PowerShell `Move-Item`, bash `mv`, etc.) will not properly track changes in Git history.
+**IMPORTANT**: All TODO files in `ai/todos/` are Git-tracked. Always use Git commands (`git mv`, `git add`, `git commit`) when creating, moving, or modifying TODO files.
 
-### Workflow 1: Creating Branch from Backlog TODO
+### Workflow 1: Starting Work from GitHub Issue (/pw-startissue)
 
-When you have a branch-ready TODO file (e.g., `ai/todos/backlog/TODO-utf8_no_bom.md`):
+Use `/pw-startissue <number>` for zero-prompt startup. The command reads the issue labels and determines the appropriate branch strategy.
 
-> **Note:** Backlog TODOs live on `ai-context` branch, not master.
+#### Step 1: Fetch Issue and Check Labels
 
-**Step 1: Create feature branch from master**
 ```bash
-git checkout master
-git pull origin master
-git submodule update --init --recursive  # Ensure submodules are in sync
-git checkout -b Skyline/work/20251015_utf8_no_bom  # Use today's date
+gh issue view <number> --json labels,title,body
 ```
 
-**Why the submodule update?** The project has Git submodules (e.g., `DocumentConverter`, `BullseyeSharp`) that need to be at the exact commit master expects. Without this step, submodules may show as modified in all your diffs.
+#### Step 2: Determine Branch Strategy
 
-**Step 2: Move TODO on ai-context (claims the work)**
+**If `ai-context` label present** - Work directly on ai-context:
 ```bash
 git checkout ai-context
 git pull origin ai-context
-# IMPORTANT: Use git mv to preserve Git history when moving tracked files
-git mv ai/todos/backlog/TODO-utf8_no_bom.md ai/todos/active/TODO-20251015_utf8_no_bom.md
 ```
 
-**Step 3: Update TODO header and commit on ai-context**
-- Fill in Branch, Created, Status fields
-- Update any placeholder values
-```bash
-git add ai/todos/active/TODO-20251015_utf8_no_bom.md
-git commit -m "Start utf8_no_bom work - move TODO to active"
-git push origin ai-context
-```
-
-**Step 4: Cherry-pick to feature branch**
-```bash
-git checkout Skyline/work/20251015_utf8_no_bom
-git cherry-pick <commit-hash-from-step-3>
-git push -u origin Skyline/work/20251015_utf8_no_bom
-```
-
-**Why move on ai-context first?**
-- Removes TODO from backlog (prevents duplicate work claims)
-- Makes it visible on ai-context that work is in progress
-- Cherry-pick brings the TODO to feature branch cleanly
-- Git history properly tracks the TODO lifecycle
-
-### Workflow 2: Creating Branch and TODO Together
-
-When starting fresh without a pre-existing TODO:
-
-**Step 1: Ensure master is up to date and create branch**
+**If NO `ai-context` label** - Create feature branch from master:
 ```bash
 git checkout master
 git pull origin master
-git submodule update --init --recursive  # Ensure submodules are in sync
-git checkout -b Skyline/work/20251015_new_feature
+git submodule update --init --recursive
+git checkout -b Skyline/work/YYYYMMDD_feature_name
 ```
 
-**Step 2: Create TODO file in active/**
+#### Step 3: Create TODO File
+
+Create `ai/todos/active/TODO-YYYYMMDD_feature_name.md` with:
+- Branch Information populated
+- GitHub Issue linked
+- Scope from issue transferred to task checklist
+- Progress Log section started
+
+#### Step 4: Signal Ownership (CRITICAL)
+
+**Git signal** - Push TODO to ai-context (even if working on feature branch):
 ```bash
-# Create ai/todos/active/TODO-20251015_new_feature.md with structure from template above
+git checkout ai-context
+git pull origin ai-context
+git add ai/todos/active/TODO-YYYYMMDD_feature_name.md
+git commit -m "Start work on #NNNN - feature name"
+git push origin ai-context
 ```
 
-**Step 3: Commit TODO to branch**
+If working on feature branch, cherry-pick:
 ```bash
-git add ai/todos/active/TODO-20251015_new_feature.md
-git commit -m "Initial TODO for new_feature"
-git push -u origin Skyline/work/20251015_new_feature
+git checkout Skyline/work/YYYYMMDD_feature_name
+git cherry-pick <commit-hash>
+git push -u origin Skyline/work/YYYYMMDD_feature_name
 ```
 
-### Workflow 3: Daily Development
+**GitHub signal** - Comment on the issue:
+```bash
+gh issue comment NNNN --body "Starting work.
+- Branch: \`Skyline/work/YYYYMMDD_feature_name\` (or \`ai-context\`)
+- TODO: \`ai/todos/active/TODO-YYYYMMDD_feature_name.md\`"
+```
+
+### Workflow 2: Daily Development
 
 ```bash
 # Make code changes
@@ -368,80 +298,37 @@ git push
 - Files modified
 - Any blockers or issues encountered
 
-### Workflow 3A: Early Pull Request for TeamCity Validation
+### Workflow 3: Early Pull Request for TeamCity Validation
 
-For multi-phase branches, create a PR after the first testable unit of work for TeamCity validation and team visibility:
+For multi-phase branches, create a PR after the first testable unit of work:
 
 **When to create early PR:**
 - Branch has multiple phases or takes >1 week
 - First phase is complete and testable
 - Want TeamCity validation before proceeding
-- Want team feedback during development
-
-**Step 1: Create PR after first testable phase**
-```bash
-# Phase 1 complete, committed, pushed
-# Create pull request on GitHub
-```
-
-**Step 2: Mark PR as Work-In-Progress**
-- Title: `[WIP] Brief description - Phase N Complete` or use GitHub Draft PR
-- Message: Single screen summary (see template below)
-- Reference the TODO file for complete details
-- Indicate current phase and next steps
-
-**Step 3: Continue development**
-```bash
-# Make Phase 2 changes
-git add .
-git commit -m "Phase 2: Description"
-git push  # Updates the same PR
-```
-
-**Step 4: Update PR as phases complete**
-- Edit PR description to reflect progress
-- Update phase status (Phase 2A ✅, Phase 2B 🔄)
-- Add TeamCity results as they complete
-- Respond to team feedback
-
-**Step 5: Final merge (when all work complete)**
-- Remove [WIP] from title or mark Draft as Ready
-- Update PR description with final summary
-- Follow standard merge workflow (see Workflow 4 below)
 
 **Early PR Message Template:**
 ```markdown
 ## Summary
-[1-2 sentences: what is being migrated/refactored and why]
+[1-2 sentences: what is being done and why]
 
 **Phase N (this commit):** [What this phase accomplishes]
-
 **Next:** [What Phase N+1 will do]
 
 ## Status
-✅ Phase N complete - all tests passing in all locales
-⏳ Awaiting TeamCity validation
-🔄 Phase N+1 in progress
+- Phase N complete - all tests passing
+- Awaiting TeamCity validation
+- Phase N+1 in progress
 
 ## Testing
 [Brief bullet points of test coverage]
 
-## Impact
-[Which solutions/projects affected, API compatibility notes]
-
-See `todos/active/TODO-YYYYMMDD_description.md` for complete details.
+See `ai/todos/active/TODO-YYYYMMDD_description.md` for complete details.
 ```
-
-**Benefits of early PR:**
-- TeamCity validates each phase before proceeding
-- Team visibility into in-progress work
-- Early feedback on architecture decisions
-- Clear checkpoints for complex migrations
-- Continuous integration validation throughout development
 
 ### Workflow 4: Completing Work and Merging
 
-**Step 1: Final updates to TODO**
+#### Step 1: Final Updates to TODO
 ```bash
 # Add completion summary to TODO file
 # Document what was actually done, bugs found, follow-up work
@@ -450,287 +337,192 @@ git commit -m "Add completion summary to TODO"
 git push
 ```
 
-**Step 2: Create pull request**
+#### Step 2: Create Pull Request
 - Document all changes and testing in PR description
-- Reference any related issues
+- Reference the GitHub Issue: `Fixes #NNNN` or `Closes #NNNN`
 - Link to the active TODO file for full context
 
-**Step 3: Add PR reference to TODO file**
-
-**IMPORTANT**: TODO files must reference their PR before moving to completed/. This creates a permanent link between the work and its review/discussion.
+#### Step 3: Add PR Reference to TODO
 
 ```markdown
-## Pull Request
-
-**PR**: #1234
-**Merged**: 2025-10-22
-**Status**: Merged to master
+- **PR**: [#1234](https://github.com/ProteoWizard/pwiz/pull/1234)
 ```
 
-Add this section to the TODO file in ai/todos/active/ and commit:
-```bash
-git add ai/todos/active/TODO-YYYYMMDD_description.md
-git commit -m "Add PR #1234 reference to TODO"
-git push
-```
-
-**Step 4: Prepare for merge (after PR is approved, before merging)**
+#### Step 4: Prepare for Merge (after approval)
 
 **Update TODO checkboxes:**
-- Mark all completed tasks as `[x]` in the Task Checklist and Success Criteria sections
-- This creates an accurate historical record of what was accomplished
-- Remove or mark as incomplete any tasks that were planned but not done
+- Mark all completed tasks as `[x]`
+- Remove or mark incomplete any tasks not done
 
-**Generate merge summary for GitHub:**
-- Create a brief summary (single screen of text) for the merge commit message
-- Include: Summary, Key Changes, Benefits, Testing status
-- Reference the TODO file for complete details: `See todos/completed/TODO-YYYYMMDD_description.md for complete details.`
-- Keep it concise - the TODO file contains the full context
-
-**Example merge summary template:**
-```markdown
-## PR #XXXX: [Brief title]
-
-### Summary
-[1-2 sentences describing what was done and why]
-
-### Key Changes
-- [Major change 1]
-- [Major change 2]
-- [Major change 3]
-
-### Benefits
-- Users: [User-facing improvements]
-- Developers: [Developer experience improvements]
-- Code Quality: [Quality improvements]
-
-### Testing
-✅ [Test results summary]
-
-See `todos/completed/TODO-YYYYMMDD_description.md` for complete details.
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-**Step 5: Move TODO to completed/ with Git (after PR is merged)**
+**Move TODO to completed:**
 ```bash
-# IMPORTANT: Use git mv to preserve Git history when moving tracked files
-# NEVER move to completed/ without a PR reference in the TODO file
-git mv ai/todos/active/TODO-YYYYMMDD_description.md ai/todos/completed/TODO-YYYYMMDD_description.md
+git mv ai/todos/active/TODO-YYYYMMDD_description.md ai/todos/completed/
 git commit -m "Move TODO to completed - PR #1234 merged"
 git push
 ```
 
-**Step 6: After merge to master**
+#### Step 5: Sync to ai-context (CRITICAL before merging)
+
+```bash
+git checkout ai-context
+git pull origin ai-context
+git cherry-pick <commit-hash-of-TODO-move>
+git push origin ai-context
+git checkout Skyline/work/YYYYMMDD_feature
+```
+
+#### Step 6: After Merge to Master
+
 ```bash
 git checkout master
 git pull origin master
 git branch -d Skyline/work/YYYYMMDD_description  # Delete local branch
 ```
 
-**Step 7: Periodic cleanup (monthly or as needed)**
+#### Step 7: Close GitHub Issue with Completion Summary
+
+Post a summary to the issue before closing (this serves as the "index" while the TODO file remains the detailed record):
+
 ```bash
-# Move old completed TODOs (>3 months) to archive or delete
-git mv ai/todos/completed/TODO-20240715_old_work.md ai/todos/archive/
-# Or simply delete if no longer needed (preserved in Git history)
-git rm ai/todos/completed/TODO-20240715_old_work.md
+gh issue comment NNNN --body "## Completion Summary
+
+**PR**: #XXXX | **Merged**: YYYY-MM-DD
+
+### What Was Done
+- Key accomplishment 1
+- Key accomplishment 2
+
+### Key Files Modified
+- path/to/file.cs
+
+See ai/todos/completed/TODO-YYYYMMDD_feature.md for full engineering context."
+
+gh issue close NNNN
 ```
 
-### Workflow 5: Creating Backlog TODO (Planning)
+### Workflow 5: Bug Fix for Completed Work
 
-#### 5a. Planning Future Work on Master
+When fixing bugs in recently completed features (still in `ai/todos/completed/`):
 
-When you want to plan future work without creating a branch:
-
-**Step 1: Create TODO in backlog/**
+**Create bug-fix branch:**
 ```bash
-# Create ai/todos/backlog/TODO-new_feature.md with planning structure
-```
-
-**Step 2: Commit to master**
-```bash
-git checkout master
-git add ai/todos/backlog/TODO-new_feature.md
-git commit -m "Add backlog TODO for new_feature planning"
-git push origin master
-```
-
-This makes the planned work visible to the team and LLM tools.
-
-#### 5b. Creating Backlog TODO During Active Branch Work
-
-When inspiration strikes during development on a feature branch, you can document the idea immediately and make it available to the team without waiting for your PR to merge.
-
-**Option 1: Create TODO directly on master (recommended)**
-
-```bash
-# Save current work on feature branch
-git stash
-
-# Switch to master and create backlog TODO
 git checkout master
 git pull origin master
-
-# Create ai/todos/backlog/TODO-new_idea.md with planning structure
-# ... edit the file ...
-
-git add ai/todos/backlog/TODO-new_idea.md
-git commit -m "Add backlog TODO for new_idea planning"
-git push origin master
-
-# Return to feature branch and resume work
-git checkout Skyline/work/YYYYMMDD_current_feature
-git stash pop
+git checkout -b Skyline/work/YYYYMMDD_original-feature-name-fix
 ```
 
-**Option 2: Cherry-pick from feature branch to master**
+**Branch naming pattern:** Use original feature name + `-fix` suffix with today's date
+
+**Update the original TODO** (don't create new one):
+```markdown
+## Bug Fixes
+
+### YYYY-MM-DD - Fix Description
+- **Issue**: What was wrong
+- **Root Cause**: Why it happened
+- **Fix**: What was changed
+- **PR**: #NNNN
+```
+
+**Use this workflow when:**
+- Bug is discovered shortly after feature completion
+- Fix is small and clearly related to original feature
+- Original TODO is still in `completed/` (not yet archived)
+
+### Workflow 6: Create GitHub Issue for Future Work
+
+When inspiration strikes during development:
 
 ```bash
-# Create TODO on your current feature branch
-# Create ai/todos/backlog/TODO-new_idea.md with planning structure
-# ... edit the file ...
+gh issue create \
+  --title "Brief description" \
+  --label "ai-context,todo,enhancement" \
+  --body "## Summary
+Brief description of the work.
 
-git add ai/todos/backlog/TODO-new_idea.md
-git commit -m "Add backlog TODO for new_idea planning"
+## Scope
+- [ ] Task 1
+- [ ] Task 2
 
-# Note the commit hash
-git log -1 --oneline
-
-# Switch to master and cherry-pick just that commit
-git checkout master
-git pull origin master
-git cherry-pick <commit-hash>
-git push origin master
-
-# Return to feature branch
-git checkout Skyline/work/YYYYMMDD_current_feature
+## Getting Started
+Use /pw-startissue <number> to begin work."
 ```
 
-**Why this matters:**
-- New TODO ideas become available to the team immediately
-- Other developers can start work on the idea without waiting for your PR merge
-- Separates TODO lifecycle from feature branch lifecycle
-- When your feature branch eventually merges, Git handles the duplicate commit gracefully
+### Workflow 7: Branching from a Feature Branch (Pre-Merge Dependency)
 
-### Workflow 6: Branching from a Feature Branch (Pre-Merge Dependency)
+When you want to start new work that depends on changes in a feature branch not yet merged to master:
 
-When you want to start new work that depends on changes in a feature branch not yet merged to master. This is useful when:
-- The parent feature branch provides essential context (e.g., a tutorial you're extending)
-- The parent branch will merge before your new work creates a PR
-- You want to start immediately rather than wait for the parent merge
-
-**Step 1: Create new branch from the feature branch (not master)**
+**Step 1: Create new branch from the feature branch**
 ```bash
 git checkout Skyline/work/20251122_parent_feature
 git pull origin Skyline/work/20251122_parent_feature
 git checkout -b Skyline/work/20251221_new_feature
 ```
 
-**Step 2: Copy TODO from backlog on ai-context**
-```bash
-git checkout ai-context -- ai/todos/backlog/TODO-new_feature.md
-git mv ai/todos/backlog/TODO-new_feature.md ai/todos/active/TODO-20251221_new_feature.md
-```
-
-**Step 3: Update TODO header with temporary base notation**
+**Step 2: Update TODO header with temporary base notation**
 ```markdown
-## Branch Information
-- **Branch**: `Skyline/work/20251221_new_feature`
 - **Base**: `Skyline/work/20251122_parent_feature` (will rebase to master after parent merges)
-- **Created**: 2025-12-21
-- **Status**: 🚧 In Progress
 ```
 
-**Step 4: Commit TODO and push**
-```bash
-git add ai/todos/active/TODO-20251221_new_feature.md
-git commit -m "Start new_feature work - branched from parent_feature"
-git push -u origin Skyline/work/20251221_new_feature
-```
-
-**Step 5: After parent branch merges to master, rebase onto master**
+**Step 3: After parent branch merges, rebase onto master**
 ```bash
 git fetch origin master
 git rebase origin/master
-# Resolve any conflicts if needed
-```
-
-**Step 6: Update TODO header to reflect new base**
-```markdown
-- **Base**: `master` (rebased after parent merged)
-```
-
-**Step 7: Force push (required after rebase) and create PR**
-```bash
 git push --force-with-lease
-# Create PR against master as usual
 ```
-
-**Why this works:**
-- You can start work immediately using parent branch context
-- Git rebase cleanly replays your commits onto master after parent merges
-- The `--force-with-lease` is safe because you're the only one working on this branch
-- PR is created against master, not the (now-deleted) parent branch
 
 **Caution:**
-- Only use this when confident the parent will merge before your PR
-- If parent branch is abandoned, you'll need to cherry-pick or recreate your changes on master
-- Document the temporary base clearly in the TODO so future sessions understand the situation
+- Only use when confident the parent will merge before your PR
+- Document the temporary base clearly in the TODO
 
 ## Best Practices
 
 ### TODO File Management
-- **Backlog TODOs**: Commit to master for visibility, cull items >6 months old
 - **Active TODOs**: Update with every commit, keep context fresh
-- **Completed TODOs**: Must have PR reference, retain 1-3 months for reference and knowledge transfer
+- **Completed TODOs**: Must have PR reference, retain 1-3 months
 - **Archive**: Move or delete old completed work, Git history preserves everything
 
 **CRITICAL - Completed TODOs are Historical Records**:
-- ❌ **NEVER modify TODO files in todos/completed/** (they document merged PRs)
-- ✅ All completed TODOs **MUST** have a PR reference before moving to completed/
-- ✅ They serve as a permanent record of decisions, context, and implementation details
-- ✅ If doing follow-up work, create a new TODO that references the completed one
+- NEVER modify TODO files in `todos/completed/` (they document merged PRs)
+- All completed TODOs MUST have a PR reference before moving to completed/
+- If doing follow-up work, create a new TODO that references the completed one
 
 ### Git Submodule Management
-This project has Git submodules (e.g., `DocumentConverter`, `BullseyeSharp`, `Hardklor`) that must stay in sync.
-
-**Manual approach (requires discipline):**
 ```bash
-# After every pull or checkout
+# One-time configuration (recommended)
+git config submodule.recurse true
+
+# Or manual after every pull/checkout
 git submodule update --init --recursive
 ```
 
-**Automatic approach (recommended):**
-```bash
-# One-time configuration - Git will auto-update submodules on pull/checkout
-git config submodule.recurse true
+### Commit Messages
+
+**Keep messages concise (10 lines max)**
+
+```
+<Title in past tense>
+
+* bullet point 1
+* bullet point 2
+
+See ai/todos/active/TODO-YYYYMMDD_feature.md
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-**Why this matters:**
-- Out-of-sync submodules show as "modified" in every `git status` and diff
-- Creates noise and confusion about what actually changed
-- Can cause merge conflicts if not handled properly
-- The `git submodule update` command syncs to the exact commit master expects
-
-**Best practice:** Configure `submodule.recurse true` once in your local repository to avoid manual steps.
-
-### Commit Messages
-- Use clear, descriptive messages
-- Reference issue numbers when applicable
-- Keep commits focused and atomic
-- Update TODO file with each commit
+**Rules:**
+- Past tense title - "Added feature" not "Add feature"
+- 1-5 bullet points
+- Reference TODO file
+- Include Co-Authored-By when LLM contributed
+- No emojis or markdown links
 
 ### Testing
 - All new code must have appropriate tests
 - Run existing tests to ensure no regressions
 - Use translation-proof assertions
 - Follow DRY principles in test code
-
-### Documentation
-- Update relevant documentation
-- Add XML documentation for public APIs
-- Keep comments focused and meaningful
-- Update README.md when adding new features
 
 ### Code Quality
 - Follow established coding standards
@@ -756,6 +548,21 @@ If issues are discovered after merge:
 3. Test rollback thoroughly
 4. Merge to master
 5. Document lessons learned
+
+## Querying Issues
+
+```bash
+# List open issues by label
+gh issue list --label "ai-context"
+gh issue list --label "todo"
+gh issue list --label "ai-context,todo"
+
+# View issue details
+gh issue view 3732
+
+# Search issues
+gh issue list --search "scheduled daily"
+```
 
 ## Integration with CI/CD
 

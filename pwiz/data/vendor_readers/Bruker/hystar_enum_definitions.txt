@@ -1,0 +1,99 @@
+Definitions for the Type and Unit columns in chromatography-data.sqlite files, per Sven at Bruker 2025/12/11
+--------------
+
+Trace-Type:
+
+    /// Default none-value.
+    NoneTrace		= 0
+ 
+    /// Trace from MS data
+    ChromMS			= 1
+ 
+    /// Trace from UV detector
+    ChromUV			= 3
+ 
+    /// Trace of a pressure.
+    /// But note that this pressure might be the value of a pressure
+    /// gauge that can be positioned anywhere - in that case no further
+    /// information (except the description) is available.
+    ChromPressure	= 4
+ 
+    /// Trace from solvent mix (percentage) of pump.
+    ChromSolventMix	= 5
+ 
+    /// <summary>
+    /// Trace of flow.
+    /// But note that this flow might be the value of a flow gauge that
+    /// can be positioned anywhere - in that case no further information
+    /// (except the description) is available.
+    ChromFlow		= 6
+ 
+    /// Trace with the temperature.
+    /// But note that this temperature might be the value of a
+    /// temperature gauge that can be positioned anywhere - in that case
+    /// no further information (except the description) is available.
+    ChromTemperature = 7
+ 
+    /// Some other type of chromatogramm
+    ChromUserDefined = 9999
+};
+
+Trace-Unit:
+
+    NoneUnit		 = 0
+ 
+    /// Unknown
+    /// Not all data formats contain information about the
+    /// unit of the data. And even in data formats that
+    /// support units it is possible that not all units
+    /// are known during acquisition. In both cases this unit is used.
+    UnknownUnit		 = 7
+ 
+    Absorbance_AU	 = 8
+    Absorbance_mAU	 = 9
+    Counts			 = 10
+    Current_A		 = 11
+    Current_mA		 = 12
+    Current_muA		 = 13
+    Energy_J		 = 43
+    Energy_mJ		 = 44
+    Energy_muJ		 = 45
+    Flow_ml_min		 = 14
+ 
+    /// µl/min
+    Flow_mul_min	 = 2
+    Flow_nl_min		 = 15
+    /// Intensity
+    Intensity		 = 6
+    Length_cm		 = 16
+    Length_mm		 = 17
+    Length_mum		 = 18
+    Length_nm		 = 1
+    Length_Angstrom	 = 46
+    Luminescence	 = 20
+    Molarity_mM		 = 21
+ 
+    Percent			 = 4
+ 
+    Power_W			 = 22
+    Power_mW		 = 23
+    Pressure_bar	 = 3
+    Pressure_mbar	 = 24
+    Pressure_kPa	 = 25
+    Pressure_MPa	 = 26
+    Pressure_psi	 = 27
+    RefractiveIndex	 = 28
+    Temperature_C	 = 5
+    Temperature_F	 = 30
+    Time_h			 = 31
+    Time_min		 = 32
+    Time_s			 = 33
+    Time_ms			 = 34
+    Time_mus		 = 35
+    Viscosity_cP	 = 36
+    Voltage_kV		 = 37
+    Voltage_V		 = 38
+    Voltage_mV		 = 39
+    Volume_l		 = 40
+    Volume_ml		 = 41
+    Volume_mul		 = 42
