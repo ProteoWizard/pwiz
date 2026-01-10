@@ -12,6 +12,7 @@
 | testfails | Failed tests with stack traces | testfails-schema.md |
 | handleleaks | Handle leak records | handleleaks-schema.md |
 | memoryleaks | Memory leak records | memoryleaks-schema.md |
+| hangs | Test hang detections | hangs-schema.md |
 | user | Computer/user mapping | user-schema.md |
 | expected_computers | Baseline statistics per computer | expected_computers-schema.md |
 
@@ -33,6 +34,22 @@
 | handleleaks_by_computer | Leaks aggregated by computer | handleleaks_by_computer.sql | Proposed |
 | testfails_by_computer | Failures aggregated by computer | testfails_by_computer.sql | Proposed |
 | compare_run_timings | Compare durations between runs | compare_run_timings.sql | Draft (subquery issues) |
+
+## History Backfill Queries (Ready for Deployment)
+
+For `nightly_history.py` implementation - see TODO-20251228_daily_report_improvements.md Progress Log 2026-01-09.
+
+| Query | Description | File | Status |
+|-------|-------------|------|--------|
+| failures_history | Failures with stacktrace + githash | failures_history.sql | Ready to deploy |
+| leaks_history | Leaks with amounts (bytes/handles) + githash | leaks_history.sql | Ready to deploy |
+| hangs_history | Hangs with computer + githash | hangs_history.sql | Ready to deploy |
+
+**Key additions over existing queries:**
+- `githash` from testruns (for commit correlation)
+- `run_id` for URL generation
+- Leak amounts (bytes for memory, handles count for handle)
+- Consistent DATE parameters (simpler than TIMESTAMP)
 
 ## Notes
 
