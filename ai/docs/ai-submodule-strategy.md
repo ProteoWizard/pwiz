@@ -1,6 +1,6 @@
 # AI Submodule Strategy
 
-Strategy for managing the `ai/` folder as a Git submodule, replacing the ai-context branch workflow.
+Strategy for managing all AI tooling as a Git submodule, replacing the ai-context branch workflow.
 
 **Status**: Proposed (not yet implemented)
 
@@ -8,26 +8,65 @@ Strategy for managing the `ai/` folder as a Git submodule, replacing the ai-cont
 
 ## Overview
 
-The `ai/` folder lives in a separate repository (`ProteoWizard/pwiz-ai`) and is included in pwiz as a Git submodule. This provides:
+All AI tooling lives in a separate repository (`ProteoWizard/pwiz-ai`) included in pwiz as a Git submodule at `ai/`. This provides:
 
 - **Normal git workflow** - Standard pull/push, no rebase complexity
-- **Single source of truth** - All pwiz clones share the same ai/ content
-- **Clean separation** - Documentation PRs vs code PRs
-- **No sync overhead** - No weekly syncs, no cherry-picks needed
+- **Single source of truth** - All pwiz clones share the same AI content
+- **Unified location** - All AI tooling in one place
+- **Clear pattern** - Future projects add `ai/scripts/NewProject/`
 
 ### What's Where
 
 | Component | Location | Notes |
 |-----------|----------|-------|
-| `ai/` folder | `pwiz-ai` repo (submodule) | All documentation, todos, MCP configs |
-| `.claude/` folder | `pwiz` repo | Commands/skills (concise references to ai/) |
-| Root `CLAUDE.md` | `pwiz` repo | Tiny pointer to ai/CLAUDE.md |
+| `ai/` folder | `pwiz-ai` repo (submodule) | Everything: docs, scripts, commands, MCP |
+| `.claude/` folder | Windows junction | Points to `ai/claude/` |
+
+### Unified Structure
+
+```
+ai/                              <- Single submodule (pwiz-ai repo)
++-- claude/                      <- Commands/skills (was .claude/)
+|   +-- commands/
+|   +-- skills/
++-- scripts/                     <- All project build scripts
+|   +-- Skyline/
+|   |   +-- Build-Skyline.ps1
+|   |   +-- Run-Tests.ps1
+|   |   +-- helpers/
+|   +-- AutoQC/
+|   |   +-- Build-AutoQC.ps1
+|   +-- SkylineBatch/
+|       +-- Build-SkylineBatch.ps1
++-- docs/                        <- All documentation
++-- mcp/                         <- MCP server
++-- todos/                       <- Work tracking
++-- CLAUDE.md, MEMORY.md, etc.
+```
+
+**In pwiz repo (after conversion):**
+```
+.claude/  ->  Windows junction to ai/claude/
+ai/       ->  Submodule mount point
+```
+
+---
+
+## Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| **Single source** | "Where's AI stuff?" -> `ai/` |
+| **Single sync** | One submodule update gets everything |
+| **Clear pattern** | New project? Add `ai/scripts/NewProject/` |
+| **Findability** | All build scripts in one tree |
+| **Normal workflow** | Standard push/pull, no force-push or rebase |
 
 ---
 
 ## Daily Workflow
 
-### Updating ai/ Documentation
+### Updating AI Content
 
 ```bash
 # Enter the submodule
@@ -57,33 +96,75 @@ git submodule update --remote ai
 ```
 
 **In TortoiseGit:**
-1. Right-click the `ai/` folder → Submodule Update
+1. Right-click the `ai/` folder -> Submodule Update
 2. Check "Remote tracking branch" to get latest
 
-### Pinning ai/ Version in pwiz (Optional)
+---
 
-If you want pwiz to track a specific ai/ commit:
+## Windows Junction for .claude/
 
-```bash
-git add ai
-git commit -m "Update ai/ submodule to latest"
-git push origin master
+Claude Code requires `.claude/` at repo root. Solution: Windows junction (directory link) pointing to `ai/claude/`.
+
+### Automatic Creation via Boost Build
+
+The junction is created automatically during the first build. In `pwiz_tools/Skyline/Jamfile.jam`:
+
+```jam
+if ! --incremental in [ modules.peek : ARGV ]
+{
+   echo "Updating submodules for Hardklor etc..." ;
+   SHELL "git submodule update --init --recursive" ;
+
+   # Create .claude junction if it doesn't exist
+   if ! [ path.exists $(PWIZ_ROOT_PATH)/.claude ]
+   {
+      echo "Creating .claude junction to ai/claude..." ;
+      SHELL "mklink /J \"$(PWIZ_ROOT_PATH)/.claude\" \"$(PWIZ_ROOT_PATH)/ai/claude\"" ;
+   }
+}
 ```
 
-**Note**: We recommend NOT pinning - let each clone update ai/ independently since documentation applies broadly across Skyline versions.
+**This integrates with the existing workflow:**
+- Submodules already initialized by Boost Build (not clone)
+- Junction created in same step
+- No changes needed to clone instructions
+- `new-machine-setup.md` workflow unchanged
+
+### Junction Properties
+
+- Works without admin rights
+- Appears as normal folder to all tools
+- Git sees it as a junction (not tracked)
+- Created automatically by first build
+
+---
+
+## New Machine Setup
+
+When cloning pwiz fresh, no special steps needed:
+
+```bash
+git clone git@github.com:ProteoWizard/pwiz.git
+cd pwiz
+bs.bat   # Boost Build initializes submodules AND creates junction
+```
+
+The build automatically:
+1. Runs `git submodule update --init --recursive`
+2. Creates `.claude` junction pointing to `ai/claude/`
 
 ---
 
 ## Working with Multiple Clones
 
-One major benefit: all your pwiz clones can share the same ai/ content.
+All your pwiz clones share the same ai/ content:
 
 ```
 C:\proj\
-  pwiz\ai\          → pwiz-ai repo
-  scratch\ai\       → pwiz-ai repo (same!)
-  review\ai\        → pwiz-ai repo (same!)
-  skyline_26_1\ai\  → pwiz-ai repo (same!)
+  pwiz\ai\          -> pwiz-ai repo
+  scratch\ai\       -> pwiz-ai repo (same!)
+  review\ai\        -> pwiz-ai repo (same!)
+  skyline_26_1\ai\  -> pwiz-ai repo (same!)
 ```
 
 Update ai/ in any clone, and it's available everywhere (after `git pull` in each ai/ submodule).
@@ -97,9 +178,9 @@ Update ai/ in any clone, and it's available everywhere (after `git pull` in each
 Don't retrofit them. Instead, work from a modern checkout:
 
 ```
-C:\proj\scratch\          ← Work here (has full ai/ + .claude/ context)
-  └── Claude Code can read/write files in:
-      C:\proj\skyline_25_1\   ← Older branch without ai/
+C:\proj\scratch\          <- Work here (has full ai/ + .claude/ context)
+  +-- Claude Code can read/write files in:
+      C:\proj\skyline_25_1\   <- Older branch without ai/
 ```
 
 **Pattern:** "Work from context-rich, modify anywhere"
@@ -110,66 +191,22 @@ C:\proj\scratch\          ← Work here (has full ai/ + .claude/ context)
 
 ---
 
-## New Machine Setup
+## Existing Submodules in pwiz
 
-When cloning pwiz fresh:
+The project already uses 4 submodules - this is an **established pattern**:
 
-```bash
-# Clone with submodules
-git clone --recurse-submodules https://github.com/ProteoWizard/pwiz.git
+| Submodule | Path |
+|-----------|------|
+| BullseyeSharp | `pwiz_tools/Skyline/Executables/BullseyeSharp` |
+| DocumentConverter | `pwiz_tools/Skyline/Executables/DevTools/DocumentConverter` |
+| Hardklor | `pwiz_tools/Skyline/Executables/Hardklor/Hardklor` |
+| MSToolkit | `pwiz_tools/Skyline/Executables/Hardklor/MSToolkit` |
 
-# Or if already cloned without submodules:
-git submodule update --init
-```
-
----
-
-## Scheduled Tasks
-
-For machines running scheduled Claude Code tasks (e.g., /pw-daily):
-
-```bash
-# Update ai/ submodule before running
-git submodule update --remote ai
-```
-
-This can be added to the scheduled task script.
-
----
-
-## Troubleshooting
-
-### "ai/ folder is empty"
-
-Submodule not initialized:
-```bash
-git submodule update --init
-```
-
-### "Detached HEAD in ai/"
-
-Normal for submodules. To make changes:
-```bash
-cd ai
-git checkout main
-# Now you can commit
-```
-
-### "Changes in ai/ not showing in pwiz status"
-
-Submodule changes are tracked separately. To see ai/ changes:
-```bash
-cd ai
-git status
-```
-
-### "Want to discard ai/ changes"
-
-```bash
-cd ai
-git checkout .
-git clean -fd
-```
+**Implications:**
+- CI/build already handles submodules
+- Team has submodule experience
+- Adding `ai/` follows existing pattern
+- Difference: `ai/` won't be pinned (docs apply broadly), others are pinned (reproducible builds)
 
 ---
 
@@ -210,53 +247,134 @@ git pull  # Normal pull works!
 
 ### Phase 1: Create pwiz-ai Repository
 
-- [ ] Create `ProteoWizard/pwiz-ai` repo on GitHub
-- [ ] Copy ai/ content (flat structure - ai/ contents become repo root)
-- [ ] Initial commit and push
+1. Create `ProteoWizard/pwiz-ai` repo on GitHub
+2. Copy content with new structure:
+   ```
+   ai/docs/          -> docs/
+   ai/mcp/           -> mcp/
+   ai/scripts/       -> scripts/        (existing utility scripts)
+   ai/todos/         -> todos/
+   ai/*.md           -> *.md            (root docs)
+   .claude/          -> claude/         (commands/skills)
+   pwiz_tools/Skyline/ai/              -> scripts/Skyline/
+   pwiz_tools/.../AutoQC/ai/           -> scripts/AutoQC/
+   pwiz_tools/.../SkylineBatch/ai/     -> scripts/SkylineBatch/
+   ```
+3. Initial commit and push
 
-### Phase 2: Convert pwiz to Use Submodule
+### Phase 2: Update Script Paths
 
-- [ ] Final ai-context sync to master
-- [ ] Remove ai/ from pwiz: `git rm -r ai/`
-- [ ] Add submodule: `git submodule add https://github.com/ProteoWizard/pwiz-ai.git ai`
-- [ ] Push to master
+Scripts must update their relative path calculations:
+- `Build-Skyline.ps1`: Navigate from `ai/scripts/Skyline/` to `pwiz_tools/Skyline/`
+- Similar updates for AutoQC, SkylineBatch
+- Update all documentation references to new paths
 
-### Phase 3: Update Documentation
+### Phase 3: Convert pwiz to Use Submodule
 
-- [ ] Update new-machine-setup.md with `--recurse-submodules`
-- [ ] Update CLAUDE.md to note submodule
-- [ ] Archive ai-context-branch-strategy.md
-- [ ] Update this document status to "Implemented"
+1. Final ai-context sync to master
+2. Remove old locations:
+   ```bash
+   git rm -r ai/
+   git rm -r .claude/
+   git rm -r pwiz_tools/Skyline/ai/
+   git rm -r pwiz_tools/Skyline/Executables/AutoQC/ai/
+   git rm -r pwiz_tools/Skyline/Executables/SkylineBatch/ai/
+   ```
+3. Add submodule:
+   ```bash
+   git submodule add https://github.com/ProteoWizard/pwiz-ai.git ai
+   ```
+4. Update `pwiz_tools/Skyline/Jamfile.jam` to create junction (see above)
+5. Add `.claude` to `.gitignore` (junction shouldn't be tracked)
+6. Push to master
 
-### Phase 4: Retire ai-context Branch
+### Phase 4: Update Documentation
 
-- [ ] Delete remote branch: `git push origin --delete ai-context`
-- [ ] Remove /pw-aicontextsync, /pw-aicontextupdate commands
-- [ ] Clean up sync scripts
+- `new-machine-setup.md`: Minimal changes (workflow unchanged, build creates junction)
+- `CLAUDE.md`: Update script path examples
+- Archive `ai-context-branch-strategy.md`
+- Update this document status to "Implemented"
 
-### Rollback Plan
+### Phase 5: Retire ai-context Branch
 
-If needed, revert to regular directory:
+- Delete remote branch: `git push origin --delete ai-context`
+- Remove `/pw-aicontextsync`, `/pw-aicontextupdate` commands
+
+---
+
+## Critical Files to Update
+
+| File | Change Needed |
+|------|---------------|
+| `pwiz_tools/Skyline/Jamfile.jam` | Add junction creation after submodule init |
+| `Build-Skyline.ps1` | Update `$skylineRoot` path calculation |
+| `Build-AutoQC.ps1` | Update `$autoQCRoot` path calculation |
+| `Build-SkylineBatch.ps1` | Update root path calculation |
+| `ai/CLAUDE.md` | Update script path examples |
+| `ai/docs/build-and-test-guide.md` | Update script path references |
+| `.gitignore` | Add `.claude` (junction) |
+
+---
+
+## Rollback Plan
+
+If issues arise, revert to regular directory:
 
 ```bash
 git submodule deinit ai
 git rm ai
 rm -rf .git/modules/ai
-# Copy content back from pwiz-ai
-cp -r /path/to/pwiz-ai/* ai/
-git add ai/
+rmdir .claude  # Remove junction
+# Restore from pwiz-ai repo content
+git add ai/ .claude/
 git commit -m "Restore ai/ as regular directory"
+```
+
+---
+
+## Troubleshooting
+
+### "ai/ folder is empty"
+
+Submodule not initialized. Run the build (`bs.bat`) or manually:
+```bash
+git submodule update --init
+```
+
+### ".claude/ folder missing after clone"
+
+Run the build (`bs.bat`) which creates the junction, or manually:
+```cmd
+mklink /J .claude ai\claude
+```
+
+### "Detached HEAD in ai/"
+
+Normal for submodules. To make changes:
+```bash
+cd ai
+git checkout main
+# Now you can commit
+```
+
+### "Changes in ai/ not showing in pwiz status"
+
+Submodule changes are tracked separately:
+```bash
+cd ai
+git status
 ```
 
 ---
 
 ## Design Decisions
 
-### Why ai/ Only (Not .claude/)
+### Why Unified (All AI Content Together)
 
-- `ai/` has high change velocity (todos, docs, memory)
-- `.claude/` has low change velocity (commands reference ai/docs/)
-- Normal PR workflow works fine for rare .claude/ changes
+- **Single location**: "Where's AI stuff?" -> `ai/`
+- **Single sync**: One update gets everything
+- **Clear pattern**: Future projects add `ai/scripts/NewProject/`
+- **Build scripts self-navigate**: Location is organizational, not functional
 
 ### Why Not Pin Versions
 
@@ -264,11 +382,12 @@ git commit -m "Restore ai/ as regular directory"
 - Each clone can update ai/ independently
 - Reduces coordination overhead
 
-### Why Fresh History (Not Extracted)
+### Why Junction for .claude/
 
-- Simpler migration
-- Old history remains accessible in pwiz repo
-- Clean start for new workflow
+- Claude Code requires `.claude/` at repo root
+- Junction is transparent to all tools
+- No admin rights required
+- Created automatically by Boost Build
 
 ---
 
@@ -287,3 +406,4 @@ The submodule approach eliminates this complexity. See archived `ai-context-bran
 
 - [Git Submodules Documentation](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
 - [documentation-maintenance.md](documentation-maintenance.md) - "Reference, don't embed" principle
+- GitHub Issue #3786 - Original submodule proposal discussion
