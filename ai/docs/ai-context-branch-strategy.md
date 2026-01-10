@@ -6,24 +6,15 @@ When a user asks to "sync ai-context" or "merge ai-context to master", use the a
 
 ```powershell
 # IMPORTANT: All .ps1 scripts require PowerShell 7+ (pwsh.exe)
-# Sync FROM master (pull latest code into ai-context):
+
+# Sync FROM master (rebase ai-context onto master):
 pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
 
-# Sync TO master (create PR with ai/ documentation updates):
-pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -DryRun
-# Then create PR via: gh pr create --base master --head ai-context ...
+# Sync TO master (squash commits and prepare PR):
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -Push
+# Then create PR: gh pr create --base master --head ai-context --title "Weekly ai-context sync"
+# Merge using "Rebase and merge" (NOT squash!)
 ```
-
-**CRITICAL: Before merging any PR to master**, sync TODO completion to ai-context:
-```bash
-# On feature branch after moving TODO to completed/
-git checkout ai-context && git pull origin ai-context
-git cherry-pick <commit-hash-of-TODO-move>
-git push origin ai-context
-git checkout <feature-branch>
-```
-
-See [Syncing TODO Changes to ai-context](#syncing-todo-changes-to-ai-context) for details.
 
 ---
 
@@ -33,7 +24,6 @@ Frequent commits to `ai/todos/` on master are causing friction for team members:
 - PRs show "out-of-date with base branch" frequently
 - Developers must wait for quiet periods to merge
 - TeamCity builds trigger unnecessarily for documentation-only changes
-- Current workaround (override merge rules) works but feels ad-hoc
 
 ## Key Insight
 
@@ -43,351 +33,219 @@ The `ai/` folder serves a different purpose than code:
 
 These have different change velocities and risk profiles. They shouldn't impose the same merge friction.
 
-## Recommended Solution: Dedicated ai-context Branch
+## Solution: Rebase-Based ai-context Branch
 
 ### Overview
 
-1. Create a long-lived `ai-context` branch for rapid ai/ iteration
-2. Commit ai/ changes there without blocking team PRs
-3. Batch-merge to master periodically (daily or when stabilized)
-4. Feature branches continue branching from master (stable)
+1. `ai-context` branch holds rapid ai/ documentation iteration
+2. Always kept as a **linear history on top of master** (via rebase, not merge)
+3. Weekly sync squashes commits into one and merges to master
+4. After merge, both branches share the same commit—no "sync loop" needed
+
+### Branch Model
+
+```
+master:      M1---M2---M3---S  (S = squashed ai-context sync)
+                           ↑
+ai-context:               S  (same commit after merge!)
+```
+
+Key difference from merge-based workflow:
+- **Rebase** keeps ai-context linear on top of master
+- **Squash before PR** means PR shows 1 commit
+- **"Rebase and merge"** on GitHub puts the same commit on master
+- Both branches end up at the same commit—naturally in sync!
 
 ### Benefits
 
-- Rapid iteration on ai/ documentation without blocking colleagues
-- Git version control retained (history, diffs, blame)
-- No submodule complexity
-- Clear separation of concerns
-- Feature branches see stable ai/ context from master
+- PRs show exactly 1 commit (clean, easy to review)
+- No "closing the loop" needed after merge
+- No divergent history or add/add conflicts
+- Clean linear history on ai-context
 
-### Branch Workflow
+---
 
-```
-master (stable)
-  │
-  ├── feature/my-feature (branches from master)
-  │
-  └── ai-context (long-lived, rapid ai/ changes)
-        │
-        └── periodically merged back to master
-```
+## Daily Workflow
 
-## Implementation Steps
+### Working on ai-context
 
-### 1. Create the ai-context branch
-
-```bash
-git checkout master
-git pull origin master
-git checkout -b ai-context
-git push -u origin ai-context
-```
-
-### 2. Daily Workflow: Working on ai-context
-
-**Adding/modifying ai/ files:**
 ```powershell
 # Ensure you're on ai-context branch
 git checkout ai-context
-git pull origin ai-context
 
-# Make changes to ai/ files (MEMORY.md, backlog TODOs, etc.)
+# Make changes to ai/ files
 # Edit files...
 
 # Commit changes
 git add ai/
-git commit -m "Add backlog TODO for [feature] and update MEMORY.md"
-git push origin ai-context
+git commit -m "Add backlog TODO for [feature]"
+git push --force-with-lease origin ai-context
 ```
 
-### 3. Daily Maintenance: Sync ai-context FROM master
+**Note:** Use `--force-with-lease` because rebasing rewrites history.
 
-**Keep ai-context up-to-date with master code changes (run daily or before starting work):**
+### Sync FROM master (daily maintenance)
+
+Keep ai-context rebased onto latest master:
 
 ```powershell
 # Using automation script (recommended)
-.\ai\scripts\sync-ai-context.ps1 -Direction FromMaster -Push
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
 
 # Or manually:
 git checkout ai-context
-git pull origin ai-context
 git fetch origin master
-git merge origin/master --no-ff -m "Merge master into ai-context: sync with latest code changes"
-git push origin ai-context
+git rebase origin/master
+git push --force-with-lease origin ai-context
 ```
-
-**What this does:**
-- Pulls latest code changes from master into ai-context
-- Keeps ai-context's view of codebase current
-- Prevents ai-context from diverging too far from master
 
 **When to run:**
 - At start of work session
-- After major master merges (e.g., your PR was just merged)
-- If you notice ai-context is behind master
+- After your code PR merges to master
+- Before starting the weekly sync
 
-### 4. Batch Update: Sync ai-context TO master
+---
 
-**Merge accumulated ai/ documentation back to master (weekly or when stabilized):**
+## Weekly Sync: ai-context → master
 
-```powershell
-# Preview changes first (dry run)
-.\ai\scripts\sync-ai-context.ps1 -Direction ToMaster -DryRun
-
-# Option A: Create PR (recommended for visibility)
-# 1. Push ai-context if needed
-git push origin ai-context
-# 2. Create PR: ai-context → master on GitHub
-# 3. Merge via GitHub after review/approval
-
-# Option B: Direct merge (faster, less ceremony)
-.\ai\scripts\sync-ai-context.ps1 -Direction ToMaster -Push
-
-# Or manually:
-git checkout master
-git pull origin master
-git merge origin/ai-context --no-ff -m "Merge ai-context: batch update ai/ documentation"
-git push origin master
-
-# Sync ai-context back to master
-git checkout ai-context
-git merge master
-git push origin ai-context
-```
-
-**When to merge to master:**
-- Weekly batch (e.g., Friday afternoon)
-- Before starting a feature that needs latest ai/ context
-- When backlog TODOs are ready for team visibility
-- After major documentation updates
-
-**Do NOT merge to master:**
-- For every tiny commit (defeats the purpose)
-- During active PR merging periods (let team members finish first)
-- If ai-context has experimental/incomplete documentation
-
-## Policy Guidelines
-
-### What goes on ai-context (bypass full CI)
-- New TODO files in `ai/todos/backlog/`
-- Updates to `ai/todos/work/` session notes
-- MEMORY.md, WORKFLOW.md refinements
-- Any file under `ai/` that doesn't affect build/test
-
-### What still goes through normal PRs
-- Code changes (always)
-- Changes to `ai/` that accompany code changes (same PR)
-- CRITICAL-RULES.md updates that affect team workflow (needs review)
-
-### Merge frequency to master
-- Daily batch merge if changes accumulated
-- Immediate merge if a feature branch needs updated context
-- No merge needed if ai-context is just holding backlog items
-
-## Syncing TODO Changes to ai-context
-
-### The Problem
-
-When a feature branch updates a TODO file and merges to master, ai-context may have an older version of that TODO. This causes add/add merge conflicts during the weekly sync, even though both versions represent the same logical file at different lifecycle stages.
-
-### The Solution: Sync Before Merge
-
-**ai-context is the authoritative source for all `ai/` content.** To maintain this:
-
-1. **Before merging a PR to master**, sync the TODO completion state to ai-context
-2. This ensures ai-context and master have the TODO in the same location (`completed/`)
-3. Weekly syncs then merge cleanly with no conflicts
-
-### When to Sync to ai-context
-
-| Event | Action |
-|-------|--------|
-| Move TODO to `completed/` | **Required**: Cherry-pick to ai-context before merging PR |
-| Significant TODO updates during development | Recommended: Keep ai-context current |
-| Minor TODO task checkbox updates | Optional: Can wait for PR completion |
-
-### How to Sync TODO Changes
-
-**Option 1: Cherry-pick (recommended for single commits)**
-```bash
-# After committing TODO move on feature branch
-git checkout ai-context
-git pull origin ai-context
-git cherry-pick <commit-hash>
-git push origin ai-context
-git checkout <feature-branch>
-```
-
-**Option 2: Manual copy (for multiple scattered updates)**
-```bash
-git checkout ai-context
-git pull origin ai-context
-# Copy the TODO file from feature branch
-git show <feature-branch>:ai/todos/completed/TODO-YYYYMMDD_feature.md > ai/todos/completed/TODO-YYYYMMDD_feature.md
-# Remove from active/ if it exists
-git rm ai/todos/active/TODO-YYYYMMDD_feature.md 2>/dev/null || true
-git add ai/todos/completed/TODO-YYYYMMDD_feature.md
-git commit -m "Sync TODO-YYYYMMDD_feature to completed (pre-merge sync)"
-git push origin ai-context
-git checkout <feature-branch>
-```
-
-### Why This Matters
-
-- **Prevents conflicts**: Both branches have the file in the same location
-- **Maintains authority**: ai-context always reflects current TODO state
-- **Enables clean syncs**: Weekly `FromMaster` syncs merge without manual resolution
-- **Preserves history**: Cherry-picks maintain commit attribution
-
-## Automation: sync-ai-context.ps1 Script
-
-Located at `ai/scripts/sync-ai-context.ps1`, this script automates bidirectional synchronization.
-
-> **Important:** This script requires PowerShell 7+ (`pwsh.exe`). Windows PowerShell 5.1 will fail with syntax errors. Run with `pwsh -File ./ai/scripts/sync-ai-context.ps1 ...`
-
-### Command Reference
+### Step 1: Squash and Push
 
 ```powershell
-# Preview what would be merged FROM master into ai-context
-pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -DryRun
-
-# Sync FROM master (daily maintenance)
-pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
-
-# Preview what would be merged TO master from ai-context
+# Preview what will be squashed
 pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -DryRun
 
-# Sync TO master (batch update)
+# Squash commits and push
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -Push -Message "Weekly sync: description here"
+```
+
+This:
+1. Rebases ai-context onto latest master (if needed)
+2. Squashes all ai-context commits into 1
+3. Force-pushes ai-context
+
+### Step 2: Create and Merge PR
+
+```powershell
+# Create PR
+gh pr create --base master --head ai-context --title "Weekly ai-context sync (Jan 4, 2026)"
+```
+
+**IMPORTANT: Use "Rebase and merge" on GitHub** (not "Squash and merge")
+
+Since we already squashed, "Rebase and merge" puts the exact same commit on master. Both branches now share the same HEAD commit.
+
+### Step 3: Sync Local (optional)
+
+```powershell
+# Pull the merged state
+git checkout ai-context
+git pull origin ai-context
+```
+
+---
+
+## Automation Script Reference
+
+Located at `ai/scripts/sync-ai-context.ps1`
+
+> **Important:** Requires PowerShell 7+ (`pwsh.exe`).
+
+### Commands
+
+```powershell
+# Preview rebase FROM master
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -DryRun
+
+# Rebase FROM master and push
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
+
+# Preview squash TO master
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -DryRun
+
+# Squash and push (prepares PR)
 pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -Push
+
+# With custom commit message
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -Push -Message "Weekly sync: new features"
 ```
 
 ### Features
 
 - **Dry run mode**: Preview changes before executing
-- **Safety checks**: Verifies clean working tree, fetches latest
-- **Conflict detection**: Guides you through resolution if needed
-- **Bidirectional sync**: Handles both FROM master and TO master
-- **Automatic push**: Optional `-Push` flag for unattended operation
+- **Automatic rebase**: FromMaster rebases ai-context onto master
+- **Automatic squash**: ToMaster squashes all commits into one
+- **Force-push safety**: Uses `--force-with-lease` to prevent overwrites
+- **Clear next steps**: Shows exact commands for PR creation
 
-### Typical Usage
-
-**Morning routine (sync FROM master):**
-```powershell
-.\ai\scripts\sync-ai-context.ps1 -Direction FromMaster -Push
-```
-
-**Weekly batch merge (sync TO master via PR):**
-```powershell
-# 1. Preview changes
-.\ai\scripts\sync-ai-context.ps1 -Direction ToMaster -DryRun
-
-# 2. Push ai-context
-git push origin ai-context
-
-# 3. Create PR on GitHub: ai-context → master
-# 4. Merge via GitHub after approval
-
-# 5. Sync ai-context back
-.\ai\scripts\sync-ai-context.ps1 -Direction FromMaster -Push
-```
-
-## Team Communication
-
-Suggested message to team:
-
-> To reduce master churn from ai/ documentation updates, we're adopting a dedicated `ai-context` branch for rapid iteration. 
->
-> - ai/-only changes will accumulate on `ai-context`
-> - Batch merges to master will happen weekly (or when stabilized)
-> - Your feature branches won't see constant "out-of-date" warnings
-> - The issue tracker remains our project management tool; ai/todos is LLM context
->
-> **If you need latest ai/ context on your feature branch:**
-> - Option 1: Wait for next batch merge (usually weekly)
-> - Option 2: Cherry-pick from ai-context: `git cherry-pick <commit-hash>`
-> - Option 3: Merge ai-context directly: `git merge origin/ai-context` (creates merge commit)
->
-> **Automation:** Use `ai/scripts/sync-ai-context.ps1` to manage branch synchronization.
+---
 
 ## Conflict Resolution
 
-If merge conflicts occur during synchronization:
+### Rebase Conflicts (FromMaster)
 
-### Conflicts when syncing FROM master (code conflicts)
-
-Rare, but can happen if both master and ai-context modified the same ai/ file:
+If conflicts occur during rebase:
 
 ```powershell
 # Script will stop on conflict
-# Resolve conflicts manually in affected files
+# Resolve conflicts in affected files
 git add <resolved-files>
-git merge --continue
-git push origin ai-context
+git rebase --continue
+
+# If needed, abort and retry
+git rebase --abort
+
+# After resolution, push
+git push --force-with-lease origin ai-context
 ```
 
-### Conflicts when syncing TO master (documentation conflicts)
+### Prevention
 
-Very rare (ai/ files rarely touched on master), but resolve similarly:
+Conflicts are rare with this workflow because:
+- ai-context is always linear on top of master
+- Squashing before merge eliminates complex history
+- Only one person typically works on ai/ documentation
 
-```powershell
-# Resolve conflicts (prefer ai-context version for ai/ files)
-git add <resolved-files>
-git merge --continue
-git push origin master
+---
 
-# Sync ai-context back
+## Syncing TODO Changes from Feature Branches
+
+When a feature branch updates a TODO file:
+
+### Option 1: Cherry-pick to ai-context
+
+```bash
+# After committing TODO move on feature branch
 git checkout ai-context
-git merge master
-git push origin ai-context
+git fetch origin ai-context
+git rebase origin/ai-context  # Ensure up to date
+git cherry-pick <commit-hash>
+git push --force-with-lease origin ai-context
+git checkout <feature-branch>
 ```
 
-## Critical: Complete the Sync Loop After PR Merge
+### Option 2: Let it merge naturally
 
-### The Problem
+Since feature branches merge to master, and ai-context rebases onto master, the TODO changes will appear in ai-context after the next FromMaster sync.
 
-When you sync ai-context → master via a PR, a merge commit is created on master. But ai-context doesn't know about this merge commit. If you continue working on ai-context without syncing back, you'll get **add/add conflicts** on your next FromMaster sync—even though the conflicting files are your own changes!
+---
 
-```
-ai-context:  A--B--C--D--E  (continued development, doesn't know about M)
-                  ↓
-master:          M  (merge commit from your PR)
+## Policy Guidelines
 
-Next FromMaster sync: CONFLICT! Git sees both branches adding the same files.
-```
+### What goes on ai-context
 
-### The Solution
+- New TODO files in `ai/todos/backlog/`
+- Updates to `ai/todos/active/` or `ai/todos/completed/`
+- MEMORY.md, WORKFLOW.md, CRITICAL-RULES.md refinements
+- MCP server updates in `ai/mcp/`
+- Any file under `ai/` that doesn't affect build/test
 
-**Immediately after your ai-context → master PR merges on GitHub, run:**
+### What goes through normal PRs
 
-```powershell
-pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
-```
+- Code changes (always)
+- Changes to `ai/` that accompany code changes (same PR)
+- CRITICAL-RULES.md updates that affect team workflow (needs review)
 
-This "closes the loop" by merging M back into ai-context:
-
-```
-ai-context:  A--B--C--D--E--F  (F = merge of M, loop closed)
-                  ↓       ↗
-master:          M-------
-
-Future FromMaster syncs: Clean! Git knows ai-context has seen M.
-```
-
-### Why This Happens
-
-Git tracks merge relationships, not file content. When both branches have files that were introduced via different commit paths, Git sees them as independent additions—even if the content is identical or one is a superset of the other.
-
-### The Rule
-
-> **After any ai-context → master PR merges, immediately sync back before making new commits on ai-context.**
-
-This is the most important workflow rule for avoiding painful conflict resolution.
-
-### Lesson Learned (December 2025)
-
-This was discovered the hard way when a weekly sync PR (#3737) merged to master, but the FromMaster sync wasn't run afterward. Subsequent ai-context development added improvements to the same files. The next FromMaster sync showed 12 add/add conflicts for files that were logically the same—master had the older synced versions, ai-context had improved versions. Resolution required manually choosing ai-context versions for all conflicts.
-
-The fix was simple in hindsight: run `/pw-aicontextupdate` right after the PR merged.
+---
 
 ## Troubleshooting
 
@@ -396,31 +254,60 @@ The fix was simple in hindsight: run `/pw-aicontextupdate` right after the PR me
 Commit or stash changes before running sync:
 ```powershell
 git stash push -u -m "WIP: ai/ changes"
-.\ai\scripts\sync-ai-context.ps1 -Direction FromMaster -Push
+pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction FromMaster -Push
 git stash pop
 ```
 
-### "No new commits to merge"
+### "Rebase conflict detected"
 
-Branches are already in sync. No action needed.
+Resolve conflicts manually:
+```powershell
+# Edit conflicting files
+git add <resolved-files>
+git rebase --continue
+git push --force-with-lease origin ai-context
+```
 
-### "Merge conflict detected"
+### "rejected - failed to push"
 
-Follow conflict resolution guidance above. The script will guide you.
+Someone else pushed to ai-context. Fetch and rebase:
+```powershell
+git fetch origin ai-context
+git rebase origin/ai-context
+git push --force-with-lease origin ai-context
+```
 
-### "Not in a git repository"
+### "Branch is ahead of origin" after someone else rebased
 
-Run script from repository root or any subdirectory within the pwiz repository.
+After another checkout runs `/pw-aicontextupdate` (or the sync script), your local history diverges from the force-pushed remote. Git shows you're "ahead by N commits" even though the content is identical.
 
-## Future Enhancements
+**Why this happens:** Rebasing rewrites commit hashes. Your local branch has the old hashes; the remote has new ones. A regular `git pull` creates merge commits trying to reconcile them.
 
-Potential automation improvements:
-- GitHub Actions for scheduled ai-context → master PRs (weekly)
-- Branch protection rules lighter for ai-context → master merges
-- Personal ai-context branches if team adopts ai/ workflows broadly
-- Slack/Teams notification when ai-context merges to master
+**Solution:** Reset to the remote:
+```bash
+git fetch origin ai-context
+git reset --hard origin/ai-context
+```
+
+This discards your local commit graph and uses the remote's rebased history. No content is lost since the files are identical.
+
+**If you have uncommitted changes**, stash first:
+```bash
+git stash push -m "WIP changes"
+git fetch origin ai-context
+git reset --hard origin/ai-context
+git stash pop
+```
+
+---
+
+## Historical Note
+
+Prior to January 2026, this workflow used merge commits instead of rebase. This caused PRs to show hundreds of commits (the full history since branch creation) even though the actual diff was small. The rebase-based workflow was adopted to ensure PRs show only the actual new changes.
+
+---
 
 ## Related
 
-- TeamCity: Also disabling build triggers for changes under `ai/` (separate configuration change)
-- Issue tracker: Remains the source of truth for project planning; ai/todos is implementation context for LLM sessions
+- **TeamCity**: Build triggers disabled for changes under `ai/` (separate configuration)
+- **Issue tracker**: Remains the source of truth for project planning; ai/todos is LLM context

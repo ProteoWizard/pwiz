@@ -4,7 +4,9 @@ description: Create GitHub Issue from TODO file or skyline.ms issue
 
 # Create GitHub Issue
 
-Create a GitHub Issue from a TODO file or skyline.ms issue.
+Migrate a TODO file or skyline.ms issue to GitHub Issues (the single backlog system).
+
+**Goal**: Complete information transfer so the source file can be deleted. The GitHub Issue must be self-contained with ALL technical details preserved.
 
 ## Arguments
 
@@ -20,14 +22,16 @@ $ARGUMENTS = One of:
 
 ### Workflow
 
-1. **Read the TODO file**:
+1. **Read the TODO file completely**:
    - If file exists on current branch: `Read ai/todos/backlog/TODO-old_work.md`
    - If not found: `git show backlog-archive-YYYYMMDD:ai/todos/backlog/TODO-old_work.md`
 
-2. **Extract content**:
+2. **Transfer ALL content** (the issue must be self-contained):
    - Objective/Summary
    - Scope items (as checklist)
-   - Any relevant technical notes
+   - **All technical details** - proposed solutions, code samples, root cause analysis
+   - **All context** - affected files/screenshots, status notes, related work
+   - Preserve code blocks with proper formatting
 
 3. **Create GitHub Issue**:
    ```bash
@@ -35,19 +39,25 @@ $ARGUMENTS = One of:
      --title "<objective>" \
      --label "todo" \
      --body "## Summary
-   <from TODO>
+   <from TODO - include category, priority, origin>
 
    ## Scope
    <checklist from TODO>
+
+   ## Technical Details
+   <ALL technical content - code samples, proposed solutions, root cause analysis>
+   <Use markdown headers to organize by task/topic>
 
    ## Getting Started
    Use /pw-startissue <number> to begin work.
 
    ---
-   Recovered from: $ARGUMENTS"
+   Migrated from: $ARGUMENTS"
    ```
 
 4. **Report**: Show issue URL
+
+5. **Verify completeness**: Ask user to confirm the issue contains all information needed to delete the TODO file
 
 ## From skyline.ms Issue
 
@@ -83,6 +93,8 @@ $ARGUMENTS = One of:
 
 ## Rules
 
-- Only create issues for work you're ready to start soon
+- **Complete transfer**: The GitHub Issue must contain ALL information from the source. No summarizing or omitting technical details.
+- **Self-contained**: After migration, the issue should be usable without referencing the original TODO file.
+- **Deletable source**: The goal is that `ai/todos/backlog/` ceases to exist - all backlog items live in GitHub Issues.
 - Add appropriate labels (ai-context, skyline, pwiz, etc.)
-- The created issue becomes the backlog item - no TODO file until work starts
+- The created issue becomes the backlog item - TODO files are only created when work actively starts via `/pw-startissue`

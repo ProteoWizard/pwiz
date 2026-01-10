@@ -2,6 +2,8 @@
 
 Guide for LLM-assisted debugging using SkylineTester with automated dev-build-test cycles.
 
+> **See also:** [skylinetester-guide.md](skylinetester-guide.md) for comprehensive SkylineTester reference (tabs, file paths, common workflows).
+
 ## Overview
 
 SkylineTester provides a GUI for running Skyline tests repeatedly, which is essential for reproducing intermittent failures. This guide documents workflows discovered during paired debugging sessions that enable Claude to iterate on debugging problems with minimal human intervention.

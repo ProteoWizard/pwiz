@@ -13,10 +13,10 @@
     Email address to send the report to. Default: brendanx@uw.edu
 
 .PARAMETER Model
-    Claude model to use. Default: claude-sonnet-4-20250514
+    Claude model to use. Default: claude-opus-4-5-20251101
 
 .PARAMETER MaxTurns
-    Maximum agentic turns. Default: 30
+    Maximum agentic turns. Default: 100
 
 .PARAMETER DryRun
     If set, prints the command without executing.
@@ -39,8 +39,8 @@
 
 param(
     [string]$Recipient = "brendanx@uw.edu",
-    [string]$Model = "claude-sonnet-4-20250514",
-    [int]$MaxTurns = 30,
+    [string]$Model = "claude-opus-4-5-20251101",
+    [int]$MaxTurns = 100,
     [switch]$DryRun
 )
 
@@ -100,6 +100,7 @@ $AllowedTools = @(
     "mcp__labkey__save_test_failure_history",
     "mcp__labkey__analyze_daily_patterns",
     "mcp__labkey__save_daily_summary",
+    "mcp__labkey__query_test_history",
     # Gmail MCP - read notifications, send report, archive
     "mcp__gmail__search_emails",
     "mcp__gmail__read_email",
