@@ -13,6 +13,7 @@ Modules:
 - issues: Issue tracking tools
 - patterns: Pattern detection for daily reports
 - computers: Computer status management (deactivate/reactivate)
+- nightly_history: Historical tracking for failures, leaks, hangs
 
 Internal utilities (no MCP tools):
 - stacktrace: Stack trace normalization for pattern matching
@@ -27,6 +28,7 @@ from . import attachments
 from . import issues
 from . import patterns
 from . import computers
+from . import nightly_history
 from . import stacktrace  # Internal utility, no MCP tools
 
 
@@ -41,6 +43,7 @@ def register_all_tools(mcp):
     support.register_tools(mcp)      # get_support_summary
     issues.register_tools(mcp)       # save_issues_report
     patterns.register_tools(mcp)     # analyze_daily_patterns, save_daily_summary
+    nightly_history.register_tools(mcp)  # backfill_nightly_history, query_test_history
 
     # DRILL-DOWN tools
     wiki.register_tools(mcp)

@@ -147,3 +147,16 @@ Before writing code, read these files:
 - **skyline-screenshots** → For ImageComparer, screenshot diffs, or s-XX.png references
 - **skyline-wiki** → For reading/updating wiki pages on skyline.ms
 - **ai-context-documentation** → For ai/ folder docs, TODOs, .claude/ files, or ai-context branch work
+
+## Developer Environment
+
+### Screenshot Location
+
+When a developer says "I saved a screenshot" without specifying a path, check the Windows default screenshot folder:
+```
+~/Pictures/Screenshots/
+```
+
+Screenshots follow the naming pattern: `Screenshot YYYY-MM-DD HHMMSS.png`
+
+Use the most recent file by modification time.

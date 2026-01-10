@@ -117,21 +117,17 @@ LAMBDA_PATTERN = re.compile(r'<(\w+)>b__\d+')  # <Method>b__0 -> Method
 CLOSURE_CLASS_PATTERN = re.compile(r'\.<>c__DisplayClass\d+_\d+\.')  # <>c__DisplayClass -> .
 ANONYMOUS_TYPE_PATTERN = re.compile(r'<>f__AnonymousType\d+')
 
-# Framework frames to filter (low signal, high noise)
+# Framework frames to ALWAYS filter (low signal, high noise)
 FRAMEWORK_PREFIXES = [
     # .NET runtime
     'System.Runtime.',
     'System.Threading.',
-    # WinForms internals
-    'System.Windows.Forms.Control.OnClick',
+    # WinForms internals - always noise
     'System.Windows.Forms.Control.Invoke',
     'System.Windows.Forms.Control.MarshaledInvoke',
-    'System.Windows.Forms.Control.WmMouseUp',
     'System.Windows.Forms.Control.WndProc',
-    'System.Windows.Forms.Button.OnMouseUp',
     'System.Windows.Forms.Button.WndProc',
     'System.Windows.Forms.ButtonBase.WndProc',
-    'System.Windows.Forms.ToolStrip',
     'System.Windows.Forms.NativeWindow.Callback',
     'System.Windows.Forms.UnsafeNativeMethods',
     'System.Windows.Forms.Application.',
@@ -141,6 +137,30 @@ FRAMEWORK_PREFIXES = [
     # Test framework
     'Microsoft.VisualStudio.TestTools.UnitTesting.Assert.',
 ]
+
+# Entry-point frames to filter ONLY if we have enough project frames (>=3 pwiz.* frames)
+# These are how the user triggered the action - less informative than where the bug is
+CONDITIONAL_ENTRY_POINT_PREFIXES = [
+    # WinForms event handlers and click handlers
+    'System.Windows.Forms.Control.OnClick',
+    'System.Windows.Forms.Control.WmMouseUp',
+    'System.Windows.Forms.Button.OnClick',
+    'System.Windows.Forms.Button.OnMouseUp',
+    'System.Windows.Forms.MenuItem.OnClick',
+    'System.Windows.Forms.ToolStripItem.',
+    'System.Windows.Forms.ToolStrip.OnItemClicked',
+    'System.Windows.Forms.Timer.OnTick',
+    'System.Windows.Forms.Form.OnLoad',
+    'System.Windows.Forms.Form.OnShown',
+    'System.Windows.Forms.ListBox.OnSelectedIndexChanged',
+    'System.Windows.Forms.ComboBox.OnSelectedIndexChanged',
+]
+
+# Minimum project frames needed before filtering entry points
+MIN_PROJECT_FRAMES_FOR_ENTRY_POINT_FILTERING = 3
+
+# Project namespace prefix - frames from our codebase
+PROJECT_NAMESPACE = 'pwiz.'
 
 
 def _normalize_file_path(file_path: Optional[str]) -> Optional[str]:
@@ -183,11 +203,24 @@ def _is_noise_frame(method: str) -> bool:
 
 
 def _is_framework_frame(method: str) -> bool:
-    """Check if a frame is low-value framework plumbing."""
+    """Check if a frame is low-value framework plumbing (always filtered)."""
     for prefix in FRAMEWORK_PREFIXES:
         if method.startswith(prefix):
             return True
     return False
+
+
+def _is_entry_point_frame(method: str) -> bool:
+    """Check if a frame is an entry-point (conditionally filtered if enough project frames)."""
+    for prefix in CONDITIONAL_ENTRY_POINT_PREFIXES:
+        if method.startswith(prefix):
+            return True
+    return False
+
+
+def _is_project_frame(method: str) -> bool:
+    """Check if a frame is from project code (pwiz.* namespace)."""
+    return method.startswith(PROJECT_NAMESPACE)
 
 
 def _normalize_method_name(method: str) -> str:
@@ -244,6 +277,13 @@ def normalize_stack_trace(
     Returns:
         NormalizedTrace with fingerprint, signature frames, and normalized text.
 
+    Filtering strategy:
+        - Always filter: async noise, threading infrastructure, WinForms internals
+        - Conditionally filter: entry-point frames (Button.OnClick, MenuItem.OnClick, etc.)
+          are filtered ONLY if we have >= 3 frames from project code (pwiz.* namespace).
+          This ensures we don't lose signal when entry points are all we have, but we
+          don't let them pollute fingerprints when we have enough project context.
+
     Example input:
         at pwiz.Skyline.Model.Foo.DoSomething() in C:\\proj\\skyline_25_1\\pwiz_tools\\Skyline\\Model\\Foo.cs:line 123
         at pwiz.Skyline.Model.Bar.<ProcessAsync>d__5.MoveNext() in C:\\proj\\pwiz\\Bar.cs:line 456
@@ -270,19 +310,23 @@ def normalize_stack_trace(
     # Strip "Exception caught at:" section - it's framework re-throw noise
     trace_to_parse = EXCEPTION_CAUGHT_PATTERN.split(raw_trace)[0]
 
-    normalized_frames = []
-    signature_frames = []
+    # Two-pass approach:
+    # Pass 1: Collect all frames, categorizing them
+    # Pass 2: Build signature, conditionally filtering entry points based on project frame count
 
-    # Parse each frame
+    parsed_frames: list[tuple[str, Optional[str], bool]] = []  # (method, file, is_entry_point)
+    project_frame_count = 0
+
+    # Pass 1: Parse and categorize all frames
     for match in FRAME_PATTERN.finditer(trace_to_parse):
         method = match.group('method').strip()
         file_path = match.group('file')
 
-        # Skip async/threading noise
+        # Skip async/threading noise (always)
         if _is_noise_frame(method):
             continue
 
-        # Optionally skip framework frames
+        # Skip framework frames (always, unless include_framework=True)
         if not include_framework and _is_framework_frame(method):
             continue
 
@@ -290,21 +334,43 @@ def normalize_stack_trace(
         normalized_method = _normalize_method_name(method)
 
         if normalized_method:
-            # Normalize file path if present (strip absolute path prefix)
-            normalized_file = _normalize_file_path(file_path)
+            is_entry_point = _is_entry_point_frame(method)
+            parsed_frames.append((normalized_method, file_path, is_entry_point))
 
-            # Build normalized frame with optional file reference
-            if normalized_file:
-                frame_text = f"{normalized_method} [{normalized_file}]"
-            else:
-                frame_text = normalized_method
+            # Count project frames for the filtering decision
+            if _is_project_frame(method):
+                project_frame_count += 1
 
-            normalized_frames.append(frame_text)
+    # Decide whether to filter entry points
+    filter_entry_points = (
+        not include_framework and
+        project_frame_count >= MIN_PROJECT_FRAMES_FOR_ENTRY_POINT_FILTERING
+    )
 
-            # Build signature from top N frames (short form, method only)
-            if len(signature_frames) < max_signature_frames:
-                short_name = _extract_class_method(normalized_method)
-                signature_frames.append(short_name)
+    # Pass 2: Build normalized frames and signature
+    normalized_frames = []
+    signature_frames = []
+
+    for normalized_method, file_path, is_entry_point in parsed_frames:
+        # Conditionally skip entry-point frames
+        if filter_entry_points and is_entry_point:
+            continue
+
+        # Normalize file path if present (strip absolute path prefix)
+        normalized_file = _normalize_file_path(file_path)
+
+        # Build normalized frame with optional file reference
+        if normalized_file:
+            frame_text = f"{normalized_method} [{normalized_file}]"
+        else:
+            frame_text = normalized_method
+
+        normalized_frames.append(frame_text)
+
+        # Build signature from top N frames (short form, method only)
+        if len(signature_frames) < max_signature_frames:
+            short_name = _extract_class_method(normalized_method)
+            signature_frames.append(short_name)
 
     # Build normalized text (one frame per line)
     normalized_text = '\n'.join(normalized_frames)

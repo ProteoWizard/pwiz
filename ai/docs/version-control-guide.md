@@ -130,3 +130,53 @@ Only amend if:
 - [ ] Co-Authored-By line at end
 - [ ] No emojis or markdown links
 - [ ] ≤10 total lines
+
+## Cherry-Picking to Release Branch
+
+During FEATURE COMPLETE phase, bug fixes often need to go to both master and the release branch. See `ai/docs/release-cycle-guide.md` for current release state.
+
+### Automatic Cherry-Pick (Preferred)
+
+Add the **"Cherry pick to release"** label to your PR before merging. The bot will create a cherry-pick PR automatically.
+
+### Manual Cherry-Pick
+
+Use `/pw-cptorelease <PR#>` when:
+- Automatic cherry-pick failed (branch deleted too early, merge commits in history)
+- You forgot to add the label before merging
+- You want a more informative PR description
+
+**Manual cherry-pick steps:**
+```bash
+# 1. Find the merge commit
+git fetch origin master
+git log --oneline origin/master | grep "#<PR#>"
+
+# 2. Create branch from release branch
+git checkout -b Skyline/work/YYYYMMDD_feature_release origin/Skyline/skyline_XX_X
+
+# 3. Cherry-pick
+git cherry-pick <merge-commit-hash>
+
+# 4. Push and create PR
+git push -u origin Skyline/work/YYYYMMDD_feature_release
+gh pr create --base Skyline/skyline_XX_X --title "Cherry-pick: <title>" --body "..."
+```
+
+### Cherry-Pick PR Format
+
+```markdown
+## Summary
+
+Cherry-pick of #<original-PR> to release branch `Skyline/skyline_XX_X`.
+
+<Optional: reason for manual cherry-pick>
+
+**Original changes:**
+<Brief summary of what the PR did>
+```
+
+### Common Gotchas
+
+1. **Deleting PR branch too early** - Wait for the cherry-pick PR to be created before deleting your branch
+2. **Merge commits in history** - Use `git pull --rebase` or `/rebase` comment before squash-and-merge
