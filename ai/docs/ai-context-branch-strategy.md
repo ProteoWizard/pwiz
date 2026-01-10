@@ -67,7 +67,13 @@ Key difference from merge-based workflow:
 
 ## CRITICAL: Never Use Regular Git Pull
 
-**The ai-context branch uses rebase, which rewrites history.** After any sync (weekly or daily rebase), commit hashes change. A regular `git pull` will try to merge divergent histories and create a mess.
+**The ai-context branch uses rebase, which rewrites history.** After any of these operations, commit hashes change and all other machines must reset (not pull):
+
+- `/pw-aicontextsync` - Weekly sync (rebase + squash + merge to master)
+- `/pw-aicontextupdate` - Quick update (rebase onto master)
+- Manual `git rebase` operations
+
+A regular `git pull` will try to merge divergent histories and create a mess of duplicate commits.
 
 **On any computer with a local ai-context branch:**
 
@@ -85,6 +91,8 @@ git reset --hard origin/ai-context
 2. Switch/Checkout → Select `ai-context` → Check **"Overwrite working tree changes (force)"** → OK
 
 This is expected after every weekly sync or when another developer rebases. See Troubleshooting for scenarios with uncommitted changes.
+
+**Why accept this complexity?** The alternative (merge-based workflow) caused PRs to show hundreds of commits and created "sync loops" where ai-context and master kept diverging. The rebase workflow keeps PRs clean (1 commit) and eliminates divergence, but requires this "fetch + reset" discipline.
 
 ---
 
