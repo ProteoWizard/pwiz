@@ -1,9 +1,9 @@
 ---
-description: Update ai-context branch from master (quick merge)
+description: Update ai-context branch from master (quick rebase)
 ---
-Update the ai-context branch from master to get the latest code and documentation changes.
+Rebase ai-context onto master to get the latest code and documentation changes.
 
-This is a common operation with no implications - it simply brings master's changes into ai-context.
+This rebases ai-context onto master, keeping it as a linear history on top of master.
 
 Run this command:
 ```powershell

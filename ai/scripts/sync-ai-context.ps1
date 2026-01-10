@@ -1,35 +1,43 @@
 <#
 .SYNOPSIS
-    Synchronize ai-context branch with master (bidirectional).
+    Synchronize ai-context branch with master using rebase workflow.
 
 .DESCRIPTION
-    Manages the ai-context branch lifecycle:
-    - Pull latest changes from master into ai-context (daily maintenance)
-    - Merge ai-context back to master (batch update of ai/ documentation)
-    - Provides dry-run mode to preview changes before executing
+    Manages the ai-context branch lifecycle with clean linear history:
+    - FromMaster: Rebase ai-context onto master (daily maintenance)
+    - ToMaster: Squash commits and prepare PR (weekly sync)
+
+    This workflow ensures:
+    - ai-context is always a linear history on top of master
+    - PRs show a single squashed commit
+    - After merge, both branches share the same commit (no "closing the loop" needed)
 
 .PARAMETER Direction
     Sync direction:
-    - 'FromMaster': Pull master changes into ai-context (daily maintenance)
-    - 'ToMaster': Merge ai-context back to master (batch documentation update)
+    - 'FromMaster': Rebase ai-context onto master (daily maintenance)
+    - 'ToMaster': Squash commits and prepare PR to master (weekly sync)
 
 .PARAMETER DryRun
-    Preview changes without executing merge/push operations.
+    Preview changes without executing rebase/push operations.
 
 .PARAMETER Push
-    Automatically push after merge (default: prompt user).
+    Automatically push after rebase (default: prompt user).
+
+.PARAMETER Message
+    Custom commit message for the squashed commit (ToMaster only).
+    If not provided, will prompt or use a default.
 
 .EXAMPLE
-    .\ai\scripts\sync-ai-context.ps1 -Direction FromMaster
-    Pull latest master changes into ai-context branch.
+    .\ai\scripts\sync-ai-context.ps1 -Direction FromMaster -Push
+    Rebase ai-context onto latest master and push.
 
 .EXAMPLE
     .\ai\scripts\sync-ai-context.ps1 -Direction ToMaster -DryRun
-    Preview what would be merged to master without executing.
+    Preview what would be squashed for the PR.
 
 .EXAMPLE
-    .\ai\scripts\sync-ai-context.ps1 -Direction ToMaster -Push
-    Merge ai-context to master and push automatically.
+    .\ai\scripts\sync-ai-context.ps1 -Direction ToMaster -Push -Message "Weekly sync: release docs"
+    Squash commits with custom message and push.
 #>
 
 [CmdletBinding()]
@@ -42,7 +50,10 @@ param(
     [switch]$DryRun,
 
     [Parameter(Mandatory=$false)]
-    [switch]$Push
+    [switch]$Push,
+
+    [Parameter(Mandatory=$false)]
+    [string]$Message
 )
 
 $ErrorActionPreference = 'Stop'
@@ -85,202 +96,249 @@ function Assert-CleanWorkingTree {
     }
 }
 
-function Get-CommitsBetween {
-    param(
-        [string]$From,
-        [string]$To
-    )
-    $commits = git log --oneline "$From..$To" 2>$null
+function Get-MergeBase {
+    $mergeBase = git merge-base origin/master HEAD 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to find merge base with master"
+    }
+    return $mergeBase
+}
+
+function Get-CommitsSinceMergeBase {
+    $mergeBase = Get-MergeBase
+    $commits = git log --oneline "$mergeBase..HEAD" 2>$null
     if ($LASTEXITCODE -ne 0) {
         return @()
     }
-    return $commits
+    if ($commits) {
+        return @($commits)
+    }
+    return @()
 }
 
-function Show-MergePreview {
-    param(
-        [string]$SourceBranch,
-        [string]$TargetBranch
-    )
-    
-    Write-Status "`nMerge Preview: $SourceBranch → $TargetBranch"
-    Write-Host "─────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    
-    $commits = Get-CommitsBetween "origin/$TargetBranch" "origin/$SourceBranch"
-    if ($commits.Count -eq 0) {
-        Write-Warning-Custom "No new commits to merge from $SourceBranch"
-        return $false
+function Show-RebasePreview {
+    param([string]$Direction)
+
+    if ($Direction -eq 'FromMaster') {
+        Write-Status "`nRebase Preview: ai-context onto master"
+        Write-Host "─────────────────────────────────────────────────────" -ForegroundColor DarkGray
+
+        # Show commits on master that we'll rebase onto
+        $behindCount = git rev-list --count HEAD..origin/master 2>$null
+        if ($behindCount -eq 0) {
+            Write-Success "ai-context is already up to date with master"
+            return $false
+        }
+
+        Write-Host "`nmaster is $behindCount commit(s) ahead. Commits to rebase onto:" -ForegroundColor Yellow
+        git log --oneline HEAD..origin/master | ForEach-Object { Write-Host "  $_" }
+
+        # Show our commits that will be replayed
+        $aheadCount = git rev-list --count origin/master..HEAD 2>$null
+        if ($aheadCount -gt 0) {
+            Write-Host "`nai-context commits to replay ($aheadCount):" -ForegroundColor Yellow
+            git log --oneline origin/master..HEAD | ForEach-Object { Write-Host "  $_" }
+        }
+
+        return $true
     }
-    
-    Write-Host "`nCommits to be merged ($($commits.Count)):" -ForegroundColor Yellow
-    $commits | ForEach-Object { Write-Host "  $_" }
-    
-    Write-Host "`nAffected files:" -ForegroundColor Yellow
-    git diff --name-status "origin/$TargetBranch...origin/$SourceBranch" | ForEach-Object {
-        Write-Host "  $_"
+    else {
+        Write-Status "`nSquash Preview: ai-context → master"
+        Write-Host "─────────────────────────────────────────────────────" -ForegroundColor DarkGray
+
+        $commits = Get-CommitsSinceMergeBase
+        if ($commits.Count -eq 0) {
+            Write-Success "No commits to squash - ai-context matches master"
+            return $false
+        }
+
+        Write-Host "`nCommits to squash into 1 ($($commits.Count)):" -ForegroundColor Yellow
+        $commits | ForEach-Object { Write-Host "  $_" }
+
+        Write-Host "`nFiles changed:" -ForegroundColor Yellow
+        $mergeBase = Get-MergeBase
+        git diff --name-status $mergeBase HEAD | ForEach-Object { Write-Host "  $_" }
+
+        return $true
     }
-    
-    return $true
 }
 
 function Sync-FromMaster {
     Write-Status "`n═══════════════════════════════════════════════════════"
-    Write-Status "  Sync ai-context FROM master (daily maintenance)"
+    Write-Status "  Rebase ai-context onto master (daily maintenance)"
     Write-Status "═══════════════════════════════════════════════════════`n"
-    
+
     # Fetch latest
     Write-Status "Fetching latest from origin..."
     git fetch origin master ai-context
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    
-    # Preview
-    $hasChanges = Show-MergePreview "master" "ai-context"
-    if (-not $hasChanges -and -not $DryRun) {
-        Write-Success "ai-context is already up to date with master"
-        return
-    }
-    
-    if ($DryRun) {
-        Write-Warning-Custom "`n[DRY RUN] Would merge master into ai-context (no changes made)"
-        return
-    }
-    
+
     # Ensure on ai-context branch
     $currentBranch = Get-CurrentBranch
     if ($currentBranch -ne 'ai-context') {
-        Write-Status "`nSwitching to ai-context branch..."
+        Write-Status "Switching to ai-context branch..."
         git checkout ai-context
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
-    
-    # Pull latest ai-context
-    Write-Status "Pulling latest ai-context..."
-    git pull origin ai-context
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    
-    # Merge master
-    Write-Status "`nMerging master into ai-context..."
-    git merge origin/master --no-ff -m "Merge master into ai-context: sync with latest code changes"
+
+    # Pull latest ai-context (fast-forward only since we use rebase)
+    git pull --ff-only origin ai-context 2>$null
+    # Ignore errors - might be ahead of origin
+
+    # Preview
+    $hasChanges = Show-RebasePreview 'FromMaster'
+    if (-not $hasChanges) {
+        return
+    }
+
+    if ($DryRun) {
+        Write-Warning-Custom "`n[DRY RUN] Would rebase ai-context onto master (no changes made)"
+        return
+    }
+
+    # Rebase onto master
+    Write-Status "`nRebasing ai-context onto master..."
+    git rebase origin/master
     if ($LASTEXITCODE -ne 0) {
-        Write-Error-Custom "Merge conflict detected. Resolve conflicts manually, then run:"
-        Write-Host "  git merge --continue" -ForegroundColor Yellow
+        Write-Error-Custom "Rebase conflict detected. Resolve conflicts, then run:"
+        Write-Host "  git rebase --continue" -ForegroundColor Yellow
+        Write-Host "  git push --force-with-lease origin ai-context" -ForegroundColor Yellow
         exit 1
     }
-    
-    Write-Success "Merged master into ai-context"
-    
-    # Push
+
+    Write-Success "Rebased ai-context onto master"
+
+    # Push (force required after rebase)
     if ($Push) {
-        Write-Status "`nPushing ai-context..."
-        git push origin ai-context
+        Write-Status "`nPushing ai-context (force-with-lease)..."
+        git push --force-with-lease origin ai-context
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Write-Success "Pushed ai-context to origin"
     } else {
-        Write-Warning-Custom "`nMerge complete locally. Push with:"
-        Write-Host "  git push origin ai-context" -ForegroundColor Yellow
+        Write-Warning-Custom "`nRebase complete locally. Push with:"
+        Write-Host "  git push --force-with-lease origin ai-context" -ForegroundColor Yellow
     }
 }
 
 function Sync-ToMaster {
     Write-Status "`n═══════════════════════════════════════════════════════"
-    Write-Status "  Prepare PR branch: ai-context → master"
+    Write-Status "  Squash and prepare PR: ai-context → master"
     Write-Status "═══════════════════════════════════════════════════════`n"
-    
+
     # Fetch latest
     Write-Status "Fetching latest from origin..."
     git fetch origin master ai-context
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    
-    # Preview
-    $hasChanges = Show-MergePreview "ai-context" "master"
-    if (-not $hasChanges -and -not $DryRun) {
-        Write-Success "master already has all ai-context changes"
-        return
-    }
-    
-    # Create PR branch name
-    $dateTag = (Get-Date).ToString('yyyyMMdd')
-    $prBranch = "$dateTag-ai-context-update"
-    
-    if ($DryRun) {
-        Write-Warning-Custom "`n[DRY RUN] Would create PR branch '$prBranch' from master, then merge ai-context into it (no changes made to master)"
-        Write-Host "`nTo execute, run:" -ForegroundColor Yellow
-        Write-Host "  .\\ai\\scripts\\sync-ai-context.ps1 -Direction ToMaster -Push" -ForegroundColor Yellow
-        return
-    }
-    
-    Write-Status "Creating PR branch: $prBranch"
-    
-    # Ensure starting from latest master
-    Write-Status "Switching to master and pulling latest..."
-    git checkout master
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    git pull origin master
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    
-    # Create branch off master
-    git checkout -b $prBranch
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    
-    # Merge ai-context into PR branch
-    Write-Status "Merging origin/ai-context into $prBranch..."
-    git merge origin/ai-context --no-ff -m "Merge ai-context: batch update ai/ documentation"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error-Custom "Merge conflict detected. Resolve conflicts manually, then run:"
-        Write-Host "  git merge --continue" -ForegroundColor Yellow
-        exit 1
-    }
-    Write-Success "Merged ai-context into $prBranch"
-    
-    # Push PR branch
-    if ($Push) {
-        Write-Status "`nPushing PR branch $prBranch..."
-        git push -u origin $prBranch
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        Write-Success "Pushed $prBranch to origin"
-        
-        Write-Host "`nOpen a PR: $prBranch → master on GitHub" -ForegroundColor Yellow
-        
-        # Optional: switch back to ai-context and sync
-        Write-Status "`nSyncing ai-context with latest master (optional)..."
+
+    # Ensure on ai-context branch
+    $currentBranch = Get-CurrentBranch
+    if ($currentBranch -ne 'ai-context') {
+        Write-Status "Switching to ai-context branch..."
         git checkout ai-context
-        git merge origin/master --no-ff -m "Merge master back into ai-context after preparing PR branch"
-        if ($LASTEXITCODE -eq 0) {
-            git push origin ai-context
-            Write-Success "ai-context synchronized with master"
-        } else {
-            Write-Warning-Custom "Skipped ai-context sync due to merge issues; sync manually if desired."
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+
+    # First, ensure we're rebased onto latest master
+    $behindCount = git rev-list --count HEAD..origin/master 2>$null
+    if ($behindCount -gt 0) {
+        Write-Status "ai-context is behind master by $behindCount commits. Rebasing first..."
+        if (-not $DryRun) {
+            git rebase origin/master
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error-Custom "Rebase conflict. Resolve conflicts first, then re-run this script."
+                exit 1
+            }
         }
+    }
+
+    # Preview
+    $hasChanges = Show-RebasePreview 'ToMaster'
+    if (-not $hasChanges) {
+        return
+    }
+
+    $commits = Get-CommitsSinceMergeBase
+
+    if ($DryRun) {
+        Write-Warning-Custom "`n[DRY RUN] Would squash $($commits.Count) commits into 1 (no changes made)"
+        Write-Host "`nTo execute, run:" -ForegroundColor Yellow
+        Write-Host "  pwsh -File ./ai/scripts/sync-ai-context.ps1 -Direction ToMaster -Push" -ForegroundColor Yellow
+        return
+    }
+
+    # Squash commits
+    if ($commits.Count -gt 1) {
+        $mergeBase = Get-MergeBase
+
+        # Determine commit message
+        $commitMessage = $Message
+        if (-not $commitMessage) {
+            $dateStr = (Get-Date).ToString('MMM d, yyyy')
+            $commitMessage = "Weekly ai-context sync ($dateStr)"
+        }
+
+        Write-Status "`nSquashing $($commits.Count) commits into 1..."
+        git reset --soft $mergeBase
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        git commit -m $commitMessage
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        Write-Success "Squashed into: $commitMessage"
     } else {
-        Write-Warning-Custom "`nPR branch created locally. Push and open PR with:"
-        Write-Host "  git push -u origin $prBranch" -ForegroundColor Yellow
-        Write-Host "  (Then open PR: $prBranch → master on GitHub)" -ForegroundColor Yellow
+        Write-Status "Only 1 commit - no squash needed"
+    }
+
+    # Push
+    if ($Push) {
+        Write-Status "`nPushing ai-context (force-with-lease)..."
+        git push --force-with-lease origin ai-context
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        Write-Success "Pushed ai-context to origin"
+
+        Write-Host "`n" -NoNewline
+        Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Green
+        Write-Host "  Next steps:" -ForegroundColor Green
+        Write-Host "═══════════════════════════════════════════════════════" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  1. Create PR on GitHub: ai-context → master" -ForegroundColor Yellow
+        Write-Host "     gh pr create --base master --head ai-context --title `"$commitMessage`"" -ForegroundColor White
+        Write-Host ""
+        Write-Host "  2. Merge using 'Rebase and merge' (NOT squash)" -ForegroundColor Yellow
+        Write-Host "     This puts the same commit on master, keeping branches in sync." -ForegroundColor DarkGray
+        Write-Host ""
+        Write-Host "  3. After merge, pull to sync local branches:" -ForegroundColor Yellow
+        Write-Host "     git checkout ai-context && git pull origin ai-context" -ForegroundColor White
+        Write-Host ""
+    } else {
+        Write-Warning-Custom "`nSquash complete locally. Push with:"
+        Write-Host "  git push --force-with-lease origin ai-context" -ForegroundColor Yellow
     }
 }
 
 # Main execution
 try {
-    Write-Host "`nai-context Branch Synchronization Tool" -ForegroundColor Magenta
-    Write-Host "======================================`n" -ForegroundColor Magenta
-    
+    Write-Host "`nai-context Branch Synchronization Tool (Rebase Workflow)" -ForegroundColor Magenta
+    Write-Host "=========================================================`n" -ForegroundColor Magenta
+
     # Verify git repository
     $gitRoot = git rev-parse --show-toplevel 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Error-Custom "Not in a git repository"
         exit 1
     }
-    
+
     # Verify clean working tree (unless dry run)
     if (-not $DryRun) {
         Assert-CleanWorkingTree
     }
-    
+
     # Execute sync
     switch ($Direction) {
         'FromMaster' { Sync-FromMaster }
         'ToMaster' { Sync-ToMaster }
     }
-    
+
     Write-Host "`n" # Blank line for readability
 }
 catch {
