@@ -408,6 +408,87 @@ pwiz_tools/Skyline/ai/         # Project-specific tooling only
 🚩 **Created ai/docs/ file that duplicates core file topic**
 - Fix: Ensure core file references ai/docs/ file; they should complement, not duplicate
 
+## Commands and Skills: Reference, Don't Embed
+
+**`.claude/commands/` and `.claude/skills/` are entry points, not encyclopedias.**
+
+The `ai/` folder is the living, growing, adapting LLM context. Commands and skills should be concise references INTO that content, not duplicates of it.
+
+### Command Size Guidelines
+
+| Size | Status | Action |
+|------|--------|--------|
+| <2,000 chars | Good | Concise reference |
+| 2,000-5,000 chars | Review | Consider extracting to ai/docs/ |
+| >5,000 chars | Refactor | Move content to ai/docs/, keep command as pointer |
+
+### Why This Matters
+
+1. **Submodule separation**: If ai/ becomes a submodule, .claude/ stays in main repo. Keeping .claude/ minimal means it rarely needs updates.
+2. **Single source of truth**: Documentation in ai/docs/ can be improved once, benefiting all commands that reference it.
+3. **Context limits**: Large commands consume token budget before the LLM even starts working.
+4. **Maintainability**: Embedded documentation drifts from the source of truth.
+
+### Command Structure Pattern
+
+```markdown
+---
+description: Brief one-line description
+---
+
+# Command Name
+
+Brief overview (2-3 sentences max).
+
+**Read**: ai/docs/detailed-guide.md for full instructions.
+
+## Quick Reference
+
+[Essential steps - enough to jog memory, not full documentation]
+
+1. Step one (brief)
+2. Step two (brief)
+3. Step three (brief)
+
+## Related
+
+- Link to detailed guide
+- Link to related commands
+```
+
+### Example: Refactoring an Overgrown Command
+
+**Before** (embedded - 30,000+ chars):
+```markdown
+# /pw-daily
+
+[700 lines of detailed instructions, formats, examples, edge cases...]
+```
+
+**After** (reference - <2,000 chars):
+```markdown
+# /pw-daily
+
+Generate daily consolidated report (nightly tests, exceptions, support).
+
+**Read**: ai/docs/daily-report-guide.md for full instructions.
+
+## Quick Reference
+
+1. Determine dates (nightly: 8AM boundary, exceptions: yesterday)
+2. Query MCP: get_daily_test_summary, save_exceptions_report, get_support_summary
+3. Analyze patterns with analyze_daily_patterns
+4. Send HTML email summary
+5. Archive processed emails
+
+## Arguments
+
+- Date: YYYY-MM-DD (optional)
+- Effort: quick | standard | deep (default: standard)
+```
+
+---
+
 ## Summary: The Golden Rules
 
 1. **Five core files only** - no new core files in ai/ root
@@ -418,6 +499,7 @@ pwiz_tools/Skyline/ai/         # Project-specific tooling only
 6. **Optional tools are optional** - frame as helpers, not requirements
 7. **Project ai/ = tooling only** - scripts and their usage, not guidance
 8. **When in doubt, add to ai/docs/** - it's always safe there
+9. **Commands and skills are entry points** - reference ai/docs/, don't embed
 
 ## When You See This Guide Being Violated
 
