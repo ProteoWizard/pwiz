@@ -30,4 +30,4 @@ This queries all 6 test folders and saves a full report to `ai/.tmp/nightly-repo
 - **Stack trace patterns**: `save_test_failure_history(test_name, start_date, container_path)`
 - **Full test logs**: `save_run_log(run_id)`
 
-For detailed workflow and examples, see **ai/docs/nightly-test-analysis.md**.
+For detailed workflow and examples, see **ai/docs/mcp/nightly-tests.md**.

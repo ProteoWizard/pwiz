@@ -40,4 +40,4 @@ For a specific exception:
 get_exception_details(exception_id)
 ```
 
-For detailed triage workflow, see **ai/docs/exception-triage-system.md**.
+For detailed triage workflow, see **ai/docs/mcp/exceptions.md**.

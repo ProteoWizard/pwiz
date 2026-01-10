@@ -127,4 +127,3 @@ If work remains, create new GitHub Issues for remaining scope.
 ## Related
 
 - ai/WORKFLOW.md - Standard branching and TODO workflow
-- ai/docs/workflow-issues-guide.md - GitHub Issues integration details
