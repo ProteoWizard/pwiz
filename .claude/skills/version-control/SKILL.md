@@ -10,6 +10,7 @@ Before any Git or GitHub operation, read the relevant documentation:
 ## Required Reading
 
 - **ai/docs/version-control-guide.md** - Commit message format, PR format, branch naming
+- **ai/docs/release-cycle-guide.md** - Current release phase, cherry-pick policy
 - **ai/WORKFLOW.md** - Git workflows, TODO system, branch lifecycle
 
 ## Commit Message Format
@@ -38,6 +39,16 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## Branch Naming
 
 `Skyline/work/YYYYMMDD_feature_name`
+
+## Cherry-Pick to Release
+
+When in FEATURE COMPLETE or patch mode, bug fix PRs should be cherry-picked to the release branch:
+
+1. Check current release phase in `ai/docs/release-cycle-guide.md`
+2. If fixing a bug during FEATURE COMPLETE: add label `Cherry pick to release`
+3. The cherry-pick happens automatically after PR merge
+
+**Current release branch**: `Skyline/skyline_26_1` (check release-cycle-guide.md for updates)
 
 ## Commands
 
