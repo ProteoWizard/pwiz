@@ -65,6 +65,29 @@ Key difference from merge-based workflow:
 
 ---
 
+## CRITICAL: Never Use Regular Git Pull
+
+**The ai-context branch uses rebase, which rewrites history.** After any sync (weekly or daily rebase), commit hashes change. A regular `git pull` will try to merge divergent histories and create a mess.
+
+**On any computer with a local ai-context branch:**
+
+```bash
+# WRONG - Creates merge commits and pollutes history
+git pull origin ai-context
+
+# CORRECT - Reset to remote after syncs
+git fetch origin ai-context
+git reset --hard origin/ai-context
+```
+
+**In TortoiseGit:**
+1. Fetch (not Pull)
+2. Switch/Checkout → Select `ai-context` → Check **"Overwrite working tree changes (force)"** → OK
+
+This is expected after every weekly sync or when another developer rebases. See Troubleshooting for scenarios with uncommitted changes.
+
+---
+
 ## Daily Workflow
 
 ### Working on ai-context
@@ -203,7 +226,36 @@ git push --force-with-lease origin ai-context
 Conflicts are rare with this workflow because:
 - ai-context is always linear on top of master
 - Squashing before merge eliminates complex history
-- Only one person typically works on ai/ documentation
+
+---
+
+## Multi-Developer Workflow
+
+When multiple developers work on ai-context, coordination is needed because rebasing rewrites history.
+
+### Best Practices
+
+1. **Communicate before weekly sync** - Let others know before running `/pw-aicontextsync`
+2. **Push frequently** - Small, frequent pushes reduce conflict scope
+3. **Fetch before committing** - Check if someone else pushed first
+4. **Reset after others rebase** - Don't pull, reset (see CRITICAL section above)
+
+### When Your Push Is Rejected
+
+If someone else pushed while you were working:
+
+```bash
+# Fetch their changes
+git fetch origin ai-context
+
+# Rebase YOUR commits onto their changes
+git rebase origin/ai-context
+
+# Push with force-with-lease (safe force push)
+git push --force-with-lease origin ai-context
+```
+
+This preserves both sets of commits in linear history
 
 ---
 
@@ -298,6 +350,28 @@ git fetch origin ai-context
 git reset --hard origin/ai-context
 git stash pop
 ```
+
+### "I made local commits, then someone synced"
+
+If you committed locally but didn't push, and then someone else rebased/synced ai-context:
+
+```bash
+# First, save your commit hashes (copy these somewhere)
+git log --oneline -5
+
+# Reset to the new remote history
+git fetch origin ai-context
+git reset --hard origin/ai-context
+
+# Cherry-pick your commits back (use the hashes you saved)
+git cherry-pick <your-commit-hash-1>
+git cherry-pick <your-commit-hash-2>
+
+# Push your work
+git push --force-with-lease origin ai-context
+```
+
+**Alternative if commits are simple:** Just redo your changes manually after reset. Often faster than cherry-picking if changes were small.
 
 ---
 
