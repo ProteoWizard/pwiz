@@ -564,6 +564,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Model\Databinding\CandidatePeakGroupFactory.cs" />
+    <Compile Include="Model\Databinding\Collections\ResultMap.cs" />
     <Compile Include="Model\Databinding\IRowItemExporter.cs" />
     <Compile Include="Model\Databinding\ParquetRowItemExporter.cs" />
     <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
@@ -660,6 +661,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Results\ReplicatePositions.cs" />
     <Compile Include="Model\Results\TransitionGroupIntegrator.cs" />
     <Compile Include="Model\WatersConnect\MethodModel.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
