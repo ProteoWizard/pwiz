@@ -420,9 +420,15 @@ namespace pwiz.Skyline.Model.Databinding
                 return new DateTimeOffset(dateTime);
             }
 
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            var nullableUnderlyingType = Nullable.GetUnderlyingType(type);
+            if (nullableUnderlyingType != null)
             {
-                return Activator.CreateInstance(type, Convert.ChangeType(value, type.GetGenericArguments()[0]));
+                value = ConvertToStorageType(value, nullableUnderlyingType);
+                return value == null ? null : Activator.CreateInstance(type, value);
+            }
+            if (type == typeof(string))
+            {
+                return value.ToString();
             }
             return Convert.ChangeType(value, type);
         }
