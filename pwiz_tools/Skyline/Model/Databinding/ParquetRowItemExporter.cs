@@ -74,9 +74,8 @@ namespace pwiz.Skyline.Model.Databinding
 
                 // Create arrays for this chunk
                 var chunkArrays = columns.Select(col => col.CreateArray(rowsInChunk)).ToArray();
-
                 // Populate chunk data
-                PopulateChunk(progressMonitor, rowItemEnumerator, columns, chunkArrays, rowsInChunk);
+                PopulateChunk(progressMonitor, rowItemEnumerator.Take(rowsInChunk), columns, chunkArrays);
                 if (progressMonitor.IsCanceled)
                 {
                     break;
@@ -115,23 +114,8 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         private void PopulateChunk(IProgressMonitor progressMonitor,
-            RowItemEnumerator rowItemEnumerator, List<ColumnData> columns, Array[] chunkArrays, int rowsInChunk)
+            RowItem[] rowItems, List<ColumnData> columns, Array[] chunkArrays)
         {
-            var rowItems = new RowItem[rowsInChunk];
-            for (int i = 0; i < rowsInChunk; i++)
-            {
-                if (progressMonitor.IsCanceled)
-                {
-                    return;
-                }
-                if (!rowItemEnumerator.MoveNext())
-                {
-                    throw new InvalidOperationException(string.Format(@"Unable to get row {0}", i));
-                }
-
-                rowItems[i] = rowItemEnumerator.Current;
-            }
-
             ParallelEx.For(0, rowItems.Length, rowIndex =>
             {
                 if (progressMonitor.IsCanceled)
@@ -144,7 +128,7 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     columns[colIndex].StoreValue(rowItem, rowIndex, chunkArrays[colIndex]);
                 }
-            });
+            }, threadName:nameof(PopulateChunk));
         }
 
         private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)

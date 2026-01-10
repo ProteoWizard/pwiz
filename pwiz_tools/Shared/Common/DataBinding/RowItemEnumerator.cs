@@ -94,6 +94,16 @@ namespace pwiz.Common.DataBinding
             return true;
         }
 
+        public RowItem[] Take(int count)
+        {
+            var array = new RowItem[count];
+            for (int index = 0; index < count && MoveNext(); index++)
+            {
+                array[index] = Current;
+            }
+            return array;
+        }
+
         public int PercentComplete
         {
             get
