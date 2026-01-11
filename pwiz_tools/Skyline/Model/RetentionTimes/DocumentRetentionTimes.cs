@@ -759,5 +759,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         private Dictionary<MsDataFileUri, PiecewiseLinearMap> _deserializedAlignmentFunctions;
+
+        #region Methods for testing
+        public Alignments GetDeserializedAlignmentsForLibrary(string libraryName)
+        {
+            _libraryAlignments.TryGetValue(libraryName, out var libraryAlignment);
+            return libraryAlignment?.Alignments;
+        }
+        #endregion
     }
 }

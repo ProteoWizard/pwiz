@@ -177,6 +177,7 @@
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
+    <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
