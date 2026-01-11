@@ -181,16 +181,16 @@ Get-ChildItem "C:\Program Files\Microsoft Visual Studio" -Directory | Select-Obj
 ```
 
 Expected output shows a version folder:
-- **VS 2026**: Folder named `18`
 - **VS 2022**: Folder named `2022`
+- **VS 2026**: Folder named `18`
 
-If no Visual Studio folder exists, guide the user:
+If no Visual Studio folder exists, guide the user to install **both** versions:
 
 1. Open browser to: https://visualstudio.microsoft.com/downloads/
-2. Download **Visual Studio 2026 Community** (free, recommended for new installs)
-3. Run the installer
+2. Download and install **Visual Studio 2022 Community** (required for nightly testing)
+3. Optionally install **Visual Studio 2026 Community** for ongoing compatibility testing
 
-> **Alternative:** Visual Studio 2022 is also fully supported if you prefer it or already have it installed.
+> **Note on VS 2026:** While VS 2026 support is being developed, nightly testing currently requires VS 2022. VS 2026 builds have shown compatibility issues with some vendor DLLs (access violations). Use `toolset=msvc-14.3` (VS 2022) for production builds. Set environment variable `SKYLINE_BUILD_TOOLSET=msvc-14.5` to test with VS 2026.
 
 ### 2.2 Required Workloads
 
@@ -248,6 +248,7 @@ After installation, restart Windows Explorer to enable TortoiseGit status icons:
 2. Find **Windows Explorer** in the list
 3. Right-click it → **Restart**
 4. Open File Explorer and navigate to `C:\proj\pwiz` - you should see green checkmarks on files indicating Git status
+5. Right-click on project root → Show more options → TortoiseGit → Settings. Select Network and set SSH client to "C:\Program Files\Git\usr\bin\ssh.exe"
 
 **Notepad++** - Lightweight text editor with syntax highlighting:
 ```powershell
@@ -334,7 +335,7 @@ Once the user agrees to the licenses, create two batch files at `C:\proj\pwiz`:
 
 **b.bat** - General build script (single line):
 ```batch
-@call "%~dp0pwiz_tools\build-apps.bat" 64 --i-agree-to-the-vendor-licenses toolset=msvc-14.5 %*
+@call "%~dp0pwiz_tools\build-apps.bat" 64 --i-agree-to-the-vendor-licenses toolset=msvc-14.3 %*
 ```
 
 **bs.bat** - Skyline-specific build:
@@ -342,7 +343,7 @@ Once the user agrees to the licenses, create two batch files at `C:\proj\pwiz`:
 call "%~dp0b.bat" pwiz_tools\Skyline//Skyline.exe
 ```
 
-> **Note on toolset**: Use `toolset=msvc-14.5` for VS 2026, or `toolset=msvc-14.3` for VS 2022.
+> **Note on toolset**: Use `toolset=msvc-14.3` for VS 2022 (recommended for nightly testing). Use `toolset=msvc-14.5` for VS 2026 (experimental).
 
 ### 4.3 Run the Build
 
