@@ -8,7 +8,7 @@ import json
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Literal, Optional
 from urllib.parse import quote
 
 import labkey
@@ -26,6 +26,103 @@ from .common import (
 from .stacktrace import normalize_stack_trace, group_by_fingerprint
 
 logger = logging.getLogger("labkey_mcp")
+
+
+def _find_log_section_boundaries(lines: list[str]) -> dict:
+    """Find section boundaries in a SkylineTester nightly log.
+
+    Returns dict with line indices for:
+    - git_end: End of git section (before "# Building Skyline...")
+    - build_start: Start of build section ("# Building Skyline...")
+    - build_end: End of build section ("# Build done.")
+    - testrunner_start: Start of TestRunner section (TestRunner.exe command line)
+    - testrunner_end: End of TestRunner section ("# Stopped ...")
+    - failures_start: Start of failures section (after TestRunner.exe report=...)
+    """
+    boundaries = {
+        'git_end': 0,
+        'build_start': 0,
+        'build_end': 0,
+        'testrunner_start': 0,
+        'testrunner_end': 0,
+        'failures_start': 0,
+    }
+
+    for i, line in enumerate(lines):
+        if line.startswith('# Building Skyline'):
+            boundaries['git_end'] = i
+            boundaries['build_start'] = i
+        elif line.startswith('# Build done'):
+            boundaries['build_end'] = i
+        # TestRunner section starts with its command line
+        elif 'TestRunner.exe" status=' in line and boundaries['testrunner_start'] == 0:
+            boundaries['testrunner_start'] = i
+        elif line.startswith('# Stopped '):
+            boundaries['testrunner_end'] = i
+        # Failures section starts after the report command
+        elif 'TestRunner.exe" report=' in line:
+            boundaries['failures_start'] = i + 1
+
+    return boundaries
+
+
+def _extract_log_section(
+    content: str,
+    part: str,
+) -> tuple[str, str]:
+    """Extract a section from log content.
+
+    Returns (section_content, section_info) where section_info describes
+    which lines were extracted.
+    """
+    # Normalize line endings to LF first
+    content = content.replace('\r\n', '\n').replace('\r', '')
+    lines = content.split('\n')
+
+    if part == 'full':
+        return content, f"Full log ({len(lines)} lines)"
+
+    boundaries = _find_log_section_boundaries(lines)
+
+    if part == 'git':
+        end = boundaries['build_start'] if boundaries['build_start'] > 0 else len(lines)
+        section_lines = lines[:end]
+        info = f"Git section (lines 1-{end})"
+
+    elif part == 'build':
+        start = boundaries['build_start']
+        end = boundaries['build_end'] + 1 if boundaries['build_end'] > start else len(lines)
+        section_lines = lines[start:end]
+        info = f"Build section (lines {start+1}-{end})"
+
+    elif part == 'testrunner':
+        start = boundaries['testrunner_start']
+        end = boundaries['testrunner_end'] + 1 if boundaries['testrunner_end'] > start else len(lines)
+        # Don't include the failures section
+        if boundaries['failures_start'] > 0 and boundaries['failures_start'] < end:
+            end = boundaries['failures_start'] - 1
+        section_lines = lines[start:end]
+        info = f"TestRunner section (lines {start+1}-{end})"
+
+    elif part == 'failures':
+        start = boundaries['failures_start']
+        if start == 0:
+            return "", "No failures section found"
+        section_lines = lines[start:]
+        # Strip "# " prefix from each line
+        cleaned_lines = []
+        for line in section_lines:
+            if line.startswith('# '):
+                cleaned_lines.append(line[2:])
+            else:
+                cleaned_lines.append(line)
+        section_lines = cleaned_lines
+        info = f"Failures section (lines {start+1}-{len(lines)}, # prefix stripped)"
+
+    else:
+        return content, f"Unknown part '{part}', returning full log"
+
+    return '\n'.join(section_lines), info
 
 
 def register_tools(mcp):
@@ -140,13 +237,20 @@ def register_tools(mcp):
     @mcp.tool()
     async def save_run_log(
         run_id: int,
+        part: Literal["full", "git", "build", "testrunner", "failures"] = "full",
         server: str = DEFAULT_SERVER,
         container_path: str = DEFAULT_TEST_CONTAINER,
     ) -> str:
-        """**DRILL-DOWN**: Full test run log (9-12 hours output). Saves to ai/.tmp/testrun-log-{run_id}.txt.
+        """**DRILL-DOWN**: Test run log, optionally by section. Saves to ai/.tmp/testrun-log-{run_id}[-{part}].txt.
 
         Args:
             run_id: Test run ID
+            part: Log section to extract:
+                - full: Entire log (default)
+                - git: Git clone/checkout output
+                - build: Boost Build (bjam.exe) output
+                - testrunner: TestRunner.exe output (includes command line, test output, crashes)
+                - failures: Extracted failure summaries (# prefix stripped for readability)
             container_path: Test folder (must match the run's folder)
         """
         try:
@@ -167,18 +271,28 @@ def register_tools(mcp):
             if not log_content:
                 return f"Test run #{run_id} has no log content"
 
-            # Save to tmp directory
+            # Extract requested section (also normalizes line endings to LF)
+            section_content, section_info = _extract_log_section(log_content, part)
+
+            if not section_content:
+                return f"Test run #{run_id}: {section_info}"
+
+            # Save to tmp directory with part in filename
             output_dir = get_tmp_dir()
-            output_file = output_dir / f"testrun-log-{run_id}.txt"
-            output_file.write_text(log_content, encoding="utf-8")
+            if part == "full":
+                output_file = output_dir / f"testrun-log-{run_id}.txt"
+            else:
+                output_file = output_dir / f"testrun-log-{run_id}-{part}.txt"
+            output_file.write_text(section_content, encoding="utf-8")
 
             # Calculate metadata
             size_bytes = output_file.stat().st_size
-            line_count = log_content.count("\n") + 1
+            line_count = section_content.count("\n") + 1
 
             return (
                 f"Log saved successfully:\n"
                 f"  file_path: {output_file}\n"
+                f"  section: {section_info}\n"
                 f"  size_bytes: {size_bytes:,}\n"
                 f"  line_count: {line_count:,}\n"
                 f"\nUse Grep or Read tools to search within this file."
