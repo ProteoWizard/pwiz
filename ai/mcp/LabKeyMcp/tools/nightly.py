@@ -6,8 +6,10 @@ from the skyline.ms test infrastructure.
 
 import json
 import logging
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Literal, Optional
 from urllib.parse import quote
 
@@ -125,6 +127,46 @@ def _extract_log_section(
     return '\n'.join(section_lines), info
 
 
+def _extract_toolsets_from_build_log(content: str) -> dict:
+    """Extract bjam and binaries toolset versions from build log content.
+
+    Returns dict with:
+    - bjam_toolset: The toolset used to build bjam.exe (e.g., "vc145")
+    - binaries_toolset: The toolset used for ProteoWizard binaries (e.g., "msvc-14.3")
+    - requested_toolset: The toolset requested on command line (e.g., "msvc-14.3")
+    """
+    result = {
+        "bjam_toolset": None,
+        "binaries_toolset": None,
+        "requested_toolset": None,
+    }
+
+    lines = content.replace('\r\n', '\n').split('\n')
+
+    for line in lines:
+        # Find bjam toolset: ### Using 'vcXXX' toolset.
+        if "### Using '" in line and "' toolset" in line:
+            match = re.search(r"### Using '(vc\d+)' toolset", line)
+            if match:
+                result["bjam_toolset"] = match.group(1)
+
+        # Find requested toolset from command line: toolset=msvc-14.X
+        if "toolset=msvc-" in line and result["requested_toolset"] is None:
+            match = re.search(r"toolset=(msvc-\d+\.\d+)", line)
+            if match:
+                result["requested_toolset"] = match.group(1)
+
+        # Find binaries toolset from build paths: msvc-14.X in path
+        # Look for compile or archive commands with msvc-14.X in path
+        if result["binaries_toolset"] is None:
+            if "\\msvc-14." in line or "/msvc-14." in line:
+                match = re.search(r"[/\\](msvc-\d+\.\d+)[/\\]", line)
+                if match:
+                    result["binaries_toolset"] = match.group(1)
+
+    return result
+
+
 def register_tools(mcp):
     """Register nightly test analysis tools."""
 
@@ -144,16 +186,18 @@ def register_tools(mcp):
         try:
             server_context = get_server_context(server, container_path)
 
-            since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
-            filter_array = [QueryFilter("posttime", since_date, "dategte")]
+            # Calculate date range for parameterized query
+            end_date = datetime.now().strftime("%Y-%m-%d")
+            start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
 
+            # Use testruns_detail query which includes computer name
             result = labkey.query.select_rows(
                 server_context=server_context,
                 schema_name=TESTRESULTS_SCHEMA,
-                query_name="testruns",
+                query_name="testruns_detail",
                 max_rows=max_rows,
                 sort="-posttime",
-                filter_array=filter_array,
+                parameters={"StartDate": start_date, "EndDate": end_date},
             )
 
             if result and result.get("rows"):
@@ -164,21 +208,25 @@ def register_tools(mcp):
                     "",
                 ]
                 for row in rows:
-                    run_id = row.get("id", "?")
-                    posttime = row.get("posttime", "Unknown")
+                    run_id = row.get("run_id", "?")
+                    computer = row.get("computer", "?")
+                    posttime = str(row.get("posttime", "Unknown"))[:16]
                     passed = row.get("passedtests", 0)
                     failed = row.get("failedtests", 0)
                     leaked = row.get("leakedtests", 0)
                     duration = row.get("duration", 0)
                     avg_mem = row.get("averagemem", 0)
+                    githash = str(row.get("githash", "?"))[:9]
                     revision = row.get("revision", "?")
                     flagged = row.get("flagged", False)
+                    hung_test = row.get("hung_test")
 
                     status = "FLAGGED " if flagged else ""
-                    lines.append(f"--- Run #{run_id} ({posttime}) {status}---")
+                    hung = f" HUNG:{hung_test}" if hung_test else ""
+                    lines.append(f"--- Run #{run_id} [{computer}] ({posttime}) {status}{hung}---")
                     lines.append(f"  Tests: {passed} passed, {failed} failed, {leaked} leaked")
                     lines.append(f"  Duration: {duration} min, Avg Memory: {avg_mem} MB")
-                    lines.append(f"  Revision: {revision}")
+                    lines.append(f"  Git: {githash}, Revision: {revision}")
                     lines.append("")
 
                 return "\n".join(lines)
@@ -301,6 +349,100 @@ def register_tools(mcp):
         except Exception as e:
             logger.error(f"Error saving run log: {e}", exc_info=True)
             return f"Error saving run log: {e}"
+
+    @mcp.tool()
+    async def get_run_toolsets(
+        run_id: int,
+        server: str = DEFAULT_SERVER,
+        container_path: str = DEFAULT_TEST_CONTAINER,
+    ) -> str:
+        """**ANALYSIS**: Get toolset versions used for a test run build.
+
+        Returns both the bjam toolset (used to build Boost.Build) and the
+        binaries toolset (used to build ProteoWizard). These can differ when
+        VS 2026 is installed alongside VS 2022.
+
+        Checks for cached build log in ai/.tmp first to avoid re-downloading.
+
+        Args:
+            run_id: Test run ID
+            container_path: Test folder (must match the run's folder)
+        """
+        try:
+            output_dir = get_tmp_dir()
+
+            # Check for existing build log
+            build_log_file = output_dir / f"testrun-log-{run_id}-build.txt"
+            full_log_file = output_dir / f"testrun-log-{run_id}.txt"
+
+            build_content = None
+
+            # Try cached build log first
+            if build_log_file.exists():
+                logger.info(f"Using cached build log: {build_log_file}")
+                build_content = build_log_file.read_text(encoding="utf-8")
+            # Try cached full log and extract build section
+            elif full_log_file.exists():
+                logger.info(f"Extracting build section from cached full log: {full_log_file}")
+                full_content = full_log_file.read_text(encoding="utf-8")
+                build_content, _ = _extract_log_section(full_content, "build")
+
+            # Download if not cached
+            if not build_content:
+                logger.info(f"Downloading build log for run {run_id}")
+                encoded_path = quote(container_path, safe='/')
+                log_url = f"https://{server}{encoded_path}/testresults-viewLog.view?runid={run_id}"
+
+                response_bytes = make_authenticated_request(server, log_url, timeout=120)
+                response_text = response_bytes.decode("utf-8")
+
+                data = json.loads(response_text)
+                log_content = data.get("log", "")
+
+                if not log_content:
+                    return f"Test run #{run_id} has no log content"
+
+                # Extract build section
+                build_content, section_info = _extract_log_section(log_content, "build")
+
+                if not build_content:
+                    return f"Test run #{run_id}: No build section found"
+
+                # Cache the build log for future use
+                build_log_file.write_text(build_content, encoding="utf-8")
+                logger.info(f"Cached build log to: {build_log_file}")
+
+            # Extract toolsets
+            toolsets = _extract_toolsets_from_build_log(build_content)
+
+            # Format result
+            bjam = toolsets["bjam_toolset"] or "unknown"
+            binaries = toolsets["binaries_toolset"] or "unknown"
+            requested = toolsets["requested_toolset"] or "not specified"
+
+            # Map vcXXX to msvc-XX.X for readability
+            bjam_display = bjam
+            if bjam == "vc145":
+                bjam_display = "vc145 (VS 2026 / msvc-14.5)"
+            elif bjam == "vc143":
+                bjam_display = "vc143 (VS 2022 / msvc-14.3)"
+
+            binaries_display = binaries
+            if binaries == "msvc-14.5":
+                binaries_display = "msvc-14.5 (VS 2026)"
+            elif binaries == "msvc-14.3":
+                binaries_display = "msvc-14.3 (VS 2022)"
+
+            return (
+                f"Toolsets for run #{run_id}:\n"
+                f"  Requested: {requested}\n"
+                f"  bjam built with: {bjam_display}\n"
+                f"  Binaries built with: {binaries_display}"
+            )
+
+        except Exception as e:
+            logger.error(f"Error getting run toolsets: {e}", exc_info=True)
+            return f"Error getting run toolsets: {e}"
 
     @mcp.tool()
     async def save_run_xml(
