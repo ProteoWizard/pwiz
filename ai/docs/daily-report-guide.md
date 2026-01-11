@@ -305,12 +305,12 @@ draft_email(
 **Structure**:
 ```
 ## Quick Status
-- Nightly: [Err: X | Warn: X | Pass: X | Missing: X] - N tests
+- Nightly: [Err: X | Warn: X | Pass: X | Crashed: X | Missing: X] - N tests
 - Exceptions: X new (Y unique issues, Z users affected)
 - Support: X threads needing attention
 
 ## Key Findings
-[Prioritized list of issues]
+[Prioritized list - early terminations are HIGH PRIORITY]
 
 ## Already Fixed (Stale Echoes)
 [Failures from old commits that have been fixed]
@@ -321,6 +321,65 @@ draft_email(
 ## Improvement Ideas
 [Votes and new ideas from self-reflection]
 ```
+
+### Detecting Early Terminations
+
+Runs that terminate before their expected duration indicate crashes or infrastructure problems. The MCP report flags these in the Anomaly column as `short (N min)`.
+
+**Normal duration**: 540 minutes (9 hours) for most computers.
+
+**Flag as "Crashed"**: Any run with `short` in the Anomaly column. Include in Key Findings:
+
+```html
+<h3>Runs Terminated Early (Crashed)</h3>
+<ul>
+  <li><strong>COMPUTER</strong> - 80 min (expected 540) - investigate crash cause</li>
+</ul>
+```
+
+**Priority**: Early terminations are HIGH priority - they may indicate:
+- Test runner crash
+- Machine reboot/shutdown
+- Infrastructure failure
+- Unhandled exception in test harness
+
+### Investigating Early Terminations
+
+For each crashed run, pull the log and analyze:
+
+```
+# 1. Find run IDs for crashed runs
+query_test_runs(container_path="/home/development/Nightly x64", days=2)
+# Look for runs with Duration < 540
+
+# 2. Pull full log for each crashed run
+save_run_log(run_id=XXXXX)
+# Saves to ai/.tmp/testrun-log-XXXXX.txt
+
+# 3. View end of log to see how it terminated
+tail -100 ai/.tmp/testrun-log-XXXXX.txt
+```
+
+**What to look for in the log tail**:
+- `# Process TestRunner had nonzero exit code -1073741819` = ACCESS_VIOLATION (native crash)
+- `Unhandled Exception:` followed by stack trace = .NET crash with diagnostics
+- Last test name before crash = which test was running when it died
+- No exception = sudden termination (machine reboot, kill, power loss)
+
+**Common exit codes**:
+| Exit Code | Meaning |
+|-----------|---------|
+| -1073741819 | ACCESS_VIOLATION (0xC0000005) - native memory corruption |
+| -1073740791 | Stack overflow |
+| -1 | General failure |
+
+**Pattern analysis**: Compare crashed runs for common factors:
+- Same machine? → Machine-specific issue (hardware, drivers, configuration)
+- Same test? → Test bug causing crash
+- Same toolchain? → Compiler/runtime issue (e.g., VS 2026 vs VS 2022)
+- Same time of day? → Scheduled task interference
+
+Document findings in `ai/.tmp/suggested-actions-YYYYMMDD.md` under "Infrastructure Issues".
 
 **Test failure format** (HTML):
 ```html
@@ -342,6 +401,70 @@ draft_email(
 | `ai/.tmp/` | `support-report-YYYYMMDD.md` | Support summary |
 | `ai/.tmp/history/` | `daily-summary-YYYYMMDD.json` | Structured data for trends |
 | `ai/.tmp/logs/` | `daily-session-YYYYMMDD.md` | Execution log |
+| `ai/.tmp/` | `suggested-actions-YYYYMMDD.md` | Pending actions for review |
+
+---
+
+## Post-Email Exploration Phase
+
+**IMPORTANT**: The email is the critical checkpoint. Send it BEFORE starting exploration.
+
+After the email is sent and execution log written, the scheduled session should continue with deeper investigation until it runs out of ideas or hits the session limit.
+
+**IMPORTANT**: Write findings to `ai/.tmp/suggested-actions-YYYYMMDD.md` progressively after each investigation. The session may be terminated without warning at any turn limit, so never accumulate findings in memory to write at the end.
+
+### Exploration Workflow
+
+```
+1. EMAIL SENT (checkpoint - session can safely end after this)
+2. Begin exploration phase:
+   a. For each exception fingerprint:
+      - Check version distribution (only old versions?)
+      - Search for PRs touching the file/method since that version
+      - If potential fix found, add to suggested-actions.md
+   b. For each NEW or SYSTEMIC test failure:
+      - Query test history for failure start date
+      - Search git log for commits around that date
+      - Search merged PRs for test name or related code
+      - If correlation found, add to suggested-actions.md
+   c. For each "stopped failing" test:
+      - Search for merged PRs mentioning the test
+      - Add finding to suggested-actions.md
+3. Write findings to ai/.tmp/suggested-actions-YYYYMMDD.md
+4. Session ends (limit or complete)
+```
+
+### Suggested Actions File Format
+
+```markdown
+# Suggested Actions - YYYY-MM-DD
+
+## Exception Fixes to Record
+
+### 1. [Exception Name]
+**Fingerprint**: `abc123...`
+**Evidence**: [Why we think it's fixed]
+**Action**: `record_exception_fix(fingerprint="...", pr_number=XXXX)`
+
+## GitHub Issues to Create
+
+### 1. [Test Name] Failure
+**Evidence**: [Correlation with PR, timing, etc.]
+**Draft issue body**: [Pre-written issue text]
+
+## Tests to Monitor
+[Low-priority items to watch]
+```
+
+### User Review Workflow
+
+When the user runs `/resume` on the scheduled session:
+1. Claude reads `ai/.tmp/suggested-actions-YYYYMMDD.md`
+2. Presents each suggested action for approval
+3. User can approve, modify, or skip each action
+4. Approved actions are executed (record_exception_fix, gh issue create, etc.)
+
+**Key principle**: The automated session does research and prepares actions. The human reviews and approves before any permanent changes.
 
 ---
 

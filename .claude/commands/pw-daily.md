@@ -73,6 +73,9 @@ batch_modify_emails(messageIds=[...], removeLabelIds=["INBOX"])
 ### 10. Write Execution Log
 - Save to `ai/.tmp/logs/daily-session-YYYYMMDD.md`
 
+### 11. Exploration Phase (continues until limit)
+- Write findings to `ai/.tmp/suggested-actions-YYYYMMDD.md`
+
 ## Critical Validation
 
 **FAIL the report if:**
@@ -88,6 +91,7 @@ batch_modify_emails(messageIds=[...], removeLabelIds=["INBOX"])
 - `ai/.tmp/support-report-YYYYMMDD.md`
 - `ai/.tmp/history/daily-summary-YYYYMMDD.json`
 - `ai/.tmp/logs/daily-session-YYYYMMDD.md`
+- `ai/.tmp/suggested-actions-YYYYMMDD.md`
 
 ## Related
 
