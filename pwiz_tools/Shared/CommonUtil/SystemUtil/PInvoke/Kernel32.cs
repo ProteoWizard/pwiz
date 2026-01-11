@@ -117,9 +117,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static string FormatExitCode(int exitCode)
         {
             uint unsigned = unchecked((uint)exitCode);
-            string hex = "0x" + unsigned.ToString("X8");
+            string hex = @"0x" + unsigned.ToString(@"X8");
             string name = Enum.GetName(typeof(NtStatus), unsigned);
-            return name != null ? $"{exitCode} ({hex} {name})" : $"{exitCode} ({hex})";
+            return name != null ? $@"{exitCode} ({hex} {name})" : $@"{exitCode} ({hex})";
         }
 
         #endregion
