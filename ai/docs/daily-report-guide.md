@@ -352,12 +352,12 @@ For each crashed run, pull the log and analyze:
 query_test_runs(container_path="/home/development/Nightly x64", days=2)
 # Look for runs with Duration < 540
 
-# 2. Pull full log for each crashed run
-save_run_log(run_id=XXXXX)
-# Saves to ai/.tmp/testrun-log-XXXXX.txt
+# 2. Pull testrunner section for crashed run
+save_run_log(run_id=XXXXX, part="testrunner")
+# Saves to ai/.tmp/testrun-log-XXXXX-testrunner.txt
 
-# 3. View end of log to see how it terminated
-tail -100 ai/.tmp/testrun-log-XXXXX.txt
+# 3. View end to see crash context (not failure summaries)
+tail -50 ai/.tmp/testrun-log-XXXXX-testrunner.txt
 ```
 
 **What to look for in the log tail**:
@@ -478,7 +478,7 @@ When the user runs `/resume` on the scheduled session:
 | `list_computer_status(container_path)` | Active/inactive computers |
 | `check_computer_alarms()` | Due reactivation reminders |
 | `save_test_failure_history(test_name, start_date)` | Historical failures |
-| `save_run_log(run_id)` | Full test log |
+| `save_run_log(run_id, part)` | Test log by section (full/git/build/testrunner/failures) |
 | `get_exception_details(exception_id)` | Exception stack trace |
 | `get_support_thread(thread_id)` | Full support thread |
 | `save_run_comparison(run_id_before, run_id_after)` | Compare test timing |

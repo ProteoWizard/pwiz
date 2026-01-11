@@ -292,7 +292,7 @@ query_table(
 |------|-------------|
 | `get_daily_test_summary(report_date)` | Query all 6 folders, save report to ai/.tmp/ |
 | `save_test_failure_history(test_name, start_date, container_path)` | Collect stack traces for a test, detect patterns |
-| `save_run_log(run_id)` | Save full test run log to ai/.tmp/ for grep/search |
+| `save_run_log(run_id, part)` | Save log section (full/git/build/testrunner/failures) to ai/.tmp/ |
 | `save_run_xml(run_id)` | Save structured XML test data to ai/.tmp/ for analysis |
 | `query_test_runs(days, max_rows)` | Query recent test runs with summaries |
 | `get_run_failures(run_id)` | Get failed tests and stack traces for a run |

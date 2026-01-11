@@ -25,7 +25,7 @@ Use these to investigate specific items found in primary reports.
 | `get_run_failures` | Stack traces for a specific run |
 | `get_run_leaks` | Memory/handle leaks for a specific run |
 | `save_test_failure_history` | Compare stack traces across multiple failures |
-| `save_run_log` | Full test output for deep investigation |
+| `save_run_log` | Test log by section (use part="testrunner" for crashes) |
 | `save_run_xml` | Structured test results |
 | `query_test_runs` | Browse test runs in a folder |
 

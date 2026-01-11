@@ -99,7 +99,7 @@ query_table(
 | `query_test_runs(days, max_rows)` | Query recent test runs with pass/fail/leak counts |
 | `get_run_failures(run_id)` | Get failed tests and stack traces for a run |
 | `get_run_leaks(run_id)` | Get memory and handle leaks for a run |
-| `save_run_log(run_id)` | Save full test run log to ai/.tmp/ for grep/search |
+| `save_run_log(run_id, part)` | Save test log section (full/git/build/testrunner/failures) |
 
 The `get_daily_test_summary(report_date)` tool is the primary entry point for daily test review. It queries all 6 test folders, saves a full markdown report to `ai/.tmp/nightly-report-YYYYMMDD.md`, and returns a brief summary with action items.
 
@@ -110,7 +110,7 @@ query_table(schema_name="testresults", query_name="testruns_detail",
             parameters={"StartDate": "2025-12-01", "EndDate": "2025-12-15"})
 ```
 
-The `save_run_log(run_id)` tool saves the complete 9-12 hour test run output to `ai/.tmp/testrun-log-{run_id}.txt` for deep investigation.
+The `save_run_log(run_id, part)` tool extracts log sections: `full` (default), `git`, `build`, `testrunner`, or `failures`. Use `part="testrunner"` for crash investigation - it ends with the actual crash context, not the failure summaries.
 
 The `save_test_failure_history(test_name, start_date, container_path)` tool collects all stack traces for a specific test, groups them by pattern, and saves to `ai/.tmp/test-failures-{testname}.md`. This helps determine if multiple failures share the same root cause.
 
