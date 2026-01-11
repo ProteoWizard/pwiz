@@ -249,6 +249,67 @@ When working with LLMs (Cursor, GitHub Copilot, etc.):
 
 ---
 
+### Claude Code Configuration
+
+#### `statusline.ps1`
+Custom status line script for Claude Code showing project name, git branch, model, and context usage.
+
+**Example output:**
+```
+pwiz-ai [ai-context] | Opus | 36% used
+```
+
+**What it shows:**
+- Project directory name (e.g., `pwiz-ai`)
+- Current git branch (e.g., `[ai-context]`)
+- Model name (e.g., `Opus`, `Sonnet`)
+- Context window usage percentage
+
+**Setup:**
+This is a personal preference, not a project-wide setting. To enable:
+
+1. Copy the script to your personal Claude folder (optional, or reference it from `ai/scripts/`):
+   ```
+   Windows: %USERPROFILE%\.claude\statusline.ps1
+   macOS/Linux: ~/.claude/statusline.ps1
+   ```
+
+2. Create or edit your personal settings file:
+   ```
+   Windows: %USERPROFILE%\.claude\settings.json
+   macOS/Linux: ~/.claude/settings.json
+   ```
+
+3. Add the statusLine configuration:
+   ```json
+   {
+     "statusLine": {
+       "type": "command",
+       "command": "pwsh -NoProfile -File C:\\Users\\YourName\\.claude\\statusline.ps1"
+     }
+   }
+   ```
+
+   Or reference it directly from the project:
+   ```json
+   {
+     "statusLine": {
+       "type": "command",
+       "command": "pwsh -NoProfile -File C:\\proj\\pwiz\\ai\\scripts\\statusline.ps1"
+     }
+   }
+   ```
+
+**Why personal, not project-wide?**
+- Status line preference is personal (you likely want the same info for all projects)
+- The script works for any project (dynamically reads project directory)
+- Settings hierarchy: `~/.claude/settings.json` applies to all projects
+
+**Context usage note:**
+Claude Code warns when ~10% context remains. Watching "% used" helps you know when you're approaching that threshold and might want to start a fresh session.
+
+---
+
 ## Related Documentation
 
 - **[ai/STYLEGUIDE.md](../STYLEGUIDE.md)** - File headers, encoding guidelines
