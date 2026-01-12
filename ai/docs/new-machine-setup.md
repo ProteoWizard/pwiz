@@ -229,6 +229,12 @@ If the Visual Studio folder is empty or missing the edition subfolder, the user 
    - "Desktop development with C++"
 4. Click "Modify" to install
 
+> **Warning: VS Installer Checkbox Quirk**
+>
+> The Visual Studio Installer can show workloads as checked even when they are not fully installed. This commonly happens when VS was installed by someone else, via system imaging, or through enterprise deployment.
+>
+> **If you didn't personally check these boxes during installation**, toggle them off and back on. When components actually need to be installed, the button will change to show a Windows UAC shield icon and prompt for elevation. If toggling the checkboxes doesn't change the button appearance, the components are already installed.
+
 ---
 
 ## Phase 3: Developer Tools
@@ -361,9 +367,14 @@ Tell the user:
 
 ### 4.4 Verify Build Artifacts
 
-After the user reports the build completed, verify:
+After the user reports the build completed, verify by checking the version:
 ```powershell
-Test-Path "C:\proj\pwiz\pwiz_tools\Skyline\bin\x64\Release\Skyline.exe"
+& "C:\proj\pwiz\pwiz_tools\Skyline\bin\x64\Release\SkylineCmd.exe" --version
+```
+
+This loads `Skyline-daily.exe` internally, so if it displays a version, both assemblies are working. Expected output shows version info like:
+```
+Skyline (64-bit : developer build) 25.1.x.xxx (xxxxxxx)
 ```
 
 If the build failed, check `C:\proj\pwiz\build64.log` for errors. Common issues:
@@ -656,7 +667,7 @@ If `ssh -T git@github.com` fails:
 The setup is complete when:
 1. `git config --global core.autocrlf` returns `true`
 2. `C:\proj\pwiz\pwiz_tools\Skyline\Skyline.sln` exists
-3. `C:\proj\pwiz\pwiz_tools\Skyline\bin\x64\Release\Skyline.exe` exists
+3. `SkylineCmd.exe --version` displays version info (confirms `Skyline-daily.exe` works)
 4. Visual Studio can build the solution without errors
 5. `TestRunner.exe test=TestA` passes
 
