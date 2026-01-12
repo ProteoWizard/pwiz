@@ -189,7 +189,7 @@ void Reader_Mobilion::read(const string& filenameIn,
     result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Mobilion(result, rawdata, config));
     result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Mobilion(rawdata, config));
 
-    fillInMetadata(filename, &rawdata->file, result);
+    fillInMetadata(filenameIn, &rawdata->file, result);
 }
 
 
