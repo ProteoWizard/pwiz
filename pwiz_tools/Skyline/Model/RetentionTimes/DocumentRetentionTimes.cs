@@ -23,7 +23,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using Microsoft.Web.WebView2.Core;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -569,6 +568,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
         /// </summary>
         public DocumentRetentionTimes UpdateFromLoadedSettings(AlignmentTarget alignmentTarget, SrmSettings settings)
         {
+            if (_libraryAlignments.Count == 0 && ResultFileAlignments.IsEmpty)
+            {
+                // Nothing to remember
+                return null;
+            }
             var newMedianDocumentRetentionTimes = alignmentTarget as AlignmentTarget.MedianDocumentRetentionTimes;
             if (Equals(newMedianDocumentRetentionTimes, MedianDocumentRetentionTimes))
             {
@@ -578,7 +582,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             if (AlignmentTarget != null && !Equals(AlignmentTarget, alignmentTarget))
             {
-                return new DocumentRetentionTimes { AlignmentTarget = alignmentTarget };
+                return EMPTY;
             }
             bool anyChanges = !ReferenceEquals(newMedianDocumentRetentionTimes, MedianDocumentRetentionTimes) || !Equals(alignmentTarget, AlignmentTarget);
             if (_libraryAlignments.Count == 0 && !anyChanges)
