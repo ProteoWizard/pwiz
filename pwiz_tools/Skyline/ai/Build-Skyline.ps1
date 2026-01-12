@@ -123,16 +123,34 @@ if ($repoRoot) {
 }
 
 # Check for running test processes that would block the build
+# Only block on processes running from THIS build directory (not other installations like D:\Nightly)
 $testProcesses = Get-Process -Name 'SkylineTester', 'TestRunner', 'Skyline*' -ErrorAction SilentlyContinue
-if ($testProcesses) {
-    $processNames = ($testProcesses | Select-Object -ExpandProperty Name -Unique) -join ', '
+$blockingProcesses = @()
+$skylineRootNormalized = $skylineRoot.Replace('/', '\').TrimEnd('\').ToLower()
+
+foreach ($proc in $testProcesses) {
+    try {
+        $procPath = $proc.MainModule.FileName
+        if ($procPath) {
+            $procPathNormalized = $procPath.Replace('/', '\').ToLower()
+            if ($procPathNormalized.StartsWith($skylineRootNormalized)) {
+                $blockingProcesses += $proc
+            }
+        }
+    } catch {
+        # Can't get path (access denied, etc.) - skip this process
+    }
+}
+
+if ($blockingProcesses) {
+    $processNames = ($blockingProcesses | Select-Object -ExpandProperty Name -Unique) -join ', '
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host "⚠️  BUILD BLOCKED - Running processes detected" -ForegroundColor Yellow
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "The following processes may lock build output files:" -ForegroundColor Yellow
-    $testProcesses | ForEach-Object {
+    $blockingProcesses | ForEach-Object {
         Write-Host "  - $($_.Name) (PID: $($_.Id))" -ForegroundColor Gray
     }
     Write-Host ""

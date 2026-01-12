@@ -262,6 +262,12 @@ This shows which computers are ACTIVE (expected to report) vs INACTIVE (intentio
 
 ### Step 7: Analyze Patterns (MCP Tool)
 
+**First, check release cycle context** by reading `ai/docs/release-cycle-guide.md`:
+- If we're in FEATURE COMPLETE, master and release branch both run nightly tests
+- Early in FEATURE COMPLETE, both branches have nearly identical code (just diverged)
+- Same failure on both branches early = single issue, NOT "systemic across branches"
+- Same failure later (after branches diverged) = potentially systemic or long-standing
+
 Use the `analyze_daily_patterns` MCP tool to compare today's results against history:
 
 ```
@@ -270,15 +276,70 @@ analyze_daily_patterns(report_date="YYYY-MM-DD", days_back=7)
 
 This tool automatically:
 - Loads today's and yesterday's daily summary JSONs
+- Loads nightly history (year of failures, leaks, hangs with fingerprints)
 - Compares failures, leaks, hangs
 - Detects patterns and returns prioritized **Action Items**:
   - 🔴 **SYSTEMIC**: Affects 3+ machines (code issue, not environment)
-  - 🆕 **NEW**: First appearance since yesterday (likely regression)
+  - 🆕 **NEW**: First time ever in history (truly new failure)
+  - 🔄 **RECURRING**: Seen before in history, returned after being absent
+  - ⚠️🔄 **REGRESSION**: Failing again after a recorded fix
+  - ⏳ **CHRONIC**: Intermittent failure spanning 30+ days
   - 🌐 **EXTERNAL**: Involves external service (Koina, Panorama, etc.)
   - ⚠️ **MISSING N DAYS**: Computer hasn't reported for multiple days
-  - ✅ **RESOLVED**: Issue no longer present
+- Produces "Not Failing Today" section with historical context:
+  - ✅ **INTERMITTENT**: Single incident, likely no fix needed
+  - ⏸️ **CHECK PRs**: Multi-day pattern stopped, search for fix
+
+**Release cycle caveat**: When interpreting "SYSTEMIC" patterns, consider whether failures appearing on both master and release branch are truly systemic or just reflecting that the branches recently diverged from the same code. Check `release-cycle-guide.md` for current phase and branch creation date.
 
 **Note**: This tool requires historical JSON data from previous runs. If no history exists, it will prompt you to run `/pw-daily` to start building history.
+
+### Step 7b: Search PRs for Potential Fixes (Standard/Deep Mode)
+
+**Skip in Quick mode.**
+
+The pattern analysis (Step 7) produces a "Not Failing Today" section that distinguishes:
+- ✅ **Intermittent**: Single-day incidents - likely no fix needed, just noise
+- ⏸️ **Check PRs**: Multi-day patterns that stopped - worth investigating for actual fixes
+
+For each test marked "⏸️ Check PRs" (multi-day failure pattern that stopped today):
+
+1. **Query test history** for context:
+   ```
+   query_test_history(test_name="TestName")
+   ```
+   This shows how many failures, which fingerprints, and the date range.
+
+2. **Search for recently merged PRs** that might have fixed it:
+   ```bash
+   gh pr list --repo ProteoWizard/pwiz --state merged --search "TestName" --limit 5 --json number,title,mergedAt
+   ```
+
+3. **If no PR mentions the test name**, search for PRs touching related files:
+   ```bash
+   # Get the test file location from history or grep
+   gh pr list --repo ProteoWizard/pwiz --state merged --search "filename:RelatedFile.cs" --limit 5 --json number,title,mergedAt
+   ```
+
+4. **Classify the resolution**:
+   - **PR found**: "Likely fixed by PR#XXXX (merged YYYY-MM-DD): [title]"
+   - **No PR found**: "Stopped failing but no fix PR found - may be intermittent or environmental"
+
+**Example output for email**:
+```
+## 📉 Not Failing Today
+
+- ⏸️ TestPeakAreaRelativeAbundanceGraph - had 7 failures from Jan 4-8
+  Likely fixed by PR#3760 "Fix intermittent failure in PeakBoundaryImputationDiaTutorial" (merged Jan 6)
+
+- ⏸️ TestRInstaller (leak) - not leaking today
+  No fix PR found - may be intermittent
+```
+
+**Why this matters**: Without PR correlation, we can't distinguish between:
+- Actual fixes (developer merged a PR that solved the problem)
+- Intermittent issues (test just happened to pass today)
+- Environmental changes (server came back online, disk space freed, etc.)
 
 ### Step 8: Present Consolidated Summary
 
@@ -411,25 +472,38 @@ For each forwarded email:
 
 This creates a **feedback loop**: Developer analyses become training signal for improving the automated system.
 
-### Step 14: Self-Improvement Reflection
+### Step 14: Self-Improvement Reflection (REQUIRED)
 
-After completing the report, reflect on the reporting system itself:
+**This step is mandatory** - every session must provide feedback to improve the system. Even when no new ideas emerge, vote on existing backlog items based on this session's experience.
 
 1. **Read the active TODO** at `ai/todos/active/TODO-20251228_daily_report_improvements.md`
-   - This contains the backlog of planned improvements
-   - Do NOT re-suggest items already in this TODO
-2. **Analyze this session** for potential improvements:
+   - Review the Backlog section for existing improvement ideas
+   - Note which items this session's experience supports or contradicts
+
+2. **Vote on 1-3 existing backlog items** (REQUIRED - never skip):
+   - Based on what you experienced this session, which backlog items would have helped?
+   - Use star ratings: ⭐ (would help), ⭐⭐ (significant value), ⭐⭐⭐ (critical need)
+   - Include brief reasoning tied to today's specific experience
+   - Example: "#8 Date Boundary Verification ⭐⭐⭐ - inbox emails from Jan 2-4 created confusion about fresh vs stale data"
+
+3. **Analyze this session** for potential NEW improvements:
    - Were there data gaps between email and MCP?
    - Was any information hard to extract or missing?
    - Could the report format be improved?
    - Are there new patterns worth tracking?
    - Were there false positives/negatives in anomaly detection?
    - (Deep mode) What did developers notice that the system missed?
-3. **Propose NEW improvements only** (don't repeat items already in the active TODO)
-4. **If you have new ideas**, add them to the Progress Log section of the active TODO
-5. **Report in email**:
-   - "New improvement idea added to TODO: [brief description]"
-   - OR "No new improvement ideas (reviewed active TODO)"
+
+4. **Record in session log** (Step 15) - votes and any new ideas go here for persistence
+
+5. **Optionally update the TODO file**:
+   - Add new ideas to the Progress Log section (with date header)
+   - Add votes to the Progress Log if particularly insightful
+   - Skip if no new ideas and votes are routine
+
+6. **Report in email**:
+   - "Voted for: #N ItemName (⭐⭐⭐), #M OtherItem (⭐⭐)"
+   - "New improvement idea: [brief description]" (if any)
 
 ### Step 15: Write Execution Log
 
@@ -472,10 +546,26 @@ File: ai/.tmp/logs/daily-session-YYYYMMDD.md
 - [Root causes identified]
 - [Recommendations made]
 
-## System Improvements Identified
-- [New ideas added to TODO, or "none"]
+## System Improvement Feedback (REQUIRED)
 
-## Comparison to Developer Analysis (Deep mode)
+### Votes for Existing Backlog Items
+| Item | Vote | Reasoning |
+|------|------|-----------|
+| #N ItemName | ⭐⭐⭐ | [Specific experience from this session that supports this item] |
+| #M OtherItem | ⭐⭐ | [Why this would have helped today] |
+
+### Observations That Suggest Improvements
+- [Specific things noticed during this session that indicate gaps]
+- [Data that was hard to get or missing]
+- [False positives/negatives in pattern detection]
+
+### New Improvement Ideas (if any)
+- **Idea Name**: [Brief description]
+  - **Problem**: [What gap or friction was encountered]
+  - **Solution**: [Proposed approach]
+  - **Value**: [Why this matters]
+
+## Comparison to Developer Analysis (Deep mode only)
 - [What developers noticed that system missed]
 - [Gaps to address]
 ```
@@ -596,6 +686,8 @@ This format provides:
 ## Follow-up Investigation
 
 - **Pattern analysis**: Use `analyze_daily_patterns(report_date)` to compare with history
+- **Test history**: Use `query_test_history(test_name)` to see all failures/leaks/hangs for a test with fingerprints
+- **Record fix**: Use `record_test_fix(test_name, fix_type, pr_number)` after a PR is merged to enable regression detection
 - **Computer status**: Use `list_computer_status(container_path)` to see active/inactive computers
 - **Computer alarms**: Use `check_computer_alarms()` to see due reactivation reminders
 - **Test failures**: Use `save_test_failure_history(test_name, start_date)`

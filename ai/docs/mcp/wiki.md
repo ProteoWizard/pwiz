@@ -7,9 +7,31 @@ Access and update wiki pages on skyline.ms via the LabKey MCP server.
 | Property | Value |
 |----------|-------|
 | Server | `skyline.ms` |
-| Container | `/home/software/Skyline` |
 | Schema | `wiki` |
 | Tables | `CurrentWikiVersions`, `AllWikiVersions` |
+
+### Wiki Containers
+
+Any LabKey folder can contain wiki pages. The two main repositories:
+
+| Container | Access | Content |
+|-----------|--------|---------|
+| `/home/software/Skyline` | Public | Install pages, tutorials, release announcements |
+| `/home/development` | Authenticated | `release-prep`, `DeployToDockerHub`, `NewMachineBootstrap`, dev tools |
+
+Other wiki content locations:
+
+| Container | Access | Content |
+|-----------|--------|---------|
+| `/home` | Public | Landing page for skyline.ms |
+| `/home/software/Skyline/daily` | Semi-public (signup required) | Skyline-daily release announcements |
+| `/home/software/Skyline/events/<event>` | Public | Event registration, course info |
+| `/home/software/Skyline/events/<event>/participants` | Restricted (participants/instructors) | Photos, posters, contacts, surveys |
+
+**Default container**: Most MCP tools default to `/home/software/Skyline`. Use `container_path` parameter for others:
+```
+get_wiki_page("DeployToDockerHub", container_path="/home/development")
+```
 
 **Key columns:**
 
