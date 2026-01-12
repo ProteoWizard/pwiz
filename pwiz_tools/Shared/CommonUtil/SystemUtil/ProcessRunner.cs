@@ -251,7 +251,7 @@ namespace pwiz.Common.SystemUtil
                     // ReSharper disable LocalizableElement
                     sbError.AppendFormat("\r\nCommand-line: {0} {1}\r\nWorking directory: {2}{3}\r\nExit code: {4}", processPath,
                         CommonTextUtil.SpaceSeparate(proc.StartInfo.Arguments), psi.WorkingDirectory,
-                        stdin != null ? "\r\nStandard input:\r\n" + stdin : string.Empty, exit);
+                        stdin != null ? "\r\nStandard input:\r\n" + stdin : string.Empty, PInvoke.Kernel32.FormatExitCode(exit));
                     // ReSharper restore LocalizableElement
                     throw new IOException(sbError.ToString());
                 }
