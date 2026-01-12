@@ -607,6 +607,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             bool anyChanges = !ReferenceEquals(newMedianDocumentRetentionTimes, MedianDocumentRetentionTimes);
+            var newResultFileAlignments = ResultFileAlignments;
+            if (alignmentTarget != null && !newResultFileAlignments.IsEmpty && newResultFileAlignments.AlignmentTarget == null)
+            {
+                newResultFileAlignments = newResultFileAlignments.ChangeAlignmentTarget(alignmentTarget);
+                anyChanges = true;
+            }
+
             if (_libraryAlignments.Count == 0 && !anyChanges)
             {
                 return null;
@@ -645,6 +652,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     im.MedianDocumentRetentionTimes = newMedianDocumentRetentionTimes;
                     im._libraryAlignments = newLibraries;
+                    im.ResultFileAlignments = newResultFileAlignments;
                 });
             }
 
@@ -661,8 +669,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 if (document.Settings.HasResults)
                 {
-                    im.ResultFileAlignments = new ResultFileAlignments(document, _deserializedAlignmentFunctions,
-                        GetDataFilesWithoutLibraryAlignments(document.MeasuredResults).ToHashSet());
+                    im.ResultFileAlignments = new ResultFileAlignments(document, _deserializedAlignmentFunctions, _deserializedAlignmentFunctions.Keys);
                 }
                 else
                 {

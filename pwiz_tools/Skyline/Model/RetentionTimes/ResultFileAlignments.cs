@@ -41,11 +41,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             Dictionary<MsDataFileUri, PiecewiseLinearMap> alignmentFunctions, ICollection<MsDataFileUri> filePaths)
         {
             _documentKey = new DocumentKey(document);
-            AlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
-            if (AlignmentTarget == null)
-            {
-                return;
-            }
             var measuredResults = document.MeasuredResults;
             if (measuredResults == null)
             {
@@ -107,6 +102,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         public AlignmentTarget AlignmentTarget { get; private set; }
+
+        public ResultFileAlignments ChangeAlignmentTarget(AlignmentTarget value)
+        {
+            return ChangeProp(ImClone(this), im => im.AlignmentTarget = value);
+        }
+
         public class AlignmentSource : Immutable
         {
             private int _targetsHashCode;
@@ -251,7 +252,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 im.AlignmentTarget = target;
                 im._documentKey = new DocumentKey(newDocument);
             });
-            var newSources = target == null ? new Dictionary<MsDataFileUri, AlignmentSource>() : GetAlignmentSources(newDocument, target, dataFiles);
+            var newSources = GetAlignmentSources(newDocument, target, dataFiles);
             if (CollectionUtil.EqualsDeep(_alignmentSources, newSources))
             {
                 if (Equals(target, AlignmentTarget))
@@ -382,7 +383,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         protected bool Equals(ResultFileAlignments other)
         {
-            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions) && Equals(AlignmentTarget, other.AlignmentTarget);
+            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions);
         }
 
         public override bool Equals(object obj)
@@ -399,7 +400,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 var hashCode = _alignmentSources != null ? CollectionUtil.GetHashCodeDeep(_alignmentSources) : 0;
                 hashCode = (hashCode * 397) ^ (_alignmentFunctions != null ? CollectionUtil.GetHashCodeDeep(_alignmentFunctions) : 0);
-                hashCode = (hashCode * 397) ^ (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
                 return hashCode;
             }
         }

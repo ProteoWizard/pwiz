@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -36,27 +38,9 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
             });
             WaitForDocumentLoaded();
-            VerifyRetentionTimeLoadSequence(1);
-            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>
-            {
-                manageResultsDlg.SelectedChromatograms = new[]{SkylineWindow.Document.MeasuredResults.Chromatograms[2]};
-                manageResultsDlg.RemoveReplicates();
-                manageResultsDlg.OkDialog();
-            });
-            RunUI(()=>
-            {
-                SkylineWindow.SaveDocument();
-                _documents.Clear();
-                SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
-            });
-            WaitForDocumentLoaded();
-            VerifyRetentionTimeLoadSequence(0);
-        }
-
-        private void VerifyRetentionTimeLoadSequence(int resultFileAlignmentCount)
-        {
             Assert.AreNotEqual(0, _documents.Count);
             var initialDocument = _documents[0];
+            Assert.AreEqual(1, initialDocument.Settings.DocumentRetentionTimes.ResultFileAlignments.GetAlignmentFunctions().Count());
             string documentLibraryName = initialDocument.Settings.PeptideSettings.Libraries.LibrarySpecs
                 .FirstOrDefault(spec => spec.IsDocumentLibrary)?.Name;
             Assert.IsNotNull(documentLibraryName);
@@ -65,16 +49,6 @@ namespace pwiz.SkylineTestFunctional
                 initialDocument.Settings.DocumentRetentionTimes
                     .GetDeserializedAlignmentsForLibrary(documentLibraryName);
             Assert.IsNotNull(deserializedAlignments);
-            var deserializedResultFileAlignments =
-                initialDocument.Settings.DocumentRetentionTimes.GetDeserializedResultFileAlignments();
-            if (resultFileAlignmentCount == 0)
-            {
-                Assert.IsNull(deserializedResultFileAlignments);
-            }
-            else
-            {
-                Assert.AreEqual(resultFileAlignmentCount, deserializedResultFileAlignments.Count);
-            }
             Assert.IsNull(GetDocumentLibraryAlignment(initialDocument));
             var initialLibraries = initialDocument.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(initialLibraries.HasDocumentLibrary);
@@ -95,11 +69,40 @@ namespace pwiz.SkylineTestFunctional
                 .GetLibraryAlignment(documentLibraryName);
             Assert.IsNotNull(loadedLibraryAlignment);
             Assert.AreSame(deserializedAlignments, loadedLibraryAlignment.Alignments);
+            VerifyNoDocumentRetentionTimesChanges(_documents.Skip(indexDocRetentionTimesLoaded));
+            _documents.Clear();
+            RunUI(()=>
+            {
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                SkylineWindow.SelectedResultsIndex = 2;
+                SkylineWindow.RemovePeak();
+            });
+            WaitForDocumentLoaded();
+            var docWithRemovedPeak = _documents[0];
+            var docWithNewAlignment = _documents[_documents.Count - 1];
+            Assert.AreNotSame(docWithRemovedPeak.Settings.DocumentRetentionTimes, docWithNewAlignment.Settings.DocumentRetentionTimes);
 
         }
 
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
         {
+            var newDocument = SkylineWindow.Document;
+            if (_documents.Count > 0)
+            {
+                var oldDocument = _documents[_documents.Count - 1];
+                var oldResultFileAlignments = oldDocument.Settings.DocumentRetentionTimes.ResultFileAlignments;
+                var newResultFileAlignments = newDocument.Settings.DocumentRetentionTimes.ResultFileAlignments;
+                if (!ReferenceEquals(oldResultFileAlignments, newResultFileAlignments) && ReferenceEquals(oldDocument.Children, newDocument.Children) && ReferenceEquals(oldDocument.MeasuredResults?.Chromatograms, newDocument.MeasuredResults?.Chromatograms))
+                {
+                    Console.Out.WriteLine("here");
+                }
+            }
+            if (_documents.Count > 0 &&
+                !ReferenceEquals(_documents[_documents.Count - 1].Settings.DocumentRetentionTimes,
+                    newDocument.Settings.DocumentRetentionTimes))
+            {
+                Console.Out.WriteLine("New DocumentRetentionTimes at {0}", _documents.Count);
+            }
             _documents.Add(SkylineWindow.Document);
         }
 
@@ -109,6 +112,53 @@ namespace pwiz.SkylineTestFunctional
                 document.Settings.PeptideSettings.Libraries.LibrarySpecs.FirstOrDefault(spec => spec.IsDocumentLibrary);
             Assert.IsNotNull(documentLibrary);
             return document.Settings.DocumentRetentionTimes.GetLibraryAlignment(documentLibrary.Name);
+        }
+
+        private void VerifyNoDocumentRetentionTimesChanges(IEnumerable<SrmDocument> documents)
+        {
+            SrmDocument lastDocument = null;
+            int index = 0;
+            foreach (var document in documents)
+            {
+                if (lastDocument != null)
+                {
+                    VerifySameDocumentRetentionTimes(lastDocument, document);
+                }
+                lastDocument = document;
+                index++;
+            }
+        }
+
+        private void VerifySameDocumentRetentionTimes(SrmDocument oldDocument, SrmDocument newDocument)
+        {
+            var oldDocRetentionTimes = oldDocument.Settings.DocumentRetentionTimes;
+            var newDocRetentionTimes = newDocument.Settings.DocumentRetentionTimes;
+            if (ReferenceEquals(oldDocRetentionTimes, newDocRetentionTimes))
+            {
+                return;
+            }
+
+            foreach (var librarySpec in newDocument.Settings.PeptideSettings.Libraries.LibrarySpecs.Concat(oldDocument
+                         .Settings.PeptideSettings.Libraries.LibrarySpecs))
+            {
+                if (librarySpec != null)
+                {
+                    var oldAlignment = oldDocRetentionTimes.GetLibraryAlignment(librarySpec.Name);
+                    var newAlignment = newDocRetentionTimes.GetLibraryAlignment(librarySpec.Name);
+                    Assert.AreSame(oldAlignment?.Alignments, newAlignment?.Alignments);
+                }
+            }
+
+            var oldResultFileAlignments = oldDocRetentionTimes.ResultFileAlignments;
+            var newResultFileAlignments = newDocRetentionTimes.ResultFileAlignments;
+            if (!ReferenceEquals(oldResultFileAlignments, newResultFileAlignments))
+            {
+                Assert.IsFalse(oldResultFileAlignments.IsUpToDate(newDocument));
+                Assert.IsTrue(newResultFileAlignments.IsUpToDate(newDocument));
+                Assert.IsTrue(!ReferenceEquals(oldDocument.Children, newDocument.Children) ||
+                              !ReferenceEquals(oldDocument.MeasuredResults?.Chromatograms,
+                                  newDocument.MeasuredResults?.Chromatograms));
+            }
         }
     }
 }
