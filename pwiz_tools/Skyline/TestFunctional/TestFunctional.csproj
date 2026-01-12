@@ -259,6 +259,7 @@
     <Compile Include="SequenceTreeExpandCollapseTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="SkipZoomScansTest.cs" />
+    <Compile Include="SpectrumFilterTransitionListTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
