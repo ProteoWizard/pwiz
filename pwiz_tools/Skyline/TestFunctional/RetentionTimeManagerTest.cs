@@ -1,9 +1,24 @@
-using System;
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -86,27 +101,24 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             var docWithDeletedPeptide = _documents[_documents.Count - 1];
             Assert.IsFalse(SameAlignments(docWithRemovedPeak.Settings.DocumentRetentionTimes.ResultFileAlignments, docWithDeletedPeptide.Settings.DocumentRetentionTimes.ResultFileAlignments));
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                dlg.SelectedChromatograms = new[] { SkylineWindow.Document.MeasuredResults.Chromatograms[2] };
+                dlg.RemoveReplicates();
+                dlg.OkDialog();
+            });
+            WaitForDocumentLoaded();
+            RunUI(()=>
+            {
+                SkylineWindow.SaveDocument();
+                _documents.Clear();
+                SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
+            });
+            Assert.IsTrue(SkylineWindow.Document.Settings.DocumentRetentionTimes.ResultFileAlignments.IsEmpty);
         }
 
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
         {
-            var newDocument = SkylineWindow.Document;
-            if (_documents.Count > 0)
-            {
-                var oldDocument = _documents[_documents.Count - 1];
-                var oldResultFileAlignments = oldDocument.Settings.DocumentRetentionTimes.ResultFileAlignments;
-                var newResultFileAlignments = newDocument.Settings.DocumentRetentionTimes.ResultFileAlignments;
-                if (!ReferenceEquals(oldResultFileAlignments, newResultFileAlignments) && ReferenceEquals(oldDocument.Children, newDocument.Children) && ReferenceEquals(oldDocument.MeasuredResults?.Chromatograms, newDocument.MeasuredResults?.Chromatograms))
-                {
-                    Console.Out.WriteLine("here");
-                }
-            }
-            if (_documents.Count > 0 &&
-                !ReferenceEquals(_documents[_documents.Count - 1].Settings.DocumentRetentionTimes,
-                    newDocument.Settings.DocumentRetentionTimes))
-            {
-                Console.Out.WriteLine("New DocumentRetentionTimes at {0}", _documents.Count);
-            }
             _documents.Add(SkylineWindow.Document);
         }
 

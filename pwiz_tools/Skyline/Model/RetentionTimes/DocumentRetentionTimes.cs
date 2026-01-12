@@ -563,6 +563,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return new Alignments(null, alignmentFunctions);
         }
 
+        /// <summary>
+        /// After Libraries have been loaded, updates <see cref="_libraryAlignments"/>
+        /// so that they have the actual Library object instead of null.
+        /// </summary>
         public DocumentRetentionTimes UpdateFromLoadedSettings(AlignmentTarget alignmentTarget, SrmSettings settings)
         {
             var newMedianDocumentRetentionTimes = alignmentTarget as AlignmentTarget.MedianDocumentRetentionTimes;
@@ -622,6 +626,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return null;
         }
 
+        /// <summary>
+        /// Called right after the SrmDocument has been deserialized from XML.
+        /// Updates all of the <see cref="ResultFileAlignments.AlignmentSource"/> with the current peak boundaries in the document so
+        /// that if any of those peak boundaries change later, it knows that the alignment needs to be performed again.
+        /// </summary>
         public DocumentRetentionTimes UpdateFromDeserializedDocument(SrmDocument document)
         {
             if (_deserializedAlignmentFunctions == null)
