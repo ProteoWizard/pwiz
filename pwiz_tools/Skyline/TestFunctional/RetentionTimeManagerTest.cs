@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceModel.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.FileUI;
@@ -80,8 +81,11 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             var docWithRemovedPeak = _documents[0];
             var docWithNewAlignment = _documents[_documents.Count - 1];
-            Assert.AreNotSame(docWithRemovedPeak.Settings.DocumentRetentionTimes, docWithNewAlignment.Settings.DocumentRetentionTimes);
-
+            Assert.IsTrue(SameAlignments(docWithRemovedPeak.Settings.DocumentRetentionTimes.ResultFileAlignments, docWithNewAlignment.Settings.DocumentRetentionTimes.ResultFileAlignments));
+            RunUI(()=>SkylineWindow.EditDelete());
+            WaitForDocumentLoaded();
+            var docWithDeletedPeptide = _documents[_documents.Count - 1];
+            Assert.IsFalse(SameAlignments(docWithRemovedPeak.Settings.DocumentRetentionTimes.ResultFileAlignments, docWithDeletedPeptide.Settings.DocumentRetentionTimes.ResultFileAlignments));
         }
 
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
@@ -148,17 +152,33 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreSame(oldAlignment?.Alignments, newAlignment?.Alignments);
                 }
             }
+            Assert.IsTrue(SameAlignments(oldDocRetentionTimes.ResultFileAlignments, newDocRetentionTimes.ResultFileAlignments));
+        }
 
-            var oldResultFileAlignments = oldDocRetentionTimes.ResultFileAlignments;
-            var newResultFileAlignments = newDocRetentionTimes.ResultFileAlignments;
-            if (!ReferenceEquals(oldResultFileAlignments, newResultFileAlignments))
+        private bool SameAlignments(ResultFileAlignments alignments1, ResultFileAlignments alignments2)
+        {
+            var alignmentFunctions1 =
+                alignments1.GetAlignmentFunctions().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            var alignmentFunctions2 = alignments2.GetAlignmentFunctions().ToList();
+            if (alignmentFunctions1.Count != alignmentFunctions2.Count)
             {
-                Assert.IsFalse(oldResultFileAlignments.IsUpToDate(newDocument));
-                Assert.IsTrue(newResultFileAlignments.IsUpToDate(newDocument));
-                Assert.IsTrue(!ReferenceEquals(oldDocument.Children, newDocument.Children) ||
-                              !ReferenceEquals(oldDocument.MeasuredResults?.Chromatograms,
-                                  newDocument.MeasuredResults?.Chromatograms));
+                return false;
             }
+
+            foreach (var alignmentFunctionEntry2 in alignmentFunctions2)
+            {
+                if (!alignmentFunctions1.TryGetValue(alignmentFunctionEntry2.Key, out var function1))
+                {
+                    return false;
+                }
+
+                if (!ReferenceEquals(function1, alignmentFunctionEntry2.Value))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

@@ -101,13 +101,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return alignmentFunction;
         }
 
-        public AlignmentTarget AlignmentTarget { get; private set; }
-
-        public ResultFileAlignments ChangeAlignmentTarget(AlignmentTarget value)
-        {
-            return ChangeProp(ImClone(this), im => im.AlignmentTarget = value);
-        }
-
         public class AlignmentSource : Immutable
         {
             private int _targetsHashCode;
@@ -249,35 +242,25 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             var result = ChangeProp(ImClone(this), im =>
             {
-                im.AlignmentTarget = target;
                 im._documentKey = new DocumentKey(newDocument);
             });
             var newSources = GetAlignmentSources(newDocument, target, dataFiles);
             if (CollectionUtil.EqualsDeep(_alignmentSources, newSources))
             {
-                if (Equals(target, AlignmentTarget))
-                {
-                    return result;
-                }
+                return result;
             }
+
             var missingSources = new List<AlignmentSource>();
             var newAlignmentFunctions = new Dictionary<AlignmentSource, PiecewiseLinearMap>();
-            if (!Equals(target, AlignmentTarget))
+            foreach (var newSource in newSources.Values.Distinct())
             {
-                missingSources.AddRange(newSources.Values.Distinct());
-            }
-            else
-            {
-                foreach (var newSource in newSources.Values.Distinct())
+                if (_alignmentFunctions.TryGetValue(newSource, out var alignmentFunction))
                 {
-                    if (_alignmentFunctions.TryGetValue(newSource, out var alignmentFunction))
-                    {
-                        newAlignmentFunctions.Add(newSource, alignmentFunction);
-                    }
-                    else
-                    {
-                        missingSources.Add(newSource);
-                    }
+                    newAlignmentFunctions.Add(newSource, alignmentFunction);
+                }
+                else
+                {
+                    missingSources.Add(newSource);
                 }
             }
 
@@ -367,16 +350,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             if (!document.Settings.HasResults)
             {
                 return Equals(EMPTY);
-            }
-            var newAlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
-            if (!Equals(newAlignmentTarget, AlignmentTarget))
-            {
-                return false;
-            }
-
-            if (newAlignmentTarget == null)
-            {
-                return true;
             }
             return Equals(new DocumentKey(document), _documentKey);
         }
