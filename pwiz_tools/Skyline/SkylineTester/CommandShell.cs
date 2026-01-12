@@ -24,6 +24,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 using TestRunnerLib.PInvoke;
 using Timer = System.Windows.Forms.Timer;
 
@@ -531,7 +532,7 @@ namespace SkylineTester
                 try
                 {
                     if (!processKilled)
-                        Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
+                        Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + Kernel32.FormatExitCode(exitCode) + Environment.NewLine);
                     RunUI(() => CommandsDone(_restartOnProcessFailure && !processKilled ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause
