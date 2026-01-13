@@ -397,10 +397,12 @@ namespace SkylineTester
                 _process.ErrorDataReceived += HandleOutput;
                 _process.Exited += ProcessExit;
             }
+
+            _processName = Path.GetFileNameWithoutExtension(exe);
+            var process = _process;
             _process.Start();
-            _processName = _process.ProcessName;
-            _process.BeginOutputReadLine();
-            _process.BeginErrorReadLine();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
             ResetLastOutputTime();
         }
 
@@ -507,7 +509,6 @@ namespace SkylineTester
                 return;
 
             var exitCode = _process.ExitCode; // That's all the info you can get from a process that has exited - no name etc
-            var processName = _process.ToString();
             _process = null;
             bool processKilled = _processKilled;
             _processKilled = false;
