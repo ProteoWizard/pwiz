@@ -121,7 +121,22 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return notLoaded;
             }
+            // TODO(nicksh): Verify correctness
             var documentRetentionTimes = document.Settings.DocumentRetentionTimes;
+            if (target == null)
+            {
+                if (documentRetentionTimes.AlignmentTarget == null)
+                {
+                    return null;
+                }
+
+                if (Equals(ResultFileAlignments.EMPTY, documentRetentionTimes.ResultFileAlignments))
+                {
+                    return null;
+                }
+
+                return nameof(documentRetentionTimes.ResultFileAlignments);
+            }
             if (!documentRetentionTimes.ResultFileAlignments.IsUpToDate(document))
             {
                 return nameof(ResultFileAlignments);
@@ -712,14 +727,23 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
         }
 
-        public DocumentRetentionTimes UpdateResultFileAlignments(ILoadMonitor loadMonitor,
+        public DocumentRetentionTimes UpdateResultFileAlignments(AlignmentTarget newAlignmentTarget, ILoadMonitor loadMonitor,
             ref IProgressStatus progressStatus, SrmDocument document)
         {
+            if (newAlignmentTarget == null)
+            {
+                if (Equals(ResultFileAlignments, ResultFileAlignments.EMPTY))
+                {
+                    return this;
+                }
+
+                return ChangeProp(ImClone(this), im => im.ResultFileAlignments = ResultFileAlignments.EMPTY);
+            }
             if (ResultFileAlignments.IsUpToDate(document))
             {
                 return this;
             }
-            var newAlignments = ResultFileAlignments.ChangeDocument(AlignmentTarget.GetAlignmentTarget(document),
+            var newAlignments = ResultFileAlignments.ChangeDocument(newAlignmentTarget,
                 document, GetDataFilesWithoutLibraryAlignments(document.MeasuredResults).ToHashSet(), loadMonitor,
                 ref progressStatus);
             return ChangeProp(ImClone(this), im =>
