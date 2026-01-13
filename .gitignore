@@ -485,3 +485,4 @@ SkylineTester Results
 
 # AI tooling junction (created by build with --ai flag)
 /.claude
+ai/

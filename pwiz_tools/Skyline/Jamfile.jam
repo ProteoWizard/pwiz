@@ -46,20 +46,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     {
        echo "Updating submodules for Hardklor etc..." ;
        SHELL "git submodule update --init --recursive" ;
-
-       # AI tooling is opt-in via --ai flag
-       if "--ai" in [ modules.peek : ARGV ]
-       {
-          echo "Initializing AI tooling (--ai flag detected)..." ;
-          SHELL "git submodule update --init ai" ;
-
-          # Create .claude junction to ai/claude if it doesn't exist
-          if ! [ path.exists $(.pwiz-root)/.claude ]
-          {
-             echo "Creating .claude junction to ai/claude..." ;
-             SHELL "cmd /c \"mklink /J \".claude\" \"ai\\claude\"\"" ;
-          }
-       }
     }
 
     # Use Git commit date for version day-of-year (reproducible versioning)
