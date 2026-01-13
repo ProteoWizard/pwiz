@@ -314,7 +314,7 @@ namespace ResourcesOrganizer.ResourcesModel
                 var entry = entries[i];
                 foreach (var record in records[entry.Invariant.Name!].Concat(records[string.Empty]))
                 {
-                    if (!string.IsNullOrEmpty(record.File) && record.File != RelativePath)
+                    if (!string.IsNullOrEmpty(record.File) && !FileMatchesRecord(record.File, RelativePath))
                     {
                         continue;
                     }
@@ -346,6 +346,29 @@ namespace ResourcesOrganizer.ResourcesModel
             }
 
             return this with { Entries = entries.ToImmutableList() };
+        }
+
+        /// <summary>
+        /// Check if a file path matches the record's File field.
+        /// The File field may contain a single path or a semicolon-separated list of paths
+        /// (e.g., "FileA.resx; FileB.resx; FileC.resx" or "FileA.resx; FileB.resx; ...").
+        /// </summary>
+        private static bool FileMatchesRecord(string recordFile, string filePath)
+        {
+            // Check for exact match first (most common case)
+            if (recordFile == filePath)
+                return true;
+
+            // Check if it's a semicolon-separated list
+            if (recordFile.Contains("; "))
+            {
+                // Split and check if filePath is in the list
+                // Handle trailing "; ..." for truncated lists
+                var files = recordFile.Split(new[] { "; " }, StringSplitOptions.RemoveEmptyEntries);
+                return files.Any(f => f == filePath || f == "...");
+            }
+
+            return false;
         }
     }
 }
