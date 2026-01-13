@@ -99,10 +99,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return nameof(DocumentRetentionTimes) + @" need to update from loaded settings";
             }
+
             var unloadedLibraries = srmSettings.DocumentRetentionTimes.GetMissingAlignments(srmSettings).Select(param => param.LibraryName).ToList();
             if (unloadedLibraries.Count == 0)
             {
-                
                 return null;
             }
 
@@ -121,7 +121,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return notLoaded;
             }
-            // TODO(nicksh): Verify correctness
             var documentRetentionTimes = document.Settings.DocumentRetentionTimes;
             if (target == null)
             {
