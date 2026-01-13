@@ -407,14 +407,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public DocumentRetentionTimes ChangeLibraryAlignments(LibraryAlignmentParam alignmentParam, Alignments alignments)
         {
             var newEntries = _libraryAlignments.Where(kvp => !alignmentParam.LibraryName.Equals(kvp.Key));
-            if (alignments != null && Equals(alignmentParam.AlignmentTarget, AlignmentTarget))
+            var newAlignmentTarget = AlignmentTarget;
+            if (alignments != null && (AlignmentTarget == null || Equals(alignmentParam.AlignmentTarget, AlignmentTarget)))
             {
+                newAlignmentTarget ??= alignmentParam.AlignmentTarget;
                 newEntries = newEntries.Append(new KeyValuePair<string, LibraryAlignment>(
                     alignmentParam.LibraryName, new LibraryAlignment(alignmentParam.Library, alignments)));
             }
 
             return ChangeProp(ImClone(this),
-                im => im._libraryAlignments = newEntries.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+                im =>
+                {
+                    im._libraryAlignments = newEntries.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                    im.AlignmentTarget = newAlignmentTarget;
+                });
         }
 
         public IEnumerable<LibraryAlignmentParam> GetMissingAlignments(SrmSettings settings)
