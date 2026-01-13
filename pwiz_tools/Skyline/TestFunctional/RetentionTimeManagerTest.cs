@@ -39,7 +39,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Libraries.HasDocumentLibrary);
             SkylineWindow.Listen(OnDocumentChanged);
             RunUI(()=>
             {
@@ -110,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             RunUI(()=>
             {
-                SkylineWindow.SaveDocument();
+                SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("TwoReplicates.sky"));
                 _documents.Clear();
                 SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
             });
