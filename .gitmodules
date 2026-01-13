@@ -10,7 +10,3 @@
 [submodule "pwiz_tools/Skyline/Executables/DevTools/DocumentConverter"]
 	path = pwiz_tools/Skyline/Executables/DevTools/DocumentConverter
 	url = https://github.com/ProteoWizard/DocumentConverter
-[submodule "ai"]
-	path = ai
-	url = https://github.com/ProteoWizard/pwiz-ai.git
-	update = none
