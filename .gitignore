@@ -482,3 +482,7 @@ SkylineTester Results
 /tutorialTestNames.txt
 /tests.txt
 /pwiz_tools/Skyline/Translation/Scratch
+
+# AI tooling junction (created by build with --ai flag)
+/.claude
+ai/
