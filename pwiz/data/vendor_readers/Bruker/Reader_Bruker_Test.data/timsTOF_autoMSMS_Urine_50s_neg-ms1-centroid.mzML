@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="timsTOF_autoMSMS_Urine_50s_neg" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.99" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.197" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,12 +9,12 @@
       <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
     </fileContent>
     <sourceFileList count="2">
-      <sourceFile id="timsTOF_autoMSMS_Urine_50s_neg.d_x005c_Analysis.tsf" name="Analysis.tsf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\timsTOF_autoMSMS_Urine_50s_neg.d">
+      <sourceFile id="timsTOF_autoMSMS_Urine_50s_neg.d_x005c_Analysis.tsf" name="Analysis.tsf" location="file://C:\Dev\UVDAD\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\timsTOF_autoMSMS_Urine_50s_neg.d">
         <cvParam cvRef="MS" accession="MS:1003283" name="Bruker TSF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1003282" name="Bruker TSF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="7c2998a37ac033429ec72b58ec4d5dd0975bbed7"/>
       </sourceFile>
-      <sourceFile id="timsTOF_autoMSMS_Urine_50s_neg.d_x005c_Analysis.tsf_bin" name="Analysis.tsf_bin" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\timsTOF_autoMSMS_Urine_50s_neg.d">
+      <sourceFile id="timsTOF_autoMSMS_Urine_50s_neg.d_x005c_Analysis.tsf_bin" name="Analysis.tsf_bin" location="file://C:\Dev\UVDAD\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\timsTOF_autoMSMS_Urine_50s_neg.d">
         <cvParam cvRef="MS" accession="MS:1003283" name="Bruker TSF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1003282" name="Bruker TSF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2685d0bd017ea9d5d871691e4eb7d7ec0d5ca868"/>
@@ -34,7 +34,7 @@
     <software id="Compass" version="3.1.1">
       <cvParam cvRef="MS" accession="MS:1000712" name="Compass" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.22236">
+    <software id="pwiz_Reader_Bruker" version="3.0.25360">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -757,7 +757,7 @@
         </binaryDataArrayList>
       </spectrum>
     </spectrumList>
-    <chromatogramList count="2" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
+    <chromatogramList count="9" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
       <chromatogram index="0" id="TIC" defaultArrayLength="20">
         <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
         <binaryDataArrayList count="3">
@@ -801,6 +801,143 @@
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
             <binary>eJxjZIAAxkFKAwAHMAAV</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="2" id="BPC,±MS" defaultArrayLength="20">
+        <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
+        <binaryDataArrayList count="3">
+          <binaryDataArray encodedLength="228">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJwBoABf/8+7saAwXDFAnMB0WrdxMUDw2xDjNYcxQHqJsUy/nDFATrNAu0OyMUAepRKe0McxQMqkhjYA3zFA+BkXDoT0MUBWR450BgoyQNkiaTf6NDJARUjdzr5+MkCdDflnBskyQIRLx5xnFDNAqFFIMqtfM0CjrUoi+6wzQJ/m5EUm+DNAExCTcCFDNECJ0t7gC480QDuMSX8v2TRAK01KQbcjNUDyuEL9</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="104">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxjYACC80cdQBRD4CEIfe8ghOaG0lFHIHTnYQjtCxVXharfAxWPgarTh5p3CqpuK1T8AVSdHlReGcq3hqoThpoXfgBCcx5xAAD3pRw6</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="20" encodedLength="20">
+            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjZIAAxkFKAwAHMAAV</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="3" id="Pressure - [psi]" defaultArrayLength="352">
+        <cvParam cvRef="MS" accession="MS:1003019" name="pressure chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000809" name="chromatogram title" value="Pressure - [psi]"/>
+        <userParam name="Instrument" value="Elute Pump"/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="1660">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJwtlWlslGUURkGQzapllV1ERFmUEqiyFd5SKC20pRvttJ2W6XQ6S2emsw+yBDWtAQSDDdrUIBEsBjRIUFCBIEFTAYGoLAIVlxAggMQFgQCCWzlP/3x5zz33ufdbJt0ysNQx+ed25sK3Q8/cXtrVTNxxML730e6m3b2/3mZQW3luP3Pu3bUtQ5IGmYyzi3ptXTaE87ah+G8Pgx8YbkYt69P69adPmYee/mjd75tG0v/NaPL2PWP+PJZtT7QkUXeNNW36zcg4vMB4szGY0u1UXbJpTFvpu7j4WdWfw182QXyiWXh5+NguqyaR1zRZ5ynMWZ+Ct3Yquaunmfydg1++kmfwjhjyilPJP54Kt043e6Jr+nY8OR1ekGZm/B9zpzXNHN4w85Nr5TPg52YwxzaTnIsz6XOmq56u+iz6L89SPYM9zmbAPZnqz8QPzpavq2cO/tU5zPdn4d/Mgoey2ftutp5TDt7fOfAlc8lpn8v7nZqLV5cL/zyXvTrlwdPy2GN5Hnx/nnmnLa5jPn5mvur5+IfFuxaQn1MAX1kAP1qAn1hIXk4hvKEQ/2Qh+b3mmRHW1V/csMyDN86DnxDvWwQvKoK/VaT3Ij64mLllxfjri+E/FZuK3ZkJ9z1u0fO34DVb2OuShfq4Evx4Cfk7Ssi5JT61FL6klLm7Ssm5U4o3oUz1MtXL6PunDG+yFe9FK3yvFd6hHD+1XPVyclrK2atDBXtmVMDrK/C/Eu8yH541H3/lfHIO6tzZZsb8OKzTS0/YTK+ts84uyrDBXeIrbORstpmjbT//Q+KXbSbibvh1yQOVXJ+shGdWkuOuxH+lkvmb5R2u1PcrL8EOH2WnP9sO99nZY7WdnK12co7Y2ecP9T1cRd7YKvpyq/DDVeQ1iG8TPyZ+tYr+ng5yxzvwCh3kxRx4b4jvcNB/UudbDvofqcabWA23VOMtEn+zmn33VOt7FL8tPtAJT3Fydju57zoneRtV/9LJnudV7+zSe3Pp/buY6xRfIb5Z/JBLz108wQ0f6db34eZ+vG68V93kfODGPyL/N/EHPfhjPOwz10NOUOc1HnI+9NB/QvyaePca7i+pBl5Qo/dWQ85rNeRvV/24+HXxnl72SPaSb/HCF3jJaVR9l5c5p73k3FG9v489kn3q13mhD7/Jh7fbR06rvLs+cgb4qU/ys5fVz/zFfnLW+en7zE/eD376/hUfVIs/rRa/XOcXaqlvqKVvXy1958TbB9hjWACeFmC+I4BfHyCnOcB++wP0XVBfxyB+j6Bpqu1Rt29okP/P44Lm3jppQfoKg/gOeVHx+qDpdqo5mPK66hvV97G8FtVPBDVX1xvy7g+R0yeENzzE/OQQe6WrXiTuCtG3QHx5iLlN4u+pb6fqB9XXKn5J/Jb6uoXZp1+YfUeG9R7F54TpKw2zX02YOYt1XhUmf636t4jvCet3opwzyvlF9buakxgh77EI/UkR8lIj+PkRPHuEnIj8uoieu/xm8e3iLfK/U+555VyPsFenKPXeUT13nZOj+OniRVF8p+ox8eXijVHmbhLfGWWfA8o5LX5J/HaU++oSo79/DD4iBp8Qw58tXhJjrkf158VX6Nwk/33xXTHmHhL/Xv1X5P+luQlx9h4Qxxsdpz4lznPKiuNZ5fl1Xho3/wH8Wc/T</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="1760">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="UO" unitAccession="UO:0010052" unitName="pounds per square inch"/>
+            <binary>eJxVln9MlVUYx98kRZmJBooS0HU20TTRGSuj2otO1wBRluaPIXudE3XOi42Y6SJfUTCvmCIy00iuMn/ww3uBe29qiXtnmqEOs3T248ZeZMkEp6lgDHXWns/xD/767Puc53nO8573nOccTdMc5aXHde1/er6Ezq1CK+4zoVa1GS7YJDQ7FSOxuy9sxz+xgPiYQhjMx97yidC+ugX/fRsZv/upUB+dS/7xedj7M66Z5NPDXMT3ktfILuxTr976RZ86n9dv7Cxivsl7GN97GOoBaP2g8gaJm9Sl6nnRI3GhrwnN/Gke6p8jNOas8FDnFsZryoVWcT16erOH+luIK3mE1od5hVq8F//pQntZFnqw00sdLqWP4R91Bh245uV7ur2s/8A68U+PEpr+cUq/KbSHpcIpS4TGrRyhfnAD9pDt2AdUCN3tPqF1uQn9T7CO77gHm/rVsz7R9dQZL7TmJwndc2cLjZHLhWbBOqE2fhdxYYeFdoYH+40L6P0tjF/sIs+i0AaJX/2qUC+diu5MaWA9jAbWL09oJOxADz6oxk/gv6cZe14bft4H5It4ySf2ifFC+49kH9+7WOhodmKP3izUk3cINXc5NBqwlzYRt/4y/mNukbesFx0yxC/5nA6h3vGG0Jyno13pQuv6QqERvtJPnnUwYzP+T7ehS1x+5t+Pjj5MfFoD9vGn8U89L3THX8G+7Tr5x96knuZ2OOQedZR2Ere6C7vnAXnn98AzWkD8WgcFyBcuNG9GYE95WWhXjsBeECV0rxiK/T7aLnkFbhge4H+MIl/USHQRdC8ij5Gj8tarPL0DAqwX1Byh+A8NgWuf8d2TqVtP6VbrcIf1WnwL3v+LdbF+hv9ewm/fj3x/8Bw6tJE8YX7s/atgegXM3Idf+w7WqcxJvib1HzOysXfPxm/XLFXP+6qOBPLExPF/vJH8h65B5FnVo/bbHfZTSVBoJKj9tuGU2p/V7NvCMqGZWsT41Rz8Z2WxT9emke92EnEd49iviSOIe++xnA+Hs5XzU/Cr0B5zjnOzqRYd/TXnKqtIna8czlfPAnTcTPz2J5LvSZzKNxD7lIf0iYU2faT8EgwGsGe76SvDt2PPXEN/yP2IftE2A36cwLhnJP3keX9KaaWPlTXTt243oluOqv62k/62dh398MNM+md+CvZTU+mP0bHEV9Fn9dH0X7vtCH263IT952CvnIAuvK36/mnuCWcxzFzA/XEkFh0TVPfbUe6hSnUfupLVfTSY+zPrei3zH6tFf17LeBb2lMRa4p/VSL1ai9AKWDV81wF0y1bG9y5FF6cyfu0tdFp8DesSi73gcTX5HwmtA/eEmm4L7Yw/hebZn+DTc/gvPQtzG/GrtFR8APtDTzXrcUJo7KxHF57Er/g75rnxDfFt1UJ3XR38HX8z/1v8tAryjK2C2fg5nA195rGyPH3Gn89rpfnIN8GP//lDfeo051G3Y6aqM4Z4M7KEPOGV5Al8T1zYL/hN+rvPelndrIt9dTd2a4niGOzL7lbJ943yC7VVh4S6a7haxyj5L7rPIf/buPKEfVBep95Ls9l3yzp4h/TL493Q3cP+nJHEPn5B7fuIWt4L77ajc2M4V8Pmco5ez+cebzzOuXy7mft5KPe043QU5zo2Seietoo+4VL9oZt7WK++yPj6C9gn+ugL6WX0jZNr1L09g/7QGwnfuck8y33Uc3Aj82/9AJ0cjo7/jXOdV6HePSsVJ6n3zjPeTaO+Yj0OODinziqP/h/T0T4x</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="4" id="Fraction A - [%]" defaultArrayLength="282">
+        <cvParam cvRef="MS" accession="MS:1000625" name="chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000809" name="chromatogram title" value="Fraction A - [%]"/>
+        <userParam name="Instrument" value="Elute Pump"/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="1396">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJwtlXtM1XUYhylNzShNWTFDR2l2saamNhXFL3I9CnjgHA6Hc4Fz49wPnHsTmSupeaFGzMVsRpnY4o9iVszSGd2okbDKdBizZEydUevirImDMk/Pyz+/fZ/38z7v+7uw806WyZUzmqYuvnWwP/voXGW458n3O//IVCVjTRk9u7PVut6BZN8bS9Sy3feNfPPho2phKv7tEyp1vB5boTryW4NXdjylto8vXTnrxdWcDz6t0lJ/h9aq/3Vvr5frBqnn4mnbpCo/WvTCrxWK/iFFrjoP/5k8uGWzOhnfnzl9eDNcl68KbmkmR/LV4JuFx65ZC+AXC5hrK8RzpZA+d5HUi6ReTP94sdRL2GOsBO7TSL+GfHiL5OXq20r+6lbmh0rJXy+FR8rYe6pMnlM5uX/K4c3b8NymVZe/e+j8jVwtuRYt/DMte82ogOdXsMeeCvhXFepwSje9krymUuqV5AeF36nDX66Dt+rgp3Xk5+rxlevh7Xryw3r8GVXqMUvb538bq+AdVfCzwjMNcIMB/ppB3ovwRdXMNVeTP1QNv1Ctak9o0m9fbJTnbyTXZWSvn43UV9WQT9bg763BMyE81wRvNjH3uAnPpIncWrPUzVI30/evmVyOhdyzFnifBT7NSj7PKnUrnn4re02rZc+SWvjzteS/Fj6rDl5aR761Ds+AnGfa1PKflsx47mGbyugpHmsqscE9wvfa8HTb1Olba+08JXzcpmLe9t+a77JzfcQO19jxeO3k99mZ3y25Qbt8v5JLd8CXOegvc8CDDvZoc+DpceAZcrDPn9I3x4lvpZM+rZN81ImvXfhR4d8Lv+qkf74L72oXOb0LX8JF7hXhvS76h+U84aL//npy6+rhxnpyTcJfrWffk/XyPQq/ITzLDd/o5ux1c98tbnxHpP6lmz0vSX2mR96bR96/h7lu4XuFdws/5ZHnLjzdC3/cK9+Hl/sJeMm95MXzrpf8kOR/F363j/xyH/ts8+EJy3m/D897PvrPCr8m/F4/97fCD9f55b358bzsx/+B1M8I/0v4/AB7rAngNwbgzwTwdEj9eIA5PwTwTEp9QZA91gSlX87bg+QPBMmdCOIZkdxUEM8DIerrQ+xlCTF/RwhPZ4i+j0P4fgzRd1P4wgZyVrl2NtA/2kA+u5GcvRHeJefLjcybF+b3cFWYPfRhdaBhXsun8TB7doTJHZPcOTlPSH1BRKW0m3IieM0R+puFd0bU7HNd4Y19wi9I7qbw7CjnvCg+h1x3RdnncBTPF8KHJH8+yh6/RPFMST4rxnVDjD5rjL6dwl8X/kmM+xmNsVdaHP5gHJ4XJ++IM2dXHM+ROPP64/RdirPPHQn40gT5ogQej/A9CXzdUh+Q+rjUZyfl/yiJd0sSbyCp/gNxGucA</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="652">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="UO" unitAccession="UO:0000187" unitName="percent"/>
+            <binary>eJzl1Tlv02AAgGEPKAxEQihCEIRQuMJVoOByBGjjnvRw2zRpWrplysSWqZunTv0D3joxsXXqlonJG1M2JKRMDEhZYKOKn/6FLnh59H0+vteOFQfB6ZZ8ioLzMwp7bI09Smss8+9u7mA3P6/PIybsjO10l1hlYWw/+7WTm/ErD3d0sMWQpR0dbR08YdrWwQ6jtg4WONzO/batg4f8zHhbB0sctXTwhCn3WzoYscKgpaOpg1940NTBmBMsNnVs5X7n8ZYO7nOPtS0dDPijkdtv6OABuw0djquYL5jPNj0/xpv5emUONnRtuB6rHK5bdz2/jx5DjmL3F+frJ4wYxDrWdDBmcU3Hqg7urergcEUHuys6OFrWwd6yDgbsf9TBmEVmSzq4xzIHizrYZXVRx4IO9hgu6GB/3vNiNK+D2ZzOOR0sczCrc1YHqxxGOiMdDM0P686r62IyYzzj+tPWnbb/g/1M3tvP9J0x05p1efzWmMdv/A7MXhsze6WTwynjKR1MQmMmL3UwfWHMdFLHpOs95zM+ddwEn/Cxrkd8yAes6jjzPu/xrnXv8DYrzr/Fm7zB6467xqss8Qov8xIvWvcCA/6p5/6u58f9rOf3d2L+v9pO37fxe3P2f3P6nTv7bp3r9/5c/QcYgpzq</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="5" id="Fraction B - [%]" defaultArrayLength="282">
+        <cvParam cvRef="MS" accession="MS:1000625" name="chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000809" name="chromatogram title" value="Fraction B - [%]"/>
+        <userParam name="Instrument" value="Elute Pump"/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="1396">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJwtlXtM1XUYhylNzShNWTFDR2l2saamNhXFL3I9CnjgHA6Hc4Fz49wPnHsTmSupeaFGzMVsRpnY4o9iVszSGd2okbDKdBizZEydUevirImDMk/Pyz+/fZ/38z7v+7uw806WyZUzmqYuvnWwP/voXGW458n3O//IVCVjTRk9u7PVut6BZN8bS9Sy3feNfPPho2phKv7tEyp1vB5boTryW4NXdjylto8vXTnrxdWcDz6t0lJ/h9aq/3Vvr5frBqnn4mnbpCo/WvTCrxWK/iFFrjoP/5k8uGWzOhnfnzl9eDNcl68KbmkmR/LV4JuFx65ZC+AXC5hrK8RzpZA+d5HUi6ReTP94sdRL2GOsBO7TSL+GfHiL5OXq20r+6lbmh0rJXy+FR8rYe6pMnlM5uX/K4c3b8NymVZe/e+j8jVwtuRYt/DMte82ogOdXsMeeCvhXFepwSje9krymUuqV5AeF36nDX66Dt+rgp3Xk5+rxlevh7Xryw3r8GVXqMUvb538bq+AdVfCzwjMNcIMB/ppB3ovwRdXMNVeTP1QNv1Ctak9o0m9fbJTnbyTXZWSvn43UV9WQT9bg763BMyE81wRvNjH3uAnPpIncWrPUzVI30/evmVyOhdyzFnifBT7NSj7PKnUrnn4re02rZc+SWvjzteS/Fj6rDl5aR761Ds+AnGfa1PKflsx47mGbyugpHmsqscE9wvfa8HTb1Olba+08JXzcpmLe9t+a77JzfcQO19jxeO3k99mZ3y25Qbt8v5JLd8CXOegvc8CDDvZoc+DpceAZcrDPn9I3x4lvpZM+rZN81ImvXfhR4d8Lv+qkf74L72oXOb0LX8JF7hXhvS76h+U84aL//npy6+rhxnpyTcJfrWffk/XyPQq/ITzLDd/o5ux1c98tbnxHpP6lmz0vSX2mR96bR96/h7lu4XuFdws/5ZHnLjzdC3/cK9+Hl/sJeMm95MXzrpf8kOR/F363j/xyH/ts8+EJy3m/D897PvrPCr8m/F4/97fCD9f55b358bzsx/+B1M8I/0v4/AB7rAngNwbgzwTwdEj9eIA5PwTwTEp9QZA91gSlX87bg+QPBMmdCOIZkdxUEM8DIerrQ+xlCTF/RwhPZ4i+j0P4fgzRd1P4wgZyVrl2NtA/2kA+u5GcvRHeJefLjcybF+b3cFWYPfRhdaBhXsun8TB7doTJHZPcOTlPSH1BRKW0m3IieM0R+puFd0bU7HNd4Y19wi9I7qbw7CjnvCg+h1x3RdnncBTPF8KHJH8+yh6/RPFMST4rxnVDjD5rjL6dwl8X/kmM+xmNsVdaHP5gHJ4XJ++IM2dXHM+ROPP64/RdirPPHQn40gT5ogQej/A9CXzdUh+Q+rjUZyfl/yiJd0sSbyCp/gNxGucA</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="648">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="UO" unitAccession="UO:0000187" unitName="percent"/>
+            <binary>eJzl1SlzE1EAwPFF0EFUMJRhWBiGcoWrlNLlCuVIeqQHaZv7cFFVdVG4fIB8gbioqrqouqiqOFQcahUuqg7C/vIVaoj5zXu7+/b/dnayQfDvlwkuz36vd4VXpw5Ho2ucn9o6OrrOG667yVu8zTvWuct7vM9FPuBDPrL+Yz5hik+nZqLoGZ/zBV+6/xJfcdk+Zr623kpivJLM5984zvyq8ar1o8QBo7e6Gb4zZvg+uX+HwQdjBh91MJ6N08ZpHZ90ML9mvKbjsy5GX3Qw/GrM8JsOBpkMzGesxwmjrL5sct4w6zij9cQ2B+v2wdSG6zf0cMxwM7G5meyvyxHnt+x/SyeHDHI62OaAk5yObR082dbBcEcHezs6OL+rg91dHQz2PM89HRxwwui7Dp4wZiqvgz2O8zr2dbDL0b6OAx3scHigg9GhzkMdjM0vFJxXcD8es8vTQnLdOWPOFe2nqIctdor2xzPzvxiUEhdLyfE0m/zBXslz5k9OuFBOOpeY5zG7ZfvnOeOyjooOZtiq6GCPZxxXdHCh6nmyXNXBLk+rOhhzruZ51nSwxQ77NR0c86Kmo66DZbbrOnjKEX/XdTR0MNfQwQ77HDZ08MJ80Pyf/Pv+zd6L2f/Q7Dt1qd/7S/UPrO2PaQ==</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="6" id="Flow - [µl/min]" defaultArrayLength="308">
+        <cvParam cvRef="MS" accession="MS:1003020" name="flow rate chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000809" name="chromatogram title" value="Flow - [µl/min]"/>
+        <userParam name="Instrument" value="Elute Pump"/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="1488">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJwtlX1M1HUcxzWdmlFRUjk1Z2WWYVNKGj5/EVRQQOB4OODAu+M47rg7uOfyYVbDUjNnjGI0c1nUdK2YJSt15qyRGbDMJJMex7Qpcz04dUrag/h6889v39fn9Xl/Pr+HG+9PKnfN+3WYOf3u9s4pexJNyR2Pf7Tjz/Emq39NUvvGKWZOx9H4oTenmuSN9/Z9/cmj5v4h/dgMM3S8EpllWjK2+M+ufcKsHpiWMubl2Zy3P2WGDf3tTDM343bN1XW+6gvJ2bbIFO6b/ML5AkN/j8ErTSf/RDrcttgcjDaPH3lyMdySYTJvxFzryzDdby35+GJlJvx0JnPtS8g5u4Q+91LVl6q+jP6BZapnsUd/Ftybrf5s/OBy+bp6V+BfWMH8QA7+lRx4KJe9r+fqOeXh/ZMHX7eSnOH55rdvHvxxcGE+XmM+/LN89hpVAM8oYI9NBfAjBebtobiRhfjZhaoX4neL32ohP88C32KBH7fgJxaRl1cEbyrCP1lEflKxmW7b9vllazG8pRjeKz6+BF5SAn+jRO9FfHIpcytK8XeWwn8pNVUHshNueciq52/Fa7Oy1zkr9SfL8ONl5HeUkXNVfGE5fF05c/eXk3OtHC+tQvUK1Svo+7cCb54N7zkb/JANPqISP71S9UpyOivZa0QVe2ZVwTdU4X8lPmYVPGcV/pZV5BzVebTdzPx56qjnH7abpPZl/Wuy7PBa8c12cnbbzfEba63vEh+wm4in6fd1tzm4PuKAZzvI8TjwX3Iwf7e8boe+X3kJTniyk/5cJ9zvZI9tTnLaneT0ONnnL/XdWU1eSjV9+dX44WrymsT3iH8rfqGa/nEucme78Ipc5MVceK+Jd7joP6nzVRf999XgzamBW2vw1oi/XsO+B2v0PYoPik9ywxe4OXvc3Hejm7x3VP/CzZ5nVB9dq/dWq/dfy1y3+Gbx3eJdtXru4gke+GMefR8e7sfnwdvqIecDD36P/D/Eb/fiz/Syz0ovOUGdm73kfOilv1f8ovhdddzfrDq4pU7vrY6cV+rI36v6CfFL4uN87JHqI9/qgz/tI6dF9f0+5pzykXNN9Ql+9kj1q1/n1X78Vj/eAT85ffKu+8mZGKA+N8BetgDz1wbI2RGg79MAeT8F6PtP3qJ6rs/WUz9cjz+8AS+jAb6hgTlHGpg/Msh5apC5mUH+L9YEzdjv24ILXtR5l85H5Z1T39gQc5JD1HNC1P0h+raG9HsLmZtrHgvp9yYvMYyXEsYrDJvW+rsbD4fD+M1h8veq3qvz5TDzrosnRvAfiNA/K0JueoQ5hRE8Z4T+iPzGCDmvym8T3yveKf875Z5RzqUI9zEqSv2eKP40nVOj+EvFS6L4btVj4pvEW6LM3SW+L8o+XyrnlPg58cEo9zUmRv+EGHx6DJ4Ww18uXhZjrlf1Z8Q369wq/z3x/THmdon/oP7z8v/W3IQ4e0+M482IU58f5znlxPFs8gI6r4+b/wHB3EJ/</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="576">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="UO" unitAccession="UO:0000271" unitName="microliters per minute"/>
+            <binary>eJzl1iuP20AQAOCFhQcDCwMNAwMDDQ8uDDRM39sXXxh4MNAw0DDQ8KBhoGFgVfUbVdofUFKTj41G63ml9Pt7t0//0ie+5Z49MwsrR05cuEbc9+KyY8/MwsqRExeuTB/EZceemYWVIycuXJk+isuOPTMLK0dOnLkyfRKXHXtmFla+cOLMlemzuOzYM7Ow8oUTZ65MX8Rlx56ZhZUjJy5c+ab88YkbbtlxzwOfmTnwxMLKMy8cOfHGVy5c+WD6Kl9uuGXHPQ98ZuaRJxZWnnnhyIk3zlx454Ppm3y54ZYddzywZ+aRJxZWnnnhyCtvnLnwzgfTd/lywy077nngMzMHnlhYeeaFIyfe+MqFdz6YfsiXG27Zcc8De2YeeWJh5ZkXjpx448yFdz6YfsqXG27ZcccDe2YeeWJh5ZkvHHnljTOX/9x4j3i3eN/4D/G/4r9em/qIOto19Rh1e23qP/pk1/Rb9GX0bfR3zIGYEzFPYu5cm/kVc27XzMuYq9dmPscc3zX7IPbG0Oyf2FNDs+9iLw7Nfo09PDT7PPb+0NwPcWcMzb0Sd83w9z76BRKpfzY=</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="7" id="Tray temperature - [°C]" defaultArrayLength="176">
+        <cvParam cvRef="MS" accession="MS:1002715" name="temperature chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000809" name="chromatogram title" value="Tray temperature - [°C]"/>
+        <userParam name="Instrument" value="Elute Autosampler"/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="984">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJwtlGtIk3EUxsXELkjMGjFBRUzKyEglJLPylJqXsty8pFPnLu9uOue7991GmoSSIaVUomQ1Iis0krALWRIWJRHSBy0/lJERK8pCumMSItV6zr4c/r/znOc8/P/brkZqhbQ3QfSu1/co5rqCSpZvuHnuq4py/A3KgdYYSr016r1/Po7Wt656OXYnnqIC8vEEChzn5EQ6ldHmmD6YTPWf1iQtad+Esy+FggKfns303+7yFq5b6cdEvlExtB19PdGwu1MVYtlBmf/G5u07wcUMnOsz4duYRZqh6CMzzbvAj2ZDdzIHOTpzwc/kQXdhN3z79oBfyee6F/0b+0h3NzcsuLyALmbd/rkwVUDvn8a++q1TQ+dXgwsa7Pmo4XyF8P1SyDmLwL8X8X0Uw+dXMecvAZ8vAT+0n9ZVnBiZDSpFbSpFjkVl2NdSBl2oFrxNC52iHH4d5eArK6DvqkBfVYk9vkrki9bx/evAV1fBt68Kc0o9/Ir18OvWk3Ig298wqaeNr+NCmyMM9CwQV2sg2dbxudFnQH/KgH6UEXNVRvAeI98bn+NMfH8m8F4T9NMm+K0VoLMJ2NMvoD8jIHeCGfMOM/oDZvS/mjGXaAGXLMgzaMGeWeYpVvgcsMJnyIr5eSv2p9ng02jD3D0b+B8b9GSHb7MdfiN26EOqwbOq4ddajT2jzJfWQJ9XA307n8dqoFM4oFM7+D0d6E84oFfW8rvUIk93LfJMMo9w8rtwPeuE75QTusg66Crr+P357K+jgF16uAieLNJp54rDDzQi5iSRlr24JG7rEqEbZN1zPs9xX+VC/lQX/hfKXPBpYO5zIdewi39XrFtgHi3hnC7BT8+1SYJPjwSfhxL0byX4BMuosTL6GTLmBOYtMnL2ysj9WMb8Bxn7FrvB493gOW742JkfY97vht8TN+ZmmId5wBM84Pke5HVyPe7B/mvcH2f+jXm4FzXJi77ay99fL/0Fztt02A==</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="36">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="UO" unitAccession="UO:0000027" unitName="degree Celsius"/>
+            <binary>eJxjYAABAQeGUXqUHqVH6VGarjQAtEo3AQ==</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="8" id="Oven temperature - [°C]" defaultArrayLength="180">
+        <cvParam cvRef="MS" accession="MS:1002715" name="temperature chromatogram" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000809" name="chromatogram title" value="Oven temperature - [°C]"/>
+        <userParam name="Instrument" value="Elute Column Oven"/>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="988">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJwtlGtIk3EUxoeJWERJSKywGCKhWGghZmp1Ss1LWd7TTefuFzfnu73vRtoIJUtCoUQwS7KLZQgmGWYrTMIi/JKVXywyTELsQkaalQyp9Dn7cvj/nuc859k+rCdMaUialNHHW+3PFHdDqGjdjntXvsspY6omtLdBQXv6RzxDVyMoumHj29EHkbRl2f5yOy0/f4ux1JrSaJ85uYuqP2/bGdwUh3d7PMmWP9cSaCXudiLPZJoby9aF+PZB1xANSi3yQNMBSv2/5rceBBdS8K5ORa43jfJ8W898rTsEfi4dvgsZ6NGSCX4pC77rh5HbdQS8O5vnUeh9x0j9KHNtgCqHbqQNzC9N5ND0q/B3i+pc+KZywQ15uPMpj/vlI3c2n3sWgP8o4N+jEDm/Crl/Ebi/CPzUcYoqPT+8ICvGrC1Gj1UluFdfAl+QErxRiXujStyTq7DXpkL+plLkt5dCV5Rhr7MMeRFq5HWp4Y8qR15vOedp4CvW0Ovlepc14BPMw7TYK9NC79BC/6CFrtCB63TgN3UU8z4iqG6a35F6Cu1Nn6qx6MG79fB/0aNntAE+uwH6HQP0WQOJluZv3hgj9gUjevQZoc8ZsRdnwp6b530TfAsm+OLN8J0wo6/PjLt+M/KTLMj3WrD32AL+1wI/WZFbZ0XesBX+wArwtArkNVTgzgjz1Tb4s2zwN/F71AZfiB2+XDv2RTt4vx13fzLfXcn9K9HvYSX6+ZknOzC9DuwNOuBbcsC3vwq8tgp5T6tozXinsDdAoDbHhtNPwgVasaUIyDEI6FnP7y5+P2ffDO8FO9E/ysnf0wnd5sRekxO+Hva9cOLuLPvWu+CLdcGX40JPwQV/swv/O32sjzGf571QEXlxIvQCEbluEXor8wHm48z/iLgjlzATJNwpkeCvkfB9zjK/KOGOj/U3zBcl5G12gye60U/lxr7XDb2D9SHWJ5nLPPApeJIHPNWD/HwP7koe+gc9qFTE</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="56">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="UO" unitAccession="UO:0000027" unitName="degree Celsius"/>
+            <binary>eJxjYAABTweGUXqw0g7Gnz3w8UfpoU0fOMMzKNwxSg9s/sKazwFaBmjm</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>

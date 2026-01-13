@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -53,8 +54,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private GraphData _data;
         private NodeTip _tip;
         private int _progressValue = -1;
+        private Stopwatch _progressStopwatch;
+        private const int PROGRESS_INITIAL_DELAY_MS = 300; // Wait before showing progress bar
+        private const int PROGRESS_UPDATE_INTERVAL_MS = 100; // Throttle progress UI updates after first show
         public PaneProgressBar _progressBar;
-        private Receiver<RetentionTimeRegressionSettings, RtRegressionResults> _graphDataReceiver;
+        private ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults> _graphDataReceiver;
 
         public RTLinearRegressionGraphPane(GraphSummary graphSummary, bool runToRun)
             : base(graphSummary)
@@ -63,12 +67,16 @@ namespace pwiz.Skyline.Controls.Graphs
             RunToRun = runToRun;
             Settings.Default.RTScoreCalculatorList.ListChanged += RTScoreCalculatorList_ListChanged;
             AllowDisplayTip = true;
-            _graphDataReceiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
+            var receiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
+            _graphDataReceiver = new ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>(
+                receiver,
+                ReplicateCachingReceiver<RetentionTimeRegressionSettings, RtRegressionResults>.DefaultCleanCache);
             _graphDataReceiver.ProgressChange += ProgressChangeAction;
         }
 
         public void Dispose()
         {
+            _graphDataReceiver?.Dispose();
             _progressBar?.Dispose();
             _progressBar = null;
             AllowDisplayTip = false;
@@ -93,6 +101,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 GraphSummary.BeginInvoke(new Action(() =>
                 {
+                    // Clear cache because newly initialized calculators require fresh computation.
+                    // Without this, the cached partial result (with GraphData == null) would be returned.
+                    _graphDataReceiver.ClearCache();
                     UpdateGraph(false);
                 }));
             }
@@ -111,10 +122,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 int newProgressValue = _graphDataReceiver.GetProgressValue();
                 if (newProgressValue != _progressValue)
                 {
-                    Title.Text = GraphsResources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
-                    Legend.IsVisible = false;
+                    if (_progressStopwatch == null)
+                    {
+                        // First progress update - start timing but don't show yet
+                        _progressStopwatch = Stopwatch.StartNew();
+                        _progressValue = newProgressValue;
+                        return;
+                    }
+
+                    bool progressBarShowing = _progressBar != null;
+                    int throttleMs = progressBarShowing ? PROGRESS_UPDATE_INTERVAL_MS : PROGRESS_INITIAL_DELAY_MS;
+
+                    if (_progressStopwatch.ElapsedMilliseconds < throttleMs)
+                    {
+                        return; // Skip this update, not enough time has passed
+                    }
+
+                    _progressStopwatch.Restart();
                     _progressBar ??= new PaneProgressBar(this);
-                    _progressBar?.UpdateProgress(_graphDataReceiver.GetProgressValue());
+                    _progressBar.UpdateProgress(newProgressValue);
                     _progressValue = newProgressValue;
                 }
             }
@@ -123,6 +149,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _progressBar?.Dispose();
                 _progressBar = null;
                 _progressValue = -1;
+                _progressStopwatch = null;
             }
         }
 
@@ -146,7 +173,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     new Rectangle(e.Location, new Size()),
                     e.Location);
 
-                GraphSummary.Cursor = Cursors.Hand;
+                sender.Cursor = Cursors.Hand;
                 return true;
             }
             else
@@ -340,13 +367,21 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void UpdateNow() 
+        private void UpdateNow()
         {
-            GraphObjList.Clear();
-            CurveList.Clear();
             var regressionSettings = GetRegressionSettings();
-            if (!_graphDataReceiver.TryGetProduct(regressionSettings, out var results))
+            RtRegressionResults results;
+            try
             {
+                if (!_graphDataReceiver.TryGetProduct(regressionSettings, out results))
+                {
+                    // Keep showing previous graph while calculating new data (stale-while-revalidate)
+                    return;
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(Program.MainWindow, e);
                 return;
             }
 
@@ -355,11 +390,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            _data = results.GraphData;
-            if (_data == null)
+            if (results.GraphData == null)
             {
                 return;
             }
+
+            // Clear only when new data is ready for seamless transition
+            GraphObjList.Clear();
+            CurveList.Clear();
+            _data = results.GraphData;
             GraphHelper.FormatGraphPane(this);
 
             var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
@@ -514,7 +553,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public RetentionTimeStatistics _statisticsRefined;
 
             private readonly RetentionScoreCalculatorSpec _calculator;
-            private bool _refine;
 
             public RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
 
@@ -536,9 +574,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 _points = snapshot.AllPoints.Select(dp => new PointInfo(dp.IdentityPath, dp.ModifiedTarget, dp.X, dp.Y)).ToImmutable();
                 _refinedPoints = snapshot.RefinedPoints.Select(dp => new PointInfo(dp.IdentityPath, dp.ModifiedTarget, dp.X, dp.Y)).ToImmutable();
                 _outlierPoints = snapshot.Outliers.Select(dp => new PointInfo(dp.IdentityPath, dp.ModifiedTarget, dp.X, dp.Y)).ToImmutable();
-
-                _refine = regressionSettings.Refine && !IsRefined();
-                // Snapshot already reflects refined vs all, so do not re-refine here.
             }
 
             public SrmDocument Document
@@ -579,6 +614,28 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             public bool HasOutliers { get { return 0 < _outlierPoints.Count; } }
+
+            /// <summary>
+            /// Returns the appropriate label for points based on whether refinement was requested.
+            /// Shows "Peptides Refined" (or molecule equivalent) when refinement is enabled,
+            /// regardless of whether outliers were actually found.
+            /// </summary>
+            public string GetPointsLabel()
+            {
+                return Helpers.PeptideToMoleculeTextMapper.Translate(
+                    RegressionSettings.Refine ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides,
+                    Document.DocumentType);
+            }
+
+            /// <summary>
+            /// Returns the appropriate label for the regression line based on whether refinement was requested.
+            /// Shows "Regression Refined" when refinement is enabled, regardless of whether outliers were found.
+            /// </summary>
+            public string GetRegressionLabel()
+            {
+                return RegressionSettings.Refine ? GraphsResources.GraphData_Graph_Regression_Refined : GraphsResources.GraphData_Graph_Regression;
+            }
+
             public ImmutableList<PointInfo> AllPoints
             {
                 get { return _points; }
@@ -632,7 +689,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 graphPane.GraphObjList.RemoveAll(o => o is TextObj);
 
-                if (!_refine)
+                if (!HasOutliers)
                 {
                     yNext += AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
                         _regressionAll, _statisticsAll, COLOR_LINE_REFINED);
@@ -785,16 +842,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 curveOut.Symbol.Size = 8f;
             }
 
-            string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides, Data.Document.DocumentType);
-            if (!Data.RegressionSettings.Refine)
+            string labelPoints = Data.GetPointsLabel();
+            if (Data.HasOutliers)
             {
-                GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
+                // Refinement with outliers - show both refined and unrefined lines
+                GraphRegression(Data._statisticsRefined, Data._regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
+                GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
             }
             else
             {
-                labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, Data.Document.DocumentType);
-                GraphRegression(Data._statisticsRefined, Data._regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
-                GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
+                // No outliers - show single line with label based on refinement setting
+                GraphRegression(Data._statisticsAll, Data._regressionAll, Data.GetRegressionLabel(), COLOR_LINE_REFINED);
             }
 
             if (Data._regressionPredict != null && Settings.Default.RTPredictorVisible)
@@ -808,7 +866,7 @@ namespace pwiz.Skyline.Controls.Graphs
             curve.Symbol.Border.IsVisible = false;
             curve.Symbol.Fill = new Fill(COLOR_REFINED);
 
-            if (Data.Outliers != null)
+            if (Data.HasOutliers)
             {
                 var curveOut = AddCurve(GraphsResources.GraphData_Graph_Outliers, Data.Outliers.Select(Data.GetX).ToArray(),
                     Data.Outliers.Select(Data.GetYCorrelation).ToArray(), Color.Black, SymbolType.Diamond);
@@ -841,15 +899,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 curveOut.Symbol.Size = 8f;
             }
 
-            string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(
-                Data.IsRefined() ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides, Data.Document.DocumentType);
+            string labelPoints = Data.GetPointsLabel();
             var curve = AddCurve(labelPoints, Data.RefinedPoints.Select(Data.GetX).ToArray(),
                 Data.RefinedPoints.Select(Data.GetYResidual).ToArray(), Color.Black, SymbolType.Diamond);
             curve.Line.IsVisible = false;
             curve.Symbol.Border.IsVisible = false;
             curve.Symbol.Fill = new Fill(COLOR_REFINED);
 
-            if (Data.Outliers != null)
+            if (Data.HasOutliers)
             {
                 var curveOut = AddCurve(GraphsResources.GraphData_Graph_Outliers, Data.Outliers.Select(Data.GetX).ToArray(),
                     Data.Outliers.Select(Data.GetYResidual).ToArray(), Color.Black, SymbolType.Diamond);
@@ -897,7 +954,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private class RtRegressionResults : Immutable
+        private class RtRegressionResults : Immutable, ICachingResult
         {
             public RtRegressionResults(RetentionTimeRegressionSettings regressionSettings)
             {
@@ -916,6 +973,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return ChangeProp(ImClone(this), im => im.GraphData = graphData);
             }
+
+            // ICachingResult implementation
+            public SrmDocument Document => RegressionSettings.Document;
         }
 
         private static Producer<RetentionTimeRegressionSettings, RtRegressionResults> _producer = new DataProducer();

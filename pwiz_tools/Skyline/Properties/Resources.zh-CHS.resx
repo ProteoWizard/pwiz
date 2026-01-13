@@ -1174,9 +1174,6 @@
   <data name="Note" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\note.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ConfigureToolsDlg_UnpackZipTool_Failed_attempting_to_extract_the_tool" xml:space="preserve">
-    <value>尝试提取工具失败</value>
-  </data>
   <data name="NoPeak" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\nopeak.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -2483,9 +2480,6 @@
   </data>
   <data name="RefineDlg_RefineDlg_Products" xml:space="preserve">
     <value>子离子</value>
-  </data>
-  <data name="ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_" xml:space="preserve">
-    <value>连接至工具商店出错：</value>
   </data>
   <data name="PeptideToMoleculeText_Molecule_Lists" xml:space="preserve">
     <value>分子列表</value>
@@ -3933,8 +3927,41 @@
   <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
     <value>必须先添加肽段修饰，然后再指定其可变状态。</value>
   </data>
+  <data name="FileMissing" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FileMissing.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AuditLog" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AuditLog.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Skyline_FilesTree" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Skyline_FilesTree.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ViewFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ViewFile.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CacheFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CacheFile.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ProtDB" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ProtDB.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ImsDB" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ImsDB.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OptDB" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\OptDB.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="IrtCalculator" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\IrtCalculator.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FolderMissing" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FolderMissing.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ReplicateMissing" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ReplicateMissing.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ArdiaIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ArdiaIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

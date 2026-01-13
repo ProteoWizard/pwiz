@@ -127,9 +127,9 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            LowResTest();
-            if (!IsCoverShotMode)
-                TofTest();
+            if (!LowResTest())
+                return;
+            TofTest();
         }
 
         private void LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode asSmallMoleculesTestMode, string documentFile)
@@ -333,7 +333,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(exportReportDlg);
         }
 
-        private void LowResTest()
+        private bool LowResTest()
         {
             string documentFile = GetTestPath(@"Low Res\BSA_Protea_label_free_meth3.sky");
 
@@ -463,16 +463,21 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             doc = WaitForDocumentChange(doc);
 
             // Add FASTA also skipped because filter for document peptides was chosen.
 
             WaitForClosedForm(importPeptideSearchDlg);
-            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
 
-            WaitForConditionUI(() => allChromGraph.ProgressTotalPercent >= 15);
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window");
+            if (!PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 32, "00:00:01", 50f, 2.14e7f,
+                new Dictionary<string, int>
+                {
+                    { "20fmol_uL_tech1", 34 },
+                    { "80fmol_uL_tech1", 31 }
+                }))
+                return false;
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
 
@@ -497,7 +502,6 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(SkylineWindow.IsGraphSpectrumVisible);
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.CollapsePrecursors();
-                SkylineWindow.Width = 1070;
             });
 
             // Select the first precursor. 
@@ -507,21 +511,29 @@ namespace pwiz.SkylineTestTutorial
                 FindNode(SkylineWindow.Document.MoleculeTransitionGroups.First().CustomMolecule.DisplayName);
             // Ensure Graphs look like p20. (checked)
             WaitForGraphs();
-            RunUI(() => SkylineWindow.Width = 1050);
+            RunUI(() =>
+            {
+                SkylineWindow.Width = 1050;
+                SkylineWindow.Height += 15; // Account for Targets and Files tabs
+            });
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported");
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
             {
                 TestPropertySheet();
             }
+            RunUI(() => SkylineWindow.Height -= 15);    // Subsequent screenshots are graphs only
 
             ValidatePeakRanks(1, 176, true);
             WaitForGraphs();
-            if (!Program.SkylineOffscreen)  // Tooltips are not rendered in offscreen mode
-                ValidatePeakTooltips();
 
-            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+            {
+                // There is no Library Match tooltip for small molecules converted as masses only
+                if (!Program.SkylineOffscreen)  // Tooltips are not rendered in offscreen mode
+                    ValidatePeakTooltips();
                 TestLibraryMatchPropertySheet();
+            }
 
             if (!AsSmallMoleculeMasses)
             {
@@ -649,7 +661,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
                 RunUI(() => selectedNode.Nodes[0].Expand());
                 TakeCoverShot();
-                return;
+                return false;
             }
 
             RunUI(() =>
@@ -707,6 +719,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             WaitForCondition(() => SkylineWindow.GraphPeakArea.IsHidden);
             RunUI(() => SkylineWindow.SaveDocument());
+
+            return true;
         }
 
         private void TofTest()
@@ -902,6 +916,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(31);
             RunUI(() =>
             {
+                SkylineWindow.ActivateReplicate("6-BSA-500fmol");
                 SkylineWindow.FocusDocument();
             });
             PauseForScreenShot("Main window");
@@ -1367,15 +1382,17 @@ namespace pwiz.SkylineTestTutorial
         private void ValidatePeakTooltips()
         {
             // Initializing localized expected values
+            var asSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
             var mzObserved = (951.6229f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
             var mzMatched = (951.4782f).ToString(Formats.Mz, CultureInfo.CurrentCulture);
             var massError = -152.1f;
             var massErrorString = string.Format(CultureInfo.CurrentCulture, Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError);
+            var fragName = "y8" + (asSmallMolecules ? "+" : string.Empty);
             var testString = $"{GraphsResources.GraphSpectrum_ToolTip_mz}\t{mzObserved}\n" +
                              $"{GraphsResources.GraphSpectrum_ToolTip_Intensity}\t3814516\n"+
                              $"{GraphsResources.GraphSpectrum_ToolTip_Rank}\t1\n"+
                              $"{GraphsResources.GraphSpectrum_ToolTip_MatchedIons}\t{GraphsResources.ToolTipImplementation_RenderTip_Calculated_Mass}\n"+
-                             $"y8\t{mzMatched}  {massErrorString}";
+                             $"{fragName}\t{mzMatched}  {massErrorString}";
             var testData = new Dictionary<Point, string>()
             {
                 {new Point(191, 95), testString},

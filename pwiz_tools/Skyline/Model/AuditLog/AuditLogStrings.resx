@@ -524,6 +524,9 @@
   <data name="removed_replicate" xml:space="preserve">
     <value>Removed replicate {0}</value>
   </data>
+  <data name="removed_library" xml:space="preserve">
+    <value>Removed library {0}</value>
+  </data>
   <data name="accepted_peptide" xml:space="preserve">
     <value>Accepted peptide {0}</value>
   </data>
@@ -680,5 +683,47 @@ For reference, the audit log is located here: "{0}"</value>
   </data>
   <data name="imputed_boundaries" xml:space="preserve">
     <value>Imputed boundaries for '{0}'</value>
+  </data>
+  <data name="files_tree_node_renamed" xml:space="preserve">
+    <value>Renamed node {0} to {1} in the Files window</value>
+  </data>
+  <data name="files_tree_node_drag_and_drop" xml:space="preserve">
+    <value>Drag and dropped {0} node to {1} in the Files window</value>
+  </data>
+  <data name="files_tree_nodes_drag_and_drop" xml:space="preserve">
+    <value>Drag and dropped {0} nodes to {1} in the Files window</value>
+  </data>
+  <data name="files_tree_replicates_remove_one" xml:space="preserve">
+    <value>Removed replicate {0} in the Files window</value>
+  </data>
+  <data name="files_tree_replicates_remove_several" xml:space="preserve">
+    <value>Removed {0} replicates in the Files window</value>
+  </data>
+  <data name="files_tree_replicates_remove_all" xml:space="preserve">
+    <value>Removed all replicates in the Files window</value>
+  </data>
+  <data name="files_tree_libraries_remove_one" xml:space="preserve">
+    <value>Removed spectral library {0} in the Files window</value>
+  </data>
+  <data name="files_tree_libraries_remove_several" xml:space="preserve">
+    <value>Removed {0} spectral libraries in the Files window</value>
+  </data>
+  <data name="files_tree_libraries_remove_all" xml:space="preserve">
+    <value>Removed all spectral libraries in the Files window</value>
+  </data>
+  <data name="files_tree_background_proteome_update" xml:space="preserve">
+    <value>Edited background proteome named {0} from the Files window</value>
+  </data>
+  <data name="files_tree_rt_calculator_update" xml:space="preserve">
+    <value>Edited retention time calculator named {0} from the Files window</value>
+  </data>
+  <data name="files_tree_optimization_library_update" xml:space="preserve">
+    <value>Edited optimization library named {0} from the Files window</value>
+  </data>
+  <data name="files_tree_ion_mobility_library_update" xml:space="preserve">
+    <value>Edited ion mobility library named {0} from the Files window</value>
+  </data>
+  <data name="files_tree_spectral_library_update" xml:space="preserve">
+    <value>Edited spectral library named {0} from the Files window</value>
   </data>
 </root>

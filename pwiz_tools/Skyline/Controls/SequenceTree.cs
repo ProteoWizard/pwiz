@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Controls
     /// Displays a <see cref="SrmDocument"/> as a tree of nodes.
     /// <para>
     /// Enhanced node label editing from:
-    /// http://www.codeproject.com/KB/tree/CustomizedLabelEdit.aspx?display=Print
+    /// https://web.archive.org/web/20090316035456/http://www.codeproject.com/KB/tree/CustomizedLabelEdit.aspx?display=Print
     /// </para>
     /// </summary>
     public class SequenceTree : TreeViewMS, ITipDisplayer

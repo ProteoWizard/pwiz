@@ -361,8 +361,7 @@ namespace pwiz.Skyline.FileUI
             this.cbExportSciexOSQuantMethod.Name = "cbExportSciexOSQuantMethod";
             this.helpTip.SetToolTip(this.cbExportSciexOSQuantMethod, resources.GetString("cbExportSciexOSQuantMethod.ToolTip"));
             this.cbExportSciexOSQuantMethod.UseVisualStyleBackColor = true;
-            this.cbExportSciexOSQuantMethod.CheckedChanged +=
-                new System.EventHandler(this.cbExportSciexOSQuantMethod_CheckedChanged);
+            this.cbExportSciexOSQuantMethod.CheckedChanged += new System.EventHandler(this.cbExportSciexOSQuantMethod_CheckedChanged);
             // 
             // textIntensityThreshold
             // 

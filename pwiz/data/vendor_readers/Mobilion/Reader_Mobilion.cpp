@@ -167,7 +167,7 @@ void fillInMetadata(const string& rawpath, MBIFile* rawdata, MSData& msd)
 } // namespace
 
 PWIZ_API_DECL
-void Reader_Mobilion::read(const string& filename,
+void Reader_Mobilion::read(const string& filenameIn,
                          const string& head,
                          MSData& result,
                          int runIndex,
@@ -175,6 +175,8 @@ void Reader_Mobilion::read(const string& filename,
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_Mobilion::read] multiple runs not supported");
+
+    string filename = get_non_unicode_path(filenameIn); // Try to convert to Windows 8.3 short path if necessary - Mobilion reader doesn't like Unicode in filenames
 
     string::const_iterator unicodeCharItr = std::find_if(filename.begin(), filename.end(), [](char ch) { return !isprint(ch) || static_cast<int>(ch) < 0; });
     if (unicodeCharItr != filename.end())
@@ -187,7 +189,7 @@ void Reader_Mobilion::read(const string& filename,
     result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Mobilion(result, rawdata, config));
     result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Mobilion(rawdata, config));
 
-    fillInMetadata(filename, &rawdata->file, result);
+    fillInMetadata(filenameIn, &rawdata->file, result);
 }
 
 

@@ -68,6 +68,13 @@ namespace pwiz.SkylineTestTutorial
         public const string PANORAMA_USER_NAME = "skyline_tester@proteinms.net";
         public const string PANORAMA_PASSWORD = "Lclcmsms1!";
 
+        /// <summary>
+        /// Contains the version text to show in the audit log entries in s-23.
+        /// Set to null and run to s-23 to see the current version, and copy it here
+        /// if desired.
+        /// </summary>
+        public const string SKYLINE_VERSION_TEXT = "25.1.0.237-519d29babc (64-Bit)";
+
         public string testFolderName = "AuditLogUpload";
 
         [TestMethod]
@@ -95,9 +102,11 @@ namespace pwiz.SkylineTestTutorial
                 @"TestTutorial\AuditLogViews.zip"
             };
 
-            AuditLogEntry.TimeProvider = new TestTimeProvider();
-
-            RunFunctionalTest();
+            using (new TestTimeProvider())
+            using (new TestVersionProvider(SKYLINE_VERSION_TEXT))
+            {
+                RunFunctionalTest();
+            }
         }
 
         private string GetTestPath(string relativePath)
@@ -184,6 +193,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI( () =>
             {
+                SkylineWindow.ShowFilesTreeForm(false); // Hide files tab
                 SkylineWindow.ExpandPrecursors();
                 SkylineWindow.Height = 390;
             });
@@ -654,18 +664,21 @@ namespace pwiz.SkylineTestTutorial
         }
     }
 
-    public class TestTimeProvider : AuditLogEntry.ITimeProvider
+    public class TestTimeProvider : AuditLogEntry.ITimeProvider, IDisposable
     {
+        private readonly AuditLogEntry.ITimeProvider _previousProvider;
         private readonly DateTime _startTime;
         private TimeSpan _elapsedTime = TimeSpan.Zero;
         private Random _random = new Random(1); // A consistent random series
 
         public TestTimeProvider()
         {
+            _previousProvider = AuditLogEntry.TimeProvider;
             // Start with a consistent local time of 2025-1-1 at 9:35 AM
             var localTime = new DateTime(2025, 1, 1, 9, 35, 0, DateTimeKind.Local);
             // The audit logging system expects a UTC time.
             _startTime = localTime.ToUniversalTime();
+            AuditLogEntry.TimeProvider = this;
         }
 
         public DateTime Now
@@ -675,6 +688,31 @@ namespace pwiz.SkylineTestTutorial
                 _elapsedTime += TimeSpan.FromSeconds(_random.Next(2, 10));  // Random time from 2 to 10 seconds
                 return _startTime.Add(_elapsedTime);
             }
+        }
+
+        public void Dispose()
+        {
+            AuditLogEntry.TimeProvider = _previousProvider;
+        }
+    }
+
+    public class TestVersionProvider : AuditLogEntry.IVersionProvider, IDisposable
+    {
+        private readonly AuditLogEntry.IVersionProvider _previousProvider;
+
+        public string Version { get; }
+
+        public TestVersionProvider(string version)
+        {
+            _previousProvider = AuditLogEntry.VersionProvider;
+            Version = version;
+            if (!string.IsNullOrEmpty(version))
+                AuditLogEntry.VersionProvider = this;
+        }
+
+        public void Dispose()
+        {
+            AuditLogEntry.VersionProvider = _previousProvider;
         }
     }
 }

@@ -18,7 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.PanoramaClient;
@@ -210,17 +209,6 @@ namespace AutoQCTest
                     testConfigManager.AutoQcState.UserAddConfig(config, null));
             
             return testConfigManager;
-        }
-
-        public static void WaitForCondition(Func<bool> condition, TimeSpan timeout, int timestep, string errorMessage)
-        {
-            var startTime = DateTime.Now;
-            while (DateTime.Now - startTime < timeout)
-            {
-                if (condition()) return;
-                Thread.Sleep(timestep);
-            }
-            throw new Exception(errorMessage);
         }
 
         public static void InitializeSettingsImportExport()

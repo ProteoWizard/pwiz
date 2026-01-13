@@ -18,6 +18,7 @@
  */
 
 
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -252,8 +253,13 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     allChromatograms.Top = SkylineWindow.Top;
                     allChromatograms.Left = SkylineWindow.Right + 20;
                 });
-                WaitForConditionUI(() => allChromatograms.ProgressTotalPercent > 40);
-                PauseForScreenShot<AllChromatogramsGraph>("Importing results form");
+                if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form", 33, "00:00:35", 22f, 2.5e6f,
+                    new Dictionary<string, int>
+                    {
+                        { Path.GetFileNameWithoutExtension(Flies_F), 44 },
+                        { Path.GetFileNameWithoutExtension(Flies_M), 40 }
+                    }))
+                    return;
             }
 
             WaitForGraphs();

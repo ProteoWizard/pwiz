@@ -914,8 +914,8 @@ Would you like to continue?
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
     <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
   </data>
-  <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
-    <value>Detailed Info</value>
+  <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
+    <value>Detailed Log</value>
   </data>
   <data name="WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__" xml:space="preserve">
     <value>Creating MRM method '{0}' from Skyline document '{1}'</value>
@@ -927,10 +927,10 @@ Would you like to continue?
     <value>Compound from Skyline document {0} - {1}</value>
   </data>
   <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_" xml:space="preserve">
-      <value>In "{0}": {1}</value>
+    <value>In "{0}": {1}</value>
   </data>
   <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_" xml:space="preserve">
-      <value>In entry "{0}" of "{1}": {2}</value>
+    <value>In entry "{0}" of "{1}": {2}</value>
   </data>
   <data name="TransitionDocNode_GetLabel__0__1__" xml:space="preserve">
     <value>{0} [{1}]</value>
@@ -956,5 +956,11 @@ Would you like to continue?
   </data>
   <data name="TransitionDocNode_Titles" xml:space="preserve">
     <value>Transitions</value>
+  </data>
+  <data name="PersistedViews_GetLocalizedReportNames_Protein_Abundances" xml:space="preserve">
+	  <value>Protein Abundances</value>
+  </data>
+  <data name="PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas" xml:space="preserve">
+	  <value>Peptide Normalized Areas</value>
   </data>
 </root>
