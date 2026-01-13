@@ -627,6 +627,26 @@ if [ modules.peek : NT ]
         }
      }
 
+    # AI tooling is opt-in via --ai flag (initialize once, don't update on every build)
+    if --ai in $(args)
+    {
+        if ! [ path.exists $(PWIZ_ROOT_PATH)/ai ]
+        {
+            echo "Initializing AI tooling (--ai flag detected)..." ;
+            SHELL "git clone https://github.com/ProteoWizard/pwiz-ai.git ai && cmd /c mklink /J .claude ai\\claude" ;
+        }
+
+        # Create .claude junction if ai exists but junction doesn't (e.g., manual clone)
+        if [ path.exists $(PWIZ_ROOT_PATH)/ai/claude ]
+        {
+            if ! [ path.exists $(PWIZ_ROOT_PATH)/.claude ]
+            {
+                echo "Creating .claude junction to ai/claude..." ;
+                SHELL "cmd /c mklink /J .claude ai\\claude" ;
+            }
+        }
+    }
+
     # overwrite the original header files because of MSVC looking in the current header's path with #include "foo"
 
     # HACK: fix program_options implicit_value eating adjacent positional tokens
