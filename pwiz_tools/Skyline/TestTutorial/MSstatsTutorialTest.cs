@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // bypass the R installer dialogue
-                configureToolsDlg.TestInstallProgram = (container, collection, script) => @"FakeDirectory\R.exe"; // Not L10N
+                configureToolsDlg.TestInstallProgram = (container, collection, script, venvName) => @"FakeDirectory\R.exe"; // Not L10N
 
                 configureToolsDlg.InstallZipTool(GetTestPath(installZipName));
                 AssertToolEquality(MSSTATS_QC, configureToolsDlg.ToolList[0]);

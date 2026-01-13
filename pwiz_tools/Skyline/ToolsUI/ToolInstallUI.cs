@@ -38,7 +38,8 @@ namespace pwiz.Skyline.ToolsUI
     {
         public delegate string InstallProgram(ProgramPathContainer pathContainer,
             ICollection<ToolPackage> toolPackages,
-            string pathToPackageInstallScrip);
+            string pathToPackageInstallScrip,
+            string virtualEnvironmentName);
      
         public static void InstallZipFromFile(Control parent, InstallProgram install)
         {
@@ -116,9 +117,10 @@ namespace pwiz.Skyline.ToolsUI
             // ReSharper disable once MemberHidesStaticFromOuterClass
             public string InstallProgram(ProgramPathContainer programPathContainer,
                                          ICollection<ToolPackage> packages,
-                                         string pathToInstallScript)
+                                         string pathToInstallScript,
+                                         string virtualEnvironmentName)
             {
-                return _installProgram(programPathContainer, packages, pathToInstallScript);
+                return _installProgram(programPathContainer, packages, pathToInstallScript, virtualEnvironmentName);
             }
 
             public bool? ShouldOverwriteAnnotations(List<AnnotationDef> annotations)

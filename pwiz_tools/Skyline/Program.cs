@@ -549,7 +549,8 @@ namespace pwiz.Skyline
             
             CopyOldExternalTools(outerToolsFolderPath, tempOuterToolsFolderPath, broker, increment);
             CopyOldSearchTools(outerToolsFolderPath, tempOuterToolsFolderPath, broker, increment);
-            
+            CopyPythonDirectory(tempOuterToolsFolderPath);
+
             Directory.Move(tempOuterToolsFolderPath, outerToolsFolderPath);
         }
         
@@ -608,6 +609,48 @@ namespace pwiz.Skyline
                 broker.ProgressValue += increment;
             }
             Settings.Default.SearchToolList = SearchToolList.CopyTools(toolList);
+        }
+
+        /// <summary>
+        /// Copy the Python directory (containing virtual environments) from the old Skyline installation
+        /// to the new installation. This preserves Python virtual environments for external tools.
+        /// </summary>
+        private static void CopyPythonDirectory(string tempOuterToolsFolderPath)
+        {
+            // Find the old Python directory by looking at existing tool paths
+            string oldPythonDir = FindOldPythonDirectory();
+            if (string.IsNullOrEmpty(oldPythonDir) || !Directory.Exists(oldPythonDir))
+                return;
+
+            string tempPythonDir = Path.Combine(tempOuterToolsFolderPath, @"Python");
+            if (!Directory.Exists(tempPythonDir))
+                DirectoryEx.DirectoryCopy(oldPythonDir, tempPythonDir, true);
+        }
+
+        /// <summary>
+        /// Find the old Python directory based on existing tool paths.
+        /// The Python directory is always at Tools\Python\ relative to the Tools directory.
+        /// </summary>
+        private static string FindOldPythonDirectory()
+        {
+            // Look for any tool with a ToolDirPath to determine the old Tools directory
+            foreach (var tool in Settings.Default.ToolList)
+            {
+                string toolDirPath = tool.ToolDirPath;
+                if (!string.IsNullOrEmpty(toolDirPath) && Directory.Exists(toolDirPath))
+                {
+                    // toolDirPath is like "C:\old\skyline\Tools\MyTool"
+                    // The parent is the Tools directory: "C:\old\skyline\Tools"
+                    string toolsDir = Path.GetDirectoryName(toolDirPath);
+                    if (!string.IsNullOrEmpty(toolsDir))
+                    {
+                        string pythonDir = Path.Combine(toolsDir, @"Python");
+                        if (Directory.Exists(pythonDir))
+                            return pythonDir;
+                    }
+                }
+            }
+            return null;
         }
 
         public static void Init()

@@ -161,7 +161,21 @@ namespace pwiz.Skyline.Model.Tools
         public List<PythonTaskBase> PendingTasks { get; set; }
 
         public string VirtualEnvironmentName { get; }
-        public string VirtualEnvironmentDir => Path.Combine(PythonVersionDir, VirtualEnvironmentName);
+
+        // Instance-specific Python version (allows different tools to use different Python versions)
+        private readonly string _instancePythonVersion;
+
+        // Instance properties that use the tool's requested Python version
+        public string InstancePythonVersion => _instancePythonVersion ?? PythonVersion;
+        public string InstancePythonVersionDir => Path.Combine(PythonRootDir, InstancePythonVersion);
+        public string InstancePythonEmbeddablePackageFileName => GetPythonEmbeddablePackageFileName(InstancePythonVersion);
+        public Uri InstancePythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + InstancePythonVersion + FORWARD_SLASH + InstancePythonEmbeddablePackageFileName);
+        public string InstancePythonEmbeddablePackageDownloadPath => Path.Combine(InstancePythonVersionDir, InstancePythonEmbeddablePackageFileName);
+        public string InstancePythonEmbeddablePackageExtractDir => Path.Combine(InstancePythonVersionDir, GetPythonEmbeddablePackageFileBaseName(InstancePythonVersion));
+        public string InstanceGetPipScriptDownloadPath => Path.Combine(InstancePythonVersionDir, GET_PIP_SCRIPT_FILE_NAME);
+        public string InstanceBasePythonExecutablePath => Path.Combine(InstancePythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
+
+        public string VirtualEnvironmentDir => Path.Combine(InstancePythonVersionDir, VirtualEnvironmentName);
         public string VirtualEnvironmentPythonExecutablePath => Path.Combine(VirtualEnvironmentDir, SCRIPTS, PYTHON_EXECUTABLE);
 
         #region Functional testing support
@@ -180,15 +194,19 @@ namespace pwiz.Skyline.Model.Tools
 
         public static string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
   
-        private static string PythonEmbeddablePackageFileBaseName
+        private static string PythonEmbeddablePackageFileBaseName => GetPythonEmbeddablePackageFileBaseName(PythonVersion);
+
+        private static string GetPythonEmbeddablePackageFileBaseName(string version)
         {
-            get
-            {
-                var architecture = PythonInstallerUtil.GetPythonPackageArchitectureSubstring(
-                    RuntimeInformation.ProcessArchitecture);
-                var fileBaseName = string.Join(HYPHEN, new[] { PYTHON_LOWER_CASE, PythonVersion, EMBED_LOWER_CASE, architecture });
-                return fileBaseName;
-            }
+            var architecture = PythonInstallerUtil.GetPythonPackageArchitectureSubstring(
+                RuntimeInformation.ProcessArchitecture);
+            var fileBaseName = string.Join(HYPHEN, new[] { PYTHON_LOWER_CASE, version, EMBED_LOWER_CASE, architecture });
+            return fileBaseName;
+        }
+
+        private static string GetPythonEmbeddablePackageFileName(string version)
+        {
+            return GetPythonEmbeddablePackageFileBaseName(version) + DOT_ZIP;
         }
 
         private static string PythonRootDir => PythonInstallerUtil.PythonRootDir;
@@ -344,14 +362,15 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         public PythonInstaller(IEnumerable<PythonPackage> packages,
-            TextWriter writer, string virtualEnvironmentName)
+            TextWriter writer, string virtualEnvironmentName, string pythonVersion = null)
         {
             // SimulatedInstallationState = eSimulatedInstallationState.NONE;
             Writer = writer;
             VirtualEnvironmentName = virtualEnvironmentName;
+            _instancePythonVersion = pythonVersion;
             PendingTasks = new List<PythonTaskBase>();
             Directory.CreateDirectory(PythonRootDir);
-            Directory.CreateDirectory(PythonVersionDir);
+            Directory.CreateDirectory(InstancePythonVersionDir);
             PythonPackages = packages.ToList();
 
             if (NvidiaGpuAvailable == true)
@@ -901,7 +920,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool? IsTaskComplete()
         {
-            var pythonFilePath = PythonInstaller.PythonEmbeddablePackageDownloadPath;
+            var pythonFilePath = PythonInstaller.InstancePythonEmbeddablePackageDownloadPath;
             if (!File.Exists(pythonFilePath))
                 return false;
 
@@ -917,9 +936,9 @@ namespace pwiz.Skyline.Model.Tools
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
             using var webClient = PythonInstaller.TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-            using var fileSaver = new FileSaver(PythonInstaller.PythonEmbeddablePackageDownloadPath);
+            using var fileSaver = new FileSaver(PythonInstaller.InstancePythonEmbeddablePackageDownloadPath);
 
-            webClient.DownloadFileAsyncOrThrow(PythonInstaller.PythonEmbeddablePackageUri, fileSaver.SafeName);
+            webClient.DownloadFileAsyncOrThrow(PythonInstaller.InstancePythonEmbeddablePackageUri, fileSaver.SafeName);
             fileSaver.Commit();
         }
     }
@@ -935,10 +954,10 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool? IsTaskComplete()
         {
-            if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
+            if (!Directory.Exists(PythonInstaller.InstancePythonEmbeddablePackageExtractDir))
                 return false;
-           
-            return PythonInstallerUtil.IsSignedFileOrDirectory(PythonInstaller.PythonEmbeddablePackageExtractDir);
+
+            return PythonInstallerUtil.IsSignedFileOrDirectory(PythonInstaller.InstancePythonEmbeddablePackageExtractDir);
         }
 
         public override void DoAction(ILongWaitBroker broker)
@@ -949,9 +968,9 @@ namespace pwiz.Skyline.Model.Tools
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
-            using var zipFile = ZipFile.Read(PythonInstaller.PythonEmbeddablePackageDownloadPath);
-            DirectoryEx.SafeDeleteLongPath(PythonInstaller.PythonEmbeddablePackageExtractDir);
-            zipFile.ExtractAll(PythonInstaller.PythonEmbeddablePackageExtractDir);
+            using var zipFile = ZipFile.Read(PythonInstaller.InstancePythonEmbeddablePackageDownloadPath);
+            DirectoryEx.SafeDeleteLongPath(PythonInstaller.InstancePythonEmbeddablePackageExtractDir);
+            zipFile.ExtractAll(PythonInstaller.InstancePythonEmbeddablePackageExtractDir);
         }
     }
 
@@ -966,16 +985,16 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool? IsTaskComplete()
         {
-            if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
+            if (!Directory.Exists(PythonInstaller.InstancePythonEmbeddablePackageExtractDir))
                 return false;
 
-            return PythonInstallerUtil.IsSignatureValid(PythonInstaller.PythonEmbeddablePackageExtractDir,
-                PythonInstallerUtil.GetDirectoryHash(PythonInstaller.PythonEmbeddablePackageExtractDir));
+            return PythonInstallerUtil.IsSignatureValid(PythonInstaller.InstancePythonEmbeddablePackageExtractDir,
+                PythonInstallerUtil.GetDirectoryHash(PythonInstaller.InstancePythonEmbeddablePackageExtractDir));
         }
 
         public override void DoAction(ILongWaitBroker broker)
         {
-            var files = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*._pth");
+            var files = Directory.GetFiles(PythonInstaller.InstancePythonEmbeddablePackageExtractDir, @"python*._pth");
             Assume.IsTrue(files.Length == 1,
                 ToolsResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected);
             var oldFilePath = files[0];
@@ -1023,7 +1042,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool? IsTaskComplete()
         {
-            var filePath = PythonInstaller.GetPipScriptDownloadPath;
+            var filePath = PythonInstaller.InstanceGetPipScriptDownloadPath;
 
             if (!File.Exists(filePath))
                 return false;
@@ -1040,8 +1059,8 @@ namespace pwiz.Skyline.Model.Tools
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
             using var webClient = PythonInstaller.TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-            webClient.DownloadFileAsyncOrThrow(PythonInstaller.GetPipScriptDownloadUri, PythonInstaller.GetPipScriptDownloadPath);
-            PythonInstallerUtil.SignFile(PythonInstaller.GetPipScriptDownloadPath);
+            webClient.DownloadFileAsyncOrThrow(PythonInstaller.GetPipScriptDownloadUri, PythonInstaller.InstanceGetPipScriptDownloadPath);
+            PythonInstallerUtil.SignFile(PythonInstaller.InstanceGetPipScriptDownloadPath);
         }
     }
 
@@ -1056,7 +1075,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool? IsTaskComplete()
         {
-            var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
+            var filePath = Path.Combine(PythonInstaller.InstancePythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
 
             if (!File.Exists(filePath))
                 return false;
@@ -1066,18 +1085,18 @@ namespace pwiz.Skyline.Model.Tools
 
         public override void DoAction(ILongWaitBroker broker)
         {
-            var cmdLine = TextUtil.SpaceSeparate(PythonInstaller.BasePythonExecutablePath.Quote(), PythonInstaller.GetPipScriptDownloadPath.Quote());
+            var cmdLine = TextUtil.SpaceSeparate(PythonInstaller.InstanceBasePythonExecutablePath.Quote(), PythonInstaller.InstanceGetPipScriptDownloadPath.Quote());
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdLine, PythonInstaller.CMD_PROCEEDING_SYMBOL);
             cmd += cmdLine;
-            
+
             var pipedProcessRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            
+
             var cancelToken = broker.GetSafeCancellationToken();
 
             if (pipedProcessRunner.RunProcess(cmd, false, PythonInstaller.Writer, true, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
 
-            var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
+            var filePath = Path.Combine(PythonInstaller.InstancePythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
             PythonInstallerUtil.SignFile(filePath);
         }
     }
@@ -1092,24 +1111,24 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool? IsTaskComplete()
         {
-            var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.VIRTUALENV_EXE);
+            var filePath = Path.Combine(PythonInstaller.InstancePythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.VIRTUALENV_EXE);
 
             if (!File.Exists(filePath))
                 return false;
 
             return PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
         }
-        
+
         public override void DoAction(ILongWaitBroker broker)
         {
             var virtualEnvPackage = new PythonPackage { Name = PythonInstaller.VIRTUALENV, Version = null };
-            PythonInstaller.PipInstall(PythonInstaller.BasePythonExecutablePath.Quote(), new [] {virtualEnvPackage}, broker);
+            PythonInstaller.PipInstall(PythonInstaller.InstanceBasePythonExecutablePath.Quote(), new [] {virtualEnvPackage}, broker);
         }
     }
 
     public class CreateVirtualEnvironmentTask : PythonTaskBase
     {
-        public CreateVirtualEnvironmentTask(PythonInstaller installer) 
+        public CreateVirtualEnvironmentTask(PythonInstaller installer)
             : base(installer, PythonTaskName.create_virtual_environment, new PipInstallVirtualEnvTask(installer))
         {
         }
@@ -1120,10 +1139,10 @@ namespace pwiz.Skyline.Model.Tools
         {
             return Directory.Exists(PythonInstaller.VirtualEnvironmentDir);
         }
-        
+
         public override void DoAction(ILongWaitBroker broker)
         {
-            PythonInstaller.RunPythonModule(PythonInstaller.BasePythonExecutablePath.Quote(), PythonInstaller.PythonVersionDir,
+            PythonInstaller.RunPythonModule(PythonInstaller.InstanceBasePythonExecutablePath.Quote(), PythonInstaller.InstancePythonVersionDir,
                 PythonInstaller.VIRTUALENV, new[] { PythonInstaller.VirtualEnvironmentName }, broker);
         }
     }

@@ -269,7 +269,7 @@ namespace pwiz.SkylineTestFunctional
         private static void ShowToolStore(IToolStoreClient client)
         {
             // Dummy install delegate for testing - actual installation tested separately
-            ToolInstallUI.InstallProgram installProgram = (ppc, packages, script) => null;
+            ToolInstallUI.InstallProgram installProgram = (ppc, packages, script, venvName) => null;
 
             using (var dlg = new ToolStoreDlg(client, client.GetToolStoreItems(), installProgram))
             {

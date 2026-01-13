@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model.Tools
                               string foundVersion,
                               string newCollectionName);
 
-        string InstallProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript);
+        string InstallProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript, string virtualEnvironmentName);
     }
     
     public static class ToolInstaller
@@ -390,7 +390,7 @@ namespace pwiz.Skyline.Model.Tools
                             }
                         }
 
-                        string path = unpackSupport.InstallProgram(ppc, retval.Installations[ppc], pathToPackageInstallScript);
+                        string path = unpackSupport.InstallProgram(ppc, retval.Installations[ppc], pathToPackageInstallScript, toolInfo.PackageIdentifier);
                         if (path == null)
                         {
                             // Cancel installation

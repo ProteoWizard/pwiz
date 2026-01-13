@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
                 return true;
             }
 
-            public string InstallProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript)
+            public string InstallProgram(ProgramPathContainer ppc, ICollection<ToolPackage> packages, string pathToInstallScript, string virtualEnvironmentName)
             {
                 return string.Empty;
             }

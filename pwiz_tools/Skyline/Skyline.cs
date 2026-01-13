@@ -4472,7 +4472,7 @@ namespace pwiz.Skyline
         }
 
         // currently a work-around to get an R-installer
-        public string InstallProgram(ProgramPathContainer programPathContainer, ICollection<ToolPackage> packages, string pathToPackageInstallScript)
+        public string InstallProgram(ProgramPathContainer programPathContainer, ICollection<ToolPackage> packages, string pathToPackageInstallScript, string virtualEnvironmentName)
         {
             if (programPathContainer.ProgramName.Equals(@"R"))
             {
@@ -4508,24 +4508,28 @@ namespace pwiz.Skyline
             }
             else if (programPathContainer.ProgramName.Equals(@"Python"))
             {
-                if (!PythonUtil.CheckInstalled(programPathContainer.ProgramVersion) || packages.Count != 0)
-                {
-                    if (packages.Count != 0)
-                    {
-                        ShowImmediateWindow();
-                    }
-                    
-                    // No versioning of packages for Python yet. 
-                    // Here we just ignore all the versions attached to packages. 
-                    IEnumerable<string> pythonPackages = packages.Select(p => p.Name);
+                // Show immediate window to display pip output
+                ShowImmediateWindow();
 
-                    using (var dlg = new PythonInstallerLegacyDlg(programPathContainer, pythonPackages, _skylineTextBoxStreamWriterHelper))
-                    {
-                        if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                            return null;
-                    }
-                }
-                return PythonUtil.GetProgramPath(programPathContainer.ProgramVersion);
+                // Convert ToolPackage to PythonPackage
+                var pythonPackages = packages.Select(p => new PythonPackage
+                {
+                    Name = p.Name,
+                    Version = p.Version
+                });
+
+                // Get the requested Python version from the tool
+                string requestedPythonVersion = programPathContainer.ProgramVersion;
+
+                // Create installer with virtual environment name and requested Python version
+                var installer = new PythonInstaller(pythonPackages, _skylineTextBoxStreamWriterHelper, virtualEnvironmentName, requestedPythonVersion);
+
+                // Install/validate the Python virtual environment
+                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, installer))
+                    return null;
+
+                // Return path to Python executable in the virtual environment
+                return PythonInstallerUtil.GetPythonExecutablePath(requestedPythonVersion, virtualEnvironmentName);
             } 
             else 
             {
