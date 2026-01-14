@@ -29,8 +29,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "MassHunterData.hpp"
 #include "MidacData.hpp"
-#include "pwiz/utility/minimxml/SAXParser.hpp"
-#include "SampleInfoParser.hpp"
+#include "XmlMetadataParser.hpp"
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -51,73 +50,6 @@ namespace Agilent {
 
 
 namespace {
-
-using namespace pwiz::minimxml;
-using boost::iostreams::stream_offset;
-using boost::iostreams::offset_to_position;
-
-struct Device
-{
-    int DeviceID;
-    string Name;
-    string DriverVersion;
-    string FirmwareVersion;
-    string ModelNumber;
-    string OrdinalNumber;
-    string SerialNumber;
-    string Type;
-    string StoredDataType;
-    string Delay;
-    string Vendor;
-};
-
-#pragma unmanaged
-struct HandlerDevices : public SAXParser::Handler
-{
-    vector<Device> devices;
-    string* currentProperty;
-
-    HandlerDevices() : currentProperty(nullptr)
-    {
-        parseCharacters = true;
-    }
-
-    virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
-    {
-        if (name == "Device")
-        {
-            devices.push_back(Device());
-            getAttribute(attributes, "DeviceID", devices.back().DeviceID);
-        }
-        else if (name == "Devices" || name == "Version") return Status::Ok;
-        else if (name == "Name") currentProperty = &devices.back().Name;
-        else if (name == "DriverVersion") currentProperty = &devices.back().DriverVersion;
-        else if (name == "FirmwareVersion") currentProperty = &devices.back().FirmwareVersion;
-        else if (name == "ModelNumber") currentProperty = &devices.back().ModelNumber;
-        else if (name == "OrdinalNumber") currentProperty = &devices.back().OrdinalNumber;
-        else if (name == "SerialNumber") currentProperty = &devices.back().SerialNumber;
-        else if (name == "Type") currentProperty = &devices.back().Type;
-        else if (name == "StoredDataType") currentProperty = &devices.back().StoredDataType;
-        else if (name == "Delay") currentProperty = &devices.back().Delay;
-        else if (name == "Vendor") currentProperty = &devices.back().Vendor;
-        else
-            throw runtime_error(("[HandlerDevices] Unexpected element name: " + name).c_str());
-
-        return Status::Ok;
-    }
-
-    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
-    {
-        if (currentProperty)
-        {
-            currentProperty->assign(text.c_str());
-            currentProperty = nullptr;
-        }
-
-        return Status::Ok;
-    }
-};
-#pragma managed
 
 MHDAC::IMsdrPeakFilter^ msdrPeakFilter(PeakFilterPtr peakFilter)
 {
@@ -531,20 +463,13 @@ std::string MassHunterDataImpl::getDeviceName(DeviceType deviceType) const
 
 std::string MassHunterData::getDeviceSerialNumber(DeviceType deviceType) const
 {
-    bfs::path massHunterDevicesPath(massHunterRootPath_);
-    massHunterDevicesPath /= "AcqData/Devices.xml";
-    if (!bfs::exists(massHunterDevicesPath))
+    loadMetadataIfNeeded();
+
+    if (devices_.empty())
         return "";
 
-    ifstream devicesXml(massHunterDevicesPath.string().c_str(), ios::binary);
-    HandlerDevices handler;
-    SAXParser::parse(devicesXml, handler);
-
-    if (handler.devices.empty())
-        return "";
-
-    auto findItr = std::find_if(handler.devices.begin(), handler.devices.end(), [&](const Device& device) { return lexical_cast<int>(device.Type) == (int) deviceType; });
-    if (findItr == handler.devices.end())
+    auto findItr = std::find_if(devices_.begin(), devices_.end(), [&](const Device& device) { return lexical_cast<int>(device.Type) == (int) deviceType; });
+    if (findItr == devices_.end())
         return "";
 
     return findItr->SerialNumber;
@@ -967,41 +892,41 @@ IonPolarity MassChromatogramImpl::getIonPolarity() const
 // sample-info accessors
 std::map<std::string, std::string> MassHunterData::getSampleInfoMap() const
 {
-    loadSampleInfoIfNeeded();
+    loadMetadataIfNeeded();
     return sampleInfoMap_;
 }
 
 const std::string& MassHunterData::getSampleInfoValue(const std::string& key, const std::string& defaultValue) const
 {
-    loadSampleInfoIfNeeded();
+    loadMetadataIfNeeded();
     auto it = sampleInfoMap_.find(key);
     return (it != sampleInfoMap_.end()) ? it->second : defaultValue;
 }
 
-void MassHunterData::loadSampleInfoIfNeeded() const
+void MassHunterData::loadMetadataIfNeeded() const
 {
-    if (sampleInfoLoaded_)
+    if (metadataLoaded_)
         return;
 
-    sampleInfoLoaded_ = true; // prevent re-entrance
+    metadataLoaded_ = true; // prevent re-entrance
 
     try
     {
-        bfs::path sampleInfoPath = bfs::path(massHunterRootPath_) / "AcqData" / "sample_info.xml";
-        if (!bfs::exists(sampleInfoPath))
+        bfs::path acqDataPath = bfs::path(massHunterRootPath_) / "AcqData";
+        if (!bfs::exists(acqDataPath))
             return;
-        SampleInfoParser parser(sampleInfoPath.string(), sampleInfoMap_);
+        XmlMetadataParser parser(acqDataPath.string(), sampleInfoMap_, devices_);
         parser.parse();
     }
     catch (const std::exception& e)
     {
         // TODO: log error
-        cerr << "Error loading sample information: " << e.what() << endl;
+        cerr << "Error loading metadata: " << e.what() << endl;
     }
     catch (...)
     {
         // TODO: log unknown error
-        cerr << "Unknown error loading sample information." << endl;
+        cerr << "Unknown error loading metadata." << endl;
     }
 }
 

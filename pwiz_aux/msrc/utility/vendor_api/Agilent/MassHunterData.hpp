@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/BinaryData.hpp"
 #include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
+#include "XmlMetadataParser.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -328,10 +329,11 @@ typedef boost::shared_ptr<Frame> FramePtr;
 
 class PWIZ_API_DECL MassHunterData
 {
-    // caching for sample_info.xml
+    // caching for sample_info.xml and Devices.xml
     mutable std::map<std::string, std::string> sampleInfoMap_;
-    mutable bool sampleInfoLoaded_ = false;
-    void loadSampleInfoIfNeeded() const;
+    mutable std::vector<Device> devices_;
+    mutable bool metadataLoaded_ = false;
+    void loadMetadataIfNeeded() const;
 
     protected:
     std::string massHunterRootPath_; // path to a .d directory with AcqData in it

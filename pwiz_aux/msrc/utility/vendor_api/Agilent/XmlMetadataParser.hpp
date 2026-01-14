@@ -17,30 +17,50 @@
 //
 
 
-#ifndef _SAMPLEINFOPARSER_HPP_
-#define _SAMPLEINFOPARSER_HPP_
+#ifndef _XMLMETADATAPARSER_HPP_
+#define _XMLMETADATAPARSER_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <string>
 #include <map>
+#include <vector>
 
 namespace pwiz {
 namespace vendor_api {
 namespace Agilent {
 
-class PWIZ_API_DECL SampleInfoParser
+struct PWIZ_API_DECL Device
+{
+    int DeviceID;
+    std::string Name;
+    std::string DriverVersion;
+    std::string FirmwareVersion;
+    std::string ModelNumber;
+    std::string OrdinalNumber;
+    std::string SerialNumber;
+    std::string Type;
+    std::string StoredDataType;
+    std::string Delay;
+    std::string Vendor;
+};
+
+
+class PWIZ_API_DECL XmlMetadataParser
 {
     public:
-    explicit SampleInfoParser(const std::string& filepath, std::map<std::string, std::string>& sampleInfoMap);
+    explicit XmlMetadataParser(const std::string& acqDataPath,
+                               std::map<std::string, std::string>& sampleInfoMap,
+                               std::vector<Device>& devices);
     void parse(); // throws on error
 
     private:
-    std::string filepath_;
-    std::map<std::string, std::string>& map_;
+    std::string acqDataPath_;
+    std::map<std::string, std::string>& sampleInfoMap_;
+    std::vector<Device>& devices_;
 };
 
 } // namespace Agilent
 } // namespace vendor_api
 } // namespace pwiz
 
-#endif // _SAMPLEINFOPARSER_HPP_
+#endif // _XMLMETADATAPARSER_HPP_
