@@ -537,10 +537,17 @@ rule day_of_year ( Y M D )
 
 # YMMDD where Y is number of years since 2016
 # Uses git commit date for reproducible versioning (not build machine date)
+# Falls back to JAMDATE if git command fails (e.g., old git version, shallow clone)
 rule MAKE_BUILD_TIMESTAMP ( )
 {
     local git_date = [ SHELL "git log -1 --format=%cs HEAD" ] ;
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : $(git_date) ] ;
+    if ! $(ymd)
+    {
+        # Fallback to build machine date if git date extraction fails
+        local utc = [ modules.peek : JAMDATE ] ;
+        ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : $(utc) ] ;
+    }
     local d = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd[0]) ] [ day_of_year $(ymd) ] ;
     return $(d:J=) ;
 }
@@ -619,6 +626,26 @@ if [ modules.peek : NT ]
             echo "NOTICE: not extracting vendor APIs; use --i-agree-to-the-vendor-licenses to extract and use them." ;
         }
      }
+
+    # AI tooling is opt-in via --ai flag (initialize once, don't update on every build)
+    if --ai in $(args)
+    {
+        if ! [ path.exists $(PWIZ_ROOT_PATH)/ai ]
+        {
+            echo "Initializing AI tooling (--ai flag detected)..." ;
+            SHELL "git clone https://github.com/ProteoWizard/pwiz-ai.git ai && cmd /c mklink /J .claude ai\\claude" ;
+        }
+
+        # Create .claude junction if ai exists but junction doesn't (e.g., manual clone)
+        if [ path.exists $(PWIZ_ROOT_PATH)/ai/claude ]
+        {
+            if ! [ path.exists $(PWIZ_ROOT_PATH)/.claude ]
+            {
+                echo "Creating .claude junction to ai/claude..." ;
+                SHELL "cmd /c mklink /J .claude ai\\claude" ;
+            }
+        }
+    }
 
     # overwrite the original header files because of MSVC looking in the current header's path with #include "foo"
 

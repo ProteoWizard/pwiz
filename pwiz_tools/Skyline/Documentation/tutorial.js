@@ -1,9 +1,61 @@
-function renderPage(tutorialName, pdf_ver, cover_ver, data_suffix, lang)
+// =============================================================================
+// Tutorial Version Configuration
+// =============================================================================
+// These are the ONLY places version numbers need to be updated for releases.
+// Other pages can include this script and call rewriteTutorialUrls() to
+// automatically update placeholder versions (0-0, 0-9) in image URLs.
+
+var tutorialVersion = '25-1';       // Current stable release
+var tutorialAltVersion = '26-0-9';  // Pre-release version (empty string if none)
+
+// Rewrites placeholder version numbers in tutorial image URLs.
+// Use 0-0 as placeholder for stable version, 0-9 for pre-release only.
+// Call this at the bottom of any page that has tutorial cover images.
+function rewriteTutorialUrls() {
+  // Replace 0-0 placeholder with current stable version
+  document.querySelectorAll('img[src*="/tutorials/0-0/"]').forEach(function(img) {
+    img.src = img.src.replace('/tutorials/0-0/', '/tutorials/' + tutorialVersion + '/');
+  });
+  // Replace 0-9 placeholder with pre-release version (for new tutorials)
+  if (tutorialAltVersion.length > 0) {
+    document.querySelectorAll('img[src*="/tutorials/0-9/"]').forEach(function(img) {
+      img.src = img.src.replace('/tutorials/0-9/', '/tutorials/' + tutorialAltVersion + '/');
+    });
+  }
+}
+
+// =============================================================================
+// Tutorial Page Rendering Functions
+// =============================================================================
+
+// Wrapper for tutorials that exist in the stable release version.
+// Use this for new tutorials going forward.
+function renderPageRelease(tutorialName, data_suffix, lang) {
+    renderPage(tutorialName, null, null, data_suffix, lang, false);
+}
+
+// Wrapper for tutorials that only exist in the pre-release (alt) version.
+// Use this when a tutorial is new and hasn't been included in a stable release yet.
+function renderPagePreRelease(tutorialName, data_suffix, lang) {
+    renderPage(tutorialName, null, null, data_suffix, lang, true);
+}
+
+// Main render function for tutorial wiki pages.
+// Parameters:
+//   tutorialName - folder name under /tutorials/{version}/ (e.g., 'DIA')
+//   pdf_ver      - LEGACY: no longer used, pass null (kept as option to show links to historical PDF files)
+//   cover_ver    - LEGACY: no longer used, pass null
+//   data_suffix  - suffix for data zip file (e.g., '' or version like '26.0.9')
+//   lang         - language code ('en', 'ja', 'zh')
+//   altOnly      - true if tutorial only exists in altVersion (pre-release), false otherwise
+function renderPage(tutorialName, pdf_ver, cover_ver, data_suffix, lang, altOnly)
 {
-  var version = '25-1';  // change to update version - must exist https://skyline.ms/tutorials/24-1/
-  var altVersion = '';  // change to update beta version - must exist https://skyline.ms/tutorials/25-0-9/
-  pdf_ver = null;  // Comment this line to add back links to last PDF files
-  cover_ver = cover_ver.replaceAll('.', '_'); // No longer used
+  // Stable release version - tutorials here are available via the [html] link
+  var version = tutorialVersion;
+  // Pre-release version - tutorials here are available via the [html X.X.X] link
+  var altVersion = tutorialAltVersion;
+
+  pdf_ver = null;  // Comment this line to add back links to historical PDF files
   var lang_img_suffix = '';
   var lang_pdf_suffix = '';
   if (lang != 'en')
@@ -39,9 +91,16 @@ function renderPage(tutorialName, pdf_ver, cover_ver, data_suffix, lang)
     }
     document.getElementById("doc_html_a").href = htmlRef;
     document.getElementById("doc_html_a").textContent = langLookup(lang, 'html', 'html', '哈特莫');
+    if (altOnly)
+    {
+      // Hide the regular html link for altOnly tutorials (only alt-html exists)
+      document.getElementById("doc_html").style.display = 'none';
+    }
     if (altVersion.length > 0)
-      addAltHtmlLink(tutorialName, lang, altVersion);    
-    document.getElementById("doc_img").src = '/tutorials/' + version + '/' + tutorialName + '/' + lang + '/cover.png';
+      addAltHtmlLink(tutorialName, lang, altVersion);
+    // Use altVersion for cover image when tutorial only exists in pre-release
+    var coverVersion = altOnly ? altVersion : version;
+    document.getElementById("doc_img").src = '/tutorials/' + coverVersion + '/' + tutorialName + '/' + lang + '/cover.png';
     if (document.getElementById("data_a") != null)
     {
       if (data_suffix.includes('.'))

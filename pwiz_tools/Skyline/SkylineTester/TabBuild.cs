@@ -126,7 +126,11 @@ namespace SkylineTester
                 : "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
             var git = MainWindow.Git;
             
-            var toolsetArg = string.Empty; // Let bjam pick the newest available - currently VS2017 and VS2019 work equally well for Skyline builds
+            // Default to VS 2022 (msvc-14.3) for compatibility with vendor DLLs.
+            // VS 2026 (msvc-14.5) can cause access violations with some vendor libraries.
+            // Set environment variable SKYLINE_BUILD_TOOLSET to override (e.g., "msvc-14.5" for VS 2026)
+            var toolset = Environment.GetEnvironmentVariable("SKYLINE_BUILD_TOOLSET") ?? "msvc-14.3";
+            var toolsetArg = "toolset=" + toolset;
             /* But retain this code in case we someday get back to a state where we need to choose
 
             // Determine toolset requirement based on .Net usage

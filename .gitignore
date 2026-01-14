@@ -428,8 +428,10 @@ Version.cpp
 /pwiz_tools/Skyline/SkylineTester test list.txt
 /pwiz_tools/Skyline/SkylineTester.log
 SkylineTester Results
+/b.bat
 /b64.bat
 /b32.bat
+/bs.bat
 /bs64.bat
 /bs32.bat
 /bso64.bat
@@ -480,3 +482,7 @@ SkylineTester Results
 /tutorialTestNames.txt
 /tests.txt
 /pwiz_tools/Skyline/Translation/Scratch
+
+# AI tooling junction (created by build with --ai flag)
+/.claude
+ai/

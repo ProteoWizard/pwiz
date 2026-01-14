@@ -225,6 +225,9 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd, const
             }
     }
 
+    if (sl->numSpectraOfController(Controller_PDA) > 0)
+        msd.fileDescription.fileContent.set(MS_EMR_spectrum);
+
     // these scan types should be represented as chromatograms
     if (simScanCount > 0)
         msd.fileDescription.fileContent.set(MS_SIM_chromatogram);
