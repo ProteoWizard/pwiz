@@ -180,6 +180,7 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
+    <Compile Include="ExportHugeParquetReportTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
     <Compile Include="ParquetRowItemExporterTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
