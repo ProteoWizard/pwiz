@@ -733,7 +733,7 @@
     <value>228, 22</value>
   </data>
   <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>R&amp;egression</value>
+    <value>回帰(&amp;e)</value>
     <comment>Needs Review:English text changed
 Old English:&amp;Regression
 Current English:R&amp;egression
@@ -758,7 +758,7 @@ Old Localized:回帰(&amp;R)</comment>
     <value>180, 22</value>
   </data>
   <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>Retention T&amp;imes</value>
+    <value>保持時間(&amp;i)</value>
     <comment>Needs Review:English text changed
 Old English:Retention &amp;Times
 Current English:Retention T&amp;imes

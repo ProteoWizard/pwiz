@@ -344,8 +344,11 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
     <value>次に対する空のクロマトグラムを破棄しています: {0}</value>
   </data>
+  <data name="SpectrumFilter_No_Isolation_Window_Found_For_Precursor_" xml:space="preserve">
+    <value>プリカーサー{1}について{0}には単離ウィンドウがありません（m/z={2:F04} {3}）</value>
+  </data>
   <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
-    <value>Loading {0}</value>
+    <value>読み込み中 {0}</value>
     <comment>Needs Review:Inconsistent translation
 Candidate Translation:{0}の読み込み中
 Candidate Translation:{0}を読み込んでいます</comment>
@@ -355,5 +358,14 @@ Candidate Translation:{0}を読み込んでいます</comment>
   </data>
   <data name="Property_DisambiguationPrefix_Property__" xml:space="preserve">
     <value>プロパティ： </value>
+  </data>
+  <data name="IonMobilityAndCCS_DisplayString_HighEnergyOffset_" xml:space="preserve">
+    <value>高エネルギーオフセット={0:F03}</value>
+  </data>
+  <data name="IonMobilityAndCCS_DisplayString_CCS_" xml:space="preserve">
+    <value>CCS={0:F03}</value>
+  </data>
+  <data name="IonMobilityAndCCS_DisplayString_IM_And_Tolerance_" xml:space="preserve">
+    <value>IM={0:F03}{1} {2}</value>
   </data>
 </root>

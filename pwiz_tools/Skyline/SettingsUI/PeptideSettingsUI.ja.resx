@@ -1348,6 +1348,9 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="tbxMaxPeakWidthVariation.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
+  <data name="tbxMaxPeakWidthVariation.ToolTip" xml:space="preserve">
+    <value>最良スコアの繰り返し測定で幅がこの量を超えて異なるピークの境界は調整されます。</value>
+  </data>
   <data name="&gt;&gt;tbxMaxPeakWidthVariation.Name" xml:space="preserve">
     <value>tbxMaxPeakWidthVariation</value>
   </data>
@@ -1371,6 +1374,9 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="lblMaxPeakWidthVariation.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
+  </data>
+  <data name="lblMaxPeakWidthVariation.Text" xml:space="preserve">
+    <value>次より大きい幅デルタ(&amp;d):</value>
   </data>
   <data name="&gt;&gt;lblMaxPeakWidthVariation.Name" xml:space="preserve">
     <value>lblMaxPeakWidthVariation</value>
@@ -1423,6 +1429,9 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="tbxMaxRtShift.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="tbxMaxRtShift.ToolTip" xml:space="preserve">
+    <value>最良スコアの繰り返し測定で中心時間がこの距離を超えるピークの境界は調整されます。</value>
+  </data>
   <data name="&gt;&gt;tbxMaxRtShift.Name" xml:space="preserve">
     <value>tbxMaxRtShift</value>
   </data>
@@ -1446,6 +1455,9 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="lblMaxRtShift.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
+  </data>
+  <data name="lblMaxRtShift.Text" xml:space="preserve">
+    <value>次より大きいRTデルタ(&amp;T):</value>
   </data>
   <data name="&gt;&gt;lblMaxRtShift.Name" xml:space="preserve">
     <value>lblMaxRtShift</value>
@@ -1471,6 +1483,12 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="cbxImputeMissingPeaks.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
+  <data name="cbxImputeMissingPeaks.Text" xml:space="preserve">
+    <value>欠損しているピーク(&amp;M)</value>
+  </data>
+  <data name="cbxImputeMissingPeaks.ToolTip" xml:space="preserve">
+    <value>選択した場合、欠損しているピークは、最良スコアの繰り返し測定に一致するように移動します。</value>
+  </data>
   <data name="&gt;&gt;cbxImputeMissingPeaks.Name" xml:space="preserve">
     <value>cbxImputeMissingPeaks</value>
   </data>
@@ -1491,6 +1509,13 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="groupBoxPeakImputation.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
+  </data>
+  <data name="groupBoxPeakImputation.Text" xml:space="preserve">
+    <value>境界を補間：</value>
+  </data>
+  <data name="groupBoxPeakImputation.ToolTip" xml:space="preserve">
+    <value>ピーク境界補間はオプションのプロセスで、ピークスコアリングモデルを使用してピークの再積分を適用する場合、およびスペクトルライブラリからの明示的なピーク境界を使用する場合に行うことができます。
+</value>
   </data>
   <data name="&gt;&gt;groupBoxPeakImputation.Name" xml:space="preserve">
     <value>groupBoxPeakImputation</value>
@@ -1566,6 +1591,9 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="lblRunToRunAlignment.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
+  </data>
+  <data name="lblRunToRunAlignment.Text" xml:space="preserve">
+    <value>実行するランのアライメント(&amp;a):</value>
   </data>
   <data name="&gt;&gt;lblRunToRunAlignment.Name" xml:space="preserve">
     <value>lblRunToRunAlignment</value>
