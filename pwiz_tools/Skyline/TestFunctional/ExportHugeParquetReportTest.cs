@@ -50,7 +50,6 @@ namespace pwiz.SkylineTestFunctional
                 exportReportDlg.OkDialog(parquetFilePath, TextUtil.CsvSeparator);
             });
 
-            ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog)
         }
     }
 }
