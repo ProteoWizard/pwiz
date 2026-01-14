@@ -30,6 +30,7 @@
 #include "MassHunterData.hpp"
 #include "MidacData.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
+#include "SampleInfoParser.hpp"
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -962,6 +963,47 @@ IonPolarity MassChromatogramImpl::getIonPolarity() const
     try { return (IonPolarity)chromData_->IonPolarity; } CATCH_AND_FORWARD
 }
 
+
+// sample-info accessors
+std::map<std::string, std::string> MassHunterData::getSampleInfoMap() const
+{
+    loadSampleInfoIfNeeded();
+    return sampleInfoMap_;
+}
+
+const std::string& MassHunterData::getSampleInfoValue(const std::string& key, const std::string& defaultValue) const
+{
+    loadSampleInfoIfNeeded();
+    auto it = sampleInfoMap_.find(key);
+    return (it != sampleInfoMap_.end()) ? it->second : defaultValue;
+}
+
+void MassHunterData::loadSampleInfoIfNeeded() const
+{
+    if (sampleInfoLoaded_)
+        return;
+
+    sampleInfoLoaded_ = true; // prevent re-entrance
+
+    try
+    {
+        bfs::path sampleInfoPath = bfs::path(massHunterRootPath_) / "AcqData" / "sample_info.xml";
+        if (!bfs::exists(sampleInfoPath))
+            return;
+        SampleInfoParser parser(sampleInfoPath.string(), sampleInfoMap_);
+        parser.parse();
+    }
+    catch (const std::exception& e)
+    {
+        // TODO: log error
+        cerr << "Error loading sample information: " << e.what() << endl;
+    }
+    catch (...)
+    {
+        // TODO: log unknown error
+        cerr << "Unknown error loading sample information." << endl;
+    }
+}
 
 } // Agilent
 } // vendor_api
