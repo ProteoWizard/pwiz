@@ -4520,6 +4520,15 @@ namespace pwiz.Skyline
 
                 // Get the requested Python version from the tool
                 string requestedPythonVersion = programPathContainer.ProgramVersion;
+                if (string.IsNullOrEmpty(requestedPythonVersion))
+                {
+                    throw new InvalidOperationException(
+                        string.Format(@"Python version not specified. Expected Command format: $(ProgramPath(Python,X.Y.Z)). " +
+                                      @"ProgramName={0}, ProgramVersion={1}, virtualEnvironmentName={2}",
+                            programPathContainer.ProgramName,
+                            programPathContainer.ProgramVersion ?? @"(null)",
+                            virtualEnvironmentName ?? @"(null)"));
+                }
 
                 // Create installer with virtual environment name and requested Python version
                 var installer = new PythonInstaller(pythonPackages, _skylineTextBoxStreamWriterHelper, virtualEnvironmentName, requestedPythonVersion);

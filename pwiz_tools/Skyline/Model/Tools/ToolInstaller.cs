@@ -915,10 +915,10 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 command = Path.Combine(ToolMacros.TOOL_DIR, command);
             }
-            else if (programPathContainer != null) // If it is a ProgramPath macro
-            {
-                FindPackagesToInstall(readin, accumulator, programPathContainer);
-            }
+            // Note: We do NOT call FindPackagesToInstall here because installation requirements
+            // should only come from info.properties, not from individual tool .properties files.
+            // The info.properties Command specifies what version to install (e.g., Python 3.12.8),
+            // while individual tool files just reference the program without specifying installation version.
             return command;
         }
 
