@@ -3965,7 +3965,7 @@ namespace pwiz.Skyline
 
                 // Make sure the graphs for the result set are visible.
                 if (GetGraphChrom(name) != null || // Graph exists
-                    _listGraphChrom.Count >= MAX_GRAPH_CHROM) // Graph doesn't exist, presumably because there are more chromatograms than available graphs
+                    _listGraphChrom.Count >= Settings.Default.MaxChromatogramGraphs) // Graph doesn't exist, presumably because there are more chromatograms than available graphs
                 {
                     bool focus = ComboResults.Focused;
 
@@ -4252,7 +4252,6 @@ namespace pwiz.Skyline
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
                     if (!ImportingResultsWindow.HasErrors &&
-                        !ImportingResultsWindow.IsProgressFrozen() &&
                         Settings.Default.ImportResultsAutoCloseWindow)
                     {
                         DestroyAllChromatogramsGraph();

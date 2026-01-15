@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
@@ -1244,6 +1245,23 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
 
+                    // Exclude the current file - its own ID times shouldn't appear as "aligned"
+                    var currentFileIndex = libraryAlignment.Library.LibraryFiles.FindIndexOf(filePath);
+                    if (currentFileIndex >= 0)
+                    {
+                        var currentLibraryFilePath = libraryAlignment.Library.LibraryFiles.FilePaths[currentFileIndex];
+                        if (spectrumSourceFiles == null)
+                        {
+                            // Create a set of all files except the current one
+                            spectrumSourceFiles = libraryAlignment.Library.LibraryFiles.FilePaths
+                                .Where(f => f != currentLibraryFilePath).ToHashSet();
+                        }
+                        else
+                        {
+                            spectrumSourceFiles.Remove(currentLibraryFilePath);
+                        }
+                    }
+
                     var times = new List<double>();
                     foreach (var normalizedTime in libraryAlignment.GetNormalizedRetentionTimes(spectrumSourceFiles,
                                  targets))
@@ -2286,6 +2304,73 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(MeasuredResults);
             if (DocumentRetentionTimes.AnyAlignments())
                 writer.WriteElement(DocumentRetentionTimes);
+        }
+
+        #endregion
+
+        #region Quantification comparison
+
+        /// <summary>
+        /// Compares settings that affect quantification/abundance calculations.
+        /// Used to determine if cached abundance values can be reused.
+        ///
+        /// Normalization method-specific behavior:
+        /// - NONE, RatioToLabel: Only check if quantification settings match
+        /// - GLOBAL_STANDARDS: Also check if global standard peptides changed and MeasuredResults
+        /// - TIC: Check if MeasuredResults changed
+        /// - EQUALIZE_MEDIANS: Settings check only - per-node invalidation handled by cache cleanup
+        ///   (see CleanCacheForIncrementalUpdates which invalidates when any node changes)
+        /// - RatioToSurrogate: Conservatively check if any standard peptides changed
+        ///
+        /// Future optimization: When invalidating entire cache due to DocNode changes (not ReferenceEquals
+        /// but matching Id), we could compare actual peak area values and only invalidate if they differ.
+        /// This would avoid cache invalidation for minor node changes (e.g., adding a note to a transition)
+        /// that don't affect abundance calculations.
+        /// </summary>
+        public bool HasEqualQuantificationSettings(SrmSettings other)
+        {
+            if (ReferenceEquals(this, other))
+                return true;
+            if (other == null)
+                return false;
+            // Compare quantification settings that affect abundance calculations
+            if (!Equals(PeptideSettings.Quantification, other.PeptideSettings.Quantification))
+            {
+                return false;
+            }
+
+            var normalizationMethod = PeptideSettings.Quantification.NormalizationMethod;
+            // Note: EQUALIZE_MEDIANS is not checked here. Settings can differ for reasons
+            // unrelated to abundance (annotations, replicate names, etc.). Per-node invalidation
+            // for median normalization is handled in CleanCacheForIncrementalUpdates.
+
+            if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod))
+            {
+                if (!CollectionUtil.EqualsDeep(_cachedPeptideStandards, other._cachedPeptideStandards))
+                {
+                    return false;
+                }
+            }
+
+            // For surrogate standard normalization, conservatively invalidate if any surrogate standard changed.
+            // Surrogate standards are typically used in smaller documents, so the performance impact is minimal.
+            if (normalizationMethod is NormalizationMethod.RatioToSurrogate)
+            {
+                if (!CollectionUtil.EqualsDeep(_cachedPeptideStandards, other._cachedPeptideStandards))
+                {
+                    return false;
+                }
+            }
+
+            if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod) ||
+                NormalizationMethod.TIC.Equals(normalizationMethod))
+            {
+                if (!ReferenceEquals(MeasuredResults, other.MeasuredResults))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         #endregion

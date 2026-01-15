@@ -16,7 +16,6 @@
 
 using System;
 using System.IO;
-using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls.FilesTree
 {
@@ -32,17 +31,15 @@ namespace pwiz.Skyline.Controls.FilesTree
     /// </summary>
     internal class ManagedFileSystemWatcher : IDisposable
     {
-        internal ManagedFileSystemWatcher(string path, Control synchronizingObject)
+        internal ManagedFileSystemWatcher(string path)
         {
             Path = path;
-            SynchronizingObject = synchronizingObject;
 
             CreateWatcher();
         }
 
         internal string Path { get; }
 
-        private Control SynchronizingObject { get; }
         private FileSystemWatcher FileSystemWatcher { get; set; }
         internal bool IsPaused { get; private set; }
 
@@ -55,8 +52,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             FileSystemWatcher = new FileSystemWatcher();
             FileSystemWatcher.Path = Path;
-            FileSystemWatcher.SynchronizingObject = SynchronizingObject;
             FileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
+
+            // IMPORTANT: Do NOT set FileSystemWatcher.SynchronizingObject. Setting it causes FSW to marshal
+            // events via BeginInvoke, which can deadlock during disposal when the UI thread is waiting for
+            // FSW.Dispose() while a FSW callback is trying to BeginInvoke back to the UI thread.
+            // Event marshaling is handled safely by BackgroundActionService.RunUI() which uses SafeBeginInvoke.
 
             // .NET's FileSystemService does not recursively monitor subdirectories. Instead, FileSystemWatcher instances are
             // started for each directory containing files Skyline wants to monitor. This approach is easier to 

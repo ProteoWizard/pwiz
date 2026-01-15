@@ -47,6 +47,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
@@ -383,7 +384,7 @@ namespace pwiz.SkylineTestUtil
             var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
             if (form.InvokeRequired)
             {
-                form.Invoke(act);
+                HangDetection.InterruptWhenHung(()=> form.Invoke(act));
             }
             else
             {
@@ -1183,13 +1184,17 @@ namespace pwiz.SkylineTestUtil
         public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
+            TimeSpan maxInvokeDuration = TimeSpan.FromMilliseconds(Math.Max(waitCycles * SLEEP_INTERVAL, 60_000));
+
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                Program.MainWindow.Invoke(new Action(() => isCondition = func()));
+                HangDetection.InterruptAfter(() => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                    maxInvokeDuration);
+                
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -1226,7 +1231,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
+            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, throwOnProgramException);
         }
 
         public static void WaitForRegression()
@@ -1820,6 +1825,79 @@ namespace pwiz.SkylineTestUtil
             if (replicateName == null)
                 RunUI(() => replicateName = SkylineWindow.SelectedGraphChromName);
             PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), timeout, processShot);
+        }
+
+        public void PauseForRelativeAbundanceGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            var graphSummary = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
+            Assert.IsNotNull(graphSummary, "Relative abundance graph not found");
+            PauseForGraphScreenShot(description, graphSummary, timeout, processShot);
+        }
+
+        public void PauseForVolcanoPlotGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            var volcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
+            Assert.IsNotNull(volcanoPlot, "Volcano plot not found");
+            PauseForGraphScreenShot(description, volcanoPlot, timeout, processShot);
+        }
+
+        /// <summary>
+        /// Set this value to true to have PauseForAllChromatogramsGraphScreenShot
+        /// cancel the import after taking the screenshot, and then return false.
+        /// The calling test should return early when false is returned from
+        /// PauseForAllChromatogramsGraphScreenShot.
+        /// </summary>
+        protected bool IsTestingResultsProgressOnly => false;
+
+        /// <summary>
+        /// Takes a screenshot of the AllChromatogramsGraph (Importing Results form) with frozen
+        /// progress display. Handles the complete freeze/wait/screenshot/release cycle.
+        /// The freeze is only performed in screenshot mode - in normal test runs the screenshot
+        /// is skipped and no freezing occurs.
+        /// Also makes the AllChromatogramsGraph form accessible to the SkylineTester Forms tab.
+        /// </summary>
+        /// <param name="description">Screenshot description for the tutorial</param>
+        /// <param name="totalProgress">Total progress bar percentage to display</param>
+        /// <param name="elapsedTime">Elapsed time text to display (e.g., "00:00:01")</param>
+        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.
+        /// Null for SRM data that doesn't show a progress line.</param>
+        /// <param name="graphIntensityMax">Y-axis maximum to lock the scale. Null to leave scale unlocked.</param>
+        /// <param name="fileProgress">Dictionary mapping filename to progress percentage</param>
+        /// <returns>True to continue the test, false to end early (when IsTestingResultsProgressOnly is true)</returns>
+        public bool PauseForAllChromatogramsGraphScreenShot(
+            string description,
+            int totalProgress,
+            string elapsedTime,
+            float? graphTime = null,
+            float? graphIntensityMax = null,
+            Dictionary<string, int> fileProgress = null)
+        {
+            if (!IsPauseForScreenShots)
+                return true;
+
+            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
+            allChromGraph.SetFrozenProgress(totalProgress, elapsedTime, graphTime, graphIntensityMax, fileProgress);
+            WaitForConditionUI(() => allChromGraph.IsReadyForScreenshot());
+
+            // Output the current intensity max to help determine what value to use
+            if (!graphIntensityMax.HasValue)
+            {
+                var currentMax = allChromGraph.CurrentIntensityMax;
+                Console.WriteLine($@"AllChromatogramsGraph graphIntensityMax: {currentMax:0.00e0}f");
+            }
+
+            PauseForScreenShot(allChromGraph, description,
+                processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChromGraph.ProgressBarTotal));
+            allChromGraph.ReleaseFrozenProgress();
+
+            if (IsTestingResultsProgressOnly)
+            {
+                RunUI(() => allChromGraph.ClickCancel());
+                WaitForConditionUI(() => allChromGraph.Finished);
+                OkDialog(allChromGraph, allChromGraph.Close);
+                return false;
+            }
+            return true;
         }
 
         protected ZedGraphControl FindZedGraph(Control graphContainer)
@@ -3023,6 +3101,40 @@ namespace pwiz.SkylineTestUtil
                 intercept = -intercept;
             }
         }
+
+        /// <summary>
+        /// Moves all the FloatingWindow's off the screen so they are not in the way of the
+        /// main Skyline window's screenshots.
+        /// </summary>
+        /// <returns>A list of the original locations of the windows that were moved</returns>
+        public static List<(FloatingWindow Window, Rectangle Bounds)> HideFloatingWindows()
+        {
+            var list = new List<(FloatingWindow Window, Rectangle Bounds)>();
+            RunUI(() =>
+            {
+                foreach (var floatingWindow in FormUtil.OpenForms.OfType<FloatingWindow>())
+                {
+                    list.Add((floatingWindow, floatingWindow.Bounds));
+                    floatingWindow.Location = FormEx.GetOffscreenPoint();
+                }
+            });
+            return list;
+        }
+        /// <summary>
+        /// Move the windows back to their original locations
+        /// </summary>
+        public static void RestoreFloatingWindows(List<(FloatingWindow Window, Rectangle Bounds)> list)
+        {
+            RunUI(() =>
+            {
+                foreach (var tuple in list)
+                {
+                    tuple.Window.Bounds = tuple.Bounds;
+                }
+            });
+        }
+
+
 
         #region Modification helpers
 

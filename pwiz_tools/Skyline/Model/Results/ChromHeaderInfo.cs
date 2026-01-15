@@ -2164,7 +2164,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static ChromKey FromQcTrace(MsDataFileImpl.QcTrace qcTrace)
         {
-            var chromatogramGroupId = ChromatogramGroupId.ForQcTraceName(qcTrace.Name);
+            var chromatogramGroupId = ChromatogramGroupId.ForQcTraceName(qcTrace.Name, qcTrace.TypeWithUnits());
             return new ChromKey(chromatogramGroupId, SignedMz.ZERO, null, SignedMz.ZERO, 0, 0, 0, ChromSource.unknown, ChromExtractor.qc);
         }
 
@@ -2314,6 +2314,7 @@ namespace pwiz.Skyline.Model.Results
         [CanBeNull]
         public ChromatogramGroupId ChromatogramGroupId { get; private set; }
         public string QcTraceName { get { return ChromatogramGroupId?.QcTraceName; } }
+        public string QcTraceTypeWithUnits { get { return ChromatogramGroupId?.QcTraceTypeWithUnits; } }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
         public ChromCachedFile CachedFile { get { return _allFiles[_groupHeaderInfo.FileIndex]; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
@@ -2878,28 +2879,16 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(PeakGroupIntegrator peakGroupIntegrator, float startTime, float endTime, ChromPeak.FlagValues flags)
+        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator, ImmutableList<float> interpolatedTimes)
         {
-            if (startTime == endTime)
+            TimeIntensities interpolatedTimeIntensities = null;
+            if (interpolatedTimes != null && _groupInfo?.TimeIntensitiesGroup is RawTimeIntensities rawTimeIntensities)
             {
-                return ChromPeak.EMPTY;
+                interpolatedTimeIntensities = rawTimeIntensities.TransitionTimeIntensities[TransitionIndex]
+                    .Interpolate(interpolatedTimes, rawTimeIntensities.InferZeroes);
             }
-            var existingPeak = Peaks.FirstOrDefault(peak => peak.StartTime == startTime && peak.EndTime == endTime);
-            if (!existingPeak.IsEmpty)
-            {
-                return existingPeak;
-            }
-            var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
-            return peakIntegrator.IntegratePeak(startTime, endTime, flags);
-        }
-        
-        
-
-        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
-        {
-            var rawTimeIntensities = RawTimeIntensities;
-            var interpolatedTimeIntensities = GetTransformedTimeIntensities(TransformChrom.interpolated);
-            return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, rawTimeIntensities,
+            interpolatedTimeIntensities ??= GetTransformedTimeIntensities(TransformChrom.interpolated);
+            return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, RawTimeIntensities,
                 interpolatedTimeIntensities, null);
         }
 

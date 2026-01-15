@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return RetentionTimesResources.AlignmentTargetSpec_GetTooltip_Invalid;
                 }
 
-                if (calculator is RCalcIrt rCalcIrt)
+                if (calculator is RCalcIrt rCalcIrt && rCalcIrt.IsUsable)
                 {
                     int standardCount = rCalcIrt.GetStandardPeptides().Count();
                     if (standardCount != 0)

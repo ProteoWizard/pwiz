@@ -2193,6 +2193,8 @@ namespace pwiz.Skyline.Model
             Settings = Settings.ChangePeptideSettings(Settings.PeptideSettings.ChangeIntegration(
                 Settings.PeptideSettings.Integration.ChangeScoreQValueMap(
                     ScoreQValueMap.FromMoleculeGroups(MoleculeGroups))));
+            Settings = Settings.ChangeDocumentRetentionTimes(Settings.DocumentRetentionTimes
+                .UpdateFromDeserializedDocument(this));
 
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
 

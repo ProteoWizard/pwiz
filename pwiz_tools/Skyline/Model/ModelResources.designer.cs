@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ModelResources {
@@ -1709,11 +1709,29 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Detailed Info.
+        ///   Looks up a localized string similar to Detailed Log.
         /// </summary>
-        public static string PersistedViews_GetDefaults_Detailed_Info {
+        public static string PersistedViews_GetDefaults_Detailed_Log {
             get {
-                return ResourceManager.GetString("PersistedViews_GetDefaults_Detailed_Info", resourceCulture);
+                return ResourceManager.GetString("PersistedViews_GetDefaults_Detailed_Log", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Normalized Areas.
+        /// </summary>
+        public static string PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas {
+            get {
+                return ResourceManager.GetString("PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Abundances.
+        /// </summary>
+        public static string PersistedViews_GetLocalizedReportNames_Protein_Abundances {
+            get {
+                return ResourceManager.GetString("PersistedViews_GetLocalizedReportNames_Protein_Abundances", resourceCulture);
             }
         }
         
