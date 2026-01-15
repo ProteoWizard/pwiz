@@ -117,11 +117,53 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="FilesTree_TreeNode_Tooltip_LocalPath" xml:space="preserve">
+    <value>本地路径</value>
+  </data>
   <data name="FilesTree_TreeNode_Tooltip_SampleName" xml:space="preserve">
     <value>样品名称</value>
   </data>
+  <data name="FilesTree_TreeNode_Tooltip_LocalFilePath" xml:space="preserve">
+    <value>本地文件路径</value>
+  </data>
+  <data name="Change_ReplicateName" xml:space="preserve">
+    <value>更改重复测定名称</value>
+  </data>
   <data name="Drag_and_Drop" xml:space="preserve">
     <value>拖放</value>
+  </data>
+  <data name="Remove_All_Replicates" xml:space="preserve">
+    <value>删除所有重复测定节点</value>
+  </data>
+  <data name="Remove_Replicate" xml:space="preserve">
+    <value>删除重复测定节点</value>
+  </data>
+  <data name="FilesTreeForm_Confirm_Remove_Replicate" xml:space="preserve">
+    <value>是否确定要删除此重复测定？</value>
+  </data>
+  <data name="FilesTreeForm_Confirm_Remove_Replicates" xml:space="preserve">
+    <value>是否确定要删除这些重复测定？</value>
+  </data>
+  <data name="Remove_All_Spectral_Libraries" xml:space="preserve">
+    <value>删除所有谱图库</value>
+  </data>
+  <data name="Remove_Spectral_Library" xml:space="preserve">
+    <value>删除谱图库</value>
+  </data>
+  <data name="FilesTreeForm_Confirm_Remove_Spectral_Library" xml:space="preserve">
+    <value>是否确定要删除此库？</value>
+  </data>
+  <data name="FilesTreeForm_Confirm_Remove_Spectral_Libraries" xml:space="preserve">
+    <value>是否确定要删除这些库？</value>
+  </data>
+  <data name="FilesTreeForm_Error_Renaming_Replicate" xml:space="preserve">
+    <value>已存在名称为“{0}”的重复测定。请选择其它名称。</value>
+  </data>
+  <data name="Change_SpectralLibraryName" xml:space="preserve">
+    <value>更改谱图库名称</value>
+  </data>
+  <data name="FilesTreeForm_Error_Renaming_SpectralLibrary" xml:space="preserve">
+    <value>名称为“{0}”的谱图库已存在。请选择其它名称。</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="Trash" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -134,15 +176,33 @@
     <value>名称</value>
   </data>
   <data name="FilesTreeNode_TreeNode_Tooltip_ReplicateCount" xml:space="preserve">
-    <value>Replicates</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:Replicates
-Candidate Translation:重复测定</comment>
+    <value>重复测定</value>
+  </data>
+  <data name="FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount" xml:space="preserve">
+    <value>样品文件</value>
   </data>
   <data name="FilesTree_TreeNode_Tooltip_FileName" xml:space="preserve">
-    <value>File Name</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:文件名
-Candidate Translation:文件名称</comment>
+    <value>文件名称</value>
+  </data>
+  <data name="FilesTree_TreeNode_Tooltip_FileMissing" xml:space="preserve">
+    <value>找不到文件</value>
+  </data>
+  <data name="FilesTree_TreeNode_Tooltip_SavedFilePath" xml:space="preserve">
+    <value>已保存文件路径</value>
+  </data>
+  <data name="FilesTreeForm_Update_BackgroundProteome" xml:space="preserve">
+    <value>更新背景蛋白质组</value>
+  </data>
+  <data name="FilesTreeForm_Update_IonMobilityLibrary" xml:space="preserve">
+    <value>更新离子迁移库</value>
+  </data>
+  <data name="FilesTreeForm_Update_OptimizationLibrary" xml:space="preserve">
+    <value>更新最优化库</value>
+  </data>
+  <data name="FilesTreeForm_Update_RTCalculator" xml:space="preserve">
+    <value>更新保留时间计算器</value>
+  </data>
+  <data name="FilesTreeForm_Update_SpectralLibrary" xml:space="preserve">
+    <value>更新谱图库</value>
   </data>
 </root>

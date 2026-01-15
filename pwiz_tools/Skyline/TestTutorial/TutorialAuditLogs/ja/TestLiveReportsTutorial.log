@@ -111,11 +111,11 @@ H162	M	235	Scamper
 
 レポート名 = "default"
 
-Undo Redo : 注釈>"SubjectID">Lookupが"Samples"に変更されました
-Summary   : 設定>ドキュメント設定－注釈>"SubjectID">Lookupが"Samples"に変更されました
+Undo Redo : 注釈>"SubjectID">ルックアップが"Samples"に変更されました
+Summary   : 設定>ドキュメント設定－注釈>"SubjectID">ルックアップが"Samples"に変更されました
 All Info  :
-注釈>"SubjectID">Lookupが"Samples"に変更されました
-設定>ドキュメント設定－注釈>"SubjectID">Lookupは見つかりませんから"Samples"に変更されました
+注釈>"SubjectID">ルックアップが"Samples"に変更されました
+設定>ドキュメント設定－注釈>"SubjectID">ルックアップは見つかりませんから"Samples"に変更されました
 
 Undo Redo : ペプチド設定－定量化>正規化メソッドは"なし"から"グローバル標準に対する比率"に変更されました
 Summary   : 設定>ペプチド設定－定量化>正規化メソッドは"なし"から"グローバル標準に対する比率"に変更されました

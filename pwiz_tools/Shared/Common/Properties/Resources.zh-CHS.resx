@@ -557,4 +557,13 @@
   <data name="AggregateOperation_Median_Median" xml:space="preserve">
     <value>中位数</value>
   </data>
+  <data name="AggregateOperation_Median_Median__0_" xml:space="preserve">
+    <value>中位数 {0}</value>
+  </data>
+  <data name="CountDistinctImpl_CountDistinctImpl_Count_Distinct" xml:space="preserve">
+    <value>计数唯一值</value>
+  </data>
+  <data name="CountDistinctImpl_CountDistinctImpl_Count_Distinct__0_" xml:space="preserve">
+    <value>计数唯一值 {0}</value>
+  </data>
 </root>

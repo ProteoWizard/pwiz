@@ -970,6 +970,15 @@
   <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
     <value>同じ場所にアップロードしますか？</value>
   </data>
+  <data name="SkylineWindow_PublishToSavedUri_Validating_saved_folder" xml:space="preserve">
+    <value>保存されたフォルダを検証中</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_servers_" xml:space="preserve">
+    <value>サーバー{0}はPanoramaサーバーのリストに含まれていません。</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_server_to_your_settings_" xml:space="preserve">
+    <value>[ツール] &gt; [オプション] &gt; [Panorama]タブに移動してサーバーを設定に追加してください。</value>
+  </data>
   <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
     <value>クロマトグラムを再インポートしています</value>
   </data>

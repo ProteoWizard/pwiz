@@ -171,6 +171,9 @@
   <data name="ApexTotalIonCountMS1">
     <value>頂点総イオンカウントMS1</value>
   </data>
+  <data name="ApexTransitionIonCount">
+    <value>頂点トランジションイオン数</value>
+  </data>
   <data name="Area">
     <value>面積</value>
   </data>
@@ -321,6 +324,9 @@
   <data name="ConfidenceLevel">
     <value>信頼度レベル</value>
   </data>
+  <data name="ConstantNeutralLoss">
+    <value>コンスタントニュートラルロス</value>
+  </data>
   <data name="CountTruncated">
     <value>切断数</value>
   </data>
@@ -384,6 +390,9 @@
   <data name="DetectionZScore">
     <value>検知Zスコア</value>
   </data>
+  <data name="DissociationMethod">
+    <value>解離メソッド</value>
+  </data>
   <data name="DriftTimeFragment">
     <value>ドリフト時間断片</value>
   </data>
@@ -407,6 +416,30 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>校正から除外</value>
+  </data>
+  <data name="ExemplaryEndTime">
+    <value>例示的終了時間</value>
+  </data>
+  <data name="ExemplaryFilePath">
+    <value>例示的ファイルパス</value>
+  </data>
+  <data name="ExemplaryLibraryName">
+    <value>例示的ライブラリ名</value>
+  </data>
+  <data name="ExemplaryPeak">
+    <value>例示的ピーク</value>
+  </data>
+  <data name="ExemplaryReplicateName">
+    <value>例示的繰り返し測定名</value>
+  </data>
+  <data name="ExemplaryRetentionTime">
+    <value>例示的保持時間</value>
+  </data>
+  <data name="ExemplaryScore">
+    <value>例示的スコア</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>例示的開始時間</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
     <value>表示されたアナライト濃度</value>
@@ -512,6 +545,15 @@
   </data>
   <data name="Identified">
     <value>同定済み</value>
+  </data>
+  <data name="ImputedEndTime">
+    <value>補間された終了時間</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>補間されたピーク</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>補間された開始時間</value>
   </data>
   <data name="InChI">
     <value>InChI</value>
@@ -638,6 +680,9 @@
   </data>
   <data name="LcPeakTotalIonCurrentAreaMS1">
     <value>LCピーク総イオン電流面積MS1</value>
+  </data>
+  <data name="LcPeakTransitionIonCount">
+    <value>LCピークトランジションイオン数</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>ライブラリ衝突断面積</value>
@@ -846,6 +891,9 @@
   <data name="MoleculeListAbundanceMessage">
     <value>分子リスト存在量（メッセージ）</value>
   </data>
+  <data name="MoleculeListAbundanceRaw">
+    <value>分子リスト存在量生データ</value>
+  </data>
   <data name="MoleculeListAbundanceStrict">
     <value>分子リスト存在量（厳密なデータ）</value>
   </data>
@@ -948,8 +996,20 @@
   <data name="OptStep">
     <value>最適ステップ</value>
   </data>
+  <data name="OriginalEndTime">
+    <value>元の終了時間</value>
+  </data>
   <data name="OriginalPeak">
     <value>元のピーク</value>
+  </data>
+  <data name="OriginalRetentionTime">
+    <value>元の保持時間</value>
+  </data>
+  <data name="OriginalScore">
+    <value>元のスコア</value>
+  </data>
+  <data name="OriginalStartTime">
+    <value>元の開始時間</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>ピークグループ終了時間</value>
@@ -1173,6 +1233,9 @@
   <data name="ProteinAbundanceMessage">
     <value>タンパク質存在量（メッセージ）</value>
   </data>
+  <data name="ProteinAbundanceRaw">
+    <value>タンパク質存在量の生データ</value>
+  </data>
   <data name="ProteinAbundanceStrict">
     <value>タンパク質存在量（厳密なデータ）</value>
   </data>
@@ -1277,6 +1340,21 @@
   </data>
   <data name="Reason">
     <value>理由</value>
+  </data>
+  <data name="ReintegratedEndTime">
+    <value>再積分された終了時間</value>
+  </data>
+  <data name="ReintegratedPeak">
+    <value>再積分されたピーク</value>
+  </data>
+  <data name="ReintegratedRetentionTime">
+    <value>再積分された保持時間</value>
+  </data>
+  <data name="ReintegratedScore">
+    <value>再積分されたスコア</value>
+  </data>
+  <data name="ReintegratedStartTime">
+    <value>再積分された開始時間</value>
   </data>
   <data name="Replicate">
     <value>繰り返し測定</value>
@@ -1493,6 +1571,9 @@
   </data>
   <data name="TransitionCount">
     <value>トランジション数</value>
+  </data>
+  <data name="TransitionIonMetrics">
+    <value>トランジションイオンメトリック</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>トランジション同位体デコイ</value>
