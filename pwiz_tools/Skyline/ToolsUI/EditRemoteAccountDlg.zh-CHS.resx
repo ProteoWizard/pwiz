@@ -365,10 +365,6 @@
   </data>
   <data name="btnTest.Text" xml:space="preserve">
     <value>测试(&amp;T)</value>
-    <comment>Needs Review:English text changed
-Old English:Test
-Current English:&amp;Test
-Old Localized:测试</comment>
   </data>
   <data name="&gt;&gt;btnTest.Name" xml:space="preserve">
     <value>btnTest</value>
@@ -417,10 +413,6 @@ Old Localized:测试</comment>
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>帐户类型(&amp;A)：</value>
-    <comment>Needs Review:English text changed
-Old English:Account type:
-Current English:&amp;Account type:
-Old Localized:账户类型：</comment>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -616,10 +608,6 @@ Old Localized:账户类型：</comment>
   </data>
   <data name="lblClientSecret.Text" xml:space="preserve">
     <value>客户端密钥(&amp;R)：</value>
-    <comment>Needs Review:English text changed
-Old English:Client secret:
-Current English:Client sec&amp;ret:
-Old Localized:客户密钥：</comment>
   </data>
   <data name="tbxClientScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -647,10 +635,6 @@ Old Localized:客户密钥：</comment>
   </data>
   <data name="lblClientScope.Text" xml:space="preserve">
     <value>客户端范围(&amp;C)：</value>
-    <comment>Needs Review:English text changed
-Old English:Client scope:
-Current English:Client s&amp;cope:
-Old Localized:客户范围：</comment>
   </data>
   <data name="tbxIdentityServer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -678,10 +662,6 @@ Old Localized:客户范围：</comment>
   </data>
   <data name="lblIdentityServer.Text" xml:space="preserve">
     <value>身份服务器(&amp;N)：</value>
-    <comment>Needs Review:English text changed
-Old English:Identity server:
-Current English:Ide&amp;ntity server:
-Old Localized:身份服务器：</comment>
   </data>
   <data name="wizardPagesByAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>

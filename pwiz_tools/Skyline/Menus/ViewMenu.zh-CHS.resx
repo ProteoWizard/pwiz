@@ -734,10 +734,6 @@
   </data>
   <data name="regressionMenuItem.Text" xml:space="preserve">
     <value>回归(&amp;E)</value>
-    <comment>Needs Review:English text changed
-Old English:&amp;Regression
-Current English:R&amp;egression
-Old Localized:回归(&amp;R)</comment>
   </data>
   <data name="retentionTimeAlignmentsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -759,10 +755,6 @@ Old Localized:回归(&amp;R)</comment>
   </data>
   <data name="retentionTimesMenuItem.Text" xml:space="preserve">
     <value>保留时间(&amp;I)</value>
-    <comment>Needs Review:English text changed
-Old English:Retention &amp;Times
-Current English:Retention T&amp;imes
-Old Localized:保留时间(&amp;T)</comment>
   </data>
   <data name="areaReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F7</value>

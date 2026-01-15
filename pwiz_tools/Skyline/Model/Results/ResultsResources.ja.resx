@@ -349,9 +349,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   </data>
   <data name="ChromatogramManager_LoadBackground_Loading__0_" xml:space="preserve">
     <value>読み込み中 {0}</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:{0}の読み込み中
-Candidate Translation:{0}を読み込んでいます</comment>
   </data>
   <data name="Annotation_DisambiguationPrefix_Annotation__" xml:space="preserve">
     <value>注釈： </value>

@@ -105,9 +105,6 @@
   </data>
   <data name="FileModel_Replicates" xml:space="preserve">
     <value>重复测定</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:Replicates
-Candidate Translation:重复测定</comment>
   </data>
   <data name="FileModel_Libraries" xml:space="preserve">
     <value>谱图库</value>

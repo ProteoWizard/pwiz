@@ -136,10 +136,6 @@
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>请在下方登录 Ardia</value>
-    <comment>Needs Review:English text changed
-Old English:Sign in into Ardia web below
-Current English:Sign in to Ardia below
-Old Localized:在下方登录 Ardia 网站</comment>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

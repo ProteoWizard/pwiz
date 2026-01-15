@@ -177,9 +177,6 @@
   </data>
   <data name="FilesTreeNode_TreeNode_Tooltip_ReplicateCount" xml:space="preserve">
     <value>繰り返し測定</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:Replicates
-Candidate Translation:繰り返し測定</comment>
   </data>
   <data name="FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount" xml:space="preserve">
     <value>サンプルファイル</value>

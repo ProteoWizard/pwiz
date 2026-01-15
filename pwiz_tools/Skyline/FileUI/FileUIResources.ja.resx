@@ -679,9 +679,6 @@
   </data>
   <data name="WatersConnectSaveMethodFileDialog_OpenButtonText" xml:space="preserve">
     <value>開く</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:開
-Candidate Translation:開く</comment>
   </data>
   <data name="WatersConnectSaveMethodFileDialog_SourcePathLabelText" xml:space="preserve">
     <value>メソッド名：</value>

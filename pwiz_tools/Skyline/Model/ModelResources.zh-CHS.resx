@@ -944,9 +944,6 @@
   </data>
   <data name="PeptideDocNode_Title" xml:space="preserve">
     <value>肽段</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:Peptide
-Candidate Translation:肽段</comment>
   </data>
   <data name="PeptideDocNode_Title_Molecule" xml:space="preserve">
     <value>分子</value>

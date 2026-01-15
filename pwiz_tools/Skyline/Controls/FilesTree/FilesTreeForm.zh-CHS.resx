@@ -188,10 +188,6 @@
   </data>
   <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
     <value>打开库浏览器</value>
-    <comment>Needs Review:English text changed
-Old English:Library &amp;Explorer
-Current English:Open Library Explorer
-Old Localized:库浏览器(&amp;E)</comment>
   </data>
   <data name="manageResultsMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -210,10 +206,6 @@ Old Localized:库浏览器(&amp;E)</comment>
   </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
     <value>打开包含文件夹</value>
-    <comment>Needs Review:English text changed
-Old English:Open &amp;containing folder
-Current English:Open Containing Folder
-Old Localized:打开包含文件夹(&amp;C)</comment>
   </data>
   <data name="openLibraryInLibraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>

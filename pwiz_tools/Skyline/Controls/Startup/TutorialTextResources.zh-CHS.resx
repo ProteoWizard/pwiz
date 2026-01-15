@@ -167,10 +167,6 @@
   </data>
   <data name="CustomReports_Caption" xml:space="preserve">
     <value>自定义报告</value>
-    <comment>Needs Review:English text changed
-Old English:Custom &amp; Live Reports
-Current English:Custom Reports
-Old Localized:自定义即时报告(&amp;L)</comment>
   </data>
   <data name="LiveReports_Caption" xml:space="preserve">
     <value>实时报告</value>
@@ -282,10 +278,6 @@ Old Localized:自定义即时报告(&amp;L)</comment>
   </data>
   <data name="SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
     <value>通过文献引用了解如何创建以稳定同位素标记的分子为目标的 Skyline 文档，这些分子指定为母离子质荷比、子离子质荷比和碰撞能量值。通过导入来自 Waters Xevo TQ-S（使用 Sciex 三重四极杆质谱仪的初始 CE 值）的多个重复测定数据集，对分子执行保留时间时序安排和碰撞能量优化。了解最初为靶向蛋白质组学应用而创建的 Skyline 功能中，有多少现成的功能现在可以应用于非蛋白质组分子数据。</value>
-    <comment>Needs Review:English text changed
-Old English:Learn how how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.
-Current English:Learn how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.
-Old Localized:针对仅指定为母离子质荷比、子离子质荷比以及碰撞能量值的同位素标记分子，了解如何从文献引用创建以此类分子为靶向的 Skyline 文档。使用从 Sciex 三重四极杆获取的初始碰撞能量值，从 Waters Xevo TQ-S 导入多个重复测定的数据集，对分子执行保留时间预定和碰撞能量优化。了解最初为靶向蛋白质组学用途而创建的现有 Skyline 特性中，有多少可以应用于非蛋白质组学分子数据。</comment>
   </data>
   <data name="SmallMoleculeQuantification_Description" xml:space="preserve">
     <value>针对指定为母离子化学式和加合物以及子离子质荷比值的分子，了解如何创建以此类分子为靶向的 Skyline 文档。导入在三重四极杆上使用 LC-MS/MS 收集的多个重复测定的数据集，查看最初为靶向蛋白质组学用途而创建的现有 Skyline 特性中，有多少可以应用于非蛋白质组学分子数据。</value>

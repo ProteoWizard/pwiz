@@ -1397,10 +1397,6 @@
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
     <value>开始(&amp;T)…</value>
-    <comment>Needs Review:English text changed
-Old English:Sta&amp;rt...
-Current English:S&amp;tart...
-Old Localized:开始(&amp;R)…</comment>
   </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1512,10 +1508,6 @@ Old Localized:开始(&amp;R)…</comment>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
     <value>搜索(&amp;R)</value>
-    <comment>Needs Review:English text changed
-Old English:&amp;Search
-Current English:Sea&amp;rch
-Old Localized:搜索(&amp;S)</comment>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>

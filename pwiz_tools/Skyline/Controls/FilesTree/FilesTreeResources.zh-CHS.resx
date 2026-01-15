@@ -177,18 +177,12 @@
   </data>
   <data name="FilesTreeNode_TreeNode_Tooltip_ReplicateCount" xml:space="preserve">
     <value>重复测定</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:Replicates
-Candidate Translation:重复测定</comment>
   </data>
   <data name="FilesTreeNode_TreeNode_Tooltip_ReplicateSampleFileCount" xml:space="preserve">
     <value>样品文件</value>
   </data>
   <data name="FilesTree_TreeNode_Tooltip_FileName" xml:space="preserve">
     <value>文件名称</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:文件名
-Candidate Translation:文件名称</comment>
   </data>
   <data name="FilesTree_TreeNode_Tooltip_FileMissing" xml:space="preserve">
     <value>找不到文件</value>

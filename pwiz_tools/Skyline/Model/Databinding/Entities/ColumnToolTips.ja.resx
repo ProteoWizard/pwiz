@@ -609,13 +609,6 @@
   <data name="IsolationWindowWidth">
     <value>プリカーサ―が単離されたm/zウィンドウの幅。
 2つ以上のプリカーサーが単離された場合、単離ウィンドウ幅は、各プリカーサー周囲のウィンドウの合計となります。</value>
-    <comment>Needs Review:English text changed
-Old English:With of the m/z window in which the precursor was isolated. 
-If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.
-Current English:Width of the m/z window in which the precursor was isolated. 
-If more than one precursor was isolated then the Isolation Window Width is the sum of the windows around each precursor.
-Old Localized:プリカーサ―が単離されたm/zウィンドウの幅。
-2つ以上のプリカーサーが単離された場合、単離ウィンドウ幅は、各プリカーサー周囲のウィンドウの合計となります。</comment>
   </data>
   <data name="IsotopeDistIndex">
     <value>モノアイソトピックピークであればゼロ、M+1であれば1、M+2であれば2などとなります。 </value>
@@ -881,10 +874,6 @@ Old Localized:プリカーサ―が単離されたm/zウィンドウの幅。
   </data>
   <data name="Molecule">
     <value>分子は分子リストに属し、プリカーサーを含みます。</value>
-    <comment>Needs Review:English text changed
-Old English:Molecules belong to Molecule Lists and contain Percursors.
-Current English:Molecules belong to Molecule Lists and contain Precursors.
-Old Localized:分子は分子リストに属し、プリカーサーが含まれます。</comment>
   </data>
   <data name="MoleculeFormula">
     <value>質量分析計で測定される荷電されていない非標識の分子の原子化学式。</value>
@@ -895,11 +884,6 @@ Old Localized:分子は分子リストに属し、プリカーサーが含まれ
   <data name="MoleculeListAbundance">
     <value>分子リストの存在量を示す数字。
 通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings
-Current English:A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Old Localized:[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値</comment>
   </data>
   <data name="MoleculeListAbundanceMessage">
     <value>繰り返し測定間の「分子リスト存在量」の比較に欠損データが影響する場合に警告を表示</value>
@@ -913,29 +897,12 @@ Old Localized:[分子定量化] 設定で指定された「正規化メソッド
     <value>分子リストの存在量を示す数字。
 通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。
 繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.
-Current English:A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.
-Old Localized:[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
     <value>旧：代わりに分子リスト存在量の生データを使用します。</value>
-    <comment>Needs Review:English text changed
-Old English:Average of the normalized areas of the transitions under the Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
-Current English:Obsolete: Use Molecule List Abundance Raw instead.
-Old Localized:分子リストの下にあるトランジションの平均正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます。</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
     <value>旧：分子リスト存在量の生データとトランジションの数の積に等しくなります。</value>
-    <comment>Needs Review:English text changed
-Old English:Sum of the normalized areas of the transitions under the Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings
-Current English:Obsolete: Equal to Molecule List Abundance Raw times the number of Transitions.
-Old Localized:分子リストの下にあるトランジションの合計正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます</comment>
   </data>
   <data name="MoleculeListLocator">
     <value>ドキュメント内の分子リストの一意の識別子です。これは「MoleculeGroup:」で始まります。</value>
@@ -1274,11 +1241,6 @@ Old Localized:分子リストの下にあるトランジションの合計正規
   <data name="ProteinAbundance">
     <value>分子リストの存在量を示す数字。
 通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
-Current English:A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Old Localized:[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。</comment>
   </data>
   <data name="ProteinAbundanceMessage">
     <value>繰り返し測定間の「タンパク質存在量」の比較に欠損データが影響がある場合に警告を表示</value>
@@ -1292,29 +1254,12 @@ Old Localized:[ペプチド定量化] 設定で指定された「正規化メソ
     <value>分子リストの存在量を示す数字。
 通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。
 繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.
-Current English:A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.
-Old Localized:[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
     <value>旧：代わりにタンパク質存在量の生データを使用します。</value>
-    <comment>Needs Review:English text changed
-Old English:Average of the normalized areas of the transitions under the Protein.
-The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
-Current English:Obsolete: Use Protein Abundance Raw instead.
-Old Localized:[タンパク質] の下にあるトランジションの平均正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
     <value>旧：タンパク質存在量の生データとトランジションの数の積に等しくなります。</value>
-    <comment>Needs Review:English text changed
-Old English:Sum of the normalized areas of the transitions under the Protein.
-The areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
-Current English:Obsolete: Equal to Protein Abundance Raw times the number of transitions.
-Old Localized:[タンパク質] の下にあるトランジションの合計正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</comment>
   </data>
   <data name="ProteinAccession">
     <value>タンパク質アクセッション番号</value>
