@@ -585,7 +585,7 @@ Old Localized:アカウントタイプ：</comment>
     <value>6</value>
   </data>
   <data name="lblClientId.Text" xml:space="preserve">
-    <value>クライアントID(&amp;d):</value>
+    <value>クライアントID(&amp;D):</value>
   </data>
   <data name="tbxClientSecret.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -615,7 +615,7 @@ Old Localized:アカウントタイプ：</comment>
     <value>4</value>
   </data>
   <data name="lblClientSecret.Text" xml:space="preserve">
-    <value>クライアントの秘密(&amp;r):</value>
+    <value>クライアントの秘密(&amp;R):</value>
     <comment>Needs Review:English text changed
 Old English:Client secret:
 Current English:Client sec&amp;ret:
@@ -646,7 +646,7 @@ Old Localized:クライアントの秘密：</comment>
     <value>2</value>
   </data>
   <data name="lblClientScope.Text" xml:space="preserve">
-    <value>クライアントの適用範囲(&amp;c):</value>
+    <value>クライアントの適用範囲(&amp;C):</value>
     <comment>Needs Review:English text changed
 Old English:Client scope:
 Current English:Client s&amp;cope:
@@ -677,7 +677,7 @@ Old Localized:クライアントの適用範囲：</comment>
     <value>0</value>
   </data>
   <data name="lblIdentityServer.Text" xml:space="preserve">
-    <value>アイデンティティサーバー(&amp;n):</value>
+    <value>アイデンティティサーバー(&amp;N):</value>
     <comment>Needs Review:English text changed
 Old English:Identity server:
 Current English:Ide&amp;ntity server:

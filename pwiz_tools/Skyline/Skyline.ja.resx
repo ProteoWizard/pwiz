@@ -1511,7 +1511,7 @@ Old Localized:開始(&amp;R)...</comment>
     <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
-    <value>検索(&amp;r)</value>
+    <value>検索(&amp;R)</value>
     <comment>Needs Review:English text changed
 Old English:&amp;Search
 Current English:Sea&amp;rch
