@@ -322,10 +322,12 @@
     <value>加载登录页面失败，出现 HTTP 状态码{0}。客户端注册码很可能无效。刚从服务器接收到新的客户端注册码，这很可能是程序故障。登录页面 URL： {1}</value>
   </data>
   <data name="MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email" xml:space="preserve">
-    <value>Check your email for the verification code and copy it into the box.
+    <value>请检查您的邮箱，获取验证码并将其复制到框中。
 
-If you don't get an email, double-check your email address or click "More Info" for troubleshooting.</value>
-    <comment>Needs Review:Missing translation</comment>
+如果未收到邮件，请再次核对您的邮箱地址，或点击“更多信息”进行故障排查。</value>
+  </data>
+  <data name="MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server" xml:space="preserve">
+    <value>正在连接 MS Fragger 下载服务器</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>下载工具出错</value>

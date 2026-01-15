@@ -504,6 +504,9 @@
   <data name="searchEngineComboBox.Items3" xml:space="preserve">
     <value>Comet</value>
   </data>
+  <data name="searchEngineComboBox.Items4" xml:space="preserve">
+    <value>肽段搜索</value>
+  </data>
   <data name="searchEngineComboBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 39</value>
   </data>
@@ -912,6 +915,9 @@
   </data>
   <data name="btnEditSearchTools.TabIndex" type="System.Int32, mscorlib">
     <value>20</value>
+  </data>
+  <data name="btnEditSearchTools.Text" xml:space="preserve">
+    <value>编辑搜索工具(&amp;T)</value>
   </data>
   <data name="&gt;&gt;btnEditSearchTools.Name" xml:space="preserve">
     <value>btnEditSearchTools</value>
