@@ -257,6 +257,8 @@ namespace pwiz.Skyline.FileUI
                                 _currentDirectory = value;
                         }
                     }
+                    else
+                        _currentDirectory = value;
                     try
                     {   // Try to populate the dialog with the given URL/account
                         OnCurrentDirectoryChange();
