@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
                 _documents.FindIndex(doc => doc.Settings.PeptideSettings.Libraries.Libraries[0].IsLoaded);
             AssertEx.IsGreaterThan(indexLibraryLoaded, 0);
             var indexDocRetentionTimesLoaded = _documents.FindIndex(doc => doc.Settings.DocumentRetentionTimes.GetLibraryAlignment(documentLibraryName) != null);
-            AssertEx.IsGreaterThan(indexDocRetentionTimesLoaded, indexLibraryLoaded);
+            Assert.IsFalse(indexDocRetentionTimesLoaded < indexLibraryLoaded, "{0} should not be less than {1}", indexDocRetentionTimesLoaded, indexLibraryLoaded);
             var docRetentionTimesLoaded = _documents[indexDocRetentionTimesLoaded];
             var loadedLibraryAlignment = docRetentionTimesLoaded.Settings.DocumentRetentionTimes
                 .GetLibraryAlignment(documentLibraryName);
