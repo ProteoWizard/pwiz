@@ -178,6 +178,12 @@
   <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
     <value>尝试从下列服务器检索信息失败：</value>
   </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders" xml:space="preserve">
+    <value>正在请求远程服务器文件夹</value>
+  </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Retrieving_folder_information" xml:space="preserve">
+    <value>正在获取文件夹信息</value>
+  </data>
   <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
     <value>打开</value>
   </data>
@@ -202,14 +208,26 @@
   <data name="AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
     <value>正在删除服务器上的临时文件</value>
   </data>
+  <data name="AbstractPanoramaClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
+    <value>在服务器上重新命名临时文件</value>
+  </data>
   <data name="AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
     <value>正在等待数据导入完成…</value>
   </data>
   <data name="AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__" xml:space="preserve">
     <value>验证文件夹“{0}”出错</value>
   </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_all_folders" xml:space="preserve">
+    <value>所有文件夹</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for__0__" xml:space="preserve">
+    <value>获取文件夹 {0}</value>
+  </data>
   <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__" xml:space="preserve">
     <value>获取文件夹“{0}”的信息出错</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_folder___0__" xml:space="preserve">
+    <value>“{0}”的信息时出错</value>
   </data>
   <data name="AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__" xml:space="preserve">
     <value>获取文件夹“{0}”的 WebDAV url 时出错</value>
@@ -228,6 +246,9 @@
   </data>
   <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>服务器未返回有效的 JSON 响应。{0} 并非 Panorama  服务器。</value>
+  </data>
+  <data name="WebPanoramaClient_ValidateUri_Server_did_not_return_a_valid_LabKey_Server_response___0__is_not_a_LabKey_server_" xml:space="preserve">
+    <value>服务器未返回有效的 LabKey 服务器响应。{0} 不是 LabKey 服务器。</value>
   </data>
   <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
     <value>获取文档导入管道任务状态时出错。</value>

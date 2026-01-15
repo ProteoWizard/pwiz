@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="keyboardShortcutsHelpMenuItem.Text" xml:space="preserve">
+    <value>キーボードショートカット(&amp;K)</value>
+  </data>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
@@ -1393,7 +1396,7 @@
     <value>200, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
-    <value>S&amp;tart...</value>
+    <value>開始(&amp;S)...</value>
     <comment>Needs Review:English text changed
 Old English:Sta&amp;rt...
 Current English:S&amp;tart...
@@ -1480,6 +1483,9 @@ Old Localized:開始(&amp;R)...</comment>
   <data name="ardiaPublishMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
   </data>
+  <data name="ardiaPublishMenuItem.Text" xml:space="preserve">
+    <value>Ardiaにアップロード(&amp;D)...</value>
+  </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 6</value>
   </data>
@@ -1505,7 +1511,7 @@ Old Localized:開始(&amp;R)...</comment>
     <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
-    <value>Sea&amp;rch</value>
+    <value>検索(&amp;R)</value>
     <comment>Needs Review:English text changed
 Old English:&amp;Search
 Current English:Sea&amp;rch
@@ -1780,6 +1786,9 @@ Old Localized:検索(&amp;S)</comment>
   </data>
   <data name="searchToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
+  </data>
+  <data name="searchToolsMenuItem.Text" xml:space="preserve">
+    <value>検索ツール(&amp;S)</value>
   </data>
   <data name="toolStripSeparator46.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>

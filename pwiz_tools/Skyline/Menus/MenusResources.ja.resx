@@ -330,4 +330,134 @@
   <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
     <value>デコイを追加</value>
   </data>
+  <data name="EditMenu_ImputePeakBoundaries_" xml:space="preserve">
+    <value>このドキュメントでは補間オプションが選択されていません。
+補間オプションを選択するには、[ペプチド設定]の[予測]タブに移動します。</value>
+  </data>
+  <data name="EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries" xml:space="preserve">
+    <value>ピーク境界を補間中</value>
+  </data>
+  <data name="EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries" xml:space="preserve">
+    <value>補間されたピーク境界</value>
+  </data>
+  <data name="RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading" xml:space="preserve">
+    <value>ドキュメントの読み込み終了を待機中</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Title" xml:space="preserve">
+    <value>キーボードショートカット</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Header_Menu" xml:space="preserve">
+    <value>メニュー</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Header_Shortcut" xml:space="preserve">
+    <value>ショートカット</value>
+  </data>
+  <data name="KeyboardShortcutDocumentation_GenerateKeyboardShortcutHtml_Keyboard_Shortcuts" xml:space="preserve">
+    <value>キーボードショートカット</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Table_Title" xml:space="preserve">
+    <value>キーボードショートカット</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Table_Title" xml:space="preserve">
+    <value>メニューニーモニック</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Header_Menu" xml:space="preserve">
+    <value>メニュー</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Header_Mnemonic" xml:space="preserve">
+    <value>ニーモニック</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Intro" xml:space="preserve">
+    <value>Skylineではメニューコマンドにアクセスする2種類の方法が提供されています：</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Shortcuts" xml:space="preserve">
+    <value>キーボードショートカットは（Ctrl+Nのような）キーの組み合わせを同時に押すことで、メニューの操作を直接実行するために使用できます。 これらのショートカットは、メニューに表示されるテキストの右側に示されています。</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Mnemonics" xml:space="preserve">
+    <value>ニーモニックはメニューテキスト内の下線付きの文字で、Altキーを押すと表示されます。これらの文字を使用すると、キーボードを使用してメニューを移動することができ、マウスを使用せずにキーを押すだけでメニューコマンドにアクセスすることができます。</value>
+  </data>
+  <data name="Keyboard_GridView_Table_Title" xml:space="preserve">
+    <value>GridViewコントロール</value>
+  </data>
+  <data name="Keyboard_GridView_Header_Action" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="GridView_Action_EnterEditMode" xml:space="preserve">
+    <value>セルの編集モードに入る</value>
+  </data>
+  <data name="GridView_Action_SelectAll" xml:space="preserve">
+    <value>すべてを選択</value>
+  </data>
+  <data name="GridView_Action_MoveToEndOfColumn" xml:space="preserve">
+    <value>列の最後に移動</value>
+  </data>
+  <data name="GridView_Action_SelectToEndOfColumn" xml:space="preserve">
+    <value>列の最後まで選択</value>
+  </data>
+  <data name="GridView_Action_FillDown" xml:space="preserve">
+    <value>フィルダウン（Excel形式）</value>
+  </data>
+  <data name="GridView_Action_FillRight" xml:space="preserve">
+    <value>フィルライト（Excel形式）</value>
+  </data>
+  <data name="GridView_Action_MoveToBeginningOfColumn" xml:space="preserve">
+    <value>列の最初に移動</value>
+  </data>
+  <data name="GridView_Action_SelectToBeginningOfColumn" xml:space="preserve">
+    <value>列の最初まで選択</value>
+  </data>
+  <data name="GridView_Action_MoveToBeginningOfRow" xml:space="preserve">
+    <value>行の最初に移動</value>
+  </data>
+  <data name="GridView_Action_SelectToBeginningOfRow" xml:space="preserve">
+    <value>行の最初まで選択</value>
+  </data>
+  <data name="GridView_Action_MoveToEndOfRow" xml:space="preserve">
+    <value>行の最後に移動</value>
+  </data>
+  <data name="GridView_Action_SelectToEndOfRow" xml:space="preserve">
+    <value>行の最後まで選択</value>
+  </data>
+  <data name="GridView_Action_CancelEditMode" xml:space="preserve">
+    <value>編集モードをキャンセル</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveDown" xml:space="preserve">
+    <value>編集を確定して下方向に移動</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveRight" xml:space="preserve">
+    <value>編集を確定して右方向に移動</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveLeft" xml:space="preserve">
+    <value>編集を確定して左方向に移動</value>
+  </data>
+  <data name="GridView_Action_MoveUpOneCell" xml:space="preserve">
+    <value>1つ上のセルに移動</value>
+  </data>
+  <data name="GridView_Action_MoveDownOneCell" xml:space="preserve">
+    <value>1つ下のセルに移動</value>
+  </data>
+  <data name="GridView_Action_MoveLeftOneCell" xml:space="preserve">
+    <value>1つ左のセルに移動</value>
+  </data>
+  <data name="GridView_Action_MoveRightOneCell" xml:space="preserve">
+    <value>1つ右のセルに移動</value>
+  </data>
+  <data name="GridView_Action_MoveToFirstCellInRow" xml:space="preserve">
+    <value>行の最初のセルに移動</value>
+  </data>
+  <data name="GridView_Action_MoveToLastCellInRow" xml:space="preserve">
+    <value>行の最後のセルに移動</value>
+  </data>
+  <data name="GridView_Action_MoveToFirstCellInGrid" xml:space="preserve">
+    <value>グリッドの最初のセルに移動</value>
+  </data>
+  <data name="GridView_Action_MoveToLastCellInGrid" xml:space="preserve">
+    <value>グリッドの最後のセルに移動</value>
+  </data>
+  <data name="GridView_Action_ClearCell" xml:space="preserve">
+    <value>セルをクリア（または編集モードに入る）</value>
+  </data>
+  <data name="GridView_Action_SelectRow" xml:space="preserve">
+    <value>行を選択</value>
+  </data>
 </root>

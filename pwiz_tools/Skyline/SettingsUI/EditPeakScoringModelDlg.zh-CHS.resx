@@ -328,6 +328,9 @@
   <data name="findUnknownModelScoresButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
   </data>
+  <data name="findUnknownModelScoresButton.ToolTipText" xml:space="preserve">
+    <value>查找缺失模型得分的肽段</value>
+  </data>
   <data name="toolStripFindUnknownModelScores.Location" type="System.Drawing.Point, System.Drawing">
     <value>368, 410</value>
   </data>
