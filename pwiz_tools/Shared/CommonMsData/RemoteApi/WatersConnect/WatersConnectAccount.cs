@@ -99,7 +99,6 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 ClientId = @"resourceownerclient_jwt"
             };
 
-
         static WatersConnectAccount()
         {
             var services = new ServiceCollection();
@@ -114,6 +113,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var provider = services.BuildServiceProvider();
             _httpClientFactory = provider.GetService<IHttpClientFactory>();
         }
+
         public WatersConnectAccount(string serverUrl, string username, string password)
         {
             ServerUrl = serverUrl;
@@ -133,23 +133,27 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         public string IdentityServer { get; private set; }
+
         public bool SupportsMethodDevelopment(out string reason)
         {
             reason = null;
-            bool canAuthenticate = false;
+            if (!DEFAULT.ClientId.Equals(ClientId))
+            {
+                reason = WatersConnectResources
+                    .WatersConnectAccount_SupportsMethodDevelopment_Not_supported_by_the_waters_connect_server_;
+                return false;
+            }
             try
             {
                 Authenticate();
-                canAuthenticate = true;
+                return true;
             }
             catch (AuthenticationException ex)
             {
                 var authReason = HandleAuthenticationException(ex, out _);
                 reason = WatersConnectResources.WatersConnectAccount_SupportsMethodDevelopment_Cannot_authenticate__ + authReason.ToUserMessage();
+                return false;
             }
-            if (!DEFAULT.ClientId.Equals(ClientId))
-                reason = WatersConnectResources.WatersConnectAccount_SupportsMethodDevelopment_Not_supported_by_the_waters_connect_server_;
-            return canAuthenticate && DEFAULT.ClientId.Equals(ClientId);
         }
 
         public WatersConnectAccount ChangeIdentityServer(string identityServer)
@@ -262,10 +266,9 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             message = null;
             if (!ex.Data.Contains(TOKEN_DATA) || string.IsNullOrEmpty(ex.Data[TOKEN_DATA] as string))
             {
-                message = ex.Message;
+                message = CommonTextUtil.LineSeparate(WatersConnectResources.WatersConnectAccount_HandleAuthenticationException_waters_connect_server_returned_non_JSON_body__, ex.Message);
                 return AuthenticationErrorType.Generic;
             }
-
             try
             {
                 var tokenResponse = JObject.Parse((string)ex.Data[TOKEN_DATA]);
@@ -279,7 +282,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 {
                     return AuthenticationErrorType.InvalidClientSecret;
                 }
-                else if (errorType.ToString() == @"invalid_grant")
+                else if (errorType == @"invalid_grant")
                 {
                     return AuthenticationErrorType.InvalidPassword;
                 }
@@ -295,7 +298,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             }
             catch(Exception)
             {
-                message = ex.Message;
+                message = CommonTextUtil.LineSeparate(WatersConnectResources.WatersConnectAccount_HandleAuthenticationException_waters_connect_server_returned_non_JSON_body__, ex.Message);
                 return AuthenticationErrorType.InvalidResponse;
             }
         }

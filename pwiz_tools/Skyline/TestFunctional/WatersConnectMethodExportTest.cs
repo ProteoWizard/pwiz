@@ -161,8 +161,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestAuthenticationError(ExportMethodDlg exportMethodDlg)
         {
             Assert.IsTrue(RemoteUrl.RemoteAccountStorage.GetRemoteAccounts().Any());
-            var wac = RemoteUrl.RemoteAccountStorage.GetRemoteAccounts().First() as WatersConnectAccount;
-            Assert.IsNotNull(wac);
+            Assert.IsNotNull(RemoteUrl.RemoteAccountStorage.GetRemoteAccounts().First() as WatersConnectAccount);
             // Remove the cached token to force authentication server call
             WatersConnectAccount._authenticationTokens.Clear();
             var authErrorDlg = ShowDialog<MessageDlg>(() => exportMethodDlg.ClickTemplateButton());

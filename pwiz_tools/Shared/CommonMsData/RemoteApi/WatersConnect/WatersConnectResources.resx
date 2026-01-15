@@ -134,17 +134,17 @@
     <value>Uploading method {0} to {1}</value>
   </data>
   <data name="WatersConnectAccount_AuthenticationErrorType_InvalidIdentityServer" xml:space="preserve">
-    <value>Invalid Identity Server</value>
+    <value>Cannot reach identity server (check server URL / VPN)</value>
   </data>
 
   <data name="WatersConnectAccount_AuthenticationErrorType_InvalidClientScope" xml:space="preserve">
-    <value>Invalid Client Scope</value>
+    <value>Client credentials rejected (Scope)</value>
   </data>
   <data name="WatersConnectAccount_AuthenticationErrorType_InvalidClientSecret" xml:space="preserve">
-    <value>Invalid Client Secret</value>
+    <value>Client credentials rejected (Secret)</value>
   </data>
   <data name="WatersConnectAccount_AuthenticationErrorType_InvalidPassword" xml:space="preserve">
-    <value>Invalid Password</value>
+    <value>Password rejected (check username/password)</value>
   </data>
   <data name="WatersConnectAccount_AuthenticationErrorType_InvalidServerResponse" xml:space="preserve">
     <value>Invalid Server Response</value>
@@ -157,5 +157,8 @@
   </data>
   <data name="WatersConnectAccount_SupportsMethodDevelopment_Not_supported_by_the_waters_connect_server_" xml:space="preserve">
     <value>Not supported by the waters_connect server.</value>
+  </data>
+  <data name="WatersConnectAccount_HandleAuthenticationException_waters_connect_server_returned_non_JSON_body__" xml:space="preserve">
+    <value>waters_connect server returned non-JSON body. </value>
   </data>
 </root>
