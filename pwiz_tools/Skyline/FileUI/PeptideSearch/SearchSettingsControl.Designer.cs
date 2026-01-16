@@ -61,6 +61,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.labelCutoff = new System.Windows.Forms.Label();
             this.lblSearchEngineBlurb = new System.Windows.Forms.Label();
             this.btnEditSearchTools = new System.Windows.Forms.Button();
+            this.lblWorkflowConfig = new System.Windows.Forms.Label();
+            this.comboWorkflowConfig = new System.Windows.Forms.ComboBox();
+            this.btnSaveConfig = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
             this.groupBoxHardklor.SuspendLayout();
             this.SuspendLayout();
@@ -260,10 +263,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.btnEditSearchTools.UseVisualStyleBackColor = true;
             this.btnEditSearchTools.Click += new System.EventHandler(this.btnEditSearchTools_Click);
             // 
+            // lblWorkflowConfig
+            // 
+            resources.ApplyResources(this.lblWorkflowConfig, "lblWorkflowConfig");
+            this.lblWorkflowConfig.Name = "lblWorkflowConfig";
+            // 
+            // comboWorkflowConfig
+            // 
+            this.comboWorkflowConfig.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboWorkflowConfig.FormattingEnabled = true;
+            resources.ApplyResources(this.comboWorkflowConfig, "comboWorkflowConfig");
+            this.comboWorkflowConfig.Name = "comboWorkflowConfig";
+            // 
+            // btnSaveConfig
+            // 
+            resources.ApplyResources(this.btnSaveConfig, "btnSaveConfig");
+            this.btnSaveConfig.Name = "btnSaveConfig";
+            this.btnSaveConfig.UseVisualStyleBackColor = true;
+            // 
             // SearchSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnSaveConfig);
+            this.Controls.Add(this.comboWorkflowConfig);
+            this.Controls.Add(this.lblWorkflowConfig);
             this.Controls.Add(this.btnEditSearchTools);
             this.Controls.Add(this.labelCutoff);
             this.Controls.Add(this.textCutoff);
@@ -328,5 +352,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TextBox textCutoff;
         private System.Windows.Forms.Label lblSearchEngineBlurb;
         private System.Windows.Forms.Button btnEditSearchTools;
+        private System.Windows.Forms.Label lblWorkflowConfig;
+        private System.Windows.Forms.ComboBox comboWorkflowConfig;
+        private System.Windows.Forms.Button btnSaveConfig;
     }
 }

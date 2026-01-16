@@ -334,6 +334,180 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
+        [TestMethod]
+        public void TestDdaSearchSettingsPreset()
+        {
+            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+            RunFunctionalTest();
+        }
+
+        private void TestSettingsPreset()
+        {
+            // Clear any existing settings presets
+            Settings.Default.SearchSettingsPresets.Clear();
+
+            PrepareDocument("TestSettingsPreset.sky");
+
+            // Open the Import Peptide Search wizard
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
+
+            // Navigate to the DDA search settings page
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                // Use only 1 file to avoid add/remove prefix/suffix dialog
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dda;
+                importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+
+                // Match modifications page
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+
+                // Full scan settings page
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+
+                // Import FASTA page
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("rpal-subset.fasta"));
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+
+                // DDA search settings page
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+            });
+
+            var searchSettingsControl = importPeptideSearchDlg.SearchSettingsControl;
+
+            // Verify settings preset is visible
+            RunUI(() => Assert.IsTrue(searchSettingsControl.SettingsPresetVisible, "Settings preset should be visible"));
+
+            // Set specific search settings
+            RunUI(() =>
+            {
+                searchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSAmanda;
+                searchSettingsControl.PrecursorTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
+                searchSettingsControl.FragmentTolerance = new MzTolerance(20, MzTolerance.Units.ppm);
+                searchSettingsControl.FragmentIons = "b, y";
+                searchSettingsControl.Ms2Analyzer = "Default";
+                searchSettingsControl.CutoffScore = 0.05;
+                searchSettingsControl.SetAdditionalSetting("ConsideredCharges", "2,3,4");
+            });
+
+            // Save settings preset
+            const string amandaPresetName = "MSAmanda - Test Config";
+            RunUI(() => searchSettingsControl.SaveSettingsPreset(amandaPresetName));
+
+            // Verify preset was saved
+            RunUI(() =>
+            {
+                Assert.IsTrue(searchSettingsControl.PresetNames.Contains(amandaPresetName),
+                    "Saved preset should appear in preset list");
+                Assert.AreEqual(amandaPresetName, searchSettingsControl.SelectedPresetName,
+                    "Saved preset should be selected");
+            });
+
+            // Change settings to different values
+            RunUI(() =>
+            {
+                searchSettingsControl.PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm);
+                searchSettingsControl.FragmentTolerance = new MzTolerance(100, MzTolerance.Units.ppm);
+                searchSettingsControl.CutoffScore = 0.2;
+                searchSettingsControl.SetAdditionalSetting("ConsideredCharges", "2,3");
+            });
+
+            // Select a blank/none option to clear selection, then re-select the preset
+            RunUI(() => searchSettingsControl.SelectedPresetName = string.Empty);
+            RunUI(() => searchSettingsControl.SelectedPresetName = amandaPresetName);
+
+            // Verify settings were restored from preset
+            RunUI(() =>
+            {
+                Assert.AreEqual(10, searchSettingsControl.PrecursorTolerance.Value, 0.001,
+                    "Precursor tolerance should be restored from preset");
+                Assert.AreEqual(MzTolerance.Units.ppm, searchSettingsControl.PrecursorTolerance.Unit,
+                    "Precursor tolerance unit should be restored from preset");
+                Assert.AreEqual(20, searchSettingsControl.FragmentTolerance.Value, 0.001,
+                    "Fragment tolerance should be restored from preset");
+                Assert.AreEqual(0.05, searchSettingsControl.CutoffScore, 0.001,
+                    "Cutoff score should be restored from preset");
+                Assert.AreEqual("2,3,4", searchSettingsControl.AdditionalSettings["ConsideredCharges"].Value);
+            });
+
+            // Test overwriting preset with new settings
+            RunUI(() =>
+            {
+                searchSettingsControl.PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm);
+                searchSettingsControl.SaveSettingsPreset(amandaPresetName);
+            });
+
+            // Verify only one preset with this name exists
+            RunUI(() =>
+            {
+                Assert.AreEqual(1, searchSettingsControl.PresetNames.Count(n => n == amandaPresetName),
+                    "Should only have one preset with the same name after overwrite");
+            });
+
+            // Test switching to a different search engine via preset
+            const string cometPresetName = "Comet - Test Config";
+            RunUI(() =>
+            {
+                searchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.Comet;
+                searchSettingsControl.PrecursorTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
+                searchSettingsControl.FragmentTolerance = new MzTolerance(1.0005, MzTolerance.Units.mz);
+                searchSettingsControl.FragmentIons = "b,y";
+                searchSettingsControl.Ms2Analyzer = "Default";
+                searchSettingsControl.CutoffScore = 0.01;
+                searchSettingsControl.SaveSettingsPreset(cometPresetName);
+            });
+
+            // Switch back to MSAmanda preset
+            RunUI(() => searchSettingsControl.SelectedPresetName = amandaPresetName);
+            RunUI(() =>
+            {
+                Assert.AreEqual(SearchSettingsControl.SearchEngine.MSAmanda, searchSettingsControl.SelectedSearchEngine,
+                    "Search engine should be MSAmanda after selecting MSAmanda preset");
+            });
+
+            // Now select the Comet preset - this may trigger dependency download
+            RunUI(() => searchSettingsControl.SelectedPresetName = cometPresetName);
+
+            // Handle potential dependency download dialog for Comet
+            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (downloaderDlg != null)
+            {
+                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                var waitDlg = TryWaitForOpenForm<LongWaitDlg>(2000);
+                if (waitDlg != null)
+                    WaitForClosedForm(waitDlg);
+            }
+
+            // Verify settings were restored from Comet preset
+            RunUI(() =>
+            {
+                Assert.AreEqual(SearchSettingsControl.SearchEngine.Comet, searchSettingsControl.SelectedSearchEngine,
+                    "Search engine should be Comet after selecting Comet preset");
+                Assert.AreEqual(25, searchSettingsControl.PrecursorTolerance.Value, 0.001,
+                    "Precursor tolerance should be restored from Comet preset");
+                Assert.AreEqual(MzTolerance.Units.ppm, searchSettingsControl.PrecursorTolerance.Unit,
+                    "Precursor tolerance unit should be restored from Comet preset");
+                Assert.AreEqual(1.0005, searchSettingsControl.FragmentTolerance.Value, 0.0001,
+                    "Fragment tolerance should be restored from Comet preset");
+                Assert.AreEqual(MzTolerance.Units.mz, searchSettingsControl.FragmentTolerance.Unit,
+                    "Fragment tolerance unit should be mz for Comet preset");
+                Assert.AreEqual(0.01, searchSettingsControl.CutoffScore, 0.001,
+                    "Cutoff score should be restored from Comet preset");
+            });
+
+            // Close the dialog
+            OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
+
+            // Clean up
+            Settings.Default.SearchSettingsPresets.Clear();
+        }
+
         protected override bool IsRecordMode => false;
         private bool RedownloadTools => !IsRecordMode && IsPass0;
 
@@ -368,7 +542,10 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            TestSearch();
+            if (TestSettings == null)
+                TestSettingsPreset();
+            else
+                TestSearch();
         }
 
         /// <summary>

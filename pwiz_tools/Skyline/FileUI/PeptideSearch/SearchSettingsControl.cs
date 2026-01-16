@@ -42,6 +42,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly ImportPeptideSearchDlg _documentContainer;
         private readonly FullScanSettingsControl _hardklorInstrumentSettingsControl;
         private SearchEngine? _searchEngine;
+        private SettingsListComboDriver<SearchSettingsPreset> _workflowDriver;
 
         public SearchSettingsControl(ImportPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
         {
@@ -82,6 +83,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
                 txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = false;
+
+                // Initialize workflow config dropdown
+                InitWorkflowCombo();
+                comboWorkflowConfig.SelectedIndexChanged += comboWorkflowConfig_SelectedIndexChanged;
+                btnSaveConfig.Click += btnSaveConfig_Click;
             }
 
             InitializeControls();
@@ -717,6 +723,188 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             driverTools.LoadList();
             driverTools.EditList();
         }
+
+        #region Workflow Config
+
+        private void InitWorkflowCombo()
+        {
+            _workflowDriver = new SettingsListComboDriver<SearchSettingsPreset>(
+                comboWorkflowConfig,
+                Settings.Default.SearchSettingsPresets,
+                true); // Shows "Edit list..." option
+            _workflowDriver.LoadList(null);
+        }
+
+        private void comboWorkflowConfig_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_workflowDriver.SelectedIndexChangedEvent(sender, e))
+            {
+                // Refresh the list after edit operations
+                _workflowDriver.LoadList(_workflowDriver.SelectedItem?.Name);
+                return;
+            }
+
+            var workflow = _workflowDriver.SelectedItem;
+            if (workflow != null)
+                ApplyWorkflow(workflow);
+        }
+
+        private void ApplyWorkflow(SearchSettingsPreset workflow)
+        {
+            // Set search engine first (triggers InitializeEngine via event handler)
+            SelectedSearchEngine = workflow.SearchEngine;
+
+            // Then set primary settings
+            PrecursorTolerance = workflow.PrecursorTolerance;
+            FragmentTolerance = workflow.FragmentTolerance;
+            MaxVariableMods = workflow.MaxVariableMods;
+
+            // Set fragment ions if specified
+            if (!string.IsNullOrEmpty(workflow.FragmentIons))
+            {
+                var index = cbFragmentIons.Items.IndexOf(workflow.FragmentIons);
+                if (index >= 0)
+                    cbFragmentIons.SelectedIndex = index;
+            }
+
+            // Set MS2 analyzer if specified
+            if (!string.IsNullOrEmpty(workflow.Ms2Analyzer))
+            {
+                var index = cbMs2Analyzer.Items.IndexOf(workflow.Ms2Analyzer);
+                if (index >= 0)
+                    cbMs2Analyzer.SelectedIndex = index;
+            }
+
+            CutoffScore = workflow.CutoffScore;
+
+            // Apply additional settings
+            workflow.ApplyAdditionalSettings(ImportPeptideSearch.SearchEngine);
+        }
+
+        private void btnSaveConfig_Click(object sender, EventArgs e)
+        {
+            // If a workflow is selected, default to its name for easy overwrite
+            var currentWorkflow = _workflowDriver.SelectedItem;
+            var suggestedName = currentWorkflow != null
+                ? currentWorkflow.Name
+                : $@"{SelectedSearchEngine} - ";
+
+            string name;
+            if (!ShowNameInputDialog(PeptideSearchResources.SearchSettingsControl_SaveSettingsPreset, suggestedName, out name))
+                return;
+
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            // Check for existing workflow with same name
+            var existingWorkflow = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingWorkflow != null)
+            {
+                var result = MessageDlg.Show(this,
+                    string.Format(PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_, name),
+                    false, MessageBoxButtons.YesNo);
+                if (result != DialogResult.Yes)
+                    return;
+                Settings.Default.SearchSettingsPresets.Remove(existingWorkflow);
+            }
+
+            var workflow = CaptureCurrentWorkflow(name);
+            Settings.Default.SearchSettingsPresets.Add(workflow);
+            _workflowDriver.LoadList(name);
+        }
+
+        private bool ShowNameInputDialog(string title, string defaultValue, out string result)
+        {
+            result = null;
+            using (var form = new Form())
+            {
+                form.Text = title;
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.StartPosition = FormStartPosition.CenterParent;
+                form.MaximizeBox = false;
+                form.MinimizeBox = false;
+                form.Width = 350;
+                form.Height = 130;
+
+                var label = new Label { Left = 10, Top = 15, Text = PeptideSearchResources.SearchSettingsControl_SettingsPreset, AutoSize = true };
+                var textBox = new TextBox { Left = 10, Top = 35, Width = 310, Text = defaultValue };
+                textBox.SelectionStart = textBox.Text.Length;
+                var btnOk = new Button { Text = @"OK", Left = 150, Width = 80, Top = 65, DialogResult = DialogResult.OK };
+                var btnCancel = new Button { Text = @"Cancel", Left = 240, Width = 80, Top = 65, DialogResult = DialogResult.Cancel };
+
+                form.Controls.Add(label);
+                form.Controls.Add(textBox);
+                form.Controls.Add(btnOk);
+                form.Controls.Add(btnCancel);
+                form.AcceptButton = btnOk;
+                form.CancelButton = btnCancel;
+
+                if (form.ShowDialog(this) == DialogResult.OK)
+                {
+                    result = textBox.Text;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        private SearchSettingsPreset CaptureCurrentWorkflow(string name)
+        {
+            return new SearchSettingsPreset(
+                name,
+                SelectedSearchEngine,
+                PrecursorTolerance,
+                FragmentTolerance,
+                MaxVariableMods,
+                cbFragmentIons.SelectedItem?.ToString(),
+                cbMs2Analyzer.SelectedItem?.ToString(),
+                CutoffScore,
+                SearchSettingsPreset.SerializeAdditionalSettings(ImportPeptideSearch.SearchEngine?.AdditionalSettings));
+        }
+
+        // Test helpers
+        public bool SettingsPresetVisible => comboWorkflowConfig.Visible;
+
+        public string SelectedPresetName
+        {
+            get => _workflowDriver?.SelectedItem?.Name;
+            set
+            {
+                if (_workflowDriver == null)
+                    return;
+                for (int i = 0; i < comboWorkflowConfig.Items.Count; i++)
+                {
+                    if (comboWorkflowConfig.Items[i].ToString() == value)
+                    {
+                        comboWorkflowConfig.SelectedIndex = i;
+                        // Explicitly apply the workflow since WinForms doesn't fire event if index unchanged
+                        var workflow = _workflowDriver.SelectedItem;
+                        if (workflow != null)
+                            ApplyWorkflow(workflow);
+                        return;
+                    }
+                }
+                // If value not found (e.g., empty string for "no selection"), reload list with no selection
+                if (string.IsNullOrEmpty(value))
+                    _workflowDriver.LoadList(null);
+            }
+        }
+
+        public IEnumerable<string> PresetNames => Settings.Default.SearchSettingsPresets.Select(w => w.Name);
+
+        public void SaveSettingsPreset(string name)
+        {
+            // Simulate save by directly creating and adding the workflow
+            var existingWorkflow = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingWorkflow != null)
+                Settings.Default.SearchSettingsPresets.Remove(existingWorkflow);
+
+            var workflow = CaptureCurrentWorkflow(name);
+            Settings.Default.SearchSettingsPresets.Add(workflow);
+            _workflowDriver.LoadList(name);
+        }
+
+        #endregion
     }
 
 }
