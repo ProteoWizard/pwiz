@@ -42,7 +42,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly ImportPeptideSearchDlg _documentContainer;
         private readonly FullScanSettingsControl _hardklorInstrumentSettingsControl;
         private SearchEngine? _searchEngine;
-        private SettingsListComboDriver<SearchSettingsPreset> _workflowDriver;
+        private SettingsListComboDriver<SearchSettingsPreset> _settingsPresetDriver;
 
         public SearchSettingsControl(ImportPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
         {
@@ -728,65 +728,65 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void InitWorkflowCombo()
         {
-            _workflowDriver = new SettingsListComboDriver<SearchSettingsPreset>(
+            _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
                 comboWorkflowConfig,
                 Settings.Default.SearchSettingsPresets,
                 true); // Shows "Edit list..." option
-            _workflowDriver.LoadList(null);
+            _settingsPresetDriver.LoadList(null);
         }
 
         private void comboWorkflowConfig_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_workflowDriver.SelectedIndexChangedEvent(sender, e))
+            if (_settingsPresetDriver.SelectedIndexChangedEvent(sender, e))
             {
                 // Refresh the list after edit operations
-                _workflowDriver.LoadList(_workflowDriver.SelectedItem?.Name);
+                _settingsPresetDriver.LoadList(_settingsPresetDriver.SelectedItem?.Name);
                 return;
             }
 
-            var workflow = _workflowDriver.SelectedItem;
-            if (workflow != null)
-                ApplyWorkflow(workflow);
+            var preset = _settingsPresetDriver.SelectedItem;
+            if (preset != null)
+                ApplySettingsPreset(preset);
         }
 
-        private void ApplyWorkflow(SearchSettingsPreset workflow)
+        private void ApplySettingsPreset(SearchSettingsPreset preset)
         {
             // Set search engine first (triggers InitializeEngine via event handler)
-            SelectedSearchEngine = workflow.SearchEngine;
+            SelectedSearchEngine = preset.SearchEngine;
 
             // Then set primary settings
-            PrecursorTolerance = workflow.PrecursorTolerance;
-            FragmentTolerance = workflow.FragmentTolerance;
-            MaxVariableMods = workflow.MaxVariableMods;
+            PrecursorTolerance = preset.PrecursorTolerance;
+            FragmentTolerance = preset.FragmentTolerance;
+            MaxVariableMods = preset.MaxVariableMods;
 
             // Set fragment ions if specified
-            if (!string.IsNullOrEmpty(workflow.FragmentIons))
+            if (!string.IsNullOrEmpty(preset.FragmentIons))
             {
-                var index = cbFragmentIons.Items.IndexOf(workflow.FragmentIons);
+                var index = cbFragmentIons.Items.IndexOf(preset.FragmentIons);
                 if (index >= 0)
                     cbFragmentIons.SelectedIndex = index;
             }
 
             // Set MS2 analyzer if specified
-            if (!string.IsNullOrEmpty(workflow.Ms2Analyzer))
+            if (!string.IsNullOrEmpty(preset.Ms2Analyzer))
             {
-                var index = cbMs2Analyzer.Items.IndexOf(workflow.Ms2Analyzer);
+                var index = cbMs2Analyzer.Items.IndexOf(preset.Ms2Analyzer);
                 if (index >= 0)
                     cbMs2Analyzer.SelectedIndex = index;
             }
 
-            CutoffScore = workflow.CutoffScore;
+            CutoffScore = preset.CutoffScore;
 
             // Apply additional settings
-            workflow.ApplyAdditionalSettings(ImportPeptideSearch.SearchEngine);
+            preset.ApplyAdditionalSettings(ImportPeptideSearch.SearchEngine);
         }
 
         private void btnSaveConfig_Click(object sender, EventArgs e)
         {
-            // If a workflow is selected, default to its name for easy overwrite
-            var currentWorkflow = _workflowDriver.SelectedItem;
-            var suggestedName = currentWorkflow != null
-                ? currentWorkflow.Name
+            // If a preset is selected, default to its name for easy overwrite
+            var currentPreset = _settingsPresetDriver.SelectedItem;
+            var suggestedName = currentPreset != null
+                ? currentPreset.Name
                 : $@"{SelectedSearchEngine} - ";
 
             string name;
@@ -796,21 +796,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (string.IsNullOrWhiteSpace(name))
                 return;
 
-            // Check for existing workflow with same name
-            var existingWorkflow = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
-            if (existingWorkflow != null)
+            // Check for existing preset with same name
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingPreset != null)
             {
                 var result = MessageDlg.Show(this,
                     string.Format(PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_, name),
                     false, MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes)
                     return;
-                Settings.Default.SearchSettingsPresets.Remove(existingWorkflow);
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
             }
 
-            var workflow = CaptureCurrentWorkflow(name);
-            Settings.Default.SearchSettingsPresets.Add(workflow);
-            _workflowDriver.LoadList(name);
+            var preset = SaveCurrentSettingsAsPreset(name);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            _settingsPresetDriver.LoadList(name);
         }
 
         private bool ShowNameInputDialog(string title, string defaultValue, out string result)
@@ -848,7 +848,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private SearchSettingsPreset CaptureCurrentWorkflow(string name)
+        private SearchSettingsPreset SaveCurrentSettingsAsPreset(string name)
         {
             return new SearchSettingsPreset(
                 name,
@@ -867,26 +867,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public string SelectedPresetName
         {
-            get => _workflowDriver?.SelectedItem?.Name;
+            get => _settingsPresetDriver?.SelectedItem?.Name;
             set
             {
-                if (_workflowDriver == null)
+                if (_settingsPresetDriver == null)
                     return;
                 for (int i = 0; i < comboWorkflowConfig.Items.Count; i++)
                 {
                     if (comboWorkflowConfig.Items[i].ToString() == value)
                     {
                         comboWorkflowConfig.SelectedIndex = i;
-                        // Explicitly apply the workflow since WinForms doesn't fire event if index unchanged
-                        var workflow = _workflowDriver.SelectedItem;
-                        if (workflow != null)
-                            ApplyWorkflow(workflow);
+                        // Explicitly apply the preset since WinForms doesn't fire event if index unchanged
+                        var preset = _settingsPresetDriver.SelectedItem;
+                        if (preset != null)
+                            ApplySettingsPreset(preset);
                         return;
                     }
                 }
                 // If value not found (e.g., empty string for "no selection"), reload list with no selection
                 if (string.IsNullOrEmpty(value))
-                    _workflowDriver.LoadList(null);
+                    _settingsPresetDriver.LoadList(null);
             }
         }
 
@@ -894,14 +894,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void SaveSettingsPreset(string name)
         {
-            // Simulate save by directly creating and adding the workflow
-            var existingWorkflow = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
-            if (existingWorkflow != null)
-                Settings.Default.SearchSettingsPresets.Remove(existingWorkflow);
+            // Simulate save by directly creating and adding the preset
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingPreset != null)
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
 
-            var workflow = CaptureCurrentWorkflow(name);
-            Settings.Default.SearchSettingsPresets.Add(workflow);
-            _workflowDriver.LoadList(name);
+            var preset = SaveCurrentSettingsAsPreset(name);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            _settingsPresetDriver.LoadList(name);
         }
 
         #endregion
