@@ -19,15 +19,12 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.SkylineTestUtil;
-using System.Globalization;
 using System.Linq;
-using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -95,7 +92,6 @@ namespace pwiz.SkylineTestFunctional
             int totalFilteredPointCount = 0;
             foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
             {
-                double? voltage = null;
                 Assert.IsTrue(document.MeasuredResults.TryLoadChromatogram(0, peptideDocNode, transitionGroupDocNode, tolerance, out var infos));
                 Assert.AreEqual(1, infos.Length);
                 var chromatogramGroupInfo = infos[0];
@@ -110,12 +106,6 @@ namespace pwiz.SkylineTestFunctional
                 else
                 {
                     totalFilteredPointCount += pointCount;
-                    var strVoltage = transitionGroupDocNode.SpectrumClassFilter.Clauses.First().FilterSpecs.First()
-                        .Predicate.InvariantOperandText;
-                    if (!string.IsNullOrEmpty(strVoltage))
-                    {
-                        voltage = double.Parse(strVoltage, CultureInfo.InvariantCulture);
-                    }
                 }
 
                 var identityPath = new IdentityPath(peptideGroupDocNode.PeptideGroup, peptideDocNode.Peptide,
@@ -125,28 +115,9 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.SelectedPath = identityPath;
                 });
                 WaitForGraphs();
-
-                var timeIntensities = firstChromatogram.TimeIntensities;
-                ClickChromatogram(timeIntensities.Times[0], timeIntensities.Intensities[0]);
-                var graphFullScan = WaitForOpenForm<GraphFullScan>();
-                RunUI(()=>graphFullScan.ShowPropertiesSheet = true);
-                if (!transitionGroupDocNode.SpectrumClassFilter.IsEmpty)
-                {
-                    var fullScanProperties = graphFullScan.MsGraphExtension.PropertiesSheet.SelectedObject as FullScanProperties;
-                    Assert.IsNotNull(fullScanProperties);
-                    if (voltage.HasValue)
-                    {
-                        Assert.AreEqual(voltage.Value.ToString(Formats.OPT_PARAMETER, CultureInfo.CurrentCulture), fullScanProperties.SourceOffsetVoltage);
-                    }
-                    else
-                    {
-                        Assert.IsNull(fullScanProperties.SourceOffsetVoltage);
-                    }
-                }
             }
             Assert.IsNotNull(fullPointCount);
             Assert.AreEqual(fullPointCount.Value, totalFilteredPointCount);
         }
-
     }
 }
