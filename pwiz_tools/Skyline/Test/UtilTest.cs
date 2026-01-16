@@ -27,6 +27,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.PanoramaClient;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
@@ -497,6 +498,32 @@ namespace pwiz.SkylineTest
             //     since we know the file is locked and cannot have been deleted.
             AssertEx.ThrowsException<IOException>(() => FileLockingProcessFinder.DeleteDirectoryWithFileLockingDetails(dirPath),
                 x => AssertEx.Contains(x.Message, lockedFile, "this process"));
+        }
+
+        /// <summary>
+        /// Verifies that Panorama exceptions are recognized as user-actionable errors,
+        /// not programming defects. This ensures users see friendly error messages
+        /// instead of crash dialogs when Panorama operations fail.
+        /// </summary>
+        [TestMethod]
+        public void TestPanoramaExceptionsUserActionable()
+        {
+            // PanoramaException and its subclasses should NOT be treated as programming defects
+            // because they inherit from IOException, which is recognized as user-actionable
+            var testUri = new Uri("https://panoramaweb.org/");
+
+            // Base class
+            Assert.IsFalse(ExceptionUtil.IsProgrammingDefect(new PanoramaException("Test error")));
+
+            // PanoramaServerException - used for server communication errors
+            Assert.IsFalse(ExceptionUtil.IsProgrammingDefect(new PanoramaServerException("Server error")));
+
+            // PanoramaImportErrorException - used when document import fails on server
+            // This was the bug reported in issue #3808: before the fix, this exception
+            // inherited from Exception instead of IOException, causing it to be treated
+            // as a programming defect and showing a crash dialog instead of a friendly error
+            Assert.IsFalse(ExceptionUtil.IsProgrammingDefect(
+                new PanoramaImportErrorException(testUri, testUri, "Import failed")));
         }
     }
 }
