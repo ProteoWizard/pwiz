@@ -80,15 +80,18 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public static readonly SpectrumClassColumn ConstantNeutralLoss = MakeColumn(
             nameof(SpectrumClass.ConstantNeutralLoss), spectrum => spectrum.ConstantNeutralLoss);
 
+        public static readonly SpectrumClassColumn SourceOffsetVoltage = MakeColumn(
+            nameof(SpectrumClass.SourceOffsetVoltage), spectrum => spectrum.SourceOffsetVoltage);
+
         public static readonly ImmutableList<SpectrumClassColumn> ALL = ImmutableList.ValueOf(new[]
         {
             Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth, CompensationVoltage,
-            PresetScanConfiguration, MsLevel, Analyzer, IsolationWindowWidth, DissociationMethod, ConstantNeutralLoss
+            PresetScanConfiguration, MsLevel, Analyzer, IsolationWindowWidth, DissociationMethod, ConstantNeutralLoss, SourceOffsetVoltage
         });
 
         public static readonly ImmutableList<SpectrumClassColumn> MS1 = ImmutableList.ValueOf(new[]
         {
-            ScanDescription, ScanWindowWidth, CompensationVoltage, PresetScanConfiguration, Analyzer
+            ScanDescription, ScanWindowWidth, CompensationVoltage, PresetScanConfiguration, Analyzer, SourceOffsetVoltage
         });
 
         /// <summary>
