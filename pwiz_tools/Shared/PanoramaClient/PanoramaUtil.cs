@@ -450,7 +450,18 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class PanoramaServerException : IOException
+    /// <summary>
+    /// Base class for all Panorama-specific exceptions.
+    /// Inherits from IOException so that these exceptions are recognized as user-actionable
+    /// rather than programming defects by ExceptionUtil.IsProgrammingDefect().
+    /// </summary>
+    public class PanoramaException : IOException
+    {
+        public PanoramaException(string message) : base(message) { }
+        public PanoramaException(string message, Exception innerException) : base(message, innerException) { }
+    }
+
+    public class PanoramaServerException : PanoramaException
     {
         public HttpStatusCode? HttpStatus { get; }
 
@@ -473,7 +484,7 @@ namespace pwiz.PanoramaClient
             if (labKeyError != null)
             {
                 errorMessageBuilder.LabKeyError(labKeyError);
-                
+
                 // Don't include the NetworkRequestException message when we have a LabKey error
                 // The LabKey error is the server's specific error message and is what users need
                 // The exception message would be technical details (e.g., "Response status code does not indicate success: 500...")
@@ -577,9 +588,10 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class PanoramaImportErrorException : Exception
+    public class PanoramaImportErrorException : PanoramaException
     {
         public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl, string error, bool jobCancelled = false)
+            : base(error)
         {
             ServerUrl = serverUrl;
             JobUrl = jobUrl;
