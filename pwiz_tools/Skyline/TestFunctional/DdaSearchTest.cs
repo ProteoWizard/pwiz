@@ -474,16 +474,6 @@ namespace pwiz.SkylineTestFunctional
             // Now select the Comet preset - this may trigger dependency download
             RunUI(() => searchSettingsControl.SelectedPresetName = cometPresetName);
 
-            // Handle potential dependency download dialog for Comet
-            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-            if (downloaderDlg != null)
-            {
-                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                var waitDlg = TryWaitForOpenForm<LongWaitDlg>(2000);
-                if (waitDlg != null)
-                    WaitForClosedForm(waitDlg);
-            }
-
             // Verify settings were restored from Comet preset
             RunUI(() =>
             {

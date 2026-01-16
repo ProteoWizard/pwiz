@@ -62,7 +62,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblSearchEngineBlurb = new System.Windows.Forms.Label();
             this.btnEditSearchTools = new System.Windows.Forms.Button();
             this.lblWorkflowConfig = new System.Windows.Forms.Label();
-            this.comboWorkflowConfig = new System.Windows.Forms.ComboBox();
+            this.cbSettingsPreset = new System.Windows.Forms.ComboBox();
             this.btnSaveConfig = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pBLogo)).BeginInit();
             this.groupBoxHardklor.SuspendLayout();
@@ -270,10 +270,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // comboWorkflowConfig
             // 
-            this.comboWorkflowConfig.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboWorkflowConfig.FormattingEnabled = true;
-            resources.ApplyResources(this.comboWorkflowConfig, "comboWorkflowConfig");
-            this.comboWorkflowConfig.Name = "comboWorkflowConfig";
+            this.cbSettingsPreset.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbSettingsPreset.FormattingEnabled = true;
+            resources.ApplyResources(this.cbSettingsPreset, "comboWorkflowConfig");
+            this.cbSettingsPreset.Name = "comboWorkflowConfig";
             // 
             // btnSaveConfig
             // 
@@ -286,7 +286,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.btnSaveConfig);
-            this.Controls.Add(this.comboWorkflowConfig);
+            this.Controls.Add(this.cbSettingsPreset);
             this.Controls.Add(this.lblWorkflowConfig);
             this.Controls.Add(this.btnEditSearchTools);
             this.Controls.Add(this.labelCutoff);
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.Label lblSearchEngineBlurb;
         private System.Windows.Forms.Button btnEditSearchTools;
         private System.Windows.Forms.Label lblWorkflowConfig;
-        private System.Windows.Forms.ComboBox comboWorkflowConfig;
+        private System.Windows.Forms.ComboBox cbSettingsPreset;
         private System.Windows.Forms.Button btnSaveConfig;
     }
 }

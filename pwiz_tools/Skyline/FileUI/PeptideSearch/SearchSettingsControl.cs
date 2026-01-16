@@ -84,9 +84,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = false;
 
-                // Initialize workflow config dropdown
-                InitWorkflowCombo();
-                comboWorkflowConfig.SelectedIndexChanged += comboWorkflowConfig_SelectedIndexChanged;
+                // Initialize settings preset dropdown
+                InitSettingsPresets();
+                cbSettingsPreset.SelectedIndexChanged += cbSettingsPreset_SelectedIndexChanged;
                 btnSaveConfig.Click += btnSaveConfig_Click;
             }
 
@@ -726,16 +726,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         #region Workflow Config
 
-        private void InitWorkflowCombo()
+        private void InitSettingsPresets()
         {
             _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
-                comboWorkflowConfig,
+                cbSettingsPreset,
                 Settings.Default.SearchSettingsPresets,
                 true); // Shows "Edit list..." option
             _settingsPresetDriver.LoadList(null);
         }
 
-        private void comboWorkflowConfig_SelectedIndexChanged(object sender, EventArgs e)
+        private void cbSettingsPreset_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (_settingsPresetDriver.SelectedIndexChangedEvent(sender, e))
             {
@@ -863,7 +863,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         // Test helpers
-        public bool SettingsPresetVisible => comboWorkflowConfig.Visible;
+        public bool SettingsPresetVisible => cbSettingsPreset.Visible;
 
         public string SelectedPresetName
         {
@@ -872,11 +872,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 if (_settingsPresetDriver == null)
                     return;
-                for (int i = 0; i < comboWorkflowConfig.Items.Count; i++)
+                for (int i = 0; i < cbSettingsPreset.Items.Count; i++)
                 {
-                    if (comboWorkflowConfig.Items[i].ToString() == value)
+                    if (cbSettingsPreset.Items[i].ToString() == value)
                     {
-                        comboWorkflowConfig.SelectedIndex = i;
+                        cbSettingsPreset.SelectedIndex = i;
                         // Explicitly apply the preset since WinForms doesn't fire event if index unchanged
                         var preset = _settingsPresetDriver.SelectedItem;
                         if (preset != null)
