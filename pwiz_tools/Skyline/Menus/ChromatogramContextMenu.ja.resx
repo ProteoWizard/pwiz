@@ -187,6 +187,9 @@
   <data name="exemplaryPeakMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
+  <data name="exemplaryPeakMenuItem.Text" xml:space="preserve">
+    <value>例示的ピーク</value>
+  </data>
   <data name="massErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>

@@ -274,6 +274,15 @@
   <data name="RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators" xml:space="preserve">
     <value>编辑保留时间计算器</value>
   </data>
+  <data name="SearchToolList_Label_Internal__Tools" xml:space="preserve">
+    <value>内部工具(&amp;T)</value>
+  </data>
+  <data name="SearchToolList_Label_Search__Tools" xml:space="preserve">
+    <value>搜索工具(&amp;T)</value>
+  </data>
+  <data name="SearchToolList_Title_Edit_Search_Tools" xml:space="preserve">
+    <value>编辑搜索工具</value>
+  </data>
   <data name="ServerList_Label__Servers" xml:space="preserve">
     <value>服务器(&amp;S)</value>
   </data>

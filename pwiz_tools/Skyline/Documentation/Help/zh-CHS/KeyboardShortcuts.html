@@ -42,15 +42,15 @@ td {
     text-decoration: line-through;
 }</style>
 </head><body>
-<h2>Keyboard Shortcuts</h2>
-<p>Skyline provides two types of keyboard access to menu commands:</p>
+<h2>键盘快捷键</h2>
+<p>Skyline 提供两种通过键盘访问菜单命令的方式：</p>
 <ul>
-<li><strong>Keyboard Shortcuts</strong> Keyboard Shortcuts are single-stroke key combinations (like Ctrl+N) that can be used to perform menu actions directly. These shortcuts are displayed to the right of the menu text on the menus themselves.</li>
-<li><strong>Menu Mnemonics</strong> Mnemonics are underlined letters in menu text that become visible when you press the Alt key. You can use these letters to navigate menus using the keyboard, or learn the complete keystroke sequences to access any menu command without using the mouse.</li>
+<li><strong>键盘快捷键</strong> 键盘快捷键是单次按键组合（如 Ctrl+N），可用于直接执行菜单操作。这些快捷键显示在菜单上的菜单文本右侧。</li>
+<li><strong>菜单助记符</strong> 菜单文本中的助记符是带下划线的字母，按下 Alt 键时会显示。使用这些字母可通过键盘浏览菜单，或学习完整的键盘操作序列，无需鼠标即可访问菜单命令。</li>
 </ul>
-<h3>Keyboard Shortcuts</h3>
+<h3>键盘快捷键</h3>
 <table border="1" cellspacing="0" cellpadding="4">
-<thead><tr><th>Menu</th><th>Shortcut</th></tr></thead><tbody>
+<thead><tr><th>菜单</th><th>快捷键</th></tr></thead><tbody>
 <tr><td>文件(F) → 新建(N)</td><td>Ctrl+N</td></tr>
 <tr><td>文件(F) → 打开(O)</td><td>Ctrl+O</td></tr>
 <tr><td>文件(F) → 保存(S)</td><td>Ctrl+S</td></tr>
@@ -63,7 +63,7 @@ td {
 <tr><td>编辑(E) → 全选(A)</td><td>Ctrl+A</td></tr>
 <tr><td>编辑(E) → 查找(F)</td><td>Ctrl+F</td></tr>
 <tr><td>编辑(E) → 查找下一个(N)</td><td>F3</td></tr>
-<tr><td>编辑(E) → Edit Note</td><td>Shift+F2</td></tr>
+<tr><td>编辑(E) → 编辑注释(E)</td><td>Shift+F2</td></tr>
 <tr><td>编辑(E) → 整合(G) → 峰应用于全部(A)</td><td>Ctrl+Shift+A</td></tr>
 <tr><td>编辑(E) → 整合(G) → 峰应用于后续(S)</td><td>Ctrl+Shift+S</td></tr>
 <tr><td>编辑(E) → 整合(G) → 删除峰(R)</td><td>Ctrl+Shift+R</td></tr>
@@ -101,17 +101,17 @@ td {
 <tr><td>视图(V) → 自动缩放(Z) → 最优峰(B)</td><td>F11</td></tr>
 <tr><td>视图(V) → 自动缩放(Z) → 保留时间窗口(R)</td><td>Ctrl+F11</td></tr>
 <tr><td>视图(V) → 自动缩放(Z) → 两个都是(O)</td><td>Ctrl+Shift+F11</td></tr>
-<tr><td>视图(V) → Retention Times → 重复测定比较(R)</td><td>F8</td></tr>
-<tr><td>视图(V) → Retention Times → 肽段比较(P)</td><td>Ctrl+F8</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 重复测定比较(R)</td><td>F8</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 肽段比较(P)</td><td>Ctrl+F8</td></tr>
 <tr><td>视图(V) → 峰面积(K) → 重复测定比较(R)</td><td>F7</td></tr>
 <tr><td>视图(V) → 峰面积(K) → 肽段比较(P)</td><td>Ctrl+F7</td></tr>
 <tr><td>视图(V) → 质量误差(E) → 重复测定比较(R)</td><td>F6</td></tr>
 <tr><td>视图(V) → 质量误差(E) → 肽段比较(P)</td><td>Ctrl+F6</td></tr>
 </tbody></table>
-<h3>Menu Mnemonics</h3>
+<h3>菜单助记符</h3>
 <table border="1" cellspacing="0" cellpadding="4">
-<thead><tr><th>Menu</th><th>Mnemonic</th></tr></thead><tbody>
-<tr><td>文件(F) → Start</td><td>Alt+F,T</td></tr>
+<thead><tr><th>菜单</th><th>助记符</th></tr></thead><tbody>
+<tr><td>文件(F) → 开始(T)</td><td>Alt+F,T</td></tr>
 <tr><td>文件(F) → 新建(N)</td><td>Alt+F,N</td></tr>
 <tr><td>文件(F) → 打开(O)</td><td>Alt+F,O</td></tr>
 <tr><td>文件(F) → 从 Panorama 打开(M)</td><td>Alt+F,M</td></tr>
@@ -120,10 +120,10 @@ td {
 <tr><td>文件(F) → 另存为(A)</td><td>Alt+F,A</td></tr>
 <tr><td>文件(F) → 共享(H)</td><td>Alt+F,H</td></tr>
 <tr><td>文件(F) → 上传至 Panorama(U)</td><td>Alt+F,U</td></tr>
-<tr><td>文件(F) → Upload to Ardia</td><td>Alt+F,D</td></tr>
-<tr><td>文件(F) → Search → 运行肽段搜索(R)</td><td>Alt+F,R,R</td></tr>
-<tr><td>文件(F) → Search → 特征检测(F)</td><td>Alt+F,R,F</td></tr>
-<tr><td>文件(F) → Search</td><td>Alt+F,R</td></tr>
+<tr><td>文件(F) → 上传至 Ardia(D)</td><td>Alt+F,D</td></tr>
+<tr><td>文件(F) → 搜索(R) → 运行肽段搜索(R)</td><td>Alt+F,R,R</td></tr>
+<tr><td>文件(F) → 搜索(R) → 特征检测(F)</td><td>Alt+F,R,F</td></tr>
+<tr><td>文件(F) → 搜索(R)</td><td>Alt+F,R</td></tr>
 <tr><td>文件(F) → 导入(I) → 结果(R)</td><td>Alt+F,I,R</td></tr>
 <tr><td>文件(F) → 导入(I) → 峰边界(B)</td><td>Alt+F,I,B</td></tr>
 <tr><td>文件(F) → 导入(I) → 肽段搜索(P)</td><td>Alt+F,I,P</td></tr>
@@ -131,7 +131,7 @@ td {
 <tr><td>文件(F) → 导入(I) → 分析库(A)</td><td>Alt+F,I,A</td></tr>
 <tr><td>文件(F) → 导入(I) → 离子对列表(T)</td><td>Alt+F,I,T</td></tr>
 <tr><td>文件(F) → 导入(I) → 文档(D)</td><td>Alt+F,I,D</td></tr>
-<tr><td>文件(F) → 导入(I) → Annotations</td><td>Alt+F,I,N</td></tr>
+<tr><td>文件(F) → 导入(I) → 注释(N)</td><td>Alt+F,I,N</td></tr>
 <tr><td>文件(F) → 导入(I)</td><td>Alt+F,I</td></tr>
 <tr><td>文件(F) → 导出(E) → 离子对列表(T)</td><td>Alt+F,E,T</td></tr>
 <tr><td>文件(F) → 导出(E) → 分离列表(I)</td><td>Alt+F,E,I</td></tr>
@@ -152,7 +152,7 @@ td {
 <tr><td>编辑(E) → 全选(A)</td><td>Alt+E,A</td></tr>
 <tr><td>编辑(E) → 查找(F)</td><td>Alt+E,F</td></tr>
 <tr><td>编辑(E) → 查找下一个(N)</td><td>Alt+E,N</td></tr>
-<tr><td>编辑(E) → Edit Note</td><td>Alt+E,E</td></tr>
+<tr><td>编辑(E) → 编辑注释(E)</td><td>Alt+E,E</td></tr>
 <tr><td>编辑(E) → 整合(G) → 峰应用于全部(A)</td><td>Alt+E,G,A</td></tr>
 <tr><td>编辑(E) → 整合(G) → 峰应用于后续(S)</td><td>Alt+E,G,S</td></tr>
 <tr><td>编辑(E) → 整合(G) → 分组应用方式(G)</td><td>Alt+E,G,G</td></tr>
@@ -268,14 +268,14 @@ td {
 <tr><td>视图(V) → 自动缩放(Z) → 保留时间窗口(R)</td><td>Alt+V,Z,R</td></tr>
 <tr><td>视图(V) → 自动缩放(Z) → 两个都是(O)</td><td>Alt+V,Z,O</td></tr>
 <tr><td>视图(V) → 自动缩放(Z)</td><td>Alt+V,Z</td></tr>
-<tr><td>视图(V) → Retention Times → 重复测定比较(R)</td><td>Alt+V,I,R</td></tr>
-<tr><td>视图(V) → Retention Times → 肽段比较(P)</td><td>Alt+V,I,P</td></tr>
-<tr><td>视图(V) → Retention Times → Regression → 得分到运行(S)</td><td>Alt+V,I,E,S</td></tr>
-<tr><td>视图(V) → Retention Times → Regression → 运行到运行(R)</td><td>Alt+V,I,E,R</td></tr>
-<tr><td>视图(V) → Retention Times → Regression</td><td>Alt+V,I,E</td></tr>
-<tr><td>视图(V) → Retention Times → 对齐(G)</td><td>Alt+V,I,G</td></tr>
-<tr><td>视图(V) → Retention Times → 时序安排(S)</td><td>Alt+V,I,S</td></tr>
-<tr><td>视图(V) → Retention Times</td><td>Alt+V,I</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 重复测定比较(R)</td><td>Alt+V,I,R</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 肽段比较(P)</td><td>Alt+V,I,P</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 回归(E) → 得分到运行(S)</td><td>Alt+V,I,E,S</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 回归(E) → 运行到运行(R)</td><td>Alt+V,I,E,R</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 回归(E)</td><td>Alt+V,I,E</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 对齐(G)</td><td>Alt+V,I,G</td></tr>
+<tr><td>视图(V) → 保留时间(I) → 时序安排(S)</td><td>Alt+V,I,S</td></tr>
+<tr><td>视图(V) → 保留时间(I)</td><td>Alt+V,I</td></tr>
 <tr><td>视图(V) → 峰面积(K) → 重复测定比较(R)</td><td>Alt+V,K,R</td></tr>
 <tr><td>视图(V) → 峰面积(K) → 肽段比较(P)</td><td>Alt+V,K,P</td></tr>
 <tr><td>视图(V) → 峰面积(K) → 相对丰度(A)</td><td>Alt+V,K,A</td></tr>
@@ -304,7 +304,7 @@ td {
 <tr><td>工具(T) → 更新(U)</td><td>Alt+T,U</td></tr>
 <tr><td>工具(T) → 工具商店(T)</td><td>Alt+T,T</td></tr>
 <tr><td>工具(T) → 外部工具(E)</td><td>Alt+T,E</td></tr>
-<tr><td>工具(T) → Search Tools</td><td>Alt+T,S</td></tr>
+<tr><td>工具(T) → 搜索工具(S)</td><td>Alt+T,S</td></tr>
 <tr><td>工具(T) → 即时窗口(I)</td><td>Alt+T,I</td></tr>
 <tr><td>工具(T) → 选项(O)</td><td>Alt+T,O</td></tr>
 <tr><td>帮助(H) → 主页(H)</td><td>Alt+H,H</td></tr>
@@ -313,7 +313,7 @@ td {
 <tr><td>帮助(H) → 教程(T)</td><td>Alt+H,T</td></tr>
 <tr><td>帮助(H) → 文档(D) → 报告(R)</td><td>Alt+H,D,R</td></tr>
 <tr><td>帮助(H) → 文档(D) → 命令行(C)</td><td>Alt+H,D,C</td></tr>
-<tr><td>帮助(H) → 文档(D) → Keyboard Shortcuts</td><td>Alt+H,D,K</td></tr>
+<tr><td>帮助(H) → 文档(D) → 键盘快捷键(K)</td><td>Alt+H,D,K</td></tr>
 <tr><td>帮助(H) → 文档(D) → 其他(O)</td><td>Alt+H,D,O</td></tr>
 <tr><td>帮助(H) → 文档(D)</td><td>Alt+H,D</td></tr>
 <tr><td>帮助(H) → 支持(S)</td><td>Alt+H,S</td></tr>
@@ -321,34 +321,34 @@ td {
 <tr><td>帮助(H) → 检查更新(C)</td><td>Alt+H,C</td></tr>
 <tr><td>帮助(H) → 关于(A)</td><td>Alt+H,A</td></tr>
 </tbody></table>
-<h3>GridView Controls</h3>
+<h3>GridView 控件</h3>
 <table border="1" cellspacing="0" cellpadding="4">
-<thead><tr><th>Menu</th><th>Action</th></tr></thead><tbody>
-<tr><td>Ctrl+D</td><td>Fill down (Excel-style)</td></tr>
-<tr><td>Ctrl+R</td><td>Fill right (Excel-style)</td></tr>
-<tr><td>F2</td><td>Enter edit mode in cell</td></tr>
-<tr><td>Escape</td><td>Cancel edit mode</td></tr>
-<tr><td>Enter</td><td>Confirm edit and move down</td></tr>
-<tr><td>Tab</td><td>Confirm edit and move right</td></tr>
-<tr><td>Shift+Tab</td><td>Confirm edit and move left</td></tr>
-<tr><td>Ctrl+A</td><td>Select all</td></tr>
-<tr><td>Ctrl+0</td><td>Clear cell (or enter edit mode)</td></tr>
-<tr><td>Shift+Space</td><td>Select row</td></tr>
-<tr><td>Down</td><td>Move down one cell</td></tr>
-<tr><td>Ctrl+Down</td><td>Move to end of column</td></tr>
-<tr><td>Ctrl+Shift+Down</td><td>Select to end of column</td></tr>
-<tr><td>Up</td><td>Move up one cell</td></tr>
-<tr><td>Ctrl+Up</td><td>Move to beginning of column</td></tr>
-<tr><td>Ctrl+Shift+Up</td><td>Select to beginning of column</td></tr>
-<tr><td>Left</td><td>Move left one cell</td></tr>
-<tr><td>Ctrl+Left</td><td>Move to beginning of row</td></tr>
-<tr><td>Ctrl+Shift+Left</td><td>Select to beginning of row</td></tr>
-<tr><td>Right</td><td>Move right one cell</td></tr>
-<tr><td>Ctrl+Right</td><td>Move to end of row</td></tr>
-<tr><td>Ctrl+Shift+Right</td><td>Select to end of row</td></tr>
-<tr><td>Home</td><td>Move to first cell in row</td></tr>
-<tr><td>Ctrl+Home</td><td>Move to first cell in grid</td></tr>
-<tr><td>End</td><td>Move to last cell in row</td></tr>
-<tr><td>Ctrl+End</td><td>Move to last cell in grid</td></tr>
+<thead><tr><th>菜单</th><th>操作</th></tr></thead><tbody>
+<tr><td>Ctrl+D</td><td>向下填充（Excel 样式）</td></tr>
+<tr><td>Ctrl+R</td><td>向右填充（Excel 样式）</td></tr>
+<tr><td>F2</td><td>在单元格中进入编辑模式</td></tr>
+<tr><td>Escape</td><td>取消编辑模式</td></tr>
+<tr><td>Enter</td><td>确认编辑并下移</td></tr>
+<tr><td>Tab</td><td>确认编辑并右移</td></tr>
+<tr><td>Shift+Tab</td><td>确认编辑并左移</td></tr>
+<tr><td>Ctrl+A</td><td>全选</td></tr>
+<tr><td>Ctrl+0</td><td>清除单元格（或进入编辑模式）</td></tr>
+<tr><td>Shift+Space</td><td>选择行</td></tr>
+<tr><td>Down</td><td>下移一个单元格</td></tr>
+<tr><td>Ctrl+Down</td><td>移动至列末</td></tr>
+<tr><td>Ctrl+Shift+Down</td><td>选取至列末</td></tr>
+<tr><td>Up</td><td>上移一个单元格</td></tr>
+<tr><td>Ctrl+Up</td><td>移动至列首</td></tr>
+<tr><td>Ctrl+Shift+Up</td><td>选取至列首</td></tr>
+<tr><td>Left</td><td>左移一个单元格</td></tr>
+<tr><td>Ctrl+Left</td><td>移动至行首</td></tr>
+<tr><td>Ctrl+Shift+Left</td><td>选取至行首</td></tr>
+<tr><td>Right</td><td>右移一个单元格</td></tr>
+<tr><td>Ctrl+Right</td><td>移动至行末</td></tr>
+<tr><td>Ctrl+Shift+Right</td><td>选取至行末</td></tr>
+<tr><td>Home</td><td>移动至行首单元格</td></tr>
+<tr><td>Ctrl+Home</td><td>移动至网格中的第一个单元格</td></tr>
+<tr><td>End</td><td>移动至行末单元格</td></tr>
+<tr><td>Ctrl+End</td><td>移动至网格中的最后一个单元格</td></tr>
 </tbody></table>
 </body></html>
