@@ -1396,7 +1396,7 @@
     <value>200, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
-    <value>開始(&amp;S)...</value>
+    <value>開始(&amp;T)...</value>
   </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
