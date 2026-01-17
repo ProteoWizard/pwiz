@@ -572,8 +572,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!_graphDataReceiver.TryGetCurrentProduct(out var product))
                     return false;
 
-                return ReferenceEquals(product.Document, GraphSummary.DocumentUIContainer.DocumentUI) &&
-                       Equals(product.GraphSettings, GraphSettings.FromSettings());
+                var currentDoc = GraphSummary.DocumentUIContainer.DocumentUI;
+                var currentSettings = GraphSettings.FromSettings();
+
+                // Verify receiver's product matches current state
+                if (!ReferenceEquals(product.Document, currentDoc) ||
+                    !Equals(product.GraphSettings, currentSettings))
+                    return false;
+
+                // Verify _graphData has been updated (ProductAvailableAction callback has run)
+                // This prevents race where receiver has product but _graphData is still stale
+                return _graphData != null &&
+                       ReferenceEquals(_graphData.Document, currentDoc) &&
+                       Equals(_graphData.GraphSettings, currentSettings);
             }
         }
 
