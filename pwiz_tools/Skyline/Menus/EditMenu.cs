@@ -795,16 +795,16 @@ namespace pwiz.Skyline.Menus
             if (!canApply)
                 return;
 
-            lock (SkylineWindow.GetDocumentChangeLock())
+            try
             {
-                try
+                lock (SkylineWindow.GetDocumentChangeLock())
                 {
                     ApplyPeakWithLongWait(subsequent, group);
                 }
-                catch (Exception e)
-                {
-                    ExceptionUtil.DisplayOrReportException(SkylineWindow, e);
-                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.DisplayOrReportException(SkylineWindow, e);
             }
         }
 
