@@ -26,7 +26,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
