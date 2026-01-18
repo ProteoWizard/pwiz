@@ -1272,8 +1272,8 @@ namespace pwiz.Skyline.Controls.Graphs
             /// </summary>
             public string GetDiagnosticInfo()
             {
-                return $"Full={WasFullCalculation}, Cached={CachedNodeCount}, Recalc={RecalculatedNodeCount}, " +
-                       $"DocId={Document.Id.GlobalIndex}, DocRev={Document.RevisionIndex}";
+                return $@"Full={WasFullCalculation}, Cached={CachedNodeCount}, Recalc={RecalculatedNodeCount}, " +
+                       $@"DocId={Document.Id.GlobalIndex}, DocRev={Document.RevisionIndex}";
             }
 
             public virtual double MaxValueSetting { get { return 0; } }
