@@ -789,11 +789,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     // The caller (CleanCacheForIncrementalUpdates) has already validated that the
                     // prior data is from the same document identity with compatible settings
                     CalcDataPositionsIncremental(parameters.PriorGraphData, productionMonitor);
+                    WasFullCalculation = false;
                 }
                 else
                 {
                     // Full calculation
                     CalcDataPositionsFull(productionMonitor);
+                    WasFullCalculation = true;
                 }
             }
 
@@ -1258,6 +1260,21 @@ namespace pwiz.Skyline.Controls.Graphs
             /// Equals total node count when full calculation was performed.
             /// </summary>
             public int RecalculatedNodeCount { get; private set; }
+
+            /// <summary>
+            /// True if this data was calculated from scratch (CalcDataPositionsFull),
+            /// false if it was an incremental update using prior cached data.
+            /// </summary>
+            public bool WasFullCalculation { get; private set; }
+
+            /// <summary>
+            /// Returns diagnostic information for debugging test failures.
+            /// </summary>
+            public string GetDiagnosticInfo()
+            {
+                return $"Full={WasFullCalculation}, Cached={CachedNodeCount}, Recalc={RecalculatedNodeCount}, " +
+                       $"DocId={Document.Id.GlobalIndex}, DocRev={Document.RevisionIndex}";
+            }
 
             public virtual double MaxValueSetting { get { return 0; } }
             public virtual double MinValueSetting { get { return 0; } }
