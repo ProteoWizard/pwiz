@@ -97,6 +97,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     generate-skyline-AssemblyInfo.cs "Skyline" : "Targeted Mass Spec Environment" : "Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineCmd" : "Command-line access to Skyline" : "SkylineCmd/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineBatch" : "Batch Processing with Skyline" : "Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "AutoQC" : "Automated Mass Spec System Suitability with Skyline" : "Executables/AutoQC/AutoQC/Properties/AssemblyInfo.cs" ;
     #generate-skyline-AssemblyInfo.cs "SkylineRunner" : "Command-line access to Skyline" : "SkylineRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "TestRunner" : "Command-line testing tool" : "TestRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineTester" : "Testing GUI" : "SkylineTester/Properties/AssemblyInfo.cs" ;
@@ -220,6 +221,34 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Unit testing SkylineBatch in $(CONFIGURATION:L) configuration...
         vstest.console.exe $(OUTPUT_PATH)\SkylineBatchTest.dll
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+    rule do_auto_qc ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_auto_qc
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Building AutoQC in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Executables/AutoQC/AutoQC.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:AutoQCTest /nologo /verbosity:minimal
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
+    rule do_auto_qc_test ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_auto_qc_test
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo Unit testing AutoQC in $(CONFIGURATION:L) configuration...
+        vstest.console.exe $(OUTPUT_PATH)\AutoQCTest.dll
         set status=%ERRORLEVEL%
         exit %status%
     }
@@ -544,9 +573,34 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>SkylineBatch.exe
         ;
     explicit SkylineBatchTest ;
-        
-    
-        
+
+    make AutoQC.exe
+        : # sources
+        : # actions
+            @do_auto_qc
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+
+    make AutoQCTest
+        : # sources
+        : # actions
+            @do_auto_qc_test
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>AutoQC.exe
+        ;
+    explicit AutoQCTest ;
+
+
+
     make Test
         : # sources
         : # actions
