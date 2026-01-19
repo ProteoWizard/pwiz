@@ -33,7 +33,8 @@ namespace pwiz.Skyline.Model.Results
         public static readonly ChromatogramGapDetector SENSITIVE = new ChromatogramGapDetector
         {
             ToleranceFactor = 10,
-            PercentileReference = 0.9
+            PercentileReference = 0.9,
+            Sensitive = true
         };
 
         /// <summary>
@@ -42,13 +43,16 @@ namespace pwiz.Skyline.Model.Results
         public static readonly ChromatogramGapDetector SELECTIVE = new ChromatogramGapDetector()
         {
             ToleranceFactor = 10,
-            PercentileReference = .5
+            PercentileReference = .5,
+            Sensitive = false
         };
 
         /// <summary>
         /// Gaps in the retention times are found by examining the times between scans.
         /// </summary>
         public double PercentileReference { get; private set; }
+
+        public bool Sensitive { get; private set; }
 
         public ChromatogramGapDetector ChangePercentileReference(double value)
         {
@@ -78,7 +82,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    var newResult = result.Intersect(timeIntervals);
+                    var newResult = Sensitive ? result.Intersect(timeIntervals) : result.Union(timeIntervals);
                     result = newResult;
                 }
             }

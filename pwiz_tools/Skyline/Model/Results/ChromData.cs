@@ -775,7 +775,21 @@ namespace pwiz.Skyline.Model.Results
             double maxHeight = ((height - maxIntensity) * ASCENT_TOL) + maxIntensity;
 
             // Determine the interval containing the current boundary, to avoid extending into a gap
-            int? currentIntervalIndex = timeIntervals?.IndexOfIntervalContaining(peakPrimary.Data.Times[indexBoundary]);
+            int? currentIntervalIndex = null;
+            if (timeIntervals != null)
+            {
+                foreach (var index in new[] { indexBoundary, indexBoundary + increment, indexBoundary - increment })
+                {
+                    if (index >= 0 && index < peakPrimary.Data.Times.Count)
+                    {
+                        currentIntervalIndex = timeIntervals.IndexOfIntervalContaining(peakPrimary.Data.Times[index]);
+                        if (currentIntervalIndex.HasValue)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
 
             // Extend the index in the direction of the increment
             for (int i = indexBoundary + increment;
@@ -783,14 +797,12 @@ namespace pwiz.Skyline.Model.Results
                  i += increment)
             {
                 // Don't extend into a gap in the TimeIntervals
-                if (timeIntervals != null)
+                if (currentIntervalIndex.HasValue)
                 {
                     float timeAtIndex = peakPrimary.Data.Times[i];
-                    if (!timeIntervals.ContainsTime(timeAtIndex))
-                        break;
-                    // Also stop if we would extend into a different interval (across a gap)
-                    int? intervalIndex = timeIntervals.IndexOfIntervalContaining(timeAtIndex);
-                    if (intervalIndex != currentIntervalIndex)
+                    // Stop if we would extend outside the current interval
+                    if (timeAtIndex < timeIntervals.Starts[currentIntervalIndex.Value] ||
+                        timeAtIndex > timeIntervals.Ends[currentIntervalIndex.Value])
                         break;
                 }
 

@@ -68,6 +68,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public TimeIntervals Union(TimeIntervals other)
+        {
+            return FromIntervals(Intervals.Concat(other.Intervals));
+        }
+
         public int? IndexOfIntervalContaining(float time)
         {
             int index = IndexOfIntervalEndingAfter(time);

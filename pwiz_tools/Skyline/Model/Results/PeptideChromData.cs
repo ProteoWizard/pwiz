@@ -173,26 +173,46 @@ namespace pwiz.Skyline.Model.Results
         public void PickChromatogramPeaks(ExplicitPeakBoundsFunc explicitPeakBoundsFunc)
         {
             TimeIntervals intersectedTimeIntervals = null;
-            ChromatogramGapDetector chromatogramGapDetector = null;
             if (NodePep != null)
             {
+                ChromatogramGapDetector chromatogramGapDetector;
+                bool sensitive;
                 if (_settings.TransitionSettings.Instrument.TriggeredAcquisition)
                 {
+                    sensitive = true;
                     chromatogramGapDetector = ChromatogramGapDetector.SENSITIVE;
                 }
                 else
                 {
+                    sensitive = false;
                     chromatogramGapDetector = ChromatogramGapDetector.SELECTIVE;
                 }
-            }
-
-            if (chromatogramGapDetector != null)
-            {
                 foreach (var chromDataSet in _dataSets)
                 {
                     var timeIntervals = chromatogramGapDetector.InferTimeIntervals(
                         chromDataSet.Chromatograms.Where(chrom => null != chrom.DocNode)
                             .Select(chrom => chrom.RawTimes));
+                    if (timeIntervals != null && !sensitive)
+                    {
+                        if (timeIntervals.Count == 1)
+                        {
+                            float minTime = float.MaxValue;
+                            float maxTime = float.MinValue;
+                            foreach (var chromData in chromDataSet.Chromatograms)
+                            {
+                                if (chromData.DocNode != null && chromData.RawTimes.Count > 0)
+                                {
+                                    minTime = Math.Min(chromData.RawTimes[0], minTime);
+                                    maxTime = Math.Max(chromData.RawTimes[chromData.RawTimes.Count - 1], maxTime);
+                                }
+                            }
+
+                            if (timeIntervals.Starts[0] <= minTime && timeIntervals.Ends[0] >= maxTime)
+                            {
+                                timeIntervals = null;
+                            }
+                        }
+                    }
                     chromDataSet.TimeIntervals = timeIntervals;
                     if (timeIntervals != null)
                     {
@@ -202,7 +222,14 @@ namespace pwiz.Skyline.Model.Results
                         }
                         else
                         {
-                            intersectedTimeIntervals = intersectedTimeIntervals.Intersect(timeIntervals);
+                            if (sensitive)
+                            {
+                                intersectedTimeIntervals = intersectedTimeIntervals.Intersect(timeIntervals);
+                            }
+                            else
+                            {
+                                intersectedTimeIntervals = intersectedTimeIntervals.Union(timeIntervals);
+                            }
                         }
                     }
                 }
