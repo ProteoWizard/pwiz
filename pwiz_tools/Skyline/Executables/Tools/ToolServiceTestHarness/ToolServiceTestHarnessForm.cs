@@ -1,5 +1,7 @@
-using System.Reflection;
 using SkylineTool;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.Loader;
 
 namespace ToolServiceTestHarness
 {
@@ -7,18 +9,22 @@ namespace ToolServiceTestHarness
     {
         private readonly string _arg1OriginalLabel;
         private readonly string _arg2OriginalLabel;
-        private readonly MethodInfo[] _methodInfos;
+        private MethodInfo[] _methodInfos = [];
         public ToolServiceTestHarnessForm()
         {
             InitializeComponent();
-            _methodInfos = typeof(IToolService).GetMethods().ToArray();
-            foreach (var method in _methodInfos)
-            {
-                comboMethod.Items.Add(method.Name);
-            }
+            UpdateMethodDropdown(typeof(IToolService));
 
             _arg1OriginalLabel = lblArgument1.Text;
             _arg2OriginalLabel = lblArgument2.Text;
+        }
+
+        private void UpdateMethodDropdown(Type type)
+        {
+            _methodInfos = [];
+            comboMethod.Items.Clear();
+            _methodInfos = type.GetMethods();
+            comboMethod.Items.AddRange(_methodInfos.Select(object (method) =>method.Name).ToArray());
         }
 
         private void comboMethod_SelectedIndexChanged(object sender, EventArgs e)
@@ -138,7 +144,7 @@ namespace ToolServiceTestHarness
                 }
                 catch (Exception exception)
                 {
-                    ShowError(exception.Message);
+                    HandleException(exception);
                     textBox.Focus();
                 }
             }
@@ -158,6 +164,65 @@ namespace ToolServiceTestHarness
         public void ShowError(string message)
         {
             MessageBox.Show(this, message);
+        }
+
+        private void btnUpdateMethods_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var client = new RemoteClient(tbxConnection.Text);
+                var processId = client.RemoteCallName(nameof(IToolService.GetProcessId), []) as int?;
+                if (processId == null)
+                {
+                    ShowError("Unable to get process id from connection");
+                    return;
+                }
+
+                var process = Process.GetProcessById(processId.Value);
+                var skylineToolPath = Path.Combine(Path.GetDirectoryName(process.MainModule?.FileName ?? string.Empty)!, "SkylineTool.dll");
+                if (!File.Exists(skylineToolPath))
+                {
+                    ShowError($"File '{skylineToolPath}' does not exist");
+                    return;
+                }
+
+                AssemblyLoadContext? loadContext = null;
+                try
+                {
+                    loadContext = new IsolatedAssemblyLoadContext();
+                    var assembly = loadContext.LoadFromAssemblyPath(skylineToolPath);
+                    var toolServiceTypeName = typeof(IToolService).FullName!;
+                    var toolServiceType = assembly.GetType(toolServiceTypeName);
+                    if (toolServiceType == null)
+                    {
+                        ShowError($"Unable to find type {toolServiceType} in {skylineToolPath}");
+                        return;
+                    }
+                    UpdateMethodDropdown(toolServiceType);
+                }
+                finally
+                {
+                    loadContext?.Unload();
+                }
+            }
+            catch (Exception exception)
+            {
+                HandleException(exception);
+            }
+        }
+
+        public void HandleException(Exception ex)
+        {
+            ShowError(ex.Message);
+        }
+
+        public class IsolatedAssemblyLoadContext() : AssemblyLoadContext(isCollectible: true)
+        {
+            protected override Assembly Load(AssemblyName assemblyName)
+            {
+                // Return null to let default context handle dependencies
+                return null!;
+            }
         }
     }
 }

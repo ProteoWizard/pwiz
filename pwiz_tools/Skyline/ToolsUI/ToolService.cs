@@ -588,6 +588,37 @@ namespace pwiz.Skyline.ToolsUI
             return result?.ToString();
         }
 
+        public void ReorderElements(string[] elementLocators)
+        {
+            var orderedElements = elementLocators.Select(locator =>
+                ElementRefs.FromObjectReference(ElementLocator.Parse(locator))).ToList();
+            _skylineWindow.Invoke(new Action(() =>
+            {
+                lock (_skylineWindow.GetDocumentChangeLock())
+                {
+                    var originalDocument = _skylineWindow.Document;
+                    var reorderer = new ElementReorderer(CancellationToken.None, originalDocument);
+                    var newDocument = reorderer.SetNewOrder(orderedElements);
+                    if (!ReferenceEquals(newDocument, originalDocument))
+                    {
+                        _skylineWindow.ModifyDocument("Change element ordering in document from external tool", doc =>
+                        {
+                            if (!ReferenceEquals(doc, originalDocument))
+                            {
+                                // Should not be possible because of the lock on GetDocumentChangeLock
+                                throw new InvalidOperationException(Resources
+                                    .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                            }
+
+                            return newDocument;
+                        }, pair=>AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.sort_protein_name, newDocument.DocumentType)));
+                    }
+                }
+            }));
+        }
+        
+        
+        
         private ElementRef GetSelectedElementRefNow(string elementType)
         {
             var document = _skylineWindow.DocumentUI;
