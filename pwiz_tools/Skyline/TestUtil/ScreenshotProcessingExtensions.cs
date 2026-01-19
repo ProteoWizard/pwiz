@@ -507,6 +507,18 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Draws the state of multiple ProgressBars to cover up
+        /// any animation that Windows may have drawn on the completed progress
+        /// </summary>
+        public static Bitmap FillProgressBars(this Bitmap bmp, IEnumerable<ProgressBar> progressBars)
+        {
+            var result = bmp;
+            foreach (var progressBar in progressBars)
+                result = result.FillProgressBar(progressBar);
+            return result;
+        }
+
+        /// <summary>
         /// Draws the state of a ProgressBar on the ProgressBar to cover up
         /// any animation that Windows may have drawn on the completed progress
         /// </summary>
