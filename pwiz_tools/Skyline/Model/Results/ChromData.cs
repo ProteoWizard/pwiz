@@ -720,7 +720,7 @@ namespace pwiz.Skyline.Model.Results
             UpdateCombinedScore();
         }
 
-        public bool Extend()
+        public bool Extend(TimeIntervals timeIntervals = null)
         {
             // Only extend for peak groups with at least one peak
             if (Count < 1)
@@ -733,25 +733,25 @@ namespace pwiz.Skyline.Model.Results
             int toleranceLen = Math.Max(MIN_TOLERANCE_LEN, (int)Math.Round(peakPrimary.Peak.Fwhm * FRACTION_FWHM_LEN));
             int startIndex = peakPrimary.Peak.StartIndex;
             int endIndex = peakPrimary.Peak.EndIndex;
-            peakPrimary.Peak.ResetBoundaries(ExtendBoundary(peakPrimary, startIndex, endIndex, -1, toleranceLen),
-                                             ExtendBoundary(peakPrimary, endIndex, startIndex, 1, toleranceLen));
+            peakPrimary.Peak.ResetBoundaries(ExtendBoundary(peakPrimary, startIndex, endIndex, -1, toleranceLen, timeIntervals),
+                                             ExtendBoundary(peakPrimary, endIndex, startIndex, 1, toleranceLen, timeIntervals));
             // Convex peaks can result in single point peaks after boundaries are extended
             return peakPrimary.Peak.StartIndex < peakPrimary.Peak.EndIndex;
         }
 
         private int ExtendBoundary(ChromDataPeak peakPrimary, int indexBoundary, int indexOpposite,
-                                   int increment, int toleranceLen)
+                                   int increment, int toleranceLen, TimeIntervals timeIntervals)
         {
             int indexAdjusted = indexBoundary;
             if (peakPrimary.Peak.Fwhm >= MIN_TOLERANCE_SMOOTH_FWHM)
             {
-                indexAdjusted = ExtendBoundary(peakPrimary, false, indexBoundary, increment, toleranceLen);
+                indexAdjusted = ExtendBoundary(peakPrimary, false, indexBoundary, increment, toleranceLen, timeIntervals);
             }
             // Because smoothed data can have a tendency to reach baseline one
             // interval sooner than the raw data, do a final check to choose the
             // boundary correctly for the raw data.
             indexAdjusted = RetractBoundary(peakPrimary, true, indexAdjusted, -increment);
-            indexAdjusted = ExtendBoundary(peakPrimary, true, indexAdjusted, increment, toleranceLen);
+            indexAdjusted = ExtendBoundary(peakPrimary, true, indexAdjusted, increment, toleranceLen, timeIntervals);
             // Avoid backing up over the original boundary
             int indexLimit = (indexBoundary + indexOpposite) / 2;
             indexAdjusted = increment > 0
@@ -760,7 +760,7 @@ namespace pwiz.Skyline.Model.Results
             return indexAdjusted;
         }
 
-        private int ExtendBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen)
+        private int ExtendBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen, TimeIntervals timeIntervals)
         {
             float maxIntensity;
             GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity);
@@ -774,11 +774,26 @@ namespace pwiz.Skyline.Model.Results
             // Put a limit on how high intensity can go before the search is terminated
             double maxHeight = ((height - maxIntensity) * ASCENT_TOL) + maxIntensity;
 
+            // Determine the interval containing the current boundary, to avoid extending into a gap
+            int? currentIntervalIndex = timeIntervals?.IndexOfIntervalContaining(peakPrimary.Data.Times[indexBoundary]);
+
             // Extend the index in the direction of the increment
             for (int i = indexBoundary + increment;
                  i >= 0 && i < lenIntensities && Math.Abs(indexBoundary - i) < toleranceLen;
                  i += increment)
             {
+                // Don't extend into a gap in the TimeIntervals
+                if (timeIntervals != null)
+                {
+                    float timeAtIndex = peakPrimary.Data.Times[i];
+                    if (!timeIntervals.ContainsTime(timeAtIndex))
+                        break;
+                    // Also stop if we would extend into a different interval (across a gap)
+                    int? intervalIndex = timeIntervals.IndexOfIntervalContaining(timeAtIndex);
+                    if (intervalIndex != currentIntervalIndex)
+                        break;
+                }
+
                 float maxIntensityCurrent;
                 GetIntensityMetrics(i, useRaw, out maxIntensityCurrent);
 

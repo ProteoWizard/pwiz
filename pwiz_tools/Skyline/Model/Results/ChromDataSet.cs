@@ -658,7 +658,7 @@ namespace pwiz.Skyline.Model.Results
             // them wider.
             // This does not handle reintegration, because peaks get reintegrated
             // before they are stored, taking the entire peptide into account.
-            _listPeakSets = ExtendPeaks(_listPeakSets, retentionTimes, isAlignedTimes);
+            _listPeakSets = ExtendPeaks(_listPeakSets, retentionTimes, isAlignedTimes, TimeIntervals);
 
             // Sort by whether a peak contains an ID and then product score
             // This has to be done after peak extending, since extending may
@@ -832,12 +832,13 @@ namespace pwiz.Skyline.Model.Results
 
         private static List<ChromDataPeakList> ExtendPeaks(IEnumerable<ChromDataPeakList> listPeakSets,
                                                            double[] retentionTimes,
-                                                           bool isAlignedTimes)
+                                                           bool isAlignedTimes,
+                                                           TimeIntervals timeIntervals)
         {
             var listExtendedSets = new List<ChromDataPeakList>();
             foreach (var peakSet in listPeakSets)
             {
-                if (!peakSet.Extend())
+                if (!peakSet.Extend(timeIntervals))
                     continue;
                 peakSet.SetIdentified(retentionTimes, isAlignedTimes);
                 listExtendedSets.Add(peakSet);
