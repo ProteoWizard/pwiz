@@ -769,9 +769,9 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromPeak.FlagValues.contains_id;
                     if (peakSet.IsAlignedIdentified)
                         flags |= ChromPeak.FlagValues.used_id_alignment;
-                    if (intersectedTimeIntervals != null)
+                    if (intersectedTimeIntervals != null && peak.StartIndex >= 0 && peak.EndIndex >= 0)
                     {
-                        if (!intersectedTimeIntervals.ContainsTime(peak.StartTime) || !intersectedTimeIntervals.ContainsTime(peak.EndTime))
+                        if (!intersectedTimeIntervals.ContainsTime(Times[peak.StartIndex]) || !intersectedTimeIntervals.ContainsTime(Times[peak.EndIndex]))
                         {
                             flags |= ChromPeak.FlagValues.peak_truncated;
                         }
