@@ -371,7 +371,7 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 var chromDataSet = new ChromDataSet(true, PeptideDocNode, transitionGroup,
-                    Settings.TransitionSettings.FullScan.AcquisitionMethod, chromDatas.ToArray());
+                    Settings.TransitionSettings.FullScan.AcquisitionMethod, Settings.TransitionSettings.Instrument.TriggeredAcquisition, chromDatas.ToArray());
                 peptideChromDataSets.Add(PeptideDocNode, chromDataSet);
             }
 

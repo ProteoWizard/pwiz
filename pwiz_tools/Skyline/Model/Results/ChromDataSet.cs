@@ -53,14 +53,15 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private List<ChromDataPeakList> _listPeakSets = new List<ChromDataPeakList>();
 
-        public ChromDataSet(bool isTimeNormalArea, FullScanAcquisitionMethod fullScanAcquisitionMethod, ChromData chromData)
-            :this(isTimeNormalArea, null, null, fullScanAcquisitionMethod, new []{chromData})
+        public ChromDataSet(bool isTimeNormalArea, TransitionSettings transitionSettings, ChromData chromData)
+            : this(isTimeNormalArea, null, null, transitionSettings.FullScan.AcquisitionMethod, transitionSettings.Instrument.TriggeredAcquisition, new []{chromData})
         {
             OverrideTextId = false;
         }
 
         public ChromDataSet(bool isTimeNormalArea, PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupDocNode, FullScanAcquisitionMethod fullScanAcquisitionMethod,
+            bool triggeredAcquisition,
             IEnumerable<ChromData> arrayChromData)
         {
             _isTimeNormalArea = isTimeNormalArea;
@@ -147,9 +148,10 @@ namespace pwiz.Skyline.Model.Results
         public bool IsTimeNormalArea { get { return _isTimeNormalArea; } }
 
         public FullScanAcquisitionMethod FullScanAcquisitionMethod { get; private set; }
+        public bool TriggeredAcquisition { get; }
 
         /// <summary>
-        /// Enumerates the peak groups associated with this transiton group
+        /// Enumerates the peak groups associated with this transition group
         /// </summary>
         public IEnumerable<ChromDataPeakList> PeakSets { get { return _listPeakSets; } }
 
@@ -718,7 +720,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void GeneratePeakData(TimeIntervals intersectedTimeIntervals)
         {
-            var peakGroupIntegrator = new PeakGroupIntegrator(FullScanAcquisitionMethod, intersectedTimeIntervals);
+            var peakGroupIntegrator = new PeakGroupIntegrator(FullScanAcquisitionMethod, intersectedTimeIntervals, TriggeredAcquisition);
             foreach (var chromData in _listChromData)
             {
                 if (chromData.OptimizationStep != 0)
@@ -777,7 +779,7 @@ namespace pwiz.Skyline.Model.Results
 
                     peak.CalcChromPeak(peakGroupIntegrator, peakMax, flags);
 
-                    if (intersectedTimeIntervals != null && peakMax != null)
+                    if (intersectedTimeIntervals != null && TriggeredAcquisition && peakMax != null)
                     {
                         float startTime = Times[peakMax.StartIndex];
                         float endTime = Times[peakMax.EndIndex];

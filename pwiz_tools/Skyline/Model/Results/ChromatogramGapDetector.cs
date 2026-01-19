@@ -25,24 +25,40 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public class TriggeredAcquisition : Immutable
+    public class ChromatogramGapDetector : Immutable
     {
-        public TriggeredAcquisition()
+        /// <summary>
+        /// Gap detector to use when "Triggered Chromatogram Extraction" is chosen.
+        /// </summary>
+        public static readonly ChromatogramGapDetector SENSITIVE = new ChromatogramGapDetector
         {
-            ScanTimeTolerance = 10;
-        }
+            ToleranceFactor = 10,
+            PercentileReference = 0.9
+        };
 
         /// <summary>
-        /// Gaps in the retention times are found by comparing the time interval between any two scans
-        /// with what the median time interval is between each scan and its neighbor.
-        /// Any scans where the time between the scan and its neighbor is more than ScanTimeTolerance times
-        /// the median delta is considered to be a gap.
+        /// Gap detector to use for regular data which is not expected to have any gaps.
         /// </summary>
-        public double ScanTimeTolerance { get; private set; }
-
-        public TriggeredAcquisition ChangeScanTimeTolerance(double value)
+        public static readonly ChromatogramGapDetector SELECTIVE = new ChromatogramGapDetector()
         {
-            return ChangeProp(ImClone(this), im => im.ScanTimeTolerance = value);
+            ToleranceFactor = 10,
+            PercentileReference = .5
+        };
+
+        /// <summary>
+        /// Gaps in the retention times are found by examining the times between scans.
+        /// </summary>
+        public double PercentileReference { get; private set; }
+
+        public ChromatogramGapDetector ChangePercentileReference(double value)
+        {
+            return ChangeProp(ImClone(this), im => im.PercentileReference = value);
+        }
+        public double ToleranceFactor { get; private set; }
+
+        public ChromatogramGapDetector ChangeToleranceFactor(double value)
+        {
+            return ChangeProp(ImClone(this), im => im.ToleranceFactor = value);
         }
 
         public TimeIntervals InferTimeIntervals(IEnumerable<IList<float>> timesList)
@@ -72,8 +88,8 @@ namespace pwiz.Skyline.Model.Results
 
         public TimeIntervals InferTimeIntervalsFromScanTimes(IList<float> times)
         {
-            float medianDuration = GetMedianScanDuration(times);
-            return TimeIntervals.FromScanTimes(times, (float) (medianDuration * ScanTimeTolerance));
+            float referenceDuration = GetReferenceScanDuration(times, PercentileReference / 100);
+            return TimeIntervals.FromScanTimes(times, (float) (referenceDuration * ToleranceFactor));
         }
 
         public static IEnumerable<float> GetScanDurations(IEnumerable<float> times)
@@ -104,10 +120,10 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static float GetMedianScanDuration(IEnumerable<float> times)
+        public static float GetReferenceScanDuration(IEnumerable<float> times, double percentile)
         {
             var statistics = new Statistics(GetMinimumScanDurations(times).Select(t => (double) t));
-            return (float) statistics.Median();
+            return (float)statistics.QPercentile(percentile);
         }
     }
 }

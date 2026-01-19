@@ -616,7 +616,6 @@ namespace pwiz.Skyline.Model.Results
 
         private static IEnumerable<ChromDataSet> GetChromDataSets(SrmDocument document, ChromDataProvider provider)
         {
-            var fullScanAcquisitionMethod = document.Settings.TransitionSettings.FullScan.AcquisitionMethod;
             var isTimeNormalArea = !document.Settings.HasResults || document.Settings.MeasuredResults.IsTimeNormalArea;
 
             ChromKey lastKey = ChromKey.EMPTY;
@@ -635,7 +634,7 @@ namespace pwiz.Skyline.Model.Results
                     if (chromDataSet != null)
                         yield return chromDataSet;
 
-                    chromDataSet = new ChromDataSet(isTimeNormalArea, fullScanAcquisitionMethod, chromData);
+                    chromDataSet = new ChromDataSet(isTimeNormalArea, document.Settings.TransitionSettings, chromData);
                 }
                 lastKey = key;
             }
@@ -914,7 +913,8 @@ namespace pwiz.Skyline.Model.Results
                     chromDataSet = new ChromDataSet(chromDataSet.IsTimeNormalArea,
                         peptidePrecursorMz.NodePeptide,
                         peptidePrecursorMz.NodeGroup,
-                        chromDataSet.FullScanAcquisitionMethod, 
+                        chromDataSet.FullScanAcquisitionMethod,
+                        chromDataSet.TriggeredAcquisition,
                         chromDataSet.Chromatograms.Select(c => c.CloneForWrite()));
                 }
                 var groupData = GetMatchingData(nodeGroup, chromDataSet, explicitRetentionTimeInfo, tolerance);
@@ -969,7 +969,7 @@ namespace pwiz.Skyline.Model.Results
                     !bestMz.HasValue || bestMz.Value == match.Item1.PrecursorMz))
                 {
                     var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Item1.NodePeptide,
-                        match.Item1.NodeGroup, chromDataSet.FullScanAcquisitionMethod, match.Item3);
+                        match.Item1.NodeGroup, chromDataSet.FullScanAcquisitionMethod, chromDataSet.TriggeredAcquisition, match.Item3);
                     yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
                         match.Item1, chromDataPart);
                 }

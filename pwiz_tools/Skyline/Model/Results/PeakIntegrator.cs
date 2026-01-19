@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Results
     public class PeakIntegrator
     {
         public PeakIntegrator(TimeIntensities interpolatedTimeIntensities)
-            : this(new PeakGroupIntegrator(FullScanAcquisitionMethod.None, null), ChromSource.unknown, null, interpolatedTimeIntensities, null)
+            : this(new PeakGroupIntegrator(FullScanAcquisitionMethod.None, null, false), ChromSource.unknown, null, interpolatedTimeIntensities, null)
         {
         }
 
@@ -129,14 +129,14 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return HasBackgroundSubtraction(FullScanAcquisitionMethod, TimeIntervals, ChromSource);
+                return HasBackgroundSubtraction(FullScanAcquisitionMethod, TimeIntervals, PeakGroupIntegrator.TriggeredAcquisition, ChromSource);
             }
         }
 
         public static bool HasBackgroundSubtraction(FullScanAcquisitionMethod acquisitionMethod,
-            TimeIntervals timeIntervals, ChromSource chromSource)
+            TimeIntervals timeIntervals, bool triggeredAcquisition, ChromSource chromSource)
         {
-            if (timeIntervals != null)
+            if (timeIntervals != null && triggeredAcquisition)
             {
                 return false;
             }

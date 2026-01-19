@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model.Results
                 _interpolatedTimes = rawTimeIntensities?.GetInterpolatedTimes();
                 var peakGroupIntegrator =
                     new PeakGroupIntegrator(Settings.TransitionSettings.FullScan.AcquisitionMethod,
-                        rawTimeIntensities?.TimeIntervals);
+                        rawTimeIntensities?.TimeIntervals, Settings.TransitionSettings.Instrument.TriggeredAcquisition);
                 _peakIntegrators = EnsureOptStepChromatograms().Zip(TransitionGroupDocNode.Transitions,
                     (optStepChromatograms, transition) => optStepChromatograms?.GetChromatogramForStep(0)
                         ?.MakePeakIntegrator(peakGroupIntegrator, _interpolatedTimes)).ToArray();

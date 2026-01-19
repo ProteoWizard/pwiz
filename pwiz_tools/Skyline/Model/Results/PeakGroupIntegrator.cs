@@ -32,16 +32,19 @@ namespace pwiz.Skyline.Model.Results
     {
         private List<PeakIntegrator> _peakIntegrators;
         private Dictionary<PeakBounds, MedianPeakShape> _medianChromatograms = new Dictionary<PeakBounds, MedianPeakShape>();
-        public PeakGroupIntegrator(FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals)
+        public PeakGroupIntegrator(FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals, bool triggeredAcquisition)
         {
             FullScanAcquisitionMethod = acquisitionMethod;
             TimeIntervals = timeIntervals;
+            TriggeredAcquisition = triggeredAcquisition;
             _peakIntegrators = new List<PeakIntegrator>();
         }
 
         public FullScanAcquisitionMethod FullScanAcquisitionMethod { get; }
 
         public TimeIntervals TimeIntervals { get; }
+
+        public bool TriggeredAcquisition { get; }
 
         public IEnumerable<PeakIntegrator> PeakIntegrators
         {

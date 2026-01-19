@@ -173,12 +173,24 @@ namespace pwiz.Skyline.Model.Results
         public void PickChromatogramPeaks(ExplicitPeakBoundsFunc explicitPeakBoundsFunc)
         {
             TimeIntervals intersectedTimeIntervals = null;
-            if (_settings.TransitionSettings.Instrument.TriggeredAcquisition && NodePep != null)
+            ChromatogramGapDetector chromatogramGapDetector = null;
+            if (NodePep != null)
             {
-                var triggeredAcquisition = new TriggeredAcquisition();
+                if (_settings.TransitionSettings.Instrument.TriggeredAcquisition)
+                {
+                    chromatogramGapDetector = ChromatogramGapDetector.SENSITIVE;
+                }
+                else
+                {
+                    chromatogramGapDetector = ChromatogramGapDetector.SELECTIVE;
+                }
+            }
+
+            if (chromatogramGapDetector != null)
+            {
                 foreach (var chromDataSet in _dataSets)
                 {
-                    var timeIntervals = triggeredAcquisition.InferTimeIntervals(
+                    var timeIntervals = chromatogramGapDetector.InferTimeIntervals(
                         chromDataSet.Chromatograms.Where(chrom => null != chrom.DocNode)
                             .Select(chrom => chrom.RawTimes));
                     chromDataSet.TimeIntervals = timeIntervals;

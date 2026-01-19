@@ -1741,6 +1741,7 @@ namespace pwiz.Skyline.Controls.Graphs
             float? backgroundLevel = null;
             if (PeakIntegrator.HasBackgroundSubtraction(
                     DocumentUI.Settings.TransitionSettings.FullScan.AcquisitionMethod, chromatogramInfo.TimeIntervals,
+                    DocumentUI.Settings.TransitionSettings.Instrument.TriggeredAcquisition,
                     chromatogramInfo.Source))
             {
                 backgroundLevel = chromatogramInfo.GetBackgroundLevel(start, end);

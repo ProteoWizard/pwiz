@@ -1212,7 +1212,7 @@
     <Compile Include="Model\Results\NormalizedValueCalculator.cs" />
     <Compile Include="Model\Results\NormalizeOption.cs" />
     <Compile Include="Model\Results\TimeIntervals.cs" />
-    <Compile Include="Model\Results\TriggeredAcquisition.cs" />
+    <Compile Include="Model\Results\ChromatogramGapDetector.cs" />
     <Compile Include="Model\Serialization\AnnotationScrubber.cs" />
     <Compile Include="Model\Serialization\Pre372CustomIonTransitionGroupHandler.cs" />
     <Compile Include="Model\Serialization\XmlReadAhead.cs" />

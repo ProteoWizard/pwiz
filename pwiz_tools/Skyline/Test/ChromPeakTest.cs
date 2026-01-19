@@ -60,9 +60,9 @@ namespace pwiz.SkylineTest
             var peakWithBackground = peakIntegrator.IntegratePeak(peakStartTime, peakEndTime, flagValues);
             Assert.AreNotEqual(0, peakWithBackground.BackgroundArea);
 
-            // Set the TimeIntervals so the peakIntegrator will use "IntegratePeakWithoutBackground" 
+            // Set the TimeIntervals and triggeredAcquisition so the peakIntegrator will use "IntegratePeakWithoutBackground" 
             var peakIntegratorWithTimeIntervals = new PeakIntegrator(
-                new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY),
+                new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY, true),
                 ChromSource.unknown, null, timeIntensities, null);
             var peakWithoutBackground = peakIntegratorWithTimeIntervals.IntegratePeak(peakStartTime, peakEndTime, flagValues);
             Assert.AreEqual(0, peakWithoutBackground.BackgroundArea);
@@ -78,7 +78,7 @@ namespace pwiz.SkylineTest
             var intensities = Enumerable.Repeat(constantIntensity, times.Length);
             var timeIntensities = new TimeIntensities(times, intensities, null, null);
             var peakIntegrator = new PeakIntegrator(
-                new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY),
+                new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY, true),
                 ChromSource.unknown, null, timeIntensities, null);
             var flagValues = ChromPeak.FlagValues.time_normalized;
             for (float peakStartTime = 0; peakStartTime < 3; peakStartTime += .1f)
@@ -100,7 +100,7 @@ namespace pwiz.SkylineTest
             var times = new[] { 0, 1.5f, 2, 3 };
             var intensities = times.Select(time => (float) (time * slope)).ToList();
             var timeIntensities = new TimeIntensities(times, intensities, null, null);
-            var peakIntegrator = new PeakIntegrator(new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY), 
+            var peakIntegrator = new PeakIntegrator(new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY, true), 
                 ChromSource.unknown, null, timeIntensities, null);
             var flagValues = ChromPeak.FlagValues.time_normalized;
             for (float peakStartTime = 0; peakStartTime < 3; peakStartTime += .1f)
