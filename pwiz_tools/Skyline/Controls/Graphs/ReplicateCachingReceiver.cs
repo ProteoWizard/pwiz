@@ -393,6 +393,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly ReplicateCachingReceiver<TParam, TResult> _owner;
             private readonly int _cacheKey;
             private readonly WorkOrder _workOrder;
+            private int _isListening = 1;  // 1 = listening, 0 = unlistened
 
             public CompletionListener(ReplicateCachingReceiver<TParam, TResult> owner, int cacheKey, WorkOrder workOrder)
             {
@@ -429,6 +430,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void Unlisten()
             {
+                // Atomic check-and-set to prevent double Unlisten from concurrent threads
+                if (Interlocked.Exchange(ref _isListening, 0) == 0)
+                    return;
                 _owner._receiver.Cache.Unlisten(_workOrder, this);
             }
         }
