@@ -572,8 +572,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!_graphDataReceiver.TryGetCurrentProduct(out var product))
                     return false;
 
-                return ReferenceEquals(product.Document, GraphSummary.DocumentUIContainer.DocumentUI) &&
-                       Equals(product.GraphSettings, GraphSettings.FromSettings());
+                var currentDoc = GraphSummary.DocumentUIContainer.DocumentUI;
+                var currentSettings = GraphSettings.FromSettings();
+
+                // Verify receiver's product matches current state
+                if (!ReferenceEquals(product.Document, currentDoc) ||
+                    !Equals(product.GraphSettings, currentSettings))
+                    return false;
+
+                // Verify _graphData has been updated (ProductAvailableAction callback has run)
+                // This prevents race where receiver has product but _graphData is still stale
+                return _graphData != null &&
+                       ReferenceEquals(_graphData.Document, currentDoc) &&
+                       Equals(_graphData.GraphSettings, currentSettings);
             }
         }
 
@@ -778,11 +789,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     // The caller (CleanCacheForIncrementalUpdates) has already validated that the
                     // prior data is from the same document identity with compatible settings
                     CalcDataPositionsIncremental(parameters.PriorGraphData, productionMonitor);
+                    WasFullCalculation = false;
                 }
                 else
                 {
                     // Full calculation
                     CalcDataPositionsFull(productionMonitor);
+                    WasFullCalculation = true;
                 }
             }
 
@@ -1247,6 +1260,21 @@ namespace pwiz.Skyline.Controls.Graphs
             /// Equals total node count when full calculation was performed.
             /// </summary>
             public int RecalculatedNodeCount { get; private set; }
+
+            /// <summary>
+            /// True if this data was calculated from scratch (CalcDataPositionsFull),
+            /// false if it was an incremental update using prior cached data.
+            /// </summary>
+            public bool WasFullCalculation { get; private set; }
+
+            /// <summary>
+            /// Returns diagnostic information for debugging test failures.
+            /// </summary>
+            public string GetDiagnosticInfo()
+            {
+                return $@"Full={WasFullCalculation}, Cached={CachedNodeCount}, Recalc={RecalculatedNodeCount}, " +
+                       $@"DocId={Document.Id.GlobalIndex}, DocRev={Document.RevisionIndex}";
+            }
 
             public virtual double MaxValueSetting { get { return 0; } }
             public virtual double MinValueSetting { get { return 0; } }
