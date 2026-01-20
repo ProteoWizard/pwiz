@@ -1457,9 +1457,16 @@ namespace CommonTest
 
                 // Check that the failing searches exception message matches by prefix, because it will contain the URI requested
                 var expectedPrefix = GetExpectedMessagePrefix(helper);
-                Assert.AreNotEqual(0, expectedPrefix.Length);
-                Assert.IsTrue(failedProteins.All(p => p.FailureDetail != null &&
-                                                      p.FailureDetail.StartsWith(expectedPrefix, StringComparison.Ordinal)));
+                var expectedSuffix = GetExpectedMessageSuffix(helper);
+                Assert.IsTrue(expectedPrefix.Length != 0 || expectedSuffix.Length != 0);
+                foreach (var failedProtein in failedProteins)
+                {
+                    if (failedProtein.FailureDetail != null)
+                    {
+                        StringAssert.StartsWith(failedProtein.FailureDetail, expectedPrefix);
+                        StringAssert.EndsWith(failedProtein.FailureDetail, expectedSuffix);
+                    }
+                }
             }
             else
             {
@@ -1477,12 +1484,22 @@ namespace CommonTest
 
         private static string GetExpectedMessagePrefix(HttpClientTestHelper helper)
         {
-            const string urlText = "https://test.com";
+            const string urlText = "https://test.com/";
             string expectedMessage = helper.GetExpectedMessage(new Uri(urlText));
             int iMatch = expectedMessage.IndexOf(urlText, StringComparison.Ordinal);
             if (iMatch == -1)
                 return expectedMessage;
             return expectedMessage.Substring(0, iMatch);
+        }
+
+        private static string GetExpectedMessageSuffix(HttpClientTestHelper helper)
+        {
+            const string urlText = "https://test.com/";
+            string expectedMessage = helper.GetExpectedMessage(new Uri(urlText));
+            int iMatch = expectedMessage.LastIndexOf(urlText, StringComparison.Ordinal);
+            if (iMatch == -1)
+                return expectedMessage;
+            return expectedMessage.Substring(iMatch + urlText.Length);
         }
 
         private void WriteDiagnostics(LookupTestMode mode, IList<ProteinSearchInfo> proteins,

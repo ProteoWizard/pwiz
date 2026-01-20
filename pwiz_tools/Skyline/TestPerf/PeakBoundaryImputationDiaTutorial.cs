@@ -226,7 +226,7 @@ namespace TestPerf
         {
             var scoreToRunGraphPane = GetScoreToRunGraphPane();
             Assert.IsNotNull(scoreToRunGraphPane);
-            WaitForConditionUI(() => !scoreToRunGraphPane.IsCalculating);
+            WaitForConditionUI(() => scoreToRunGraphPane.IsComplete);
         }
 
         public static RTLinearRegressionGraphPane GetScoreToRunGraphPane()

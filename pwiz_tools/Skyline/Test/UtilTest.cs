@@ -26,6 +26,7 @@ using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.Skyline.Model;
@@ -497,7 +498,7 @@ namespace pwiz.SkylineTest
             // NB: We really do not want to see the error "was locked but has since been deleted"
             //     since we know the file is locked and cannot have been deleted.
             AssertEx.ThrowsException<IOException>(() => FileLockingProcessFinder.DeleteDirectoryWithFileLockingDetails(dirPath),
-                x => AssertEx.Contains(x.Message, lockedFile, "this process"));
+                x => AssertEx.Contains(x.Message, lockedFile, MessageResources.FileLockingProcessFinder_ToFileLockingException_this_process));
         }
 
         /// <summary>

@@ -1965,7 +1965,10 @@ namespace TestRunner
                 testDict.Add(testNames[i], i);
             }
 
-            var testArray = new TestInfo[testNames.Count];
+            // Use List<TestInfo> per slot to support class names (which may have multiple tests)
+            var testArray = new List<TestInfo>[testNames.Count];
+            for (int i = 0; i < testNames.Count; i++)
+                testArray[i] = new List<TestInfo>();
 
             var skipList = LoadList(commandLineArgs.ArgAsString("skip"));
 
@@ -1976,7 +1979,8 @@ namespace TestRunner
                 {
                     var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
                     if (testNames.Count == 0 || testNames.Contains(testName) ||
-                        testNames.Contains(testInfo.TestMethod.Name))
+                        testNames.Contains(testInfo.TestMethod.Name) ||
+                        testNames.Contains(testInfo.TestClassType.Name))
                     {
                         if (!skipList.Contains(testName) && !skipList.Contains(testInfo.TestMethod.Name))
                         {
@@ -1984,15 +1988,18 @@ namespace TestRunner
                                 testList.Add(testInfo);
                             else
                             {
-                                string lookup = testNames.Contains(testName) ? testName : testInfo.TestMethod.Name;
-                                testArray[testDict[lookup]] = testInfo;
+                                // Lookup in priority order: full name, method name, class name
+                                string lookup = testNames.Contains(testName) ? testName :
+                                    testNames.Contains(testInfo.TestMethod.Name) ? testInfo.TestMethod.Name :
+                                    testInfo.TestClassType.Name;
+                                testArray[testDict[lookup]].Add(testInfo);
                             }
                         }
                     }
                 }
             }
             if (testNames.Count > 0)
-                testList.AddRange(testArray.Where(testInfo => testInfo != null));
+                testList.AddRange(testArray.SelectMany(list => list));
 
             // Sort tests alphabetically, but run perf tests last for best coverage in a fixed amount of time.
             // However, if tests were explicitly specified (via file or command line), preserve that order.
@@ -2231,9 +2238,10 @@ in the current directory.  You can get a summary of errors and memory leaks by r
 Here is a list of recognized arguments:
 
     test=[test1,test2,...]          Run one or more tests by name (separated by ',').
-                                    Test names can be just the method name, or the method
-                                    name prefixed by the class name and a period
-                                    (such as IrtTest.IrtFunctionalTest).  Tests must belong
+                                    Test names can be just the method name, the class name
+                                    (to run all tests in that class), or the method name
+                                    prefixed by the class name and a period (such as
+                                    IrtTest.IrtFunctionalTest).  Tests must belong
                                     to a class marked [TestClass], although the method does
                                     not need to be marked [TestMethod] to be included in a
                                     test run.  A name prefixed by '@' (such as ""@fail.txt"")

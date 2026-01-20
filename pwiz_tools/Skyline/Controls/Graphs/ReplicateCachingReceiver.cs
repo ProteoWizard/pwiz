@@ -156,6 +156,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var cachedDocuments = new ReadOnlyDictionary<int, SrmDocument>(
                 _localCache.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Document));
             var keysToRemove = _cleanCache(document, cachedDocuments);
+
             foreach (var key in keysToRemove)
             {
                 _localCache.TryRemove(key, out _);
@@ -315,6 +316,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Store in local cache with the document the result was computed from
                 _localCache[cacheKey] = new CacheEntry(result, result.Document);
+                TrackCachedResult(result);
                 return true;
             }
 
@@ -391,6 +393,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly ReplicateCachingReceiver<TParam, TResult> _owner;
             private readonly int _cacheKey;
             private readonly WorkOrder _workOrder;
+            private int _isListening = 1;  // 1 = listening, 0 = unlistened
 
             public CompletionListener(ReplicateCachingReceiver<TParam, TResult> owner, int cacheKey, WorkOrder workOrder)
             {
@@ -410,6 +413,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // Store successful result in cache with its source document
                     _owner._localCache[_cacheKey] = new CacheEntry(typedResult, typedResult.Document);
+                    TrackCachedResult(typedResult);
                 }
 
                 // Clean up: unlisten and remove from pending
@@ -426,8 +430,50 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void Unlisten()
             {
+                // Atomic check-and-set to prevent double Unlisten from concurrent threads
+                if (Interlocked.Exchange(ref _isListening, 0) == 0)
+                    return;
                 _owner._receiver.Cache.Unlisten(_workOrder, this);
             }
         }
+
+        #region Cache tracking for tests
+
+        /// <summary>
+        /// When true, records all cached results for later inspection by tests.
+        /// Use ScopedAction to enable/disable around test code.
+        /// Setting to true clears any previously tracked results.
+        /// </summary>
+        public static bool TrackCaching
+        {
+            get => _trackCaching;
+            set
+            {
+                _trackCaching = value;
+                if (value)
+                    _cachedSinceTracked = new List<TResult>();
+                // Don't clear on false - test needs to read the results
+            }
+        }
+
+        // ReSharper disable once StaticMemberInGenericType
+        private static bool _trackCaching;
+        private static List<TResult> _cachedSinceTracked;
+
+        /// <summary>
+        /// Returns all results cached since TrackCaching was enabled.
+        /// Use First() to get the initial (full) calculation after document reopen.
+        /// Subsequent entries should be incremental updates with zero recalculation.
+        /// </summary>
+        public static IEnumerable<TResult> CachedSinceTracked =>
+            _cachedSinceTracked ?? Enumerable.Empty<TResult>();
+
+        private static void TrackCachedResult(TResult result)
+        {
+            if (_trackCaching && _cachedSinceTracked != null)
+                _cachedSinceTracked.Add(result);
+        }
+
+        #endregion
     }
 }
