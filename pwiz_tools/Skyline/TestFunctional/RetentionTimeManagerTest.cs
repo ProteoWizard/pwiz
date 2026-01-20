@@ -39,7 +39,11 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            SkylineWindow.Listen(OnDocumentChanged);
+            var docContainer = (IDocumentContainer)SkylineWindow;
+            using var _ = new ScopedAction(
+                () => docContainer.Listen(OnDocumentChanged),
+                () => docContainer.Unlisten(OnDocumentChanged));
+
             RunUI(()=>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ThreeReplicates.sky"));
@@ -48,7 +52,6 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.SaveDocument();
-                SkylineWindow.Listen(OnDocumentChanged);
                 _documents.Clear();
                 SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
             });
@@ -111,7 +114,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("TwoReplicates.sky"));
                 _documents.Clear();
-                SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
             });
             Assert.IsTrue(SkylineWindow.Document.Settings.DocumentRetentionTimes.ResultFileAlignments.IsEmpty);
 
@@ -126,9 +128,9 @@ namespace pwiz.SkylineTestFunctional
 
         private LibraryAlignment GetDocumentLibraryAlignment(SrmDocument document)
         {
-            var documentLibrary =
-                document.Settings.PeptideSettings.Libraries.LibrarySpecs.FirstOrDefault(spec => spec.IsDocumentLibrary);
-            Assert.IsNotNull(documentLibrary);
+            var libraries = document.Settings.PeptideSettings.Libraries;
+            Assert.IsTrue(libraries.HasDocumentLibrary);
+            var documentLibrary = libraries.LibrarySpecs.First(spec => spec.IsDocumentLibrary);
             return document.Settings.DocumentRetentionTimes.GetLibraryAlignment(documentLibrary.Name);
         }
 
