@@ -145,7 +145,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
    else if (state == STATE_PROPHET_SUMMARY && isElement("inputfile", name)) {
       // Count files for use in reporting percent complete
       numFiles++;
-   } else if(isElement("msms_run_summary",name)) {
+   }
+   else if(isElement("msms_run_summary",name)) {
       fileroot_ = getRequiredAttrValue("base_name",attr);
       Verbosity::comment(V_DEBUG, "PepXML base_name is %s", fileroot_.c_str());
 
@@ -155,7 +156,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
           Verbosity::comment(V_DEBUG, "Pepxml file is from Proteome Discoverer.");
           analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
       }
-   } else if (isElement("parameter", name)) {
+   }
+   else if (isElement("parameter", name)) {
        string paramName = bal::to_lower_copy(string(getAttrValue("name", attr)));
        string paramValue = bal::to_lower_copy(string(getAttrValue("value", attr)));
        if (paramName == "post-processor" && paramValue == "percolator")
@@ -250,6 +252,11 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                analysisType_ = COMET_ANALYSIS;
                setScoreType(TANDEM_EXPECTATION_VALUE); // expect values should be compatible with X!Tandem
                probCutOff = getScoreThreshold(TANDEM);
+           } else if(search_engine.find("Percolator") == 0){
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Percolator.");
+               analysisType_ = PERCOLATOR_ANALYSIS;
+               setScoreType(PERCOLATOR_QVALUE);
+               probCutOff = getScoreThreshold(SQT);
            }// else assume peptide prophet or inter prophet 
 
            if (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS &&
@@ -424,7 +431,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||
            (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value") ||
            (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue") ||
-           (analysisType_ == CRUX_ANALYSIS && score_name == "percolator_qvalue")) {
+           (analysisType_ == CRUX_ANALYSIS && score_name == "percolator_qvalue") ||
+           (analysisType_ == PERCOLATOR_ANALYSIS)) {
            pepProb = getDoubleRequiredAttrValue("value", attr);
        } else if (analysisType_ == PEAKS_ANALYSIS && score_name == "-10lgp") {
            pepProb = getDoubleRequiredAttrValue("value", attr);
@@ -619,6 +627,7 @@ bool PepXMLreader::scorePasses(double score){
     case PEAKS_ANALYSIS:
     case CRUX_ANALYSIS:
     case COMET_ANALYSIS:
+    case PERCOLATOR_ANALYSIS:
     case MSFRAGGER_ANALYSIS:
         if(score <= probCutOff){
             return true;
