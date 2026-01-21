@@ -507,130 +507,163 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FileSystemWatcher_OnDeleted(object sender, FileSystemEventArgs e)
         {
-            var cancellationToken = CancellationToken;
-
-            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
-                return;
-
-            // Cannot check whether the changed path was a directory (since it was deleted) so 
-            // start by looking for FullPath in the cache. If not found, check whether FullPath
-            // may have contained items in the cache.
-            if (Cache.ContainsKey(e.FullPath))
+            try
             {
-                Cache[e.FullPath] = false;
-            }
-            else
-            {
-                foreach (var cacheKey in Cache.Keys)
+                if (_isStopped)
+                    return;
+
+                var cancellationToken = CancellationToken;
+
+                if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
+                    return;
+
+                // Cannot check whether the changed path was a directory (since it was deleted) so
+                // start by looking for FullPath in the cache. If not found, check whether FullPath
+                // may have contained items in the cache.
+                if (Cache.ContainsKey(e.FullPath))
                 {
-                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && !File.Exists(cacheKey))
+                    Cache[e.FullPath] = false;
+                }
+                else
+                {
+                    foreach (var cacheKey in Cache.Keys)
                     {
-                        Cache[cacheKey] = false;
+                        if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && !File.Exists(cacheKey))
+                        {
+                            Cache[cacheKey] = false;
+                        }
                     }
                 }
-            }
 
-            BackgroundActionService.AddTask(() =>
-            {
-                if (!cancellationToken.IsCancellationRequested && FileDeletedAction != null)
+                BackgroundActionService.AddTask(() =>
                 {
-                    FileDeletedAction(e.FullPath, cancellationToken);
-                }
-            });
+                    if (!cancellationToken.IsCancellationRequested && FileDeletedAction != null)
+                    {
+                        FileDeletedAction(e.FullPath, cancellationToken);
+                    }
+                });
+            }
+            catch (Exception)
+            {
+                // FSW callbacks run on I/O completion port threads. Unhandled exceptions here
+                // would terminate the process. Swallow exceptions after _isStopped is set.
+            }
         }
 
         private void FileSystemWatcher_OnCreated(object sender, FileSystemEventArgs e)
         {
-            var cancellationToken = CancellationToken;
-
-            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
-                return;
-
-            var isDirectory = Directory.Exists(e.FullPath);
-
-            if (isDirectory)
+            try
             {
-                foreach (var cacheKey in Cache.Keys)
+                if (_isStopped)
+                    return;
+
+                var cancellationToken = CancellationToken;
+
+                if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
+                    return;
+
+                var isDirectory = Directory.Exists(e.FullPath);
+
+                if (isDirectory)
                 {
-                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                    foreach (var cacheKey in Cache.Keys)
                     {
-                        Cache[cacheKey] = true;
+                        if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                        {
+                            Cache[cacheKey] = true;
+                        }
                     }
                 }
-            }
-            else
-            {
-                Cache[e.FullPath] = true;
-            }
-
-            BackgroundActionService.AddTask(() =>
-            {
-                if (!cancellationToken.IsCancellationRequested && FileCreatedAction != null)
+                else
                 {
-                    FileCreatedAction(e.FullPath, cancellationToken);
+                    Cache[e.FullPath] = true;
                 }
-            });
+
+                BackgroundActionService.AddTask(() =>
+                {
+                    if (!cancellationToken.IsCancellationRequested && FileCreatedAction != null)
+                    {
+                        FileCreatedAction(e.FullPath, cancellationToken);
+                    }
+                });
+            }
+            catch (Exception)
+            {
+                // FSW callbacks run on I/O completion port threads. Unhandled exceptions here
+                // would terminate the process. Swallow exceptions after _isStopped is set.
+            }
         }
 
         private void FileSystemWatcher_OnRenamed(object sender, RenamedEventArgs e)
         {
-            var cancellationToken = CancellationToken;
-
-            // Ignore file names with .bak / .tmp extensions as they are temporary files created during the save process.
-            //
-            // N.B. it's important to only ignore rename events where the new file name's extension is on the ignore list.
-            // Otherwise, files that actually exist will be marked as missing in Files Tree without a way to force those
-            // nodes to reset their FileState from disk leading to much confusion.
-            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
-                return;
-
-            var isDirectory = Directory.Exists(e.FullPath);
-
-            /*
-            c:\tmp\foo1.raw
-            c:\tmp\foo2.raw
-
-            rename c:\tmp to c:\tmp2
-                old: c:\tmp
-                new: c:\tmp2
-
-            find all files with old name, mark as missing
-            find all files with new name, mark as available
-             */
-            if (isDirectory)
+            try
             {
-                // files in the directory's old name no longer exist at the expected path
-                Cache.Keys.Where(item => FileSystemUtil.IsFileInDirectory(e.OldFullPath, item)).ForEach(item => Cache[item] = false);
+                if (_isStopped)
+                    return;
 
-                // files in the directory's new name _might_ exist but could have already been marked missing so 
-                // do a real check whether the file exists
-                foreach (var cacheKey in Cache.Keys)
+                var cancellationToken = CancellationToken;
+
+                // Ignore file names with .bak / .tmp extensions as they are temporary files created during the save process.
+                //
+                // N.B. it's important to only ignore rename events where the new file name's extension is on the ignore list.
+                // Otherwise, files that actually exist will be marked as missing in Files Tree without a way to force those
+                // nodes to reset their FileState from disk leading to much confusion.
+                if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
+                    return;
+
+                var isDirectory = Directory.Exists(e.FullPath);
+
+                /*
+                c:\tmp\foo1.raw
+                c:\tmp\foo2.raw
+
+                rename c:\tmp to c:\tmp2
+                    old: c:\tmp
+                    new: c:\tmp2
+
+                find all files with old name, mark as missing
+                find all files with new name, mark as available
+                 */
+                if (isDirectory)
                 {
-                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                    // files in the directory's old name no longer exist at the expected path
+                    Cache.Keys.Where(item => FileSystemUtil.IsFileInDirectory(e.OldFullPath, item)).ForEach(item => Cache[item] = false);
+
+                    // files in the directory's new name _might_ exist but could have already been marked missing so
+                    // do a real check whether the file exists
+                    foreach (var cacheKey in Cache.Keys)
                     {
-                        Cache[cacheKey] = true;
+                        if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                        {
+                            Cache[cacheKey] = true;
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (Cache.ContainsKey(e.OldFullPath))
+                else
                 {
-                    Cache[e.OldFullPath] = false;
+                    if (Cache.ContainsKey(e.OldFullPath))
+                    {
+                        Cache[e.OldFullPath] = false;
+                    }
+                    else if (Cache.ContainsKey(e.FullPath))
+                    {
+                        Cache[e.FullPath] = true;
+                    }
                 }
-                else if (Cache.ContainsKey(e.FullPath))
-                {
-                    Cache[e.FullPath] = true;
-                }
-            }
 
-            BackgroundActionService.AddTask(() =>
-            {
-                if (!cancellationToken.IsCancellationRequested && FileRenamedAction != null)
+                BackgroundActionService.AddTask(() =>
                 {
-                    FileRenamedAction(e.OldFullPath, e.FullPath, cancellationToken);
-                }
-            });
+                    if (!cancellationToken.IsCancellationRequested && FileRenamedAction != null)
+                    {
+                        FileRenamedAction(e.OldFullPath, e.FullPath, cancellationToken);
+                    }
+                });
+            }
+            catch (Exception)
+            {
+                // FSW callbacks run on I/O completion port threads. Unhandled exceptions here
+                // would terminate the process. Swallow exceptions after _isStopped is set.
+            }
         }
 
         /// Find Skyline files on the local file system.
