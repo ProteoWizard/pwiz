@@ -23,6 +23,7 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 // TODO: refresh all items in the cache periodically and when Skyline regains focus. Also consider restarting the FileSystemWatchers.
 namespace pwiz.Skyline.Controls.FilesTree
@@ -365,19 +366,30 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 action();
             }
-            catch (Exception)
+            catch (ObjectDisposedException)
             {
-                // Swallow exceptions to prevent process termination.
-                // After StopWatching(), resources may be disposed and any operation could fail.
+                // Expected during cleanup race conditions when _isStopped check passes but
+                // StopWatching() disposes resources before the action completes. Silently ignore.
+            }
+            catch (Exception ex)
+            {
+                // Report programming defects (NRE, IndexOutOfRange, etc.) so tests fail on bugs.
+                // Silently ignore expected FSW exceptions (IOException from network disconnects, etc.).
+                // Files view is auxiliary UI; its background processing should never interrupt user workflow.
+                if (ExceptionUtil.IsProgrammingDefect(ex))
+                    Program.ReportException(ex);
             }
         }
 
         private void FileSystemWatcher_OnError(object sender, ErrorEventArgs e)
         {
-            var fsw = sender as FileSystemWatcher;
-            if (fsw == null)
-                return;
-            SafeInvokeFswHandler(() => HandleFswError(fsw.Path, e.GetException()));
+            SafeInvokeFswHandler(() =>
+            {
+                var fsw = sender as FileSystemWatcher;
+                if (fsw == null)
+                    return;
+                HandleFswError(fsw.Path, e.GetException());
+            });
         }
 
         private void HandleFswError(string directoryPath, Exception exception)
