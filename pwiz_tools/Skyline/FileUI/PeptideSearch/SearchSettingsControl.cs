@@ -42,6 +42,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly ImportPeptideSearchDlg _documentContainer;
         private readonly FullScanSettingsControl _hardklorInstrumentSettingsControl;
         private SearchEngine? _searchEngine;
+        private SettingsListComboDriver<SearchSettingsPreset> _settingsPresetDriver;
 
         public SearchSettingsControl(ImportPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
         {
@@ -82,6 +83,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
                 txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = false;
+
+                // Initialize settings preset dropdown
+                InitSettingsPresets();
+                cbSettingsPreset.SelectedIndexChanged += cbSettingsPreset_SelectedIndexChanged;
+                btnSaveConfig.Click += btnSaveConfig_Click;
             }
 
             InitializeControls();
@@ -717,6 +723,188 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             driverTools.LoadList();
             driverTools.EditList();
         }
+
+        #region Workflow Config
+
+        private void InitSettingsPresets()
+        {
+            _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
+                cbSettingsPreset,
+                Settings.Default.SearchSettingsPresets,
+                true); // Shows "Edit list..." option
+            _settingsPresetDriver.LoadList(null);
+        }
+
+        private void cbSettingsPreset_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_settingsPresetDriver.SelectedIndexChangedEvent(sender, e))
+            {
+                // Refresh the list after edit operations
+                _settingsPresetDriver.LoadList(_settingsPresetDriver.SelectedItem?.Name);
+                return;
+            }
+
+            var preset = _settingsPresetDriver.SelectedItem;
+            if (preset != null)
+                ApplySettingsPreset(preset);
+        }
+
+        private void ApplySettingsPreset(SearchSettingsPreset preset)
+        {
+            // Set search engine first (triggers InitializeEngine via event handler)
+            SelectedSearchEngine = preset.SearchEngine;
+
+            // Then set primary settings
+            PrecursorTolerance = preset.PrecursorTolerance;
+            FragmentTolerance = preset.FragmentTolerance;
+            MaxVariableMods = preset.MaxVariableMods;
+
+            // Set fragment ions if specified
+            if (!string.IsNullOrEmpty(preset.FragmentIons))
+            {
+                var index = cbFragmentIons.Items.IndexOf(preset.FragmentIons);
+                if (index >= 0)
+                    cbFragmentIons.SelectedIndex = index;
+            }
+
+            // Set MS2 analyzer if specified
+            if (!string.IsNullOrEmpty(preset.Ms2Analyzer))
+            {
+                var index = cbMs2Analyzer.Items.IndexOf(preset.Ms2Analyzer);
+                if (index >= 0)
+                    cbMs2Analyzer.SelectedIndex = index;
+            }
+
+            CutoffScore = preset.CutoffScore;
+
+            // Apply additional settings
+            preset.ApplyAdditionalSettings(ImportPeptideSearch.SearchEngine);
+        }
+
+        private void btnSaveConfig_Click(object sender, EventArgs e)
+        {
+            // If a preset is selected, default to its name for easy overwrite
+            var currentPreset = _settingsPresetDriver.SelectedItem;
+            var suggestedName = currentPreset != null
+                ? currentPreset.Name
+                : $@"{SelectedSearchEngine} - ";
+
+            string name;
+            if (!ShowNameInputDialog(PeptideSearchResources.SearchSettingsControl_SaveSettingsPreset, suggestedName, out name))
+                return;
+
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            // Check for existing preset with same name
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingPreset != null)
+            {
+                var result = MessageDlg.Show(this,
+                    string.Format(PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_, name),
+                    false, MessageBoxButtons.YesNo);
+                if (result != DialogResult.Yes)
+                    return;
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+            }
+
+            var preset = SaveCurrentSettingsAsPreset(name);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            _settingsPresetDriver.LoadList(name);
+        }
+
+        private bool ShowNameInputDialog(string title, string defaultValue, out string result)
+        {
+            result = null;
+            using (var form = new Form())
+            {
+                form.Text = title;
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.StartPosition = FormStartPosition.CenterParent;
+                form.MaximizeBox = false;
+                form.MinimizeBox = false;
+                form.Width = 350;
+                form.Height = 130;
+
+                var label = new Label { Left = 10, Top = 15, Text = PeptideSearchResources.SearchSettingsControl_SettingsPreset, AutoSize = true };
+                var textBox = new TextBox { Left = 10, Top = 35, Width = 310, Text = defaultValue };
+                textBox.SelectionStart = textBox.Text.Length;
+                var btnOk = new Button { Text = @"OK", Left = 150, Width = 80, Top = 65, DialogResult = DialogResult.OK };
+                var btnCancel = new Button { Text = @"Cancel", Left = 240, Width = 80, Top = 65, DialogResult = DialogResult.Cancel };
+
+                form.Controls.Add(label);
+                form.Controls.Add(textBox);
+                form.Controls.Add(btnOk);
+                form.Controls.Add(btnCancel);
+                form.AcceptButton = btnOk;
+                form.CancelButton = btnCancel;
+
+                if (form.ShowDialog(this) == DialogResult.OK)
+                {
+                    result = textBox.Text;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        private SearchSettingsPreset SaveCurrentSettingsAsPreset(string name)
+        {
+            return new SearchSettingsPreset(
+                name,
+                SelectedSearchEngine,
+                PrecursorTolerance,
+                FragmentTolerance,
+                MaxVariableMods,
+                cbFragmentIons.SelectedItem?.ToString(),
+                cbMs2Analyzer.SelectedItem?.ToString(),
+                CutoffScore,
+                SearchSettingsPreset.SerializeAdditionalSettings(ImportPeptideSearch.SearchEngine?.AdditionalSettings));
+        }
+
+        // Test helpers
+        public bool SettingsPresetVisible => cbSettingsPreset.Visible;
+
+        public string SelectedPresetName
+        {
+            get => _settingsPresetDriver?.SelectedItem?.Name;
+            set
+            {
+                if (_settingsPresetDriver == null)
+                    return;
+                for (int i = 0; i < cbSettingsPreset.Items.Count; i++)
+                {
+                    if (cbSettingsPreset.Items[i].ToString() == value)
+                    {
+                        cbSettingsPreset.SelectedIndex = i;
+                        // Explicitly apply the preset since WinForms doesn't fire event if index unchanged
+                        var preset = _settingsPresetDriver.SelectedItem;
+                        if (preset != null)
+                            ApplySettingsPreset(preset);
+                        return;
+                    }
+                }
+                // If value not found (e.g., empty string for "no selection"), reload list with no selection
+                if (string.IsNullOrEmpty(value))
+                    _settingsPresetDriver.LoadList(null);
+            }
+        }
+
+        public IEnumerable<string> PresetNames => Settings.Default.SearchSettingsPresets.Select(w => w.Name);
+
+        public void SaveSettingsPreset(string name)
+        {
+            // Simulate save by directly creating and adding the preset
+            var existingPreset = Settings.Default.SearchSettingsPresets.FirstOrDefault(w => w.Name == name);
+            if (existingPreset != null)
+                Settings.Default.SearchSettingsPresets.Remove(existingPreset);
+
+            var preset = SaveCurrentSettingsAsPreset(name);
+            Settings.Default.SearchSettingsPresets.Add(preset);
+            _settingsPresetDriver.LoadList(name);
+        }
+
+        #endregion
     }
 
 }

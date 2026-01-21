@@ -27,6 +27,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
@@ -1221,6 +1222,26 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
+        public SearchSettingsPresetList SearchSettingsPresets
+        {
+            get
+            {
+                var list = (SearchSettingsPresetList)this[@"SearchSettingsPresets"];
+                if (list == null)
+                {
+                    list = new SearchSettingsPresetList();
+                    list.AddDefaults();
+                    SearchSettingsPresets = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[@"SearchSettingsPresets"] = value;
+            }
+        }
+
+        [UserScopedSetting]
         public RemoteAccountList RemoteAccountList
         {
             get 
@@ -1688,6 +1709,18 @@ namespace pwiz.Skyline.Properties
                 return this[toolType.ToString()].ExtraCommandlineArgs;
             return defaultArgs;
         }
+    }
+
+
+    public sealed class SearchSettingsPresetList : SettingsListBase<SearchSettingsPreset>
+    {
+        public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)
+        {
+            yield break;
+        }
+
+        public override string Title => PropertiesResources.SearchSettingsPresetList_Title_Edit_Settings_Presets;
+        public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
     }
 
 
