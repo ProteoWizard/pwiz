@@ -350,16 +350,40 @@ namespace pwiz.Skyline.Controls.FilesTree
             });
         }
 
+        /// <summary>
+        /// Safely invoke a FileSystemWatcher event handler. Guards against race conditions where
+        /// FSW events arrive after StopWatching() has started cleanup. FSW callbacks run on I/O
+        /// completion port threads, so unhandled exceptions would terminate the process.
+        /// See GitHub issue #3845.
+        /// </summary>
+        private void SafeInvokeFswHandler(Action action)
+        {
+            if (_isStopped)
+                return;
+
+            try
+            {
+                action();
+            }
+            catch (Exception)
+            {
+                // Swallow exceptions to prevent process termination.
+                // After StopWatching(), resources may be disposed and any operation could fail.
+            }
+        }
+
         private void FileSystemWatcher_OnError(object sender, ErrorEventArgs e)
         {
             var fsw = sender as FileSystemWatcher;
             if (fsw == null)
                 return;
+            SafeInvokeFswHandler(() => HandleFswError(fsw.Path, e.GetException()));
+        }
 
-            var directoryPath = fsw.Path;
-
+        private void HandleFswError(string directoryPath, Exception exception)
+        {
             // Likely means the directory is unavailable so find all affected files, mark their cache entries as unavailable, and update the tree
-            if (e.GetException() is IOException)
+            if (exception is IOException)
             {
                 HandleDirectoryUnavailable(directoryPath);
             }
@@ -369,6 +393,10 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             // It is a coding error if the caller does not cancel in-flight work before calling StopWatching
             Assume.IsTrue(CancellationToken.IsCancellationRequested);
+
+            // Set stopped flag first to signal FSW event handlers to exit early.
+            // This prevents race conditions where events arrive while cleanup is in progress.
+            _isStopped = true;
 
             lock (_fswLock)
             {
@@ -391,8 +419,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             HealthMonitor.Dispose();
 
             Cache?.Clear();
-
-            _isStopped = true;
         }
 
         /// <summary>
@@ -507,23 +533,28 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FileSystemWatcher_OnDeleted(object sender, FileSystemEventArgs e)
         {
+            SafeInvokeFswHandler(() => HandleFileDeleted(e.FullPath));
+        }
+
+        private void HandleFileDeleted(string fullPath)
+        {
             var cancellationToken = CancellationToken;
 
-            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
+            if (ShouldIgnoreFile(fullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
-            // Cannot check whether the changed path was a directory (since it was deleted) so 
+            // Cannot check whether the changed path was a directory (since it was deleted) so
             // start by looking for FullPath in the cache. If not found, check whether FullPath
             // may have contained items in the cache.
-            if (Cache.ContainsKey(e.FullPath))
+            if (Cache.ContainsKey(fullPath))
             {
-                Cache[e.FullPath] = false;
+                Cache[fullPath] = false;
             }
             else
             {
                 foreach (var cacheKey in Cache.Keys)
                 {
-                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && !File.Exists(cacheKey))
+                    if (FileSystemUtil.IsFileInDirectory(fullPath, cacheKey) && !File.Exists(cacheKey))
                     {
                         Cache[cacheKey] = false;
                     }
@@ -534,25 +565,30 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 if (!cancellationToken.IsCancellationRequested && FileDeletedAction != null)
                 {
-                    FileDeletedAction(e.FullPath, cancellationToken);
+                    FileDeletedAction(fullPath, cancellationToken);
                 }
             });
         }
 
         private void FileSystemWatcher_OnCreated(object sender, FileSystemEventArgs e)
         {
+            SafeInvokeFswHandler(() => HandleFileCreated(e.FullPath));
+        }
+
+        private void HandleFileCreated(string fullPath)
+        {
             var cancellationToken = CancellationToken;
 
-            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
+            if (ShouldIgnoreFile(fullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
-            var isDirectory = Directory.Exists(e.FullPath);
+            var isDirectory = Directory.Exists(fullPath);
 
             if (isDirectory)
             {
                 foreach (var cacheKey in Cache.Keys)
                 {
-                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                    if (FileSystemUtil.IsFileInDirectory(fullPath, cacheKey) && File.Exists(cacheKey))
                     {
                         Cache[cacheKey] = true;
                     }
@@ -560,19 +596,24 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             else
             {
-                Cache[e.FullPath] = true;
+                Cache[fullPath] = true;
             }
 
             BackgroundActionService.AddTask(() =>
             {
                 if (!cancellationToken.IsCancellationRequested && FileCreatedAction != null)
                 {
-                    FileCreatedAction(e.FullPath, cancellationToken);
+                    FileCreatedAction(fullPath, cancellationToken);
                 }
             });
         }
 
         private void FileSystemWatcher_OnRenamed(object sender, RenamedEventArgs e)
+        {
+            SafeInvokeFswHandler(() => HandleFileRenamed(e.OldFullPath, e.FullPath));
+        }
+
+        private void HandleFileRenamed(string oldFullPath, string fullPath)
         {
             var cancellationToken = CancellationToken;
 
@@ -581,10 +622,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             // N.B. it's important to only ignore rename events where the new file name's extension is on the ignore list.
             // Otherwise, files that actually exist will be marked as missing in Files Tree without a way to force those
             // nodes to reset their FileState from disk leading to much confusion.
-            if (ShouldIgnoreFile(e.FullPath) || cancellationToken.IsCancellationRequested)
+            if (ShouldIgnoreFile(fullPath) || cancellationToken.IsCancellationRequested)
                 return;
 
-            var isDirectory = Directory.Exists(e.FullPath);
+            var isDirectory = Directory.Exists(fullPath);
 
             /*
             c:\tmp\foo1.raw
@@ -600,13 +641,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (isDirectory)
             {
                 // files in the directory's old name no longer exist at the expected path
-                Cache.Keys.Where(item => FileSystemUtil.IsFileInDirectory(e.OldFullPath, item)).ForEach(item => Cache[item] = false);
+                Cache.Keys.Where(item => FileSystemUtil.IsFileInDirectory(oldFullPath, item)).ForEach(item => Cache[item] = false);
 
-                // files in the directory's new name _might_ exist but could have already been marked missing so 
+                // files in the directory's new name _might_ exist but could have already been marked missing so
                 // do a real check whether the file exists
                 foreach (var cacheKey in Cache.Keys)
                 {
-                    if (FileSystemUtil.IsFileInDirectory(e.FullPath, cacheKey) && File.Exists(cacheKey))
+                    if (FileSystemUtil.IsFileInDirectory(fullPath, cacheKey) && File.Exists(cacheKey))
                     {
                         Cache[cacheKey] = true;
                     }
@@ -614,13 +655,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             else
             {
-                if (Cache.ContainsKey(e.OldFullPath))
+                if (Cache.ContainsKey(oldFullPath))
                 {
-                    Cache[e.OldFullPath] = false;
+                    Cache[oldFullPath] = false;
                 }
-                else if (Cache.ContainsKey(e.FullPath))
+                else if (Cache.ContainsKey(fullPath))
                 {
-                    Cache[e.FullPath] = true;
+                    Cache[fullPath] = true;
                 }
             }
 
@@ -628,7 +669,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 if (!cancellationToken.IsCancellationRequested && FileRenamedAction != null)
                 {
-                    FileRenamedAction(e.OldFullPath, e.FullPath, cancellationToken);
+                    FileRenamedAction(oldFullPath, fullPath, cancellationToken);
                 }
             });
         }
