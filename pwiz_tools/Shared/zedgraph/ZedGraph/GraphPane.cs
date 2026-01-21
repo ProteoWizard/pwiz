@@ -1574,30 +1574,12 @@ namespace ZedGraph
                 if (visiblePoints.Any())
                 {
                     var savedLayout = existingLayout ?? new List<LabeledPoint.PointLayout>();
-					var newPoints = new List<LabeledPoint>();
-                    foreach (var point in visiblePoints)
+                    _labelLayout.PlaceLabelsSimulatedAnnealing(visiblePoints, g, savedLayout);
+                    foreach (var labPoint in _labelLayout.LabeledPoints.Values)
                     {
-                        // if we already have a saved point layout for this peptide we do not need to re-adjust it
-						// CONSIDER: There is no stable persistent protein ID, so we cannot match the points using identityPath
-                        //var savedPoint = savedLayout.FirstOrDefault(p => p.Identity.Equals(point.UniqueID.ToString()));
-                        var savedPoint = savedLayout.FirstOrDefault(p => point.Point.Equals(p.PointLocation));
-                        if (savedPoint != null)
-                        {
-                            _labelLayout.AddLabel(point, savedPoint.LabelLocation);
-                            GraphObjList.Remove(point.Connector);
-                            _labelLayout.DrawConnector(point, g);
-                        }
-						else // we should add all the existing points first to make sure the layout algorithm takes them into account when placing the new ones.
-                            newPoints.Add(point);
+                        GraphObjList.Remove(labPoint.Connector);
+                        _labelLayout.DrawConnector(labPoint, g);
                     }
-                    foreach (var point in newPoints)
-                    {
-                        if (_labelLayout.PlaceLabel(point, g))
-                        {
-                            GraphObjList.Remove(point.Connector);
-                            _labelLayout.DrawConnector(point, g);
-                        }
-					}
 				}
             }
         }
