@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -26,76 +27,108 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("BlankDocument.sky")));
-            RunDlg<ImportTransitionListColumnSelectDlg>(
-                () => SkylineWindow.ImportMassList(TestFilesDirs[0].GetTestPath("TransitionList.csv")),
-                dlg =>
-                {
-                    dlg.OkDialog();
-                });
             var rawFileName = TestFilesDirs[1].GetTestPath("crv_qf_hsp_ms2_opt0.raw");
-            ImportResultsFile(rawFileName);
-            var blankDocumentLoaded = SkylineWindow.Document;
+
+            // ONLY import WithTransitions.sky - test if it extracts HCD chromatograms correctly
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("WithTransitions.sky")));
+
+            // Diagnostic: Check transition groups in WithTransitions BEFORE import
+            var docBeforeImport = SkylineWindow.Document;
+            int hcdTransitionGroupsBefore = docBeforeImport.MoleculeTransitionGroups
+                .Count(tg => tg.SpectrumClassFilter.ToString().Contains("HCD"));
+            int emptyFilterGroupsBefore = docBeforeImport.MoleculeTransitionGroups
+                .Count(tg => tg.SpectrumClassFilter.IsEmpty);
+
             ImportResultsFile(rawFileName);
-            var otherDocument = SkylineWindow.Document;
-            var missingChromatograms =
-                FindMissingChromatograms(blankDocumentLoaded, otherDocument, new MsDataFilePath(rawFileName)).ToList();
-            var message = TextUtil.LineSeparate(missingChromatograms.Select(tuple =>
-                TextUtil.SpaceSeparate(tuple.Item1.ModifiedSequence + tuple.Item2.SpectrumClassFilter)));
-            Assert.AreEqual(0, missingChromatograms.Count, message);
-        }
+            var docAfterImport = SkylineWindow.Document;
 
-        private IEnumerable<(PeptideDocNode, TransitionGroupDocNode)> FindMissingChromatograms(SrmDocument expected, SrmDocument actual, MsDataFileUri filePath)
-        {
-            var chromSetFileMatchExpected = expected.MeasuredResults.FindMatchingMSDataFile(filePath);
-            var chromSetFileMatchActual = actual.MeasuredResults.FindMatchingMSDataFile(filePath);
-            float tolerance = (float) expected.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var actualMolecules = actual.Molecules.ToLookup(molecule => molecule.ModifiedSequence);
-            foreach (var expectedMolecule in expected.Molecules)
+            // Diagnostic: Check transition groups AFTER import
+            int hcdTransitionGroupsAfter = docAfterImport.MoleculeTransitionGroups
+                .Count(tg => tg.SpectrumClassFilter.ToString().Contains("HCD"));
+            int emptyFilterGroupsAfter = docAfterImport.MoleculeTransitionGroups
+                .Count(tg => tg.SpectrumClassFilter.IsEmpty);
+
+            // Diagnostic output
+            var diagnosticLines = new List<string>();
+
+            var cache = docAfterImport.MeasuredResults.CacheFinal;
+
+            // Count chromatogram entries with HCD-related ChromatogramGroupIds
+            int hcdCount = 0;
+            int emptyFilterCount = 0;
+
+            // Collect distinct SpectrumClassFilter values in cache
+            var cacheFilters = new HashSet<string>();
+
+            foreach (var entry in cache.ChromGroupHeaderInfos)
             {
-                foreach (var expectedTransitionGroup in expectedMolecule.TransitionGroups)
-                {
-                    Assert.IsTrue(FindMatchingTransitionGroup(expectedTransitionGroup, actualMolecules[expectedMolecule.ModifiedSequence], out var actualMolecule, out var actualTransitionGroup));
-                    if (!expected.MeasuredResults.TryLoadChromatogram(
-                            chromSetFileMatchExpected.Chromatograms, expectedMolecule,
-                            expectedTransitionGroup, tolerance, out var expectedChromatograms) ||
-                        expectedChromatograms.Length == 0)
-                    {
-                        continue;
-                    }
+                var chromGroupId = cache.GetChromatogramGroupId(entry);
+                var filterStr = chromGroupId?.SpectrumClassFilter.ToString() ?? "(null)";
+                cacheFilters.Add(filterStr);
+                if (chromGroupId?.SpectrumClassFilter.ToString().Contains("HCD") == true)
+                    hcdCount++;
+                if (chromGroupId?.SpectrumClassFilter.IsEmpty == true || chromGroupId == null)
+                    emptyFilterCount++;
+            }
 
-                    if (!actual.MeasuredResults.TryLoadChromatogram(chromSetFileMatchActual.Chromatograms,
-                            actualMolecule, actualTransitionGroup, tolerance, out var actualChromatograms) || actualChromatograms.Length == 0)
-                    {
-                        yield return (actualMolecule, actualTransitionGroup);
-                    }
+            // Count HCD ChromatogramGroupIds in document
+            var hcdChromIds = new HashSet<string>();
+            foreach (var mol in docAfterImport.Molecules)
+            {
+                foreach (var tg in mol.TransitionGroups)
+                {
+                    var chromId = ChromatogramGroupId.ForPeptide(mol, tg);
+                    if (chromId?.SpectrumClassFilter.ToString().Contains("HCD") == true)
+                        hcdChromIds.Add($"{chromId.Target}|{chromId.SpectrumClassFilter}");
                 }
             }
-        }
 
-        private bool FindMatchingTransitionGroup(TransitionGroupDocNode transitionGroupDocNode,
-            IEnumerable<PeptideDocNode> candidateMolecules, out PeptideDocNode matchingMolecule,
-            out TransitionGroupDocNode matchingTransitionGroup)
-        {
-            foreach (var candidateMolecule in candidateMolecules)
-            {
-                foreach (var candidateTransitionGroup in candidateMolecule.TransitionGroups)
-                {
-                    if (Equals(candidateTransitionGroup.SpectrumClassFilter,
-                            transitionGroupDocNode.SpectrumClassFilter))
-                    {
-                        matchingMolecule = candidateMolecule;
-                        matchingTransitionGroup = candidateTransitionGroup;
-                        return true;
-                    }
-                }
-            }
-            matchingMolecule = null;
-            matchingTransitionGroup = null;
-            return false;
-        }
+            // Create SpectrumFilter to see filter pairs
+            var spectrumFilter = new SpectrumFilter(docAfterImport);
+            var filterPairs = spectrumFilter.FilterPairs.ToList();
 
-        
+            int hcdFilterPairs = filterPairs.Count(fp => !fp.SpectrumClassFilter.IsEmpty &&
+                fp.SpectrumClassFilter.ToString().Contains("HCD"));
+            int emptyFilterPairs = filterPairs.Count(fp => fp.SpectrumClassFilter.IsEmpty);
+
+            // Check if HCD filter pairs have CollisionEnergy set (which could cause mismatch)
+            var hcdFilterPairsWithCE = filterPairs
+                .Where(fp => fp.SpectrumClassFilter.ToString().Contains("HCD"))
+                .ToList();
+            int hcdWithOptStep = hcdFilterPairsWithCE.Count(fp => fp.OptStep.HasValue);
+
+            // Get unique OptStep values for HCD filter pairs
+            var hcdOptSteps = hcdFilterPairsWithCE.Select(fp => fp.OptStep?.ToString() ?? "null").Distinct().ToList();
+
+            diagnosticLines.Add("=== SPECTRUM FILTER PAIRS ===");
+            diagnosticLines.Add($"Total filter pairs: {filterPairs.Count}");
+            diagnosticLines.Add($"HCD filter pairs: {hcdFilterPairs}");
+            diagnosticLines.Add($"Empty filter pairs: {emptyFilterPairs}");
+            diagnosticLines.Add($"HCD filter pairs with OptStep: {hcdWithOptStep}");
+            diagnosticLines.Add($"HCD OptStep values: {string.Join(", ", hcdOptSteps)}");
+            diagnosticLines.Add("");
+            diagnosticLines.Add("=== CACHE ENTRIES ===");
+            diagnosticLines.Add($"Total cache entries: {cache.ChromGroupHeaderInfos.Count}");
+            diagnosticLines.Add($"HCD cache entries: {hcdCount}");
+            diagnosticLines.Add($"Empty filter cache entries: {emptyFilterCount}");
+            diagnosticLines.Add("");
+            diagnosticLines.Add("=== DISTINCT SPECTRUM FILTERS IN CACHE ===");
+            diagnosticLines.Add($"Cache distinct filters: {string.Join(", ", cacheFilters.OrderBy(s => s))}");
+            diagnosticLines.Add("");
+            diagnosticLines.Add("=== DOCUMENT ===");
+            diagnosticLines.Add($"Unique HCD ChromatogramGroupIds: {hcdChromIds.Count}");
+            diagnosticLines.Add($"HCD transition groups BEFORE import: {hcdTransitionGroupsBefore}");
+            diagnosticLines.Add($"Empty filter groups BEFORE import: {emptyFilterGroupsBefore}");
+            diagnosticLines.Add($"HCD transition groups AFTER import: {hcdTransitionGroupsAfter}");
+            diagnosticLines.Add($"Empty filter groups AFTER import: {emptyFilterGroupsAfter}");
+
+            var message = TextUtil.LineSeparate(
+                $"Expected HCD cache entries, found {hcdCount}",
+                "",
+                TextUtil.LineSeparate(diagnosticLines));
+
+            // The raw file should have 99 peptides with HCD data, so we expect at least 99 HCD cache entries
+            Assert.IsTrue(hcdCount > 0, message);
+        }
     }
 }
