@@ -330,4 +330,134 @@
   <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
     <value>添加诱饵</value>
   </data>
+  <data name="EditMenu_ImputePeakBoundaries_" xml:space="preserve">
+    <value>此文档未选择任何插补选项。
+请转到肽段设置中的预测选项卡，选择一些插补选项。</value>
+  </data>
+  <data name="EditMenu_ImputePeakBoundaries_Imputing_peak_boundaries" xml:space="preserve">
+    <value>正在插补峰边界</value>
+  </data>
+  <data name="EditMenu_ImputePeakBoundaries_Imputed_peak_boundaries" xml:space="preserve">
+    <value>插补峰边界</value>
+  </data>
+  <data name="RefineMenu_ShowReintegrateDialog_Waiting_for_document_to_finish_loading" xml:space="preserve">
+    <value>正在等待文档加载完成</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Title" xml:space="preserve">
+    <value>键盘快捷键</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Header_Menu" xml:space="preserve">
+    <value>菜单</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Header_Shortcut" xml:space="preserve">
+    <value>快捷键</value>
+  </data>
+  <data name="KeyboardShortcutDocumentation_GenerateKeyboardShortcutHtml_Keyboard_Shortcuts" xml:space="preserve">
+    <value>键盘快捷键</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Table_Title" xml:space="preserve">
+    <value>键盘快捷键</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Table_Title" xml:space="preserve">
+    <value>菜单助记符</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Header_Menu" xml:space="preserve">
+    <value>菜单</value>
+  </data>
+  <data name="Keyboard_Mnemonics_Header_Mnemonic" xml:space="preserve">
+    <value>助记符</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Intro" xml:space="preserve">
+    <value>Skyline 提供两种通过键盘访问菜单命令的方式：</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Shortcuts" xml:space="preserve">
+    <value>键盘快捷键是单次按键组合（如 Ctrl+N），可用于直接执行菜单操作。这些快捷键显示在菜单上的菜单文本右侧。</value>
+  </data>
+  <data name="Keyboard_Shortcuts_Explanation_Mnemonics" xml:space="preserve">
+    <value>菜单文本中的助记符是带下划线的字母，按下 Alt 键时会显示。使用这些字母可通过键盘浏览菜单，或学习完整的键盘操作序列，无需鼠标即可访问菜单命令。</value>
+  </data>
+  <data name="Keyboard_GridView_Table_Title" xml:space="preserve">
+    <value>GridView 控件</value>
+  </data>
+  <data name="Keyboard_GridView_Header_Action" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="GridView_Action_EnterEditMode" xml:space="preserve">
+    <value>在单元格中进入编辑模式</value>
+  </data>
+  <data name="GridView_Action_SelectAll" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="GridView_Action_MoveToEndOfColumn" xml:space="preserve">
+    <value>移动至列末</value>
+  </data>
+  <data name="GridView_Action_SelectToEndOfColumn" xml:space="preserve">
+    <value>选取至列末</value>
+  </data>
+  <data name="GridView_Action_FillDown" xml:space="preserve">
+    <value>向下填充（Excel 样式）</value>
+  </data>
+  <data name="GridView_Action_FillRight" xml:space="preserve">
+    <value>向右填充（Excel 样式）</value>
+  </data>
+  <data name="GridView_Action_MoveToBeginningOfColumn" xml:space="preserve">
+    <value>移动至列首</value>
+  </data>
+  <data name="GridView_Action_SelectToBeginningOfColumn" xml:space="preserve">
+    <value>选取至列首</value>
+  </data>
+  <data name="GridView_Action_MoveToBeginningOfRow" xml:space="preserve">
+    <value>移动至行首</value>
+  </data>
+  <data name="GridView_Action_SelectToBeginningOfRow" xml:space="preserve">
+    <value>选取至行首</value>
+  </data>
+  <data name="GridView_Action_MoveToEndOfRow" xml:space="preserve">
+    <value>移动至行末</value>
+  </data>
+  <data name="GridView_Action_SelectToEndOfRow" xml:space="preserve">
+    <value>选取至行末</value>
+  </data>
+  <data name="GridView_Action_CancelEditMode" xml:space="preserve">
+    <value>取消编辑模式</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveDown" xml:space="preserve">
+    <value>确认编辑并下移</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveRight" xml:space="preserve">
+    <value>确认编辑并右移</value>
+  </data>
+  <data name="GridView_Action_ConfirmEditMoveLeft" xml:space="preserve">
+    <value>确认编辑并左移</value>
+  </data>
+  <data name="GridView_Action_MoveUpOneCell" xml:space="preserve">
+    <value>上移一个单元格</value>
+  </data>
+  <data name="GridView_Action_MoveDownOneCell" xml:space="preserve">
+    <value>下移一个单元格</value>
+  </data>
+  <data name="GridView_Action_MoveLeftOneCell" xml:space="preserve">
+    <value>左移一个单元格</value>
+  </data>
+  <data name="GridView_Action_MoveRightOneCell" xml:space="preserve">
+    <value>右移一个单元格</value>
+  </data>
+  <data name="GridView_Action_MoveToFirstCellInRow" xml:space="preserve">
+    <value>移动至行首单元格</value>
+  </data>
+  <data name="GridView_Action_MoveToLastCellInRow" xml:space="preserve">
+    <value>移动至行末单元格</value>
+  </data>
+  <data name="GridView_Action_MoveToFirstCellInGrid" xml:space="preserve">
+    <value>移动至网格中的第一个单元格</value>
+  </data>
+  <data name="GridView_Action_MoveToLastCellInGrid" xml:space="preserve">
+    <value>移动至网格中的最后一个单元格</value>
+  </data>
+  <data name="GridView_Action_ClearCell" xml:space="preserve">
+    <value>清除单元格（或进入编辑模式）</value>
+  </data>
+  <data name="GridView_Action_SelectRow" xml:space="preserve">
+    <value>选择行</value>
+  </data>
 </root>

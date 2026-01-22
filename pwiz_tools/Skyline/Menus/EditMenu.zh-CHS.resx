@@ -253,8 +253,7 @@
     <value>207, 22</value>
   </data>
   <data name="editNoteToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Edit Note</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>编辑注释(&amp;E)</value>
   </data>
   <data name="toolStripSeparator42.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
@@ -300,6 +299,9 @@
   </data>
   <data name="imputePeakBoundariesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>284, 22</value>
+  </data>
+  <data name="imputePeakBoundariesMenuItem.Text" xml:space="preserve">
+    <value>插补峰边界</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>281, 6</value>

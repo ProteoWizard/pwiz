@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Alerts
         public MultiButtonMsgDlg(Control ctl, string btnText, string ctlContentAsText) : this(ctlContentAsText, btnText)
         {
             messageScrollPanel.Hide();
-            splitContainer.Panel1.Controls.Add(ctl);
+            iconAndMessageSplitContainer.Panel2.Controls.Add(ctl);
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Alerts
         : this(ctlContentAsText, btnYesText, btnNoText, allowCancel)
         {
             messageScrollPanel.Hide();
-            splitContainer.Panel1.Controls.Add(ctl);
+            iconAndMessageSplitContainer.Panel2.Controls.Add(ctl);
         }
 
         /// <summary>

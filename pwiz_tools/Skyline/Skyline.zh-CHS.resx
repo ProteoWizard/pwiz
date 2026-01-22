@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="keyboardShortcutsHelpMenuItem.Text" xml:space="preserve">
+    <value>键盘快捷键(&amp;K)</value>
+  </data>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
@@ -1393,11 +1396,7 @@
     <value>200, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
-    <value>S&amp;tart...</value>
-    <comment>Needs Review:English text changed
-Old English:Sta&amp;rt...
-Current English:S&amp;tart...
-Old Localized:开始(&amp;R)…</comment>
+    <value>开始(&amp;T)…</value>
   </data>
   <data name="newMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1480,6 +1479,9 @@ Old Localized:开始(&amp;R)…</comment>
   <data name="ardiaPublishMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
   </data>
+  <data name="ardiaPublishMenuItem.Text" xml:space="preserve">
+    <value>上传至 Ardia(&amp;D)…</value>
+  </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 6</value>
   </data>
@@ -1505,11 +1507,7 @@ Old Localized:开始(&amp;R)…</comment>
     <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
-    <value>Sea&amp;rch</value>
-    <comment>Needs Review:English text changed
-Old English:&amp;Search
-Current English:Sea&amp;rch
-Old Localized:搜索(&amp;S)</comment>
+    <value>搜索(&amp;R)</value>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1563,8 +1561,7 @@ Old Localized:搜索(&amp;S)</comment>
     <value>170, 22</value>
   </data>
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
-    <value>A&amp;nnotations...</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>注释(&amp;N)……</value>
   </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
@@ -1781,6 +1778,9 @@ Old Localized:搜索(&amp;S)</comment>
   </data>
   <data name="searchToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
+  </data>
+  <data name="searchToolsMenuItem.Text" xml:space="preserve">
+    <value>搜索工具(&amp;S)…</value>
   </data>
   <data name="toolStripSeparator46.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 6</value>
