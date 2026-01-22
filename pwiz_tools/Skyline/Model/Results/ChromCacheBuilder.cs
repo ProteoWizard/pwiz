@@ -381,6 +381,37 @@ namespace pwiz.Skyline.Model.Results
                 _document.Settings.PeptideSettings.Modifications.InternalStandardTypes);
 
             var listChromData = CalcPeptideChromDataSets(provider, listMzPrecursors, setInternalStandards);
+
+            // Diagnostic: log what's in listChromData - use separate file to avoid lock conflict
+            var diagPathBase = Environment.GetEnvironmentVariable("SKYLINE_CHROM_DIAGNOSTIC_LOG");
+            var diagPathRead = !string.IsNullOrEmpty(diagPathBase) ? diagPathBase + ".read.log" : null;
+            if (!string.IsNullOrEmpty(diagPathRead))
+            {
+                try
+                {
+                    int hcdDataSets = 0, cidDataSets = 0;
+                    var allProviderIds = new List<int>();
+                    foreach (var pepChromData in listChromData)
+                    {
+                        foreach (var dataSet in pepChromData.DataSets)
+                        {
+                            var filterStr = dataSet.ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? string.Empty;
+                            if (filterStr.Contains("HCD") && filterStr.Contains("15"))
+                                hcdDataSets++;
+                            else if (filterStr.Contains("CID") && filterStr.Contains("20"))
+                                cidDataSets++;
+                        }
+                        allProviderIds.AddRange(pepChromData.ProviderIds);
+                    }
+                    var hcdProviderIds = allProviderIds.Where(id => id < 5000).Count(); // HCD products are at lower indices
+                    var cidProviderIds = allProviderIds.Where(id => id >= 5000).Count(); // CID products are at higher indices
+                    File.AppendAllText(diagPathRead, $"Read: listChromData.Count={listChromData.Count}\n");
+                    File.AppendAllText(diagPathRead, $"Read: HCD CE=15 datasets={hcdDataSets}, CID CE=20 datasets={cidDataSets}\n");
+                    File.AppendAllText(diagPathRead, $"Read: allProviderIds.Count={allProviderIds.Count}, lowIds(<5000)={hcdProviderIds}, highIds(>=5000)={cidProviderIds}\n");
+                }
+                catch { /* ignore logging errors */ }
+            }
+
             for (int i = 0; i < listChromData.Count; i++)
             {
                 listChromData[i].IndexInFile = i;
@@ -532,6 +563,7 @@ namespace pwiz.Skyline.Model.Results
             var dictPeptideChromData = new Dictionary<PeptideSequenceModKey, PeptideChromDataSets>();
             var listChromData = new List<PeptideChromDataSets>();
 
+            int hcdMatched = 0, hcdUnmatched = 0, cidMatched = 0, cidUnmatched = 0;
             foreach (var matchingGroup in GetMatchingGroups(_document, provider, listMzPrecursors))
             {
                 var peptidePercursor = matchingGroup.Key;
@@ -539,6 +571,21 @@ namespace pwiz.Skyline.Model.Results
                 chromDataSetMatch.IsStandard = peptidePercursor != null &&
                                                setInternalStandards.Contains(
                                                    peptidePercursor.NodeGroup.TransitionGroup.LabelType);
+
+                // Count HCD vs CID matched/unmatched
+                var dsFilterStr = chromDataSetMatch.ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? string.Empty;
+                bool isHcd = dsFilterStr.Contains("HCD") && dsFilterStr.Contains("15");
+                bool isCid = dsFilterStr.Contains("CID") && dsFilterStr.Contains("20");
+                if (peptidePercursor != null)
+                {
+                    if (isHcd) hcdMatched++;
+                    else if (isCid) cidMatched++;
+                }
+                else
+                {
+                    if (isHcd) hcdUnmatched++;
+                    else if (isCid) cidUnmatched++;
+                }
 
                 AddChromDataSet(provider.IsProcessedScans,
                     chromDataSetMatch,
@@ -550,6 +597,40 @@ namespace pwiz.Skyline.Model.Results
 
             listChromData.AddRange(dictPeptideChromData.Values);
             listChromData.Sort(CompareMaxRetentionTime);
+
+            // Log diagnostic info - use separate file to avoid lock conflict
+            var diagPathBase = Environment.GetEnvironmentVariable("SKYLINE_CHROM_DIAGNOSTIC_LOG");
+            var diagPathCalc = !string.IsNullOrEmpty(diagPathBase) ? diagPathBase + ".calc.log" : null;
+            if (!string.IsNullOrEmpty(diagPathCalc))
+            {
+                try
+                {
+                    File.AppendAllText(diagPathCalc, $"CalcPeptideChromDataSets: HCD CE=15 matched={hcdMatched}, unmatched={hcdUnmatched}\n");
+                    File.AppendAllText(diagPathCalc, $"CalcPeptideChromDataSets: CID CE=20 matched={cidMatched}, unmatched={cidUnmatched}\n");
+
+                    // Count HCD CE=15 in listChromData BEFORE returning
+                    int hcdInList = 0, cidInList = 0;
+                    int hcdOverride = 0, hcdNoOverride = 0;
+                    foreach (var pepData in listChromData)
+                    {
+                        foreach (var ds in pepData.DataSets)
+                        {
+                            var filter = ds.ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? string.Empty;
+                            if (filter.Contains("HCD") && filter.Contains("15"))
+                            {
+                                hcdInList++;
+                                if (ds.OverrideTextId) hcdOverride++;
+                                else hcdNoOverride++;
+                            }
+                            else if (filter.Contains("CID") && filter.Contains("20"))
+                                cidInList++;
+                        }
+                    }
+                    File.AppendAllText(diagPathCalc, $"CalcPeptideChromDataSets AFTER AddRange: HCD in list={hcdInList} (override={hcdOverride}, noOverride={hcdNoOverride}), CID in list={cidInList}\n");
+                    File.AppendAllText(diagPathCalc, $"CalcPeptideChromDataSets: listChromData.Count={listChromData.Count}, dictPeptideChromData.Count was {dictPeptideChromData.Count}\n");
+                }
+                catch { /* ignore logging errors */ }
+            }
 
             // Avoid holding onto chromatogram data sets for entire read
             dictPeptideChromData.Clear();
@@ -621,10 +702,39 @@ namespace pwiz.Skyline.Model.Results
 
             ChromKey lastKey = ChromKey.EMPTY;
             ChromDataSet chromDataSet = null;
+            int hcdDataSets = 0, cidDataSets = 0, otherDataSets = 0;
+            int hcdChromKeys = 0, cidChromKeys = 0;
+            int totalChromKeys = 0;
+            var diagPathBase = Environment.GetEnvironmentVariable("SKYLINE_CHROM_DIAGNOSTIC_LOG");
+            var diagPathTop = !string.IsNullOrEmpty(diagPathBase) ? diagPathBase + ".datasets.log" : null;
+
+            // Log total ChromIds count before iteration
+            if (!string.IsNullOrEmpty(diagPathTop))
+            {
+                try { File.AppendAllText(diagPathTop, $"GetChromDataSets: Starting iteration, ChromIds count={provider.ChromIds.Count()}\n"); }
+                catch { }
+            }
+
             foreach (var keyIndex in provider.ChromIds.OrderBy(k => k))
             {
+                totalChromKeys++;
                 var key = keyIndex.Key;
                 var chromData = new ChromData(key, keyIndex.ProviderId);
+
+                // Count HCD vs CID ChromKeys
+                var filterStr = key.ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? string.Empty;
+                if (filterStr.Contains("HCD") && filterStr.Contains("15"))
+                {
+                    hcdChromKeys++;
+                    // Log first 3 HCD ChromKeys
+                    if (hcdChromKeys <= 3 && !string.IsNullOrEmpty(diagPathTop))
+                    {
+                        try { File.AppendAllText(diagPathTop, $"GetChromDataSets HCD key #{hcdChromKeys}: ProviderId={keyIndex.ProviderId}, Q1={key.Precursor}, Q3={key.Product}, Target={key.ChromatogramGroupId?.Target}\n"); }
+                        catch { }
+                    }
+                }
+                else if (filterStr.Contains("CID") && filterStr.Contains("20"))
+                    cidChromKeys++;
 
                 if (chromDataSet != null && key.ComparePrecursors(lastKey) == 0)
                 {
@@ -633,7 +743,28 @@ namespace pwiz.Skyline.Model.Results
                 else
                 {
                     if (chromDataSet != null)
+                    {
+                        // Count ChromDataSets by type
+                        var dsFilterStr = chromDataSet.ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? string.Empty;
+                        if (dsFilterStr.Contains("HCD") && dsFilterStr.Contains("15"))
+                        {
+                            hcdDataSets++;
+                            // Log first 5 HCD datasets
+                            if (hcdDataSets <= 5 && !string.IsNullOrEmpty(diagPathTop))
+                            {
+                                try
+                                {
+                                    File.AppendAllText(diagPathTop, $"GetChromDataSets yielding HCD #{hcdDataSets}: Precursor={chromDataSet.PrecursorMz}, ChromCount={chromDataSet.Chromatograms.Count()}, Target={chromDataSet.ChromatogramGroupId?.Target}\n");
+                                }
+                                catch { }
+                            }
+                        }
+                        else if (dsFilterStr.Contains("CID") && dsFilterStr.Contains("20"))
+                            cidDataSets++;
+                        else
+                            otherDataSets++;
                         yield return chromDataSet;
+                    }
 
                     chromDataSet = new ChromDataSet(isTimeNormalArea, fullScanAcquisitionMethod, chromData);
                 }
@@ -642,7 +773,27 @@ namespace pwiz.Skyline.Model.Results
             // Caution: for SRM data, we may have just grouped chromatograms that will eventually
             // prove to have discontiguous RT spans once we load them and have time data.
             if (chromDataSet != null)
+            {
+                var dsFilterStr = chromDataSet.ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? string.Empty;
+                if (dsFilterStr.Contains("HCD") && dsFilterStr.Contains("15"))
+                    hcdDataSets++;
+                else if (dsFilterStr.Contains("CID") && dsFilterStr.Contains("20"))
+                    cidDataSets++;
+                else
+                    otherDataSets++;
                 yield return chromDataSet;
+            }
+
+            // Log diagnostic info
+            if (!string.IsNullOrEmpty(diagPathTop))
+            {
+                try
+                {
+                    File.AppendAllText(diagPathTop, $"GetChromDataSets: HCD CE=15 keys={hcdChromKeys}, CID CE=20 keys={cidChromKeys}\n");
+                    File.AppendAllText(diagPathTop, $"GetChromDataSets: HCD CE=15 datasets={hcdDataSets}, CID CE=20 datasets={cidDataSets}, other={otherDataSets}\n");
+                }
+                catch { /* ignore logging errors */ }
+            }
         }
 
         private void AddChromDataSet(bool isProcessedScans,
@@ -890,6 +1041,7 @@ namespace pwiz.Skyline.Model.Results
                 document.Settings.TransitionSettings.Instrument.MzMatchTolerance));
         }
 
+        private static int _diagLogCount = 0;
         private static IEnumerable<KeyValuePair<PeptidePrecursorMz, ChromDataSet>> GetMatchingGroups(
             ChromDataSet chromDataSet, List<PeptidePrecursorMz> listMzPrecursors, bool singleMatch, double tolerance)
         {
@@ -900,11 +1052,37 @@ namespace pwiz.Skyline.Model.Results
             // with potentially matching product ions
             var chromatogramGroupId = chromDataSet.ChromatogramGroupId;
             var listMatchingGroups = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
+
+            // Diagnostic logging for HCD CE=15 - use separate file to avoid lock conflict
+            var diagPathBase = Environment.GetEnvironmentVariable("SKYLINE_CHROM_DIAGNOSTIC_LOG");
+            var diagPath2 = !string.IsNullOrEmpty(diagPathBase) ? diagPathBase + ".matching.log" : null;
+            var dsFilterStr = chromatogramGroupId?.SpectrumClassFilter.ToString() ?? string.Empty;
+            bool isHcdCe15 = dsFilterStr.Contains("HCD") && dsFilterStr.Contains("15");
+            int skippedDueToGroupId = 0;
+            int precursorsChecked = 0;
+
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch && listMzPrecursors[i].PrecursorMz.IsNegative == maxMzMatch.IsNegative; i++)
             {
+                precursorsChecked++;
                 var peptidePrecursorMz = listMzPrecursors[i];
                 if (chromatogramGroupId != null && !Equals(chromatogramGroupId, peptidePrecursorMz.ChromatogramGroupId))
+                {
+                    if (isHcdCe15 && _diagLogCount < 20 && !string.IsNullOrEmpty(diagPath2))
+                    {
+                        _diagLogCount++;
+                        try
+                        {
+                            var pepGroupId = peptidePrecursorMz.ChromatogramGroupId;
+                            File.AppendAllText(diagPath2, $"GetMatchingGroups skip #{_diagLogCount}: DS groupId={chromatogramGroupId}, Peptide groupId={pepGroupId}\n");
+                            File.AppendAllText(diagPath2, $"  DS Target={chromatogramGroupId?.Target}, Peptide Target={pepGroupId?.Target}\n");
+                            File.AppendAllText(diagPath2, $"  DS Filter={chromatogramGroupId?.SpectrumClassFilter}, Peptide Filter={pepGroupId?.SpectrumClassFilter}\n");
+                            File.AppendAllText(diagPath2, $"  Targets equal: {Equals(chromatogramGroupId?.Target, pepGroupId?.Target)}, Filters equal: {Equals(chromatogramGroupId?.SpectrumClassFilter, pepGroupId?.SpectrumClassFilter)}\n");
+                        }
+                        catch { /* ignore logging errors */ }
+                    }
+                    skippedDueToGroupId++;
                     continue;
+                }
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;
                 var explicitRetentionTimeInfo = peptidePrecursorMz.NodePeptide.ExplicitRetentionTime;
@@ -930,11 +1108,22 @@ namespace pwiz.Skyline.Model.Results
             if (!singleMatch)
                 FilterMatchingGroups(listMatchingGroups);
 
+            // Diagnostic logging for unmatched HCD CE=15
+            if (isHcdCe15 && listMatchingGroups.Count == 0 && !string.IsNullOrEmpty(diagPath2) && _diagLogCount < 50)
+            {
+                try
+                {
+                    File.AppendAllText(diagPath2, $"GetMatchingGroups UNMATCHED HCD: Precursor={chromDataSet.PrecursorMz}, Target={chromatogramGroupId?.Target}, Filter={chromatogramGroupId?.SpectrumClassFilter}\n");
+                    File.AppendAllText(diagPath2, $"  PrecursorsChecked={precursorsChecked}, SkippedDueToGroupId={skippedDueToGroupId}\n");
+                }
+                catch { /* ignore logging errors */ }
+            }
+
             if (listMatchingGroups.Count == 0)
             {
                 // No matches found
                 yield return new KeyValuePair<PeptidePrecursorMz, ChromDataSet>(
-                    null, chromDataSet);                
+                    null, chromDataSet);
             }
             else if (listMatchingGroups.Count == 1)
             {

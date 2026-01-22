@@ -419,13 +419,120 @@ namespace pwiz.Skyline.Model.Results
                 collectors.AddComplete(retentionTime >= 0 ? retentionTime : float.MaxValue);
         }
 
+        // Diagnostic logging for debugging missing chromatograms
+        // Controlled via SKYLINE_CHROM_DIAGNOSTIC_LOG environment variable
+        private static readonly object _diagnosticLogLock = new object();
+        private static System.IO.StreamWriter _diagnosticLogWriter;
+        private static string _currentLogPath;
+
+        internal static bool DiagnosticLoggingEnabled
+        {
+            get
+            {
+                var logPath = Environment.GetEnvironmentVariable(@"SKYLINE_CHROM_DIAGNOSTIC_LOG");
+                if (string.IsNullOrEmpty(logPath))
+                {
+                    // Close existing writer if env var is cleared
+                    if (_diagnosticLogWriter != null)
+                    {
+                        lock (_diagnosticLogLock)
+                        {
+                            _diagnosticLogWriter?.Close();
+                            _diagnosticLogWriter = null;
+                            _currentLogPath = null;
+                        }
+                    }
+                    return false;
+                }
+
+                // Check if we need to open a new log file
+                if (_diagnosticLogWriter == null || _currentLogPath != logPath)
+                {
+                    lock (_diagnosticLogLock)
+                    {
+                        if (_diagnosticLogWriter == null || _currentLogPath != logPath)
+                        {
+                            _diagnosticLogWriter?.Close();
+                            try
+                            {
+                                _diagnosticLogWriter = new System.IO.StreamWriter(logPath, false);
+                                _currentLogPath = logPath;
+                            }
+                            catch
+                            {
+                                _diagnosticLogWriter = null;
+                                _currentLogPath = null;
+                            }
+                        }
+                    }
+                }
+                return _diagnosticLogWriter != null;
+            }
+        }
+
+        internal static void DiagLog(string message)
+        {
+            if (!DiagnosticLoggingEnabled || _diagnosticLogWriter == null) return;
+            lock (_diagnosticLogLock)
+            {
+                _diagnosticLogWriter?.WriteLine(message);
+                _diagnosticLogWriter?.Flush();
+            }
+        }
+
+        /// <summary>
+        /// Close the diagnostic log file. Call this before trying to read the log.
+        /// </summary>
+        public static void CloseDiagnosticLog()
+        {
+            lock (_diagnosticLogLock)
+            {
+                _diagnosticLogWriter?.Close();
+                _diagnosticLogWriter = null;
+                _currentLogPath = null;
+            }
+        }
+
+        private static bool _dumpedMapOnce = false;
+        private int _hcdGetChromLogCount = 0;
+
         private void AddChromatogramsForFilterPair(ChromDataCollectorSet[] chromMaps, SpectrumFilterPair filterPair)
         {
             // Fill the chromatograms that were actually extracted
             foreach (var chromMap in chromMaps)
             {
-                if (filterPair.Id >= chromMap.PrecursorCollectorMap.Count ||
-                    chromMap.PrecursorCollectorMap[filterPair.Id] == null)
+                // One-time dump of the PrecursorCollectorMap to understand what's stored
+                if (DiagnosticLoggingEnabled && chromMap.ChromSource == ChromSource.fragment && !_dumpedMapOnce)
+                {
+                    _dumpedMapOnce = true;
+                    DiagLog($"=== PrecursorCollectorMap Dump (Count={chromMap.PrecursorCollectorMap.Count}) ===");
+                    for (int i = 0; i < Math.Min(100, chromMap.PrecursorCollectorMap.Count); i++)
+                    {
+                        var entry = chromMap.PrecursorCollectorMap[i];
+                        if (entry != null)
+                        {
+                            DiagLog($"  [{i}] Q1={entry.Item1.PrecursorMz}, Filter={entry.Item1.ChromatogramGroupId?.SpectrumClassFilter}");
+                        }
+                    }
+                    DiagLog($"=== End PrecursorCollectorMap Dump ===");
+                }
+                bool skipped = filterPair.Id >= chromMap.PrecursorCollectorMap.Count ||
+                    chromMap.PrecursorCollectorMap[filterPair.Id] == null;
+
+                if (DiagnosticLoggingEnabled && filterPair.SpectrumClassFilter.ToString().Contains("HCD") &&
+                    filterPair.SpectrumClassFilter.ToString().Contains("15"))
+                {
+                    // Log what's actually at the index
+                    string storedInfo = "N/A";
+                    if (filterPair.Id < chromMap.PrecursorCollectorMap.Count && chromMap.PrecursorCollectorMap[filterPair.Id] != null)
+                    {
+                        var stored = chromMap.PrecursorCollectorMap[filterPair.Id];
+                        storedInfo = $"StoredQ1={stored.Item1.PrecursorMz}, StoredFilter={stored.Item1.ChromatogramGroupId?.SpectrumClassFilter}";
+                    }
+                    DiagLog($"AddChromatogramsForFilterPair: Id={filterPair.Id}, Q1={filterPair.Q1}, Filter={filterPair.SpectrumClassFilter}, MapCount={chromMap.PrecursorCollectorMap.Count}, Skipped={skipped}, {storedInfo}");
+                }
+
+                if (skipped)
                     continue;
 
                 var pairPrecursor = chromMap.PrecursorCollectorMap[filterPair.Id];
@@ -450,6 +557,12 @@ namespace pwiz.Skyline.Model.Results
 
                     // Otherwise NRE will occur later
                     Assume.IsTrue(chromCollector.IsSetTimes);
+
+                    if (DiagnosticLoggingEnabled && filterPair.SpectrumClassFilter.ToString().Contains("HCD") &&
+                        filterPair.SpectrumClassFilter.ToString().Contains("15"))
+                    {
+                        DiagLog($"  -> AddCollector: FilterId={pairProduct.Key.FilterId}, Q3={pairProduct.Key.TargetMz}");
+                    }
 
                     _collectors.AddCollector(pairProduct.Key.FilterId, chromCollector);
                 }
@@ -597,6 +710,43 @@ namespace pwiz.Skyline.Model.Results
             if (_isSrm)
                 return;
 
+            // Diagnostic logging
+            if (DiagnosticLoggingEnabled)
+            {
+                var allIds = chromatogramRequestOrder.SelectMany(g => g).ToList();
+                int lowIds = allIds.Count(id => id < 5000);
+                int highIds = allIds.Count(id => id >= 5000);
+                DiagLog($"SetRequestOrder: totalGroups={chromatogramRequestOrder.Count}, totalIds={allIds.Count}, lowIds(<5000)={lowIds}, highIds(>=5000)={highIds}");
+
+                // Check if any HCD CE=15 IDs are in the request
+                int hcdIds = 0;
+                int cidIds = 0;
+                foreach (var id in allIds)
+                {
+                    if (id < _collectors.ChromKeys.Count)
+                    {
+                        var filterStr = _collectors.ChromKeys[id].ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? string.Empty;
+                        if (filterStr.Contains("HCD") && filterStr.Contains("15"))
+                            hcdIds++;
+                        else if (filterStr.Contains("CID") && filterStr.Contains("20"))
+                            cidIds++;
+                    }
+                }
+                DiagLog($"SetRequestOrder: HCD CE=15 ids requested = {hcdIds}, CID CE=20 ids requested = {cidIds}");
+
+                // Log first few ChromKeys at known HCD indices (from AddCollector log)
+                var testIds = new[] { 2880, 2881, 2970, 3060, 6820, 6950, 7100 };
+                foreach (var testId in testIds)
+                {
+                    if (testId < _collectors.ChromKeys.Count)
+                    {
+                        var key = _collectors.ChromKeys[testId];
+                        var filterStr = key.ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? "(null)";
+                        DiagLog($"  ChromKey[{testId}]: Q1={key.Precursor}, Q3={key.Product}, Filter={filterStr}");
+                    }
+                }
+            }
+
             chromatogramRequestOrder = FilterOutGlobalChromatograms(chromatogramRequestOrder).ToList();
             if (_chromGroups != null)
                 _chromGroups.Dispose();
@@ -640,6 +790,12 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
+            // Log first call to verify this code path is reached
+            if (DiagnosticLoggingEnabled && _hcdGetChromLogCount == 0)
+            {
+                DiagLog($"=== GetChromatogram FIRST CALL ===");
+            }
+
             timeIntensities = TimeIntensities.EMPTY;
             extra = null;
             bool isTicChromatogram;
@@ -658,11 +814,20 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
+                var chromKey = _collectors.ChromKeys[id];
                 var statusId = _collectors.ReleaseChromatogram(id, _chromGroups, out timeIntensities);
                 extra = new ChromExtra(statusId, 0);
                 // Each chromatogram will be read only once!
                 _readChromatograms++;
-                var chromKey = _collectors.ChromKeys[id];
+
+                // Log all GetChromatogram calls (first 50 to see what's happening)
+                if (DiagnosticLoggingEnabled && _hcdGetChromLogCount < 50)
+                {
+                    _hcdGetChromLogCount++;
+                    var filterStr = chromKey.ChromatogramGroupId?.SpectrumClassFilter.ToString() ?? "(null)";
+                    DiagLog($"GetChromatogram #{_hcdGetChromLogCount}: id={id}, Q3={chromKey.Product}, NumPoints={timeIntensities.NumPoints}, Filter={filterStr}");
+                }
+
                 isTicChromatogram = SignedMz.ZERO.Equals(chromKey.Precursor) &&
                                     ChromExtractor.summed == chromKey.Extractor;
             }
@@ -1256,12 +1421,19 @@ namespace pwiz.Skyline.Model.Results
             {
                 IsRunningAsync = runningAsync;
 
+                var hcdKeyCount = chromKeys.Count(k => k.ChromatogramGroupId?.SpectrumClassFilter.ToString().Contains("HCD") == true &&
+                                                      k.ChromatogramGroupId?.SpectrumClassFilter.ToString().Contains("15") == true);
+                DiagLog($"Collectors constructor: chromKeys.Count={chromKeys.Count}, HCD CE=15 keys={hcdKeyCount}, runningAsync={runningAsync}");
+
                 var chromKeyIndexes = chromKeys.Select((chromKey, index) => Tuple.Create(chromKey, index));
                 var groupedByEndTime = chromKeyIndexes.GroupBy(tuple => tuple.Item1.OptionalMaxTime ?? float.MaxValue)
                     .OrderBy(group => group.Key).ToList();
                 ChromKeys = ImmutableList.ValueOf(groupedByEndTime.SelectMany(group => group.Select(tuple => tuple.Item1)));
+
+                DiagLog($"  groupedByEndTime.Count={groupedByEndTime.Count}");
                 if (groupedByEndTime.Count > 1)
                 {
+                    DiagLog($"  Creating _chromKeyLookup with remapping");
                     var sortIndexes = groupedByEndTime.SelectMany(group => group.Select(tuple => tuple.Item2)).ToArray();
                     // The sort indexes tell us where the keys used to live. For lookup, we need
                     // to go the other way. Chromatograms will come in indexed by where they used to
@@ -1270,6 +1442,10 @@ namespace pwiz.Skyline.Model.Results
                     _chromKeyLookup = new int[sortIndexes.Length];
                     for (int j = 0; j < sortIndexes.Length; j++)
                         _chromKeyLookup[sortIndexes[j]] = j;
+                }
+                else
+                {
+                    DiagLog($"  No lookup remapping (single time group)");
                 }
                 // Create empty chromatograms for each ChromKey.
                 _collectors = new ChromCollector[chromKeys.Count];
@@ -1302,6 +1478,11 @@ namespace pwiz.Skyline.Model.Results
                 lock (this)
                 {
                     int index = ProductFilterIdToId(productFilterId);
+                    if (index < 0 || index >= _collectors.Count)
+                    {
+                        DiagLog($"ERROR: AddCollector index out of range: productFilterId={productFilterId}, index={index}, _collectors.Count={_collectors.Count}");
+                        return;
+                    }
                     _collectors[index] = collector;
                 }
             }
@@ -1710,6 +1891,14 @@ namespace pwiz.Skyline.Model.Results
             var chromatogramGroupId = spectrum.ChromatogramGroupId;
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
+
+            if (SpectraChromDataProvider.DiagnosticLoggingEnabled &&
+                chromatogramGroupId?.SpectrumClassFilter.ToString().Contains("HCD") == true &&
+                chromatogramGroupId?.SpectrumClassFilter.ToString().Contains("15") == true)
+            {
+                SpectraChromDataProvider.DiagLog($"ProcessExtractedSpectrum: FilterIndex={spectrum.FilterIndex}, Q1={precursorMz}, Filter={chromatogramGroupId?.SpectrumClassFilter}, Time={time}");
+            }
+
             ChromDataCollector collector;
             var key = new PrecursorTextId(precursorMz, null, null, ionMobility, chromatogramGroupId, extractor);
             int index = spectrum.FilterIndex;
