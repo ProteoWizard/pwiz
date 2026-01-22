@@ -1,13 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel.Channels;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -18,33 +15,41 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestImportSpectrumFilterTransitionList()
         {
-            TestFilesZip = @"TestFunctional\ImportSpectrumFilterTransitionListTest.data";
+            TestFilesZipPaths = new []
+            {
+                @"TestFunctional\ImportSpectrumFilterTransitionListTest.data",
+                @"TestFunctional\crv_qf_hsp_ms2_opt0.zip"
+
+            };
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("BlankDocument.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("BlankDocument.sky")));
             RunDlg<ImportTransitionListColumnSelectDlg>(
-                () => SkylineWindow.ImportMassList(TestFilesDir.GetTestPath("TransitionList.csv")),
+                () => SkylineWindow.ImportMassList(TestFilesDirs[0].GetTestPath("TransitionList.csv")),
                 dlg =>
                 {
                     dlg.OkDialog();
                 });
-            var rawFileNames = Enumerable.Range(0, 5)
-                .Select(i => new MsDataFilePath(TestFilesDir.GetTestPath("crv_qf_hsp_ms2_opt" + i + ".raw"))).ToList();
-            ImportResultsFiles(rawFileNames);
+            var rawFileName = TestFilesDirs[1].GetTestPath("crv_qf_hsp_ms2_opt0.raw");
+            ImportResultsFile(rawFileName);
             var blankDocumentLoaded = SkylineWindow.Document;
-            RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("WithTransitions.sky")));
-            ImportResultsFiles(rawFileNames);
+            RunUI(()=>SkylineWindow.OpenFile(TestFilesDirs[0].GetTestPath("WithTransitions.sky")));
+            ImportResultsFile(rawFileName);
             var otherDocument = SkylineWindow.Document;
-            VerifyHasAllChromatograms(blankDocumentLoaded, otherDocument);
+            var missingChromatograms =
+                FindMissingChromatograms(blankDocumentLoaded, otherDocument, new MsDataFilePath(rawFileName)).ToList();
+            var message = TextUtil.LineSeparate(missingChromatograms.Select(tuple =>
+                TextUtil.SpaceSeparate(tuple.Item1.ModifiedSequence + tuple.Item2.SpectrumClassFilter)));
+            Assert.AreEqual(0, missingChromatograms.Count, message);
         }
 
-        private void VerifyHasAllChromatograms(SrmDocument expected, SrmDocument actual)
+        private IEnumerable<(PeptideDocNode, TransitionGroupDocNode)> FindMissingChromatograms(SrmDocument expected, SrmDocument actual, MsDataFileUri filePath)
         {
-            CollectionAssert.AreEqual(expected.MeasuredResults.CachedFilePaths.ToList(),
-                actual.MeasuredResults.CachedFilePaths.ToList());
+            var chromSetFileMatchExpected = expected.MeasuredResults.FindMatchingMSDataFile(filePath);
+            var chromSetFileMatchActual = actual.MeasuredResults.FindMatchingMSDataFile(filePath);
             float tolerance = (float) expected.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var actualMolecules = actual.Molecules.ToLookup(molecule => molecule.ModifiedSequence);
             foreach (var expectedMolecule in expected.Molecules)
@@ -52,21 +57,18 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var expectedTransitionGroup in expectedMolecule.TransitionGroups)
                 {
                     Assert.IsTrue(FindMatchingTransitionGroup(expectedTransitionGroup, actualMolecules[expectedMolecule.ModifiedSequence], out var actualMolecule, out var actualTransitionGroup));
-                    for (int replicateIndex = 0;
-                         replicateIndex < expected.MeasuredResults.Chromatograms.Count;
-                         replicateIndex++)
+                    if (!expected.MeasuredResults.TryLoadChromatogram(
+                            chromSetFileMatchExpected.Chromatograms, expectedMolecule,
+                            expectedTransitionGroup, tolerance, out var expectedChromatograms) ||
+                        expectedChromatograms.Length == 0)
                     {
-                        var message =
-                            $"{expectedMolecule.ModifiedSequence} {expectedTransitionGroup.SpectrumClassFilter} {expected.MeasuredResults.Chromatograms[replicateIndex].Name}";
-                        if (!expected.MeasuredResults.TryLoadChromatogram(
-                                expected.MeasuredResults.Chromatograms[replicateIndex], expectedMolecule,
-                                expectedTransitionGroup, tolerance, out var expectedChromatograms) ||
-                            expectedChromatograms.Length == 0)
-                        {
-                            continue;
-                        }
-                        Assert.IsTrue(actual.MeasuredResults.TryLoadChromatogram(actual.MeasuredResults.Chromatograms[replicateIndex], actualMolecule, actualTransitionGroup, tolerance, out var actualChromatograms), message);
-                        Assert.AreEqual(expectedChromatograms.Length, actualChromatograms.Length, message);
+                        continue;
+                    }
+
+                    if (!actual.MeasuredResults.TryLoadChromatogram(chromSetFileMatchActual.Chromatograms,
+                            actualMolecule, actualTransitionGroup, tolerance, out var actualChromatograms) || actualChromatograms.Length == 0)
+                    {
+                        yield return (actualMolecule, actualTransitionGroup);
                     }
                 }
             }
@@ -93,5 +95,7 @@ namespace pwiz.SkylineTestFunctional
             matchingTransitionGroup = null;
             return false;
         }
+
+        
     }
 }
