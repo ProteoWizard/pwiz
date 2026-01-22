@@ -376,10 +376,7 @@ Term parseTerm(istream& is)
     Term result;
 
     for (string line; getcleanline(is,line) && !line.empty();)
-    {
-       // if (!isIgnoredRelationship(result.prefix)) // PEFF etc terms are not interesting for describing mass spectrometry data
-            parseTagValuePair(line, result);
-    }
+        parseTagValuePair(line, result);
 
     return result;
 }
@@ -395,8 +392,8 @@ void parseStanza(istream& is, OBO& obo)
     {
         Term term = parseTerm(is);
 
-        // ignore UO and non-followed terms in MS obo
-        if (/*isIgnoredRelationship(term.prefix) || term.prefix.empty() ||*/ (bal::iends_with(obo.filename, "psi-ms.obo") && term.prefix == "UO"))
+        // ignore UO terms in MS obo
+        if (bal::iends_with(obo.filename, "psi-ms.obo") && term.prefix == "UO")
             return;
 
         // validate prefix

@@ -37,52 +37,52 @@ const vector<InstrumentNameToModelMapping> nameToModelMapping =
 {
     {"2010E", MS_LCMS_2010EV}, // predicted
     {"2010A", MS_LCMS_2010A}, // predicted
-    {"2010", MS_LCMS_2010},
+    {"2010", MS_LCMS_2010}, // predicted
     {"2020", MS_LCMS_2020},
     {"2050", MS_LCMS_2050},
     {"7090", MS_Shimadzu_MALDI_7090}, // predicted
-    {"8030 PLUS", MS_LCMS_8030_Plus},
-    {"8030", MS_LCMS_8030},
+    {"8030 PLUS", MS_LCMS_8030_Plus}, // predicted
+    {"8030", MS_LCMS_8030}, // predicted
     {"8040", MS_LCMS_8040},
-    {"8045RX", MS_LCMS_8045RX},
+    {"8045RX", MS_LCMS_8045RX}, // predicted
     {"8045", MS_LCMS_8045},
-    {"8050RX", MS_LCMS_8050RX},
+    {"8050RX", MS_LCMS_8050RX}, // predicted
     {"8050", MS_LCMS_8050},
-    {"8060NX", MS_LCMS_8060NX},
+    {"8060NX", MS_LCMS_8060NX}, // predicted
     {"8060RX", MS_LCMS_8060RX},
     {"8060", MS_LCMS_8060},
-    {"8065XE", MS_LCMS_8065XE},
+    {"8065XE", MS_LCMS_8065XE}, // predicted
     {"9030", MS_LCMS_9030},
     {"9050", MS_LCMS_9050},
     {"AXIMA-CFR PLUS", MS_AXIMA_CFR_plus}, // predicted
     {"AXIMA CFR", MS_AXIMA_CFR_MALDI_TOF}, // predicted
     {"AXIMA-QIT", MS_AXIMA_QIT}, // predicted
-    {"AXIMA-LNR", MS_AXIMA_LNR},
-    {"AXIMA-TOF", MS_AXIMA_TOF__sq__},
-    {"AXIMA RESONANCE", MS_AXIMA_Resonance},
+    {"AXIMA-LNR", MS_AXIMA_LNR}, // predicted
+    {"AXIMA-TOF", MS_AXIMA_TOF__sq__}, // predicted
+    {"AXIMA RESONANCE", MS_AXIMA_Resonance}, // predicted
     {"AXIMA PERFORMANCE", MS_AXIMA_Performance_MALDI_TOF_TOF}, // predicted
     {"AXIMA CONFIDENCE", MS_AXIMA_Confidence_MALDI_TOF}, // predicted
     {"AXIMA ASSURANCE", MS_AXIMA_Assurance_Linear_MALDI_TOF}, // predicted
-    {"GCMS-QP2010 PLUS", MS_GCMS_QP2010_Plus},
-    {"GCMS-QP2010 ULTRA", MS_GCMS_QP2010_Ultra},
+    {"GCMS-QP2010 PLUS", MS_GCMS_QP2010_Plus}, // predicted
+    {"GCMS-QP2010 ULTRA", MS_GCMS_QP2010_Ultra}, // predicted
     {"GCMS-QP2010SE", MS_GCMS_QP2010SE}, // predicted
-    {"GCMS-QP2010S", MS_GCMS_QP2010S},
-    {"GCMS-QP2010", MS_GCMS_QP2010},
-    {"GCMS-QP2020NX", MS_GCMS_QP2020NX},
-    {"GCMS-QP2020", MS_GCMS_QP2020},
-    {"GCMS-QP2050", MS_GCMS_QP2050},
-    {"GCMS-QP5000", MS_GCMS_QP5000},
-    {"GCMS-QP5050A", MS_GCMS_QP5050A},
-    {"GCMS-TQ8040NX", MS_GCMS_TQ8040NX},
-    {"GCMS-TQ8040", MS_GCMS_TQ8040},
-    {"GCMS-TQ8050NX", MS_GCMS_TQ8050NX},
-    {"GCMS-TQ 8030", MS_GCMS_TQ_8030},
-    {"GCMS-TQ 8050", MS_GCMS_TQ_8050},
+    {"GCMS-QP2010S", MS_GCMS_QP2010S}, // predicted
+    {"GCMS-QP2010", MS_GCMS_QP2010}, // predicted
+    {"GCMS-QP2020NX", MS_GCMS_QP2020NX}, // predicted
+    {"GCMS-QP2020", MS_GCMS_QP2020}, // predicted
+    {"GCMS-QP2050", MS_GCMS_QP2050}, // predicted
+    {"GCMS-QP5000", MS_GCMS_QP5000}, // predicted
+    {"GCMS-QP5050A", MS_GCMS_QP5050A}, // predicted
+    {"GCMS-TQ8040NX", MS_GCMS_TQ8040NX}, // predicted
+    {"GCMS-TQ8040", MS_GCMS_TQ8040}, // predicted
+    {"GCMS-TQ8050NX", MS_GCMS_TQ8050NX}, // predicted
+    {"GCMS-TQ 8030", MS_GCMS_TQ_8030}, // predicted
+    {"GCMS-TQ 8050", MS_GCMS_TQ_8050}, // predicted
     {"IT-TOF", MS_LCMS_IT_TOF}, // predicted
-    {"MALDI-8020 EASYCARE", MS_MALDI_8020_EasyCare},
-    {"MALDI-8020", MS_MALDI_8020},
-    {"MALDI-8030 EASYCARE", MS_MALDI_8030_EasyCare},
-    {"MALDI-8030", MS_MALDI_8030},
+    {"MALDI-8020 EASYCARE", MS_MALDI_8020_EasyCare}, // predicted
+    {"MALDI-8020", MS_MALDI_8020}, // predicted
+    {"MALDI-8030 EASYCARE", MS_MALDI_8030_EasyCare}, // predicted
+    {"MALDI-8030", MS_MALDI_8030}, // predicted
     {"LCMS", MS_Shimadzu_Scientific_Instruments_instrument_model}, // instrument model not specified, use different fallback type to avoid error
 
 };
