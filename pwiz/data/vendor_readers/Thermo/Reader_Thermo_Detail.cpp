@@ -260,13 +260,14 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Q_Exactive_Focus:
-        case InstrumentModelType_Q_Exactive_GC_Orbitrap: // TODO: check this CoPilot guess
+        case InstrumentModelType_Q_Exactive_GC_Orbitrap:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
         case InstrumentModelType_Orbitrap_Exploris_GC:
         case InstrumentModelType_Orbitrap_GC:
+        case InstrumentModelType_Orbitrap_Excedion_Pro:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -284,7 +285,6 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
 
         case InstrumentModelType_Orbitrap_Astral:
         case InstrumentModelType_Orbitrap_Astral_Zoom:
-        case InstrumentModelType_Orbitrap_Excedion_Pro: // TODO: check this CoPilot guess
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -337,11 +337,11 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
-        case InstrumentModelType_MALDI_LTQ_Orbitrap_XL: // TODO: check this CoPilot guess
-        case InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery: // TODO: check this CoPilot guess
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_XL:
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Velos_Pro:
-        case InstrumentModelType_LTQ_Orbitrap_Velos_ETD: // TODO: check this CoPilot guess
+        case InstrumentModelType_LTQ_Orbitrap_Velos_ETD:
         case InstrumentModelType_LTQ_Orbitrap_Elite:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -362,6 +362,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_PolarisQ:
         case InstrumentModelType_ITQ_700:
         case InstrumentModelType_ITQ_900:
+        case InstrumentModelType_ITQ:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole_ion_trap, 2));
@@ -377,7 +378,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
-        case InstrumentModelType_Velos_Pro: // TODO: check this CoPilot guess
+        case InstrumentModelType_Velos_Pro:
         case InstrumentModelType_Stellar:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -390,11 +391,11 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_DSQ:
         case InstrumentModelType_DSQ_II:
         case InstrumentModelType_ISQ:
-        case InstrumentModelType_ISQ_7000: // TODO: check this CoPilot guess
-        case InstrumentModelType_ISQ_LT: // TODO: check this CoPilot guess
-        case InstrumentModelType_ITQ: // TODO: check this CoPilot guess
+        case InstrumentModelType_ISQ_7000:
+        case InstrumentModelType_ISQ_LT:
         case InstrumentModelType_Trace_DSQ:
         case InstrumentModelType_GC_IsoLink:
+        case InstrumentModelType_ThermoQuest_Voyager:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -402,16 +403,16 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
             break;
 
         case InstrumentModelType_TSQ_7000:
-        case InstrumentModelType_TSQ_8000: // TODO: check this CoPilot guess
+        case InstrumentModelType_TSQ_8000:
         case InstrumentModelType_TSQ_8000_Evo:
         case InstrumentModelType_TSQ_9000:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
-        case InstrumentModelType_TSQ_Quantum_Access_MAX: // TODO: check this CoPilot guess
+        case InstrumentModelType_TSQ_Quantum_Access_MAX:
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
-        case InstrumentModelType_TSQ_Quantum_XLS: // TODO: check this CoPilot guess
+        case InstrumentModelType_TSQ_Quantum_XLS:
         case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_TSQ_Vantage_AM:
@@ -421,7 +422,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_TSQ_Altis:
         case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
-        case InstrumentModelType_TSQ_Certis: // TODO: check this CoPilot guess
+        case InstrumentModelType_TSQ_Certis:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -436,8 +437,12 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_MAT900XP_Trap:
         case InstrumentModelType_MAT95XP:
         case InstrumentModelType_MAT95XP_Trap:
-        case InstrumentModelType_DeltaPlus_IRMS: // TODO: check this CoPilot guess
-        case InstrumentModelType_ThermoQuest_Voyager: // TODO: check this CoPilot guess
+        case InstrumentModelType_Element_2:
+        case InstrumentModelType_Element_XR:
+        case InstrumentModelType_Element_GD:
+        case InstrumentModelType_DeltaPlus_IRMS:
+        case InstrumentModelType_Delta_Plus_Advantage:
+        case InstrumentModelType_Delta_Plus_XP:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_magnetic_sector, 2));
@@ -445,11 +450,6 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
             break;
 
         case InstrumentModelType_Tempus_TOF:
-        case InstrumentModelType_Element_2:
-        case InstrumentModelType_Element_XR:
-        case InstrumentModelType_Element_GD:
-        case InstrumentModelType_Delta_Plus_Advantage:
-        case InstrumentModelType_Delta_Plus_XP:
         case InstrumentModelType_Neptune:
         case InstrumentModelType_Triton:
             // TODO: figure out these configurations
@@ -739,3 +739,4 @@ AcylCarnitine 12:0|  |  (no adduct) | 344.3 | 1 | 84.1 | 1.5 | 0.4 | 24 | Negati
 } // detail
 } // msdata
 } // pwiz
+
