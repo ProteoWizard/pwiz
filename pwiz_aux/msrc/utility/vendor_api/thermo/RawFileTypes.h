@@ -139,6 +139,21 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_GC,
     InstrumentModelType_Orbitrap_Astral,
     InstrumentModelType_Orbitrap_Astral_Zoom,
+    InstrumentModelType_Orbitrap_Excedion_Pro,
+    InstrumentModelType_Q_Exactive_GC_Orbitrap,
+    InstrumentModelType_ISQ_7000,
+    InstrumentModelType_Velos_Pro,
+    InstrumentModelType_MALDI_LTQ_Orbitrap_XL,
+    InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery,
+    InstrumentModelType_TSQ_Quantum_Access_MAX,
+    InstrumentModelType_LTQ_Orbitrap_Velos_ETD,
+    InstrumentModelType_ISQ_LT,
+    InstrumentModelType_ITQ,
+    InstrumentModelType_TSQ_Quantum_XLS,
+    InstrumentModelType_TSQ_8000,
+    InstrumentModelType_DeltaPlus_IRMS,
+    InstrumentModelType_ThermoQuest_Voyager,
+    InstrumentModelType_TSQ_Certis,
     InstrumentModelType_Stellar,
 
     InstrumentModelType_Count,
@@ -205,10 +220,11 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"LTQ ORBITRAP DISCOVERY", InstrumentModelType_LTQ_Orbitrap_Discovery, Exact},
     {"LTQ ORBITRAP XL", InstrumentModelType_LTQ_Orbitrap_XL, Exact},
     {"ORBITRAP VELOS PRO", InstrumentModelType_LTQ_Orbitrap_Velos_Pro, Contains},
+    {"LTQ ORBITRAP VELOS/ETD", InstrumentModelType_LTQ_Orbitrap_Velos_ETD, Exact},
     {"ORBITRAP VELOS", InstrumentModelType_LTQ_Orbitrap_Velos, Contains},
     {"ORBITRAP ELITE", InstrumentModelType_LTQ_Orbitrap_Elite, Contains},
     {"VELOS PLUS", InstrumentModelType_LTQ_Velos_Plus, Contains},
-    {"VELOS PRO", InstrumentModelType_LTQ_Velos_Plus, Contains},
+    {"VELOS PRO", InstrumentModelType_Velos_Pro, Contains},
     {"LTQ VELOS", InstrumentModelType_LTQ_Velos, Exact},
     {"LTQ VELOS ETD", InstrumentModelType_LTQ_Velos_ETD, Exact},
     {"LXQ", InstrumentModelType_LXQ, Exact},
@@ -227,6 +243,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"MALDI LTQ XL", InstrumentModelType_MALDI_LTQ_XL, Exact},
     {"MALDI LTQ ORBITRAP", InstrumentModelType_MALDI_LTQ_Orbitrap, Exact},
     {"TSQ QUANTUM", InstrumentModelType_TSQ_Quantum, Exact},
+    {"TSQ QUANTUM ACCESS MAX", InstrumentModelType_TSQ_Quantum_Access_MAX, Contains},
     {"TSQ QUANTUM ACCESS", InstrumentModelType_TSQ_Quantum_Access, Contains},
     {"TSQ QUANTUM ULTRA", InstrumentModelType_TSQ_Quantum_Ultra, Exact},
     {"TSQ QUANTUM ULTRA AM", InstrumentModelType_TSQ_Quantum_Ultra_AM, Exact},
@@ -243,6 +260,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"GC ISOLINK", InstrumentModelType_GC_IsoLink, Exact},
     {"ORBITRAP ID-X", InstrumentModelType_Orbitrap_ID_X, Exact},
     {"ORBITRAP IQ-X", InstrumentModelType_Orbitrap_IQ_X, Exact}, // predicted
+    {"Q EXACTIVE GC ORBITRAP", InstrumentModelType_Q_Exactive_GC_Orbitrap, Contains},
     {"Q EXACTIVE PLUS", InstrumentModelType_Q_Exactive_Plus, Contains},
     {"Q EXACTIVE HF-X", InstrumentModelType_Q_Exactive_HF_X, Contains},
     {"Q EXACTIVE HF", InstrumentModelType_Q_Exactive_HF, Contains},
@@ -261,6 +279,20 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"ECLIPSE", InstrumentModelType_Orbitrap_Eclipse, Contains},
     {"ASTRAL ZOOM", InstrumentModelType_Orbitrap_Astral_Zoom, Contains}, // predicted
     {"ASTRAL", InstrumentModelType_Orbitrap_Astral, Contains},
+    {"ORBITRAP EXCEDION PRO", InstrumentModelType_Orbitrap_Excedion_Pro, Contains},
+    {"ORBITRAP EXCEDION", InstrumentModelType_Orbitrap_Excedion_Pro, Contains},
+    {"ISQ 7000", InstrumentModelType_ISQ_7000, Exact},
+    {"VELOS PRO", InstrumentModelType_Velos_Pro, Contains},
+    {"MALDI LTQ ORBITRAP XL", InstrumentModelType_MALDI_LTQ_Orbitrap_XL, Exact},
+    {"MALDI LTQ ORBITRAP DISCOVERY", InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery, Exact},
+    {"TSQ QUANTUM ACCESS MAX", InstrumentModelType_TSQ_Quantum_Access_MAX, Contains},
+    {"ISQ LT", InstrumentModelType_ISQ_LT, Exact},
+    {"ITQ", InstrumentModelType_ITQ, Exact},
+    {"TSQ QUANTUM XLS", InstrumentModelType_TSQ_Quantum_XLS, Exact},
+    {"TSQ 8000", InstrumentModelType_TSQ_8000, Exact},
+    {"DELTA PLUS IRMS", InstrumentModelType_DeltaPlus_IRMS, Exact},
+    {"THERMOQUEST VOYAGER", InstrumentModelType_ThermoQuest_Voyager, Exact},
+    {"TSQ CERTIS", InstrumentModelType_TSQ_Certis, Exact},
     {"FUSION ETD", InstrumentModelType_Orbitrap_Fusion_ETD, Contains},
     {"FUSION LUMOS", InstrumentModelType_Orbitrap_Fusion_Lumos, Contains},
     {"FUSION", InstrumentModelType_Orbitrap_Fusion, Contains},
@@ -340,6 +372,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Velos_Pro:
+        case InstrumentModelType_LTQ_Orbitrap_Velos_ETD: // TODO check this CoPilot guess
         case InstrumentModelType_LTQ_Orbitrap_Elite:
         case InstrumentModelType_Exactive:
         case InstrumentModelType_Exactive_Plus:
@@ -361,6 +394,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Orbitrap_IQ_X:
         case InstrumentModelType_Orbitrap_Astral:
         case InstrumentModelType_Orbitrap_Astral_Zoom:
+        case InstrumentModelType_Orbitrap_Excedion_Pro: // TODO check this CoPilot guess
         case InstrumentModelType_Stellar:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
@@ -375,6 +409,11 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_TSQ_Altis:
         case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
+        case InstrumentModelType_TSQ_Quantum_Access_MAX: // TODO verify this CoPilot guess 
+        case InstrumentModelType_Velos_Pro: // TODO verify this CoPilot guess 
+        case InstrumentModelType_TSQ_Quantum_XLS: // TODO verify this CoPilot guess 
+        case InstrumentModelType_TSQ_Certis: // TODO verify this CoPilot guess 
+        case InstrumentModelType_TSQ_8000: // ESI/LC-MS instrument
             ionSources.push_back(IonizationType_ESI);
             break;
 
@@ -383,21 +422,27 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_ITQ_700:
         case InstrumentModelType_ITQ_900:
         case InstrumentModelType_ITQ_1100:
+        case InstrumentModelType_ITQ: // TODO verify this CoPilot guess 
         case InstrumentModelType_Trace_DSQ:
         case InstrumentModelType_GC_Quantum:
         case InstrumentModelType_DFS:
         case InstrumentModelType_DSQ_II:
         case InstrumentModelType_ISQ:
+        case InstrumentModelType_ISQ_7000: // TODO verify this CoPilot guess 
+        case InstrumentModelType_ISQ_LT: // TODO verify this CoPilot guess 
         case InstrumentModelType_GC_IsoLink:
         case InstrumentModelType_Orbitrap_GC:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
         case InstrumentModelType_Orbitrap_Exploris_GC:
+        case InstrumentModelType_Q_Exactive_GC_Orbitrap: // TODO verify this CoPilot guess 
             ionSources.push_back(IonizationType_EI);
             break;
 
 
         case InstrumentModelType_MALDI_LTQ_XL:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_XL: // TODO verify this CoPilot guess 
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery: // TODO verify this CoPilot guess 
             ionSources.push_back(IonizationType_MALDI);
             break;
 
@@ -418,6 +463,11 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_MAT95XP:
         case InstrumentModelType_MAT95XP_Trap:
             // TODO: get source information for these instruments
+            break;
+
+        case InstrumentModelType_DeltaPlus_IRMS: // TODO verify this CoPilot guess 
+        case InstrumentModelType_ThermoQuest_Voyager: // TODO verify this CoPilot guess 
+            ionSources.push_back(IonizationType_FD);
             break;
        
         case InstrumentModelType_Surveyor_PDA:
@@ -475,6 +525,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Q_Exactive_Focus:
+        case InstrumentModelType_Q_Exactive_GC_Orbitrap: // TODO verify this CoPilot guess
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
@@ -488,8 +539,11 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_XL: // TODO verify this CoPilot guess
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery: // TODO verify this CoPilot guess
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Velos_Pro:
+        case InstrumentModelType_LTQ_Orbitrap_Velos_ETD: // TODO verify this CoPilot guess
         case InstrumentModelType_LTQ_Orbitrap_Elite:
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_Lumos:
@@ -512,6 +566,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
 
         case InstrumentModelType_Orbitrap_Astral:
         case InstrumentModelType_Orbitrap_Astral_Zoom:
+        case InstrumentModelType_Orbitrap_Excedion_Pro: // TODO verify this CoPilot guess
             switch (scanFilterType)
             {
                 case ScanFilterMassAnalyzerType_FTMS: return MassAnalyzerType_Orbitrap;
@@ -537,13 +592,16 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
             return MassAnalyzerType_Single_Quadrupole;
 
         case InstrumentModelType_TSQ_7000:
+        case InstrumentModelType_TSQ_8000: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_8000_Evo:
         case InstrumentModelType_TSQ_9000:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Access_MAX: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Quantum_XLS: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_TSQ_Vantage_AM:
@@ -553,6 +611,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_TSQ_Altis:
         case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
+        case InstrumentModelType_TSQ_Certis: // TODO verify this CoPilot guess
             return MassAnalyzerType_Triple_Quadrupole;
 
         case InstrumentModelType_LCQ_Advantage:
@@ -561,6 +620,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LCQ_Deca_XP_Plus:
         case InstrumentModelType_LCQ_Fleet:
         case InstrumentModelType_PolarisQ:
+        case InstrumentModelType_ITQ: // TODO verify this CoPilot guess
         case InstrumentModelType_ITQ_700:
         case InstrumentModelType_ITQ_900:
             return MassAnalyzerType_Quadrupole_Ion_Trap;
@@ -583,6 +643,8 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_MAT900XP_Trap:
         case InstrumentModelType_MAT95XP:
         case InstrumentModelType_MAT95XP_Trap:
+        case InstrumentModelType_DeltaPlus_IRMS: // TODO verify this CoPilot guess
+        case InstrumentModelType_ThermoQuest_Voyager: // TODO verify this CoPilot guess
             return MassAnalyzerType_Magnetic_Sector;
 
         case InstrumentModelType_Tempus_TOF:
@@ -630,6 +692,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Q_Exactive_Focus:
+        case InstrumentModelType_Q_Exactive_GC_Orbitrap: // TODO verify this CoPilot guess
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
@@ -644,8 +707,11 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_LTQ_Orbitrap_Discovery:
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_XL: // TODO verify this CoPilot guess
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery: // TODO verify this CoPilot guess
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Velos_Pro:
+        case InstrumentModelType_LTQ_Orbitrap_Velos_ETD: // TODO verify this CoPilot guess
         case InstrumentModelType_LTQ_Orbitrap_Elite:
         case InstrumentModelType_Orbitrap_Fusion: // has a quadrupole but only for mass filtering, not analysis
         case InstrumentModelType_Orbitrap_Fusion_Lumos: // ditto
@@ -660,6 +726,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
 
         case InstrumentModelType_Orbitrap_Astral:
         case InstrumentModelType_Orbitrap_Astral_Zoom:
+        case InstrumentModelType_Orbitrap_Excedion_Pro: // TODO verify this CoPilot guess
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             massAnalyzers.push_back(MassAnalyzerType_Astral);
             break;
@@ -675,19 +742,24 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_DSQ:
         case InstrumentModelType_DSQ_II:
         case InstrumentModelType_ISQ:
+        case InstrumentModelType_ISQ_7000: // TODO verify this CoPilot guess
+        case InstrumentModelType_ISQ_LT: // TODO verify this CoPilot guess
         case InstrumentModelType_Trace_DSQ:
         case InstrumentModelType_GC_IsoLink:
             massAnalyzers.push_back(MassAnalyzerType_Single_Quadrupole);
             break;
 
         case InstrumentModelType_TSQ_7000:
+        case InstrumentModelType_TSQ_8000: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_8000_Evo:
         case InstrumentModelType_TSQ_9000:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Access_MAX: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Quantum_XLS: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_TSQ_Vantage_AM:
@@ -697,6 +769,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_TSQ_Altis:
         case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
+        case InstrumentModelType_TSQ_Certis: // TODO verify this CoPilot guess
             massAnalyzers.push_back(MassAnalyzerType_Triple_Quadrupole);
             break;
 
@@ -708,6 +781,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_PolarisQ:
         case InstrumentModelType_ITQ_700:
         case InstrumentModelType_ITQ_900:
+        case InstrumentModelType_ITQ: // TODO verify this CoPilot guess
             massAnalyzers.push_back(MassAnalyzerType_Quadrupole_Ion_Trap);
             break;
 
@@ -721,6 +795,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Velos_Pro: // TODO verify this CoPilot guess
         case InstrumentModelType_Stellar:
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
@@ -731,6 +806,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_MAT900XP_Trap:
         case InstrumentModelType_MAT95XP:
         case InstrumentModelType_MAT95XP_Trap:
+
             massAnalyzers.push_back(MassAnalyzerType_Magnetic_Sector);
             break;
 
@@ -746,6 +822,11 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Neptune:
         case InstrumentModelType_Triton:
             // TODO: get mass analyzer information for these instruments
+            break;
+
+        case InstrumentModelType_DeltaPlus_IRMS: // TODO verify this CoPilot guess
+        case InstrumentModelType_ThermoQuest_Voyager: // TODO verify this CoPilot guess
+            massAnalyzers.push_back(MassAnalyzerType_Magnetic_Sector);
             break;
        
         case InstrumentModelType_Surveyor_PDA:
@@ -782,6 +863,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Q_Exactive_Focus:
+        case InstrumentModelType_Q_Exactive_GC_Orbitrap: // TODO verify this CoPilot guess
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_GC_240:
@@ -799,8 +881,11 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_XL: // TODO verify this CoPilot guess
+        case InstrumentModelType_MALDI_LTQ_Orbitrap_Discovery: // TODO verify this CoPilot guess
         case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Velos_Pro:
+        case InstrumentModelType_LTQ_Orbitrap_Velos_ETD: // TODO verify this CoPilot guess
         case InstrumentModelType_LTQ_Orbitrap_Elite:
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_Lumos:
@@ -811,12 +896,14 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_Eclipse:
         case InstrumentModelType_Orbitrap_Astral:
         case InstrumentModelType_Orbitrap_Astral_Zoom:
+        case InstrumentModelType_Orbitrap_Excedion_Pro: // TODO verify this CoPilot guess
             detectors.push_back(DetectorType_Inductive);
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
 
         case InstrumentModelType_SSQ_7000:
         case InstrumentModelType_TSQ_7000:
+        case InstrumentModelType_TSQ_8000: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_8000_Evo:
         case InstrumentModelType_TSQ_9000:
         case InstrumentModelType_TSQ:
@@ -834,15 +921,19 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Velos_ETD:
         case InstrumentModelType_LTQ_Velos_Plus:
+        case InstrumentModelType_Velos_Pro: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Access_MAX: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Quantum_XLS: // TODO verify this CoPilot guess
         case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_TSQ_Vantage_EMR:
         case InstrumentModelType_TSQ_Vantage_AM:
         case InstrumentModelType_DSQ:
         case InstrumentModelType_PolarisQ:
+        case InstrumentModelType_ITQ: // TODO verify this CoPilot guess
         case InstrumentModelType_ITQ_700:
         case InstrumentModelType_ITQ_900:
         case InstrumentModelType_ITQ_1100:
@@ -851,13 +942,18 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_DFS:
         case InstrumentModelType_DSQ_II:
         case InstrumentModelType_ISQ:
+        case InstrumentModelType_ISQ_LT: // TODO verify this CoPilot guess
+        case InstrumentModelType_ISQ_7000: // TODO verify this CoPilot guess
         case InstrumentModelType_GC_IsoLink:
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
         case InstrumentModelType_TSQ_Altis:
         case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
+        case InstrumentModelType_TSQ_Certis: // TODO verify this CoPilot guess
         case InstrumentModelType_Stellar:
+        case InstrumentModelType_DeltaPlus_IRMS:
+        case InstrumentModelType_ThermoQuest_Voyager:
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
 
