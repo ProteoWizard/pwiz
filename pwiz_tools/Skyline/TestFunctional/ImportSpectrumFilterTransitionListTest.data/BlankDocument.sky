@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="25.11" software_version="Skyline (64-bit : developer build) 26.1.1.021 (96a8a9a47)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="1" />
+      <peptide_filter start="25" min_length="8" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library">
+        <bibliospec_lite_library name="83SIL_15PRTC_2ATP_Koina" file_name_hint="crv_qf_hsp_ms2_opt.blib" lsid="urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:minimal:83SIL_15PRTC_2ATP_Koina:d66670f6-3478-4e85-8f8a-436c6e3eb125:1.7" revision="1" />
+      </peptide_libraries>
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1" internal_standard="light">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl (C)" aminoacid="C" formula="H3C2NO" unimod_id="4" short_name="CAM" />
+          <static_modification name="Oxidation (M)" aminoacid="M" variable="true" formula="O" unimod_id="35">
+            <potential_loss formula="H4COS" massdiff_monoisotopic="63.998285" massdiff_average="64.10701" />
+          </static_modification>
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name="Label:13C(6)15N(2) (C-term K)" aminoacid="K" terminus="C" label_13C="true" label_15N="true" />
+          <static_modification name="Label:13C(6)15N(4) (C-term R)" aminoacid="R" terminus="C" label_13C="true" label_15N="true" />
+        </heavy_modifications>
+      </peptide_modifications>
+      <quantification weighting="1/x" fit="bilinear" normalization="tic" units="fmol" lod_calculation="turning_point_stderr" max_loq_bias="20" max_loq_cv="20" />
+      <imputation>
+        <alignment type="library" name="83SIL_15PRTC_2ATP_Koina" />
+      </imputation>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None" />
+      <transition_filter precursor_charges="2,3,4" product_charges="1,2" precursor_adducts="[M+H]" product_adducts="[M+]" fragment_types="y,b" small_molecule_fragment_types="f" fragment_range_first="ion 2" fragment_range_last="last ion - 1" precursor_mz_window="0" auto_select="true" />
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="3" ion_count="15" pick_from="filter" />
+      <transition_integration>
+        <synchronize_integration group_by="" all="true" />
+      </transition_integration>
+      <transition_instrument min_mz="50" max_mz="2000" mz_match_tolerance="0.0003" />
+      <transition_full_scan acquisition_method="PRM" product_mass_analyzer="qit" product_res="0.7" />
+    </transition_settings>
+    <data_settings panorama_publish_uri="https://panoramaweb.org/Thermo Fisher - Research and Development/CollaboratorProjects/Van Eyk/" document_guid="28e1c773-85af-4021-bbd7-c75cce8d622e" />
+  </settings_summary>
+</srm_settings>
