@@ -104,16 +104,19 @@
     <value>新しいドキュメント</value>
   </data>
   <data name="FileModel_Replicates" xml:space="preserve">
-    <value>Replicates</value>
-    <comment>Needs Review:Inconsistent translation
-Candidate Translation:Replicates
-Candidate Translation:繰り返し測定</comment>
+    <value>繰り返し測定</value>
   </data>
   <data name="FileModel_Libraries" xml:space="preserve">
     <value>スペクトルライブラリ</value>
   </data>
   <data name="FileModel_OptimizationLibrary" xml:space="preserve">
     <value>最適化ライブラリ</value>
+  </data>
+  <data name="FileModel_ProjectFiles" xml:space="preserve">
+    <value>プロジェクトファイル</value>
+  </data>
+  <data name="FileModel_ViewFile" xml:space="preserve">
+    <value>ウィンドウレイアウト</value>
   </data>
   <data name="FileModel_ChromatogramCache" xml:space="preserve">
     <value>クロマトグラム</value>
@@ -123,5 +126,8 @@ Candidate Translation:繰り返し測定</comment>
   </data>
   <data name="FileModel_None" xml:space="preserve">
     <value>なし</value>
+  </data>
+  <data name="SpectralLibrary_Edit_Library___0___not_found_in_the_document_" xml:space="preserve">
+    <value>ドキュメントにライブラリ「{0}」が見つかりません。</value>
   </data>
 </root>

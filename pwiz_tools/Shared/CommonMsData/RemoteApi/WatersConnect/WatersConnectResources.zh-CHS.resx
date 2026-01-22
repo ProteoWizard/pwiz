@@ -121,4 +121,16 @@
   <data name="WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
     <value>无法找到用户名 {0} 和服务器 {1} 的账户。</value>
   </data>
+  <data name="WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__" xml:space="preserve">
+    <value>waters_connect 服务器返回错误代码：{0}。</value>
+  </data>
+  <data name="WatersConnectAccount_Authenticate_Failed_to_authenticate_waters_connect_account__0__with_error___1_" xml:space="preserve">
+    <value>无法验证 waters_connect 帐户 {0}，发生错误：{1}</value>
+  </data>
+  <data name="WatersConnectAcquisitionMethodUrl_Init_Invalid_method_version_Id__0_" xml:space="preserve">
+    <value>无效的方法版本 ID {0}</value>
+  </data>
+  <data name="WatersConnectSessionAcquisitionMethod_UploadMethod_Uploading_method__0__to__1_" xml:space="preserve">
+    <value>正在上传方法 {0} 至 {1}</value>
+  </data>
 </root>

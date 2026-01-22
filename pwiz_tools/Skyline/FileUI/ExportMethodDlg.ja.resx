@@ -229,6 +229,9 @@
   <data name="wcDecideBuckets.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
+  <data name="wcDecideBuckets.Text" xml:space="preserve">
+    <value>waters_connectに決定させる(&amp;L)</value>
+  </data>
   <data name="wcDecideBuckets.ToolTip" xml:space="preserve">
     <value>指定されたトランジション数まで、必要に応じた数のファイルを作成します。</value>
   </data>
@@ -582,15 +585,8 @@
     <value>30</value>
   </data>
   <data name="textTemplateFile.ToolTip" xml:space="preserve">
-    <value>Existing method file containing settings that will be used in the exported method.
-A single template transition may also be required for transition values not controlled by Skyline.</value>
-    <comment>Needs Review:English text changed
-Old English:Existing method file containing settings that will be used in the exported method.
-A single template transition may also be required for transition values not controled by Skyline.
-Current English:Existing method file containing settings that will be used in the exported method.
-A single template transition may also be required for transition values not controlled by Skyline.
-Old Localized:エクスポートされたメソッドで使用される設定を含む既存のメソッドファイルです。
-Skylineで制御されないトランジション値に対しては、単一のテンプレートトランジションも必要となる場合があります。</comment>
+    <value>エクスポートされたメソッドで使用される設定を含む既存のメソッドファイル。
+Skylineによりコントロールされていないトランジション値については、単一のテンプレートトランジションも必要になる場合があります。</value>
   </data>
   <data name="&gt;&gt;textTemplateFile.Name" xml:space="preserve">
     <value>textTemplateFile</value>

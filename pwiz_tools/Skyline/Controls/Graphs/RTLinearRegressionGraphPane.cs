@@ -506,6 +506,28 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        /// <summary>
+        /// Returns true when the graph data is fully loaded and ready to be accessed.
+        /// Use this in tests instead of just IsCalculating to avoid race conditions
+        /// where the background calculation is done but the data hasn't been set yet.
+        /// </summary>
+        public bool IsComplete
+        {
+            get
+            {
+                // Error means we're "done" (no further processing will help)
+                if (_graphDataReceiver.HasError)
+                    return true;
+
+                // Not complete if still calculating
+                if (IsCalculating)
+                    return false;
+
+                // Data must be populated (ProductAvailableAction callback has run)
+                return StatisticsRefined != null;
+            }
+        }
+
         private RetentionTimeRegressionSettings GetRegressionSettings()
         {
             var targetIndex = ShowReplicate == ReplicateDisplay.single || RunToRun
