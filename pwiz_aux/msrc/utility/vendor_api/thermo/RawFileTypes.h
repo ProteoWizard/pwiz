@@ -584,6 +584,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_ISQ:
         case InstrumentModelType_Trace_DSQ:
         case InstrumentModelType_GC_IsoLink:
+        case InstrumentModelType_ThermoQuest_Voyager:
             return MassAnalyzerType_Single_Quadrupole;
 
         case InstrumentModelType_TSQ_7000:
@@ -1069,4 +1070,5 @@ enum PWIZ_API_DECL TriBool
 } // namespace pwiz
 
 #endif // _RAWFILETYPES_H_
+
 
