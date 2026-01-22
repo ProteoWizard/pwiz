@@ -620,7 +620,6 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_ITQ_700:
         case InstrumentModelType_ITQ_900:
         case InstrumentModelType_ITQ_1100:
-        case InstrumentModelType_ThermoQuest_Voyager:
             return MassAnalyzerType_Quadrupole_Ion_Trap;
 
         case InstrumentModelType_LTQ:
