@@ -39,6 +39,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -54,7 +56,8 @@ namespace ZedGraph
         private const float CROSSOVER_PENALTY = 5000f;
         private const float LABEL_OVERLAP_PENALTY = 1500f;
         private const float TARGET_OVERLAP_PENALTY = 1500f;
-        private const float DISTANCE_SCALE = 8000f;
+        private const float CONNECTOR_LABEL_OVERLAP_PENALTY = 3000f;
+        private const float DISTANCE_SCALE = 10000f;
         private LayoutSignature? _lastSignature;
 
         public Dictionary<TextObj, LabeledPoint> LabeledPoints => _labeledPoints;
@@ -389,15 +392,16 @@ namespace ZedGraph
             var start2 = targets[p2];
             var end2 = placements[p2];
 
-            var minAx = Math.Min(start1.X, end1.X);
-            var maxAx = Math.Max(start1.X, end1.X);
-            var minAy = Math.Min(start1.Y, end1.Y);
-            var maxAy = Math.Max(start1.Y, end1.Y);
+            // Expanded bounding boxes that include both label rectangle and connector endpoints
+            var minAx = Math.Min(Math.Min(rect1.Left, rect1.Right), Math.Min(start1.X, end1.X));
+            var maxAx = Math.Max(Math.Max(rect1.Left, rect1.Right), Math.Max(start1.X, end1.X));
+            var minAy = Math.Min(Math.Min(rect1.Top, rect1.Bottom), Math.Min(start1.Y, end1.Y));
+            var maxAy = Math.Max(Math.Max(rect1.Top, rect1.Bottom), Math.Max(start1.Y, end1.Y));
 
-            var minBx = Math.Min(start2.X, end2.X);
-            var maxBx = Math.Max(start2.X, end2.X);
-            var minBy = Math.Min(start2.Y, end2.Y);
-            var maxBy = Math.Max(start2.Y, end2.Y);
+            var minBx = Math.Min(Math.Min(rect2.Left, rect2.Right), Math.Min(start2.X, end2.X));
+            var maxBx = Math.Max(Math.Max(rect2.Left, rect2.Right), Math.Max(start2.X, end2.X));
+            var minBy = Math.Min(Math.Min(rect2.Top, rect2.Bottom), Math.Min(start2.Y, end2.Y));
+            var maxBy = Math.Max(Math.Max(rect2.Top, rect2.Bottom), Math.Max(start2.Y, end2.Y));
 
             if (maxAx >= minBx && maxBx >= minAx && maxAy >= minBy && maxBy >= minAy)
             {
@@ -407,7 +411,26 @@ namespace ZedGraph
                     cost += CROSSOVER_PENALTY;
             }
 
+            // Penalize when a connector crosses the other label's rectangle
+            if (SegmentIntersectsRect(start1, end1, rect2))
+                cost += CONNECTOR_LABEL_OVERLAP_PENALTY;
+            if (SegmentIntersectsRect(start2, end2, rect1))
+                cost += CONNECTOR_LABEL_OVERLAP_PENALTY;
+
             return cost;
+        }
+
+        double RecomputeTotal(Dictionary<LabeledPoint, PointF> placements, Dictionary<LabeledPoint, SizeF> labelSizes,
+            Dictionary<LabeledPoint, PointF> targetPoints, Dictionary<LabeledPoint, RectangleF> targetMarkers)
+        {
+            double total = 0;
+            foreach (var p in placements.Keys)
+                total += BaseCost(p, labelSizes, targetPoints, targetMarkers, placements);
+            var plist = placements.Keys.ToList();
+            for (int i = 0; i < plist.Count; i++)
+            for (int j = i + 1; j < plist.Count; j++)
+                total += PairCost(plist[i], plist[j], labelSizes, targetPoints, placements);
+            return total;
         }
 
         /// <summary>
@@ -441,6 +464,7 @@ namespace ZedGraph
             var placements = new Dictionary<LabeledPoint, PointF>();    // label top-center positions
             var fixedPoints = new HashSet<LabeledPoint>();
             var movablePoints = new List<LabeledPoint>();
+            var avgLabelLength = labelSizes.Values.Any() ? labelSizes.Values.Average(sz => sz.Width) : _cellSize;
             // Place saved points first, build the list of points that have to be optimized
             foreach (var point in points)
             {
@@ -460,7 +484,9 @@ namespace ZedGraph
                 else
                 {
                     var target = targetPoints[point];
-                    var initial = new PointF(target.X, target.Y - size.Height - 2);
+                    // Start near the point with a random offset on the order of the average label length
+                    var offsetMag = avgLabelLength * 2f;
+                    var initial = new PointF(target.X + GetRandom(offsetMag), target.Y - size.Height - 2 + GetRandom(offsetMag));
                     placements[point] = ClampToAllowed(initial, size);
                     movablePoints.Add(point);
                 }
@@ -485,62 +511,82 @@ namespace ZedGraph
                 }
             }
 
-            float currentCost = baseCosts.Values.Sum() + pairSum / 2;
+            float currentCost = baseCosts.Values.Sum() + pairSum;
+            //var realCost = RecomputeTotal(placements, labelSizes, targetPoints, targetMarkers);
 
             var startTemp = 10.0f;
             var minTemp = 0.1f;
             var cooling = 0.995f;
-            var maxIterations = Math.Max(400, points.Count * 120);
+            var maxIterations = Math.Max(400, points.Count * 200);
+            var acceptanceScale = 1.0f * points.Count;
             var bestPlacement = CopyPlacement(placements);
             var bestCost = currentCost;
-
-            for (var iter = 0; iter < maxIterations; iter++)
+            var logPath = Path.Combine(Environment.CurrentDirectory, $"LabelLayoutAnneal.csv");
+            if (File.Exists(logPath))
+                File.Delete(logPath);
+            using (var log = new StreamWriter(logPath))
             {
-                var temp = startTemp * (float)Math.Pow(cooling, iter);
-                if (temp < minTemp || !movablePoints.Any())
-                    break;
+                log.WriteLine("iteration,point_count,temperature,cost, delta, jump");
 
-                var point = movablePoints[_randGenerator.Next(movablePoints.Count)];
-                var step = _cellSize * (0.5f + temp);
-                var proposed = placements[point] + new SizeF(GetRandom(step), GetRandom(step));
-                proposed = ClampToAllowed(proposed, labelSizes[point]);
-                var currentPos = placements[point];
-
-                // Remove old contributions for this point
-                var removedBase = baseCosts[point];
-                var removedPair = pairCosts[point].Values.Sum();
-                var removedCost = removedBase + removedPair / 2;
-                placements[point] = proposed;
-
-                var newBase = BaseCost(point, labelSizes, targetPoints, targetMarkers, placements);
-                float newPairSum = 0;
-                foreach (var other in pointList)
+                for (var iter = 0; iter < maxIterations; iter++)
                 {
-                    if (ReferenceEquals(other, point))
-                        continue;
-                    var cost = PairCost(point, other, labelSizes, targetPoints, placements);
-                    pairCosts[point][other] = cost;
-                    pairCosts[other][point] = cost;
-                    newPairSum += cost;
-                }
-                var addedCost = newBase + newPairSum / 2;
+                    var temp = startTemp * (float)Math.Pow(cooling, iter);
+                    if (temp < minTemp || !movablePoints.Any())
+                        break;
 
-                var newCost = currentCost - removedCost + addedCost;
-                var delta = newCost - currentCost;
-                var accept = delta < 0 || Math.Exp(-delta / Math.Max(temp, 0.0001f)) > _randGenerator.NextDouble();
-                if (accept)
-                {
-                    baseCosts[point] = newBase;
-                    currentCost = newCost;
-                    if (newCost < bestCost)
+                    var point = movablePoints[_randGenerator.Next(movablePoints.Count)];
+                    var step = _cellSize * (0.5f + temp);
+                    var proposed = placements[point] + new SizeF(GetRandom(step), GetRandom(step));
+                    proposed = ClampToAllowed(proposed, labelSizes[point]);
+                    var currentPos = placements[point];
+
+                    // Remove old contributions for this point
+                    var removedBase = baseCosts[point];
+                    var removedPair = pairCosts[point].Values.Sum();
+                    var removedCost = removedBase + removedPair;
+                    placements[point] = proposed;
+
+                    var newBase = BaseCost(point, labelSizes, targetPoints, targetMarkers, placements);
+                    var oldPairs = new Dictionary<LabeledPoint, float>(pairCosts[point]);
+                    float newPairSum = 0;
+                    foreach (var other in pointList)
                     {
-                        bestCost = newCost;
-                        bestPlacement = CopyPlacement(placements);
+                        if (ReferenceEquals(other, point))
+                            continue;
+                        var cost = PairCost(point, other, labelSizes, targetPoints, placements);
+                        pairCosts[point][other] = cost;
+                        pairCosts[other][point] = cost;
+                        newPairSum += cost;
                     }
-                }
-                else
-                {
-                    placements[point] = currentPos;
+                    var addedCost = newBase + newPairSum;
+
+                    var newCost = currentCost - removedCost + addedCost;
+                    //realCost = RecomputeTotal(placements, labelSizes, targetPoints, targetMarkers);
+                    var delta = newCost - currentCost;
+
+                    var accept = delta < 0 || Math.Exp(-delta / Math.Max(temp, 0.0001f)/acceptanceScale) > _randGenerator.NextDouble();
+                    if (accept)
+                    {
+                        baseCosts[point] = newBase;
+                        currentCost = newCost;
+                        if (newCost < bestCost)
+                        {
+                            bestCost = newCost;
+                            bestPlacement = CopyPlacement(placements);
+                        }
+                    }
+                    else
+                    {
+                        placements[point] = currentPos;
+                        foreach (var kvp in oldPairs)
+                        {
+                            pairCosts[point][kvp.Key] = kvp.Value;
+                            pairCosts[kvp.Key][point] = kvp.Value;
+                        }
+                    }
+                    var jump = accept && delta > 0 ? 1 : 0;
+                    log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString()},{currentCost.ToString()}, {delta.ToString()}, {jump}");
+
                 }
             }
 
@@ -670,6 +716,32 @@ namespace ZedGraph
             rect.Location += new SizeF(-size, size);
             rect.Width += size2;
             rect.Height += size2;
+        }
+
+        private static bool SegmentIntersectsRect(PointF a, PointF b, RectangleF rect)
+        {
+            // Quick reject on bounding boxes
+            var minX = Math.Min(a.X, b.X);
+            var maxX = Math.Max(a.X, b.X);
+            var minY = Math.Min(a.Y, b.Y);
+            var maxY = Math.Max(a.Y, b.Y);
+            if (maxX < rect.Left || minX > rect.Right || maxY < rect.Top || minY > rect.Bottom)
+                return false;
+
+            // If either endpoint inside rect, it's an overlap
+            if (rect.Contains(a) || rect.Contains(b))
+                return true;
+
+            var tl = rect.Location;
+            var tr = new PointF(rect.Right, rect.Top);
+            var bl = new PointF(rect.Left, rect.Bottom);
+            var br = new PointF(rect.Right, rect.Bottom);
+
+            var seg = new VectorF(a, b);
+            return seg.DoIntersect(new VectorF(tl, tr)) ||
+                   seg.DoIntersect(new VectorF(tr, br)) ||
+                   seg.DoIntersect(new VectorF(br, bl)) ||
+                   seg.DoIntersect(new VectorF(bl, tl));
         }
 
         private struct LayoutSignature
