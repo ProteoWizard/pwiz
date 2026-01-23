@@ -97,6 +97,7 @@
     <Compile Include="PInvoke\User32TestExtensions.cs" />
     <Compile Include="RunTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScreenshotComparisonResults.cs" />
     <Compile Include="TestRunnerContext.cs" />
   </ItemGroup>
   <ItemGroup>
