@@ -1358,6 +1358,9 @@ MS/MS谱图库。</value>
   <data name="tbxMaxPeakWidthVariation.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
+  <data name="tbxMaxPeakWidthVariation.ToolTip" xml:space="preserve">
+    <value>当峰宽度与得分最高的重复测定相差超过此数值时，将调整峰边界。</value>
+  </data>
   <data name="&gt;&gt;tbxMaxPeakWidthVariation.Name" xml:space="preserve">
     <value>tbxMaxPeakWidthVariation</value>
   </data>
@@ -1381,6 +1384,9 @@ MS/MS谱图库。</value>
   </data>
   <data name="lblMaxPeakWidthVariation.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
+  </data>
+  <data name="lblMaxPeakWidthVariation.Text" xml:space="preserve">
+    <value>宽度增量大于(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;lblMaxPeakWidthVariation.Name" xml:space="preserve">
     <value>lblMaxPeakWidthVariation</value>
@@ -1433,6 +1439,9 @@ MS/MS谱图库。</value>
   <data name="tbxMaxRtShift.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="tbxMaxRtShift.ToolTip" xml:space="preserve">
+    <value>当峰中心时间与得分最高的重复测定相差超过此距离时，将调整峰边界。</value>
+  </data>
   <data name="&gt;&gt;tbxMaxRtShift.Name" xml:space="preserve">
     <value>tbxMaxRtShift</value>
   </data>
@@ -1456,6 +1465,9 @@ MS/MS谱图库。</value>
   </data>
   <data name="lblMaxRtShift.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
+  </data>
+  <data name="lblMaxRtShift.Text" xml:space="preserve">
+    <value>保留时间增量大于(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;lblMaxRtShift.Name" xml:space="preserve">
     <value>lblMaxRtShift</value>
@@ -1481,6 +1493,12 @@ MS/MS谱图库。</value>
   <data name="cbxImputeMissingPeaks.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
+  <data name="cbxImputeMissingPeaks.Text" xml:space="preserve">
+    <value>缺失峰(&amp;M)</value>
+  </data>
+  <data name="cbxImputeMissingPeaks.ToolTip" xml:space="preserve">
+    <value>如果选中，缺失峰将移动以匹配得分最高的重复测定。</value>
+  </data>
   <data name="&gt;&gt;cbxImputeMissingPeaks.Name" xml:space="preserve">
     <value>cbxImputeMissingPeaks</value>
   </data>
@@ -1501,6 +1519,13 @@ MS/MS谱图库。</value>
   </data>
   <data name="groupBoxPeakImputation.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
+  </data>
+  <data name="groupBoxPeakImputation.Text" xml:space="preserve">
+    <value>对以下对象进行边界插补</value>
+  </data>
+  <data name="groupBoxPeakImputation.ToolTip" xml:space="preserve">
+    <value>峰边界插补是一个选择性执行的过程，可以在使用峰得分模型重新合并峰时，或在使用来自谱图库的明确峰边界时执行。
+</value>
   </data>
   <data name="&gt;&gt;groupBoxPeakImputation.Name" xml:space="preserve">
     <value>groupBoxPeakImputation</value>
@@ -1576,6 +1601,9 @@ MS/MS谱图库。</value>
   </data>
   <data name="lblRunToRunAlignment.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
+  </data>
+  <data name="lblRunToRunAlignment.Text" xml:space="preserve">
+    <value>运行间校准(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;lblRunToRunAlignment.Name" xml:space="preserve">
     <value>lblRunToRunAlignment</value>

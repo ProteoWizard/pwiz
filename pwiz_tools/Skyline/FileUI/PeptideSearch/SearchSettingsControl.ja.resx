@@ -504,6 +504,9 @@
   <data name="searchEngineComboBox.Items3" xml:space="preserve">
     <value>Comet</value>
   </data>
+  <data name="searchEngineComboBox.Items4" xml:space="preserve">
+    <value>Tide-Search</value>
+  </data>
   <data name="searchEngineComboBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 39</value>
   </data>
@@ -912,6 +915,9 @@ TPP pepXMLでは、この値は最小PeptideProphet確率です。Mascotでは�
   </data>
   <data name="btnEditSearchTools.TabIndex" type="System.Int32, mscorlib">
     <value>20</value>
+  </data>
+  <data name="btnEditSearchTools.Text" xml:space="preserve">
+    <value>検索ツールを編集(&amp;T)</value>
   </data>
   <data name="&gt;&gt;btnEditSearchTools.Name" xml:space="preserve">
     <value>btnEditSearchTools</value>

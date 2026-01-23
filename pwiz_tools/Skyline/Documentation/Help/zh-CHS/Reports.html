@@ -173,8 +173,8 @@ td {
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
 <tr><td class="ColumnCaption">重复测定</td><td class="ColumnDescription">重复测定</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">重复测定</a></td></tr>
-<tr><td class="ColumnCaption">分子列表丰度</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue">AbundanceValue</a></td></tr>
+<tr><td class="ColumnCaption">分子列表丰度</td><td class="ColumnDescription">一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue">AbundanceValue</a></td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.Databinding.Collections.ResultKey"><span class="RowType">ResultKey</span>
@@ -216,7 +216,7 @@ Usually the sum of the transition peak areas, but may be different depending on 
 <div id="pwiz.Skyline.Model.Databinding.Entities.Precursor"><span class="RowType">母离子</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">分子</td><td class="ColumnDescription">Molecules belong to Molecule Lists and contain Precursors.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">分子</a></td></tr>
+<tr><td class="ColumnCaption">分子</td><td class="ColumnDescription">分子属于分子列表并包含母离子。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">分子</a></td></tr>
 <tr><td class="ColumnCaption">离子对</td><td class="ColumnDescription">离子对</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">离子对</a> 列表</td></tr>
 <tr><td class="ColumnCaption">母离子结果（多个）</td><td class="ColumnDescription">母离子结果（多个）</td><td class="ColumnType">ResultKey 到 <a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">母离子结果（单个）</a> 的图谱</td></tr>
 <tr><td class="ColumnCaption">母离子结果摘要</td><td class="ColumnDescription">母离子结果摘要</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary">PrecursorResultSummary</a></td></tr>
@@ -281,16 +281,16 @@ Usually the sum of the transition peak areas, but may be different depending on 
 诱饵质荷比</td><td class="ColumnType">Int32</td></tr>
 <tr><td class="ColumnCaption">自动选择离子对</td><td class="ColumnDescription">如果为“true”，则 Skyline 将根据离子对设置筛选器、谱图库等自动添加或删除母离子中的离子对。</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">目标定性离子比</td><td class="ColumnDescription">所有未从校准排除的外部标准重复测定中定性离子比值的平均值。</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary Peak</td><td class="ColumnDescription">Best-scoring peak either from one of the Replicates in the document or one of the explicit peak boundaries from a library</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
+<tr><td class="ColumnCaption">范例峰</td><td class="ColumnDescription">文档中任一重复测定或库中任一明确峰边界中得分最高的峰</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Exemplary Retention Time</td><td class="ColumnDescription">Normalized retention time of the apex of the best-scoring peak</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary Start Time</td><td class="ColumnDescription">Normalized start retention time of the peak from the best-scoring replicate or library file</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary End Time</td><td class="ColumnDescription">Normalized end retention time of the peak from the best-scoring replicate or library file</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary Score</td><td class="ColumnDescription">Score of the highest scoring peak in either a replicate or a library</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary Replicate Name</td><td class="ColumnDescription">Name of the replicate with the best-scoring peak</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Exemplary Library Name</td><td class="ColumnDescription">Name of the library with the best-scoring peak</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Exemplary File Path</td><td class="ColumnDescription">File path of the result file with the best-scoring peak</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">范例保留时间</td><td class="ColumnDescription">得分最高的峰顶点的归一化保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例起始时间</td><td class="ColumnDescription">来自得分最高的重复测定或库文件的峰归一化起点保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例结束时间</td><td class="ColumnDescription">来自得分最高的重复测定或库文件的峰归一化结束保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例得分</td><td class="ColumnDescription">重复测定或库中得分最高的峰得分</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">范例重复测定名称</td><td class="ColumnDescription">得分最高的峰重复测定名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">范例库名称</td><td class="ColumnDescription">得分最高的峰库名称</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">范例文件路径</td><td class="ColumnDescription">得分最高的峰结果文件路径</td><td class="ColumnType">String</td></tr>
 </table>
 
 </td></tr>
@@ -428,12 +428,12 @@ Usually the sum of the transition peak areas, but may be different depending on 
 <div id="pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue"><span class="RowType">AbundanceValue</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Molecule List Abundance Raw</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Available even when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">分子列表丰度精确值</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子列表丰度原始值</td><td class="ColumnDescription">一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+在缺失的数据影响到重复测定之间的比较时仍可获取。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子列表丰度精确值</td><td class="ColumnDescription">一个表示分子列表丰度的数值。
+通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
+在缺失的数据影响到重复测定之间的比较时不可获取。</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">分子列表丰度消息</td><td class="ColumnDescription">如果缺失的数据影响到比较重复测定之间的“分子列表丰度”，则发出警告</td><td class="ColumnType">String</td></tr>
 </table>
 
@@ -635,34 +635,34 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 </table>
 
 </td></tr>
-<tr><td class="ColumnCaption">初始峰</td><td class="ColumnDescription">Peak boundaries chosen by Skyline during chromatogram extraction</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td class="ColumnCaption">初始峰</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 选定的峰边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Original Retention Time</td><td class="ColumnDescription">Retention time of the apex of the peak chosen by Skyline during the initial chromatogram extraction</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Original Start Time</td><td class="ColumnDescription">Start retention time of the peak chosen by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Original End Time</td><td class="ColumnDescription">End retention time of the peak chosen by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Original Score</td><td class="ColumnDescription">Peak score assigned by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">原始保留时间</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 选定的峰顶点保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">原始起始时间</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 选定的峰起始保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">原始结束时间</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 选定的峰结束保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">原始得分</td><td class="ColumnDescription">色谱图提取过程中由 Skyline 分配的峰得分</td><td class="ColumnType">Double</td></tr>
 </table>
 
 </td></tr>
-<tr><td class="ColumnCaption">Reintegrated Peak</td><td class="ColumnDescription">Peak boundaries of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td class="ColumnCaption">重新合并峰</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Reintegrated Retention Time</td><td class="ColumnDescription">Retention time of the apex of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Reintegrated Start Time</td><td class="ColumnDescription">Start retention time of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Reintegrated End Time</td><td class="ColumnDescription">End retention time of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Reintegrated Score</td><td class="ColumnDescription">Score assigned to the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新合并保留时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰顶点保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新合并起始时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰起始保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新合并结束时间</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时选定的峰结束保留时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">重新合并得分</td><td class="ColumnDescription">与训练好的峰得分模型重新合并时分配的峰得分</td><td class="ColumnType">Double</td></tr>
 </table>
 
 </td></tr>
 <tr><td class="ColumnCaption">母离子重复测定注释</td><td class="ColumnDescription">与使用结果网格的母离子结果集
 相关的自由文字注释。</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">分子结果</td><td class="ColumnDescription">分子结果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">分子结果</a></td></tr>
-<tr><td class="ColumnCaption">Imputed Peak</td><td class="ColumnDescription">Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
+<tr><td class="ColumnCaption">插补峰</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时的峰边界</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Imputed Start Time</td><td class="ColumnDescription">Start time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Imputed End Time</td><td class="ColumnDescription">End time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">插补起始时间</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的起始时间</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">插补结束时间</td><td class="ColumnDescription">基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的结束时间</td><td class="ColumnType">Double</td></tr>
 </table>
 
 </td></tr>
@@ -750,7 +750,7 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 <tr><td class="ColumnCaption">离子对结果为 MS1</td><td class="ColumnDescription">此结果是否从 MS1 扫描获取。</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">母离子结果（单个）</td><td class="ColumnDescription">母离子结果（单个）</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">母离子结果（单个）</a></td></tr>
 <tr><td class="ColumnCaption">离子对结果定位器</td><td class="ColumnDescription">文档内的离子对结果特殊标识符。这以“TransitionResult:”开头，并通常以重复测定名称结束，但可能包含最优步和结果文件的额外属性。</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Transition Ion Metrics</td><td class="ColumnDescription">Values related to the number of ions in the mass spectrometer</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">Transition Ion Metrics</a></td></tr>
+<tr><td class="ColumnCaption">转移离子指标</td><td class="ColumnDescription">与质谱仪中离子数量相关的数值</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">转移离子指标</a></td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult"><span class="RowType">PrecursorQuantificationResult</span>
@@ -823,11 +823,11 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 </td></tr>
 </table>
 
-<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">Transition Ion Metrics</span>
+<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">转移离子指标</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">LC Peak Transition Ion Count</td><td class="ColumnDescription">Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Apex Transition Ion Count</td><td class="ColumnDescription">Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LC 峰转移离子计数</td><td class="ColumnDescription">离子对强度与峰积分边界间 MS2 谱图进样时间的乘积之和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">顶点转移离子计数</td><td class="ColumnDescription">光谱中强度最高的提取离子强度对应的强度值与进样时间的乘积</td><td class="ColumnType">Double</td></tr>
 </table>
 
 

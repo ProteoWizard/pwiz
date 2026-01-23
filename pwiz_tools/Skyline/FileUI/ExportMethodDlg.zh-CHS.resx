@@ -229,6 +229,9 @@
   <data name="wcDecideBuckets.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
+  <data name="wcDecideBuckets.Text" xml:space="preserve">
+    <value>让 waters_connect 决定(&amp;L)</value>
+  </data>
   <data name="wcDecideBuckets.ToolTip" xml:space="preserve">
     <value>根据允许的最多离子对数量，创建所需的任意数量的文件。</value>
   </data>
@@ -582,15 +585,8 @@
     <value>30</value>
   </data>
   <data name="textTemplateFile.ToolTip" xml:space="preserve">
-    <value>Existing method file containing settings that will be used in the exported method.
-A single template transition may also be required for transition values not controlled by Skyline.</value>
-    <comment>Needs Review:English text changed
-Old English:Existing method file containing settings that will be used in the exported method.
-A single template transition may also be required for transition values not controled by Skyline.
-Current English:Existing method file containing settings that will be used in the exported method.
-A single template transition may also be required for transition values not controlled by Skyline.
-Old Localized:现有方法文件包含将用在导出方法中的设置。
-对于不受 Skyline 控制的离子对值，也可能需要单一模式离子对。</comment>
+    <value>包含将用于导出方法设置的现有方法文件。
+对于不受 Skyline 控制的转移值，可能还需要一个单独的模板转移。</value>
   </data>
   <data name="&gt;&gt;textTemplateFile.Name" xml:space="preserve">
     <value>textTemplateFile</value>
