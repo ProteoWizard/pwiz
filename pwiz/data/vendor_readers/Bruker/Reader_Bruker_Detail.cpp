@@ -389,8 +389,7 @@ PWIZ_API_DECL pwiz::cv::CVID traceUnitToCVID(TraceUnit unit, double& value)
         case TraceUnit::Flow_mul_min:
             return UO_microliters_per_minute;
         case TraceUnit::Pressure_bar:
-            value *= 100000.0; // convert bar to Pa (1 bar = 100000 Pa)
-            return UO_pascal;
+            return UO_bar;
         case TraceUnit::Percent:
             return UO_percent;
         case TraceUnit::Temperature_C:
@@ -434,8 +433,8 @@ PWIZ_API_DECL pwiz::cv::CVID traceUnitToCVID(TraceUnit unit, double& value)
             value /= 1000.0; // convert mW to W
             return UO_watt;
         case TraceUnit::Pressure_mbar:
-            value *= 100.0; // convert mbar to Pa (1 mbar = 100 Pa)
-            return UO_pascal;
+            value /= 1000.0; // convert mbar to bar (1 bar = 1000 mbar)
+            return UO_bar;
         case TraceUnit::Pressure_kPa:
             value *= 1000.0; // convert kPa to Pa
             return UO_pascal;
