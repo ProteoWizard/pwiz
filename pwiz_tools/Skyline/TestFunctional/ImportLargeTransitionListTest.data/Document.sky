@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="25.1" software_version="Skyline (64-bit) 25.1.0.237 (519d29babc)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin/P" cut="KR" no_cut="" sense="C" />
+      <digest_settings max_missed_cleavages="9" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2" />
+      <peptide_filter start="0" min_length="2" max_length="144" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="4" max_neutral_losses="1">
+        <heavy_modifications />
+      </peptide_modifications>
+      <peptide_integration>
+        <legacy_peak_scoring_model name="Gennabio_V66_trypsin_mod_lys" bias="-28.667007476327342">
+          <peak_feature_calculator type="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCalc" weight="1.9420385961106139" />
+          <peak_feature_calculator type="pwiz.Skyline.Model.Results.Scoring.LegacyUnforcedCountScoreDefaultCalc" weight="1.9420385961106139" />
+          <peak_feature_calculator type="pwiz.Skyline.Model.Results.Scoring.LegacyIdentifiedCountCalc" weight="38.840771922212276" />
+          <peak_feature_calculator type="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCorrelationCalc" weight="5.8261157883318422" />
+          <peak_feature_calculator type="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedShapeCalc" weight="7.7681543844424557" />
+          <peak_feature_calculator type="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultWeightedCoElutionCalc" weight="-0.0971019298055307" />
+          <peak_feature_calculator type="pwiz.Skyline.Model.Results.Scoring.MQuestRetentionTimePredictionCalc" weight="-1.3594270172774297" />
+        </legacy_peak_scoring_model>
+      </peptide_integration>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="Waters Xevo" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.037" intercept="-1.066" />
+          <regression_ce charge="3" slope="0.036" intercept="-1.328" />
+        </predict_collision_energy>
+      </transition_prediction>
+      <transition_filter precursor_charges="1,2,3,4,5,6,7,8,9" product_charges="1,2,3,4,5,6,7,8,9" precursor_adducts="[M+],[M+H]" product_adducts="[M+]" fragment_types="p,b,y" small_molecule_fragment_types="f,p" fragment_range_first="ion 1" fragment_range_last="last ion" precursor_mz_window="0" auto_select="true" />
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="6" pick_from="all_plus" />
+      <transition_integration integrate_all="true">
+        <synchronize_integration group_by="" all="true" />
+      </transition_integration>
+      <transition_instrument min_mz="75" max_mz="2000" mz_match_tolerance="0.055" />
+      <transition_full_scan acquisition_method="DDA" product_mass_analyzer="tof" product_res="20000" precursor_isotopes="Percent" precursor_isotope_filter="20" precursor_mass_analyzer="tof" precursor_res="20000" retention_time_filter_type="ms2_ids" retention_time_filter_length="5">
+        <isotope_enrichments name="Default">
+          <atom_percent_enrichment symbol="H'">0.98</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="C'">0.995</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="C&quot;">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="N'">0.995</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="O&quot;">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="O'">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="Cl'">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="Br'">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="P'">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="S&quot;">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="S'">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="H&quot;">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="Cu'">0.99</atom_percent_enrichment>
+        </isotope_enrichments>
+      </transition_full_scan>
+    </transition_settings>
+    <data_settings document_guid="bca930f5-42d2-43df-a4b5-25ef6c8de26c" audit_logging="true" />
+  </settings_summary>
+</srm_settings>
