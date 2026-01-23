@@ -64,6 +64,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
     </Reference>
+    <Reference Include="JetBrains.Profiler.Api">
+      <HintPath>..\..\Shared\Lib\Test\JetBrains.Profiler.Api.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Condition="'$(Platform)' == 'x86'" Include="TestDiagnostics">
       <HintPath>..\..\Shared\ProteowizardWrapper\obj\x86\TestDiagnostics.dll</HintPath>
