@@ -31,11 +31,22 @@ namespace Shimadzu {
 using namespace pwiz::cv;
 
 
+namespace {
+
+    enum MatchType
+    {
+        Exact,
+        Contains
+    };
+
+} // namespace
+
 struct InstrumentNameToModelMapping
 {
 
     const char* name;
     CVID modelType;
+    MatchType matchType;
 };
 
 extern const std::vector<InstrumentNameToModelMapping> nameToModelMapping;
