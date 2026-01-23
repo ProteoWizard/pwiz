@@ -61,12 +61,49 @@ namespace pwiz.Skyline.Model
         public List<PasteError> ErrorList { get; set; }
         public bool HasHeaders { get; set; }
 
+        // Batching support: collect pending transitions to add them in bulk
+        // Key is the path to the transition group, value is the list of transitions to add
+        private Dictionary<IdentityPath, List<TransitionDocNode>> _pendingTransitions;
+
         protected SmallMoleculeTransitionListReader()
         {
             Rows = new List<Row>();
             ErrorList = new List<PasteError>();
             LibraryIntensities = new Dictionary<Tuple<Peptide, TransitionGroup, Transition>, List<double>>();
             IRTs = new Dictionary<Peptide, HashSet<double>>(); // We take the median IRT for different isotopic labels
+            _pendingTransitions = new Dictionary<IdentityPath, List<TransitionDocNode>>();
+        }
+
+        /// <summary>
+        /// Queue a transition to be added to the document later in a batch.
+        /// This avoids O(n^2) behavior when adding many transitions to the same group.
+        /// </summary>
+        private void QueueTransitionForBatch(IdentityPath pathGroup, TransitionDocNode tranNode)
+        {
+            if (!_pendingTransitions.TryGetValue(pathGroup, out var transitions))
+            {
+                transitions = new List<TransitionDocNode>();
+                _pendingTransitions[pathGroup] = transitions;
+            }
+            transitions.Add(tranNode);
+        }
+
+        /// <summary>
+        /// Add all pending transitions to the document in batches.
+        /// </summary>
+        private SrmDocument FlushPendingTransitions(SrmDocument document)
+        {
+            foreach (var kvp in _pendingTransitions)
+            {
+                var pathGroup = kvp.Key;
+                var transitions = kvp.Value;
+                if (transitions.Count > 0)
+                {
+                    document = (SrmDocument)document.AddAll(pathGroup, transitions.Cast<DocNode>());
+                }
+            }
+            _pendingTransitions.Clear();
+            return document;
         }
 
         public class Row
@@ -204,6 +241,9 @@ namespace pwiz.Skyline.Model
             {
                 return null;
             }
+
+            // Flush any pending batched transitions before finalizing the document
+            document = FlushPendingTransitions(document);
 
             document = document.EndDeferSettingsChanges(docStart, null); // Process deferred calls to SetDocumentType etc
 
@@ -436,6 +476,7 @@ namespace pwiz.Skyline.Model
                                     tranGroup.TransitionGroup, tranGroup.ExplicitValues);
                                 if (tranNode == null)
                                     return true;
+                                // Check for duplicates in the existing document
                                 foreach (var tran in tranGroup.Transitions)
                                 {
                                     if (Equals(tranNode.Transition.CustomIon, tran.Transition.CustomIon))
@@ -445,9 +486,23 @@ namespace pwiz.Skyline.Model
                                     }
                                 }
 
+                                // Also check for duplicates in the pending batch
+                                if (!tranFound && _pendingTransitions.TryGetValue(pathGroup, out var pendingTrans))
+                                {
+                                    foreach (var pendingTran in pendingTrans)
+                                    {
+                                        if (Equals(tranNode.Transition.CustomIon, pendingTran.Transition.CustomIon))
+                                        {
+                                            tranFound = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
                                 if (!tranFound)
                                 {
-                                    document = (SrmDocument) document.Add(pathGroup, tranNode);
+                                    // Batch transitions to avoid O(n^2) behavior when adding many to the same group
+                                    QueueTransitionForBatch(pathGroup, tranNode);
                                     _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
                                 }
                             }
