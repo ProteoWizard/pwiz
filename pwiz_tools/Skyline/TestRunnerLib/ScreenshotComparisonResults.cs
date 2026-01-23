@@ -28,6 +28,8 @@ namespace TestRunnerLib
     /// </summary>
     public static class ScreenshotComparisonResults
     {
+        public const string SCREENSHOT_DIFFS_DIRECTORY = "ScreenshotDiffs";
+
         private static readonly List<TestScreenshotResults> _testResults = new List<TestScreenshotResults>();
 
         /// <summary>
@@ -49,6 +51,14 @@ namespace TestRunnerLib
         /// Total number of screenshots that failed comparison across all tests.
         /// </summary>
         public static int FailedCount => _testResults.Sum(t => t.FailedCount);
+
+        /// <summary>
+        /// Checks if a test has already been compared (to avoid duplicate comparisons in multiple iterations).
+        /// </summary>
+        public static bool HasTestBeenCompared(string testName)
+        {
+            return _testResults.Any(t => t.TestName == testName);
+        }
 
         /// <summary>
         /// Adds results for a single test.

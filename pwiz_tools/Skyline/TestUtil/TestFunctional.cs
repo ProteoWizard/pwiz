@@ -1968,7 +1968,10 @@ namespace pwiz.SkylineTestUtil
                 var form = !fullScreen ? TryWaitForOpenForm(formType) : SkylineWindow;
                 Assert.IsNotNull(form);
             }
-            if (Program.SkylineOffscreen && !IsScreenshotComparisonMode)
+            // Allow screenshot comparison in offscreen mode, but only in pass 2 and only once per test
+            bool shouldCompareScreenshots = IsScreenshotComparisonMode && TestPass == 2 &&
+                !ScreenshotComparisonResults.HasTestBeenCompared(TestContext.TestName);
+            if (Program.SkylineOffscreen && !shouldCompareScreenshots)
                 return;
 
             if (IsDemoMode)
@@ -1998,7 +2001,8 @@ namespace pwiz.SkylineTestUtil
                     Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
                     _shotManager.ActivateScreenshotForm(screenshotForm);
 
-                    if (IsScreenshotComparisonMode)
+                    // Screenshot comparison only runs in pass 2 and only once per test
+                    if (shouldCompareScreenshots)
                     {
                         if (ScreenshotComparer == null)
                         {
@@ -2011,7 +2015,7 @@ namespace pwiz.SkylineTestUtil
                         var shotPic = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot);
                         var result = ScreenshotComparer.Compare(ScreenshotCounter, shotPic);
                     }
-                    else
+                    else if (!IsScreenshotComparisonMode)
                     {
                         // Original behavior - save to file
                         var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
@@ -2662,12 +2666,13 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+
         private void EndTest()
         {
             // Finalize screenshot comparison results if active
             if (IsScreenshotComparisonMode && ScreenshotComparer != null)
             {
-                var outputFolder = Path.Combine(TestContext.TestDir, "ScreenshotDiffs");
+                var outputFolder = Path.Combine(TestContext.TestDir, ScreenshotComparisonResults.SCREENSHOT_DIFFS_DIRECTORY);
                 var testName = TestContext.TestName;
                 ScreenshotComparer.FinalizeResults(outputFolder, testName);
                 ScreenshotComparer = null; // Reset for next test

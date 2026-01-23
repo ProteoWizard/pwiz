@@ -746,6 +746,9 @@ namespace TestRunnerLib
                 abandonedFilesList.Remove(unicodeSubDir);
             }
 
+            // Don't report ScreenshotDiffs directory as abandoned - it's intentionally preserved
+            abandonedFilesList.RemoveAll(entry => entry.EndsWith(ScreenshotComparisonResults.SCREENSHOT_DIFFS_DIRECTORY));
+
             return abandonedFilesList;
         }
 
