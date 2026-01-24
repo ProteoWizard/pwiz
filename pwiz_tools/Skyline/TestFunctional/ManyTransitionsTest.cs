@@ -15,7 +15,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mb_0000.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("thousand.sky")));
             WaitForDocumentLoaded();
             WaitForGraphs();
             RunUI(()=>SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo(2, 0));
