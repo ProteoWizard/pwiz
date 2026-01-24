@@ -70,10 +70,16 @@ namespace pwiz.Skyline.Model.Irt
 
         public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
         {
+            IProgressStatus status = new ProgressStatus();
+            return Initialize(loadMonitor, ref status);
+        }
+
+        public RCalcIrt Initialize(IProgressMonitor progressMonitor, ref IProgressStatus status)
+        {
             if (_database != null)
                 return this;
 
-            var database = IrtDb.GetIrtDb(DatabasePath, loadMonitor);
+            var database = IrtDb.GetIrtDb(DatabasePath, progressMonitor, ref status);
             // Check for the case where an exception was handled by the progress monitor
             if (database == null)
                 return null;
@@ -563,7 +569,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static string PersistAsSmallMolecules(string currentPersistencePath, string pathDestDir = null, IrtDb database = null)
         {
-            database ??= IrtDb.GetIrtDb(currentPersistencePath, null);
+            database ??= IrtDb.GetIrtDb(currentPersistencePath);
             pathDestDir ??= Path.GetDirectoryName(currentPersistencePath) ?? string.Empty;
 
             var persistPath = Path.Combine(pathDestDir, Path.GetFileName(currentPersistencePath) ?? string.Empty);  // ReSharper
