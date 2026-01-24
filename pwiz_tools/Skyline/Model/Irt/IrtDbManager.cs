@@ -16,8 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Linq;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
@@ -91,6 +93,26 @@ namespace pwiz.Skyline.Model.Irt
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
+            var loadMonitor = new LoadMonitor(this, container, document);
+            var status = new ProgressStatus();
+
+            try
+            {
+                return LoadBackgroundInner(container, document, docCurrent, loadMonitor, status);
+            }
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+                loadMonitor.UpdateProgress(status.ChangeErrorException(x));
+                EndProcessing(document);
+                return false;
+            }
+        }
+
+        private bool LoadBackgroundInner(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent,
+            ILoadMonitor loadMonitor, IProgressStatus status)
+        {
             var calc = GetIrtCalculator(docCurrent);
             if (calc != null && !calc.IsUsable)
                 calc = LoadCalculator(container, calc);
@@ -111,6 +133,7 @@ namespace pwiz.Skyline.Model.Irt
                     library.Add(pep);
             }
 
+            bool needsReload = false;
             if (calc.IsUsable)
             {
                 // Watch out for stale db read
@@ -119,14 +142,26 @@ namespace pwiz.Skyline.Model.Irt
                 if (standards.Any(s => !calcStandardPeptides.Contains(s.ModifiedTarget)) ||
                     library.Any(l => !calcLibraryPeptides.Contains(l.ModifiedTarget)))
                 {
-                    calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null));
+                    needsReload = true;
                 }
             }
 
             var duplicates = IrtDb.CheckForDuplicates(standards, library);
-            if (duplicates != null && duplicates.Any())
+            bool hasDuplicates = duplicates != null && duplicates.Any();
+
+            if (needsReload || hasDuplicates)
             {
-                calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null).RemoveDuplicateLibraryPeptides());
+                var db = IrtDb.GetIrtDb(calc.DatabasePath, loadMonitor);
+                if (db == null)
+                {
+                    EndProcessing(document);
+                    return false;  // Error already reported through loadMonitor
+                }
+                if (hasDuplicates)
+                {
+                    db = db.RemoveDuplicateLibraryPeptides();
+                }
+                calc = calc.ChangeDatabase(db);
             }
 
             var rtRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
