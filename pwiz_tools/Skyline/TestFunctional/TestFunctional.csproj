@@ -178,6 +178,7 @@
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
     <Compile Include="ImportLargeTransitionListTest.cs" />
+    <Compile Include="ManyTransitionsTest.cs" />
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
