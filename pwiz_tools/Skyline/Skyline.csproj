@@ -2165,6 +2165,7 @@
     <Compile Include="Model\Results\ChromDataProvider.cs" />
     <Compile Include="Model\Results\ChromDataSet.cs" />
     <Compile Include="Model\Results\ChromHeaderInfo.cs" />
+    <Compile Include="Model\Results\ChromTransitionMatcher.cs" />
     <Compile Include="Model\Results\ChromInfoData.cs" />
     <Compile Include="Model\Results\Crawdad\Crawdads.cs" />
     <Compile Include="Model\Results\IonMobilityFinder.cs" />

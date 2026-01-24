@@ -2271,6 +2271,7 @@ namespace pwiz.Skyline.Model.Results
         protected IList<float> _scores;
         private TimeIntensitiesGroup _timeIntensitiesGroup;
         private TimeIntensities[] _interpolatedTimeIntensities;
+        private ChromTransitionMatcher _transitionMatcher;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      FeatureNames scoreTypeIndices,
@@ -2522,28 +2523,31 @@ namespace pwiz.Skyline.Model.Results
             return new OptStepChromatograms(listChromInfo, regression.StepCount);
         }
 
-        private int? GetBestProductIndex(TransitionDocNode nodeTran, float tolerance)
+        private ChromTransitionMatcher TransitionMatcher
         {
-            var productMz = nodeTran?.Mz ?? SignedMz.ZERO;
-            var startTran = _groupHeaderInfo.StartTransitionIndex;
-            var endTran = startTran + _groupHeaderInfo.NumTransitions;
-
-            int? iNearest = null;
-            var deltaNearestMz = double.MaxValue;
-            for (var i = startTran; i < endTran; i++)
+            get
             {
-                if (!IsProductGlobalMatch(i, nodeTran, tolerance) || _allTransitions[i].OptimizationStep != 0)
-                    continue;
-
-                var deltaMz = Math.Abs(productMz - GetProductGlobal(i));
-                if (deltaMz < deltaNearestMz)
-            {
-                    iNearest = i;
-                    deltaNearestMz = deltaMz;
+                if (_transitionMatcher == null)
+                {
+                    var startTran = _groupHeaderInfo.StartTransitionIndex;
+                    var transitions = ReadOnlyList.Create(_groupHeaderInfo.NumTransitions,
+                        i => _allTransitions[startTran + i]);
+                    _transitionMatcher = new ChromTransitionMatcher(transitions);
+                }
+                return _transitionMatcher;
             }
         }
 
-            return iNearest;
+        private int? GetBestProductIndex(TransitionDocNode nodeTran, float tolerance)
+        {
+            var productMz = nodeTran?.Mz ?? SignedMz.ZERO;
+
+            // Check sign match
+            if (productMz.IsNegative != _groupHeaderInfo.NegativeCharge)
+                return null;
+
+            return TransitionMatcher.GetBestProductIndex(productMz.Value, tolerance, nodeTran?.IsMs1) +
+                   _groupHeaderInfo.StartTransitionIndex;
         }
 
         public ChromPeak GetTransitionPeak(int transitionIndex, int peakIndex)
