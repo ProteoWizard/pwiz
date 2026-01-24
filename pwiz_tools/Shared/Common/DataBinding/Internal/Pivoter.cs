@@ -38,6 +38,7 @@ namespace pwiz.Common.DataBinding.Internal
     /// </summary>
     internal class Pivoter
     {
+        private ValueCache _valueCache = new ValueCache();
         /// <summary>
         /// Pivoter Constructor.  Initializes many lists of ColumnDescriptors that
         /// get used while doing the work of expanding, aggregating, and pivoting.
@@ -117,7 +118,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 object key = keys == null ? index : keys[index];
-                var child = rowItem.SetRowKey(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key));
+                var child = rowItem.SetRowKey(_valueCache.CacheValue(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key)));
                 return Expand(cancellationToken, child, sublistColumnIndex + 1);
             });
         }
