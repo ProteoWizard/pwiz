@@ -1150,6 +1150,7 @@ class ScanInfoImpl : public ScanInfo
     virtual double frequency() const {return frequency_;}
     virtual bool FAIMSOn() const {return faimsOn_;}
     virtual double compensationVoltage() const {return compensationVoltage_;}
+    virtual double sourceOffsetVoltage() const {return sourceOffsetVoltage_;}
 
     virtual bool isConstantNeutralLoss() const { return constantNeutralLoss_;};
     virtual double analyzerScanOffset() const { return analyzerScanOffset_;};
@@ -1217,6 +1218,7 @@ class ScanInfoImpl : public ScanInfo
     double frequency_;
     bool faimsOn_;
     double compensationVoltage_;
+    double sourceOffsetVoltage_;
     double saEnergy_;
     std::vector<double> spsMasses_;
 
@@ -1317,6 +1319,7 @@ void ScanInfoImpl::initialize()
         frequency_ = (0);
         faimsOn_ = (false);
         compensationVoltage_ = (0);
+        sourceOffsetVoltage_ = (0);
         saEnergy_ = (0);
         statusLogInitialized_ = (false);
         statusLogSize_ = (0);
@@ -1592,6 +1595,7 @@ void ScanInfoImpl::parseFilterString()
     isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
 	faimsOn_ = filterParser.faimsOn_ == TriBool_True;
 	compensationVoltage_ = filterParser.compensationVoltage_;
+    sourceOffsetVoltage_ = filterParser.sourceOffsetVoltage_;
     constantNeutralLoss_ = filterParser.constantNeutralLoss_;
     analyzerScanOffset_ = filterParser.analyzer_scan_offset_;
 
@@ -1677,6 +1681,7 @@ void ScanInfoImpl::parseFilterString()
         isCentroidScan_ = filter_->ScanData == ThermoEnum::ScanDataType::Centroid;
         faimsOn_ = filter_->CompensationVoltage == ThermoEnum::TriState::On;
         compensationVoltage_ = faimsOn_ ? filter_->CompensationVoltageValue(0) : 0;
+        sourceOffsetVoltage_ = isSourceCID_ ? filter_->SourceFragmentationValue(0) : 0;
 
         for (int i=0; i < filter_->MassRangeCount; ++i)
             scanRanges_.push_back(make_pair(filter_->GetMassRange(i)->Low, filter_->GetMassRange(i)->High));

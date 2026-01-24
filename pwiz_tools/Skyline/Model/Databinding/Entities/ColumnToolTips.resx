@@ -1588,6 +1588,9 @@ file, or the file name again for other file types.</value>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="SourceOffsetVoltage">
+    <value>DV voltage applied at the ion source</value>
+  </data>
   <data name="SpectrumFilter">
     <value>Extra criteria that spectra must pass to be included in the extracted ion chromatogram</value>
   </data>

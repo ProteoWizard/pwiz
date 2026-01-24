@@ -304,6 +304,7 @@ class PWIZ_API_DECL ScanInfo
     virtual double frequency() const = 0;
     virtual bool FAIMSOn() const = 0;
     virtual double compensationVoltage() const = 0;
+    virtual double sourceOffsetVoltage() const = 0;
 
     virtual bool isConstantNeutralLoss() const = 0;
     virtual double analyzerScanOffset() const = 0;
@@ -396,7 +397,7 @@ struct PWIZ_API_DECL InstrumentData
     // Device suggested label of X axis
     std::string AxisLabelX;
 
-    // Device suggested label of Y axis (name for units of data, such as "°C")
+    // Device suggested label of Y axis (name for units of data, such as "Â°C")
     std::string AxisLabelY;
 };
 
