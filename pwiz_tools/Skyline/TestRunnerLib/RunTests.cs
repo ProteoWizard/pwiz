@@ -155,6 +155,16 @@ namespace TestRunnerLib
         public bool IsParallelClient { get; private set; }
         public string ParallelClientId { get; private set; }
 
+        // dotMemory snapshot configuration - set both > 0 to enable automatic snapshots
+        // When running under dotMemory profiler, snapshots will be taken:
+        //   1. After DotMemoryWarmupRuns iterations (baseline)
+        //   2. After DotMemoryWarmupRuns + DotMemoryWaitRuns iterations (analysis)
+        public int DotMemoryWarmupRuns { get; set; }
+        public int DotMemoryWaitRuns { get; set; }
+        public bool DotMemoryCollectAllocations { get; set; } // Collect allocation stack traces
+        private int _dotMemoryIterationCount;
+        private string _dotMemoryTestName;
+
         public bool ReportSystemHeaps
         {
             get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
@@ -294,6 +304,15 @@ namespace TestRunnerLib
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
             TeamCityStartTest(test, pass);
+
+            // Track iterations for dotMemory snapshots
+            var currentTestName = test.TestMethod.Name;
+            if (_dotMemoryTestName != currentTestName)
+            {
+                _dotMemoryTestName = currentTestName;
+                _dotMemoryIterationCount = 0;
+            }
+            _dotMemoryIterationCount++;
 
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
@@ -480,6 +499,10 @@ namespace TestRunnerLib
             // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
             _process.Refresh();
+
+            // Take dotMemory snapshots at configured iteration counts
+            TakeDotMemorySnapshotIfNeeded(test.TestMethod.Name);
+
             var heapCounts = ReportSystemHeaps
                 ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
                 : new MemoryManagement.HeapAllocationSizes[1];
@@ -1126,7 +1149,7 @@ namespace TestRunnerLib
         [StringFormatMethod("info")]
 
         // N.B. not thread safe, use the non-static version (which calls this) from any RunTests object
-        public static void Log(StreamWriter log, string info, params object[] args) 
+        public static void Log(StreamWriter log, string info, params object[] args)
         {
             Console.Write(info, args);
             Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
@@ -1134,6 +1157,34 @@ namespace TestRunnerLib
             {
                 log.Write(info, args);
                 log.Flush();
+            }
+        }
+
+        /// <summary>
+        /// Takes dotMemory snapshots at configured iteration counts when running under dotMemory profiler.
+        /// Set DotMemoryWarmupRuns and DotMemoryWaitRuns to enable automatic snapshots.
+        /// </summary>
+        private void TakeDotMemorySnapshotIfNeeded(string testName)
+        {
+            // Early exit if not configured - MemoryProfiler is never called,
+            // so JetBrains.Profiler.Api assembly is never loaded
+            if (DotMemoryWarmupRuns <= 0 || DotMemoryWaitRuns <= 0)
+                return;
+
+            // Pass through setting (applied on first Snapshot call)
+            MemoryProfiler.CollectAllocations = DotMemoryCollectAllocations;
+
+            if (_dotMemoryIterationCount == DotMemoryWarmupRuns)
+            {
+                var snapshotName = $"{testName}_Warmup_After{DotMemoryWarmupRuns}";
+                Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
+                MemoryProfiler.Snapshot(snapshotName);
+            }
+            else if (_dotMemoryIterationCount == DotMemoryWarmupRuns + DotMemoryWaitRuns)
+            {
+                var snapshotName = $"{testName}_Analysis_After{DotMemoryWarmupRuns + DotMemoryWaitRuns}";
+                Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
+                MemoryProfiler.Snapshot(snapshotName);
             }
         }
 
