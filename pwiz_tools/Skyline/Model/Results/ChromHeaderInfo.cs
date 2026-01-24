@@ -2271,7 +2271,6 @@ namespace pwiz.Skyline.Model.Results
         protected IList<float> _scores;
         private TimeIntensitiesGroup _timeIntensitiesGroup;
         private TimeIntensities[] _interpolatedTimeIntensities;
-        private bool? _transitionsSortedByMz;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      FeatureNames scoreTypeIndices,
@@ -2326,14 +2325,6 @@ namespace pwiz.Skyline.Model.Results
         public int NumPeaks { get { return _groupHeaderInfo.NumPeaks; } }
         public int MaxPeakIndex { get { return _groupHeaderInfo.MaxPeakIndex; } }
         public int BestPeakIndex { get { return MaxPeakIndex; } }
-
-        // True if transitions are sorted by m/z. Old documents may not be sorted.
-        public bool AreTransitionsSortedByMz()
-        {
-            return _transitionsSortedByMz ??= Enumerable
-                .Range(_groupHeaderInfo.StartTransitionIndex + 1, _groupHeaderInfo.NumTransitions - 1)
-                .All(i => _allTransitions[i].Product >= _allTransitions[i - 1].Product);
-        }
 
         [Browsable(false)]
         public TimeIntensitiesGroup TimeIntensitiesGroup
@@ -2537,67 +2528,21 @@ namespace pwiz.Skyline.Model.Results
             var startTran = _groupHeaderInfo.StartTransitionIndex;
             var endTran = startTran + _groupHeaderInfo.NumTransitions;
 
-            // Check sign match
-            if (productMz.IsNegative != _groupHeaderInfo.NegativeCharge)
-                return null;
-
-            double targetMz = productMz.Value;
-            double minMz = targetMz - tolerance;
-            double maxMz = targetMz + tolerance;
-
-            int lo = startTran;
-            bool sorted = AreTransitionsSortedByMz();
-
-            if (sorted)
-            {
-                // Binary search to skip elements below minMz
-                int hi = endTran;
-                while (lo < hi)
-                {
-                    int mid = lo + (hi - lo) / 2;
-                    if (_allTransitions[mid].Product < minMz)
-                        lo = mid + 1;
-                    else
-                        hi = mid;
-                }
-            }
-
-            // Scan candidates within tolerance range
             int? iNearest = null;
             var deltaNearestMz = double.MaxValue;
-            for (int i = lo; i < endTran; i++)
+            for (var i = startTran; i < endTran; i++)
             {
-                var product = _allTransitions[i].Product;
-                if (sorted && product > maxMz)
-                    break;
-                if (product < minMz || product > maxMz)
+                if (!IsProductGlobalMatch(i, nodeTran, tolerance) || _allTransitions[i].OptimizationStep != 0)
                     continue;
-                iNearest = CheckTransitionMatch(i, nodeTran, targetMz, iNearest, ref deltaNearestMz);
-            }
 
-            return iNearest;
+                var deltaMz = Math.Abs(productMz - GetProductGlobal(i));
+                if (deltaMz < deltaNearestMz)
+            {
+                    iNearest = i;
+                    deltaNearestMz = deltaMz;
+            }
         }
 
-        private int? CheckTransitionMatch(int i, TransitionDocNode nodeTran, double targetMz,
-            int? iNearest, ref double deltaNearestMz)
-        {
-            var chromTransition = _allTransitions[i];
-
-            if (chromTransition.OptimizationStep != 0)
-                return iNearest;
-
-            // Fragment transitions cannot match MS1 chromatograms
-            var source = chromTransition.Source;
-            bool isMs1Source = source == ChromSource.ms1 || source == ChromSource.sim;
-            if (isMs1Source && nodeTran != null && !nodeTran.IsMs1)
-                return iNearest;
-
-            var deltaMz = Math.Abs(targetMz - chromTransition.Product);
-            if (deltaMz < deltaNearestMz)
-            {
-                deltaNearestMz = deltaMz;
-                return i;
-            }
             return iNearest;
         }
 
