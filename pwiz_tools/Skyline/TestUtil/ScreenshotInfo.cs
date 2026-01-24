@@ -182,6 +182,12 @@ namespace pwiz.SkylineTestUtil
 
     internal class ScreenshotDiff
     {
+        /// <summary>
+        /// Height of Windows title bar in pixels (at 100% DPI).
+        /// This is used to exclude title bar differences from comparison.
+        /// </summary>
+        public const int TITLE_BAR_HEIGHT = 32;
+
         private readonly Size _sizeOld;
         private readonly byte[] _memoryOld;
         private readonly Size _sizeNew;
@@ -212,6 +218,56 @@ namespace pwiz.SkylineTestUtil
         public bool BytesDiffer => _memoryOld.Length != _memoryNew.Length || !_memoryOld.SequenceEqual(_memoryNew);
         public Bitmap HighlightedImage { get; private set; }
         public int PixelCount { get; private set; }
+        public int PixelCountInTitleBar { get; private set; }
+
+        /// <summary>
+        /// Gets the percentage of pixels that differ between the two screenshots.
+        /// Returns 100.0 if the sizes don't match.
+        /// </summary>
+        public double DiffPercentage
+        {
+            get
+            {
+                if (SizesDiffer)
+                    return 100.0; // Completely different if sizes don't match
+                int totalPixels = _sizeOld.Width * _sizeOld.Height;
+                return totalPixels > 0 ? (100.0 * PixelCount / totalPixels) : 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the percentage of pixels that differ, excluding the title bar area.
+        /// This is useful for ignoring differences in window titles, timestamps, etc.
+        /// Returns 100.0 if the sizes don't match.
+        /// </summary>
+        public double DiffPercentageWithoutTitleBar
+        {
+            get
+            {
+                if (SizesDiffer)
+                    return 100.0;
+                int titleBarPixels = _sizeOld.Width * Math.Min(TITLE_BAR_HEIGHT, _sizeOld.Height);
+                int totalPixelsWithoutTitleBar = _sizeOld.Width * _sizeOld.Height - titleBarPixels;
+                int diffPixelsWithoutTitleBar = PixelCount - PixelCountInTitleBar;
+                return totalPixelsWithoutTitleBar > 0 ? (100.0 * diffPixelsWithoutTitleBar / totalPixelsWithoutTitleBar) : 0;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the difference percentage exceeds the given threshold.
+        /// </summary>
+        public bool ExceedsThreshold(double thresholdPercent)
+        {
+            return DiffPercentage > thresholdPercent;
+        }
+
+        /// <summary>
+        /// Checks if the difference percentage (excluding title bar) exceeds the given threshold.
+        /// </summary>
+        public bool ExceedsThresholdWithoutTitleBar(double thresholdPercent)
+        {
+            return DiffPercentageWithoutTitleBar > thresholdPercent;
+        }
 
         public string DiffText
         {
@@ -260,8 +316,10 @@ namespace pwiz.SkylineTestUtil
             var alpha = highlightColor.A;
 
             PixelCount = 0;
+            PixelCountInTitleBar = 0;
             for (int y = 0; y < bmpOld.Height; y++)
             {
+                bool inTitleBar = y < TITLE_BAR_HEIGHT;
                 for (int x = 0; x < bmpOld.Width; x++)
                 {
                     var pixel1 = bmpOld.GetPixel(x, y);
@@ -277,6 +335,8 @@ namespace pwiz.SkylineTestUtil
                         );
                         result.SetPixel(x, y, blendedColor);
                         PixelCount++;
+                        if (inTitleBar)
+                            PixelCountInTitleBar++;
                     }
                     else
                     {

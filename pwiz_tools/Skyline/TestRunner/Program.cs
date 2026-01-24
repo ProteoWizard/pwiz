@@ -1837,7 +1837,11 @@ namespace TestRunner
             }
 
             Console.WriteLine($"Tests finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
-            return runTests.FailureCount == 0;
+
+            // Generate screenshot comparison report if screenshot comparison mode was used
+            bool screenshotComparisonPassed = GenerateScreenshotComparisonReport(runTests);
+
+            return runTests.FailureCount == 0 && screenshotComparisonPassed;
         }
 
         //
@@ -1885,6 +1889,30 @@ namespace TestRunner
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Outputs screenshot comparison report if screenshot comparison mode was used.
+        /// </summary>
+        /// <returns>True if no screenshot comparison failures, false if there were failures.</returns>
+        private static bool GenerateScreenshotComparisonReport(RunTests runTests)
+        {
+            if (!ScreenshotComparisonResults.IsActive)
+                return true; // No comparison was done, so no failures
+
+            if (!string.IsNullOrEmpty(ScreenshotComparisonResults.Report))
+            {
+                runTests.Log("\r\n");
+                runTests.Log(ScreenshotComparisonResults.Report);
+                runTests.Log("\r\n");
+            }
+
+            if (!string.IsNullOrEmpty(ScreenshotComparisonResults.DiffImagesFolder))
+            {
+                runTests.Log($"# Screenshot diff images saved to: {ScreenshotComparisonResults.DiffImagesFolder}\r\n");
+            }
+
+            return ScreenshotComparisonResults.FailedCount == 0;
         }
 
         /// <summary>
@@ -2193,6 +2221,12 @@ namespace TestRunner
                 Console.WriteLine("# No failures.\n");
             foreach (var failure in errorList)
                 Console.WriteLine(failure);
+            if (ScreenshotComparisonResults.IsActive)
+            {
+                int failed = ScreenshotComparisonResults.FailedCount;
+                int total = ScreenshotComparisonResults.PassedCount + failed;
+                Console.WriteLine($"# {failed} out of {total} screenshot comparisons failed.");
+            }
 
             if (leakList.Count > 0)
             {

@@ -1320,16 +1320,42 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsAutoScreenShotMode
         {
-            get { return _isAutoScreenShotMode || Program.PauseSeconds == -3; } // -3 is the magic number SkylineTester uses to indicate cover shot mode
+            // -3 is auto screenshot mode, -4 is screenshot comparison mode (which also enables auto screenshot mode)
+            get { return _isAutoScreenShotMode || Program.PauseSeconds == -3 || Program.PauseSeconds == -4; }
             set
             {
                 _isAutoScreenShotMode = value;
                 if (_isAutoScreenShotMode)
                 {
-                    Program.PauseSeconds = -3; // -3 is the magic number SkylineTester uses to indicate cover shot mode
+                    Program.PauseSeconds = -3;
                 }
             }
         }
+
+        private static bool _isScreenshotComparisonMode;
+
+        /// <summary>
+        /// When true, screenshots are compared against existing local screenshots instead of being saved.
+        /// This also enables <see cref="IsAutoScreenShotMode"/>.
+        /// </summary>
+        public static bool IsScreenshotComparisonMode
+        {
+            get { return _isScreenshotComparisonMode || Program.PauseSeconds == -4; } // -4 is the magic number for screenshot comparison mode
+            set
+            {
+                _isScreenshotComparisonMode = value;
+                if (_isScreenshotComparisonMode)
+                {
+                    Program.PauseSeconds = -4; // -4 is the magic number for screenshot comparison mode
+                }
+            }
+        }
+
+        /// <summary>
+        /// The screenshot comparer used when <see cref="IsScreenshotComparisonMode"/> is true.
+        /// Set this before running the test, typically in the test setup.
+        /// </summary>
+        public static ScreenshotComparer ScreenshotComparer { get; set; }
 
         public static bool IsTranslationRequired => (IsAutoScreenShotMode || IsCoverShotMode) &&
                                                     !Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture));
@@ -1942,7 +1968,10 @@ namespace pwiz.SkylineTestUtil
                 var form = !fullScreen ? TryWaitForOpenForm(formType) : SkylineWindow;
                 Assert.IsNotNull(form);
             }
-            if (Program.SkylineOffscreen)
+            // Allow screenshot comparison in offscreen mode, but only in pass 2 and only once per test
+            bool shouldCompareScreenshots = IsScreenshotComparisonMode && TestPass == 2 &&
+                !ScreenshotComparisonResults.HasTestBeenCompared(TestContext.TestName);
+            if (Program.SkylineOffscreen && !shouldCompareScreenshots)
                 return;
 
             if (IsDemoMode)
@@ -1971,8 +2000,27 @@ namespace pwiz.SkylineTestUtil
                 {
                     Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
                     _shotManager.ActivateScreenshotForm(screenshotForm);
-                    var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
-                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
+
+                    // Screenshot comparison only runs in pass 2 and only once per test
+                    if (shouldCompareScreenshots)
+                    {
+                        if (ScreenshotComparer == null)
+                        {
+                            if (CoverShotName.IsNullOrEmpty())
+                                throw new InvalidOperationException(@"ScreenshotComparer only works for tutorials with CoverShotName.");
+                            ScreenshotComparer = new ScreenshotComparer(TutorialPath);
+                        }
+
+                        // Compare instead of saving
+                        var shotPic = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot);
+                        var result = ScreenshotComparer.Compare(ScreenshotCounter, shotPic);
+                    }
+                    else if (!IsScreenshotComparisonMode)
+                    {
+                        // Original behavior - save to file
+                        var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
+                        _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
+                    }
                 }
                 else
                 {
@@ -2618,8 +2666,18 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+
         private void EndTest()
         {
+            // Finalize screenshot comparison results if active
+            if (IsScreenshotComparisonMode && ScreenshotComparer != null)
+            {
+                var outputFolder = Path.Combine(TestContext.TestDir, ScreenshotComparisonResults.SCREENSHOT_DIFFS_DIRECTORY);
+                var testName = TestContext.TestName;
+                ScreenshotComparer.FinalizeResults(outputFolder, testName);
+                ScreenshotComparer = null; // Reset for next test
+            }
+
             if (_pauseAndContinueForm is { IsDisposed: false })
             {
                 RunUI(() => _pauseAndContinueForm.Close());
