@@ -2500,20 +2500,48 @@ namespace pwiz.Skyline.Model.Results
             var startTran = _groupHeaderInfo.StartTransitionIndex;
             var endTran = startTran + _groupHeaderInfo.NumTransitions;
 
+            // Check sign match
+            if (productMz.IsNegative != _groupHeaderInfo.NegativeCharge)
+                return null;
+
+            double targetMz = productMz.Value;
+            double minMz = targetMz - tolerance;
+            double maxMz = targetMz + tolerance;
+
+            // Binary search for the lower bound (transitions are sorted by m/z)
+            int lo = startTran, hi = endTran;
+            while (lo < hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                if (_allTransitions[mid].Product < minMz)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+
+            // Scan candidates within tolerance range
             int? iNearest = null;
             var deltaNearestMz = double.MaxValue;
-            for (var i = startTran; i < endTran; i++)
+            for (int i = lo; i < endTran && _allTransitions[i].Product <= maxMz; i++)
             {
-                if (!IsProductGlobalMatch(i, nodeTran, tolerance) || _allTransitions[i].OptimizationStep != 0)
+                var chromTransition = _allTransitions[i];
+
+                if (chromTransition.OptimizationStep != 0)
                     continue;
 
-                var deltaMz = Math.Abs(productMz - GetProductGlobal(i));
+                // Fragment transitions cannot match MS1 chromatograms
+                var source = chromTransition.Source;
+                bool isMs1Source = source == ChromSource.ms1 || source == ChromSource.sim;
+                if (isMs1Source && nodeTran != null && !nodeTran.IsMs1)
+                    continue;
+
+                var deltaMz = Math.Abs(targetMz - chromTransition.Product);
                 if (deltaMz < deltaNearestMz)
-            {
+                {
                     iNearest = i;
                     deltaNearestMz = deltaMz;
+                }
             }
-        }
 
             return iNearest;
         }
