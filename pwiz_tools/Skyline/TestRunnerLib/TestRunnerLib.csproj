@@ -90,6 +90,7 @@
     <Compile Include="FormLookup.cs" />
     <Compile Include="FormSeen.cs" />
     <Compile Include="InvokeSkyline.cs" />
+    <Compile Include="MemoryProfiler.cs" />
     <Compile Include="MiniDump.cs" />
     <Compile Include="PInvoke\DwmapiTest.cs" />
     <Compile Include="PInvoke\Gdi32Test.cs" />

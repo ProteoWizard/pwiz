@@ -29,7 +29,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
-using JetBrains.Profiler.Api;
 using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -162,6 +161,7 @@ namespace TestRunnerLib
         //   2. After DotMemoryWarmupRuns + DotMemoryWaitRuns iterations (analysis)
         public int DotMemoryWarmupRuns { get; set; }
         public int DotMemoryWaitRuns { get; set; }
+        public bool DotMemoryCollectAllocations { get; set; } // Collect allocation stack traces
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
@@ -1166,24 +1166,25 @@ namespace TestRunnerLib
         /// </summary>
         private void TakeDotMemorySnapshotIfNeeded(string testName)
         {
+            // Early exit if not configured - MemoryProfiler is never called,
+            // so JetBrains.Profiler.Api assembly is never loaded
             if (DotMemoryWarmupRuns <= 0 || DotMemoryWaitRuns <= 0)
                 return;
 
-            // Check if dotMemory profiler is attached
-            if ((MemoryProfiler.GetFeatures() & MemoryFeatures.Ready) == 0)
-                return;
+            // Pass through setting (applied on first Snapshot call)
+            MemoryProfiler.CollectAllocations = DotMemoryCollectAllocations;
 
             if (_dotMemoryIterationCount == DotMemoryWarmupRuns)
             {
                 var snapshotName = $"{testName}_Warmup_After{DotMemoryWarmupRuns}";
                 Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
-                MemoryProfiler.GetSnapshot(snapshotName);
+                MemoryProfiler.Snapshot(snapshotName);
             }
             else if (_dotMemoryIterationCount == DotMemoryWarmupRuns + DotMemoryWaitRuns)
             {
                 var snapshotName = $"{testName}_Analysis_After{DotMemoryWarmupRuns + DotMemoryWaitRuns}";
                 Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
-                MemoryProfiler.GetSnapshot(snapshotName);
+                MemoryProfiler.Snapshot(snapshotName);
             }
         }
 
