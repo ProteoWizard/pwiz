@@ -261,7 +261,7 @@ namespace TestRunner
             "teamcitytestdecoration=off;teamcitytestsuite=;teamcitycleanup=off;" +
             "verbose=off;listonly;showheader=on;" +
             "reportheaps=off;reporthandles=off;sorthandlesbycount=off;" +
-            "dotmemorywarmup=0;dotmemorywaitruns=0;dotmemorycollectallocations=off";
+            "dotmemorywarmup=5;dotmemorywaitruns=0;dotmemorycollectallocations=off";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -1487,7 +1487,7 @@ namespace TestRunner
             // Configure dotMemory snapshot settings if wait runs specified
             if (dotMemoryWaitRuns > 0)
             {
-                runTests.DotMemoryWarmupRuns = dotMemoryWarmup > 0 ? dotMemoryWarmup : 5;
+                runTests.DotMemoryWarmupRuns = dotMemoryWarmup;
                 runTests.DotMemoryWaitRuns = dotMemoryWaitRuns;
                 runTests.DotMemoryCollectAllocations = dotMemoryCollectAllocations;
             }
