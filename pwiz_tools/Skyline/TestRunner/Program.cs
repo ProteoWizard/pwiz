@@ -260,7 +260,8 @@ namespace TestRunner
             "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;" +
             "teamcitytestdecoration=off;teamcitytestsuite=;teamcitycleanup=off;" +
             "verbose=off;listonly;showheader=on;" +
-            "reportheaps=off;reporthandles=off;sorthandlesbycount=off";
+            "reportheaps=off;reporthandles=off;sorthandlesbycount=off;" +
+            "dotmemorywarmup=0;dotmemorywaitruns=0;dotmemorycollectallocations=off";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -1404,6 +1405,9 @@ namespace TestRunner
             bool reportHeaps = commandLineArgs.ArgAsBool("reportheaps");
             bool reportHandles = commandLineArgs.ArgAsBool("reporthandles");
             bool sortHandlesByCount = commandLineArgs.ArgAsBool("sorthandlesbycount");
+            int dotMemoryWarmup = (int) commandLineArgs.ArgAsLong("dotmemorywarmup");
+            int dotMemoryWaitRuns = (int) commandLineArgs.ArgAsLong("dotmemorywaitruns");
+            bool dotMemoryCollectAllocations = commandLineArgs.ArgAsBool("dotmemorycollectallocations");
             string parallelMode = commandLineArgs.ArgAsString("parallelmode");
             bool serverMode = parallelMode == "server";
             bool clientMode = parallelMode == "client";
@@ -1479,6 +1483,14 @@ namespace TestRunner
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
                 results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
+
+            // Configure dotMemory snapshot settings if wait runs specified
+            if (dotMemoryWaitRuns > 0)
+            {
+                runTests.DotMemoryWarmupRuns = dotMemoryWarmup > 0 ? dotMemoryWarmup : 5;
+                runTests.DotMemoryWaitRuns = dotMemoryWaitRuns;
+                runTests.DotMemoryCollectAllocations = dotMemoryCollectAllocations;
+            }
 
             var timer = new Stopwatch();
             timer.Start();
