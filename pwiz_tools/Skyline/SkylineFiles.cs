@@ -2427,7 +2427,7 @@ namespace pwiz.Skyline
                     }
                 }
                 var dbPath = calcIrt.DatabasePath;
-                db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+                db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath) : IrtDb.CreateIrtDb(dbPath);
             }
             else
             {
