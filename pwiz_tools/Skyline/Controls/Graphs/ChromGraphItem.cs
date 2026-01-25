@@ -65,9 +65,9 @@ namespace pwiz.Skyline.Controls.Graphs
             return fontSpec;
         }
 
-        private readonly double[] _measuredTimes;
+        private readonly IList<float> _measuredTimes;
         private readonly double[] _displayTimes;
-        private readonly double[] _intensities;
+        private readonly IList<float> _intensities;
         private readonly FontSpec _fontSpec;
         private readonly int _width;
 
@@ -121,22 +121,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (chromatogram == null)
             {
-                _measuredTimes = new double[0];
-                _displayTimes = _measuredTimes;
-                _intensities = new double[0];
+                _measuredTimes = Array.Empty<float>();
+                _displayTimes = Array.Empty<double>();
+                _intensities = Array.Empty<float>();
             }
             else
             {
-                // Cache values early to avoid accessing slow enumerators
-                // which show up under profiling.
-                Chromatogram.AsArrays(out _measuredTimes, out _intensities);
+                Chromatogram.GetTimesAndIntensities(out _measuredTimes, out _intensities);
                 if (TimeRegressionFunction == null)
                 {
-                    _displayTimes = _measuredTimes;
+                    _displayTimes = _measuredTimes.Select(t => (double)t).ToArray();
                 }
                 else
                 {
-                    _displayTimes = _measuredTimes.Select(TimeRegressionFunction.GetY).ToArray();
+                    _displayTimes = _measuredTimes.Select(t => TimeRegressionFunction.GetY(t)).ToArray();
                 }
                 // Add peak times to hash set for labeling
                 int iLastStart = 0;
@@ -322,7 +320,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                return new PointPairList(_displayTimes, _intensities);
+                return new PointPairList(_displayTimes, _intensities.Select(i => (double)i).ToArray());
             }
         }
 
@@ -683,12 +681,12 @@ namespace pwiz.Skyline.Controls.Graphs
             // Search forward for the start of the peak
             // This position is retained as the start of the next search, since
             // peaks are not guaranteed to be non-overlapping.
-            while (iLastStart < _measuredTimes.Length && _measuredTimes[iLastStart] < startTime)
+            while (iLastStart < _measuredTimes.Count && _measuredTimes[iLastStart] < startTime)
                 iLastStart++;
             // Search forward for the maximum intensity until the end of the peak is reached
             int maxIndex = -1;
             double maxIntensity = 0;
-            for (int iPoint = iLastStart; iPoint < _measuredTimes.Length && _measuredTimes[iPoint] < endTime; iPoint++)
+            for (int iPoint = iLastStart; iPoint < _measuredTimes.Count && _measuredTimes[iPoint] < endTime; iPoint++)
             {
                 if (_intensities[iPoint] > maxIntensity)
                 {
@@ -955,16 +953,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var peak = Chromatogram.GetPeak(closestLabelIndex);
             float rt = peak.RetentionTime;
-            int iTime = Array.BinarySearch(_measuredTimes, rt);
-            if (iTime < 0)
-            {
-                iTime = ~iTime;
-                if (iTime > _measuredTimes.Length - 1 ||
-                    (iTime > 0 && Math.Abs(rt - _measuredTimes[iTime]) > Math.Abs(rt - _measuredTimes[iTime - 1])))
-                {
-                    iTime--;
-                }
-            }
+            int iTime = NearestIndex(_measuredTimes, rt);
             return new ScaledRetentionTime(rt, _displayTimes[iTime]);
         }
 
@@ -1023,16 +1012,22 @@ namespace pwiz.Skyline.Controls.Graphs
             return NearestIndex(_measuredTimes, measuredTime);
         }
 
-        private static int NearestIndex(double[] sortedArray, double value)
+        private static int NearestIndex(IList<float> sortedList, double value)
         {
-            int index = Array.BinarySearch(sortedArray, value);
-            if (index < 0)
+            int lo = 0;
+            int hi = sortedList.Count;
+            while (lo < hi)
             {
-                index = ~index;
-                if (index == sortedArray.Length || (index > 0 && sortedArray[index] - value > value - sortedArray[index - 1]))
-                {
-                    index--;
-                }
+                int mid = lo + (hi - lo) / 2;
+                if (sortedList[mid] < value)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+            int index = lo;
+            if (index == sortedList.Count || (index > 0 && sortedList[index] - value > value - sortedList[index - 1]))
+            {
+                index--;
             }
             return index;
         }

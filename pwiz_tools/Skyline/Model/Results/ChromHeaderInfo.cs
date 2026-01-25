@@ -2943,28 +2943,29 @@ namespace pwiz.Skyline.Model.Results
             return minDelta < 0.001 ? iMin : -1;
         }
 
-        public void AsArrays(out double[] times, out double[] intensities)
+        /// <summary>
+        /// Returns the times and intensities to be displayed on the chromatogram graph.
+        /// Periods where the mass spectrometer was not acquiring data are replaced with NaN.
+        /// </summary>
+        public void GetTimesAndIntensities(out IList<float> times, out IList<float> intensities)
         {
             if (TimeIntensities == null)
             {
-                times = intensities = new double[0];
+                times = intensities = Array.Empty<float>();
+            }
+            else if (TimeIntervals == null)
+            {
+                times = TimeIntensities.Times;
+                intensities = TimeIntensities.Intensities;
             }
             else
             {
-                if (TimeIntervals == null)
+                times = new List<float>();
+                intensities = new List<float>();
+                foreach (var (Time, Intensity) in TimeIntervals.ReplaceExternalPointsWithNaN(TimeIntensities.Times.Zip(TimeIntensities.Intensities, ValueTuple.Create)))
                 {
-                    times = TimeIntensities.Times.Select(time => (double)time).ToArray();
-                    intensities = TimeIntensities.Intensities.Select(intensity => (double)intensity).ToArray();
-                }
-                else
-                {
-                    var points = TimeIntervals.ReplaceExternalPointsWithNaN(Enumerable
-                            .Range(0, TimeIntensities.NumPoints).Select(i =>
-                                new KeyValuePair<float, float>(TimeIntensities.Times[i],
-                                    TimeIntensities.Intensities[i])))
-                        .ToList();
-                    times = points.Select(p => (double) p.Key).ToArray();
-                    intensities = points.Select(p => (double) p.Value).ToArray();
+                    times.Add(Time);
+                    Intensities.Add(Intensity);
                 }
             }
         }
