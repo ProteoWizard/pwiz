@@ -49,8 +49,23 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <param name="action">Action to queue for async processing</param>
         internal void AddTask(Action action)
         {
+            // Capture reference to avoid race with Dispose() setting _workQueue to null
+            var queue = _workQueue;
+            if (queue == null)
+                return; // Service has been disposed
+
             Interlocked.Increment(ref _pendingActionCount);
-            _workQueue.Add(action);
+            try
+            {
+                queue.Add(action);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ObjectDisposedException)
+            {
+                // Race condition: queue was disposed between our null check and Add call
+                // InvalidOperationException: DoneAdding was called but Dispose not yet complete
+                // ObjectDisposedException: Dispose already called on the underlying BlockingCollection
+                Interlocked.Decrement(ref _pendingActionCount);
+            }
         }
 
         /// <summary>
