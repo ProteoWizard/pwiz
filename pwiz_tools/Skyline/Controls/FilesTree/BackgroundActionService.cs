@@ -59,12 +59,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 queue.Add(action);
             }
-            catch (Exception ex) when (ex is InvalidOperationException || ex is ObjectDisposedException)
+            catch (Exception ex) when (ex is ObjectDisposedException || ex is NullReferenceException)
             {
                 // Race condition: queue was disposed between our null check and Add call
-                // InvalidOperationException: DoneAdding was called but Dispose not yet complete
-                // ObjectDisposedException: Dispose already called on the underlying BlockingCollection
-                Interlocked.Decrement(ref _pendingActionCount);
+                _pendingActionCount = 0;
             }
         }
 
