@@ -16,8 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Linq;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
@@ -91,9 +93,29 @@ namespace pwiz.Skyline.Model.Irt
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
+            IProgressStatus status = new ProgressStatus();  // Outer status for tracking progress and reporting exceptions
+
+            try
+            {
+                return LoadBackgroundInner(container, document, docCurrent, ref status);
+            }
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+                UpdateProgress(status.ChangeErrorException(x));
+                EndProcessing(document);
+                return false;
+            }
+        }
+
+        private bool LoadBackgroundInner(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent,
+            ref IProgressStatus status)
+        {
             var calc = GetIrtCalculator(docCurrent);
+            var loadMonitor = calc != null ? new LoadMonitor(this, container, calc) : null;
             if (calc != null && !calc.IsUsable)
-                calc = LoadCalculator(container, calc);
+                calc = LoadCalculator(container, calc, loadMonitor, ref status);
             if (calc == null || !ReferenceEquals(document.Id, container.Document.Id))
             {
                 // Loading was cancelled or document changed
@@ -111,6 +133,7 @@ namespace pwiz.Skyline.Model.Irt
                     library.Add(pep);
             }
 
+            bool needsReload = false;
             if (calc.IsUsable)
             {
                 // Watch out for stale db read
@@ -119,14 +142,26 @@ namespace pwiz.Skyline.Model.Irt
                 if (standards.Any(s => !calcStandardPeptides.Contains(s.ModifiedTarget)) ||
                     library.Any(l => !calcLibraryPeptides.Contains(l.ModifiedTarget)))
                 {
-                    calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null));
+                    needsReload = true;
                 }
             }
 
             var duplicates = IrtDb.CheckForDuplicates(standards, library);
-            if (duplicates != null && duplicates.Any())
+            bool hasDuplicates = duplicates.Any();
+
+            if (needsReload || hasDuplicates)
             {
-                calc = calc.ChangeDatabase(IrtDb.GetIrtDb(calc.DatabasePath, null).RemoveDuplicateLibraryPeptides());
+                var db = IrtDb.GetIrtDb(calc.DatabasePath, loadMonitor, ref status);
+                if (db == null)
+                {
+                    EndProcessing(document);
+                    return false;  // Error already reported through loadMonitor
+                }
+                if (hasDuplicates)
+                {
+                    db = db.RemoveDuplicateLibraryPeptides();
+                }
+                calc = calc.ChangeDatabase(db);
             }
 
             var rtRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
@@ -162,7 +197,7 @@ namespace pwiz.Skyline.Model.Irt
             return true;
         }
 
-        private RCalcIrt LoadCalculator(IDocumentContainer container, RCalcIrt calc)
+        private RCalcIrt LoadCalculator(IDocumentContainer container, RCalcIrt calc, ILoadMonitor loadMonitor, ref IProgressStatus status)
         {
             // TODO: Something better than locking for the entire load
             lock (_loadedCalculators)
@@ -170,7 +205,7 @@ namespace pwiz.Skyline.Model.Irt
                 RCalcIrt calcResult;
                 if (!_loadedCalculators.TryGetValue(calc.Name, out calcResult))
                 {
-                    calcResult = (RCalcIrt) calc.Initialize(new LoadMonitor(this, container, calc));
+                    calcResult = calc.Initialize(loadMonitor, ref status);
                     if (calcResult != null)
                         _loadedCalculators.Add(calcResult.Name, calcResult);
                 }

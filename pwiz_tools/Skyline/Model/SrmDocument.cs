@@ -1597,7 +1597,7 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException(ModelResources.SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides);
             }
             var dbPath = calculator.DatabasePath;
-            var db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+            var db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath) : IrtDb.CreateIrtDb(dbPath);
             var oldPeptides = db.ReadPeptides().Select(p => new DbIrtPeptide(p)).ToList();
             var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out var conflicts);
             if (peptidesCombined == null)
