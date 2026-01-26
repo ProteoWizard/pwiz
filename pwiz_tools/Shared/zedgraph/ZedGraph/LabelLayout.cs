@@ -54,9 +54,9 @@ namespace ZedGraph
         private PointF _chartOffset;
         private Dictionary<TextObj, LabeledPoint> _labeledPoints = new Dictionary<TextObj, LabeledPoint>();
         private const float CROSSOVER_PENALTY = 5000f;
-        private const float LABEL_OVERLAP_PENALTY = 1500f;
-        private const float TARGET_OVERLAP_PENALTY = 1500f;
-        private const float CONNECTOR_LABEL_OVERLAP_PENALTY = 3000f;
+        private const float LABEL_OVERLAP_PENALTY = 5000f;
+        private const float TARGET_OVERLAP_PENALTY = 300f;
+        private const float CONNECTOR_LABEL_OVERLAP_PENALTY = 1500f;
         private const float DISTANCE_SCALE = 10000f;
         private LayoutSignature? _lastSignature;
 
@@ -433,6 +433,27 @@ namespace ZedGraph
             return total;
         }
 
+        public double ComputeCurrentGoal()
+        {
+            using(var g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                var placements = _labeledPoints.ToDictionary(lp => lp.Value,
+                    lp => lp.Value.LabelPosition);
+                var labelSizes = _labeledPoints.ToDictionary(lp => lp.Value,
+                    lp => _graph.GetRectScreen(lp.Value.Label, g).Size);
+                var targetPoints = _labeledPoints.ToDictionary(lp => lp.Value,
+                    lp => _graph.TransformCoord(lp.Value.Point.X, lp.Value.Point.Y, CoordType.AxisXYScale));
+                var targetMarkers = new Dictionary<LabeledPoint, RectangleF>();
+                foreach (var point in _labeledPoints.Values)
+                {
+                    GetPointMarkerRectangle(targetPoints[point], out var rect);
+                    targetMarkers[point] = rect;
+                }
+
+                return RecomputeTotal(placements, labelSizes, targetPoints, targetMarkers);
+            }
+        }
+
         /// <summary>
         /// Places all labels using a simulated annealing search. Saved layout entries are treated as fixed.
         /// </summary>
@@ -485,7 +506,7 @@ namespace ZedGraph
                 {
                     var target = targetPoints[point];
                     // Start near the point with a random offset on the order of the average label length
-                    var offsetMag = avgLabelLength * 2f;
+                    var offsetMag = avgLabelLength * .7f;
                     var initial = new PointF(target.X + GetRandom(offsetMag), target.Y - size.Height - 2 + GetRandom(offsetMag));
                     placements[point] = ClampToAllowed(initial, size);
                     movablePoints.Add(point);
@@ -514,9 +535,9 @@ namespace ZedGraph
             float currentCost = baseCosts.Values.Sum() + pairSum;
             //var realCost = RecomputeTotal(placements, labelSizes, targetPoints, targetMarkers);
 
-            var startTemp = 10.0f;
+            var startTemp = 20.0f;
             var minTemp = 0.1f;
-            var cooling = 0.995f;
+            var cooling = Math.Exp(-Math.Log(startTemp / minTemp) / (Math.Max(700, 50 * points.Count * 2)));  //0.995f;
             var maxIterations = Math.Max(400, points.Count * 200);
             var acceptanceScale = 1.0f * points.Count;
             var bestPlacement = CopyPlacement(placements);
