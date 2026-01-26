@@ -132,7 +132,10 @@ namespace pwiz.Common.DataBinding.Internal
         {
             foreach (var child in Expand(rowItem, 0).Select(Filter))
             {
-                yield return child;
+                if (child != null)
+                {
+                    yield return child;
+                }
             }
         }
 
