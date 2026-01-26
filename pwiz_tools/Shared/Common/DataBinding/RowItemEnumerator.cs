@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -25,56 +24,56 @@ using pwiz.Common.DataBinding.Controls;
 
 namespace pwiz.Common.DataBinding
 {
+    public abstract class RowItemEnumerator : IDisposable
+    {
+        protected RowItemEnumerator(ItemProperties itemProperties, ColumnFormats columnFormats)
+        {
+            ItemProperties = itemProperties;
+            ColumnFormats = columnFormats;
+        }
+        public abstract RowItem Current { get; }
+        public ItemProperties ItemProperties { get; }
+        public ColumnFormats ColumnFormats { get; }
+        public long? Count { get; set; }
+        public abstract bool MoveNext();
+
+        public virtual void Dispose()
+        {
+        }
+    }
+
+
     /// <summary>
     /// Single-use enumerator throw a list of RowItem objects.
     /// Nulls out items in its array after they have been returned so that they can be garbage collected.
     /// </summary>
-    public class RowItemEnumerator : IEnumerator<RowItem>
+    public class RowItemList : RowItemEnumerator
     {
         private ImmutableList<RowItem[]> _rowItems;
-        private RowItem _current;
         private int _listIndex;
         private int _indexInList;
+        private RowItem _current;
 
-        public RowItemEnumerator(IEnumerable<IEnumerable<RowItem>> rowItemLists, ItemProperties itemProperties,
-            ColumnFormats columnFormats)
+        public RowItemList(IEnumerable<IEnumerable<RowItem>> rowItemLists, ItemProperties itemProperties,
+            ColumnFormats columnFormats) : base(itemProperties, columnFormats)
         {
             _rowItems = ImmutableList.ValueOf(rowItemLists.Select(list => list.ToArray()));
             Count = _rowItems.Sum(list => (long) list.Length);
-            ItemProperties = itemProperties;
-            ColumnFormats = columnFormats;
         }
 
-        public RowItemEnumerator(BigList<RowItem> bigList, ItemProperties itemProperties, ColumnFormats columnFormats) : this(bigList.InnerLists, itemProperties, columnFormats)
+        public RowItemList(BigList<RowItem> bigList, ItemProperties itemProperties, ColumnFormats columnFormats) : this(bigList.InnerLists, itemProperties, columnFormats)
         {
 
         }
 
-        public static RowItemEnumerator FromBindingListSource(BindingListSource source)
+        public static RowItemList FromBindingListSource(BindingListSource source)
         {
-            return new RowItemEnumerator(source.ReportResults.RowItems, source.ItemProperties, source.ColumnFormats);
-        }
-
-        public long Count
-        {
-            get;
+            return new RowItemList(source.ReportResults.RowItems, source.ItemProperties, source.ColumnFormats);
         }
 
         public long Index { get; private set; }
 
-        public ItemProperties ItemProperties { get; }
-        public ColumnFormats ColumnFormats { get; }
-
-        void IDisposable.Dispose()
-        {
-        }
-
-        void IEnumerator.Reset()
-        {
-            throw new InvalidOperationException();
-        }
-
-        public bool MoveNext()
+        public override bool MoveNext()
         {
             if (_listIndex >= _rowItems.Count)
             {
@@ -94,15 +93,11 @@ namespace pwiz.Common.DataBinding
             return true;
         }
 
-        public RowItem[] Take(int count)
+        public override RowItem Current
         {
-            var array = new RowItem[count];
-            for (int index = 0; index < count && MoveNext(); index++)
-            {
-                array[index] = Current;
-            }
-            return array;
+            get { return _current; }
         }
+
 
         public int PercentComplete
         {
@@ -112,19 +107,34 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        object IEnumerator.Current => Current;
-
-        public RowItem Current
-        {
-            get
-            {
-                return _current;
-            }
-        }
-
         public BigList<RowItem> GetRowItems()
         {
             return _rowItems.SelectMany(list => list).ToBigList();
+        }
+    }
+
+    public class StreamingRowItemEnumerator : RowItemEnumerator
+    {
+        private IEnumerator<RowItem> _enumerator;
+        public StreamingRowItemEnumerator(IEnumerator<RowItem> enumerator, ItemProperties itemProperties,
+            ColumnFormats columnFormats) : base(itemProperties, columnFormats)
+        {
+            _enumerator = enumerator;
+        }
+
+        public override bool MoveNext()
+        {
+            return _enumerator.MoveNext();
+        }
+
+        public override RowItem Current
+        {
+            get { return _enumerator.Current; }
+        }
+        public override void Dispose()
+        {
+            _enumerator.Dispose();
+            base.Dispose();
         }
     }
 }

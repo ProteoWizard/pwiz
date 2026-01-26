@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Web.UI;
 using Parquet;
 using Parquet.Data;
 using pwiz.Common.DataBinding;
@@ -36,7 +35,7 @@ namespace pwiz.Skyline.Model.Databinding
         private const int ROWS_PER_GROUP = 100_000;
 
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
-            RowItemEnumerator rowItemEnumerator, ColumnFormats columnFormats)
+            RowItemEnumerator rowItemEnumerator)
         {
             // Build columns and schema from item properties
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
@@ -55,27 +54,49 @@ namespace pwiz.Skyline.Model.Databinding
             // Single writer thread, queue at most 1 chunk ahead
             writeWorker.RunAsync(1, @"Parquet Writer", maxQueueSize: 1);
 
-            long totalRows = rowItemEnumerator.Count;
+            long? totalRows = rowItemEnumerator.Count;
             long rowsProcessed = 0;
 
             // Process in chunks
-            while (rowsProcessed < totalRows)
+            while (true)
             {
                 if (progressMonitor.IsCanceled || writeWorker.Exception != null)
                 {
                     break;
                 }
 
-                int rowsInChunk = (int)Math.Min(ROWS_PER_GROUP, totalRows - rowsProcessed);
 
-                progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
-                        rowsProcessed, totalRows))
-                    .ChangePercentComplete((int)(rowsProcessed * 100 / totalRows)));
+                int rowsInChunk;
+                if (totalRows.HasValue)
+                {
+                    rowsInChunk = (int)Math.Min(ROWS_PER_GROUP, totalRows.Value - rowsProcessed);
+                    progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
+                            rowsProcessed, totalRows))
+                        .ChangePercentComplete((int)(rowsProcessed * 100 / totalRows)));
+                }
+                else
+                {
+                    rowsInChunk = ROWS_PER_GROUP;
+                    progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(
+                        "Writing row {0}",
+                        rowsProcessed)));
+                }
 
+                var chunk = new List<RowItem>();
+                while (chunk.Count < rowsInChunk && rowItemEnumerator.MoveNext())
+                {
+                    chunk.Add(rowItemEnumerator.Current);
+                }
+
+                if (chunk.Count == 0)
+                {
+                    break;
+                }
                 // Create arrays for this chunk
                 var chunkArrays = columns.Select(col => col.CreateArray(rowsInChunk)).ToArray();
+
                 // Populate chunk data
-                PopulateChunk(progressMonitor, rowItemEnumerator.Take(rowsInChunk), columns, chunkArrays);
+                PopulateChunk(progressMonitor, chunk, columns, chunkArrays);
                 if (progressMonitor.IsCanceled)
                 {
                     break;
@@ -114,9 +135,9 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         private void PopulateChunk(IProgressMonitor progressMonitor,
-            RowItem[] rowItems, List<ColumnData> columns, Array[] chunkArrays)
+            IList<RowItem> rowItems, List<ColumnData> columns, Array[] chunkArrays)
         {
-            ParallelEx.For(0, rowItems.Length, rowIndex =>
+            ParallelEx.For(0, rowItems.Count, rowIndex =>
             {
                 if (progressMonitor.IsCanceled)
                 {

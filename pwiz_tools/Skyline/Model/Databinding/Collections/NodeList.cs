@@ -28,6 +28,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 {
     public abstract class NodeList<TNode> : SkylineObjectList<TNode> where TNode : SkylineDocNode
     {
+        protected static readonly ImmutableList<IdentityPath> ROOT_IDENTITY_PATH = ImmutableList.Singleton(IdentityPath.ROOT);
         private IList<IdentityPath> _ancestorIdentityPaths = ImmutableList.Empty<IdentityPath>();
 
         protected NodeList(SkylineDataSchema dataSchema, IList<IdentityPath> ancestorIdentityPaths) : base(dataSchema)
@@ -164,6 +165,16 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                     yield return new Entities.Transition(precursor, key.GetIdentity(3));
                 }
             }
+        }
+
+        public override long? GetItemCount()
+        {
+            if (ROOT_IDENTITY_PATH.Equals(AncestorIdentityPaths))
+            {
+                return DataSchema.Document.GetCount(NodeDepth);
+            }
+
+            return base.GetItemCount();
         }
     }
 }

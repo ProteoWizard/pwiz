@@ -17,22 +17,12 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using pwiz.Skyline.Model.Databinding.Entities;
-
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
     public class Transitions : NodeList<Entities.Transition>
     {
-        public Transitions(SkylineDataSchema dataSchema) : base(dataSchema, IdentityPath.ROOT)
+        public Transitions(SkylineDataSchema dataSchema) : base(dataSchema, ROOT_IDENTITY_PATH)
         {
-        }
-        public Transitions(Precursor precursor) : base(precursor.DataSchema, precursor.IdentityPath)
-        {
-        }
-        public Transitions(SkylineDataSchema dataSchema, IList<IdentityPath> ancestorIdentityPaths) : base(dataSchema, ancestorIdentityPaths)
-        {
-            
         }
         protected override int NodeDepth
         {

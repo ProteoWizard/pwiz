@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Databinding
     public interface IRowItemExporter
     {
         void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
-            RowItemEnumerator rowItemEnumerator, ColumnFormats columnFormats);
+            RowItemEnumerator rowItemEnumerator);
     }
 
     public static class RowItemExporters

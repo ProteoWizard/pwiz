@@ -136,67 +136,8 @@ namespace pwiz.Skyline.Controls.Databinding
         protected override void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
             RowItemEnumerator rowItemEnumerator, char separator)
         {
-            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(rowItemEnumerator.ItemProperties);
-            if (true != replicatePivotColumns?.HasConstantAndVariableColumns())
-            {
-                base.WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
-                return;
-            }
-            var dsvWriter = CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats);
-
-            // Filter columns for main grid to be written out.
-            var filteredColumnDescriptors = rowItemEnumerator.ItemProperties.OfType<ColumnPropertyDescriptor>()
-                .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor)).ToList();
-
-            // Count main grid columns to add spaces.
-            var replicateVariablePropertyCounts = filteredColumnDescriptors.GroupBy(column => column.PivotKey ?? PivotKey.EMPTY)
-                .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
-            // Create header line with property column and replicate headers.
-            var propertyCaption = LocalizationHelper.CallWithCulture(DataSchema.DataSchemaLocalizer.Language,
-                () => Model.Databinding.DatabindingResources.SkylineViewContext_WriteDataWithStatus_Property);
-            var headerLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1)
-                .Prepend(propertyCaption).ToList();
-            var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
-            var propertyLines = new List<List<string>> { headerLine };
-            var allRowItems = rowItemEnumerator.GetRowItems();
-            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
-            {
-                // Add replicate to header line.
-                headerLine.Add(group.Key.ReplicateName);
-                headerLine.AddRange(Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[group.ToList()[0].PivotKey] - 1));
-
-                foreach (var column in group)
-                {
-                    if (!replicatePivotColumns.IsConstantColumn(column) || column.DisplayColumn.ColumnDescriptor == null)
-                    {
-                        continue;
-                    }
-
-                    var propertyPath = column.DisplayColumn.PropertyPath;
-                    if (!propertyLineDictionary.TryGetValue(propertyPath, out var propertyLine))
-                    {
-                        // Create a new row if property line does not exist yet.
-                        var propertyDisplayName = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
-                        propertyLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1).Prepend(propertyDisplayName).ToList();
-                        propertyLineDictionary[propertyPath] = propertyLine;
-                        propertyLines.Add(propertyLine);
-                    }
-
-                    // Add value to property line.
-                    var rowItem = allRowItems.FirstOrDefault(item => column.GetValue(item) != null);
-                    var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
-                    propertyLine.AddRange(Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[column.PivotKey] - 1).Prepend(formattedValue));
-                }
-            }
-
-            // Write pivot replicate data.
-            foreach (var line in propertyLines)
-            {
-                dsvWriter.WriteRowValues(writer, line);
-            }
-            writer.WriteLine();
-            var newRowItemEnumerator = new RowItemEnumerator(allRowItems, new ItemProperties(filteredColumnDescriptors), rowItemEnumerator.ColumnFormats);
-            base.WriteDataWithStatus(progressMonitor, ref status, writer, newRowItemEnumerator, separator);
+            var rowItemExporter = new RowItemExporter(CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats));
+            rowItemExporter.Export(progressMonitor, ref status, writer, rowItemEnumerator);
         }
 
         protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
@@ -438,7 +379,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 }
 
-                rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
+                rowItemEnumerator = RowItemList.FromBindingListSource(bindingListSource);
             }
 
             progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
@@ -583,11 +524,11 @@ namespace pwiz.Skyline.Controls.Databinding
                 () => new Proteins(dataSchema));
             yield return MakeRowSource<Model.Databinding.Entities.Peptide>(dataSchema, 
                 proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
-                () => new Peptides(dataSchema, new[] {IdentityPath.ROOT}));
+                () => new Peptides(dataSchema));
             yield return MakeRowSource<Precursor>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
-                () => new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
+                () => new Precursors(dataSchema));
             yield return MakeRowSource<Model.Databinding.Entities.Transition>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, 
-                () => new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
+                () => new Transitions(dataSchema));
             yield return MakeRowSource<Replicate>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 
                 () => new ReplicateList(dataSchema));
             yield return new RowSourceInfo(typeof(SkylineDocument), new StaticRowSource(new SkylineDocument[0]), new ViewInfo[0]);

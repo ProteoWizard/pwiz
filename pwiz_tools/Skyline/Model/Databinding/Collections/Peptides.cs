@@ -24,11 +24,9 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 {
     public class Peptides : NodeList<Entities.Peptide> 
     {
-        public Peptides(Protein protein) : base(protein.DataSchema, protein.IdentityPath)
+        public Peptides(SkylineDataSchema dataSchema) : base(dataSchema, ROOT_IDENTITY_PATH)
         {
-        }
-        public Peptides(SkylineDataSchema dataSchema, IList<IdentityPath> ancestorIdentityPaths): base(dataSchema, ancestorIdentityPaths)
-        {
+
         }
 
         protected override int NodeDepth 

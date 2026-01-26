@@ -90,7 +90,7 @@ namespace pwiz.Common.DataBinding.Internal
         /// </summary>
         public IList<ColumnDescriptor> PivotColumns { get; private set; }
 
-        public IEnumerable<RowItem> Expand(CancellationToken cancellationToken, RowItem rowItem, int sublistColumnIndex)
+        private IEnumerable<RowItem> Expand(CancellationToken cancellationToken, RowItem rowItem, int sublistColumnIndex)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (sublistColumnIndex >= SublistColumns.Count)
@@ -121,6 +121,14 @@ namespace pwiz.Common.DataBinding.Internal
                 var child = rowItem.SetRowKey(_valueCache.CacheValue(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key)));
                 return Expand(cancellationToken, child, sublistColumnIndex + 1);
             });
+        }
+
+        public IEnumerable<RowItem> ExpandAndFilter(RowItem rowItem)
+        {
+            foreach (var child in Expand(CancellationToken.None, rowItem, 0).Select(Filter))
+            {
+                yield return child;
+            }
         }
 
         public RowItem Pivot(CancellationToken cancellationToken, RowItem rowItem)
@@ -175,16 +183,22 @@ namespace pwiz.Common.DataBinding.Internal
             return rowItems.Select(rowItem =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                foreach (var filter in ViewInfo.Filters)
+                return Filter(rowItem);
+            }).Where(rowItem=>null != rowItem);
+        }
+
+        public RowItem Filter(RowItem rowItem)
+        {
+            foreach (var filter in ViewInfo.Filters)
+            {
+                rowItem = filter.ApplyFilter(rowItem);
+                if (rowItem == null)
                 {
-                    rowItem = filter.ApplyFilter(rowItem);
-                    if (null == rowItem)
-                    {
-                        return null;
-                    }
+                    break;
                 }
-                return rowItem;
-            }).Where(rowItem => rowItem != null);
+            }
+
+            return rowItem;
         }
 
         public ReportResults ExpandAndPivot(CancellationToken cancellationToken, IList<RowItem> rowItems)

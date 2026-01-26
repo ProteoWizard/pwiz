@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
@@ -89,14 +88,14 @@ namespace pwiz.Skyline.Model.Databinding
             return ListTransitions().SelectMany(transition => transition.Results.Values);
         }
 
-        public void RegisterFactory<T>(Func<IEnumerable<T>> listItemsFunc)
+        public void RegisterFactory<T>(Func<IEnumerable<T>> listItemsFunc, long? itemCount = null)
         {
-            RegisterFactory(ViewSpec.GetRowSourceName(typeof(T)), listItemsFunc);
+            RegisterFactory(ViewSpec.GetRowSourceName(typeof(T)), listItemsFunc, itemCount);
         }
 
-        public void RegisterFactory<T>(string name, Func<IEnumerable<T>> listItemsFunc)
+        public void RegisterFactory<T>(string name, Func<IEnumerable<T>> listItemsFunc, long? itemCount)
         {
-            var factory = new Factory(name, typeof(T), listItemsFunc);
+            var factory = new Factory(name, typeof(T), listItemsFunc, itemCount);
             _factoriesByName.Add(name, factory);
         }
 
@@ -107,11 +106,13 @@ namespace pwiz.Skyline.Model.Databinding
 
         private class Factory : IRowSource
         {
-            public Factory(string rowSourceName, Type itemType, Func<IEnumerable> listItemsFunc)
+            private long? _itemCount;
+            public Factory(string rowSourceName, Type itemType, Func<IEnumerable> listItemsFunc, long? itemCount)
             {
                 RowSourceName = rowSourceName;
                 ItemType = itemType;
                 ListItemsFunc = listItemsFunc;
+                _itemCount = itemCount;
             }
             public string RowSourceName { get; }
             public Type ItemType { get; }
@@ -128,15 +129,21 @@ namespace pwiz.Skyline.Model.Databinding
 
                 remove { }
             }
+
+            public long? GetItemCount()
+            {
+                return _itemCount;
+            }
         }
 
         public void RegisterAllFactories()
         {
-            RegisterFactory(ListProteins);
-            RegisterFactory(ListPeptides);
-            RegisterFactory(ListPrecursors);
-            RegisterFactory(ListTransitions);
-            RegisterFactory(ListReplicates);
+            var document = DataSchema.Document;
+            RegisterFactory(ListProteins, document.GetCount(0));
+            RegisterFactory(ListPeptides, document.GetCount(1));
+            RegisterFactory(ListPrecursors, document.GetCount(2));
+            RegisterFactory(ListTransitions, document.GetCount(3));
+            RegisterFactory(ListReplicates, document.MeasuredResults?.Chromatograms.Count ?? 0);
             RegisterFactory(ListPeptideResults);
             RegisterFactory(ListPrecursorResults);
             RegisterFactory(ListTransitionResults);
@@ -180,27 +187,43 @@ namespace pwiz.Skyline.Model.Databinding
         public static void ExportReport(CancellationToken cancellationToken, Stream stream, ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
             IRowItemExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
+            if (layout == null || layout.RowTransforms.Count == 0)
+            {
+
+                using var streamingRowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(rowSource);
+                if (streamingRowItemEnumerator != null)
+                {
+                    layout?.ApplyFormats(streamingRowItemEnumerator.ColumnFormats);
+                    rowItemExporter.Export(progressMonitor, ref status, stream, streamingRowItemEnumerator);
+                    return;
+                }
+            }
+
             RowItemEnumerator rowItemEnumerator;
-            ColumnFormats columnFormats;
             using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetView(viewInfo, rowSource);
-                if (layout != null)
-                {
-                    foreach (var column in layout.ColumnFormats)
-                    {
-                        bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
-                    }
-                }
-                rowItemEnumerator = RowItemEnumerator.FromBindingListSource(bindingListSource);
-                columnFormats = bindingListSource.ColumnFormats;
+                layout?.ApplyFormats(bindingListSource.ColumnFormats);
+                rowItemEnumerator = RowItemList.FromBindingListSource(bindingListSource);
             }
             
-            rowItemExporter.Export(progressMonitor, ref status, stream, rowItemEnumerator, columnFormats);
+            rowItemExporter.Export(progressMonitor, ref status, stream, rowItemEnumerator);
             if (!progressMonitor.IsCanceled)
             {
                 progressMonitor.UpdateProgress(status = status.Complete());
             }
+        }
+
+        private bool ExportSimpleReport(CancellationToken cancellationToken, Stream stream, ViewInfo viewInfo,
+            ViewLayout layout, ref IRowSource rowSource,
+            IRowItemExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        {
+            if (layout?.RowTransforms.Count > 0)
+            {
+                return false;
+            }
+
+            var items = rowSource.GetItems().Cast<object>().ToList();
 
         }
     }

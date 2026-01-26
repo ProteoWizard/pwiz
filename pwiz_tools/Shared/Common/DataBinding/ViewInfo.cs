@@ -19,7 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 
 namespace pwiz.Common.DataBinding
 {
@@ -178,6 +181,20 @@ namespace pwiz.Common.DataBinding
                 return sortIndex1.Value.CompareTo(sortIndex2.Value);
             }
             return kvp1.Key.CompareTo(kvp2.Key);
+        }
+
+        public StreamingRowItemEnumerator GetStreamingRowItemEnumerator(IEnumerator<object> items)
+        {
+            var pivoter = new Pivoter(this);
+            if (pivoter.CollectionColumns.Count > pivoter.SublistColumns.Count + 1 || pivoter.PivotColumns.Count > 0)
+            {
+                return null;
+            }
+            var itemProperties = new ItemProperties(pivoter.GetItemProperties(BigList<RowItem>.Empty));
+
+            return new StreamingRowItemEnumerator(
+                items.SelectMany(item => pivoter.ExpandAndFilter(new RowItem(item))).GetEnumerator(),
+                itemProperties, new ColumnFormats());
         }
     }
 }

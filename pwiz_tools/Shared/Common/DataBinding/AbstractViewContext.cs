@@ -190,7 +190,7 @@ namespace pwiz.Common.DataBinding
         protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, char separator)
         {
-            WriteData(progressMonitor, writer, RowItemEnumerator.FromBindingListSource(bindingListSource), separator);
+            WriteData(progressMonitor, writer, RowItemList.FromBindingListSource(bindingListSource), separator);
         }
 
         protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,

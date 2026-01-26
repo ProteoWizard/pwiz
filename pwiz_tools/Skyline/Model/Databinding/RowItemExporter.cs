@@ -20,6 +20,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -35,10 +36,10 @@ namespace pwiz.Skyline.Model.Databinding
         public DsvWriter DsvWriter { get; }
 
         public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
-            RowItemEnumerator rowItemEnumerator, ColumnFormats columnFormats)
+            RowItemEnumerator rowItemEnumerator)
         {
             using var writer = new StreamWriter(stream);
-            DsvWriter.ColumnFormats = columnFormats;
+            DsvWriter.ColumnFormats = rowItemEnumerator.ColumnFormats;
             Export(progressMonitor, ref status, writer, rowItemEnumerator);
         }
 
@@ -66,7 +67,7 @@ namespace pwiz.Skyline.Model.Databinding
                 .Prepend(propertyCaption).ToList();
             var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
             var propertyLines = new List<List<string>> { headerLine };
-            var allRowItems = rowItemEnumerator.GetRowItems();
+            var allRowItems = ((RowItemList) rowItemEnumerator).GetRowItems();
             foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
             {
                 // Add replicate to header line.
@@ -103,9 +104,10 @@ namespace pwiz.Skyline.Model.Databinding
                 DsvWriter.WriteRowValues(writer, line);
             }
             writer.WriteLine();
-            var newRowItemEnumerator = new RowItemEnumerator(allRowItems, new ItemProperties(filteredColumnDescriptors), rowItemEnumerator.ColumnFormats);
+            var newRowItemEnumerator = new RowItemList(allRowItems, new ItemProperties(filteredColumnDescriptors), rowItemEnumerator.ColumnFormats);
             WriteFlatTable(progressMonitor, ref status, writer, newRowItemEnumerator);
         }
+        public const int PROGRESS_UPDATE_INTERVAL_MS = 100; // Throttle progress UI updates after first show
 
         public void WriteFlatTable(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
             RowItemEnumerator rowItemEnumerator)
@@ -114,18 +116,28 @@ namespace pwiz.Skyline.Model.Databinding
             var rowCount = rowItemEnumerator.Count;
             int startPercent = status.PercentComplete;
             int rowIndex = 0;
+            var stopwatch = Stopwatch.StartNew();
             while (rowItemEnumerator.MoveNext())
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return;
                 }
-                int percentComplete = (int) (startPercent + rowIndex * (100 - startPercent) / rowCount);
-                if (percentComplete > status.PercentComplete)
+                int? percentComplete = (int?) (startPercent + rowIndex * (100 - startPercent) / rowCount);
+                if (percentComplete > status.PercentComplete || stopwatch.ElapsedMilliseconds > PROGRESS_UPDATE_INTERVAL_MS)
                 {
-                    status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
-                        .ChangePercentComplete(percentComplete);
+                    if (percentComplete.HasValue)
+                    {
+                        status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
+                            .ChangePercentComplete(percentComplete.Value);
+                    }
+                    else
+                    {
+                        status = status.ChangeMessage(string.Format("Writing row {0}", rowIndex + 1));
+
+                    }
                     progressMonitor.UpdateProgress(status);
+                    stopwatch.Restart();
                 }
                 DsvWriter.WriteDataRow(writer, rowItemEnumerator.Current, rowItemEnumerator.ItemProperties);
                 rowIndex++;

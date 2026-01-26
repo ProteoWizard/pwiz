@@ -36,8 +36,7 @@ namespace pwiz.Skyline.Model.Lists
 
         public override IEnumerable GetItems()
         {
-            var listData =
-                DataSchema.Document.Settings.DataSettings.Lists.FirstOrDefault(list => list.ListDef.Name == ListName);
+            var listData = GetListData(); 
             if (listData == null)
             {
                 return Array.Empty<TItem>();
@@ -45,5 +44,16 @@ namespace pwiz.Skyline.Model.Lists
             return Enumerable.Range(0, listData.RowCount)
                 .Select(rowIndex => ListItem.ExistingRecord(typeof(TItem), listData, rowIndex));
         }
+
+        private ListData GetListData()
+        {
+            return DataSchema.Document.Settings.DataSettings.Lists.FirstOrDefault(list => list.ListDef.Name == ListName);
+        }
+
+        public override long? GetItemCount()
+        {
+            return GetListData()?.RowCount ?? 0;
+        }
+
     }
 }

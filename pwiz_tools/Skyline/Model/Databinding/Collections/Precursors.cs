@@ -17,17 +17,13 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
     public class Precursors : NodeList<Precursor>
     {
-        public Precursors(SkylineDataSchema dataSchema, IList<IdentityPath> ancestorIdentityPaths) : base(dataSchema, ancestorIdentityPaths)
-        {
-        }
-        public Precursors(Entities.Peptide peptide) : base(peptide.DataSchema, peptide.IdentityPath)
+        public Precursors(SkylineDataSchema dataSchema) : base(dataSchema, ROOT_IDENTITY_PATH)
         {
         }
 
