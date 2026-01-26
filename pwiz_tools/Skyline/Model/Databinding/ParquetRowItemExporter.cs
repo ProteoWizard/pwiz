@@ -28,6 +28,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Skyline.Model.Databinding
 {

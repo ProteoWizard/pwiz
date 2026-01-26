@@ -86,9 +86,10 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 
         private ImmutableList<TResult> EnsureSorted(ImmutableList<TResult> list)
         {
-            if (Enumerable.Range(0, list.Count - 1).All(i =>
-                    GetReplicateIndex(list[i]) <=
-                    GetReplicateIndex(list[i + 1])))
+            if (list.Count <= 1 || Enumerable.Range(0, list.Count - 1)
+                    .All(i =>
+                        GetReplicateIndex(list[i]) <=
+                        GetReplicateIndex(list[i + 1])))
             {
                 return list;
             }

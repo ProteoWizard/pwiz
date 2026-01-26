@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
