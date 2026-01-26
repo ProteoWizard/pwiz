@@ -420,6 +420,7 @@ namespace pwiz.SkylineTestUtil
         {
             Program.UnitTest = true;
             Program.TestName = TestContext.TestName;
+            Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);

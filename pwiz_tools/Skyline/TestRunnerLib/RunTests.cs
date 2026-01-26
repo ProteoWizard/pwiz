@@ -52,7 +52,7 @@ namespace TestRunnerLib
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
         public bool DoNotLeakTest; // If true, test is too lengthy to run multiple iterations for leak checks (we invert this in perftest runs)
-        public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
+        public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with Unicode (3rd party tool, mz5, etc), or the system does not support it
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
@@ -64,10 +64,9 @@ namespace TestRunnerLib
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
 
-            // Explicitly disable unicode path conversion for tests marked with NoUnicodeTestingAttribute
-            ProcessEx.CanConvertUnicodePaths = (RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute") != null) ? false : (bool?)null;
-            DoNotUseUnicode = !ProcessEx.CanConvertUnicodePaths.Value; // If true, don't add unicode to TMP environment variable etc
-            
+            // If true, don't add Unicode characters to TMP environment variable etc
+            DoNotUseUnicode = !ProcessEx.CanConvertUnicodePaths || 
+                              (RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute") != null); 
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
 
