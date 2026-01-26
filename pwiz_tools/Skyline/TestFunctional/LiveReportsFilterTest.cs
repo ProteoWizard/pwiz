@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
                     .ToArray();
                 CollectionAssert.AreEqual(new []{"AEVAALAAENK", "AIDYVEATANSHSR"}, 
                     filteredPeptides.Select(peptide=>peptide.ToString()).ToArray());
-                var allPeptides = new Peptides(new SkylineDataSchema(SkylineWindow, DataSchemaLocalizer.INVARIANT), new []{IdentityPath.ROOT});
+                var allPeptides = new Peptides(new SkylineDataSchema(SkylineWindow, DataSchemaLocalizer.INVARIANT));
                 var ratioIndex = modifications.InternalStandardTypes.IndexOf(isotopeLabel);
                 Assert.IsTrue(ratioIndex >= 0);
                 foreach (var peptide in allPeptides.GetItems().OfType<Peptide>())

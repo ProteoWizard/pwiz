@@ -53,8 +53,8 @@ namespace pwiz.Common.DataBinding.Internal
             // Construct the ViewInfo again so that it picks up the latest property definitions from
             // the DataSchema.
             viewInfo = new ViewInfo(viewInfo.DataSchema, viewInfo.ParentColumn.PropertyType, viewInfo.ViewSpec);
-            var pivoter = new Pivoter(viewInfo);
-            return pivoter.ExpandAndPivot(cancellationToken, results.SourceRows);
+            var pivoter = new Pivoter(cancellationToken, viewInfo);
+            return pivoter.ExpandAndPivot(results.SourceRows);
         }
 
         protected TransformResults Transform(CancellationToken cancellationToken, DataSchema dataSchema, TransformResults input,

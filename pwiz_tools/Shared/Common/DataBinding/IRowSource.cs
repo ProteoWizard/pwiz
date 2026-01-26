@@ -29,7 +29,6 @@ namespace pwiz.Common.DataBinding
     {
         IEnumerable GetItems();
         event Action RowSourceChanged;
-        long? GetItemCount();
     }
 
     public class StaticRowSource : IRowSource
@@ -54,11 +53,6 @@ namespace pwiz.Common.DataBinding
             remove
             {
             }
-        }
-
-        public long? GetItemCount()
-        {
-            return (_items as ICollection)?.Count;
         }
     }
 
@@ -121,10 +115,6 @@ namespace pwiz.Common.DataBinding
             {
                 eventHandler();
             }
-        }
-        public virtual long? GetItemCount()
-        {
-            return null;
         }
     }
 

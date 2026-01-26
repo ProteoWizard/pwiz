@@ -50,9 +50,9 @@ namespace pwiz.Skyline.Model.Databinding
         public static readonly SkylineRowSource<Entities.Peptide> Peptides 
             = MakeRowSource(@"Peptides", schema => new Peptides(schema));
         public static readonly SkylineRowSource<Precursor> Precursors
-            = MakeRowSource(@"Precursors", schema => new Precursors(schema, new[] { IdentityPath.ROOT }));
+            = MakeRowSource(@"Precursors", schema => new Precursors(schema));
         public static readonly SkylineRowSource<Entities.Transition> Transitions 
-            = MakeRowSource(@"Transitions", schema => new Transitions(schema, new[] {IdentityPath.ROOT}));
+            = MakeRowSource(@"Transitions", schema => new Transitions(schema));
 
         public static readonly IList<SkylineRowSource> RowSources =
             ImmutableList.ValueOf(new SkylineRowSource[] {Proteins, Peptides, Precursors, Transitions});

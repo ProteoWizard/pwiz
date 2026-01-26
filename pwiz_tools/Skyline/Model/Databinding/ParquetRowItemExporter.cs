@@ -16,17 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using Parquet;
 using Parquet.Data;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -53,9 +54,7 @@ namespace pwiz.Skyline.Model.Databinding
                 });
             // Single writer thread, queue at most 1 chunk ahead
             writeWorker.RunAsync(1, @"Parquet Writer", maxQueueSize: 1);
-
-            long? totalRows = rowItemEnumerator.Count;
-            long rowsProcessed = 0;
+            var stopwatch = Stopwatch.StartNew();
 
             // Process in chunks
             while (true)
@@ -65,26 +64,33 @@ namespace pwiz.Skyline.Model.Databinding
                     break;
                 }
 
-
-                int rowsInChunk;
-                if (totalRows.HasValue)
-                {
-                    rowsInChunk = (int)Math.Min(ROWS_PER_GROUP, totalRows.Value - rowsProcessed);
-                    progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
-                            rowsProcessed, totalRows))
-                        .ChangePercentComplete((int)(rowsProcessed * 100 / totalRows)));
-                }
-                else
-                {
-                    rowsInChunk = ROWS_PER_GROUP;
-                    progressMonitor.UpdateProgress(status = status.ChangeMessage(string.Format(
-                        "Writing row {0}",
-                        rowsProcessed)));
-                }
-
                 var chunk = new List<RowItem>();
-                while (chunk.Count < rowsInChunk && rowItemEnumerator.MoveNext())
+                while (chunk.Count < ROWS_PER_GROUP && rowItemEnumerator.MoveNext())
                 {
+                    int? percentComplete = (int?)rowItemEnumerator.PercentComplete;
+                    if (percentComplete.HasValue)
+                    {
+                        percentComplete = Math.Min(99, percentComplete.Value);
+                    }
+                    if (percentComplete > status.PercentComplete || stopwatch.ElapsedMilliseconds > 100)
+                    {
+                        if (rowItemEnumerator.Count.HasValue)
+                        {
+                            status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
+                                rowItemEnumerator.Index, rowItemEnumerator.Count));
+                        }
+                        else
+                        {
+                            status = status.ChangeMessage(string.Format("Writing row {0}", rowItemEnumerator.Index));
+                        }
+                        if (percentComplete.HasValue)
+                        {
+                            status = status.ChangePercentComplete(percentComplete.Value);
+                        }
+
+                        progressMonitor.UpdateProgress(status);
+                        stopwatch.Restart();
+                    }
                     chunk.Add(rowItemEnumerator.Current);
                 }
 
@@ -92,8 +98,9 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     break;
                 }
+
                 // Create arrays for this chunk
-                var chunkArrays = columns.Select(col => col.CreateArray(rowsInChunk)).ToArray();
+                var chunkArrays = columns.Select(col => col.CreateArray(chunk.Count)).ToArray();
 
                 // Populate chunk data
                 PopulateChunk(progressMonitor, chunk, columns, chunkArrays);
@@ -109,8 +116,6 @@ namespace pwiz.Skyline.Model.Databinding
                     dataColumns[i] = columns[i].CreateDataColumn(chunkArrays[i]);
                 }
                 writeWorker.Add(dataColumns);
-
-                rowsProcessed += rowsInChunk;
             }
 
             writeWorker.DoneAdding(wait: true);

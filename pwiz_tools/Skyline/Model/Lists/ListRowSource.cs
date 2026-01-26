@@ -49,11 +49,5 @@ namespace pwiz.Skyline.Model.Lists
         {
             return DataSchema.Document.Settings.DataSettings.Lists.FirstOrDefault(list => list.ListDef.Name == ListName);
         }
-
-        public override long? GetItemCount()
-        {
-            return GetListData()?.RowCount ?? 0;
-        }
-
     }
 }

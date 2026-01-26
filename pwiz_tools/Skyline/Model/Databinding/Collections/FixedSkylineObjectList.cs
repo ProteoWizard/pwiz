@@ -37,10 +37,5 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         {
             return _items;
         }
-
-        public override long? GetItemCount()
-        {
-            return _items.Count;
-        }
     }
 }

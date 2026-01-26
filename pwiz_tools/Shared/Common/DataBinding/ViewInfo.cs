@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.SystemUtil;
@@ -183,18 +185,41 @@ namespace pwiz.Common.DataBinding
             return kvp1.Key.CompareTo(kvp2.Key);
         }
 
-        public StreamingRowItemEnumerator GetStreamingRowItemEnumerator(IEnumerator<object> items)
+        public StreamingRowItemEnumerator GetStreamingRowItemEnumerator(CancellationToken cancellationToken,
+            IRowSource rowSource)
         {
+            if (SortColumns.Count > 0)
+            {
+                return null;
+            }
             var pivoter = new Pivoter(this);
             if (pivoter.CollectionColumns.Count > pivoter.SublistColumns.Count + 1 || pivoter.PivotColumns.Count > 0)
             {
                 return null;
             }
-            var itemProperties = new ItemProperties(pivoter.GetItemProperties(BigList<RowItem>.Empty));
 
-            return new StreamingRowItemEnumerator(
-                items.SelectMany(item => pivoter.ExpandAndFilter(new RowItem(item))).GetEnumerator(),
-                itemProperties, new ColumnFormats());
+            var sourceItems = new List<RowItem>();
+            foreach (var item in rowSource.GetItems())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                sourceItems.Add(new RowItem(item));
+            }
+
+            return GetStreamingRowItemEnumerator(sourceItems, sourceItems.Count, pivoter);
+        }
+
+        private StreamingRowItemEnumerator GetStreamingRowItemEnumerator(IEnumerable<RowItem> sourceItems,
+            long? sourceItemCount, Pivoter pivoter)
+        {
+            long? rowCount = null;
+            if (pivoter.CollectionColumns.Count == 1 && Filters.Count == 0)
+            {
+                rowCount = sourceItemCount;
+            }
+            var itemProperties = new ItemProperties(pivoter.GetItemProperties(BigList<RowItem>.Empty));
+            return new StreamingRowItemEnumerator(sourceItems, sourceItemCount,
+                pivoter.ExpandAndFilter,
+                rowCount, itemProperties, new ColumnFormats());
         }
     }
 }

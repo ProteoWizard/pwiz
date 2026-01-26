@@ -115,7 +115,6 @@ namespace pwiz.Skyline.Model.Databinding
             DsvWriter.WriteHeaderRow(writer, rowItemEnumerator.ItemProperties);
             var rowCount = rowItemEnumerator.Count;
             int startPercent = status.PercentComplete;
-            int rowIndex = 0;
             var stopwatch = Stopwatch.StartNew();
             while (rowItemEnumerator.MoveNext())
             {
@@ -123,24 +122,27 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     return;
                 }
-                int? percentComplete = (int?) (startPercent + rowIndex * (100 - startPercent) / rowCount);
+                int? percentComplete = (int?) (startPercent + rowItemEnumerator.PercentComplete * (100 - startPercent));
                 if (percentComplete > status.PercentComplete || stopwatch.ElapsedMilliseconds > PROGRESS_UPDATE_INTERVAL_MS)
                 {
-                    if (percentComplete.HasValue)
+                    if (rowCount.HasValue)
                     {
-                        status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
-                            .ChangePercentComplete(percentComplete.Value);
+                        status = status.ChangeMessage(string.Format(
+                            Resources.AbstractViewContext_WriteData_Writing_row__0___1_, rowItemEnumerator.Index + 1, rowCount));
+
                     }
                     else
                     {
-                        status = status.ChangeMessage(string.Format("Writing row {0}", rowIndex + 1));
-
+                        status = status.ChangeMessage(string.Format("Writing row {0}", rowItemEnumerator.Index + 1));
+                    }
+                    if (percentComplete.HasValue)
+                    {
+                        status = status.ChangePercentComplete(percentComplete.Value);
                     }
                     progressMonitor.UpdateProgress(status);
                     stopwatch.Restart();
                 }
                 DsvWriter.WriteDataRow(writer, rowItemEnumerator.Current, rowItemEnumerator.ItemProperties);
-                rowIndex++;
             }
         }
         

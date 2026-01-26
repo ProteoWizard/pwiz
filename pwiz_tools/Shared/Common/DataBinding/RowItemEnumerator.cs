@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
@@ -34,7 +35,22 @@ namespace pwiz.Common.DataBinding
         public abstract RowItem Current { get; }
         public ItemProperties ItemProperties { get; }
         public ColumnFormats ColumnFormats { get; }
-        public long? Count { get; set; }
+
+        public long Index { get; protected set; }
+        public long? Count { get; protected set; }
+
+        public virtual double? PercentComplete
+        {
+            get
+            {
+                if (Count.HasValue)
+                {
+                    return Index * 100.0 / Count.Value;
+                }
+                return null;
+            }
+        }
+
         public abstract bool MoveNext();
 
         public virtual void Dispose()
@@ -71,7 +87,6 @@ namespace pwiz.Common.DataBinding
             return new RowItemList(source.ReportResults.RowItems, source.ItemProperties, source.ColumnFormats);
         }
 
-        public long Index { get; private set; }
 
         public override bool MoveNext()
         {
@@ -99,14 +114,6 @@ namespace pwiz.Common.DataBinding
         }
 
 
-        public int PercentComplete
-        {
-            get
-            {
-                return (int)(Index * 100 / Count);
-            }
-        }
-
         public BigList<RowItem> GetRowItems()
         {
             return _rowItems.SelectMany(list => list).ToBigList();
@@ -115,11 +122,36 @@ namespace pwiz.Common.DataBinding
 
     public class StreamingRowItemEnumerator : RowItemEnumerator
     {
+
         private IEnumerator<RowItem> _enumerator;
-        public StreamingRowItemEnumerator(IEnumerator<RowItem> enumerator, ItemProperties itemProperties,
+        private long _sourceIndex;
+        private long? _sourceCount;
+        private Func<RowItem, IEnumerable<RowItem>> _expander;
+
+        public StreamingRowItemEnumerator(IEnumerable<RowItem> source, long? sourceCount, Func<RowItem, IEnumerable<RowItem>> expander,
+            long? expandedItemCount,
+            ItemProperties itemProperties,
             ColumnFormats columnFormats) : base(itemProperties, columnFormats)
         {
-            _enumerator = enumerator;
+            _expander = expander;
+            _sourceCount = sourceCount;
+            Count = expandedItemCount;
+            _enumerator = EnumerateRowItems(source);
+        }
+
+        private IEnumerator<RowItem> EnumerateRowItems(IEnumerable<RowItem> source)
+        {
+            _sourceIndex = 0;
+            foreach (var o in source)
+            {
+
+                foreach (var rowItem in _expander(o))
+                {
+                    yield return rowItem;
+                    Index++;
+                }
+                _sourceIndex++;
+            }
         }
 
         public override bool MoveNext()
@@ -135,6 +167,19 @@ namespace pwiz.Common.DataBinding
         {
             _enumerator.Dispose();
             base.Dispose();
+        }
+
+        public override double? PercentComplete
+        {
+            get
+            {
+                var value = base.PercentComplete;
+                if (_sourceCount.HasValue)
+                {
+                    value ??= _sourceIndex * 100.0 / _sourceCount.Value;
+                }
+                return value;
+            }
         }
     }
 }

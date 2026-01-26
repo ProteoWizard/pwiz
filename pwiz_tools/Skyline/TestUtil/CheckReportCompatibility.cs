@@ -66,15 +66,15 @@ namespace pwiz.SkylineTestUtil
             }
             if (type == typeof (Peptide))
             {
-                return new Peptides(_dataSchema, new[]{IdentityPath.ROOT});
+                return new Peptides(_dataSchema);
             }
             if (type == typeof (Precursor))
             {
-                return new Precursors(_dataSchema, new[]{IdentityPath.ROOT});
+                return new Precursors(_dataSchema);
             }
             if (type == typeof (Transition))
             {
-                return new Transitions(_dataSchema, new[]{IdentityPath.ROOT});
+                return new Transitions(_dataSchema);
             }
             throw new ArgumentException(string.Format("No row source for {0}", viewInfo.ParentColumn.PropertyType));
         }

@@ -166,15 +166,5 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                 }
             }
         }
-
-        public override long? GetItemCount()
-        {
-            if (ROOT_IDENTITY_PATH.Equals(AncestorIdentityPaths))
-            {
-                return DataSchema.Document.GetCount(NodeDepth);
-            }
-
-            return base.GetItemCount();
-        }
     }
 }

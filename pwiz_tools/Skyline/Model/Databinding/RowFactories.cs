@@ -88,14 +88,14 @@ namespace pwiz.Skyline.Model.Databinding
             return ListTransitions().SelectMany(transition => transition.Results.Values);
         }
 
-        public void RegisterFactory<T>(Func<IEnumerable<T>> listItemsFunc, long? itemCount = null)
+        public void RegisterFactory<T>(Func<IEnumerable<T>> listItemsFunc)
         {
-            RegisterFactory(ViewSpec.GetRowSourceName(typeof(T)), listItemsFunc, itemCount);
+            RegisterFactory(ViewSpec.GetRowSourceName(typeof(T)), listItemsFunc);
         }
 
-        public void RegisterFactory<T>(string name, Func<IEnumerable<T>> listItemsFunc, long? itemCount)
+        public void RegisterFactory<T>(string name, Func<IEnumerable<T>> listItemsFunc)
         {
-            var factory = new Factory(name, typeof(T), listItemsFunc, itemCount);
+            var factory = new Factory(name, typeof(T), listItemsFunc);
             _factoriesByName.Add(name, factory);
         }
 
@@ -106,13 +106,11 @@ namespace pwiz.Skyline.Model.Databinding
 
         private class Factory : IRowSource
         {
-            private long? _itemCount;
-            public Factory(string rowSourceName, Type itemType, Func<IEnumerable> listItemsFunc, long? itemCount)
+            public Factory(string rowSourceName, Type itemType, Func<IEnumerable> listItemsFunc)
             {
                 RowSourceName = rowSourceName;
                 ItemType = itemType;
                 ListItemsFunc = listItemsFunc;
-                _itemCount = itemCount;
             }
             public string RowSourceName { get; }
             public Type ItemType { get; }
@@ -129,21 +127,16 @@ namespace pwiz.Skyline.Model.Databinding
 
                 remove { }
             }
-
-            public long? GetItemCount()
-            {
-                return _itemCount;
-            }
         }
 
         public void RegisterAllFactories()
         {
             var document = DataSchema.Document;
-            RegisterFactory(ListProteins, document.GetCount(0));
-            RegisterFactory(ListPeptides, document.GetCount(1));
-            RegisterFactory(ListPrecursors, document.GetCount(2));
-            RegisterFactory(ListTransitions, document.GetCount(3));
-            RegisterFactory(ListReplicates, document.MeasuredResults?.Chromatograms.Count ?? 0);
+            RegisterFactory(ListProteins);
+            RegisterFactory(ListPeptides);
+            RegisterFactory(ListPrecursors);
+            RegisterFactory(ListTransitions);
+            RegisterFactory(ListReplicates);
             RegisterFactory(ListPeptideResults);
             RegisterFactory(ListPrecursorResults);
             RegisterFactory(ListTransitionResults);
@@ -190,7 +183,7 @@ namespace pwiz.Skyline.Model.Databinding
             if (layout == null || layout.RowTransforms.Count == 0)
             {
 
-                using var streamingRowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(rowSource);
+                using var streamingRowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
                 if (streamingRowItemEnumerator != null)
                 {
                     layout?.ApplyFormats(streamingRowItemEnumerator.ColumnFormats);
@@ -212,19 +205,6 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 progressMonitor.UpdateProgress(status = status.Complete());
             }
-        }
-
-        private bool ExportSimpleReport(CancellationToken cancellationToken, Stream stream, ViewInfo viewInfo,
-            ViewLayout layout, ref IRowSource rowSource,
-            IRowItemExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
-        {
-            if (layout?.RowTransforms.Count > 0)
-            {
-                return false;
-            }
-
-            var items = rowSource.GetItems().Cast<object>().ToList();
-
         }
     }
 }
