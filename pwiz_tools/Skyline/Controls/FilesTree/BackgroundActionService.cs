@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 queue.Add(action);
             }
-            catch (Exception ex) when (ex is ObjectDisposedException || ex is NullReferenceException)
+            catch (ObjectDisposedException)
             {
                 // Race condition: queue was disposed between our null check and Add call
                 _pendingActionCount = 0;
