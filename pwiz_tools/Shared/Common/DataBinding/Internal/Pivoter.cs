@@ -38,8 +38,6 @@ namespace pwiz.Common.DataBinding.Internal
     /// </summary>
     internal class Pivoter
     {
-        private ValueCache _valueCache = new ValueCache();
-
         public Pivoter(ViewInfo viewInfo) : this(viewInfo.DataSchema.QueryLock.CancellationToken, viewInfo)
         {
 
@@ -125,7 +123,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 CancellationToken.ThrowIfCancellationRequested();
                 object key = keys == null ? index : keys[index];
-                var child = rowItem.SetRowKey(_valueCache.CacheValue(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key)));
+                var child = rowItem.SetRowKey(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key));
                 return Expand(child, sublistColumnIndex + 1);
             });
         }
