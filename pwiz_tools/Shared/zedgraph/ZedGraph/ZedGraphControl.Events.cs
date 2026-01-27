@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2007  John Champion
+//Copyright Â© 2007  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -1234,8 +1234,11 @@ namespace ZedGraph
 			_dragText.UpdateLabelLocation(xScale.AddInterval(_dragText.LabelPosition.X, startX, mouseX),
 				yScale.AddInterval(_dragText.LabelPosition.Y, startY, mouseY), _dragPane);
 
+#if DEBUG
             if (_dragPane.Layout != null)
-                Trace.WriteLine(string.Format(@"Goal function: {0}", _dragPane.Layout.CalculateGoalFunction(_dragText)));
+				using(var g = Graphics.FromHwnd(IntPtr.Zero))
+                    Trace.WriteLine(string.Format(@"Goal function: {0}", _dragPane.Layout.CalculateTotalCost(g)));
+#endif
             Invalidate();
 		}
 
@@ -1296,7 +1299,7 @@ namespace ZedGraph
 			}
 		}
 
-	#endregion
+#endregion
 
 	#region Zoom Events
 

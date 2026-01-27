@@ -163,7 +163,8 @@ namespace ZedGraph
         }
 
         /// <summary>
-        /// Calculates goal function for a labeled point and a suggested label position.
+        /// Calculates goal function for a labeled point and a suggested label position. This does not include point-to-point
+        /// pairwise interactions, only the cost of this label placement itself.
         /// All coordinates are in screen pixels.
         /// </summary>
         /// <param name="pt">Center of the label box, in pixels</param>
@@ -172,11 +173,6 @@ namespace ZedGraph
         /// <param name="targetMarkerRect"> enclosing rectangle of the target point marker. We want to avoid
         /// overlaps with it as much as possible.</param>
         /// <returns>goal function value.</returns>
-        private float GoalFunction(PointF pt, PointF targetPoint, SizeF labelSize, RectangleF targetMarkerRect)
-        {
-            return EvaluateLabelBaseCost(pt, targetPoint, labelSize, targetMarkerRect);
-        }
-
         private float EvaluateLabelBaseCost(PointF pt, PointF targetPoint, SizeF labelSize, RectangleF targetMarkerRect)
         {
             var pathCellCoord = CellIndexesFromXY(targetPoint);
@@ -250,12 +246,6 @@ namespace ZedGraph
                     pathDensity += CellFromPoint(pathCellCoord)._density;
             }
 
-            // calculate the crossover penalty. For each previously labeled point we find if there is an intersection 
-            // between vector V from this point q to the suggested label position and the vector U from the previously
-            // labeled point p to its label position. We do this by solving the equation p + rR = q + sV where r and s
-            // are parameters. If r and s both are <= 1, then the vectors intersect.
-            // For each crossover we penalize the goal function by some large number because we really do not want crossovers to happen.
-            // penalize the goal if the label is completely or partially outside of the chart area
             var visibleArea = RectArea(RectangleF.Intersect(rect, _graph.Chart.Rect));
             var clipPenalty = 0.0f;
             if (visibleArea > 0)
@@ -370,6 +360,9 @@ namespace ZedGraph
             return EvaluateLabelBaseCost(placements[point], targets[point], sizes[point], targetMarkers[point]);
         }
 
+        /// <summary>
+        /// Calculates pairwise cost between two labeled points given their label placements.
+        /// </summary>
         private float PairCost(LabeledPoint p1, LabeledPoint p2, IDictionary<LabeledPoint, SizeF> sizes,
             IDictionary<LabeledPoint, PointF> targets, IDictionary<LabeledPoint, PointF> placements)
         {
@@ -377,15 +370,6 @@ namespace ZedGraph
             var size2 = sizes[p2];
             var rect1 = new RectangleF(placements[p1].X - size1.Width / 2, placements[p1].Y, size1.Width, size1.Height);
             var rect2 = new RectangleF(placements[p2].X - size2.Width / 2, placements[p2].Y, size2.Width, size2.Height);
-            float cost = 0;
-            var intersect = RectangleF.Intersect(rect1, rect2);
-            if (!intersect.IsEmpty)
-            {
-                var intersectArea = intersect.Width * intersect.Height;
-                var rect1Area = rect1.Width * rect1.Height;
-                var rect2Area = rect2.Width * rect2.Height;
-                cost += LABEL_OVERLAP_PENALTY * intersectArea / Math.Max(1, Math.Min(rect1Area, rect2Area));
-            }
 
             var start1 = targets[p1];
             var end1 = placements[p1];
@@ -403,8 +387,24 @@ namespace ZedGraph
             var minBy = Math.Min(Math.Min(rect2.Top, rect2.Bottom), Math.Min(start2.Y, end2.Y));
             var maxBy = Math.Max(Math.Max(rect2.Top, rect2.Bottom), Math.Max(start2.Y, end2.Y));
 
+            float cost = 0;
             if (maxAx >= minBx && maxBx >= minAx && maxAy >= minBy && maxBy >= minAy)
             {
+                // Calculate penalty for label overlap
+                var intersect = RectangleF.Intersect(rect1, rect2);
+                if (!intersect.IsEmpty)
+                {
+                    var intersectArea = intersect.Width * intersect.Height;
+                    var rect1Area = rect1.Width * rect1.Height;
+                    var rect2Area = rect2.Width * rect2.Height;
+                    cost += LABEL_OVERLAP_PENALTY * intersectArea / Math.Max(1, Math.Min(rect1Area, rect2Area));
+                }
+                // calculate the crossover penalty. For each previously labeled point we find if there is an intersection 
+                // between vector V from this point q to the suggested label position and the vector U from the previously
+                // labeled point p to its label position. We do this by solving the equation p + rR = q + sV where r and s
+                // are parameters. If r and s both are <= 1, then the vectors intersect.
+                // For each crossover we penalize the goal function by some large number because we really do not want crossovers to happen.
+                // penalize the goal if the label is completely or partially outside of the chart area
                 var v1 = new VectorF(start1, end1);
                 var v2 = new VectorF(start2, end2);
                 if (v1.DoIntersect(v2))
@@ -418,40 +418,6 @@ namespace ZedGraph
                 cost += CONNECTOR_LABEL_OVERLAP_PENALTY;
 
             return cost;
-        }
-
-        double RecomputeTotal(Dictionary<LabeledPoint, PointF> placements, Dictionary<LabeledPoint, SizeF> labelSizes,
-            Dictionary<LabeledPoint, PointF> targetPoints, Dictionary<LabeledPoint, RectangleF> targetMarkers)
-        {
-            double total = 0;
-            foreach (var p in placements.Keys)
-                total += BaseCost(p, labelSizes, targetPoints, targetMarkers, placements);
-            var plist = placements.Keys.ToList();
-            for (int i = 0; i < plist.Count; i++)
-            for (int j = i + 1; j < plist.Count; j++)
-                total += PairCost(plist[i], plist[j], labelSizes, targetPoints, placements);
-            return total;
-        }
-
-        public double ComputeCurrentGoal()
-        {
-            using(var g = Graphics.FromHwnd(IntPtr.Zero))
-            {
-                var placements = _labeledPoints.ToDictionary(lp => lp.Value,
-                    lp => lp.Value.LabelPosition);
-                var labelSizes = _labeledPoints.ToDictionary(lp => lp.Value,
-                    lp => _graph.GetRectScreen(lp.Value.Label, g).Size);
-                var targetPoints = _labeledPoints.ToDictionary(lp => lp.Value,
-                    lp => _graph.TransformCoord(lp.Value.Point.X, lp.Value.Point.Y, CoordType.AxisXYScale));
-                var targetMarkers = new Dictionary<LabeledPoint, RectangleF>();
-                foreach (var point in _labeledPoints.Values)
-                {
-                    GetPointMarkerRectangle(targetPoints[point], out var rect);
-                    targetMarkers[point] = rect;
-                }
-
-                return RecomputeTotal(placements, labelSizes, targetPoints, targetMarkers);
-            }
         }
 
         /// <summary>
@@ -483,7 +449,6 @@ namespace ZedGraph
 
             var savedLookup = savedLayout ?? new List<LabeledPoint.PointLayout>();
             var placements = new Dictionary<LabeledPoint, PointF>();    // label top-center positions
-            var fixedPoints = new HashSet<LabeledPoint>();
             var movablePoints = new List<LabeledPoint>();
             var avgLabelLength = labelSizes.Values.Any() ? labelSizes.Values.Average(sz => sz.Width) : _cellSize;
             // Place saved points first, build the list of points that have to be optimized
@@ -500,13 +465,12 @@ namespace ZedGraph
                     point.Label.Location.Y = savedPoint.LabelLocation.Y;
                     var topCenter = GetTopCenter(point, g);
                     placements[point] = ClampToAllowed(topCenter, size);
-                    fixedPoints.Add(point);
                 }
                 else
                 {
                     var target = targetPoints[point];
                     // Start near the point with a random offset on the order of the average label length
-                    var offsetMag = avgLabelLength * .7f;
+                    var offsetMag = avgLabelLength * .6f;
                     var initial = new PointF(target.X + GetRandom(offsetMag), target.Y - size.Height - 2 + GetRandom(offsetMag));
                     placements[point] = ClampToAllowed(initial, size);
                     movablePoints.Add(point);
@@ -533,25 +497,27 @@ namespace ZedGraph
             }
 
             float currentCost = baseCosts.Values.Sum() + pairSum;
-            //var realCost = RecomputeTotal(placements, labelSizes, targetPoints, targetMarkers);
 
-            var startTemp = 20.0f;
+            var startTemp = 7.0f;
             var minTemp = 0.1f;
-            var cooling = Math.Exp(-Math.Log(startTemp / minTemp) / (Math.Max(700, 50 * points.Count * 2)));  //0.995f;
-            var maxIterations = Math.Max(400, points.Count * 200);
+            // Linear cooling
+            var maxIterations = Math.Max(700, points.Count * 50);
+            var cooling = (startTemp - minTemp) / maxIterations;
             var acceptanceScale = 1.0f * points.Count;
             var bestPlacement = CopyPlacement(placements);
             var bestCost = currentCost;
+#if DEBUG
+            // Log the annealing process for debugging
             var logPath = Path.Combine(Environment.CurrentDirectory, $"LabelLayoutAnneal.csv");
             if (File.Exists(logPath))
                 File.Delete(logPath);
             using (var log = new StreamWriter(logPath))
             {
                 log.WriteLine("iteration,point_count,temperature,cost, delta, jump");
-
+#endif
                 for (var iter = 0; iter < maxIterations; iter++)
                 {
-                    var temp = startTemp * (float)Math.Pow(cooling, iter);
+                    var temp = startTemp - cooling * iter;
                     if (temp < minTemp || !movablePoints.Any())
                         break;
 
@@ -582,7 +548,6 @@ namespace ZedGraph
                     var addedCost = newBase + newPairSum;
 
                     var newCost = currentCost - removedCost + addedCost;
-                    //realCost = RecomputeTotal(placements, labelSizes, targetPoints, targetMarkers);
                     var delta = newCost - currentCost;
 
                     var accept = delta < 0 || Math.Exp(-delta / Math.Max(temp, 0.0001f)/acceptanceScale) > _randGenerator.NextDouble();
@@ -605,12 +570,12 @@ namespace ZedGraph
                             pairCosts[kvp.Key][point] = kvp.Value;
                         }
                     }
+#if DEBUG
                     var jump = accept && delta > 0 ? 1 : 0;
-                    log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString()},{currentCost.ToString()}, {delta.ToString()}, {jump}");
-
+                    log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString()},{bestCost.ToString()}, {delta.ToString()}, {jump}");
                 }
+#endif
             }
-
             placements = bestPlacement;
             _labeledPoints.Clear();
             foreach (var kv in placements)
@@ -624,19 +589,37 @@ namespace ZedGraph
             _lastSignature = signature;
         }
 
-        // mostly for debugging support
-        public float CalculateGoalFunction(LabeledPoint labPoint)
+        /// <summary>
+        /// Calculates the total goal function for the current layout (all labels).
+        /// </summary>
+        public float CalculateTotalCost(Graphics g)
         {
-            if (labPoint == null)
+            if (!_labeledPoints.Any())
                 return 0;
-            var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
-            var hasTargetMarker = GetPointMarkerRectangle(targetPoint, out var targetMarkerRect);
-            RectangleF labelRect;
-            using (var g = Graphics.FromHwnd(IntPtr.Zero))
-                labelRect = _graph.GetRectScreen(labPoint.Label, g);
-            var labScreenCoords = _graph.TransformCoord(labPoint.Label.Location.X, labPoint.Label.Location.Y, CoordType.AxisXYScale);
-            labScreenCoords = new PointF(labScreenCoords.X, labScreenCoords.Y - labelRect.Height/2);
-            return GoalFunction(labScreenCoords, targetPoint, labelRect.Size, targetMarkerRect);
+
+            var points = _labeledPoints.Values.ToList();
+            var labelSizes = points.ToDictionary(p => p, p => _graph.GetRectScreen(p.Label, g).Size);
+            var targetPoints = points.ToDictionary(p => p, p => _graph.TransformCoord(p.Point.X, p.Point.Y, CoordType.AxisXYScale));
+            var targetMarkers = new Dictionary<LabeledPoint, RectangleF>();
+            foreach (var p in points)
+            {
+                GetPointMarkerRectangle(targetPoints[p], out var rect);
+                targetMarkers[p] = rect;
+            }
+
+            var placements = points.ToDictionary(p => p, p => GetTopCenter(p, g));
+
+            double total = 0;
+            foreach (var p in points)
+                total += BaseCost(p, labelSizes, targetPoints, targetMarkers, placements);
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                for (int j = i + 1; j < points.Count; j++)
+                    total += PairCost(points[i], points[j], labelSizes, targetPoints, placements);
+            }
+
+            return (float)total;
         }
 
         /// <summary>
@@ -712,15 +695,6 @@ namespace ZedGraph
 
             graph.ReverseTransform(new PointF(endPoint.X, endPoint.Y), out var x, out var y);
             return new SizeF((float)(x - labPoint.Point.X), (float)(y - labPoint.Point.Y));
-        }
-
-        public LabeledPoint FindById(object id)
-        {
-            var res = _labeledPoints.ToList().FindAll(lpt => lpt.Value.UniqueID.Equals(id)).Select(pair => pair.Value).ToList();
-            if (res.Any())
-                return res.First();
-            else
-                return null;
         }
 
         public bool IsPointVisible(PointPair point)
