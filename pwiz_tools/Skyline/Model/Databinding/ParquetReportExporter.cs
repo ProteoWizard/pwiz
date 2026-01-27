@@ -26,13 +26,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace pwiz.Skyline.Model.Databinding
 {
     public class ParquetReportExporter : IReportExporter
     {
-        private const int ROWS_PER_GROUP = 100_000;
-
         public void Export(Stream stream, RowItemEnumerator rowItemEnumerator)
         {
             // Build columns and schema from item properties
@@ -51,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding
                 });
             // Single writer thread, queue at most 1 chunk ahead
             writeWorker.RunAsync(1, @"Parquet Writer", maxQueueSize: 1);
-
+            int rowsPerGroup = DecideRowCountPerGroup(rowItemEnumerator.ItemProperties);
             // Process in chunks
             while (true)
             {
@@ -61,7 +60,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
 
                 var chunk = new List<RowItem>();
-                while (chunk.Count < ROWS_PER_GROUP && rowItemEnumerator.MoveNext())
+                while (chunk.Count < rowsPerGroup && rowItemEnumerator.MoveNext())
                 {
                     chunk.Add(rowItemEnumerator.Current);
                 }
@@ -413,6 +412,69 @@ namespace pwiz.Skyline.Model.Databinding
                 return value.ToString();
             }
             return Convert.ChangeType(value, type);
+        }
+
+        public static int DecideRowCountPerGroup(ItemProperties itemProperties)
+        {
+            var targetGroupSize = 1 << 28; // Try to have row groups that are 256GB on disk
+            int rowCount = targetGroupSize / EstimateRowByteCount(itemProperties);
+            return Math.Max(rowCount, 1000);
+        }
+
+        /// <summary>
+        /// Returns a loose estimate of the number of bytes each row will take up.
+        /// </summary>
+        public static int EstimateRowByteCount(IEnumerable<DataPropertyDescriptor> propertyDescriptors)
+        {
+            int columnCount = 0;
+            int maxSublistDepth = 0;
+            int leafColumnByteCount = 0;
+            foreach (var propertyDescriptor in propertyDescriptors)
+            {
+                columnCount++;
+                int sublistDepth = 0;
+                if (propertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor)
+                {
+                    var propertyPath = columnPropertyDescriptor.PropertyPath;
+                    for (; false == propertyPath?.IsRoot; propertyPath = propertyPath.Parent)
+                    {
+                        if (propertyPath.IsUnboundLookup)
+                        {
+                            sublistDepth++;
+                        }
+                    }
+                }
+
+                int columnSize = EstimateColumnSize(propertyDescriptor);
+                // Only include the column byte counts for the columns from the deepest depth of sublist.
+                // Other columns are assumed to have a lot of duplication
+                if (sublistDepth > maxSublistDepth)
+                {
+                    maxSublistDepth = sublistDepth;
+                    leafColumnByteCount = columnSize;
+                }
+                else if (sublistDepth == maxSublistDepth)
+                {
+                    leafColumnByteCount += columnSize;
+                }
+            }
+
+            return 1 + columnCount + leafColumnByteCount;
+        }
+
+        public static int EstimateColumnSize(DataPropertyDescriptor propertyDescriptor)
+        {
+            var columnType = propertyDescriptor.DataSchema.GetWrappedValueType(propertyDescriptor.PropertyType);
+            if (columnType.IsPrimitive)
+            {
+                return Marshal.SizeOf(columnType);
+            }
+            if (columnType.IsGenericType && columnType.GetGenericTypeDefinition() == typeof(FormattableList<>))
+            {
+                return 64;
+            }
+
+            return 8;
         }
     }
 }
