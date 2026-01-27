@@ -414,9 +414,14 @@ namespace pwiz.Skyline.Model.Databinding
             return Convert.ChangeType(value, type);
         }
 
+        /// <summary>
+        /// Returns the number of rows that should be in each row group based on the
+        /// set of columns that are going to be written.
+        /// 
+        /// </summary>
         public static int DecideRowCountPerGroup(ItemProperties itemProperties)
         {
-            var targetGroupSize = 1 << 28; // Try to have row groups that are 256GB on disk
+            var targetGroupSize = 1 << 28; // Try to have row groups that are 256MB on disk
             int rowCount = targetGroupSize / EstimateRowByteCount(itemProperties);
             return Math.Max(rowCount, 1000);
         }
