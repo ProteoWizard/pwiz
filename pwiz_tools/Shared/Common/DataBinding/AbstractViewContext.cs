@@ -16,16 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Clustering;
@@ -34,6 +24,18 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Net.Mime;
+using System.Text;
+using System.Threading;
+using System.Web;
+using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding
 {
@@ -190,39 +192,19 @@ namespace pwiz.Common.DataBinding
         protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, char separator)
         {
-            WriteData(progressMonitor, writer, RowItemList.FromBindingListSource(bindingListSource), separator);
-        }
-
-        protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
-            RowItemEnumerator rowItemEnumerator, char separator)
-        {
-            IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, rowItemEnumerator.Count));
-            WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
-        }
-
-        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, RowItemEnumerator rowItemEnumerator, char separator)
-        {
-            var dsvWriter = CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats);
-            dsvWriter.WriteHeaderRow(writer, rowItemEnumerator.ItemProperties);
-            var rowCount = rowItemEnumerator.Count;
-            int startPercent = status.PercentComplete;
-            long rowIndex = 0;
-            while (rowItemEnumerator.MoveNext())
+            var rowItemEnumerator = RowItemList.FromBindingListSource(bindingListSource);
+            if (progressMonitor != null)
             {
-                if (progressMonitor.IsCanceled)
-                {
-                    return;
-                }
-                int percentComplete = startPercent + (int) (rowIndex * (100 - startPercent) / rowCount);
-                if (percentComplete > status.PercentComplete)
-                {
-                    status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
-                        .ChangePercentComplete(percentComplete);
-                    progressMonitor.UpdateProgress(status);
-                }
-                dsvWriter.WriteDataRow(writer, rowItemEnumerator.Current, rowItemEnumerator.ItemProperties);
-                rowIndex++;
+                rowItemEnumerator.SetProgressMonitor(progressMonitor, new ProgressStatus());
             }
+            CreateDsvReportExporter(separator).Write(writer, rowItemEnumerator);
+        }
+
+        protected virtual DsvReportExporter CreateDsvReportExporter(char separator)
+        {
+            return new DsvReportExporter(new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider,
+                DataSchema.DataSchemaLocalizer.Language,
+                separator));
         }
 
         /// <summary>
@@ -263,33 +245,30 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public virtual DsvWriter CreateDsvWriter(char separator, ColumnFormats columnFormats)
-        {
-            return new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, DataSchema.DataSchemaLocalizer.Language,
-                separator)
-            {
-                ColumnFormats = columnFormats
-            };
-        }
-
         public void ExportToFile(Control owner, BindingListSource bindingListSource, String filename,
             char separator)
         {
             SafeWriteToFile(owner, filename, stream =>
             {
                 var writer = new StreamWriter(stream, new UTF8Encoding(false));
-                bool finished = false;
-                RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
-                {
-                    WriteData(progressMonitor, writer, bindingListSource, separator);
-                    finished = !progressMonitor.IsCanceled;
-                });
-                if (finished)
-                {
-                    writer.Flush();
-                }
-                return finished;
+                return ExportToWriter(owner, bindingListSource, writer, separator);
             });
+        }
+
+        public bool ExportToWriter(Control owner, BindingListSource bindingListSource, TextWriter writer,
+            char separator)
+        {
+            bool finished = false;
+            RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
+            {
+                WriteData(progressMonitor, writer, bindingListSource, separator);
+                finished = !progressMonitor.IsCanceled;
+            });
+            if (finished)
+            {
+                writer.Flush();
+            }
+            return finished;
         }
 
         /// <summary>

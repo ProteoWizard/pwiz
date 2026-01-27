@@ -18,65 +18,149 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
+    /// <summary>
+    /// Enumerates RowItem's and updates progress.
+    /// </summary>
     public abstract class RowItemEnumerator : IDisposable
     {
-        protected RowItemEnumerator(ItemProperties itemProperties, ColumnFormats columnFormats)
+        protected RowItemEnumerator(long? rowCount)
         {
-            ItemProperties = itemProperties;
-            ColumnFormats = columnFormats;
+            Length = rowCount;
+            if (Length.HasValue)
+            {
+                ProgressMessageTemplate = string.Format(Resources.RowItemEnumerator_RowItemEnumerator_Writing_row__0___1_, @"{0:#,0}", Length.Value.ToString(@"#,0"));
+            }
+            else
+            {
+                ProgressMessageTemplate = Resources.RowItemEnumerator_RowItemEnumerator_Writing_row__0___0_;
+            }
+
         }
         public abstract RowItem Current { get; }
-        public ItemProperties ItemProperties { get; }
-        public ColumnFormats ColumnFormats { get; }
+        public ItemProperties ItemProperties { get; set; } = ItemProperties.EMPTY;
+        public ColumnFormats ColumnFormats { get; set; } = new ColumnFormats();
 
-        public long Index { get; protected set; }
-        public long? Count { get; protected set; }
+        /// <summary>
+        /// The number of RowItem's that have been returned so far.
+        /// </summary>
+        public long Position { get; protected set; }
+        /// <summary>
+        /// The total number of RowItem's that will be returned, if known.
+        /// </summary>
+        public long? Length { get; }
 
         public virtual double? PercentComplete
         {
             get
             {
-                if (Count.HasValue)
+                if (Length.HasValue)
                 {
-                    return Index * 100.0 / Count.Value;
+                    return Position * 100.0 / Length.Value;
                 }
                 return null;
             }
         }
 
-        public abstract bool MoveNext();
+        /// <summary>
+        /// Move to the next RowItem and update progress
+        /// </summary>
+
+        public bool MoveNext()
+        {
+            if (IsCanceled)
+            {
+                return false;
+            }
+
+            bool result = TryMoveNext();
+            if (result)
+            {
+                UpdateProgress();
+            }
+
+            return result;
+        }
+
+        public bool IsCanceled
+        {
+            get
+            {
+                return true == ProgressMonitor?.IsCanceled;
+            }
+        }
+
+        protected abstract bool TryMoveNext();
+       
 
         public virtual void Dispose()
         {
+        }
+
+        public IProgressStatus Status { get; set; }
+        public IProgressMonitor ProgressMonitor { get; private set; }
+
+        public void SetProgressMonitor(IProgressMonitor progressMonitor, IProgressStatus status)
+        {
+            ProgressMonitor = progressMonitor;
+            Status = status;
+            ProgressUpdateStopwatch = Stopwatch.StartNew();
+        }
+        public TimeSpan ProgressUpdateInterval { get; set; } = TimeSpan.FromMilliseconds(100);
+        public Stopwatch ProgressUpdateStopwatch { get; set; }
+
+        public int StartProgressPercent { get; set; }
+        public string ProgressMessageTemplate { get; set; }
+
+        public void UpdateProgress()
+        {
+            if (Status == null)
+            {
+                return;
+            }
+
+            int? newPercentComplete = (int?) (StartProgressPercent + this.PercentComplete * (100 - StartProgressPercent) / 100);
+            if (newPercentComplete > Status.PercentComplete ||
+                ProgressUpdateStopwatch?.Elapsed > ProgressUpdateInterval)
+            {
+                Status = Status.ChangeMessage(string.Format(ProgressMessageTemplate, Position + 1));
+                if (newPercentComplete.HasValue)
+                {
+                    Status = Status.ChangePercentComplete(Math.Max(0, Math.Min(99, newPercentComplete.Value)));
+                }
+
+                ProgressMonitor?.UpdateProgress(Status);
+            }
         }
     }
 
 
     /// <summary>
-    /// Single-use enumerator throw a list of RowItem objects.
+    /// Single-use enumerator through a list of RowItem objects.
     /// Nulls out items in its array after they have been returned so that they can be garbage collected.
     /// </summary>
     public class RowItemList : RowItemEnumerator
     {
-        private ImmutableList<RowItem[]> _rowItems;
+        private readonly ImmutableList<RowItem[]> _rowItems;
         private int _listIndex;
         private int _indexInList;
         private RowItem _current;
 
-        public RowItemList(IEnumerable<IEnumerable<RowItem>> rowItemLists, ItemProperties itemProperties,
-            ColumnFormats columnFormats) : base(itemProperties, columnFormats)
+        private RowItemList(ImmutableList<RowItem[]> rowItems) : base(rowItems.Sum(list=>list.Length))
         {
-            _rowItems = ImmutableList.ValueOf(rowItemLists.Select(list => list.ToArray()));
-            Count = _rowItems.Sum(list => (long) list.Length);
+            _rowItems = rowItems;
         }
 
-        public RowItemList(BigList<RowItem> bigList, ItemProperties itemProperties, ColumnFormats columnFormats) : this(bigList.InnerLists, itemProperties, columnFormats)
+        public RowItemList(BigList<RowItem> bigList, ItemProperties itemProperties, ColumnFormats columnFormats)
+            : this(ImmutableList.ValueOf(bigList.InnerLists.Select(list=>list.ToArray())))
         {
 
         }
@@ -87,7 +171,7 @@ namespace pwiz.Common.DataBinding
         }
 
 
-        public override bool MoveNext()
+        protected override bool TryMoveNext()
         {
             if (_listIndex >= _rowItems.Count)
             {
@@ -103,7 +187,7 @@ namespace pwiz.Common.DataBinding
                 _listIndex++;
             }
 
-            Index++;
+            Position++;
             return true;
         }
 
@@ -119,6 +203,10 @@ namespace pwiz.Common.DataBinding
         }
     }
 
+    /// <summary>
+    /// Enumerates RowItems when it is not known how many there will actually be.
+    /// The RowItems come from performing an operation which maps each source RowItem to zero or more RowItems.
+    /// </summary>
     public class StreamingRowItemEnumerator : RowItemEnumerator
     {
 
@@ -127,14 +215,18 @@ namespace pwiz.Common.DataBinding
         private long? _sourceCount;
         private Func<RowItem, IEnumerable<RowItem>> _expander;
 
+        /// <summary>
+        /// Constructor for a StreamingRowItemEnumerator which iterates over RowItems that are obtained by performing an operation on source row items.
+        /// </summary>
+        /// <param name="source">The RowItem objects that will be given to the <paramref name="expander"/> function</param>
+        /// <param name="sourceCount">The number of source RowItem objects or null if that count is not known</param>
+        /// <param name="expander">Mapping operation that returns zero or more RowItem objects for each input.</param>
+        /// <param name="expandedItemCount">The total number of RowItems that will be returned by invoking expander on each source RowItem, or null if not known</param>
         public StreamingRowItemEnumerator(IEnumerable<RowItem> source, long? sourceCount, Func<RowItem, IEnumerable<RowItem>> expander,
-            long? expandedItemCount,
-            ItemProperties itemProperties,
-            ColumnFormats columnFormats) : base(itemProperties, columnFormats)
+            long? expandedItemCount) : base(expandedItemCount)
         {
             _expander = expander;
             _sourceCount = sourceCount;
-            Count = expandedItemCount;
             _enumerator = EnumerateRowItems(source);
         }
 
@@ -147,13 +239,13 @@ namespace pwiz.Common.DataBinding
                 foreach (var rowItem in _expander(o))
                 {
                     yield return rowItem;
-                    Index++;
+                    Position++;
                 }
                 _sourceIndex++;
             }
         }
 
-        public override bool MoveNext()
+        protected override bool TryMoveNext()
         {
             return _enumerator.MoveNext();
         }

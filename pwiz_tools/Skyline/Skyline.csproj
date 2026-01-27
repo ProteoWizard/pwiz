@@ -565,10 +565,10 @@
     </Compile>
     <Compile Include="Model\Databinding\CandidatePeakGroupFactory.cs" />
     <Compile Include="Model\Databinding\Collections\ResultMap.cs" />
-    <Compile Include="Model\Databinding\IRowItemExporter.cs" />
-    <Compile Include="Model\Databinding\ParquetRowItemExporter.cs" />
+    <Compile Include="Model\Databinding\ReportExporters.cs" />
+    <Compile Include="Model\Databinding\ParquetReportExporter.cs" />
     <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
-    <Compile Include="Model\Databinding\RowItemExporter.cs" />
+    <Compile Include="Model\Databinding\DsvReportExporter.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRowFactory.cs" />

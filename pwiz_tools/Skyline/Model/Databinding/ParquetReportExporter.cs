@@ -19,25 +19,21 @@
 using Parquet;
 using Parquet.Data;
 using pwiz.Common.DataBinding;
-using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Skyline.Model.Databinding
 {
-    public class ParquetRowItemExporter : IRowItemExporter
+    public class ParquetReportExporter : IReportExporter
     {
         private const int ROWS_PER_GROUP = 100_000;
 
-        public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
-            RowItemEnumerator rowItemEnumerator)
+        public void Export(Stream stream, RowItemEnumerator rowItemEnumerator)
         {
             // Build columns and schema from item properties
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
@@ -55,12 +51,11 @@ namespace pwiz.Skyline.Model.Databinding
                 });
             // Single writer thread, queue at most 1 chunk ahead
             writeWorker.RunAsync(1, @"Parquet Writer", maxQueueSize: 1);
-            var stopwatch = Stopwatch.StartNew();
 
             // Process in chunks
             while (true)
             {
-                if (progressMonitor.IsCanceled || writeWorker.Exception != null)
+                if (rowItemEnumerator.IsCanceled || writeWorker.Exception != null)
                 {
                     break;
                 }
@@ -68,30 +63,6 @@ namespace pwiz.Skyline.Model.Databinding
                 var chunk = new List<RowItem>();
                 while (chunk.Count < ROWS_PER_GROUP && rowItemEnumerator.MoveNext())
                 {
-                    int? percentComplete = (int?)rowItemEnumerator.PercentComplete;
-                    if (percentComplete.HasValue)
-                    {
-                        percentComplete = Math.Min(99, percentComplete.Value);
-                    }
-                    if (percentComplete > status.PercentComplete || stopwatch.ElapsedMilliseconds > 100)
-                    {
-                        if (rowItemEnumerator.Count.HasValue)
-                        {
-                            status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_,
-                                rowItemEnumerator.Index, rowItemEnumerator.Count));
-                        }
-                        else
-                        {
-                            status = status.ChangeMessage(string.Format("Writing row {0}", rowItemEnumerator.Index));
-                        }
-                        if (percentComplete.HasValue)
-                        {
-                            status = status.ChangePercentComplete(percentComplete.Value);
-                        }
-
-                        progressMonitor.UpdateProgress(status);
-                        stopwatch.Restart();
-                    }
                     chunk.Add(rowItemEnumerator.Current);
                 }
 
@@ -104,8 +75,8 @@ namespace pwiz.Skyline.Model.Databinding
                 var chunkArrays = columns.Select(col => col.CreateArray(chunk.Count)).ToArray();
 
                 // Populate chunk data
-                PopulateChunk(progressMonitor, chunk, columns, chunkArrays);
-                if (progressMonitor.IsCanceled)
+                PopulateChunk(rowItemEnumerator.ProgressMonitor, chunk, columns, chunkArrays);
+                if (rowItemEnumerator.IsCanceled)
                 {
                     break;
                 }
@@ -373,7 +344,7 @@ namespace pwiz.Skyline.Model.Databinding
             { typeof(DateTime), typeof(DateTimeOffset?) }
         };
 
-        static ParquetRowItemExporter()
+        static ParquetReportExporter()
         {
             foreach (var value in _storageTypes.Values.ToArray())
             {

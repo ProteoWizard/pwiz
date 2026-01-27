@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model.Databinding
             return rowFactories;
         }
 
-        public void ExportReport(Stream stream, ViewName viewName, IRowItemExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public void ExportReport(Stream stream, ViewName viewName, IReportExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             if (Equals(viewName.GroupId, ViewGroup.BUILT_IN.Id))
             {
@@ -166,41 +166,48 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 throw new ArgumentException(string.Format(DatabindingResources.RowFactories_ExportReport_There_is_no_report_named___0___in_the_group___1__, viewName.Name, viewName.GroupId));
             }
+            var layout = viewSpecList.GetViewLayouts(viewName.Name).DefaultLayout;
+            ExportReport(stream, viewSpec, layout, rowItemExporter, progressMonitor, ref status);
+        }
+
+        public void ExportReport(Stream stream, ViewSpec viewSpec, ViewLayout layout, IReportExporter rowItemExporter,
+            IProgressMonitor progressMonitor, ref IProgressStatus status)
+        {
             if (!_factoriesByName.TryGetValue(viewSpec.RowSource, out var factory))
             {
                 throw new ArgumentException(string.Format(DatabindingResources.RowFactories_ExportReport_The_row_type___0___cannot_be_exported_,
                     viewSpec.RowSource));
             }
 
-            var layout = viewSpecList.GetViewLayouts(viewName.Name).DefaultLayout;
             var viewInfo = new ViewInfo(DataSchema, factory.ItemType, viewSpec);
             ExportReport(CancellationToken, stream, viewInfo, layout, factory, rowItemExporter, progressMonitor, ref status);
+
         }
 
         public static void ExportReport(CancellationToken cancellationToken, Stream stream, ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
-            IRowItemExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
+            IReportExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
+            RowItemEnumerator rowItemEnumerator = null;
             if (layout == null || layout.RowTransforms.Count == 0)
             {
 
-                using var streamingRowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
-                if (streamingRowItemEnumerator != null)
-                {
-                    layout?.ApplyFormats(streamingRowItemEnumerator.ColumnFormats);
-                    rowItemExporter.Export(progressMonitor, ref status, stream, streamingRowItemEnumerator);
-                    return;
-                }
+                rowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
             }
 
-            RowItemEnumerator rowItemEnumerator;
-            using (var bindingListSource = new BindingListSource(cancellationToken))
+            if (rowItemEnumerator == null)
             {
+                using var bindingListSource = new BindingListSource(cancellationToken);
                 bindingListSource.SetView(viewInfo, rowSource);
                 layout?.ApplyFormats(bindingListSource.ColumnFormats);
                 rowItemEnumerator = RowItemList.FromBindingListSource(bindingListSource);
             }
-            
-            rowItemExporter.Export(progressMonitor, ref status, stream, rowItemEnumerator);
+            rowItemEnumerator.SetProgressMonitor(progressMonitor, status);
+            layout?.ApplyFormats(rowItemEnumerator.ColumnFormats);
+
+
+
+            rowItemExporter.Export(stream, rowItemEnumerator);
+            status = rowItemEnumerator.Status;
             if (!progressMonitor.IsCanceled)
             {
                 progressMonitor.UpdateProgress(status = status.Complete());

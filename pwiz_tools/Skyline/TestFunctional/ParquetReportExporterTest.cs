@@ -19,14 +19,14 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class ParquetRowItemExporterTest : AbstractUnitTest
+    public class ParquetReportExporterTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestConvertToStorageType()
         {
-            var dateTimeOffset = ParquetRowItemExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTimeOffset));
+            var dateTimeOffset = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTimeOffset));
             Assert.IsInstanceOfType(dateTimeOffset, typeof(DateTimeOffset));
-            var nullableFloat = ParquetRowItemExporter.ConvertToStorageType(1f, typeof(float?));
+            var nullableFloat = ParquetReportExporter.ConvertToStorageType(1f, typeof(float?));
             Assert.IsInstanceOfType(nullableFloat, typeof(float?));
         }
 
@@ -42,7 +42,7 @@ namespace pwiz.SkylineTest
             var dataSchema = SkylineDataSchema.MemoryDataSchema(new SrmDocument(SrmSettingsList.GetDefault()),
                 DataSchemaLocalizer.INVARIANT);
             var viewInfo = new ViewInfo(dataSchema, typeof(MyObject), viewSpec);
-            var rowItemExporter = new ParquetRowItemExporter();
+            var rowItemExporter = new ParquetReportExporter();
             IProgressStatus status = new ProgressStatus();
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items), rowItemExporter, new SilentProgressMonitor(), ref status);
             stream.Position = 0;

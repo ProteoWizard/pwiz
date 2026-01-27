@@ -52,10 +52,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             var view = ReportSharing.DeserializeReportList(OpenTestFile("MSstats_report.skyr")).First().ViewSpecLayout;
             var viewContext = new DocumentGridViewContext(skylineDataSchema);
             StringWriter stringWriter = new StringWriter();
-            IProgressStatus progressStatus = new ProgressStatus();
-            viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref progressStatus,
-                viewContext.GetViewInfo(ViewGroup.BUILT_IN, view.ViewSpec), stringWriter,
-                TextUtil.SEPARATOR_CSV);
+            viewContext.ExportToWriter(view.ViewSpec, stringWriter, TextUtil.SEPARATOR_CSV);
             string expectedReport = new StreamReader(OpenTestFile("BrudererSubset_MSstatsInput.csv")).ReadToEnd();
             AssertEx.NoDiff(expectedReport, stringWriter.ToString());
         }

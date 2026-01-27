@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
             bool triedToCancel = RunAndMaybeTryCancel(() =>
             {
                 var skylineViewContext = (SkylineViewContext)databoundGridControl.NavBar.ViewContext;
-                skylineViewContext.ExportToFile(databoundGridControl, databoundGridControl.BindingListSource.ViewInfo,
+                skylineViewContext.ExportToFile(databoundGridControl, databoundGridControl.BindingListSource,
                     filename, SEPARATOR_TO_USE);
             }, maybeTryToCancel);
             if (!triedToCancel)

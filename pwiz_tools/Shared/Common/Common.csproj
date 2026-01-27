@@ -169,7 +169,7 @@
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
-  <!-- DataGridViewColumnTypeAttribute.cs removed -->
+    <!-- DataGridViewColumnTypeAttribute.cs removed -->
     <Compile Include="DataBinding\Attributes\DataTypeSpecifierAttribute.cs" />
     <Compile Include="DataBinding\Attributes\FormatAttribute.cs" />
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
@@ -303,6 +303,7 @@
     <Compile Include="DataBinding\Filtering\FilterPages.cs" />
     <Compile Include="DataBinding\Filtering\IFilterAutoComplete.cs" />
     <Compile Include="DataBinding\Internal\WrappedDataPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\ReportExporter.cs" />
     <Compile Include="DataBinding\RowItemEnumerator.cs" />
     <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />

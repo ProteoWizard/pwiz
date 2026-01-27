@@ -36,7 +36,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
@@ -3405,15 +3404,15 @@ namespace pwiz.Skyline
                     IProgressStatus status = new ProgressStatus(string.Empty);
                     IProgressMonitor broker = new CommandProgressMonitor(_out, status);
 
-                    IRowItemExporter rowItemExporter;
+                    IReportExporter rowItemExporter;
                     if (reportColSeparator.HasValue)
                     {
                         rowItemExporter =
-                            RowItemExporters.ForSeparator(dataSchema.DataSchemaLocalizer, reportColSeparator.Value);
+                            ReportExporters.ForSeparator(dataSchema.DataSchemaLocalizer, reportColSeparator.Value);
                     }
                     else
                     {
-                        rowItemExporter = RowItemExporters.ForFilenameExtension(dataSchema.DataSchemaLocalizer,
+                        rowItemExporter = ReportExporters.ForFilenameExtension(dataSchema.DataSchemaLocalizer,
                             Path.GetExtension(commandArgs.ReportFile), TextUtil.EXT_CSV);
                     }
                     rowFactories.ExportReport(saver.Stream, PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName), rowItemExporter, broker, ref status);

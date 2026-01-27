@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
             var fileName = saveFileDialog.FileName;
             var localizer = GetDataSchemaLocalizer();
-            var rowExporter = RowItemExporters.ForFilenameExtension(localizer, Path.GetExtension(fileName),
+            var rowExporter = ReportExporters.ForFilenameExtension(localizer, Path.GetExtension(fileName),
                 extensions.ElementAtOrDefault(saveFileDialog.FilterIndex), TextUtil.EXT_TSV);
             if (!ExportReport(fileName, rowExporter))
                 return;
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public void OkDialog(string fileName, char separator)
         {
             Settings.Default.ExportDirectory = Path.GetDirectoryName(fileName);
-            if (!ExportReport(fileName, RowItemExporters.ForSeparator(GetDataSchemaLocalizer(), separator)))
+            if (!ExportReport(fileName, ReportExporters.ForSeparator(GetDataSchemaLocalizer(), separator)))
                 return;
 
             DialogResult = DialogResult.OK;
@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer();
         }
        
-        private bool ExportReport(string filename, IRowItemExporter rowItemExporter)
+        private bool ExportReport(string filename, IReportExporter rowItemExporter)
         {
             var viewName = SelectedViewName;
             if (!viewName.HasValue)

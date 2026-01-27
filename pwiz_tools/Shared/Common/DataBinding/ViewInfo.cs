@@ -217,9 +217,10 @@ namespace pwiz.Common.DataBinding
                 rowCount = sourceItemCount;
             }
             var itemProperties = new ItemProperties(pivoter.GetItemProperties(BigList<RowItem>.Empty));
-            return new StreamingRowItemEnumerator(sourceItems, sourceItemCount,
-                pivoter.ExpandAndFilter,
-                rowCount, itemProperties, new ColumnFormats());
+            return new StreamingRowItemEnumerator(sourceItems, sourceItemCount, pivoter.ExpandAndFilter, rowCount)
+            {
+                ItemProperties = itemProperties
+            };
         }
     }
 }

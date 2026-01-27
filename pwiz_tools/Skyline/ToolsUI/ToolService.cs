@@ -30,7 +30,6 @@ using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -102,16 +101,12 @@ namespace pwiz.Skyline.ToolsUI
             var container = new MemoryDocumentContainer();
             container.SetDocument(document, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            var viewContext = new DocumentGridViewContext(dataSchema);
+            using var stream = new MemoryStream();
+            var rowFactories = new RowFactories(CancellationToken.None, dataSchema);
             IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
-            var writer = new StringWriter();
-            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), viewSpec.DefaultViewLayout, writer,
-                    TextUtil.SEPARATOR_CSV))
-            {
-                return writer.ToString();
-            }
-            return null;
+            rowFactories.ExportReport(stream, viewSpec.ViewSpec, viewSpec.DefaultViewLayout, ReportExporters.ForSeparator(DataSchemaLocalizer.INVARIANT, TextUtil.SEPARATOR_CSV), progressMonitor, ref status);
+            return Encoding.UTF8.GetString(stream.ToArray());
         }
 
         [Obsolete]

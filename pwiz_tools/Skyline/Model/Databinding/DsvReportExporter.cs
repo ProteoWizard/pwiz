@@ -17,39 +17,28 @@
  * limitations under the License.
  */
 using pwiz.Common.DataBinding;
-using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
 namespace pwiz.Skyline.Model.Databinding
 {
-    public class RowItemExporter : IRowItemExporter
+    public class ReplicatePivotDsvReportExporter : DsvReportExporter
     {
-        public RowItemExporter(DsvWriter dsvWriter)
-        {
-            DsvWriter = dsvWriter;
-        }
-        
-        public DsvWriter DsvWriter { get; }
+        public ReplicatePivotDsvReportExporter(DsvWriter dsvWriter) : base(dsvWriter) { }
 
-        public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, Stream stream,
-            RowItemEnumerator rowItemEnumerator)
+        public override void Write(TextWriter writer, RowItemEnumerator rowItemEnumerator)
         {
-            using var writer = new StreamWriter(stream);
-            DsvWriter.ColumnFormats = rowItemEnumerator.ColumnFormats;
-            Export(progressMonitor, ref status, writer, rowItemEnumerator);
-        }
-
-        public void Export(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
-            RowItemEnumerator rowItemEnumerator) 
-        {
-            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(rowItemEnumerator.ItemProperties);
+            ReplicatePivotColumns replicatePivotColumns = null;
+            var rowItemList = rowItemEnumerator as RowItemList;
+            if (rowItemList != null)
+            {
+                replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(rowItemEnumerator.ItemProperties);
+            }
             if (true != replicatePivotColumns?.HasConstantAndVariableColumns())
             {
-                WriteFlatTable(progressMonitor, ref status, writer, rowItemEnumerator);
+                base.Write(writer, rowItemEnumerator);
                 return;
             }
 
@@ -67,7 +56,7 @@ namespace pwiz.Skyline.Model.Databinding
                 .Prepend(propertyCaption).ToList();
             var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
             var propertyLines = new List<List<string>> { headerLine };
-            var allRowItems = ((RowItemList) rowItemEnumerator).GetRowItems();
+            var allRowItems = rowItemList.GetRowItems();
             foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
             {
                 // Add replicate to header line.
@@ -105,46 +94,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             writer.WriteLine();
             var newRowItemEnumerator = new RowItemList(allRowItems, new ItemProperties(filteredColumnDescriptors), rowItemEnumerator.ColumnFormats);
-            WriteFlatTable(progressMonitor, ref status, writer, newRowItemEnumerator);
+            base.Write(writer, newRowItemEnumerator);
         }
-        public const int PROGRESS_UPDATE_INTERVAL_MS = 100; // Throttle progress UI updates after first show
-
-        public void WriteFlatTable(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
-            RowItemEnumerator rowItemEnumerator)
-        {
-            DsvWriter.WriteHeaderRow(writer, rowItemEnumerator.ItemProperties);
-            var rowCount = rowItemEnumerator.Count;
-            int startPercent = status.PercentComplete;
-            var stopwatch = Stopwatch.StartNew();
-            while (rowItemEnumerator.MoveNext())
-            {
-                if (progressMonitor.IsCanceled)
-                {
-                    return;
-                }
-                int? percentComplete = (int?) (startPercent + rowItemEnumerator.PercentComplete * (100 - startPercent));
-                if (percentComplete > status.PercentComplete || stopwatch.ElapsedMilliseconds > PROGRESS_UPDATE_INTERVAL_MS)
-                {
-                    if (rowCount.HasValue)
-                    {
-                        status = status.ChangeMessage(string.Format(
-                            Resources.AbstractViewContext_WriteData_Writing_row__0___1_, rowItemEnumerator.Index + 1, rowCount));
-
-                    }
-                    else
-                    {
-                        status = status.ChangeMessage(string.Format("Writing row {0}", rowItemEnumerator.Index + 1));
-                    }
-                    if (percentComplete.HasValue)
-                    {
-                        status = status.ChangePercentComplete(percentComplete.Value);
-                    }
-                    progressMonitor.UpdateProgress(status);
-                    stopwatch.Restart();
-                }
-                DsvWriter.WriteDataRow(writer, rowItemEnumerator.Current, rowItemEnumerator.ItemProperties);
-            }
-        }
-        
     }
 }

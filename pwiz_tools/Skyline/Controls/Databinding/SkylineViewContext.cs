@@ -132,12 +132,16 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             return true;
         }
-
-        protected override void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
-            RowItemEnumerator rowItemEnumerator, char separator)
+        protected override DsvReportExporter CreateDsvReportExporter(char separator)
         {
-            var rowItemExporter = new RowItemExporter(CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats));
-            rowItemExporter.Export(progressMonitor, ref status, writer, rowItemEnumerator);
+            var dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider,
+                DataSchema.DataSchemaLocalizer.Language,
+                separator);
+            if (IsInvariantLanguage())
+            {
+                dsvWriter.NumberFormatOverride = Formats.RoundTrip;
+            }
+            return new ReplicatePivotDsvReportExporter(dsvWriter);
         }
 
         protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
@@ -295,101 +299,22 @@ namespace pwiz.Skyline.Controls.Databinding
             return ReferenceEquals(DataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT);
         }
 
-        public override DsvWriter CreateDsvWriter(char separator, ColumnFormats columnFormats)
+        public void ExportViewToFile(ViewInfo viewInfo, string fileName, char separator)
         {
-            var dsvWriter = base.CreateDsvWriter(separator, columnFormats);
-            if (IsInvariantLanguage())
-            {
-                dsvWriter.NumberFormatOverride = Formats.RoundTrip;
-            }
-
-            return dsvWriter;
+            using var writer = new StreamWriter(fileName);
+            ExportViewToWriter(viewInfo, writer, separator);
         }
 
-        public DsvWriter GetDsvWriter(char separator)
+        public void ExportViewToWriter(ViewInfo viewInfo, TextWriter writer, char separator)
         {
-            return CreateDsvWriter(separator, null);
+            using var bindingListSource = new BindingListSource(CancellationToken.None);
+            bindingListSource.SetView(viewInfo, GetRowSource(viewInfo));
+            WriteData(null, writer, bindingListSource, separator);
         }
 
-        public bool ExportToFile(Control owner, ViewInfo viewInfo, string fileName, char separator)
+        public void ExportToWriter(ViewSpec viewSpec, TextWriter writer, char separator)
         {
-            try
-            {
-                return SafeWriteToFile(owner, fileName, stream =>
-                {
-                    bool success = false;
-                    using (var longWait = new LongWaitDlg())
-                    {
-                        longWait.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
-                        var action = new Action<IProgressMonitor>(progressMonitor =>
-                        {
-                            IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
-                            progressMonitor.UpdateProgress(status);
-                            using (var writer = new StreamWriter(stream))
-                            {
-                                success = Export(longWait.CancellationToken, progressMonitor, ref status, viewInfo, writer, separator);
-                                writer.Close();
-                            }
-                            if (success)
-                            {
-                                progressMonitor.UpdateProgress(status.Complete());
-                            }
-                        });
-                        longWait.PerformWork(owner, 1500, action);
-                    }
-                    return success;
-                });
-            }
-            catch (Exception x)
-            {
-                MessageDlg.ShowWithException(owner,
-                    string.Format(DatabindingResources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, x.Message), x);
-                return false;
-            }
-        }
-
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor,
-            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, char separator)
-        {
-            ViewLayout viewLayout = null;
-            if (viewInfo.ViewGroup != null)
-            {
-                var viewLayoutList = GetViewLayoutList(viewInfo.ViewGroup.Id.ViewName(viewInfo.Name));
-                if (viewLayoutList != null)
-                {
-                    viewLayout = viewLayoutList.DefaultLayout;
-                }
-            }
-
-            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, separator);
-        }
-
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
-        {
-            progressMonitor ??= new SilentProgressMonitor(cancellationToken);
-            RowItemEnumerator rowItemEnumerator;
-            using (var bindingListSource = new BindingListSource(cancellationToken))
-            {
-                bindingListSource.SetViewContext(this, viewInfo);
-                if (viewLayout != null)
-                {
-                    foreach (var column in viewLayout.ColumnFormats)
-                    {
-                        bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
-                    }
-                }
-
-                rowItemEnumerator = RowItemList.FromBindingListSource(bindingListSource);
-            }
-
-            progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
-                .ChangeMessage(DatabindingResources.ExportReportDlg_ExportReport_Writing_report));
-            WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
-            if (progressMonitor.IsCanceled)
-                return false;
-            writer.Flush();
-            progressMonitor.UpdateProgress(status = status.Complete());
-            return true;
+            ExportViewToWriter(GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, separator);
         }
 
         protected override bool SafeWriteToFile(Control owner, string fileName, Func<Stream, bool> writeFunc)
