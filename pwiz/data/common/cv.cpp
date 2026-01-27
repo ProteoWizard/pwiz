@@ -3233,7 +3233,7 @@ const TermInfo termInfos_[] =
     {MS_mass_spectrometry_acquisition_method_aspect, "MS:1003214", "mass spectrometry acquisition method aspect", "Specific aspect of a mass spectrometer method by which mass ranges are selected and possibly dissociated.", false},
     {MS_data_independent_acquisition, "MS:1003215", "data-independent acquisition", "Mass spectrometer data acquisition method wherein mass selection for fragmentation is configured according to a pre-determined program, rather than based on any detected precursor ions.", false},
     {MS_dissociation_of_full_mass_range, "MS:1003216", "dissociation of full mass range", "Mass spectrometer data acquisition method wherein all precursor ions of which the instrument is capable are fragmented at once..", false},
-    {MS_dissociation_of_scanning_quadrupole_across_a_specified_mass_range, "MS:1003217", "dissociation of scanning quadrupole across a specified mass range", "Mass spectrometer data acquisition method wherein ????.", false},
+    {MS_dissociation_of_scanning_quadrupole_across_a_specified_mass_range, "MS:1003217", "dissociation of scanning quadrupole across a specified mass range", "Mass spectrometer data acquisition method wherein a quadrupole mass analyzer transmits a sliding window of precursor ions for dissociation and spectrum acquisition within each acquisition cycle. This correlates precursor selection with product ion detection resulting in 'quadrupole transmission window' as an additional dimension in the resulting data. An example of such an approach is Waters SONAR.", false},
     {MS_dissociation_of_sequential_mass_ranges, "MS:1003218", "dissociation of sequential mass ranges", "Mass spectrometer data acquisition method wherein a series of limited mass range fragmentation selection windows are preconfigured.", false},
     {MS_ion_mobility_separation, "MS:1003219", "ion mobility separation", "Mass spectrometer data acquisition method wherein precursor ions are separated by their ion mobility properties prior to measurement.", false},
     {MS_adduct_deconvolution, "MS:1003220", "adduct deconvolution", "Data processing action of merging of the measurements of potentially multiple adducts into a single representation that is independent of the small ion that adds charge to a larger molecule.", false},
@@ -3793,6 +3793,11 @@ const TermInfo termInfos_[] =
     {MS_AccurateMassSearch, "MS:1003801", "AccurateMassSearch", "OpenMS TOPP tool to assemble metabolite features from singleton mass traces.", false},
     {MS_zero_intensity_point_trimming, "MS:1003901", "zero intensity point trimming", "Apply an algorithm to remove excess zero intensity value data points from a spectrum. Data may be retained for interperatbility such as retaining only zeros that flank non-zero intensity value data points from a profile spectrum..", false},
     {MS_zero_intensity_point_trimming_interpolation, "MS:1003902", "zero intensity point trimming interpolation", "A zero intensity point trimming algorithm that interpolates the m/z coordinate values from the local data or an estimated model.", false},
+    {MS_analysis, "MS:1003903", "analysis", "A strategy for mass spectrometry-based analysis that defines whether analytes are predetermined or discovered during acquisition.", false},
+    {MS_untargeted_analysis, "MS:1003904", "untargeted analysis", "An analytical approach in which comprehensive detection of all measurable analytes is attempted without prior specification of target compounds.", false},
+    {MS_targeted_analysis, "MS:1003905", "targeted analysis", "An analytical approach in which a predefined set of analytes is measured, typically enabling quantitative determination.", false},
+    {MS_semi_targeted_analysis, "MS:1003906", "semi-targeted analysis", "An analytical approach combining targeted monitoring of predefined analytes with simultaneous untargeted data acquisition.", false},
+    {MS_parallel_reaction_monitoring, "MS:1003907", "parallel reaction monitoring", "Parallel Reaction Monitoring (PRM) utilizes high-resolution, accurate-mass mass spectrometry, typically a quadrupole orbitrap or quadrupole time-of-flight instrument, to isolate specific precursor ions and detect all resulting product ions in parallel. Unlike Selected Reaction Monitoring (SRM), which filters for pre-selected transitions, PRM acquires full MS/MS spectra for each target, thereby eliminating the need for transition optimization and providing high specificity through high-resolution interference rejection.", false},
     {MS_Agilent_gas_chromatography_mass_spectrometry_system_model, "MS:1003914", "Agilent gas chromatography mass spectrometry system model", "Agilent Technologies gas chromatography mass spectrometry system model.", false},
     {NCIT_Number_of_Occurrences, "NCIT:3150827", "Number of Occurrences", "The number of times something happened.", false},
     {MS_PSI_MS_CV_Quality_Control_Vocabulary, "MS:4000000", "PSI-MS CV Quality Control Vocabulary", "PSI Quality Control controlled vocabulary term.", false},
@@ -6374,9 +6379,9 @@ CVIDPair relationsIsA_[] =
     {MS_ultraflex_TOF_TOF, MS_Bruker_Daltonics_flex_series},
     {MS_Voyager_DE_PRO, MS_Applied_Biosystems_instrument_model},
     {MS_Voyager_DE_STR, MS_Applied_Biosystems_instrument_model},
-    {MS_selected_ion_monitoring, MS_data_independent_acquisition},
+    {MS_selected_ion_monitoring, MS_mass_spectrometry_acquisition_method_aspect},
     {MS_selected_ion_monitoring, MS_mass_spectrometry_acquisition_method},
-    {MS_selected_reaction_monitoring, MS_data_independent_acquisition},
+    {MS_selected_reaction_monitoring, MS_mass_spectrometry_acquisition_method_aspect},
     {MS_selected_reaction_monitoring, MS_mass_spectrometry_acquisition_method},
     {MS_base_peak, MS_peak},
     {MS_field_free_region, MS_ion_optics_attribute},
@@ -10107,6 +10112,11 @@ CVIDPair relationsIsA_[] =
     {MS_AccurateMassSearch, MS_TOPP_software},
     {MS_zero_intensity_point_trimming, MS_data_processing_action},
     {MS_zero_intensity_point_trimming_interpolation, MS_zero_intensity_point_trimming},
+    {MS_untargeted_analysis, MS_analysis},
+    {MS_targeted_analysis, MS_analysis},
+    {MS_semi_targeted_analysis, MS_analysis},
+    {MS_parallel_reaction_monitoring, MS_mass_spectrometry_acquisition_method_aspect},
+    {MS_parallel_reaction_monitoring, MS_mass_spectrometry_acquisition_method},
     {MS_Agilent_gas_chromatography_mass_spectrometry_system_model, MS_gas_chromatography_mass_spectrometry_system_model},
     {NCIT_Number_of_Occurrences, NCIT_Number},
     {MS_single_value, MS_QC_metric_value_type},
@@ -12465,6 +12475,8 @@ CVIDPair relationsPartOf_[] =
     {MS_instrument_model, MS_instrument},
     {MS_peak_intensity, MS_peak},
     {MS_dissociation_method, MS_precursor_activation},
+    {MS_selected_ion_monitoring, MS_targeted_analysis},
+    {MS_selected_reaction_monitoring, MS_targeted_analysis},
     {MS_peak, MS_spectrum},
     {MS_scan, MS_spectrum_generation_information},
     {MS_spectrum, MS_spectrum_generation_information},
@@ -12596,6 +12608,8 @@ CVIDPair relationsPartOf_[] =
     {MS_library_attribute_set_name, MS_library_interpretation_attribute_set},
     {MS_mass_spectrometry_acquisition_method, MS_mass_spectrometry_proteomics},
     {MS_mass_spectrometry_acquisition_method_aspect, MS_mass_spectrometry_acquisition_method},
+    {MS_data_independent_acquisition, MS_untargeted_analysis},
+    {MS_data_dependent_acquisition, MS_untargeted_analysis},
     {MS_library_spectrum_attribute, MS_library_spectrum},
     {MS_peak_attribute, MS_peak},
     {MS_peptidoform_ion_attribute, MS_peptidoform_ion},
@@ -12615,6 +12629,8 @@ CVIDPair relationsPartOf_[] =
     {MS_hyphenated_separation_system, MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Vocabularies},
     {MS_separation_system, MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Vocabularies},
     {MS_instrument_class, MS_instrument},
+    {MS_analysis, MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Vocabularies},
+    {MS_parallel_reaction_monitoring, MS_targeted_analysis},
     {MS_PSI_MS_CV_Quality_Control_Vocabulary, MS_Proteomics_Standards_Initiative_Mass_Spectrometry_Vocabularies},
     {MS_QC_metric, MS_PSI_MS_CV_Quality_Control_Vocabulary},
     {MS_QC_metric_value_type, MS_PSI_MS_CV_Quality_Control_Vocabulary},
@@ -13739,7 +13755,6 @@ CVIDStringPair relationsExactSynonym_[] =
     {MS_plasma_desorption, "PD"},
     {MS_post_source_decay, "PSD"},
     {MS_surface_induced_dissociation, "SID"},
-    {MS_selected_ion_monitoring, "Multiple Ion Monitoring"},
     {MS_selected_ion_monitoring, "SIM"},
     {MS_selected_reaction_monitoring, "SRM"},
     {MS_appearance_energy_OBSOLETE, "AE"},
@@ -13935,6 +13950,7 @@ CVIDStringPair relationsExactSynonym_[] =
     {MS_triple_quadrupole_linear_ion_trap, "QqLIT"},
     {MS_quadrupole_fourier_transform_ion_cyclotron_resonance, "Q-FT-ICR"},
     {MS_quadrupole_ion_mobility_time_of_flight, "Q-IMS-TOF"},
+    {MS_parallel_reaction_monitoring, "PRM"},
     {MS_precursor_ion_current_chromatogram, "precursor ion chromatogram"},
     {MS_XIC50_fraction, "XIC-WideFrac"},
     {MS_number_of_MS1_spectra, "MS1-Count"},
@@ -28793,13 +28809,13 @@ class CVTermData : public boost::singleton<CVTermData>
         cvMap_["PEFF"].URI = cvMap_["MS"].URI;
 
         cvMap_["MS"].id = "MS";
-        cvMap_["MS"].version = "4.1.231";
+        cvMap_["MS"].version = "4.1.232";
 
         cvMap_["NCIT"].id = "NCIT";
-        cvMap_["NCIT"].version = "4.1.231";
+        cvMap_["NCIT"].version = "4.1.232";
 
         cvMap_["PEFF"].id = "PEFF";
-        cvMap_["PEFF"].version = "4.1.231";
+        cvMap_["PEFF"].version = "4.1.232";
 
         cvMap_["UNIMOD"].id = "UNIMOD";
         cvMap_["UNIMOD"].version = "2025-06-17";

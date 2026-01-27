@@ -1,5 +1,5 @@
 format-version: 1.2
-data-version: 4.1.231
+data-version: 4.1.232
 date: 16:01:2026 12:00
 saved-by: Jonathan Hunter
 default-namespace: MS
@@ -1558,10 +1558,11 @@ id: MS:1000205
 name: selected ion monitoring
 def: "The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum." [PSI:MS]
 synonym: "MIM" RELATED []
-synonym: "Multiple Ion Monitoring" EXACT []
+synonym: "Multiple Ion Monitoring" RELATED []
 synonym: "SIM" EXACT []
-is_a: MS:1003215 ! data-independent acquisition
+is_a: MS:1003214 ! mass spectrometry acquisition method aspect
 is_a: MS:1003213 ! mass spectrometry acquisition method
+relationship: part_of MS:1003905 ! targeted analysis
 
 [Term]
 id: MS:1000206
@@ -1570,8 +1571,9 @@ def: "Data acquired from specific product ions corresponding to m/z selected pre
 synonym: "MRM" RELATED []
 synonym: "Multiple Reaction Monitoring" RELATED []
 synonym: "SRM" EXACT []
-is_a: MS:1003215 ! data-independent acquisition
+is_a: MS:1003214 ! mass spectrometry acquisition method aspect
 is_a: MS:1003213 ! mass spectrometry acquisition method
+relationship: part_of MS:1003905 ! targeted analysis
 
 [Term]
 id: MS:1000207
@@ -21353,6 +21355,7 @@ name: data-independent acquisition
 def: "Mass spectrometer data acquisition method wherein mass selection for fragmentation is configured according to a pre-determined program, rather than based on any detected precursor ions." [PSI:MS]
 synonym: "DIA" EXACT []
 is_a: MS:1003214 ! mass spectrometry acquisition method aspect
+relationship: part_of MS:1003904 ! untargeted analysis
 
 [Term]
 id: MS:1003216
@@ -21363,7 +21366,7 @@ is_a: MS:1003214 ! mass spectrometry acquisition method aspect
 [Term]
 id: MS:1003217
 name: dissociation of scanning quadrupole across a specified mass range
-def: "Mass spectrometer data acquisition method wherein ????." [PSI:MS]
+def: "Mass spectrometer data acquisition method wherein a quadrupole mass analyzer transmits a sliding window of precursor ions for dissociation and spectrum acquisition within each acquisition cycle. This correlates precursor selection with product ion detection resulting in 'quadrupole transmission window' as an additional dimension in the resulting data. An example of such an approach is Waters SONAR." [PSI:MS]
 is_a: MS:1003214 ! mass spectrometry acquisition method aspect
 
 [Term]
@@ -21391,6 +21394,7 @@ def: "Mass spectrometer data acquisition method wherein MSn spectra are triggere
 is_a: MS:1003214 ! mass spectrometry acquisition method aspect
 is_a: MS:1003213 ! mass spectrometry acquisition method
 synonym: "DDA" EXACT []
+relationship: part_of MS:1003904 ! untargeted analysis
 
 [Term]
 id: MS:1003222
@@ -25095,6 +25099,40 @@ id: MS:1003902
 name: zero intensity point trimming interpolation
 def: "A zero intensity point trimming algorithm that interpolates the m/z coordinate values from the local data or an estimated model." [PSI:MS]
 is_a: MS:1003901 ! zero intensity point trimming
+
+[Term]
+id: MS:1003903
+name: analysis
+def: "A strategy for mass spectrometry-based analysis that defines whether analytes are predetermined or discovered during acquisition." [PSI:MS]
+relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Vocabularies
+
+[Term]
+id: MS:1003904
+name: untargeted analysis
+def: "An analytical approach in which comprehensive detection of all measurable analytes is attempted without prior specification of target compounds." [PSI:MS]
+is_a: MS:1003903 ! analysis
+
+[Term]
+id: MS:1003905
+name: targeted analysis
+def: "An analytical approach in which a predefined set of analytes is measured, typically enabling quantitative determination." [PSI:MS]
+is_a: MS:1003903 ! analysis
+
+[Term]
+id: MS:1003906
+name: semi-targeted analysis
+def: "An analytical approach combining targeted monitoring of predefined analytes with simultaneous untargeted data acquisition." [PSI:MS]
+synonym: "pseudo-targeted analysis" RELATED []
+is_a: MS:1003903 ! analysis
+
+[Term]
+id: MS:1003907
+name: parallel reaction monitoring
+def: "Parallel Reaction Monitoring (PRM) utilizes high-resolution, accurate-mass mass spectrometry, typically a quadrupole orbitrap or quadrupole time-of-flight instrument, to isolate specific precursor ions and detect all resulting product ions in parallel. Unlike Selected Reaction Monitoring (SRM), which filters for pre-selected transitions, PRM acquires full MS/MS spectra for each target, thereby eliminating the need for transition optimization and providing high specificity through high-resolution interference rejection." [PSI:MS]
+synonym: "PRM" EXACT []
+is_a: MS:1003214 ! mass spectrometry acquisition method aspect
+is_a: MS:1003213 ! mass spectrometry acquisition method
+relationship: part_of MS:1003905 ! targeted analysis
 
 [Term]
 id: MS:1003914

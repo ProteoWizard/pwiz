@@ -38,7 +38,7 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 4.1.231
+//   data-version: 4.1.232
 //   date: 16:01:2026 12:00
 //   saved-by: Jonathan Hunter
 //   default-namespace: MS
@@ -1040,9 +1040,6 @@ public enum class CVID
 
     /// <summary>selected ion monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.</summary>
     MS_selected_ion_monitoring = 1000205,
-
-    /// <summary>Multiple Ion Monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.</summary>
-    MS_Multiple_Ion_Monitoring = MS_selected_ion_monitoring,
 
     /// <summary>SIM: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.</summary>
     MS_SIM = MS_selected_ion_monitoring,
@@ -10269,7 +10266,7 @@ public enum class CVID
     /// <summary>dissociation of full mass range: Mass spectrometer data acquisition method wherein all precursor ions of which the instrument is capable are fragmented at once..</summary>
     MS_dissociation_of_full_mass_range = 1003216,
 
-    /// <summary>dissociation of scanning quadrupole across a specified mass range: Mass spectrometer data acquisition method wherein ????.</summary>
+    /// <summary>dissociation of scanning quadrupole across a specified mass range: Mass spectrometer data acquisition method wherein a quadrupole mass analyzer transmits a sliding window of precursor ions for dissociation and spectrum acquisition within each acquisition cycle. This correlates precursor selection with product ion detection resulting in 'quadrupole transmission window' as an additional dimension in the resulting data. An example of such an approach is Waters SONAR.</summary>
     MS_dissociation_of_scanning_quadrupole_across_a_specified_mass_range = 1003217,
 
     /// <summary>dissociation of sequential mass ranges: Mass spectrometer data acquisition method wherein a series of limited mass range fragmentation selection windows are preconfigured.</summary>
@@ -12011,6 +12008,24 @@ public enum class CVID
 
     /// <summary>zero intensity point trimming interpolation: A zero intensity point trimming algorithm that interpolates the m/z coordinate values from the local data or an estimated model.</summary>
     MS_zero_intensity_point_trimming_interpolation = 1003902,
+
+    /// <summary>analysis: A strategy for mass spectrometry-based analysis that defines whether analytes are predetermined or discovered during acquisition.</summary>
+    MS_analysis = 1003903,
+
+    /// <summary>untargeted analysis: An analytical approach in which comprehensive detection of all measurable analytes is attempted without prior specification of target compounds.</summary>
+    MS_untargeted_analysis = 1003904,
+
+    /// <summary>targeted analysis: An analytical approach in which a predefined set of analytes is measured, typically enabling quantitative determination.</summary>
+    MS_targeted_analysis = 1003905,
+
+    /// <summary>semi-targeted analysis: An analytical approach combining targeted monitoring of predefined analytes with simultaneous untargeted data acquisition.</summary>
+    MS_semi_targeted_analysis = 1003906,
+
+    /// <summary>parallel reaction monitoring: Parallel Reaction Monitoring (PRM) utilizes high-resolution, accurate-mass mass spectrometry, typically a quadrupole orbitrap or quadrupole time-of-flight instrument, to isolate specific precursor ions and detect all resulting product ions in parallel. Unlike Selected Reaction Monitoring (SRM), which filters for pre-selected transitions, PRM acquires full MS/MS spectra for each target, thereby eliminating the need for transition optimization and providing high specificity through high-resolution interference rejection.</summary>
+    MS_parallel_reaction_monitoring = 1003907,
+
+    /// <summary>PRM: Parallel Reaction Monitoring (PRM) utilizes high-resolution, accurate-mass mass spectrometry, typically a quadrupole orbitrap or quadrupole time-of-flight instrument, to isolate specific precursor ions and detect all resulting product ions in parallel. Unlike Selected Reaction Monitoring (SRM), which filters for pre-selected transitions, PRM acquires full MS/MS spectra for each target, thereby eliminating the need for transition optimization and providing high specificity through high-resolution interference rejection.</summary>
+    MS_PRM = MS_parallel_reaction_monitoring,
 
     /// <summary>Agilent gas chromatography mass spectrometry system model: Agilent Technologies gas chromatography mass spectrometry system model.</summary>
     MS_Agilent_gas_chromatography_mass_spectrometry_system_model = 1003914,
