@@ -301,8 +301,12 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void ExportViewToFile(ViewInfo viewInfo, string fileName, char separator)
         {
-            using var writer = new StreamWriter(fileName);
-            ExportViewToWriter(viewInfo, writer, separator);
+            using var fileSaver = new FileSaver(fileName, true);
+            using (var writer = new StreamWriter(fileSaver.Stream))
+            {
+                ExportViewToWriter(viewInfo, writer, separator);
+            }
+            fileSaver.Commit();
         }
 
         public void ExportViewToWriter(ViewInfo viewInfo, TextWriter writer, char separator)
