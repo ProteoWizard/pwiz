@@ -566,4 +566,10 @@
   <data name="CountDistinctImpl_CountDistinctImpl_Count_Distinct__0_" xml:space="preserve">
     <value>Count Distinct {0}</value>
   </data>
+  <data name="RowItemEnumerator_RowItemEnumerator_Writing_row__0___1_" xml:space="preserve">
+	  <value>Writing row {0}/{1}</value>
+  </data>
+  <data name="RowItemEnumerator_RowItemEnumerator_Writing_row__0___0_" xml:space="preserve">
+	  <value>Writing row {0:#,0}</value>
+  </data>
 </root>

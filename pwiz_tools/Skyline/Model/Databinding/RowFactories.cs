@@ -198,14 +198,13 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 using var bindingListSource = new BindingListSource(cancellationToken);
                 bindingListSource.SetView(viewInfo, rowSource);
-                layout?.ApplyFormats(bindingListSource.ColumnFormats);
-                rowItemEnumerator = RowItemList.FromBindingListSource(bindingListSource);
+                rowItemEnumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
+                {
+                    ItemProperties = bindingListSource.ItemProperties
+                };
             }
-            rowItemEnumerator.SetProgressMonitor(progressMonitor, status);
             layout?.ApplyFormats(rowItemEnumerator.ColumnFormats);
-
-
-
+            rowItemEnumerator.SetProgressMonitor(progressMonitor, status);
             rowItemExporter.Export(stream, rowItemEnumerator);
             status = rowItemEnumerator.Status;
             if (!progressMonitor.IsCanceled)

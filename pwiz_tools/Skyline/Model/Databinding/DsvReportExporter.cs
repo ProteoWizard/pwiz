@@ -93,7 +93,11 @@ namespace pwiz.Skyline.Model.Databinding
                 DsvWriter.WriteRowValues(writer, line);
             }
             writer.WriteLine();
-            var newRowItemEnumerator = new RowItemList(allRowItems, new ItemProperties(filteredColumnDescriptors), rowItemEnumerator.ColumnFormats);
+            var newRowItemEnumerator = new RowItemList(allRowItems)
+            {
+                ItemProperties = new ItemProperties(filteredColumnDescriptors),
+                ColumnFormats = rowItemEnumerator.ColumnFormats
+            };
             base.Write(writer, newRowItemEnumerator);
         }
     }

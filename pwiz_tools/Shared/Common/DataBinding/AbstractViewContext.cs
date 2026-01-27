@@ -192,7 +192,10 @@ namespace pwiz.Common.DataBinding
         protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, char separator)
         {
-            var rowItemEnumerator = RowItemList.FromBindingListSource(bindingListSource);
+            var rowItemEnumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
+            {
+                ItemProperties = bindingListSource.ItemProperties
+            };
             if (progressMonitor != null)
             {
                 rowItemEnumerator.SetProgressMonitor(progressMonitor, new ProgressStatus());

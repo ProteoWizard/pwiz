@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Forms.VisualStyles;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.Properties;
@@ -159,17 +160,10 @@ namespace pwiz.Common.DataBinding
             _rowItems = rowItems;
         }
 
-        public RowItemList(BigList<RowItem> bigList, ItemProperties itemProperties, ColumnFormats columnFormats)
+        public RowItemList(BigList<RowItem> bigList)
             : this(ImmutableList.ValueOf(bigList.InnerLists.Select(list=>list.ToArray())))
         {
-
         }
-
-        public static RowItemList FromBindingListSource(BindingListSource source)
-        {
-            return new RowItemList(source.ReportResults.RowItems, source.ItemProperties, source.ColumnFormats);
-        }
-
 
         protected override bool TryMoveNext()
         {
