@@ -20,9 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Windows.Forms.VisualStyles;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
