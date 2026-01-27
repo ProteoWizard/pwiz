@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         // Cache stores results paired with their source document
         private readonly ConcurrentDictionary<int, CacheEntry> _localCache = new ConcurrentDictionary<int, CacheEntry>();
-        private readonly Dictionary<int, CompletionListener> _pendingListeners = new Dictionary<int, CompletionListener>();
+        private readonly ConcurrentDictionary<int, CompletionListener> _pendingListeners = new ConcurrentDictionary<int, CompletionListener>();
         private object _cachedSettings;
         private int _currentCacheKey = int.MinValue;
 
@@ -161,10 +161,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _localCache.TryRemove(key, out _);
                 // Also clean up any pending listener for this key
-                if (_pendingListeners.TryGetValue(key, out var listener))
+                if (_pendingListeners.TryRemove(key, out var listener))
                 {
                     listener.Unlisten();
-                    _pendingListeners.Remove(key);
                 }
             }
         }
@@ -282,10 +281,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     _localCache.TryRemove(key, out _);
                     // Also clean up any pending listener for this key
-                    if (_pendingListeners.TryGetValue(key, out var listener))
+                    if (_pendingListeners.TryRemove(key, out var listener))
                     {
                         listener.Unlisten();
-                        _pendingListeners.Remove(key);
                     }
                 }
             }
@@ -329,19 +327,18 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void KeepCalculationAlive(int cacheKey)
         {
-            // Don't add duplicate listeners
-            if (_pendingListeners.ContainsKey(cacheKey))
-                return;
-
             // Get the current work order before the Receiver switches away from it
             var workOrder = _receiver.CurrentWorkOrder;
             if (workOrder == null)
                 return;
 
             // Add our completion listener to keep the calculation running
+            // TryAdd atomically checks for existing key and adds if not present
             var listener = new CompletionListener(this, cacheKey, workOrder);
-            _pendingListeners[cacheKey] = listener;
-            _receiver.Cache.Listen(workOrder, listener);
+            if (_pendingListeners.TryAdd(cacheKey, listener))
+            {
+                _receiver.Cache.Listen(workOrder, listener);
+            }
         }
 
         /// <summary>
@@ -418,7 +415,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 // Clean up: unlisten and remove from pending
                 Unlisten();
-                _owner._pendingListeners.Remove(_cacheKey);
+                _owner._pendingListeners.TryRemove(_cacheKey, out _);
             }
 
             public void OnProductStatusChanged(WorkOrder key, int progress)
