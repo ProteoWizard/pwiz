@@ -592,6 +592,15 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        public static string EscapeForXmlAttribute(string str)
+        {
+            return str.Replace(@"&", @"&amp;").Replace(@"""", @"&quot;").Replace(@"<", @"&lt;").Replace(@">", @"&gt;").Replace(@"|", @"&#x7C");
+        }
+        public static string UnescapeFromXmlAttribute(string str)
+        {
+            return str.Replace(@"&quot;", @"""").Replace(@"&lt;", @"<").Replace(@"&gt;", @">").Replace(@"&amp;", @"&").Replace(@"&#x7C", @"|");
+        }
+
         private const int TAB_SIZE = 4;
         
         public static string GetIndentation(int indentLevel, int tabSize = TAB_SIZE)

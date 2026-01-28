@@ -28,6 +28,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -294,7 +295,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var panelLayouts = GraphPanes.OfType<ILayoutPersistable>().FirstOrDefault()?.GetPersistentString();
             if (panelLayouts != null)
             {
-                res = res + '|' + Uri.EscapeDataString(panelLayouts);
+                res = res + '|' + TextUtil.EscapeForXmlAttribute(panelLayouts);
             }
             return res;
         }
