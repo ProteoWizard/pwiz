@@ -314,7 +314,7 @@ namespace pwiz.Skyline.FileUI
                     }
 
                     // Get a dictionary of peptides under consideration and the proteins they're associated with
-                    peptides.AddRange(_originalLines.Skip(hasHeaders ? 1 : 0).Take(count).Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields[_originalPeptideIndex]));
+                    peptides.AddRange(_originalLines.Skip(hasHeaders ? 1 : 0).Take(count).Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields.Length > _originalPeptideIndex ? fields[_originalPeptideIndex] : string.Empty));
                     foreach (var pep in peptides)
                     {
                         if (!stripped.ContainsKey(pep))
@@ -346,8 +346,9 @@ namespace pwiz.Skyline.FileUI
             {
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
+                var peptideSequence = fields.Length > _originalPeptideIndex ? fields[_originalPeptideIndex] : string.Empty;
                 var action = associateHelper.DetermineAssociateAction(null,
-                    fields[_originalPeptideIndex], seenPepSeq, false, dictSequenceProteins);
+                    peptideSequence, seenPepSeq, false, dictSequenceProteins);
 
                 if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurrences)
                 {
