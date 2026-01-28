@@ -101,6 +101,20 @@ namespace pwiz.SkylineTestUtil
         }
     }
 
+    public class RequestMatcherException : RequestMatcher
+    {
+        private Exception _exception;
+        public RequestMatcherException(Func<HttpRequestMessage, bool> matcher, Exception ex,  HttpStatusCode statusCode = HttpStatusCode.OK)
+            : base(matcher, statusCode)
+        {
+            _exception = ex ?? throw new ArgumentNullException(nameof(ex), @"Exception cannot be null");
+        }
+        public override HttpResponseMessage GetResponse(HttpRequestMessage request)
+        {
+            throw _exception;
+        }
+    }
+
     public class RequestMatcherFunction : RequestMatcher
     {
         private Func<HttpRequestMessage, string> _responseFunction;

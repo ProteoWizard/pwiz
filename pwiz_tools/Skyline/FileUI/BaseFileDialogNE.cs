@@ -23,11 +23,13 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
+using System.Security.Authentication;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -201,6 +203,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         protected MsDataFileUri _currentDirectory;
+
         public MsDataFileUri CurrentDirectory
         {
             get { return _currentDirectory; }
@@ -216,16 +219,73 @@ namespace pwiz.Skyline.FileUI
                     if (_remoteAccounts.Count == 1)
                     {
                         // If there is exactly one account, then skip the level that
-                        // lists the accounts to choose from.
-                        value = GetRootUrl(_remoteAccounts.First());
+                        // lists the accounts to choose from unless this is an invalid WatersConnect account.
+                        if (this is WatersConnectMethodFileDialog)
+                        {
+                            var wca = _remoteAccounts[0] as WatersConnectAccount;
+                            if (wca != null && wca.SupportsMethodDevelopment(out _))
+                            {
+                                value = GetRootUrl(_remoteAccounts.First());
+                            }
+                        }
+                        else
+                            value = GetRootUrl(_remoteAccounts.First());
                     }
                 }
                 if (value != null)
                 {
-                    _currentDirectory = value;
-                    OnCurrentDirectoryChange();
-                    populateListViewFromDirectory(_currentDirectory);
-                    populateComboBoxFromDirectory(_currentDirectory);
+                    if (value is RemoteUrl remoteUrl) // if RemoteUrl
+                    {
+                        if (Equals(value, RemoteUrl.EMPTY))
+                            _currentDirectory = value;
+                        else
+                        {
+                            //   look for a matching account
+                            var remoteAccount = GetRemoteAccount(remoteUrl);
+                            if (remoteAccount == null) // If no accounts found
+                            {
+                                // Can happen if user selects a remote URL but then deletes the associated account.
+                                // Show error message, set the currentDirectory to RemoteUrl.EMPTY
+                                var message = TextUtil.LineSeparate(
+                                    FileUIResources
+                                        .ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_,
+                                    remoteUrl.Username + @"@" + remoteUrl.ServerUrl);
+                                MessageDlg.ShowError(this, message);
+                                _currentDirectory = RemoteUrl.EMPTY;
+                            }
+                            else
+                                _currentDirectory = value;
+                        }
+                    }
+                    else
+                        _currentDirectory = value;
+                    try
+                    {   // Try to populate the dialog with the given URL/account
+                        OnCurrentDirectoryChange();
+                        populateListViewFromDirectory(_currentDirectory);
+                        populateComboBoxFromDirectory(_currentDirectory);
+                    }
+                    catch (AuthenticationException x)
+                    {   // If invalid account
+                        var errorType = WatersConnectAccount.HandleAuthenticationException(x, out var msg);
+                        // Show error message
+                        var remoteAccount = GetRemoteAccount((RemoteUrl)_currentDirectory); // Since we got this exception it is a RemoteUrl
+                        var message = TextUtil.LineSeparate(
+                            string.Format(FileUIResources.BaseFileDialogNE_Authentication_exception_message,
+                                remoteAccount?.AccountAlias, errorType.ToUserMessage()));
+                        if (!string.IsNullOrEmpty(msg))
+                        {
+                            message = TextUtil.LineSeparate(message,
+                                string.Format(FileUIResources.BaseFileDialogNE_Authentication_exception_server_response, msg));
+                        }
+                        // Dialog owner is not yet available when this is invoked from the ShowDialog override. Use the Skyline's main window as a parent in that case.
+                        MessageDlg.ShowError(this.Visible ? (IWin32Window)this : Program.MainWindow, message);
+                        // and populate it with the root remote URL
+                        _currentDirectory = RemoteUrl.EMPTY;
+                        OnCurrentDirectoryChange();
+                        populateListViewFromDirectory(_currentDirectory);
+                        populateComboBoxFromDirectory(_currentDirectory);
+                    }
                 }
             }
         }

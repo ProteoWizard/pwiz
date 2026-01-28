@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Authentication;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
@@ -53,10 +54,17 @@ namespace pwiz.SkylineTestFunctional
             SetRequestHandlers();
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MixedPolarity02.sky")));
             WaitForDocumentLoaded();
+
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             TestTemplateSelection(exportMethodDlg);
             TestMethodExport(exportMethodDlg);
+
+            SetAuthenticationErrorHandler();
+            exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+            WaitForOpenForm<ExportMethodDlg>(1000);
+            TestAuthenticationError(exportMethodDlg);
         }
 
         /// <summary>
@@ -65,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestTemplateSelection(ExportMethodDlg exportMethodDlg)
         {
             RunUI(() =>
-            {
+            {   // Set export parameters
                 exportMethodDlg.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT;
 
                 Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
@@ -79,9 +87,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(string.IsNullOrEmpty(exportMethodDlg.TemplatePathField.Text));
                 exportMethodDlg.ExportStrategy = ExportStrategy.WcDecide;
             });
-
+            // Open template file selection dialog
             var templateDlg = ShowDialog<WatersConnectSelectMethodFileDialog>(() => exportMethodDlg.ClickTemplateButton());
             WaitForConditionUI(1000, () => templateDlg.ListViewItems.Count == 1);
+            // Click through folders to Skyline folder
             RunUI(() =>
             {
                 Assert.AreEqual("Company", templateDlg.ListViewItems[0].Text);
@@ -146,6 +155,23 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(uploadResultDlg.Message.StartsWith(FileUIResources.ExportMethodDlg_OkDialog_WC_Upload_Successful), "Method upload error: \n" + uploadResultDlg.DetailedMessage);
                 uploadResultDlg.OkDialog();
             });
+            WaitForClosedForm<ExportMethodDlg>();
+        }
+
+        private void TestAuthenticationError(ExportMethodDlg exportMethodDlg)
+        {
+            Assert.IsTrue(RemoteUrl.RemoteAccountStorage.GetRemoteAccounts().Any());
+            Assert.IsNotNull(RemoteUrl.RemoteAccountStorage.GetRemoteAccounts().First() as WatersConnectAccount);
+            // Remove the cached token to force authentication server call
+            WatersConnectAccount._authenticationTokens.Clear();
+            var authErrorDlg = ShowDialog<MessageDlg>(() => exportMethodDlg.ClickTemplateButton());
+            Assert.IsTrue(authErrorDlg.Message.Contains("method development"), "Expected authentication error message not found.");
+            var templateDialog = ShowDialog<WatersConnectSelectMethodFileDialog>(authErrorDlg.OkDialog);
+            Assert.IsNotNull(templateDialog);
+            CancelDialog(templateDialog);
+            CancelDialog(exportMethodDlg);
+            // Restore normal handlers
+            SetRequestHandlers();
         }
 
         private void ValidateSkylineFolder(WatersConnectMethodFileDialog templateDlg)
@@ -257,6 +283,15 @@ namespace pwiz.SkylineTestFunctional
             ));
             Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.AUTH_HANDLER_NAME, authHandler);
             // ReSharper enable StringIndexOfIsCultureSpecific.1
+        }
+
+        private void SetAuthenticationErrorHandler()
+        {
+            var authHandler = new MockHttpMessageHandler();
+            authHandler.AddMatcher(new RequestMatcherException(req => true,  // req.RequestUri.ToString().IndexOf(@"/connect/token") >=0, 
+                new AuthenticationException()
+            ));
+            Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.AUTH_HANDLER_NAME, authHandler);
         }
     }
 }
