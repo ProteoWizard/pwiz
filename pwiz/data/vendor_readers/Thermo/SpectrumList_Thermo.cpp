@@ -845,7 +845,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
         long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
 
         if (controllerType == Controller_MS && numControllers > 1)
-            throw runtime_error("[SpectrumList_Thermo::createIndex] Unable to handle RAW files with multiple MS controllers, please contact ProteoWizard support!");
+            warn_once("[SpectrumList_Thermo::createIndex] RAW file has multiple MS controllers; only the first one will be read.");
 
         for (long n=1; n <= numControllers; ++n)
         {
@@ -864,6 +864,8 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
             {
                 case Controller_MS:
                 {
+                    if (n > 1) // only first MS controller is supported
+                        continue;
                     for (long scan=1; scan <= numSpectra; ++scan)
                     {
                         MSOrder msOrder = rawfile_->getMSOrder(scan);
