@@ -372,9 +372,9 @@ namespace ZedGraph
             var rect2 = new RectangleF(placements[p2].X - size2.Width / 2, placements[p2].Y, size2.Width, size2.Height);
 
             var start1 = targets[p1];
-            var end1 = placements[p1];
+            var end1 = new PointF(rect1.Left + rect1.Width / 2, rect1.Top + rect1.Height / 2);
             var start2 = targets[p2];
-            var end2 = placements[p2];
+            var end2 = new PointF(rect2.Left + rect2.Width / 2, rect2.Top + rect2.Height / 2);
 
             // Expanded bounding boxes that include both label rectangle and connector endpoints
             var minAx = Math.Min(Math.Min(rect1.Left, rect1.Right), Math.Min(start1.X, end1.X));
@@ -508,74 +508,86 @@ namespace ZedGraph
             var bestCost = currentCost;
 #if DEBUG
             // Log the annealing process for debugging
-            var logPath = Path.Combine(Environment.CurrentDirectory, $"LabelLayoutAnneal.csv");
-            if (File.Exists(logPath))
-                File.Delete(logPath);
-            using (var log = new StreamWriter(logPath))
+            StreamWriter log = null;
+            try
             {
+                var logPath = Path.Combine(Environment.CurrentDirectory, $"LabelLayoutAnneal.csv");
+                if (File.Exists(logPath))
+                    File.Delete(logPath);
+                log = new StreamWriter(logPath);
                 log.WriteLine("iteration,point_count,temperature,cost, delta, jump");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"LabelLayout: unable to open anneal log file: {ex.Message}");
+                log = null;
+            }
 #endif
-                for (var iter = 0; iter < maxIterations; iter++)
+            for (var iter = 0; iter < maxIterations; iter++)
+            {
+                var temp = startTemp - cooling * iter;
+                if (temp < minTemp || !movablePoints.Any())
+                    break;
+
+                var point = movablePoints[_randGenerator.Next(movablePoints.Count)];
+                var step = _cellSize * (0.5f + temp);
+                var proposed = placements[point] + new SizeF(GetRandom(step), GetRandom(step));
+                proposed = ClampToAllowed(proposed, labelSizes[point]);
+                var currentPos = placements[point];
+
+                // Remove old contributions for this point
+                var removedBase = baseCosts[point];
+                var removedPair = pairCosts[point].Values.Sum();
+                var removedCost = removedBase + removedPair;
+                placements[point] = proposed;
+
+                var newBase = BaseCost(point, labelSizes, targetPoints, targetMarkers, placements);
+                var oldPairs = new Dictionary<LabeledPoint, float>(pairCosts[point]);
+                float newPairSum = 0;
+                foreach (var other in pointList)
                 {
-                    var temp = startTemp - cooling * iter;
-                    if (temp < minTemp || !movablePoints.Any())
-                        break;
-
-                    var point = movablePoints[_randGenerator.Next(movablePoints.Count)];
-                    var step = _cellSize * (0.5f + temp);
-                    var proposed = placements[point] + new SizeF(GetRandom(step), GetRandom(step));
-                    proposed = ClampToAllowed(proposed, labelSizes[point]);
-                    var currentPos = placements[point];
-
-                    // Remove old contributions for this point
-                    var removedBase = baseCosts[point];
-                    var removedPair = pairCosts[point].Values.Sum();
-                    var removedCost = removedBase + removedPair;
-                    placements[point] = proposed;
-
-                    var newBase = BaseCost(point, labelSizes, targetPoints, targetMarkers, placements);
-                    var oldPairs = new Dictionary<LabeledPoint, float>(pairCosts[point]);
-                    float newPairSum = 0;
-                    foreach (var other in pointList)
-                    {
-                        if (ReferenceEquals(other, point))
-                            continue;
-                        var cost = PairCost(point, other, labelSizes, targetPoints, placements);
-                        pairCosts[point][other] = cost;
-                        pairCosts[other][point] = cost;
-                        newPairSum += cost;
-                    }
-                    var addedCost = newBase + newPairSum;
-
-                    var newCost = currentCost - removedCost + addedCost;
-                    var delta = newCost - currentCost;
-
-                    var accept = delta < 0 || Math.Exp(-delta / Math.Max(temp, 0.0001f)/acceptanceScale) > _randGenerator.NextDouble();
-                    if (accept)
-                    {
-                        baseCosts[point] = newBase;
-                        currentCost = newCost;
-                        if (newCost < bestCost)
-                        {
-                            bestCost = newCost;
-                            bestPlacement = CopyPlacement(placements);
-                        }
-                    }
-                    else
-                    {
-                        placements[point] = currentPos;
-                        foreach (var kvp in oldPairs)
-                        {
-                            pairCosts[point][kvp.Key] = kvp.Value;
-                            pairCosts[kvp.Key][point] = kvp.Value;
-                        }
-                    }
-#if DEBUG
-                    var jump = accept && delta > 0 ? 1 : 0;
-                    log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString()},{bestCost.ToString()}, {delta.ToString()}, {jump}");
+                    if (ReferenceEquals(other, point))
+                        continue;
+                    var cost = PairCost(point, other, labelSizes, targetPoints, placements);
+                    pairCosts[point][other] = cost;
+                    pairCosts[other][point] = cost;
+                    newPairSum += cost;
                 }
+                var addedCost = newBase + newPairSum;
+
+                var newCost = currentCost - removedCost + addedCost;
+                var delta = newCost - currentCost;
+
+                var accept = delta < 0 || Math.Exp(-delta / Math.Max(temp, 0.0001f)/acceptanceScale) > _randGenerator.NextDouble();
+                if (accept)
+                {
+                    baseCosts[point] = newBase;
+                    currentCost = newCost;
+                    if (newCost < bestCost)
+                    {
+                        bestCost = newCost;
+                        bestPlacement = CopyPlacement(placements);
+                    }
+                }
+                else
+                {
+                    placements[point] = currentPos;
+                    foreach (var kvp in oldPairs)
+                    {
+                        pairCosts[point][kvp.Key] = kvp.Value;
+                        pairCosts[kvp.Key][point] = kvp.Value;
+                    }
+                }
+#if DEBUG
+                var jump = accept && delta > 0 ? 1 : 0;
+                if (log != null)
+                    log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString()},{bestCost.ToString()}, {delta.ToString()}, {jump}");
 #endif
             }
+#if DEBUG
+            if (log != null)
+                log.Dispose();
+#endif
             placements = bestPlacement;
             _labeledPoints.Clear();
             foreach (var kv in placements)
@@ -675,9 +687,8 @@ namespace ZedGraph
         public static SizeF CalculateConnectorSize(LabeledPoint labPoint, Graphics g, GraphPane graph)
         {
             var rect = graph.GetRectScreen(labPoint.Label, g);
-            InflateRectangle(ref rect, -1);
             var targetPoint = graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
-
+            InflateRectangle(ref rect, -1);
             var diag1 = new VectorF(rect.Location, new PointF(rect.X + rect.Width, rect.Y + rect.Height));
             var diag2 = new VectorF(new PointF(rect.X, rect.Y + rect.Height), new PointF(rect.Right, rect.Y));
             var center = new PointF(rect.Left + rect.Width / 2, rect.Top + rect.Height / 2);
