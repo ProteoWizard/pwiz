@@ -864,6 +864,8 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
             {
                 case Controller_MS:
                 {
+                    if (n > 1) // only first MS controller is supported
+                        continue;
                     for (long scan=1; scan <= numSpectra; ++scan)
                     {
                         MSOrder msOrder = rawfile_->getMSOrder(scan);
