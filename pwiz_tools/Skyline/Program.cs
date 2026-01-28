@@ -96,9 +96,10 @@ namespace pwiz.Skyline
             }.Any(folder => name.IndexOf(folder, StringComparison.Ordinal) >= 0);
         }
         public static string TestName { get; set; }                 // Set during unit and functional tests
+        public static bool DoNotTestUnicodeHandling { get; set; }   // Set true to skip unicode handling tests, either because the platform doesn't support it or test attribute forbids it
         public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
-        public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == "PauseAndContinueForm");
+        public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == @"PauseAndContinueForm");
 
         public static bool SkylineOffscreen
         {
