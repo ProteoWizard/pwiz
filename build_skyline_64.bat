@@ -1,0 +1,1 @@
+pwiz_tools\build-apps.bat 64 --i-agree-to-the-vendor-licenses -j4 toolset=msvc-14.3 --without-compassxtract  pwiz_tools\Skyline//Skyline.exe
