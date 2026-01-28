@@ -439,14 +439,28 @@ namespace pwiz.Common.SystemUtil
         private int ReadChunk(Stream stream, byte[] buffer, Uri uri)
         {
             var readTask = stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken);
-            var completed = Task.WaitAny(readTask, Task.Delay(ReadTimeoutMilliseconds, CancellationToken));
 
-            // Check if cancellation was requested before throwing timeout exception
-            CancellationToken.ThrowIfCancellationRequested();
+            // Use a dedicated CTS for the delay so we can cancel it when done.
+            // This prevents timer accumulation - each Task.Delay creates an internal Timer
+            // that would otherwise run for the full ReadTimeoutMilliseconds duration.
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            try
+            {
+                var delayTask = Task.Delay(ReadTimeoutMilliseconds, timeoutCts.Token);
+                var completed = Task.WaitAny(readTask, delayTask);
 
-            if (completed != 0)
-                throw new TimeoutException(string.Format(MessageResources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
-            return readTask.Result;
+                // Check if cancellation was requested before throwing timeout exception
+                CancellationToken.ThrowIfCancellationRequested();
+
+                if (completed != 0)
+                    throw new TimeoutException(string.Format(MessageResources.HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__, uri));
+                return readTask.Result;
+            }
+            finally
+            {
+                // Cancel the delay timer to prevent timer/handle accumulation
+                timeoutCts.Cancel();
+            }
         }
 
         /// <summary>

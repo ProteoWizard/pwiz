@@ -35,35 +35,29 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Returns true iff the process is running under an OS and on volume(s) that support windows 8.3 format conversion
         /// </summary>
-        private static bool? _canConvertUnicodePaths;
         private static Dictionary<string, bool> _volumesTested = new Dictionary<string, bool>();
 
-        public static bool? CanConvertUnicodePaths
+        public static bool CanConvertUnicodePaths
         {
-            set => _canConvertUnicodePaths = value;
             get
             {
-                if (!_canConvertUnicodePaths.HasValue)
+                if (IsRunningOnWine)
                 {
-                    if (IsRunningOnWine)
-                    {
-                        _canConvertUnicodePaths = false;
-                    }
-                    else
-                    {
-                        // Systems may have 8.3 conversion enabled on some volumes but not others
-                        // So don't assume we can convert unicode paths unless we can actually do it everywhere we might need to
-                        _canConvertUnicodePaths =
-                            CanConvertUnicodePathsInDirectory(Path.GetTempPath()) &&
-                            CanConvertUnicodePathsInDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) &&
-                            CanConvertUnicodePathsInDirectory(Directory.GetCurrentDirectory()) &&
-                            CanConvertUnicodePathsInDirectory(PathEx.GetDownloadsPath());
-                    }
+                    return false; // Never supported on Wine
                 }
-                return _canConvertUnicodePaths;
+                else
+                {
+                    // Systems may have 8.3 conversion enabled on some volumes but not others
+                    // So don't assume we can convert Unicode paths unless we can actually do it everywhere we might need to
+                    return
+                        CanConvertUnicodePathsInDirectory(Path.GetTempPath()) &&
+                        CanConvertUnicodePathsInDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)) &&
+                        CanConvertUnicodePathsInDirectory(Directory.GetCurrentDirectory()) &&
+                        CanConvertUnicodePathsInDirectory(PathEx.GetDownloadsPath());
+                }
             }
         }
-        static public bool CanConvertUnicodePathsInDirectory(string baseDir)
+        private static bool CanConvertUnicodePathsInDirectory(string baseDir)
         {
             var volume = Path.GetPathRoot(baseDir);
             if (_volumesTested.TryGetValue(volume, out var result))
