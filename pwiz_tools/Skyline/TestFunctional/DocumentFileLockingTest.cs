@@ -19,9 +19,11 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
+using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -79,6 +81,19 @@ namespace pwiz.SkylineTestFunctional
                 File.Delete(versionTooHigh2);
                 alertDlg.OkDialog();
             });
+
+            // Test opening a mass spec data file - should show friendly error message
+            {
+                var mzmlFile = TestFilesDir.GetTestPath("test.mzML");
+                File.WriteAllText(mzmlFile, ExampleText.TEXT_EMPTY_MZML);
+                RunDlg<MessageDlg>(() => Program.MainWindow.OpenFile(mzmlFile), messageDlg =>
+                {
+                    AssertEx.Contains(messageDlg.Message,
+                        string.Format(ModelResources.SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file,
+                            Path.GetFileName(mzmlFile), DataSourceUtil.TYPE_MZML));
+                    messageDlg.OkDialog();
+                });
+            }
         }
     }
 }

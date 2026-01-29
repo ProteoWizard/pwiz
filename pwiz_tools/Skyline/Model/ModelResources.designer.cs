@@ -2079,6 +2079,16 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file &quot;{0}&quot; appears to be a {1} mass spectrometry data file, not a Skyline document. To work with mass spec data in Skyline, first set up targets (peptides or molecules), then use File &gt; Import &gt; Results to extract chromatograms. Use File &gt; Search to run a peptide search directly. To browse raw spectra, use SeeMS..
+        /// </summary>
+        public static string SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file {
+            get {
+                return ResourceManager.GetString("SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_da" +
+                        "ta_file", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The peptide {0} was found multiple times with user modifications..
         /// </summary>
         public static string SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications {

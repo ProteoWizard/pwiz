@@ -23,7 +23,9 @@ using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -54,6 +56,20 @@ namespace pwiz.SkylineTestFunctional
             {
                 var process = Process.Start(GetProcessStartInfo("\"--in=" + TestFilesDir.GetTestPath("invalidpath.sky") + "\""));
                 WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
+            }
+            // mass spec data file instead of skyline document
+            {
+                var mzmlFile = TestFilesDir.GetTestPath("small.mzML");
+                File.WriteAllText(mzmlFile, ExampleText.TEXT_EMPTY_MZML);
+                var massSpecLogFile = TestFilesDir.GetTestPath("massspec.log");
+                var process = Process.Start(GetProcessStartInfo(
+                    "\"--in=" + mzmlFile + "\" --log-file=\"" + massSpecLogFile + "\""));
+                WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
+                Assert.IsTrue(File.Exists(massSpecLogFile), string.Format("Missing log file {0}", massSpecLogFile));
+                var massSpecLogText = File.ReadAllText(massSpecLogFile, Encoding.UTF8);
+                AssertEx.Contains(massSpecLogText,
+                    string.Format(ModelResources.SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file,
+                        Path.GetFileName(mzmlFile), DataSourceUtil.TYPE_MZML));
             }
             // success
             string validFile = TestFilesDir.GetTestPath("SkylineCmdTest.sky");
