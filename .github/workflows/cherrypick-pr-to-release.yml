@@ -19,23 +19,27 @@ jobs:
     runs-on: ubuntu-latest
     name: release_pull_request
     steps:
-    - name: Fetch PR data for manual dispatch
-      if: github.event_name == 'workflow_dispatch'
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: Prepare event data
       uses: actions/github-script@v7
       with:
         script: |
-          const pr = await github.rest.pulls.get({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            pull_number: ${{ inputs.pr_number }}
-          });
-          const event = { pull_request: pr.data };
           const fs = require('fs');
-          fs.writeFileSync(process.env.GITHUB_EVENT_PATH, JSON.stringify(event));
-    - name: checkout
-      uses: actions/checkout@v1
+          if (context.eventName === 'workflow_dispatch') {
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ inputs.pr_number || 0 }}
+            });
+            fs.writeFileSync(process.env.GITHUB_WORKSPACE + '/_pr_event.json', JSON.stringify({ pull_request: pr.data }));
+          } else {
+            fs.copyFileSync(process.env.GITHUB_EVENT_PATH, process.env.GITHUB_WORKSPACE + '/_pr_event.json');
+          }
     - name: Cherry pick PR to release
       uses: chambm/gh-backport-action@v3
+      env:
+        GITHUB_EVENT_PATH: /github/workspace/_pr_event.json
       with:
         pr_branch: 'Skyline/skyline_26_1'
         pr_title: 'Cherry pick of #{pr_number} ({original_title}) from {base_branch} to {pr_branch}'
