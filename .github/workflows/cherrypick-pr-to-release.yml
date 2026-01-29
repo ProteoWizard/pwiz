@@ -21,8 +21,6 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v6
-      with:
-        fetch-depth: 100
     - name: Cherry pick PR to release
       uses: chambm/gh-backport-action@v3
       with:
