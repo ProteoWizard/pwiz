@@ -30,7 +30,6 @@
 #include <set>
 #include <map>
 #include <string>
-#include <limits>
 
 
 namespace pwiz {
@@ -84,6 +83,15 @@ struct PWIZ_API_DECL OBO
     OBO(const std::string& filename);
 };
 
+static bool isIgnoredRelationship(const std::string oboName)
+{
+    return "PATO" == oboName || // we don't follow the UO -> PATO relationships because we don't download pato.obo
+        "STATO" == oboName || // we don't follow the UO -> STATO relationships because we don't download stato.obo
+        "NCIT" == oboName || // we don't follow the MS -> NCIT relationships because we don't download ncit.obo
+        "OBI" == oboName || // we don't follow the MS -> OBI relationships because we don't download obi.obo
+        "PEFF" == oboName || // we don't follow the MS -> PEFF relationships because we don't download peff.obo
+        "MS" == oboName; // e.g. PEFF terms referring back to MS terms
+}
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Term& term);
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const OBO& obo);
