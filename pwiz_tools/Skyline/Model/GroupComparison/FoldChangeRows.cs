@@ -26,10 +26,12 @@ namespace pwiz.Skyline.Model.GroupComparison
 {
     public abstract class AbstractFoldChangeRow
     {
-        public AbstractFoldChangeRow(Protein protein, Databinding.Entities.Peptide peptide,
+        private GroupComparisonDef _groupComparisonDef;
+        public AbstractFoldChangeRow(GroupComparisonDef groupComparisonDef, Protein protein, Databinding.Entities.Peptide peptide,
             IsotopeLabelType labelType,
             int? msLevel, IDictionary<Replicate, ReplicateRow> replicateResults)
         {
+            _groupComparisonDef = groupComparisonDef;
             Protein = protein;
             Peptide = peptide;
             IsotopeLabelType = labelType;
@@ -46,14 +48,27 @@ namespace pwiz.Skyline.Model.GroupComparison
         public IDictionary<Replicate, ReplicateRow> ReplicateAbundances { get; private set; }
 
         public abstract IEnumerable<FoldChangeRow> GetFoldChangeRows();
+        public string GroupComparison
+        {
+            get { return _groupComparisonDef?.Name; }
+        }
+
+        public GroupComparisonDef GetGroupComparisonDef()
+        {
+            return _groupComparisonDef;
+        }
+
     }
 
+    [RowSource(ROW_SOURCE_NAME)]
     public class FoldChangeRow : AbstractFoldChangeRow
     {
-        public FoldChangeRow(Protein protein, Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
+        public const string ROW_SOURCE_NAME = @"pwiz.Skyline" + ".Controls.GroupComparison.FoldChangeBindingSource+FoldChangeRow";
+
+        public FoldChangeRow(GroupComparisonDef groupComparison, Protein protein, Databinding.Entities.Peptide peptide, IsotopeLabelType labelType,
             int? msLevel, GroupIdentifier group, int replicateCount, FoldChangeResult foldChangeResult,
             IDictionary<Replicate, ReplicateRow> replicateResults)
-            : base(protein, peptide, labelType, msLevel, replicateResults)
+            : base(groupComparison, protein, peptide, labelType, msLevel, replicateResults)
         {
             ReplicateCount = replicateCount;
             FoldChangeResult = foldChangeResult;
@@ -70,13 +85,16 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
     }
 
+    [RowSource(ROW_SOURCE_NAME)]
     public class FoldChangeDetailRow : AbstractFoldChangeRow
     {
-        public FoldChangeDetailRow(Protein protein, Databinding.Entities.Peptide peptide,
-            IsotopeLabelType labelType,
-            int? msLevel, Dictionary<GroupIdentifier, FoldChangeResult> foldChangeResults,
-            IDictionary<Replicate, ReplicateRow> replicateResult) : base(protein, peptide, labelType, msLevel,
-            replicateResult)
+        public const string ROW_SOURCE_NAME = "pwiz.Skyline" + ".Controls.GroupComparison.FoldChangeBindingSource+FoldChangeDetailRow";
+
+        public FoldChangeDetailRow(GroupComparisonDef groupComparison, Protein protein,
+            Databinding.Entities.Peptide peptide, IsotopeLabelType labelType, int? msLevel,
+            Dictionary<GroupIdentifier, FoldChangeResult> foldChangeResults,
+            IDictionary<Replicate, ReplicateRow> replicateResult)
+            : base(groupComparison, protein, peptide, labelType, msLevel, replicateResult)
         {
             FoldChangeResults = foldChangeResults;
         }
@@ -87,7 +105,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public override IEnumerable<FoldChangeRow> GetFoldChangeRows()
         {
             return FoldChangeResults.Select(kvp =>
-                new FoldChangeRow(Protein, Peptide, IsotopeLabelType, MsLevel, kvp.Key, 0, kvp.Value,
+                new FoldChangeRow(GetGroupComparisonDef(), Protein, Peptide, IsotopeLabelType, MsLevel, kvp.Key, 0, kvp.Value,
                     ReplicateAbundances));
         }
     }
