@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -183,17 +184,47 @@ namespace pwiz.SkylineTestUtil
     internal class ScreenshotDiff
     {
         /// <summary>
-        /// Height of Windows title bar in pixels (at 100% DPI).
-        /// This is used to exclude title bar differences from comparison.
+        /// Default per-channel color tolerance. Pixels whose R, G, and B channels
+        /// all differ by at most this value are considered matching.
         /// </summary>
-        public const int TITLE_BAR_HEIGHT = 32;
+        public const int DEFAULT_COLOR_TOLERANCE = 0;
+
+        /// <summary>
+        /// Known system color mappings that should be treated as equivalent.
+        /// These arise from differences in Windows theme/system colors between
+        /// the machine that captured reference screenshots and the current machine.
+        /// Mappings are checked in both directions (old->new and new->old).
+        /// </summary>
+        private static readonly HashSet<long> _allowedColorMappings = BuildAllowedColorMappings(
+            (255, 255, 255, 243, 243, 243),  // White -> light gray (system background)
+            (255, 255, 255, 249, 249, 249),  // White -> near-white (system background)
+            (225, 225, 225, 253, 253, 253)   // Gray -> near-white (system border/control color)
+        );
+
+        private static HashSet<long> BuildAllowedColorMappings(params (int r1, int g1, int b1, int r2, int g2, int b2)[] mappings)
+        {
+            var set = new HashSet<long>();
+            foreach (var (r1, g1, b1, r2, g2, b2) in mappings)
+            {
+                // Add both directions
+                set.Add(ColorPairKey(r1, g1, b1, r2, g2, b2));
+                set.Add(ColorPairKey(r2, g2, b2, r1, g1, b1));
+            }
+            return set;
+        }
+
+        private static long ColorPairKey(int r1, int g1, int b1, int r2, int g2, int b2)
+        {
+            return ((long)r1 << 40) | ((long)g1 << 32) | ((long)b1 << 24) |
+                   ((long)r2 << 16) | ((long)g2 << 8) | b2;
+        }
 
         private readonly Size _sizeOld;
         private readonly byte[] _memoryOld;
         private readonly Size _sizeNew;
         private readonly byte[] _memoryNew;
 
-        public ScreenshotDiff(ScreenshotInfo oldScreenshot, ScreenshotInfo newScreenshot, Color highlightColor)
+        public ScreenshotDiff(ScreenshotInfo oldScreenshot, ScreenshotInfo newScreenshot, Color highlightColor, int colorTolerance = DEFAULT_COLOR_TOLERANCE)
         {
             _sizeOld = oldScreenshot.ImageSize;
             _memoryOld = oldScreenshot.Memory?.ToArray();
@@ -206,7 +237,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     lock (newScreenshot.Image)
                     {
-                        CalcHighlightImage(oldScreenshot.Image, newScreenshot.Image, highlightColor);
+                        CalcHighlightImage(oldScreenshot.Image, newScreenshot.Image, highlightColor, colorTolerance);
                     }
                 }
             }
@@ -218,7 +249,13 @@ namespace pwiz.SkylineTestUtil
         public bool BytesDiffer => _memoryOld.Length != _memoryNew.Length || !_memoryOld.SequenceEqual(_memoryNew);
         public Bitmap HighlightedImage { get; private set; }
         public int PixelCount { get; private set; }
-        public int PixelCountInTitleBar { get; private set; }
+
+        /// <summary>
+        /// Color pairs (old -> new) that account for more than 50% of all differing pixels.
+        /// Key is the percentage of diff pixels for that pair, value is the (old, new) color pair.
+        /// </summary>
+        public Dictionary<float, KeyValuePair<Color, Color>> DominantColorPairs { get; private set; } =
+            new Dictionary<float, KeyValuePair<Color, Color>>();
 
         /// <summary>
         /// Gets the percentage of pixels that differ between the two screenshots.
@@ -236,37 +273,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Gets the percentage of pixels that differ, excluding the title bar area.
-        /// This is useful for ignoring differences in window titles, timestamps, etc.
-        /// Returns 100.0 if the sizes don't match.
-        /// </summary>
-        public double DiffPercentageWithoutTitleBar
-        {
-            get
-            {
-                if (SizesDiffer)
-                    return 100.0;
-                int titleBarPixels = _sizeOld.Width * Math.Min(TITLE_BAR_HEIGHT, _sizeOld.Height);
-                int totalPixelsWithoutTitleBar = _sizeOld.Width * _sizeOld.Height - titleBarPixels;
-                int diffPixelsWithoutTitleBar = PixelCount - PixelCountInTitleBar;
-                return totalPixelsWithoutTitleBar > 0 ? (100.0 * diffPixelsWithoutTitleBar / totalPixelsWithoutTitleBar) : 0;
-            }
-        }
-
-        /// <summary>
         /// Checks if the difference percentage exceeds the given threshold.
         /// </summary>
         public bool ExceedsThreshold(double thresholdPercent)
         {
             return DiffPercentage > thresholdPercent;
-        }
-
-        /// <summary>
-        /// Checks if the difference percentage (excluding title bar) exceeds the given threshold.
-        /// </summary>
-        public bool ExceedsThresholdWithoutTitleBar(double thresholdPercent)
-        {
-            return DiffPercentageWithoutTitleBar > thresholdPercent;
         }
 
         public string DiffText
@@ -310,22 +321,21 @@ namespace pwiz.SkylineTestUtil
             return Math.Round(100.0 * newLength / oldLength).ToString(CultureInfo.InvariantCulture) + "%";
         }
 
-        private void CalcHighlightImage(Bitmap bmpOld, Bitmap bmpNew, Color highlightColor)
+        private void CalcHighlightImage(Bitmap bmpOld, Bitmap bmpNew, Color highlightColor, int colorTolerance)
         {
             var result = new Bitmap(bmpOld.Width, bmpOld.Height);
             var alpha = highlightColor.A;
+            var colorPairCounts = new Dictionary<long, int>();
 
             PixelCount = 0;
-            PixelCountInTitleBar = 0;
             for (int y = 0; y < bmpOld.Height; y++)
             {
-                bool inTitleBar = y < TITLE_BAR_HEIGHT;
                 for (int x = 0; x < bmpOld.Width; x++)
                 {
                     var pixel1 = bmpOld.GetPixel(x, y);
                     var pixel2 = bmpNew.GetPixel(x, y);
 
-                    if (pixel1 != pixel2)
+                    if (!ColorsMatch(pixel1, pixel2, colorTolerance))
                     {
                         var blendedColor = Color.FromArgb(
                             255,    // Combined pixel colors always sum to 255
@@ -335,8 +345,14 @@ namespace pwiz.SkylineTestUtil
                         );
                         result.SetPixel(x, y, blendedColor);
                         PixelCount++;
-                        if (inTitleBar)
-                            PixelCountInTitleBar++;
+
+                        // Track color pair frequency: pack both RGB values into a single long key
+                        long key = ((long)pixel1.R << 40) | ((long)pixel1.G << 32) | ((long)pixel1.B << 24) |
+                                   ((long)pixel2.R << 16) | ((long)pixel2.G << 8) | pixel2.B;
+                        if (colorPairCounts.ContainsKey(key))
+                            colorPairCounts[key]++;
+                        else
+                            colorPairCounts[key] = 1;
                     }
                     else
                     {
@@ -346,6 +362,36 @@ namespace pwiz.SkylineTestUtil
             }
 
             HighlightedImage = PixelCount > 0 ? result : bmpOld;
+
+            // Find color pairs that account for >50% of differing pixels
+            if (PixelCount > 0)
+            {
+                double threshold = PixelCount * 0.5;
+                DominantColorPairs = colorPairCounts
+                    .Where(kvp => kvp.Value > threshold)
+                    .ToDictionary(
+                        kvp => (float)(100.0 * kvp.Value / PixelCount),
+                        kvp => new KeyValuePair<Color, Color>(
+                            Color.FromArgb((int)((kvp.Key >> 40) & 0xFF), (int)((kvp.Key >> 32) & 0xFF), (int)((kvp.Key >> 24) & 0xFF)),
+                            Color.FromArgb((int)((kvp.Key >> 16) & 0xFF), (int)((kvp.Key >> 8) & 0xFF), (int)(kvp.Key & 0xFF))));
+            }
+        }
+
+        /// <summary>
+        /// Returns true if two colors match within the given per-channel tolerance,
+        /// or if the color pair is in the allowed system color mappings.
+        /// </summary>
+        private static bool ColorsMatch(Color c1, Color c2, int tolerance)
+        {
+            if (c1 == c2)
+                return true;
+            if (_allowedColorMappings.Contains(ColorPairKey(c1.R, c1.G, c1.B, c2.R, c2.G, c2.B)))
+                return true;
+            if (tolerance <= 0)
+                return false;
+            return Math.Abs(c1.R - c2.R) <= tolerance &&
+                   Math.Abs(c1.G - c2.G) <= tolerance &&
+                   Math.Abs(c1.B - c2.B) <= tolerance;
         }
 
         public void ShowBinaryDiff(RichTextBox richTextBox)
@@ -459,4 +505,5 @@ namespace pwiz.SkylineTestUtil
             richTextBox.SelectionColor = richTextBox.ForeColor;
         }
     }
+
 }

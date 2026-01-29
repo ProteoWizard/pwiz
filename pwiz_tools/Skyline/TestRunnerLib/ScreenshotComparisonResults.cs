@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -105,6 +106,11 @@ namespace TestRunnerLib
                             var status = r.Passed ? "PASS" : "FAIL";
                             var marker = r.Passed ? "" : " ***";
                             sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png: {status} ({r.DiffPercentageWithoutTitleBar:F2}% diff){marker}");
+                            if (!r.Passed && r.DominantColorPairs.Count > 0)
+                            {
+                                foreach (var pair in r.DominantColorPairs)
+                                    sb.AppendLine($"      Dominant color pair: {pair}");
+                            }
                         }
                     }
 
@@ -162,9 +168,11 @@ namespace TestRunnerLib
         public double DiffPercentageWithoutTitleBar { get; }
         public int DiffPixelCount { get; }
         public string Error { get; }
+        public List<string> DominantColorPairs { get; }
 
         public ScreenshotResult(int num, bool passed, double diffPercentage,
-            double diffPercentageWithoutTitleBar, int diffPixelCount, string error)
+            double diffPercentageWithoutTitleBar, int diffPixelCount, string error,
+            List<string> dominantColorPairs = null)
         {
             ScreenshotNumber = num;
             Passed = passed;
@@ -172,6 +180,7 @@ namespace TestRunnerLib
             DiffPercentageWithoutTitleBar = diffPercentageWithoutTitleBar;
             DiffPixelCount = diffPixelCount;
             Error = error;
+            DominantColorPairs = dominantColorPairs ?? new List<string>();
         }
     }
 }

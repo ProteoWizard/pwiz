@@ -424,6 +424,8 @@ namespace pwiz.SkylineTestUtil
         public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
         {
             activeWindow ??= _skylineWindow;
+            _skylineWindow.Activate();
+            activeWindow.BringToFront(); // Make sure active window is in front before screenshot creation
 
             // Check UI and create a blank shot according to the user selection
             var newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);

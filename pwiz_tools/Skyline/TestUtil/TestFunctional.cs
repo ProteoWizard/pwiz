@@ -1968,9 +1968,11 @@ namespace pwiz.SkylineTestUtil
                 var form = !fullScreen ? TryWaitForOpenForm(formType) : SkylineWindow;
                 Assert.IsNotNull(form);
             }
-            // Allow screenshot comparison in offscreen mode, but only in pass 2 and only once per test
+            // Allow screenshot comparison in offscreen mode, but only in pass 2, only once per test,
+            // and only for tutorials (tests with CoverShotName)
             bool shouldCompareScreenshots = IsScreenshotComparisonMode && TestPass == 2 &&
-                !ScreenshotComparisonResults.HasTestBeenCompared(TestContext.TestName);
+                !ScreenshotComparisonResults.HasTestBeenCompared(TestContext.TestName) &&
+                !CoverShotName.IsNullOrEmpty();
             if (Program.SkylineOffscreen && !shouldCompareScreenshots)
                 return;
 
@@ -2001,19 +2003,15 @@ namespace pwiz.SkylineTestUtil
                     Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
                     _shotManager.ActivateScreenshotForm(screenshotForm);
 
-                    // Screenshot comparison only runs in pass 2 and only once per test
+                    // Screenshot comparison only runs in pass 2, only once per test,
+                    // and only for tutorials (tests with CoverShotName)
                     if (shouldCompareScreenshots)
                     {
-                        if (ScreenshotComparer == null)
-                        {
-                            if (CoverShotName.IsNullOrEmpty())
-                                throw new InvalidOperationException(@"ScreenshotComparer only works for tutorials with CoverShotName.");
-                            ScreenshotComparer = new ScreenshotComparer(TutorialPath);
-                        }
+                        ScreenshotComparer ??= new ScreenshotComparer(TutorialPath);
 
                         // Compare instead of saving
                         var shotPic = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot);
-                        var result = ScreenshotComparer.Compare(ScreenshotCounter, shotPic);
+                        ScreenshotComparer.Compare(ScreenshotCounter, shotPic);
                     }
                     else if (!IsScreenshotComparisonMode)
                     {
@@ -2676,6 +2674,12 @@ namespace pwiz.SkylineTestUtil
                 var testName = TestContext.TestName;
                 ScreenshotComparer.FinalizeResults(outputFolder, testName);
                 ScreenshotComparer = null; // Reset for next test
+            }
+            else if (IsScreenshotComparisonMode && TestPass == 2 &&
+                     !ScreenshotComparisonResults.HasTestBeenCompared(TestContext.TestName))
+            {
+                // No comparisons made for this test, likely because CoverShotName was not set
+                Console.WriteLine(@"WARNING: ScreenshotComparer only works for tutorials with CoverShotName.");
             }
 
             if (_pauseAndContinueForm is { IsDisposed: false })

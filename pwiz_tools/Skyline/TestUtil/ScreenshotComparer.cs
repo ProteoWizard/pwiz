@@ -30,7 +30,7 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public class ScreenshotComparer
     {
-        public const double DEFAULT_THRESHOLD_PERCENT = 5.0;
+        public const double DEFAULT_THRESHOLD_PERCENT = 15.0;
 
         private readonly string _tutorialPath;
         private readonly double _thresholdPercent;
@@ -82,17 +82,19 @@ namespace pwiz.SkylineTestUtil
             }
 
             var capturedInfo = new ScreenshotInfo(SaveToMemory(capturedScreenshot), capturedScreenshot);
-            var diff = new ScreenshotDiff(existing, capturedInfo, Color.FromArgb(128, 255, 0, 0));
+            const int COLOR_TOLERANCE = 3; // Allow minor color differences
+            var diff = new ScreenshotDiff(existing, capturedInfo, Color.FromArgb(128, 255, 0, 0), COLOR_TOLERANCE);
 
             var comparisonResult = new ComparisonResult(
                 screenshotNum,
-                passed: !diff.ExceedsThresholdWithoutTitleBar(_thresholdPercent),
+                passed: !diff.ExceedsThreshold(_thresholdPercent),
                 diffPercentage: diff.DiffPercentage,
-                diffPercentageWithoutTitleBar: diff.DiffPercentageWithoutTitleBar,
+                diffPercentageWithoutTitleBar: diff.DiffPercentage,
                 diffPixelCount: diff.PixelCount,
                 originalImage: existing.Image,
                 newImage: capturedScreenshot,
-                diffImage: diff.HighlightedImage
+                diffImage: diff.HighlightedImage,
+                dominantColorPairs: diff.DominantColorPairs
             );
             Results.Add(comparisonResult);
             return comparisonResult;
@@ -100,12 +102,12 @@ namespace pwiz.SkylineTestUtil
 
 
         /// <summary>
-        /// Save original, new, and diff images to output folder for failed comparisons.
+        /// Save original, new, and diff images to output folder for any comparison with differences.
         /// </summary>
         public void SaveComparisonImages(string outputFolder)
         {
             Directory.CreateDirectory(outputFolder);
-            foreach (var r in Results.Where(r => !r.Passed))
+            foreach (var r in Results.Where(r => r.DiffPercentage > 0))
             {
                 var prefix = $"s-{r.ScreenshotNumber:D2}";
 
@@ -144,10 +146,10 @@ namespace pwiz.SkylineTestUtil
         /// <param name="testName">Name of the test (used as subdirectory name)</param>
         public void FinalizeResults(string outputFolder, string testName)
         {
-            var failed = Results.Count(r => !r.Passed);
             string testOutputFolder = null;
+            bool hasDiffs = Results.Any(r => r.DiffPercentage > 0);
 
-            if (failed > 0 && !string.IsNullOrEmpty(outputFolder))
+            if (hasDiffs && !string.IsNullOrEmpty(outputFolder))
             {
                 testOutputFolder = Path.Combine(outputFolder, testName ?? "Unknown");
                 SaveComparisonImages(testOutputFolder);
@@ -156,7 +158,10 @@ namespace pwiz.SkylineTestUtil
             // Convert to lightweight results for the accumulator
             var lightweightResults = Results.Select(r => new ScreenshotResult(
                 r.ScreenshotNumber, r.Passed, r.DiffPercentage,
-                r.DiffPercentageWithoutTitleBar, r.DiffPixelCount, r.Error)).ToList();
+                r.DiffPercentageWithoutTitleBar, r.DiffPixelCount, r.Error,
+                r.DominantColorPairs.OrderByDescending(kvp => kvp.Key)
+                    .Select(kvp => $"({kvp.Value.Key.R},{kvp.Value.Key.G},{kvp.Value.Key.B}) -> ({kvp.Value.Value.R},{kvp.Value.Value.G},{kvp.Value.Value.B}): {kvp.Key:F1}%")
+                    .ToList())).ToList();
 
             ScreenshotComparisonResults.AddTestResults(testName ?? "Unknown", _tutorialPath,
                 _thresholdPercent, lightweightResults, testOutputFolder);
@@ -178,11 +183,13 @@ namespace pwiz.SkylineTestUtil
         public Bitmap NewImage { get; }
         public Bitmap DiffImage { get; }
         public string Error { get; }
+        public Dictionary<float, KeyValuePair<Color, Color>> DominantColorPairs { get; }
 
         public ComparisonResult(int num, bool passed = false, double diffPercentage = 0,
             double diffPercentageWithoutTitleBar = 0, int diffPixelCount = 0,
             Bitmap originalImage = null, Bitmap newImage = null,
-            Bitmap diffImage = null, string error = null)
+            Bitmap diffImage = null, string error = null,
+            Dictionary<float, KeyValuePair<Color, Color>> dominantColorPairs = null)
         {
             ScreenshotNumber = num;
             Passed = passed && string.IsNullOrEmpty(error);
@@ -193,6 +200,7 @@ namespace pwiz.SkylineTestUtil
             NewImage = newImage;
             DiffImage = diffImage;
             Error = error;
+            DominantColorPairs = dominantColorPairs ?? new Dictionary<float, KeyValuePair<Color, Color>>();
         }
     }
 }

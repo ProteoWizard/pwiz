@@ -18,8 +18,6 @@ findstr /b /e %%I scripts\misc\tc-perftests-skiplist.txt >nul
 REM if test is in skiplist, ERRORLEVEL will be 0
 IF ERRORLEVEL 1 (pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I pass0=on teamcitytestsuite=TestTutorial loop=1 language=en perftests=on teamcitytestdecoration=on runsmallmoleculeversions=on showheader=off pause=-4) ELSE echo Skipped %%I
 IF ERRORLEVEL 1 set /a FailedTests += 1
-echo Cleaning TestResults
-IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResults
 IF "%USERNAME%" neq "maccoss-teamcity" (
   echo Cleaning downloads
   IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
@@ -34,8 +32,6 @@ findstr /b /e %%I scripts\misc\tc-perftests-skiplist.txt >nul
 REM if test is in skiplist, ERRORLEVEL will be 0
 IF ERRORLEVEL 1 (pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I teamcitytestsuite=TestPerf loop=1 language=en perftests=on teamcitytestdecoration=on runsmallmoleculeversions=on showheader=off pause=-4) ELSE echo Skipped %%I
 IF ERRORLEVEL 1 set /a FailedTests += 1
-echo Cleaning TestResults
-IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResults
 IF "%USERNAME%" neq "maccoss-teamcity" (
   echo Cleaning downloads
   IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
