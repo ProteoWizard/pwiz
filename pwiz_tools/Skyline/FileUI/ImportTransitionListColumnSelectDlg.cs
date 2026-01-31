@@ -490,6 +490,7 @@ namespace pwiz.Skyline.FileUI
 
             for (var i = 0; i < numColumns; i++)
             {
+                dataGrid.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
                 if (headers != null && i < headers.Length)
                 {
                     dataGrid.Columns[i].HeaderText = headers[i];
