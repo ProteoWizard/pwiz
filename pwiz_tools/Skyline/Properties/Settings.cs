@@ -2435,6 +2435,8 @@ namespace pwiz.Skyline.Properties
             foreach (var calc in calculatorSpecs)
             {
                 list.Add(Initialize(calc, loadMonitor, ref status));
+                status = status.NextSegment();
+                loadMonitor?.UpdateProgress(status);
             }
             return list.ToArray();
         }
