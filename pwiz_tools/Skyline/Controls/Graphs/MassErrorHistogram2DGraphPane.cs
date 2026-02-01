@@ -285,10 +285,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphPane.CurveList.Clear();
                     return;
                 }
-                graphPane.YAxis.Scale.Min = _minMass;
-                graphPane.YAxis.Scale.Max = _maxMass;
-                graphPane.XAxis.Scale.Min = _minX;
-                graphPane.XAxis.Scale.Max = _maxX;
+                // Pad axes when range is zero (degenerate single-point data)
+                graphPane.XAxis.Scale.Min = _minX == _maxX ? _minX - 1 : _minX;
+                graphPane.XAxis.Scale.Max = _minX == _maxX ? _maxX + 1 : _maxX;
+                graphPane.YAxis.Scale.Min = _minMass == _maxMass ? _minMass - _binSizePpm : _minMass;
+                graphPane.YAxis.Scale.Max = _minMass == _maxMass ? _maxMass + _binSizePpm : _maxMass;
                 graphPane.AxisChange();
                 HeatMapGraphPane.GraphHeatMap(graphPane,
                     _heatMapData, MAX_DOT_RADIUS, MIN_DOT_RADIUS, (float)_minMass, (float)_maxMass,
