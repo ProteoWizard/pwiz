@@ -658,6 +658,8 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public override int GetImageIndex(ViewSpec viewSpec)
         {
+            if (viewSpec.RowSource == null)
+                return -1;
             Tuple<int, int> imageIndex;
             if (_imageIndexes.TryGetValue(viewSpec.RowSource, out imageIndex))
             {
