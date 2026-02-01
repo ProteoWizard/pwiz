@@ -1285,7 +1285,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_expectedVisible == AreaExpectedValue.ratio_to_label)
                 {
                     // if this is ratio to label normalization then we check if this precursor is not the label and it has a matching label precursor
-                    if (_normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                    if (_normalizeOption?.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                     {
                         var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
                         if (precursorNodePath.Peptide != null &&
@@ -1315,7 +1315,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return float.NaN;
                 if (_expectedVisible == AreaExpectedValue.ratio_to_label)
                 {
-                    if (_normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                    if (_normalizeOption?.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                     {
                         var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
                         if (precursorNodePath.Peptide != null && !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, nodeGroup.LabelType))
