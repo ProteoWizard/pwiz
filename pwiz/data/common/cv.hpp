@@ -41,9 +41,9 @@
 // [psi-ms.obo]
 #define _PSI_MS_OBO_
 //   format-version: 1.2
-//   data-version: 4.1.197
-//   date: 17:07:2025 21:31
-//   saved-by: David Cox
+//   data-version: 4.1.232
+//   date: 16:01:2026 12:00
+//   saved-by: Jonathan Hunter
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   namespace-id-rule: * PEFF:$sequence(7,0,9999999)$
@@ -67,6 +67,9 @@
 //   remark: creator: Mathias Walzer <walzer <-at-> ebi.ac.uk>
 //   remark: creator: Nithu Sara John <nithu <-at-> ebi.ac.uk>
 //   remark: creator: David Cox <david.cox <-at-> sciex.com>
+//   remark: creator: Jonathan Hunter <jhunter <-at-> ebi.ac.uk>
+//   remark: creator: Samuel Wein <sam <-at-> openms.de>
+//   remark: creator: Jeroen Van Goey <j.vangoey <-at-> instadeep.com>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
@@ -83,31 +86,11 @@
 // [unit.obo]
 #define _UNIT_OBO_
 //   format-version: 1.2
-//   date: 09:04:2014 13:37
-//   saved-by: gkoutos
-//   auto-generated-by: OBO-Edit 2.1-beta19
-//   subsetdef: abnormal_slim "Abnormal/normal slim"
-//   subsetdef: absent_slim "Absent/present slim"
-//   subsetdef: attribute_slim "Attribute slim"
-//   subsetdef: cell_quality "cell_quality"
-//   subsetdef: disposition_slim "Disposition slim"
-//   subsetdef: mpath_slim "Pathology slim"
-//   subsetdef: prefix_slim "prefix slim"
-//   subsetdef: relational_slim "Relational slim: types of quality that require an additional entity in order to exist"
-//   subsetdef: scalar_slim "Scalar slim"
-//   subsetdef: unit_group_slim "unit group slim"
-//   subsetdef: unit_slim "unit slim"
-//   subsetdef: value_slim "Value slim"
-//   default-namespace: quality
-//   namespace-id-rule: * UO:$sequence(7,0,9999999)$
-//   remark: Filtered by Ancestor ID equals "UO:0000000"
+//   data-version: releases/2026-01-16
+//   idspace: dc http://purl.org/dc/elements/1.1/
+//   idspace: oboInOwl http://www.geneontology.org/formats/oboInOwl#
 //   ontology: uo
-//   ontology: pato
-//   ontology: pato
-//   ontology: pato
-//   ontology: pato
-//   ontology: pato
-//   ontology: pato
+//   property_value: owl:versionInfo "2026-01-16" xsd:string
 //
 
 
@@ -184,7 +167,7 @@ enum PWIZ_API_DECL CVID
     PEFF_HasAnnotationIdentifiers = 200000024,
 
     /// DbUniqueId: Sequence database unique identifier.
-    PEFF_DbUniqueId_OBSOLETE = 200001001,
+    PEFF_DbUniqueId = 200001001,
 
     /// PName: PEFF keyword for the protein full name.
     PEFF_PName = 200001002,
@@ -288,6 +271,9 @@ enum PWIZ_API_DECL CVID
     /// initiator methionine: N-terminal methionine residue of a protein that can be co-translationally cleaved.
     PEFF_initiator_methionine = 200001035,
 
+    /// PSequence: PEFF keyword for the peptide sequence.
+    PEFF_PSequence = 200001036,
+
     /// Technique: A practiced and regimented skill or series of actions.
     NCIT_Technique = 100316847,
 
@@ -324,7 +310,7 @@ enum PWIZ_API_DECL CVID
     /// Density: The amount of something per unit size.
     NCIT_Density = 100345781,
 
-    /// Principal Component: One of the axes representing the projection of varience resulting from principal component analysis.
+    /// Principal Component: One of the axes representing the projection of variance resulting from principal component analysis.
     NCIT_Principal_Component = 100360694,
 
     /// Cover: Span a region or interval of distance, space or time.
@@ -522,14 +508,20 @@ enum PWIZ_API_DECL CVID
     /// electrospray inlet: Inlet used for introducing the liquid sample into an electrospray ionization source.
     MS_electrospray_inlet = 1000057,
 
-    /// flow injection analysis: Sample is directly injected or infused into the ionization source.
+    /// flow injection analysis: A sample introduction method in which a discrete sample aliquot is injected into a continuous carrier solvent stream and transported to the ionization source without separation, producing a transient analytical signal.
     MS_flow_injection_analysis = 1000058,
+
+    /// FIA (flow injection analysis): A sample introduction method in which a discrete sample aliquot is injected into a continuous carrier solvent stream and transported to the ionization source without separation, producing a transient analytical signal.
+    MS_FIA = MS_flow_injection_analysis,
 
     /// inductively coupled plasma: A gas discharge ion source in which the energy to the plasma is supplied by electromagnetic induction.
     MS_inductively_coupled_plasma = 1000059,
 
-    /// infusion: The continuous flow of solution of a sample into the ionization source.
+    /// infusion: A sample introduction method in which a sample solution is continuously delivered to the ionization source at a constant flow rate without separation.
     MS_infusion = 1000060,
+
+    /// direct infusion (infusion): A sample introduction method in which a sample solution is continuously delivered to the ionization source at a constant flow rate without separation.
+    MS_direct_infusion = MS_infusion,
 
     /// jet separator: A device that separates carrier gas from gaseous analyte molecules on the basis of diffusivity.
     MS_jet_separator = 1000061,
@@ -594,25 +586,25 @@ enum PWIZ_API_DECL CVID
     /// MALDI (matrix-assisted laser desorption ionization): The formation of gas-phase ions from molecules that are present in a solid or solvent matrix that is irradiated with a pulsed laser. See also laser desorption/ionization.
     MS_MALDI = MS_matrix_assisted_laser_desorption_ionization,
 
-    /// negative ion mode: OBSOLETE.
-    MS_negative_ion_mode_OBSOLETE = 1000076,
+    /// negative polarity acquisition: Polarities of the scans of a run are all negative.
+    MS_negative_polarity_acquisition = 1000076,
 
-    /// positive ion mode: OBSOLETE.
-    MS_positive_ion_mode_OBSOLETE = 1000077,
+    /// positive polarity acquisition: Polarities of the scans of a run are all positive.
+    MS_positive_polarity_acquisition = 1000077,
 
-    /// axial ejection linear ion trap: A linear ion trap mass spectrometer where ions are ejected along the axis of the analyzer.
+    /// axial ejection linear ion trap: A linear ion trap mass analyzer where ions are ejected along the axis of the analyzer.
     MS_axial_ejection_linear_ion_trap = 1000078,
 
-    /// fourier transform ion cyclotron resonance mass spectrometer: A mass spectrometer based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
-    MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer = 1000079,
+    /// fourier transform ion cyclotron resonance: A device based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
+    MS_fourier_transform_ion_cyclotron_resonance = 1000079,
 
-    /// FT_ICR (fourier transform ion cyclotron resonance mass spectrometer): A mass spectrometer based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
-    MS_FT_ICR = MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer,
+    /// FT_ICR (fourier transform ion cyclotron resonance): A device based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
+    MS_FT_ICR = MS_fourier_transform_ion_cyclotron_resonance,
 
     /// magnetic sector: A device that produces a magnetic field perpendicular to a charged particle beam that deflects the beam to an extent that is proportional to the particle momentum per unit charge. For a monoenergetic beam, the deflection is proportional to m/z.
     MS_magnetic_sector = 1000080,
 
-    /// quadrupole: A mass spectrometer that consists of four parallel rods whose centers form the corners of a square and whose opposing poles are connected. The voltage applied to the rods is a superposition of a static potential and a sinusoidal radio frequency potential. The motion of an ion in the x and y dimensions is described by the Matthieu equation whose solutions show that ions in a particular m/z range can be transmitted along the z axis.
+    /// quadrupole: A device that consists of four parallel rods whose centers form the corners of a square and whose opposing poles are connected. The voltage applied to the rods is a superposition of a static potential and a sinusoidal radio frequency potential. The motion of an ion in the x and y dimensions is described by the Matthieu equation whose solutions show that ions in a particular m/z range can be transmitted along the z axis.
     MS_quadrupole = 1000081,
 
     /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
@@ -627,7 +619,7 @@ enum PWIZ_API_DECL CVID
     /// Quistor (quadrupole ion trap): Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_Quistor = MS_quadrupole_ion_trap,
 
-    /// radial ejection linear ion trap: A linear ion trap mass spectrometer where ions are ejected along the radius of the analyzer.
+    /// radial ejection linear ion trap: A linear ion trap mass analyzer where ions are ejected along the radius of the analyzer.
     MS_radial_ejection_linear_ion_trap = 1000083,
 
     /// time-of-flight: Instrument that separates ions by m/z in a field-free region after acceleration to a fixed acceleration energy.
@@ -1053,9 +1045,6 @@ enum PWIZ_API_DECL CVID
     /// selected ion monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
     MS_selected_ion_monitoring = 1000205,
 
-    /// Multiple Ion Monitoring (selected ion monitoring): The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
-    MS_Multiple_Ion_Monitoring = MS_selected_ion_monitoring,
-
     /// SIM (selected ion monitoring): The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
     MS_SIM = MS_selected_ion_monitoring,
 
@@ -1257,10 +1246,10 @@ enum PWIZ_API_DECL CVID
     /// DIP (direct insertion probe): A device for introducing a solid or liquid sample into a mass spectrometer ion source for desorption ionization.
     MS_DIP = MS_direct_insertion_probe,
 
-    /// direct liquid introduction: The delivery of a liquid sample into a mass spectrometer for spray or desorption ionization.
+    /// direct liquid introduction: A legacy liquid chromatography-mass spectrometry interface in which a minor fraction of the eluate flow is split and introduced through a narrow orifice or diaphragm directly into the ion source, with solvent-mediated chemical ionization. This interface was largely superseded by atmospheric pressure ionization methods.
     MS_direct_liquid_introduction = 1000249,
 
-    /// DLI (direct liquid introduction): The delivery of a liquid sample into a mass spectrometer for spray or desorption ionization.
+    /// DLI (direct liquid introduction): A legacy liquid chromatography-mass spectrometry interface in which a minor fraction of the eluate flow is split and introduced through a narrow orifice or diaphragm directly into the ion source, with solvent-mediated chemical ionization. This interface was largely superseded by atmospheric pressure ionization methods.
     MS_DLI = MS_direct_liquid_introduction,
 
     /// electron capture dissociation: A process in which a multiply protonated molecules interacts with a low energy electrons. Capture of the electron leads the liberation of energy and a reduction in charge state of the ion with the production of the (M + nH) (n-1)+ odd electron ion, which readily fragments.
@@ -1446,11 +1435,11 @@ enum PWIZ_API_DECL CVID
     /// SEND (surface enhanced neat desorption): Matrix-assisted laser desorption ionization in which the matrix is covalently linked to the target surface.
     MS_SEND = MS_surface_enhanced_neat_desorption,
 
-    /// suface ionization: The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.
-    MS_suface_ionization_OBSOLETE = 1000280,
+    /// surface ionization: The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.
+    MS_surface_ionization_OBSOLETE = 1000280,
 
-    /// SI (suface ionization): The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.
-    MS_SI_OBSOLETE = MS_suface_ionization_OBSOLETE,
+    /// SI (surface ionization): The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.
+    MS_SI_OBSOLETE = MS_surface_ionization_OBSOLETE,
 
     /// selected ion flow tube: A device in which m/z selected ions are entrained in an inert carrier gas and undergo ion-molecule reactions.
     MS_selected_ion_flow_tube = 1000281,
@@ -1632,7 +1621,7 @@ enum PWIZ_API_DECL CVID
     /// linked scan at constant b/e: A linked scan at constant B/E may be performed on a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector. The magnetic field B and the electric field E are scanned simultaneously while the accelerating voltage V is held constant, so as to maintain the ratio of the two fields constant. This linked scan may record a product ion spectrum of dissociation or other reactions occurring in a field free region preceding the two sectors.
     MS_linked_scan_at_constant_b_e_OBSOLETE = 1000330,
 
-    /// Linked Scan at Constant E2/V: A linked scan performed on a sector instrument that incorporates at least one electric sector plus one magnetic sector. The electric sector field, E, and the accelerating voltage, V, are scanned simultaneously, so as to maintain the ratio E2/V at a constant value. This linked scan recordss a product ion spectrum of dissociation or other reactions occurring in a field free region (FFR) preceding the two sectors.
+    /// Linked Scan at Constant E2/V: A linked scan performed on a sector instrument that incorporates at least one electric sector plus one magnetic sector. The electric sector field, E, and the accelerating voltage, V, are scanned simultaneously, so as to maintain the ratio E2/V at a constant value. This linked scan records a product ion spectrum of dissociation or other reactions occurring in a field free region (FFR) preceding the two sectors.
     MS_Linked_Scan_at_Constant_E2_V_OBSOLETE = 1000331,
 
     /// Linked Scan at Constant B2/E: A linked scan performed on a sector mass spectrometer that incorporates at least one electric sector plus one magnetic sector in either order. The accelerating voltage is fixed and the magnetic field, B, and the electric field, E, are scanned simultaneously so as to maintain the ratio B2/E at a constant value. This linked scan records a precursor ion spectrum of dissociation or other reactions occurring in the field free region preceding the two sectors. The term B2/E linked scan is not recommended.
@@ -1641,7 +1630,7 @@ enum PWIZ_API_DECL CVID
     /// Linked Scan at Constant B[1-(E/E0)]^1/2 / E: A linked scan performed on a sector instrument that incorporates at least one electric sector plus one magnetic sector placed in either order. The accelerating voltage is fixed while scanning the magnetic field, B, and electric field, E, simultaneously, so as to maintain the quantity B[1-(E/E0)]1/2/E at a constant value. This linked scan records a constant neutral mass loss (or gain) spectrum of dissociation or other reactions occurring in a field free region preceding the two sectors. E0 is the electric field required to transmit the singly charged analog of the desired neutral fragment. The term B[1-(E/E0)]1/2/E linked scan.
     MS_Linked_Scan_at_Constant_B_1__E_E0___1_2___E_OBSOLETE = 1000333,
 
-    /// MS/MS in Time: A tandem mass spectrometry method in which product ion spectra are recorded in a single m/z analyzer (such as a Paul Ion Trap or FTMS) in discreet steps over time. Ions in a specific m/z range are selected, dissociated, and the product ions analyzed sequentially in time.
+    /// MS/MS in Time: A tandem mass spectrometry method in which product ion spectra are recorded in a single m/z analyzer (such as a Paul Ion Trap or FTMS) in discrete steps over time. Ions in a specific m/z range are selected, dissociated, and the product ions analyzed sequentially in time.
     MS_MS_MS_in_Time_OBSOLETE = 1000334,
 
     /// MS/MS in Space: A tandem mass spectrometry method in which product ion spectra are recorded in m/z analyzers separated in space. Specific m/z separation functions are designed such that in one section of the instrument ions are selected, dissociated in an intermediate region, and the product ions are then transmitted to another analyser for m/z separation and data acquisition.
@@ -1836,10 +1825,10 @@ enum PWIZ_API_DECL CVID
     /// microelectrospray: Electrospray ionization at a solvent flow rate of 300-800 nL/min where the flow is a result of a mechanical pump. See nanoelectrospray.
     MS_microelectrospray = 1000397,
 
-    /// nanoelectrospray: Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray.
+    /// nanoelectrospray: Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potential on the tip of the electrospray needle and/or a gas pressure to push the sample through the needle. See also electrospray ionization and microelectrospray.
     MS_nanoelectrospray = 1000398,
 
-    /// nanospray (nanoelectrospray): Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray.
+    /// nanospray (nanoelectrospray): Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potential on the tip of the electrospray needle and/or a gas pressure to push the sample through the needle. See also electrospray ionization and microelectrospray.
     MS_nanospray = MS_nanoelectrospray,
 
     /// penning ionization: Ionization that occurs through the interaction of two or more neutral gaseous species, at least one of which is internally excited.
@@ -1875,10 +1864,10 @@ enum PWIZ_API_DECL CVID
     /// association reaction: The reaction of an ion with a neutral species in which the reactants combine to form a single ion.
     MS_association_reaction_OBSOLETE = 1000409,
 
-    /// alpha-cleavage: A homolytic cleavage where the bond fission occurs between at the atom adjacent to the atom at the apparent charge site and an atom removed from the aparent charge site by two bonds.
+    /// alpha-cleavage: A homolytic cleavage where the bond fission occurs between the atom adjacent to the atom at the apparent charge site and an atom removed from the apparent charge site by two bonds.
     MS_alpha_cleavage_OBSOLETE = 1000410,
 
-    /// beta-cleavage: A homolytic cleavage where the bond fission occurs between at an atom removed from the apparent charge site atom by two bonds and an atom adjacent to that atom and removed from the aparent charge site by three bonds.
+    /// beta-cleavage: A homolytic cleavage where the bond fission occurs between an atom removed from the apparent charge site atom by two bonds and an atom adjacent to that atom and removed from the apparent charge site by three bonds.
     MS_beta_cleavage_OBSOLETE = 1000411,
 
     /// buffer gas: An inert gas used for collisional deactivation of internally excited ions.
@@ -2373,7 +2362,7 @@ enum PWIZ_API_DECL CVID
     /// Thermo RAW format: Thermo Scientific RAW file format.
     MS_Thermo_RAW_format = 1000563,
 
-    /// PSI mzData format: Proteomics Standards Inititative mzData file format.
+    /// PSI mzData format: Proteomics Standards Initiative mzData file format.
     MS_PSI_mzData_format = 1000564,
 
     /// Micromass PKL format: Micromass PKL file format.
@@ -2475,7 +2464,7 @@ enum PWIZ_API_DECL CVID
     /// selected reaction monitoring spectrum (SRM spectrum): Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair. Data can be obtained for a single transition pair or multiple transition pairs. Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs. Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
     MS_selected_reaction_monitoring_spectrum = MS_SRM_spectrum,
 
-    /// mzML format: Proteomics Standards Inititative mzML file format.
+    /// mzML format: Proteomics Standards Initiative mzML file format.
     MS_mzML_format = 1000584,
 
     /// contact attribute: Details about a person or organization to contact in case of concern or discussion about the file.
@@ -2502,7 +2491,7 @@ enum PWIZ_API_DECL CVID
     /// smoothing: A process of reducing spikes of intensity in order to reduce noise while preserving real peak signal. Many algorithms can be applied for this process.
     MS_smoothing = 1000592,
 
-    /// baseline reduction: A process of removal of varying intensities generated due to variable energy absorption before further processing can take place. Baseline reduction facilitates meaningful comparision between intensities of m/z values.
+    /// baseline reduction: A process of removal of varying intensities generated due to variable energy absorption before further processing can take place. Baseline reduction facilitates meaningful comparison between intensities of m/z values.
     MS_baseline_reduction = 1000593,
 
     /// low intensity data point removal: The removal of very low intensity data points that are likely to be spurious noise rather than real signal.
@@ -3045,10 +3034,10 @@ enum PWIZ_API_DECL CVID
     /// TOFCalibration: Applies time of flight calibration.
     MS_TOFCalibration = 1000766,
 
-    /// native spectrum identifier format: Describes how the native spectrum identifiers are formated.
+    /// native spectrum identifier format: Describes how the native spectrum identifiers are formatted.
     MS_native_spectrum_identifier_format = 1000767,
 
-    /// nativeID format (native spectrum identifier format): Describes how the native spectrum identifiers are formated.
+    /// nativeID format (native spectrum identifier format): Describes how the native spectrum identifiers are formatted.
     MS_nativeID_format = MS_native_spectrum_identifier_format,
 
     /// Thermo nativeID format: Native format defined by controllerType=xsd:nonNegativeInteger controllerNumber=xsd:positiveInteger scan=xsd:positiveInteger.
@@ -3342,13 +3331,16 @@ enum PWIZ_API_DECL CVID
     /// LTQ Velos: Thermo Scientific LTQ Velos MS.
     MS_LTQ_Velos = 1000855,
 
-    /// LTQ Velos ETD: Thermo Scientific LTQ Velos MS with ETD.
+    /// LTQ Velos/ETD: Thermo Scientific LTQ Velos MS with ETD.
     MS_LTQ_Velos_ETD = 1000856,
+
+    /// LTQ Velos_x20_ETD (LTQ Velos/ETD): Thermo Scientific LTQ Velos MS with ETD.
+    MS_LTQ_Velos_x20_ETD = MS_LTQ_Velos_ETD,
 
     /// run attribute: Properties of the described run.
     MS_run_attribute = 1000857,
 
-    /// fraction identifier: Identier string that describes the sample fraction. This identifier should contain the fraction number(s) or similar information.
+    /// fraction identifier: Identifier string that describes the sample fraction. This identifier should contain the fraction number(s) or similar information.
     MS_fraction_identifier = 1000858,
 
     /// molecule: Group of two or more atoms held together by chemical bonds.
@@ -3432,7 +3424,7 @@ enum PWIZ_API_DECL CVID
     /// protein short name: A short name or symbol of a protein (e.g., HSF 1 or HSF1_HUMAN).
     MS_protein_short_name = 1000883,
 
-    /// protein attribute: An nonphysical characterstic attributed to a specific protein.
+    /// protein attribute: A nonphysical characteristic attributed to a specific protein.
     MS_protein_attribute = 1000884,
 
     /// protein accession: Identifier for a specific protein in a database.
@@ -3504,7 +3496,7 @@ enum PWIZ_API_DECL CVID
     /// peak intensity rank: Ordinal specifying the rank in intensity of a peak in a spectrum. Base peak is 1. The next most intense peak is 2, etc.
     MS_peak_intensity_rank = 1000906,
 
-    /// peak targeting suitability rank: Ordinal specifying the rank of a peak in a spectrum in terms of suitability for targeting. The most suitable peak is 1. The next most suitability peak is 2, etc. Suitability is algorithm and context dependant.
+    /// peak targeting suitability rank: Ordinal specifying the rank of a peak in a spectrum in terms of suitability for targeting. The most suitable peak is 1. The next most suitable peak is 2, etc. Suitability is algorithm and context dependent.
     MS_peak_targeting_suitability_rank = 1000907,
 
     /// transition: A set of two m/z values corresponding to the precursor m/z and a fragment m/z that in combination can be used to identify or quantify a specific ion, although not necessarily uniquely.
@@ -3819,7 +3811,7 @@ enum PWIZ_API_DECL CVID
     /// taxonomy nomenclature: OBSOLETE: The system used to indicate taxonomy. There should be an enumerated list of options: latin name, NCBI TaxID, common name, Swiss-Prot species ID (ex. RABIT from the full protein ID ALBU_RABIT).
     MS_taxonomy_nomenclature_OBSOLETE = 1001090,
 
-    /// NoEnzyme: 
+    /// NoEnzyme: This term was made obsolete because it is ambiguous and is replaced by NoCleavage (MS:1001955) and unspecific cleavage (MS:1001956).
     MS_NoEnzyme_OBSOLETE = 1001091,
 
     /// peptide sequence-level identification statistic: Identification confidence metric for a peptide.
@@ -4005,8 +3997,8 @@ enum PWIZ_API_DECL CVID
     /// param: y ion-NH3 DEPRECATED: Ion y-NH3 parameter information, type of product: y ion with lost ammonia.
     MS_param__y_ion_NH3_DEPRECATED = 1001151,
 
-    /// param: y ion-H2O DEPRECATED: 
-    MS_param__y_ion_H2O_DEPRECATED = 1001152,
+    /// param: y ion-H2O DEPRECATED: This term was made obsolete - use MS:1001262 and MS:1002455 instead.
+    MS_param__y_ion_H2O_DEPRECATED_OBSOLETE = 1001152,
 
     /// search engine specific score: Search engine specific scores.
     MS_search_engine_specific_score = 1001153,
@@ -4860,8 +4852,8 @@ enum PWIZ_API_DECL CVID
     /// DB composition only decoy: Decoy database composition: database contains only decoy entries.
     MS_DB_composition_only_decoy = 1001453,
 
-    /// quality estimation with implicite decoy sequences: Decoy entries are generated during the search, not explicitly stored in a database (like Mascot Decoy).
-    MS_quality_estimation_with_implicite_decoy_sequences = 1001454,
+    /// quality estimation with implicit decoy sequences: Decoy entries are generated during the search, not explicitly stored in a database (like Mascot Decoy).
+    MS_quality_estimation_with_implicit_decoy_sequences = 1001454,
 
     /// acquisition software: Acquisition software.
     MS_acquisition_software = 1001455,
@@ -6150,8 +6142,11 @@ enum PWIZ_API_DECL CVID
     /// MALDI Solutions Microbial Identification: Shimadzu Biotech software for data acquisition, processing, and analysis.
     MS_MALDI_Solutions_Microbial_Identification = 1001878,
 
-    /// offset voltage: The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation.
-    MS_offset_voltage = 1001879,
+    /// source offset voltage: The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation.
+    MS_source_offset_voltage = 1001879,
+
+    /// offset voltage (source offset voltage): The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation.
+    MS_offset_voltage = MS_source_offset_voltage,
 
     /// in-source collision-induced dissociation: The dissociation of an ion as a result of collisional excitation during ion transfer from an atmospheric pressure ion source and the mass spectrometer vacuum.
     MS_in_source_collision_induced_dissociation = 1001880,
@@ -6243,8 +6238,11 @@ enum PWIZ_API_DECL CVID
     /// Velos Plus: Thermo Scientific second generation Velos.
     MS_Velos_Plus = 1001909,
 
-    /// LTQ Orbitrap Elite: Thermo Scientific LTQ Orbitrap Elite, often just referred to as the Orbitrap Elite.
-    MS_LTQ_Orbitrap_Elite = 1001910,
+    /// Orbitrap Elite: Thermo Scientific Orbitrap Elite, sometimes referred to as the LTQ Orbitrap Elite.
+    MS_Orbitrap_Elite = 1001910,
+
+    /// LTQ Orbitrap Elite (Orbitrap Elite): Thermo Scientific Orbitrap Elite, sometimes referred to as the LTQ Orbitrap Elite.
+    MS_LTQ_Orbitrap_Elite = MS_Orbitrap_Elite,
 
     /// Q Exactive: Thermo Scientific Q Exactive.
     MS_Q_Exactive = 1001911,
@@ -6909,7 +6907,7 @@ enum PWIZ_API_DECL CVID
     /// experiment name: The name for identifying an experiment.
     MS_experiment_name = 1002120,
 
-    /// spectral count feature: Dummy decribing a spectral count feature.
+    /// spectral count feature: Dummy describing a spectral count feature.
     MS_spectral_count_feature = 1002121,
 
     /// counts reporting: FeatureList of spectral counts.
@@ -8517,10 +8515,10 @@ enum PWIZ_API_DECL CVID
     /// MSDK: Mass Spectrometry Development Kit (MSDK) is a Java library of algorithms for processing of mass spectrometry data.
     MS_MSDK = 1002645,
 
-    /// native spectrum identifier format, combined spectra: Describes how the native spectrum identifiers that have been combined prior to searching or interpretation are formated.
+    /// native spectrum identifier format, combined spectra: Describes how the native spectrum identifiers that have been combined prior to searching or interpretation are formatted.
     MS_native_spectrum_identifier_format__combined_spectra = 1002646,
 
-    /// nativeID format, combined spectra (native spectrum identifier format, combined spectra): Describes how the native spectrum identifiers that have been combined prior to searching or interpretation are formated.
+    /// nativeID format, combined spectra (native spectrum identifier format, combined spectra): Describes how the native spectrum identifiers that have been combined prior to searching or interpretation are formatted.
     MS_nativeID_format__combined_spectra = MS_native_spectrum_identifier_format__combined_spectra,
 
     /// Thermo nativeID format, combined spectra: Thermo comma separated list of spectra that have been combined prior to searching or interpretation.
@@ -8679,7 +8677,7 @@ enum PWIZ_API_DECL CVID
     /// frag: isobaric label ion: Fragment ion corresponding to an isobaric label artifact.
     MS_frag__isobaric_label_ion = 1002695,
 
-    /// secondary isotope peak: Fragment ion is an isotopic peak other than that monoisotopic peak. This is used in conjuction with another ion type, such as frag: y ion.
+    /// secondary isotope peak: Fragment ion that is an isotopic peak other than the monoisotopic peak. This is used in conjunction with another ion type, such as frag: y ion.
     MS_secondary_isotope_peak = 1002697,
 
     /// protein cluster identification attribute: An attribute of the protein cluster concept as used in mzIdentML.
@@ -8706,7 +8704,7 @@ enum PWIZ_API_DECL CVID
     /// protein-level result list statistic: A statistical metric of an entire protein list.
     MS_protein_level_result_list_statistic = 1002705,
 
-    /// protein group-level result list statistic: Attrbiute of an entire list of protein groups.
+    /// protein group-level result list statistic: Attribute of an entire list of protein groups.
     MS_protein_group_level_result_list_statistic = 1002706,
 
     /// (?=[KR]): Regular expression for LysargiNase.
@@ -9090,8 +9088,8 @@ enum PWIZ_API_DECL CVID
     /// XCMS:area: Feature intensity produced by XCMS findPeaks() from feature area that is not normalized by the scan rate.
     MS_XCMS_area = 1002832,
 
-    /// alternating polarity mode: Polarities of the scans of a run are alternating, i.e. both positive and negative mode scans are acquired.
-    MS_alternating_polarity_mode = 1002833,
+    /// alternating polarity acquisition: The scans of a run are acquired with polarities switching in a strictly alternating sequence (e.g., positive, negative, positive, negative), such that consecutive scans or scan cycles differ in polarity.
+    MS_alternating_polarity_acquisition = 1002833,
 
     /// ProteomeDiscoverer:Delta Score: The Delta Score reported by Proteome Discoverer version 2.
     MS_ProteomeDiscoverer_Delta_Score = 1002834,
@@ -9573,6 +9571,9 @@ enum PWIZ_API_DECL CVID
     /// Q Exactive Focus: Q Exactive Focus Hybrid Quadrupole-Orbitrap Mass Spectrometer.
     MS_Q_Exactive_Focus = 1002993,
 
+    /// Orbitrap Excedion Pro: Thermo Scientific Orbitrap Excedion Pro.
+    MS_Orbitrap_Excedion_Pro = 1002994,
+
     /// Andromeda:PEP: Posterior error probability of the best identified peptide of the Andromeda search engine.
     MS_Andromeda_PEP = 1002995,
 
@@ -9765,7 +9766,7 @@ enum PWIZ_API_DECL CVID
     /// spectrum property: Inherent or measurable characteristic of a spectrum.
     MS_spectrum_property = 1003058,
 
-    /// number of peaks: Number of peaks or features in a spectrum. For a peak-picked spectrum, this will correspond to the number of data points. For a non-peak-picked spectrum, this corresponds to the number of features discernable in the spectrum, which will be fewer than the number of data points.
+    /// number of peaks: Number of peaks or features in a spectrum. For a peak-picked spectrum, this will correspond to the number of data points. For a non-peak-picked spectrum, this corresponds to the number of features discernible in the spectrum, which will be fewer than the number of data points.
     MS_number_of_peaks = 1003059,
 
     /// number of data points: Number of data points in a spectrum. For a peak-picked spectrum, this will correspond to the number of peaks. For a non-peak-picked spectrum, this corresponds to the number of values in the data array, which are not all peaks.
@@ -9882,8 +9883,11 @@ enum PWIZ_API_DECL CVID
     /// Orbitrap Exploris 120: Thermo Scientific Orbitrap Exploris 120 Quadrupole Orbitrap MS.
     MS_Orbitrap_Exploris_120 = 1003095,
 
-    /// LTQ Orbitrap Velos Pro: Thermo Scientific LTQ Orbitrap Velos Pro, often just referred to as the Orbitrap Velos Pro.
-    MS_LTQ_Orbitrap_Velos_Pro = 1003096,
+    /// Orbitrap Velos Pro: Thermo Scientific LTQ Orbitrap Velos Pro, often just referred to as the Orbitrap Velos Pro.
+    MS_Orbitrap_Velos_Pro = 1003096,
+
+    /// LTQ Orbitrap Velos Pro (Orbitrap Velos Pro): Thermo Scientific LTQ Orbitrap Velos Pro, often just referred to as the Orbitrap Velos Pro.
+    MS_LTQ_Orbitrap_Velos_Pro = MS_Orbitrap_Velos_Pro,
 
     /// MaxQuant protein group-level score: The probability based MaxQuant protein group score.
     MS_MaxQuant_protein_group_level_score = 1003097,
@@ -9900,7 +9904,7 @@ enum PWIZ_API_DECL CVID
     /// MaxQuant-DIA PEP: PSM evidence PEP probability from MaxQuant-DIA algorithm.
     MS_MaxQuant_DIA_PEP = 1003101,
 
-    /// NIST msp comment: Term for a comment field withing the NIST msp file format
+    /// NIST msp comment: Term for a comment field within the NIST msp file format
     MS_NIST_msp_comment = 1003102,
 
     /// ion annotation format: Annotation format used for annotating individual spectrum ion peaks.
@@ -10077,8 +10081,11 @@ enum PWIZ_API_DECL CVID
     /// scanning quadrupole position upper bound m/z array: Array of m/z values representing the upper bound m/z of the quadrupole position at each point in the spectrum.
     MS_scanning_quadrupole_position_upper_bound_m_z_array = 1003158,
 
-    /// isolation window full range: Indicates an acquisition mode in which the isolation window is a full range, rather than a subset of the full range.
-    MS_isolation_window_full_range = 1003159,
+    /// no isolation: Indicates an acquisition mode in which the instrument does not perform isolation or where the window spans the entire mass range of the precursor spectrum.
+    MS_no_isolation = 1003159,
+
+    /// isolation window full range (no isolation): Indicates an acquisition mode in which the instrument does not perform isolation or where the window spans the entire mass range of the precursor spectrum.
+    MS_isolation_window_full_range = MS_no_isolation,
 
     /// mzQC format: Proteomics Standards Initiative mzQC format for quality control data.
     MS_mzQC_format = 1003160,
@@ -10179,7 +10186,7 @@ enum PWIZ_API_DECL CVID
     /// library description: Extended free-text description of the library
     MS_library_description = 1003189,
 
-    /// library version: Version number of the library, usually refering to a certain release of a continually updated library 
+    /// library version: Version number of the library, usually referring to a certain release of a continually updated library
     MS_library_version = 1003190,
 
     /// library URI: URI or URL that uniquely identifies the library
@@ -10197,7 +10204,7 @@ enum PWIZ_API_DECL CVID
     /// unnatural peptidoform decoy spectrum: A decoy spectrum that is either a real spectrum of an unnatural peptidoform (e.g. a synthetic peptide that cannot be found in nature), or an artificial spectrum predicted for such unnatural peptidoform
     MS_unnatural_peptidoform_decoy_spectrum = 1003195,
 
-    /// unrelated species decoy spectrum: A decoy spectrum that is a real spectrum of a naturally occuring peptidoform of an unrelated species that should not be found in the sample
+    /// unrelated species decoy spectrum: A decoy spectrum that is a real spectrum of a naturally occurring peptidoform of an unrelated species that should not be found in the sample
     MS_unrelated_species_decoy_spectrum = 1003196,
 
     /// license URI: URI of the license controlling use of the library (e.g. https://creativecommons.org/publicdomain/zero/1.0/)
@@ -10263,7 +10270,7 @@ enum PWIZ_API_DECL CVID
     /// dissociation of full mass range: Mass spectrometer data acquisition method wherein all precursor ions of which the instrument is capable are fragmented at once..
     MS_dissociation_of_full_mass_range = 1003216,
 
-    /// dissociation of scanning quadrupole across a specified mass range: Mass spectrometer data acquisition method wherein ????.
+    /// dissociation of scanning quadrupole across a specified mass range: Mass spectrometer data acquisition method wherein a quadrupole mass analyzer transmits a sliding window of precursor ions for dissociation and spectrum acquisition within each acquisition cycle. This correlates precursor selection with product ion detection resulting in 'quadrupole transmission window' as an additional dimension in the resulting data. An example of such an approach is Waters SONAR.
     MS_dissociation_of_scanning_quadrupole_across_a_specified_mass_range = 1003217,
 
     /// dissociation of sequential mass ranges: Mass spectrometer data acquisition method wherein a series of limited mass range fragmentation selection windows are preconfigured.
@@ -10296,7 +10303,7 @@ enum PWIZ_API_DECL CVID
     /// data independent acquisition from dissociation of full mass range: Data independent mass spectrometer acquisition method wherein the full mass range is fragmented. Examples of such an approach include MS^E, AIF, and bbCID.
     MS_data_independent_acquisition_from_dissociation_of_full_mass_range = 1003227,
 
-    /// data independent acquisition from dissociation of scanning quadrupole across mass range: Data independent mass spectrometer acquisition method wherein ???. An example of such an approach is Waters SONAR.
+    /// data independent acquisition from dissociation of scanning quadrupole across mass range: Data independent mass spectrometer acquisition method wherein a quadrupole mass analyzer transmits a sliding window of precursor ions for dissociation and spectrum acquisition within each acquisition cycle. This correlates precursor selection with product ion detection resulting in 'quadrupole transmission window' as an additional dimension in the resulting data. An example of such an approach is Waters SONAR.
     MS_data_independent_acquisition_from_dissociation_of_scanning_quadrupole_across_mass_range = 1003228,
 
     /// timsTOF: Bruker Daltonics' timsTOF.
@@ -10380,22 +10387,22 @@ enum PWIZ_API_DECL CVID
     /// DIA-NN: A universal software for data-independent acquisition (DIA) proteomics data processing
     MS_DIA_NN = 1003253,
 
-    /// peak attribute: An attribute of a peak in a mass spectrum other than its m/z, intensity, and annotation. 
+    /// peak attribute: An attribute of a peak in a mass spectrum other than its m/z, intensity, and annotation.
     MS_peak_attribute = 1003254,
 
-    /// pre-decharged charge state: For a de-charged spectrum, the original charge state of the ion observed in a mass spectrum determined by charge deconvolution. 
+    /// pre-decharged charge state: For a de-charged spectrum, the original charge state of the ion observed in a mass spectrum determined by charge deconvolution.
     MS_pre_decharged_charge_state = 1003255,
 
     /// peptidoform ion attribute: Non-inherent characteristic attributed to a peptidoform
     MS_peptidoform_ion_attribute = 1003256,
 
-    /// library spectrum cross reference: A link from one spectrum to another spectrum of interest 
+    /// library spectrum cross reference: A link from one spectrum to another spectrum of interest
     MS_library_spectrum_cross_reference = 1003257,
 
-    /// related spectrum: A cross reference to another spectrum that has some relationship with this one, but is not necessarily spectrally similar. 
+    /// related spectrum: A cross reference to another spectrum that has some relationship with this one, but is not necessarily spectrally similar.
     MS_related_spectrum = 1003258,
 
-    /// related spectrum keys: A list of cross references to a related spectrum in the same library, in the form of the library spectrum key.  
+    /// related spectrum keys: A list of cross references to a related spectrum in the same library, in the form of the library spectrum key.
     MS_related_spectrum_keys = 1003259,
 
     /// related spectrum USI: A cross reference to a related spectrum in the form of a PSI Universal Spectrum Identifier
@@ -10407,7 +10414,7 @@ enum PWIZ_API_DECL CVID
     /// similar spectrum: A cross reference to another spectrum that has high spectral similarity with this one, usually assumed to originate from the same analyte ion.
     MS_similar_spectrum = 1003262,
 
-    /// similar spectrum keys: A list of cross references to a similar spectrum in the same library, in the form of the library spectrum key.  
+    /// similar spectrum keys: A list of cross references to a similar spectrum in the same library, in the form of the library spectrum key.
     MS_similar_spectrum_keys = 1003263,
 
     /// similar spectrum USI: A cross reference to a similar spectrum in the form of a PSI Universal Spectrum Identifier
@@ -10830,8 +10837,8 @@ enum PWIZ_API_DECL CVID
     /// Q Exactive GC Orbitrap: Q Exactive GC Orbitrap GC-MS/MS hybrid quadrupole Orbitrap mass spectrometer.
     MS_Q_Exactive_GC_Orbitrap = 1003395,
 
-    /// 8890 GC/MS: Agilent 8890 Gas Chromatograph System.
-    MS_8890_GC_MS = 1003396,
+    /// 8890: Agilent 8890 gas chromatograph.
+    MS_8890 = 1003396,
 
     /// timsTOF fleX MALDI-2: Bruker Daltonics' timsTOF fleX MALDI-2.
     MS_timsTOF_fleX_MALDI_2 = 1003397,
@@ -10991,6 +10998,1041 @@ enum PWIZ_API_DECL CVID
 
     /// SCIEX WIFF2 format: SCIEX WIFF2 file format.
     MS_SCIEX_WIFF2_format = 1003448,
+
+    /// ISQ 7000: Thermo Scientific ISQ 7000 Single Quadrupole GC-MS System.
+    MS_ISQ_7000 = 1003449,
+
+    /// FAIMS compensation voltage ramp start: DC potential at the start of the FAIMS voltage ramp.
+    MS_FAIMS_compensation_voltage_ramp_start = 1003450,
+
+    /// FAIMS compensation voltage ramp end: DC potential at the end of the FAIMS voltage ramp.
+    MS_FAIMS_compensation_voltage_ramp_end = 1003451,
+
+    /// Ionicon Analytik instrument model: Ionicon Analytik instrument model.
+    MS_Ionicon_Analytik_instrument_model = 1003452,
+
+    /// JEOL instrument model: JEOL instrument model.
+    MS_JEOL_instrument_model = 1003453,
+
+    /// IONTOF instrument model: IONTOF instrument model.
+    MS_IONTOF_instrument_model = 1003454,
+
+    /// PerkinElmer instrument model: PerkinElmer instrument model.
+    MS_PerkinElmer_instrument_model = 1003455,
+
+    /// TripleTOF 6600+: SCIEX TripleTOF 6600+ triple quadrupole - time-of-flight mass spectrometer.
+    MS_TripleTOF_6600_ = 1003456,
+
+    /// Triple Quad 5500+: SCIEX Triple Quad 5500+ triple quadrupole mass spectrometer.
+    MS_Triple_Quad_5500_ = 1003457,
+
+    /// Triple Quad 5500+ QTRAP Ready: SCIEX Triple Quad 5500+ QTRAP Ready quadrupole - linear ion trap mass spectrometer.
+    MS_Triple_Quad_5500__QTRAP_Ready = 1003458,
+
+    /// APEX-Qe: Bruker APEX-Qe FT-ICR-MS mass spectrometer.
+    MS_APEX_Qe = 1003459,
+
+    /// autoflex speed TOF/TOF: Bruker autoflex speed TOF/TOF MALDI TOF/TOF mass spectrometer.
+    MS_autoflex_speed_TOF_TOF = 1003460,
+
+    /// esquire 3000: Bruker esquire 3000 ion trap mass spectrometer.
+    MS_esquire_3000 = 1003461,
+
+    /// maXis impact: Bruker maXis impact quadrupole time-of-flight mass spectrometer.
+    MS_maXis_impact = 1003462,
+
+    /// maXis impact HD: Bruker maXis impact HD quadrupole time-of-flight mass spectrometer.
+    MS_maXis_impact_HD = 1003463,
+
+    /// maXis 3G: Bruker maXis 3G quadrupole time-of-flight mass spectrometer.
+    MS_maXis_3G = 1003464,
+
+    /// solariX XR: Bruker solariX XR FT-ICR-MS mass spectrometer.
+    MS_solariX_XR = 1003465,
+
+    /// amaZon SL: Bruker amaZon SL ion trap mass spectrometer.
+    MS_amaZon_SL = 1003466,
+
+    /// EVOQ DART-TQ+: Bruker EVOQ DART-TQ+ triple quadrupole mass spectrometer with Direct Analysis in Real Time (DART) ion source.
+    MS_EVOQ_DART_TQ_ = 1003467,
+
+    /// EVOQ LC-TQ: Bruker EVOQ LC-TQ triple quadrupole mass spectrometer.
+    MS_EVOQ_LC_TQ = 1003468,
+
+    /// EVOQ GC-TQ: Bruker EVOQ GC-TQ gas chromatograph - triple quadrupole mass spectrometer.
+    MS_EVOQ_GC_TQ = 1003469,
+
+    /// Toxtyper: Bruker Toxtyper ion trap mass spectrometer.
+    MS_Toxtyper = 1003470,
+
+    /// impact II VIP: Bruker impact II VIP quadrupole time-of-flight mass spectrometer.
+    MS_impact_II_VIP = 1003471,
+
+    /// ecTOF: Bruker ecTOF gas chromatograph - time-of-flight mass spectrometer.
+    MS_ecTOF = 1003472,
+
+    /// autoflex maX: Bruker autoflex maX MALDI TOF mass spectrometer.
+    MS_autoflex_maX = 1003473,
+
+    /// rapifleX MALDI PharmaPulse: Bruker rapifleX MALDI PharmaPulse MALDI TOF mass spectrometer with ultra-high-throughput screening (uHTS) capability.
+    MS_rapifleX_MALDI_PharmaPulse = 1003474,
+
+    /// smartfleX: Bruker smartfleX MALDI TOF mass spectrometer.
+    MS_smartfleX = 1003475,
+
+    /// neofleX: Bruker neofleX MALDI TOF/TOF mass spectrometer.
+    MS_neofleX = 1003476,
+
+    /// MALDI Biotyper: Bruker MALDI Biotyper MALDI TOF mass spectrometer.
+    MS_MALDI_Biotyper = 1003477,
+
+    /// scimaX: Bruker scimaX FT-ICR-MS mass spectrometer.
+    MS_scimaX = 1003478,
+
+    /// timsMetabo: Bruker timsMetabo TIMS-Q-TOF mass spectrometer.
+    MS_timsMetabo = 1003479,
+
+    /// timsUltra AIP: Bruker timsUltra AIP TIMS-Q-TOF mass spectrometer.
+    MS_timsUltra_AIP = 1003480,
+
+    /// timsOmni: Bruker timsOmni TIMS-Q-TOF mass spectrometer.
+    MS_timsOmni = 1003481,
+
+    /// timsTOF MALDI PharmaPulse: Bruker timsTOF MALDI PharmaPulse MALDI TIMS-Q-TOF mass spectrometer with ultra-high-throughput screening (uHTS) capability.
+    MS_timsTOF_MALDI_PharmaPulse = 1003482,
+
+    /// 4000 GC/MS: Varian 4000 GC/MS gas chromatograph - ion trap mass spectrometer.
+    MS_4000_GC_MS = 1003483,
+
+    /// 210-MS GC/MS Ion Trap: Varian 210-MS GC/MS Ion Trap gas chromatograph - ion trap mass spectrometer.
+    MS_210_MS_GC_MS_Ion_Trap = 1003484,
+
+    /// LCMS-8030: Shimadzu LCMS-8030 triple quadrupole mass spectrometer.
+    MS_LCMS_8030 = 1003485,
+
+    /// LCMS-8030 Plus: Shimadzu LCMS-8030 Plus triple quadrupole mass spectrometer.
+    MS_LCMS_8030_Plus = 1003486,
+
+    /// GCMS-QP2010 Plus: Shimadzu GCMS-QP2010 Plus gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP2010_Plus = 1003487,
+
+    /// LCMS-8060NX: Shimadzu LCMS-8060NX triple quadrupole mass spectrometer.
+    MS_LCMS_8060NX = 1003488,
+
+    /// GCMS-TQ8050NX: Shimadzu GCMS-TQ8050NX gas chromatograph - triple quadrupole mass spectrometer.
+    MS_GCMS_TQ8050NX = 1003489,
+
+    /// GCMS-TQ8040NX: Shimadzu GCMS-TQ8040NX gas chromatograph - triple quadrupole mass spectrometer.
+    MS_GCMS_TQ8040NX = 1003490,
+
+    /// GCMS-TQ8040: Shimadzu GCMS-TQ8040 gas chromatograph - triple quadrupole mass spectrometer.
+    MS_GCMS_TQ8040 = 1003491,
+
+    /// GCMS-QP5000: Shimadzu GCMS-QP5000 gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP5000 = 1003492,
+
+    /// GCMS-QP2020: Shimadzu GCMS-QP2020 gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP2020 = 1003493,
+
+    /// GCMS-QP2010 Ultra: Shimadzu GCMS-QP2010 Ultra gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP2010_Ultra = 1003494,
+
+    /// Velos Pro: Thermo Fisher Scientific Velos Pro ion trap - mass spectrometer.
+    MS_Velos_Pro = 1003495,
+
+    /// MALDI LTQ Orbitrap XL: Thermo Fisher Scientific MALDI LTQ Orbitrap XL linear ion trap - orbitrap mass spectrometer.
+    MS_MALDI_LTQ_Orbitrap_XL = 1003496,
+
+    /// MALDI LTQ Orbitrap Discovery: Thermo Fisher Scientific MALDI LTQ Orbitrap Discovery linear ion trap - orbitrap mass spectrometer.
+    MS_MALDI_LTQ_Orbitrap_Discovery = 1003497,
+
+    /// TSQ Quantum Access MAX: Thermo Fisher Scientific TSQ Quantum Access MAX triple quadrupole mass spectrometer.
+    MS_TSQ_Quantum_Access_MAX = 1003498,
+
+    /// LTQ Orbitrap Velos/ETD: Thermo Fisher Scientific LTQ Orbitrap Velos/ETD linear ion trap - orbitrap mass spectrometer.
+    MS_LTQ_Orbitrap_Velos_ETD = 1003499,
+
+    /// ISQ LT: Thermo Fisher Scientific ISQ LT gas chromatograph - quadrupole mass spectrometer.
+    MS_ISQ_LT = 1003500,
+
+    /// ITQ: Thermo Fisher Scientific ITQ ion trap mass spectrometer.
+    MS_ITQ = 1003501,
+
+    /// TSQ Quantum XLS: Thermo Fisher Scientific TSQ Quantum XLS gas chromatograph - triple quadrupole mass spectrometer.
+    MS_TSQ_Quantum_XLS = 1003502,
+
+    /// TSQ 8000: Thermo Fisher Scientific TSQ 8000 gas chromatograph - triple quadrupole mass spectrometer.
+    MS_TSQ_8000 = 1003503,
+
+    /// DeltaPlus IRMS: Thermo Fisher Scientific DeltaPlus IRMS isotope ratio mass spectrometer.
+    MS_DeltaPlus_IRMS = 1003504,
+
+    /// ACQUITY QDa: Waters ACQUITY QDa quadrupole mass spectrometer.
+    MS_ACQUITY_QDa = 1003505,
+
+    /// LCT Premier: Waters LCT Premier time-of-flight mass spectrometer.
+    MS_LCT_Premier = 1003506,
+
+    /// Quattro Premier XE: Waters Quattro Premier XE triple quadrupole mass spectrometer.
+    MS_Quattro_Premier_XE = 1003507,
+
+    /// Synapt G1 HDMS: Waters Synapt G1 HDMS quadrupole - ion mobility - time-of-flight mass spectrometer.
+    MS_Synapt_G1_HDMS = 1003508,
+
+    /// Synapt G2-Si HDMS: Waters Synapt G2-Si HDMS quadrupole - ion mobility - time-of-flight mass spectrometer.
+    MS_Synapt_G2_Si_HDMS = 1003509,
+
+    /// Synapt G1: Waters Synapt G1 quadrupole - ion mobility - time-of-flight mass spectrometer.
+    MS_Synapt_G1 = 1003510,
+
+    /// Synapt G2 XS QTOF: Waters Synapt G2 XS QTOF quadrupole - ion mobility - time-of-flight mass spectrometer.
+    MS_Synapt_G2_XS_QTOF = 1003511,
+
+    /// Xevo TQ Absolute: Waters Xevo TQ Absolute triple quadrupole mass spectrometer.
+    MS_Xevo_TQ_Absolute = 1003512,
+
+    /// Xevo TQ Absolute XR: Waters Xevo TQ Absolute XR triple quadrupole mass spectrometer.
+    MS_Xevo_TQ_Absolute_XR = 1003513,
+
+    /// 5973 MSD: Agilent 5973 MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5973_MSD = 1003514,
+
+    /// 5973N MSD: Agilent 5973N MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5973N_MSD = 1003515,
+
+    /// 5975 MSD: Agilent 5975 MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5975_MSD = 1003516,
+
+    /// 5975B MSD: Agilent 5975B MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5975B_MSD = 1003517,
+
+    /// 5975C inert XL MSD: Agilent 5975C inert XL MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5975C_inert_XL_MSD = 1003518,
+
+    /// 5975C MSD: Agilent 5975C MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5975C_MSD = 1003519,
+
+    /// 5975T MSD: Agilent 5975T MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5975T_MSD = 1003520,
+
+    /// 5977 MSD: Agilent 5977 MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5977_MSD = 1003521,
+
+    /// 5977A MSD: Agilent 5977A MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5977A_MSD = 1003522,
+
+    /// 5977B MSD: Agilent 5977B MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5977B_MSD = 1003523,
+
+    /// 5977C MSD: Agilent 5977C MSD gas chromatograph - quadrupole mass spectrometer.
+    MS_5977C_MSD = 1003524,
+
+    /// 6230 Time-of-Flight LC/MS: Agilent 6230 Time-of-Flight LC/MS time-of-flight mass spectrometer.
+    MS_6230_Time_of_Flight_LC_MS = 1003525,
+
+    /// 6410A Triple Quadrupole LC/MS: Agilent 6410A Triple Quadrupole LC/MS triple quadrupole mass spectrometer.
+    MS_6410A_Triple_Quadrupole_LC_MS = 1003526,
+
+    /// 6445 Q-TOF LC/MS: Agilent 6445 Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_6445_Q_TOF_LC_MS = 1003527,
+
+    /// 6456 Q-TOF LC/MS: Agilent 6456 Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_6456_Q_TOF_LC_MS = 1003528,
+
+    /// 6470 Triple Quadrupole LC/MS: Agilent 6470 Triple Quadrupole LC/MS triple quadrupole mass spectrometer.
+    MS_6470_Triple_Quadrupole_LC_MS = 1003529,
+
+    /// 6490A Triple Quadrupole LC/MS: Agilent 6490A Triple Quadrupole LC/MS triple quadrupole mass spectrometer.
+    MS_6490A_Triple_Quadrupole_LC_MS = 1003530,
+
+    /// 6495 Triple Quadrupole LC/MS: Agilent 6495 Triple Quadrupole LC/MS triple quadrupole mass spectrometer.
+    MS_6495_Triple_Quadrupole_LC_MS = 1003531,
+
+    /// 6520 Q-TOF LC/MS: Agilent 6520 Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_6520_Q_TOF_LC_MS = 1003532,
+
+    /// 6530 Q-TOF LC/MS: Agilent 6530 Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_6530_Q_TOF_LC_MS = 1003533,
+
+    /// 6543 Q-TOF LC/MS: Agilent 6543 Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_6543_Q_TOF_LC_MS = 1003534,
+
+    /// 6545XT Q-TOF LC/MS: Agilent 6545XT Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_6545XT_Q_TOF_LC_MS = 1003535,
+
+    /// 6546 Q-TOF LC/MS: Agilent 6546 Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_6546_Q_TOF_LC_MS = 1003536,
+
+    /// 6600 Q-TOF LC/MS: Agilent 6600 Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_6600_Q_TOF_LC_MS = 1003537,
+
+    /// 7000C Triple Quadrupole GC/MS: Agilent 7000C Triple Quadrupole GC/MS gas chromatograph - triple quadrupole mass spectrometer.
+    MS_7000C_Triple_Quadrupole_GC_MS = 1003538,
+
+    /// 7000D Triple Quadrupole GC/MS: Agilent 7000D Triple Quadrupole GC/MS gas chromatograph - triple quadrupole mass spectrometer.
+    MS_7000D_Triple_Quadrupole_GC_MS = 1003539,
+
+    /// 7010 Triple Quadrupole GC/MS: Agilent 7010 Triple Quadrupole GC/MS gas chromatograph - triple quadrupole mass spectrometer.
+    MS_7010_Triple_Quadrupole_GC_MS = 1003540,
+
+    /// 7010B Triple Quadrupole GC/MS: Agilent 7010B Triple Quadrupole GC/MS gas chromatograph - triple quadrupole mass spectrometer.
+    MS_7010B_Triple_Quadrupole_GC_MS = 1003541,
+
+    /// 7200 Q-TOF GC/MS: Agilent 7200 Q-TOF GC/MS gas chromatograph - quadrupole time-of-flight mass spectrometer.
+    MS_7200_Q_TOF_GC_MS = 1003542,
+
+    /// 7250 Q-TOF GC/MS: Agilent 7250 Q-TOF GC/MS gas chromatograph - quadrupole time-of-flight mass spectrometer.
+    MS_7250_Q_TOF_GC_MS = 1003543,
+
+    /// CE-TOFMS: Agilent CE-TOFMS capillary electrophoresis - time-of-flight mass spectrometer.
+    MS_CE_TOFMS = 1003544,
+
+    /// G3250AA Time-of-Flight LC/MS: Agilent G3250AA Time-of-Flight LC/MS time-of-flight mass spectrometer.
+    MS_G3250AA_Time_of_Flight_LC_MS = 1003545,
+
+    /// Revident Q-TOF LC/MS: Agilent Revident Q-TOF LC/MS quadrupole time-of-flight mass spectrometer.
+    MS_Revident_Q_TOF_LC_MS = 1003546,
+
+    /// Pegasus BT 4D: LECO Pegasus BT 4D GCxGC - time-of-flight mass spectrometer.
+    MS_Pegasus_BT_4D = 1003547,
+
+    /// Pegasus HT: LECO Pegasus HT gas chromatograph - time-of-flight mass spectrometer.
+    MS_Pegasus_HT = 1003548,
+
+    /// Pegasus IV: LECO Pegasus IV time-of-flight mass spectrometer.
+    MS_Pegasus_IV = 1003549,
+
+    /// PTR-TOF 8000: Ionicon Analytik PTR-TOF 8000 proton-transfer-reaction - time-of-flight mass spectrometer.
+    MS_PTR_TOF_8000 = 1003550,
+
+    /// AccuTOF GCv: JEOL AccuTOF GCv gas chromatograph - time-of-flight mass spectrometer.
+    MS_AccuTOF_GCv = 1003551,
+
+    /// TOF.SIMS 5: IONTOF TOF.SIMS 5 time-of-flight secondary ion mass spectrometer.
+    MS_TOF_SIMS_5 = 1003552,
+
+    /// TurboMass GC/MS: PerkinElmer TurboMass GC/MS gas chromatograph - quadrupole mass spectrometer.
+    MS_TurboMass_GC_MS = 1003553,
+
+    /// ThermoQuest Voyager: Thermo Finnigan ThermoQuest Voyager gas chromatograph - quadrupole mass spectrometer.
+    MS_ThermoQuest_Voyager = 1003554,
+
+    /// AXIMA-LNR: Shimadzu AXIMA-LNR MALDI TOF mass spectrometer.
+    MS_AXIMA_LNR = 1003555,
+
+    /// AXIMA-TOF²: Shimadzu AXIMA-TOF² MALDI TOF/TOF mass spectrometer.
+    MS_AXIMA_TOF__sq__ = 1003556,
+
+    /// AXIMA Resonance: Shimadzu AXIMA Resonance MALDI TOF mass spectrometerwith Ion Trap for MSn.
+    MS_AXIMA_Resonance = 1003557,
+
+    /// MALDI-8020: Shimadzu MALDI-8020 benchtop MALDI TOF mass spectrometer.
+    MS_MALDI_8020 = 1003558,
+
+    /// MALDI-8030: Shimadzu MALDI-8030 benchtop MALDI TOF mass spectrometer.
+    MS_MALDI_8030 = 1003559,
+
+    /// MALDI-8020 EasyCare: Shimadzu MALDI-8020 EasyCare benchtop MALDI TOF mass spectrometer.
+    MS_MALDI_8020_EasyCare = 1003560,
+
+    /// MALDI-8030 EasyCare: Shimadzu MALDI-8030 EasyCare benchtop MALDI TOF mass spectrometer.
+    MS_MALDI_8030_EasyCare = 1003561,
+
+    /// LCMS-2010: Shimadzu LCMS-2010 quadrupole mass spectrometer.
+    MS_LCMS_2010 = 1003562,
+
+    /// LCMS-2050: Shimadzu LCMS-2050 quadrupole mass spectrometer.
+    MS_LCMS_2050 = 1003563,
+
+    /// LCMS-8045RX: Shimadzu LCMS-8045RX triple quadrupole mass spectrometer.
+    MS_LCMS_8045RX = 1003564,
+
+    /// LCMS-8050RX: Shimadzu LCMS-8050RX triple quadrupole mass spectrometer.
+    MS_LCMS_8050RX = 1003565,
+
+    /// LCMS-8060RX: Shimadzu LCMS-8060RX triple quadrupole mass spectrometer.
+    MS_LCMS_8060RX = 1003566,
+
+    /// LCMS-8065XE: Shimadzu LCMS-8065XE triple quadrupole mass spectrometer.
+    MS_LCMS_8065XE = 1003567,
+
+    /// LCMS-9050: Shimadzu LCMS-9050 quadrupole time-of-flight mass spectrometer.
+    MS_LCMS_9050 = 1003568,
+
+    /// GCMS-QP5050A: Shimadzu GCMS-QP5050A gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP5050A = 1003569,
+
+    /// GCMS-QP2010S: Shimadzu GCMS-QP2010S gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP2010S = 1003570,
+
+    /// GCMS-QP2010: Shimadzu GCMS-QP2010 gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP2010 = 1003571,
+
+    /// GCMS-QP2020NX: Shimadzu GCMS-QP2020NX gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP2020NX = 1003572,
+
+    /// GCMS-QP2050: Shimadzu GCMS-QP2050 gas chromatograph - quadrupole mass spectrometer.
+    MS_GCMS_QP2050 = 1003573,
+
+    /// GCMS-TQ 8030: Shimadzu GCMS-TQ 8030 gas chromatograph - triple quadrupole mass spectrometer.
+    MS_GCMS_TQ_8030 = 1003574,
+
+    /// GCMS-TQ 8050: Shimadzu GCMS-TQ 8050 gas chromatograph - triple quadrupole mass spectrometer.
+    MS_GCMS_TQ_8050 = 1003575,
+
+    /// all ions fragmentation DIA alignment: Associating of product ions with the precursor from which they are derived, by comparing retention time and, where appropriate, ion mobility peaks.
+    MS_all_ions_fragmentation_DIA_alignment = 1003576,
+
+    /// hyphenated separation: The methods, technology and chemistry by which a hyphenated separation system effects the separation of compounds.
+    MS_hyphenated_separation = 1003577,
+
+    /// obsolete liquid chromatography: OBSOLETE. The methods, technology and chemistry by which a liquid chromatography system effects the separation of compounds.
+    MS_obsolete_liquid_chromatography_OBSOLETE = 1003578,
+
+    /// ion-exchange chromatography: Ion-exchange chromatography is a technique used to separate molecules based on their surface charge. The process relies on the reversible electrostatic interaction between charged molecules in a sample and an oppositely charged stationary phase, typically a resin in a column.
+    MS_ion_exchange_chromatography = 1003579,
+
+    /// size-exclusion chromatography: Size-exclusion chromatography (SEC), also known as gel filtration chromatography (GFC) or gel permeation chromatography (GPC), is a chromatographic technique that separates molecules based on their size or, more precisely, their hydrodynamic volume in solution. This method is primarily used for the separation of large molecules like proteins and polymers.
+    MS_size_exclusion_chromatography = 1003580,
+
+    /// affinity chromatography: Affinity chromatography (AC) is a highly selective separation technique used to purify specific biomolecules from complex mixtures, leveraging their unique biological or chemical interactions with an immobilized ligand.
+    MS_affinity_chromatography = 1003581,
+
+    /// reversed phase chromatography: Reversed-phase (RP) chromatography is a technique used to separate compounds based primarily on their hydrophobicity.
+    MS_reversed_phase_chromatography = 1003582,
+
+    /// normal phase chromatography: Normal-phase (NP) chromatography is a technique used to separate compounds based primarily on their polarity.
+    MS_normal_phase_chromatography = 1003583,
+
+    /// hydrophilic interaction liquid chromatography: Hydrophilic Interaction Liquid Chromatography (HILIC) is a chromatographic technique for the separation of polar and hydrophilic compounds. HILIC employs a polar stationary phase that absorbs water from the mobile phase to form a hydrophilic layer that retains polar analytes.
+    MS_hydrophilic_interaction_liquid_chromatography = 1003584,
+
+    /// chiral separation liquid chromatography: Chiral separation in liquid chromatography is the process of resolving enantiomers.
+    MS_chiral_separation_liquid_chromatography = 1003585,
+
+    /// mixed mode chromatography: Mixed-mode separation in liquid chromatography uses stationary phases that combine multiple types of interactions to retain and separate compounds.
+    MS_mixed_mode_chromatography = 1003586,
+
+    /// hydrophobic interaction chromatography: Hydrophobic Interaction Chromatography (HIC) is a type of chromatography used to separate biomolecules, typically proteins, based on their differences in surface hydrophobicity.
+    MS_hydrophobic_interaction_chromatography = 1003587,
+
+    /// hyphenated separation system: An on-line coupled system to effect separation of compounds prior to detection with a spectrometric or other detection technology.
+    MS_hyphenated_separation_system = 1003588,
+
+    /// liquid chromatography system: Liquid chromatography (LC) is an analytical technique used to separate a mixture into its individual components for identification, quantification, and purification. The separation is based on the differential interactions of the sample compounds with a liquid mobile phase and a solid stationary phase.
+    MS_liquid_chromatography_system = 1003589,
+
+    /// high-performance liquid chromatography system: A system for High-Performance Liquid Chromatography (HPLC), a widely used analytical chemistry technique for separating, identifying, and quantifying individual components in a liquid mixture.
+    MS_high_performance_liquid_chromatography_system = 1003590,
+
+    /// ultra-performance liquid chromatography system: A system for Ultra-Performance Liquid Chromatography (UPLC), a trademark of the Waters Corporation and is largely synonymous with ultra-high performance liquid chromatography.
+    MS_ultra_performance_liquid_chromatography_system = 1003591,
+
+    /// ultra-high performance liquid chromatography system: A system for Ultra-High Performance Liquid Chromatography (UHPLC), an advanced form of high-performance liquid chromatography designed to achieve significantly faster, higher-resolution, and more sensitive separations. It is primarily achieved by innovations in particle chemistry and systemation capable of handling ultra-high pressures.
+    MS_ultra_high_performance_liquid_chromatography_system = 1003592,
+
+    /// fast protein liquid chromatography system: A system for Fast Protein Liquid Chromatography (FPLC), a versatile and widely used medium-pressure chromatography technique primarily employed for the separation and purification of biomolecules, especially proteins. It operates under low to moderate pressures, making it suitable for labile proteins and other large biomolecules that might be denatured by the high pressures and organic solvents often used in high-performance liquid chromatography.
+    MS_fast_protein_liquid_chromatography_system = 1003593,
+
+    /// three-dimensional liquid chromatography system: A system for Three-dimensional liquid chromatography (3D-LC), an advanced separation technique that combines three distinct liquid chromatography (LC) methods to achieve significantly enhanced separation power for complex mixtures, particularly in fields like proteomics.
+    MS_three_dimensional_liquid_chromatography_system = 1003594,
+
+    /// planar chomatography system: A system for on-line planar chomatography.
+    MS_planar_chomatography_system = 1003595,
+
+    /// thin layer chromatography system: A system for on-line Thin Layer Chromatography (TLC), based upon a widely used, simple, and cost-effective analytical technique for separating and identifying components in a mixture.
+    MS_thin_layer_chromatography_system = 1003596,
+
+    /// high-performance thin layer chromatography system: A system for on-line High-Performance Thin Layer Chromatography (HPTLC), an advanced and refined version of traditional Thin Layer Chromatography (TLC), designed to offer significantly improved performance in terms of resolution, sensitivity, and reproducibility. It utilizes finer and more uniformly sized stationary phase particles, leading to more efficient separations and more accurate quantitative analysis.
+    MS_high_performance_thin_layer_chromatography_system = 1003597,
+
+    /// two-dimensional liquid chromatography system: A system for two-dimensional liquid chromatography (2D-LC), also often referred to as LC-LC or LC×LC, an advanced analytical technique that combines two different liquid chromatography methods in series to achieve enhanced separation of complex mixtures. It offers significantly higher resolving power and peak capacity compared to conventional one-dimensional liquid chromatography (1D-LC).
+    MS_two_dimensional_liquid_chromatography_system = 1003598,
+
+    /// nano-flow liquid chromatography system: Nano-flow LC at a typical flow rate in the nL/min range (e.g., 50-1000 nL/min) with a typical column internal diameter of ≤ 0.1 mm, commonly used for high sensitivity, low sample volume applications.
+    MS_nano_flow_liquid_chromatography_system = 1003599,
+
+    /// capillary-flow liquid chromatography system: Capillary-flow LC at a typical flow rate of 2-10 µL/min with a typical column internal diameter of 0.3-0.5 mm, commonly used for high sensitivity applications.
+    MS_capillary_flow_liquid_chromatography_system = 1003600,
+
+    /// micro-flow liquid chromatography system: Micro-flow, or microbore, LC at a typical flow rate of 10-50 µL/min with a typical column internal diameter of 1.0 mm, commonly used for increased sensitivity application and lower solvent consumption.
+    MS_micro_flow_liquid_chromatography_system = 1003601,
+
+    /// analytical liquid chromatography system: Analytical scale LC at a typical flow rate between 0.2- 3 mL/min with a typical column internal diameter of 2.1-4.6 mm, commonly used in typical LC methodology.
+    MS_analytical_liquid_chromatography_system = 1003602,
+
+    /// semi-preparative liquid chromatography system: Semi-preparative LC at a typical flow rate between 5-50 mL/min with a typical column internal diameter of 10 mm, commonly used for the small scale purification and isolation of compounds.
+    MS_semi_preparative_liquid_chromatography_system = 1003603,
+
+    /// preparative liquid chromatography system: Preparative LC at a typical flow rate of > 50 mL/min with a typical column internal diameter of > 20 mm, commonly used for the large scale purification and isolation of bulk quantities of target compounds.
+    MS_preparative_liquid_chromatography_system = 1003604,
+
+    /// liquid chromatography system model: Liquid chromatography system model name not including the vendor's name.
+    MS_liquid_chromatography_system_model = 1003605,
+
+    /// Waters liquid chromatography system model: Waters Corporation liquid chromatography system model.
+    MS_Waters_liquid_chromatography_system_model = 1003606,
+
+    /// timsControl: Bruker software for data acquisition.
+    MS_timsControl = 1003607,
+
+    /// MetaboScape: Bruker software for untargeted metabolomics and lipidomics data analysis.
+    MS_MetaboScape = 1003608,
+
+    /// TASQ: Bruker software for target screening and quantitation.
+    MS_TASQ = 1003609,
+
+    /// mzPeak format: Proteomics Standards Initiatve mzPeak file format.
+    MS_mzPeak_format = 1003610,
+
+    /// imzML format: IMSIS imzML imaging file format.
+    MS_imzML_format = 1003611,
+
+    /// InstaNovo: InstaNovo is a deep learning based tool using a Transformer architecture for de novo peptide sequencing.
+    MS_InstaNovo = 1003612,
+
+    /// InstaNovo+: InstaNovo+ is a deep learning based tool using a Diffusion architecture for de novo peptide sequencing.
+    MS_InstaNovo_ = 1003613,
+
+    /// Advion liquid chromatography system model: Advion Interchim Scientific liquid chromatography system model.
+    MS_Advion_liquid_chromatography_system_model = 1003615,
+
+    /// AVANT: Advion AVANT UHPLC system.
+    MS_AVANT = 1003616,
+
+    /// Agilent liquid chromatography system model: Agilent Technologies liquid chromatography system model.
+    MS_Agilent_liquid_chromatography_system_model = 1003617,
+
+    /// 1100 Series: Agilent 1100 Series HPLC system.
+    MS_1100_Series = 1003618,
+
+    /// 1200 Series: Agilent 1200 Series HPLC system.
+    MS_1200_Series = 1003619,
+
+    /// 1200 Series HPLC-Chip: Agilent 1200 Series HPLC-Chip system.
+    MS_1200_Series_HPLC_Chip = 1003620,
+
+    /// 1200 Series Rapid Resolution: Agilent  1200 Series Rapid Resolution RRLC system.
+    MS_1200_Series_Rapid_Resolution = 1003621,
+
+    /// 1200 RR Series II: Agilent 1200 RR Series II RRLC system.
+    MS_1200_RR_Series_II = 1003622,
+
+    /// 1200 SL: Agilent 1200 SL RRLC system.
+    MS_1200_SL = 1003623,
+
+    /// 1220 Infinity: Agilent 1220 Infinity UHPLC system.
+    MS_1220_Infinity = 1003624,
+
+    /// 1260 Infinity II: Agilent 1260 Infinity II UHPLC system.
+    MS_1260_Infinity_II = 1003625,
+
+    /// 1260 Infinity: Agilent 1260 Infinity UHPLC system.
+    MS_1260_Infinity = 1003626,
+
+    /// 1290 Infinity 2D-LC: Agilent  1290 Infinity 2D-LC 2D-LC UHPLC system.
+    MS_1290_Infinity_2D_LC = 1003627,
+
+    /// 1290 Infinity: Agilent 1290 Infinity UHPLC system.
+    MS_1290_Infinity = 1003628,
+
+    /// 1290 Infinity II 2D-LC: Agilent 1290 Infinity II 2D-LC 2D-LC UHPLC system.
+    MS_1290_Infinity_II_2D_LC = 1003629,
+
+    /// 1290 Infinity II: Agilent 1290 Infinity II UHPLC system.
+    MS_1290_Infinity_II = 1003630,
+
+    /// 1200 Infinity: Agilent 1200 Infinity UHPLC system.
+    MS_1200_Infinity = 1003631,
+
+    /// 1220 Infinity II: Agilent 1220 Infinity II UHPLC system.
+    MS_1220_Infinity_II = 1003632,
+
+    /// 1260 Infinity III: Agilent 1260 Infinity III UHPLC system.
+    MS_1260_Infinity_III = 1003633,
+
+    /// 1260 Infinity III Prime: Agilent 1260 Infinity III Prime UHPLC system.
+    MS_1260_Infinity_III_Prime = 1003634,
+
+    /// adduct ion monoisotopic mass: The theoretical monoisotopic mass of the adduct ion (e.g. for a singly-charged protonated peptide ion, this value would be the neutral peptide molecule's monoisotopic mass plus the mass of a proton).
+    MS_adduct_ion_monoisotopic_mass = 1003635,
+
+    /// adduct ion average mass: The theoretical average mass of the adduct ion (e.g. for a singly-charged protonated peptide ion, this value would be the neutral peptide molecule's average mass plus the average mass of a hydrogen ion).
+    MS_adduct_ion_average_mass = 1003636,
+
+    /// theoretical neutral monoisotopic mass: The theoretical neutral monoisotopic mass of the molecule (e.g. the peptide sequence and its modifications), not including its charge carrier.
+    MS_theoretical_neutral_monoisotopic_mass = 1003637,
+
+    /// theoretical neutral average mass: The theoretical neutral average mass of the molecule (e.g. the peptide sequence and its modifications), not including its charge carrier.
+    MS_theoretical_neutral_average_mass = 1003638,
+
+    /// Beckman Coulter liquid chromatography system model: Beckman Coulter, Inc. liquid chromatography system model
+    MS_Beckman_Coulter_liquid_chromatography_system_model = 1003639,
+
+    /// System Gold: Beckman Coulter System Gold HPLC system.
+    MS_System_Gold = 1003640,
+
+    /// Bruker liquid chromatography system model: Bruker Corporation liquid chromatography system model
+    MS_Bruker_liquid_chromatography_system_model = 1003641,
+
+    /// Elute: Bruker Elute UHPLC system.
+    MS_Elute = 1003642,
+
+    /// Elute HT: Bruker Elute HT UHPLC system.
+    MS_Elute_HT = 1003643,
+
+    /// Elute OLE: Bruker Elute OLE UHPLC system.
+    MS_Elute_OLE = 1003644,
+
+    /// Elute SP: Bruker Elute SP HPLC system.
+    MS_Elute_SP = 1003645,
+
+    /// nanoElute 2: Bruker nanoElute 2 HPLC system.
+    MS_nanoElute_2 = 1003646,
+
+    /// proteoElute: Bruker proteoElute UHPLC system.
+    MS_proteoElute = 1003647,
+
+    /// Michrom BioResources Paradigm MS4: Bruker Michrom BioResources Paradigm MS4 2D-LC HPLC system.
+    MS_Michrom_BioResources_Paradigm_MS4 = 1003648,
+
+    /// Michrom Advance nanoflow: Bruker Michrom Advance nanoflow UHPLC system.
+    MS_Michrom_Advance_nanoflow = 1003649,
+
+    /// SCIEX liquid chromatography system model: SCIEX liquid chromatography system model
+    MS_SCIEX_liquid_chromatography_system_model = 1003650,
+
+    /// ExionLC: SCIEX ExionLC HPLC system.
+    MS_ExionLC = 1003651,
+
+    /// ExionLC AC: SCIEX ExionLC AC UHPLC system.
+    MS_ExionLC_AC = 1003652,
+
+    /// ExionLC AD: SCIEX ExionLC AD UHPLC system.
+    MS_ExionLC_AD = 1003653,
+
+    /// ExionLC AE: SCIEX ExionLC AE UHPLC system.
+    MS_ExionLC_AE = 1003654,
+
+    /// ExionLC 2.0: SCIEX ExionLC 2.0 UHPLC system.
+    MS_ExionLC_2_0 = 1003655,
+
+    /// ExionLC 2.0+: SCIEX ExionLC 2.0+ UHPLC system.
+    MS_ExionLC_2_0_ = 1003656,
+
+    /// Eksigent ekspert nanoLC 400: SCIEX Eksigent ekspert nanoLC 400 HPLC system.
+    MS_Eksigent_ekspert_nanoLC_400 = 1003657,
+
+    /// Eksigent ekspert nanoLC 425: SCIEX Eksigent ekspert nanoLC 425 HPLC system.
+    MS_Eksigent_ekspert_nanoLC_425 = 1003658,
+
+    /// Eksigent ekspret ultraLC 100: SCIEX Eksigent ekspret ultraLC 100 UHPLC system.
+    MS_Eksigent_ekspret_ultraLC_100 = 1003659,
+
+    /// Eksigent ekspert ultraLC 100-XL: SCIEX Eksigent ekspert ultraLC 100-XL UHPLC system.
+    MS_Eksigent_ekspert_ultraLC_100_XL = 1003660,
+
+    /// Eksigent ekspert ultraLC 110: SCIEX Eksigent ekspert ultraLC 110 UHPLC system.
+    MS_Eksigent_ekspert_ultraLC_110 = 1003661,
+
+    /// Eksigent NanoLC-Ultra 2D: SCIEX Eksigent NanoLC-Ultra 2D 2D-LC UHPLC system.
+    MS_Eksigent_NanoLC_Ultra_2D = 1003662,
+
+    /// Hitachi liquid chromatography system model: Hitachi, Ltd. liquid chromatography system model
+    MS_Hitachi_liquid_chromatography_system_model = 1003663,
+
+    /// L-7100: Hitachi L-7100 HPLC pump.
+    MS_L_7100 = 1003664,
+
+    /// LaChrom Ultra: Hitachi LaChrom Ultra UHPLC system.
+    MS_LaChrom_Ultra = 1003665,
+
+    /// Chromaster: Hitachi Chromaster HPLC system.
+    MS_Chromaster = 1003666,
+
+    /// Chromaster RS: Hitachi Chromaster RS UHPLC system.
+    MS_Chromaster_RS = 1003667,
+
+    /// JASCO liquid chromatography system model: JASCO, Inc. liquid chromatography system model
+    MS_JASCO_liquid_chromatography_system_model = 1003668,
+
+    /// X-LC Series: JASCO X-LC Series UHPLC system.
+    MS_X_LC_Series = 1003669,
+
+    /// LC-4000 Series: JASCO LC-4000 Series UHPLC system.
+    MS_LC_4000_Series = 1003670,
+
+    /// LC-2000 Series: JASCO LC-2000 Series HPLC system.
+    MS_LC_2000_Series = 1003671,
+
+    /// Shimadzu liquid chromatography system model: Shimadzu Corporation liquid chromatography system model
+    MS_Shimadzu_liquid_chromatography_system_model = 1003672,
+
+    /// LC-10: Shimadzu LC-10 HPLC system.
+    MS_LC_10 = 1003673,
+
+    /// Nexera LC-20: Shimadzu Nexera LC-20 HPLC system.
+    MS_Nexera_LC_20 = 1003674,
+
+    /// Nexera LC-30: Shimadzu Nexera LC-30 UHPLC system.
+    MS_Nexera_LC_30 = 1003675,
+
+    /// Nexera X2 LC-30: Shimadzu Nexera X2 LC-30 UHPLC system.
+    MS_Nexera_X2_LC_30 = 1003676,
+
+    /// Nexera LC-40: Shimadzu Nexera LC-40 UHPLC system.
+    MS_Nexera_LC_40 = 1003677,
+
+    /// Prominence LC-20: Shimadzu Prominence LC-20 HPLC system.
+    MS_Prominence_LC_20 = 1003678,
+
+    /// Prominence UFLC: Shimadzu Prominence UFLC HPLC system.
+    MS_Prominence_UFLC = 1003679,
+
+    /// Prominence UFLC XR: Shimadzu Prominence UFLC XR UHPLC system.
+    MS_Prominence_UFLC_XR = 1003680,
+
+    /// LC-2040C 3D Nexera-i: Shimadzu LC-2040C 3D Nexera-i HPLC system.
+    MS_LC_2040C_3D_Nexera_i = 1003681,
+
+    /// Prominence Plus LC-30: Shimadzu Prominence Plus LC-30 HPLC system.
+    MS_Prominence_Plus_LC_30 = 1003682,
+
+    /// Thermo Scientific liquid chromatography system model: Thermo Scientific liquid chromatography system model.
+    MS_Thermo_Scientific_liquid_chromatography_system_model = 1003683,
+
+    /// Accela: Thermo Accela UHPLC system.
+    MS_Accela = 1003684,
+
+    /// Accela II: Thermo Accela II UHPLC system.
+    MS_Accela_II = 1003685,
+
+    /// Dionex Integrion HPIC: Thermo Dionex Integrion HPIC ion chromatography system.
+    MS_Dionex_Integrion_HPIC = 1003686,
+
+    /// Dionex Integrion RFIC: Thermo Dionex Integrion RFIC ion chromatography system.
+    MS_Dionex_Integrion_RFIC = 1003687,
+
+    /// Dionex UltiMate 3000 RSLC: Thermo Dionex UltiMate 3000 RSLC UHPLC system.
+    MS_Dionex_UltiMate_3000_RSLC = 1003688,
+
+    /// Dionex UltiMate 3000 RSLCnano: Thermo Dionex UltiMate 3000 RSLCnano UHPLC system.
+    MS_Dionex_UltiMate_3000_RSLCnano = 1003689,
+
+    /// Dionex UltiMate 3000: Thermo Dionex UltiMate 3000 UHPLC system.
+    MS_Dionex_UltiMate_3000 = 1003690,
+
+    /// Dionex UltiMate 3000 XRS: Thermo Dionex UltiMate 3000 XRS UHPLC system.
+    MS_Dionex_UltiMate_3000_XRS = 1003691,
+
+    /// EASY-nLC 1000: Thermo EASY-nLC 1000 UHPLC system.
+    MS_EASY_nLC_1000 = 1003692,
+
+    /// EASY-nLC 1200: Thermo EASY-nLC 1200 UHPLC system.
+    MS_EASY_nLC_1200 = 1003693,
+
+    /// Surveyor: Thermo Surveyor HPLC system.
+    MS_Surveyor = 1003694,
+
+    /// Vanquish Duo: Thermo Vanquish Duo UHPLC system.
+    MS_Vanquish_Duo = 1003695,
+
+    /// Vanquish Flex: Thermo Vanquish Flex UHPLC system.
+    MS_Vanquish_Flex = 1003696,
+
+    /// Vanquish Horizon: Thermo Vanquish Horizon UHPLC system.
+    MS_Vanquish_Horizon = 1003697,
+
+    /// Vanquish: Thermo Vanquish UHPLC system.
+    MS_Vanquish = 1003698,
+
+    /// Dionex ICS-5000+: Thermo Dionex ICS-5000+ ion chromatography system.
+    MS_Dionex_ICS_5000_ = 1003699,
+
+    /// Proxeon EASY-nLC II: Thermo Proxeon EASY-nLC II UHPLC system.
+    MS_Proxeon_EASY_nLC_II = 1003700,
+
+    /// Cohesive Technologies TX2: Thermo Cohesive Technologies TX2 HPLC system.
+    MS_Cohesive_Technologies_TX2 = 1003701,
+
+    /// Rheos Allegro: Thermo Flux Instruments Rheos Allegro UHPLC pump.
+    MS_Rheos_Allegro = 1003702,
+
+    /// Rheos 2000 Micro: Thermo Flux Instruments Rheos 2000 Micro HPLC pump.
+    MS_Rheos_2000_Micro = 1003703,
+
+    /// Rheos 2200 Micro: Thermo Flux Instruments Rheos 2200 Micro HPLC pump.
+    MS_Rheos_2200_Micro = 1003704,
+
+    /// 1525 Micro: Waters 1525 Micro HPLC pump.
+    MS_1525_Micro = 1003705,
+
+    /// ACQUITY Premier: Waters ACQUITY Premier UPLC system.
+    MS_ACQUITY_Premier = 1003706,
+
+    /// ACQUITY UPLC H-Class PLUS: Waters ACQUITY UPLC H-Class PLUS UPLC system.
+    MS_ACQUITY_UPLC_H_Class_PLUS = 1003707,
+
+    /// ACQUITY UPLC I-Class PLUS: Waters ACQUITY UPLC I-Class PLUS UPLC system.
+    MS_ACQUITY_UPLC_I_Class_PLUS = 1003708,
+
+    /// ACQUITY UPLC M-Class: Waters ACQUITY UPLC M-Class UPLC system.
+    MS_ACQUITY_UPLC_M_Class = 1003709,
+
+    /// Alliance 2695 Separations Module: Waters Alliance 2695 Separations Module HPLC system.
+    MS_Alliance_2695_Separations_Module = 1003710,
+
+    /// fast gas chromatography: Fast gas chromatography (fast GC, FGC) employs short, narrow-bore capillary columns, high carrier gas velocity, and rapid temperature programming to achieve high-efficiency separations in a fraction of standard GC run times.
+    MS_fast_gas_chromatography = 1003712,
+
+    /// packed column gas chromatography: Packed column gas chromatography uses stainless steel or glass tubes (typically 2–4 mm ID, 1–6 m length) filled with particulate packing material coated with stationary phase, enabling the separation of larger sample volumes but typically providing lower efficiency and broader peaks than capillary GC.
+    MS_packed_column_gas_chromatography = 1003713,
+
+    /// capillary column gas chromatography: Capillary column gas chromatography uses narrow-bore fused silica columns (typically 0.1–0.5 mm ID, 5–100 m length) coated with a thin internal stationary phase, enabling high-efficiency, high-resolution separations of volatile analytes.
+    MS_capillary_column_gas_chromatography = 1003714,
+
+    /// high-resolution gas chromatography: High-resolution gas chromatography (HRGC) utilizes narrow-bore capillary columns and optimized parameters to achieve exceptional separation efficiency and peak capacity for complex, volatile mixtures.
+    MS_high_resolution_gas_chromatography = 1003715,
+
+    /// pyrolysis-gas chromatography: Pyrolysis-gas chromatography (Py-GC) thermally decomposes complex samples into smaller volatile fragments, which are separated using GC.
+    MS_pyrolysis_gas_chromatography = 1003716,
+
+    /// gas-liquid chromatography: Gas-liquid chromatography (GLC) employs an inert gaseous mobile phase and a liquid stationary phase immobilized on a solid support, separating volatile analytes by differential partitioning in the column.
+    MS_gas_liquid_chromatography = 1003717,
+
+    /// non-polar stationary phase gas-liquid chromatography: Non-polar stationary phase gas-liquid chromatography employs phases like polydimethylsiloxane (PDMS), where separation is based on analyte volatility and dispersion interactions, optimally retaining non-polar compounds.
+    MS_non_polar_stationary_phase_gas_liquid_chromatography = 1003718,
+
+    /// mid-polar stationary phase gas-liquid chromatography: Mid-polar stationary phase gas-liquid chromatography employs phases such as polysiloxanes, providing balanced separation through both dispersion and dipole interactions for analytes of intermediate polarity.
+    MS_mid_polar_stationary_phase_gas_liquid_chromatography = 1003719,
+
+    /// polar stationary phase gas-liquid chromatography: Polar stationary phase gas-liquid chromatography uses stationary phases such as polyethylene glycol, maximizing retention and selectivity for polar analytes via dipole–dipole and hydrogen bonding interactions.
+    MS_polar_stationary_phase_gas_liquid_chromatography = 1003720,
+
+    /// chiral stationary phase gas-liquid chromatography: Chiral stationary phase gas-liquid chromatography uses a stationary phase with bonded chiral selectors, enabling enantiomeric separation by stereoselective interactions.
+    MS_chiral_stationary_phase_gas_liquid_chromatography = 1003721,
+
+    /// gas-solid chromatography: Gas-solid chromatography (GSC) separates volatile analytes by adsorption onto a solid stationary phase, with elution governed by analyte–surface interactions and adsorption.
+    MS_gas_solid_chromatography = 1003722,
+
+    /// molecular sieve stationary phase gas-solid chromatography: Molecular sieve stationary phase gas–solid chromatography separates volatile analytes by differential adsorption onto a porous, crystalline aluminosilicate solid phase, enabling selective separation of permanent gases and small hydrocarbons.
+    MS_molecular_sieve_stationary_phase_gas_solid_chromatography = 1003723,
+
+    /// porous polymer stationary phase gas-solid chromatography: Porous polymer stationary phase gas-solid chromatography employs solid adsorbents like porous polystyrene-divinylbenzene, enabling volatile analyte separation by selective physical adsorption based on molecular size and polarity.
+    MS_porous_polymer_stationary_phase_gas_solid_chromatography = 1003724,
+
+    /// activated carbon stationary phase gas-solid chromatography: Activated carbon stationary phase gas-solid chromatography utilizes activated carbon’s high surface area to selectively adsorb and resolve volatile non-polar organics and permanent gases via surface interactions and physical adsorption.
+    MS_activated_carbon_stationary_phase_gas_solid_chromatography = 1003725,
+
+    /// inorganic oxides stationary phase gas-solid chromatography: Inorganic oxides stationary phase gas-solid chromatography employs solid adsorbents such as silica or alumina, enabling separation of permanent gases and low-boiling organics by surface adsorption interactions.
+    MS_inorganic_oxides_stationary_phase_gas_solid_chromatography = 1003726,
+
+    /// graphitized carbon stationary phase gas-solid chromatography: Graphitized carbon stationary phase gas-solid chromatography utilizes non-porous or porous graphitized carbon, enabling strong planar and π-electron interactions for selective adsorption and separation of aromatic and polar analytes.
+    MS_graphitized_carbon_stationary_phase_gas_solid_chromatography = 1003727,
+
+    /// gas chromatography system: A gas chromatography (GC) system comprises an injector, temperature-controlled column with stationary phase, carrier gas supply, oven, and detector, enabling separation of volatile analytes.
+    MS_gas_chromatography_system = 1003728,
+
+    /// two-dimensional gas chromatography system: A two-dimensional gas chromatography system (GC×GC) uses orthogonal column sets connected by a modulator, providing enhanced separation of complex mixtures via sequential, independent mechanisms in primary and secondary columns.
+    MS_two_dimensional_gas_chromatography_system = 1003729,
+
+    /// gas chromatography system model: Gas chromatography system model name not including the vendor's name.
+    MS_gas_chromatography_system_model = 1003730,
+
+    /// Agilent gas chromatography system model: Agilent Technologies gas chromatography system model.
+    MS_Agilent_gas_chromatography_system_model = 1003731,
+
+    /// 6890N: Agilent 6890N gas chromatograph.
+    MS_6890N = 1003732,
+
+    /// gas chromatography mass spectrometry system: A gas chromatography mass spectrometry system (GC–MS) integrates a gas chromatograph for volatile analyte separation with a mass spectrometer for ionization and detection, enabling sensitive qualitative or quantitative analysis.
+    MS_gas_chromatography_mass_spectrometry_system = 1003733,
+
+    /// gas chromatography mass spectrometry system model: Gas chromatography mass spectrometry system model name not including the vendor's name.
+    MS_gas_chromatography_mass_spectrometry_system_model = 1003734,
+
+    /// Shimadzu gas chromatography mass spectrometry system model: Shimadzu Corporation gas chromatography mass spectrometry system model.
+    MS_Shimadzu_gas_chromatography_mass_spectrometry_system_model = 1003735,
+
+    /// separation system: A system to effect separation of compounds.
+    MS_separation_system = 1003737,
+
+    /// 5975C: Agilent 5975C gas chromatograph.
+    MS_5975C = 1003738,
+
+    /// 5975T: Agilent 5975T gas chromatograph.
+    MS_5975T = 1003739,
+
+    /// 6890: Agilent 6890 gas chromatograph.
+    MS_6890 = 1003740,
+
+    /// 7890A: Agilent 7890A gas chromatograph.
+    MS_7890A = 1003741,
+
+    /// 7890B: Agilent 7890B gas chromatograph.
+    MS_7890B = 1003742,
+
+    /// 8860: Agilent 8860 gas chromatograph.
+    MS_8860 = 1003743,
+
+    /// 8890B: Agilent 8890B gas chromatograph.
+    MS_8890B = 1003744,
+
+    /// Hewlett Packard gas chromatography system model: Hewlett Packard gas chromatography system model.
+    MS_Hewlett_Packard_gas_chromatography_system_model = 1003745,
+
+    /// 5890 Series: Hewlett Packard 5890 Series gas chromatograph.
+    MS_5890_Series = 1003746,
+
+    /// 5890 Series II: Hewlett Packard 5890 Series II gas chromatograph.
+    MS_5890_Series_II = 1003747,
+
+    /// PerkinElmer gas chromatography system model: PerkinElmer gas chromatography system model.
+    MS_PerkinElmer_gas_chromatography_system_model = 1003748,
+
+    /// AutoSystem XL GC: PerkinElmer AutoSystem XL GC gas chromatograph.
+    MS_AutoSystem_XL_GC = 1003749,
+
+    /// Shimadzu gas chromatography system model: Shimadzu Corporation gas chromatography system model.
+    MS_Shimadzu_gas_chromatography_system_model = 1003750,
+
+    /// GC-2010 Plus: Shimadzu GC-2010 Plus gas chromatograph.
+    MS_GC_2010_Plus = 1003751,
+
+    /// GC-2010 Pro: Shimadzu GC-2010 Pro gas chromatograph.
+    MS_GC_2010_Pro = 1003752,
+
+    /// GC-17A: Shimadzu GC-17A gas chromatograph.
+    MS_GC_17A = 1003753,
+
+    /// GC-2010: Shimadzu GC-2010 gas chromatograph.
+    MS_GC_2010 = 1003754,
+
+    /// Thermo Scientific gas chromatography system model: Thermo Scientific gas chromatography system model.
+    MS_Thermo_Scientific_gas_chromatography_system_model = 1003755,
+
+    /// TRACE 1300: Thermo TRACE 1300 gas chromatograph.
+    MS_TRACE_1300 = 1003756,
+
+    /// TRACE 1310: Thermo TRACE 1310 gas chromatograph.
+    MS_TRACE_1310 = 1003757,
+
+    /// TRACE GC: Thermo TRACE GC gas chromatograph.
+    MS_TRACE_GC = 1003758,
+
+    /// TRACE GC Ultra: Thermo TRACE GC Ultra gas chromatograph.
+    MS_TRACE_GC_Ultra = 1003759,
+
+    /// FOCUS GC: Thermo FOCUS GC gas chromatograph.
+    MS_FOCUS_GC = 1003760,
+
+    /// instrument class: Instruments classified based on their architecture with respect to mass analyzers.
+    MS_instrument_class = 1003761,
+
+    /// triple quadrupole: A triple quadrupole mass spectrometer (TQMS; QqQ) is a tandem mass spectrometry (MS/MS) system that employs three linear quadrupoles in series to achieve highly selective and sensitive targeted quantification of specific compounds. The first quadrupole (Q1) may select a precursor ion, the second (Q2) induces fragmentation via collision-induced dissociation (CID), and the third (Q3) monitors specific product ions, typically through Multiple Reaction Monitoring (MRM).
+    MS_triple_quadrupole = 1003762,
+
+    /// QqQ (triple quadrupole): A triple quadrupole mass spectrometer (TQMS; QqQ) is a tandem mass spectrometry (MS/MS) system that employs three linear quadrupoles in series to achieve highly selective and sensitive targeted quantification of specific compounds. The first quadrupole (Q1) may select a precursor ion, the second (Q2) induces fragmentation via collision-induced dissociation (CID), and the third (Q3) monitors specific product ions, typically through Multiple Reaction Monitoring (MRM).
+    MS_QqQ = MS_triple_quadrupole,
+
+    /// quadrupole time-of-flight: A quadrupole time-of-flight (Q-TOF) mass spectrometer is a hybrid instrument that combines a quadrupole mass filter with a time-of-flight (TOF) mass analyzer to provide both highly accurate mass measurements and fragmentation data. The quadrupole may be used to select a specific precursor ion which is then fragmented, and the resulting product ions are measured by the TOF analyzer, providing high resolution and mass accuracy for structural elucidation and quantification.
+    MS_quadrupole_time_of_flight = 1003763,
+
+    /// Q-TOF (quadrupole time-of-flight): A quadrupole time-of-flight (Q-TOF) mass spectrometer is a hybrid instrument that combines a quadrupole mass filter with a time-of-flight (TOF) mass analyzer to provide both highly accurate mass measurements and fragmentation data. The quadrupole may be used to select a specific precursor ion which is then fragmented, and the resulting product ions are measured by the TOF analyzer, providing high resolution and mass accuracy for structural elucidation and quantification.
+    MS_Q_TOF = MS_quadrupole_time_of_flight,
+
+    /// ion trap time-of-flight: An ion trap time-of-flight (IT-TOF) mass spectrometer is a hybrid instrument that uses an ion trap to accumulate, store, and often fragment ions, which are then periodically injected into a time-of-flight (TOF) mass analyzer for high-resolution mass analysis. This combination allows for sensitive MSn experiments (multiple stages of mass spectrometry) within the ion trap for structural elucidation and provides high mass accuracy and resolution via the TOF component.
+    MS_ion_trap_time_of_flight = 1003764,
+
+    /// IT-TOF (ion trap time-of-flight): An ion trap time-of-flight (IT-TOF) mass spectrometer is a hybrid instrument that uses an ion trap to accumulate, store, and often fragment ions, which are then periodically injected into a time-of-flight (TOF) mass analyzer for high-resolution mass analysis. This combination allows for sensitive MSn experiments (multiple stages of mass spectrometry) within the ion trap for structural elucidation and provides high mass accuracy and resolution via the TOF component.
+    MS_IT_TOF = MS_ion_trap_time_of_flight,
+
+    /// triple quadrupole linear ion trap: A triple quadrupole linear ion trap (QqLIT) mass spectrometer is a hybrid instrument that can operate as a conventional triple quadrupole for high-sensitivity quantification (e.g., in Multiple Reaction Monitoring mode) or as a linear ion trap for qualitative analysis, such as MSn experiments and structural elucidation. The final quadrupole (Q3) of the system can be rapidly switched between functioning as a mass-resolving filter and a high-capacity linear ion trap, allowing for both precise quantification and comprehensive structural information to be acquired in a single analytical run.
+    MS_triple_quadrupole_linear_ion_trap = 1003765,
+
+    /// QqLIT (triple quadrupole linear ion trap): A triple quadrupole linear ion trap (QqLIT) mass spectrometer is a hybrid instrument that can operate as a conventional triple quadrupole for high-sensitivity quantification (e.g., in Multiple Reaction Monitoring mode) or as a linear ion trap for qualitative analysis, such as MSn experiments and structural elucidation. The final quadrupole (Q3) of the system can be rapidly switched between functioning as a mass-resolving filter and a high-capacity linear ion trap, allowing for both precise quantification and comprehensive structural information to be acquired in a single analytical run.
+    MS_QqLIT = MS_triple_quadrupole_linear_ion_trap,
+
+    /// quadrupole fourier transform ion cyclotron resonance: A quadrupole Fourier-transform ion cyclotron resonance (Q-FT-ICR) mass spectrometer is a hybrid instrument that uses an initial quadrupole for ion guiding or mass filtering before the ions are introduced into a Penning trap, where the mass analysis occurs. Once in the Penning trap, the ions' mass-to-charge ratios (m/z) are determined with ultra-high resolution and mass accuracy by measuring their unique cyclotron frequencies in a strong magnetic field and converting the resulting image current signal into a mass spectrum via a Fourier transform. 
+    MS_quadrupole_fourier_transform_ion_cyclotron_resonance = 1003766,
+
+    /// Q-FT-ICR (quadrupole fourier transform ion cyclotron resonance): A quadrupole Fourier-transform ion cyclotron resonance (Q-FT-ICR) mass spectrometer is a hybrid instrument that uses an initial quadrupole for ion guiding or mass filtering before the ions are introduced into a Penning trap, where the mass analysis occurs. Once in the Penning trap, the ions' mass-to-charge ratios (m/z) are determined with ultra-high resolution and mass accuracy by measuring their unique cyclotron frequencies in a strong magnetic field and converting the resulting image current signal into a mass spectrum via a Fourier transform. 
+    MS_Q_FT_ICR = MS_quadrupole_fourier_transform_ion_cyclotron_resonance,
+
+    /// quadrupole ion mobility time-of-flight: A quadrupole ion mobility time-of-flight (Q-IMS-TOF) mass spectrometer is a hybrid instrument that adds an ion mobility spectrometry (IMS) cell between the quadrupole and the time-of-flight (TOF) analyzer, providing an additional dimension of separation based on ion size, shape, and charge in a buffer gas. This configuration allows for the separation of isobars and isomers that have the same mass-to-charge ratio (m/z) but different three-dimensional structures, which significantly enhances analytical confidence for complex samples such as in proteomics, environmental analysis, and drug screening.
+    MS_quadrupole_ion_mobility_time_of_flight = 1003767,
+
+    /// Q-IMS-TOF (quadrupole ion mobility time-of-flight): A quadrupole ion mobility time-of-flight (Q-IMS-TOF) mass spectrometer is a hybrid instrument that adds an ion mobility spectrometry (IMS) cell between the quadrupole and the time-of-flight (TOF) analyzer, providing an additional dimension of separation based on ion size, shape, and charge in a buffer gas. This configuration allows for the separation of isobars and isomers that have the same mass-to-charge ratio (m/z) but different three-dimensional structures, which significantly enhances analytical confidence for complex samples such as in proteomics, environmental analysis, and drug screening.
+    MS_Q_IMS_TOF = MS_quadrupole_ion_mobility_time_of_flight,
+
+    /// ion trap orbitrap: A hybrid instrument that combines an ion trap for ion storage and fragmentation with an Orbitrap mass analyzer for high-resolution, accurate-mass (HRAM) detection.
+    MS_ion_trap_orbitrap = 1003768,
+
+    /// quadrupole orbitrap: A quadrupole Orbitrap mass spectrometer is a hybrid instrument that uses a quadrupole mass filter for precursor ion selection, a collision cell for fragmentation, followed by an Orbitrap mass analyzer which determines the precise mass-to-charge ratios of ions with high resolution and mass accuracy via Fourier transform.
+    MS_quadrupole_orbitrap = 1003769,
+
+    /// quadrupole ion trap orbitrap: A mass spectrometer that integrates a quadrupole mass filter, a linear ion trap, and an Orbitrap mass analyzer to provide precursor ion selection, multiple-stage fragmentation (MSn), and ultra-high resolution mass analysis.
+    MS_quadrupole_ion_trap_orbitrap = 1003770,
+
+    /// quadrupole orbitrap astral: A instrument that integrates a quadrupole mass filter, an Orbitrap mass analyzer, and the ASTRAL analyzer for high performance in ion selection, high-resolution analysis, and high-speed, high-sensitivity MS2 measurements.
+    MS_quadrupole_orbitrap_astral = 1003771,
+
+    /// mixed polarity acquisition: The scans of a run include both positive and negative polarity acquisitions in a pattern that is not strictly alternating, such as discrete blocks of each polarity, irregular switching sequences, or other non-alternating arrangements.
+    MS_mixed_polarity_acquisition = 1003774,
+
+    /// secondary electrospray ionization: Secondary electrospray ionization (SESI) is an atmospheric pressure ionization (API) technique that uses a primary nano-electrospray plume of solvent ions to ionize neutral gaseous molecules in the gas phase via efficient proton transfer reactions. Operating at atmospheric pressure, SESI allows for the sensitive and real-time detection of volatile organic compounds (VOCs) and vapors with minimal sample preparation, making it ideal for applications like breath analysis and environmental monitoring.
+    MS_secondary_electrospray_ionization = 1003775,
+
+    /// zstd compression: Zstandard compression, a fast, modern, general purpose lossless compression algorithm.
+    MS_zstd_compression = 1003780,
+
+    /// byte-shuffled zstd compression: Byte shuffle transform followed by Zstandard compression.
+    MS_byte_shuffled_zstd_compression = 1003781,
+
+    /// dictionary-encoded zstd compression: Dictionary encoding followed by Zstandard compression using a sorted dictionary with separately byte-shuffled values and indices.
+    MS_dictionary_encoded_zstd_compression = 1003782,
+
+    /// MS-Numpress linear prediction compression followed by zstd compression: Compression using MS-Numpress linear prediction compression and Zstandard .
+    MS_MS_Numpress_linear_prediction_compression_followed_by_zstd_compression = 1003783,
+
+    /// MS-Numpress positive integer compression followed by zstd compression: Compression using MS-Numpress positive integer compression and Zstandard.
+    MS_MS_Numpress_positive_integer_compression_followed_by_zstd_compression = 1003784,
+
+    /// MS-Numpress short logged float compression followed by zstd compression: Compression using MS-Numpress short logged float compression and Zstandard.
+    MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression = 1003785,
+
+    /// TSQ Certis: Thermo Scientific TSQ Certis Triple Quadrupole MS.
+    MS_TSQ_Certis = 1003800,
+
+    /// AccurateMassSearch: OpenMS TOPP tool to assemble metabolite features from singleton mass traces.
+    MS_AccurateMassSearch = 1003801,
+
+    /// zero intensity point trimming: Apply an algorithm to remove excess zero intensity value data points from a spectrum. Data may be retained for interperatbility such as retaining only zeros that flank non-zero intensity value data points from a profile spectrum..
+    MS_zero_intensity_point_trimming = 1003901,
+
+    /// zero intensity point trimming interpolation: A zero intensity point trimming algorithm that interpolates the m/z coordinate values from the local data or an estimated model.
+    MS_zero_intensity_point_trimming_interpolation = 1003902,
+
+    /// analysis: A strategy for mass spectrometry-based analysis that defines whether analytes are predetermined or discovered during acquisition.
+    MS_analysis = 1003903,
+
+    /// untargeted analysis: An analytical approach in which comprehensive detection of all measurable analytes is attempted without prior specification of target compounds.
+    MS_untargeted_analysis = 1003904,
+
+    /// targeted analysis: An analytical approach in which a predefined set of analytes is measured, typically enabling quantitative determination.
+    MS_targeted_analysis = 1003905,
+
+    /// semi-targeted analysis: An analytical approach combining targeted monitoring of predefined analytes with simultaneous untargeted data acquisition.
+    MS_semi_targeted_analysis = 1003906,
+
+    /// parallel reaction monitoring: Parallel Reaction Monitoring (PRM) utilizes high-resolution, accurate-mass mass spectrometry, typically a quadrupole orbitrap or quadrupole time-of-flight instrument, to isolate specific precursor ions and detect all resulting product ions in parallel. Unlike Selected Reaction Monitoring (SRM), which filters for pre-selected transitions, PRM acquires full MS/MS spectra for each target, thereby eliminating the need for transition optimization and providing high specificity through high-resolution interference rejection.
+    MS_parallel_reaction_monitoring = 1003907,
+
+    /// PRM (parallel reaction monitoring): Parallel Reaction Monitoring (PRM) utilizes high-resolution, accurate-mass mass spectrometry, typically a quadrupole orbitrap or quadrupole time-of-flight instrument, to isolate specific precursor ions and detect all resulting product ions in parallel. Unlike Selected Reaction Monitoring (SRM), which filters for pre-selected transitions, PRM acquires full MS/MS spectra for each target, thereby eliminating the need for transition optimization and providing high specificity through high-resolution interference rejection.
+    MS_PRM = MS_parallel_reaction_monitoring,
+
+    /// Agilent gas chromatography mass spectrometry system model: Agilent Technologies gas chromatography mass spectrometry system model.
+    MS_Agilent_gas_chromatography_mass_spectrometry_system_model = 1003914,
 
     /// Number of Occurrences: The number of times something happened.
     NCIT_Number_of_Occurrences = 103150827,
@@ -11543,6 +12585,87 @@ enum PWIZ_API_DECL CVID
 
     /// identified MS2 quantile RT fraction: The interval used for acquisition of quantiles of all identified MS2 events, after user-defined acceptance criteria are applied, divided by retention time duration. The number of values in the tuple implies the quantile mode. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.
     MS_identified_MS2_quantile_RT_fraction = 4000188,
+
+    /// DIAMetric: DIAMetric is a Data-Independent Acquisition Quality Metric Generator.
+    MS_DIAMetric = 4000189,
+
+    /// MS1 TIC quantile RT: The amount of time elapsed since the start of the data acquisition until the implied quantile of all MS1 TIC has been accumulated. The number of values in the tuple implies the quantile mode.
+    MS_MS1_TIC_quantile_RT = 4000190,
+
+    /// MS2 TIC quantile RT: The amount of time elapsed since the start of the data acquisition until the implied quantile of all MS2 TIC has been accumulated. The number of values in the tuple implies the quantile mode.
+    MS_MS2_TIC_quantile_RT = 4000191,
+
+    /// MS1 median cycle time: The median time between consecutive MS1 scans across the full run.
+    MS_MS1_median_cycle_time = 4000192,
+
+    /// DIA isolation window median cycle time: The median time between consecutive measurements of the same DIA isolation window across the full run.
+    MS_DIA_isolation_window_median_cycle_time = 4000193,
+
+    /// DIA isolation window count: The number of distinct DIA isolation windows (i.e. sharing the same low m/z boundary, high m/z boundary, and ion mobility parameters).
+    MS_DIA_isolation_window_count_4000194 = 4000194,
+
+    /// DIA isolation window m/z widths: The minimum and maximum m/z width of the DIA isolation windows, defined as the subtraction between the high m/z boundary and the low m/z boundary. For fixed-window DIA methods, the same value is reported twice.
+    MS_DIA_isolation_window_m_z_widths = 4000195,
+
+    /// DIA isolation window count: The minimum and maximum number of times any specific DIA isolation window is measured via MS/MS. In case all isolation windows are sampled the same number of times, this value is reported twice.
+    MS_DIA_isolation_window_count_4000196 = 4000196,
+
+    /// DIA isolation window half TIC RT: The minimum and maximum retention time in which at least half of the TIC for any given DIA isolation window compared to the full TIC in this isolation window has been collected.
+    MS_DIA_isolation_window_half_TIC_RT = 4000197,
+
+    /// DIA isolation window TIC: The minimum and maximum TIC collected in any given DIA isolation window.
+    MS_DIA_isolation_window_TIC = 4000198,
+
+    /// DIA isolation window peak count: For each DIA isolation window, we compute the median number of peaks per MS/MS measurement. This metric reports the lowest and highest peak count medians among the isolation windows.
+    MS_DIA_isolation_window_peak_count = 4000199,
+
+    /// run outlier score PCA distance: Outlier score for MS runs based on the median Euclidean distance for each run to every other run after robust PCA transformation of the QC metrics for all runs.
+    MS_run_outlier_score_PCA_distance = 4000200,
+
+    /// run outlier score LoOP: Outlier score for MS runs based on the local outlier probabilities (LoOP) algorithm applied to QC metrics from all runs.
+    MS_run_outlier_score_LoOP = 4000201,
+
+    /// base peak intensity maximum: The maximum base peak intensity (MS:1000505) of all spectra in a single run.
+    MS_base_peak_intensity_maximum = 4000202,
+
+    /// base peak intensity maxima per time ranges: The maximum base peak intensity (MS:1000505) of all spectra in a single run in the given retention time ranges. The time windows are specified by the 2nd column defining the start time in seconds and the 3rd column defining the duration in seconds. To define a range from a starting time until the run's end, -1 may be used for the duration with 0 for the start.
+    MS_base_peak_intensity_maxima_per_time_ranges = 4000203,
+
+    /// total ion current maximum: The maximum total ion current (MS:1000285) of all spectra in a single run.
+    MS_total_ion_current_maximum = 4000204,
+
+    /// total ion current maxima per time ranges: The maximum total ion current (MS:1000285) of all spectra in a single run in the given retention time ranges. The time windows are specified by the 2nd column defining the start time in seconds and the 3rd column defining the duration in seconds. To define a range from a starting time until the run's end, -1 may be used for the duration with 0 for the start.
+    MS_total_ion_current_maxima_per_time_ranges = 4000205,
+
+    /// precursor ppm deviation distribution: The quantiles of the distribution of observed precursor mass accuracies (MS:4000072) [in ppm] of identified MS2 spectra after user-defined acceptance criteria (FDR) are applied. E.g. one value triplet represents the quartiles Q1, Q2, Q3.
+    MS_precursor_ppm_deviation_distribution = 4000206,
+
+    /// detected quantification data points charges fractions: The fraction of all data points detected for quantification purposes within the run for each specified charge state. The fractions [0,1] are given in the 'fraction' column, corresponding charges in the 'charge state' column. The highest charge state is to be interpreted as that charge state or higher.
+    MS_detected_quantification_data_points_charges_fractions = 4000207,
+
+    /// identified quantification data points charges fractions: The fraction of all data points detected and identified for quantification purposes within the run for each specified charge state. The fractions [0,1] are given in the 'fraction' column, corresponding charges in the 'charge state' column. The highest charge state is to be interpreted as that charge state or higher.
+    MS_identified_quantification_data_points_charges_fractions = 4000208,
+
+    /// peptide spectrum matches charges fractions: The fraction of filtered peptide spectrum matches (PSMs) within the run for each specified charge state. The fractions [0,1] are given in the 'fraction' column, corresponding charges in the 'charge state' column. The highest charge state is to be interpreted as that charge state or higher. The numbers here are recorded after any filtering for PSM level quality (e.g. FDR filtering).
+    MS_peptide_spectrum_matches_charges_fractions = 4000209,
+
+    /// vacuum pump pressure: The vacuum pump pressure of a run, defined by the retention times and respectively applied pressures. The values are similar to the ones saved in MS:1000821, but using a tabular representation.
+    MS_vacuum_pump_pressure = 4000210,
+
+    /// MS1 total ion current: Tabular representation of the total ion current (TIC) of the MS1 spectra. It is a tabular representation of the total ion current detected in each of a series of mass spectra versus time (similar to the MS:1000235, but a mzQC valid table), using only the MS1 spectra.
+    MS_MS1_total_ion_current = 4000211,
+
+    /// MS2 total ion current: Tabular representation of the total ion current (TIC) of the MS2 spectra. It is a tabular representation of the total ion current detected in each of a series of mass spectra versus time (similar to the MS:1000235, but a mzQC valid table), using only the MS2 spectra.
+    MS_MS2_total_ion_current = 4000212,
+
+    /// characteristics of spike in and reference peptide: Observed and expected characteristics for spiked in or reference peptides. The expected peptides are encoded by proforma peptidoform sequence (MS:1003169). The 'predicted retention time' should be interpreted as the expected retention time of a reference measurement.
+    MS_characteristics_of_spike_in_and_reference_peptide = 4000213,
+
+    /// number of all identified accessions in all ambiguity groups: The number of accessions in identified protein ambiguity groups that have been identified. This is the number of accessions in the groups, which were counted in 'MS:1002404 ! count of identified proteins', which hence must be greater or equal to this number.
+    MS_number_of_all_identified_accessions_in_all_ambiguity_groups = 4000214,
+
+    /// missed cleavages fractions: The fraction of identified peptides with corresponding number of missed cleavages after user-defined acceptance criteria are applied. The number of missed cleavages per peptide is given in the 'number of missed cleavages' column, the respective fraction of such peptides identified in the 'fraction' column. The highest 'missed cleavages' row is to be interpreted as that number of missed cleavages or higher.
+    MS_missed_cleavages_fractions = 4000215,
 
     /// unimod root node: The root node of the unimod modifications ontology.
     UNIMOD_unimod_root_node = 300000000,
@@ -16318,7 +17441,7 @@ enum PWIZ_API_DECL CVID
     UO_microampere = 400000038,
 
     /// micromole: A substance unit equal to a millionth of a mol or 10^[-6] mol.
-    UO_micromole_400000039 = 400000039,
+    UO_micromole = 400000039,
 
     /// millimole: A substance unit equal to a thousandth of a mol or 10^[-3] mol.
     UO_millimole = 400000040,
@@ -16764,8 +17887,8 @@ enum PWIZ_API_DECL CVID
     /// count unit: A dimensionless unit which denotes a simple count of things.
     UO_count_unit = 400000189,
 
-    /// ratio: A dimensionless unit which denotes an amount or magnitude of one quantity relative to another.
-    UO_ratio_400000190 = 400000190,
+    /// ratio unit: A dimensionless unit which denotes an amount or magnitude of one quantity relative to another.
+    UO_ratio_unit = 400000190,
 
     /// fraction: A dimensionless ratio unit which relates the part (the numerator) to the whole (the denominator).
     UO_fraction = 400000191,
@@ -16827,7 +17950,7 @@ enum PWIZ_API_DECL CVID
     /// colony forming unit: A dimensionless count unit which a measure of viable bacterial numbers.
     UO_colony_forming_unit = 400000210,
 
-    /// plaque forming unit: A dimensionless count unit which a measure of plague forming units in a given volume.
+    /// plaque forming unit: A dimensionless count unit which a measure of plaque forming units in a given volume.
     UO_plaque_forming_unit = 400000211,
 
     /// colony forming unit per volume: A concentration unit which a measure of viable bacterial numbers in a given volume.
@@ -16836,10 +17959,10 @@ enum PWIZ_API_DECL CVID
     /// colony forming unit per milliliter: A colony forming unit which a measure of viable bacterial numbers in one milliliter.
     UO_colony_forming_unit_per_milliliter = 400000213,
 
-    /// plaque forming unit per volume: A concentration unit which a measure of plague forming units in a given volume.
+    /// plaque forming unit per volume: A concentration unit which a measure of plaque forming units in a given volume.
     UO_plaque_forming_unit_per_volume = 400000214,
 
-    /// plaque forming unit per milliliter: A concentration unit which a measure of plague forming units in one milliliter.
+    /// plaque forming unit per milliliter: A concentration unit which a measure of plaque forming units in one milliliter.
     UO_plaque_forming_unit_per_milliliter = 400000215,
 
     /// disintegrations per second: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second.
@@ -17209,7 +18332,7 @@ enum PWIZ_API_DECL CVID
     UO_millimeters_per_day = 400010005,
 
     /// ratio: A dimensionless ratio unit which, given a pair of quantities a and b, for which b is a multiple of a, denotes b by giving the multiplier (coefficient) c for a to result in b.
-    UO_ratio_400010006 = 400010006,
+    UO_ratio = 400010006,
 
     /// volt-second per square centimeter: An electrical mobility unit which is equal to one volt second per square centimeter.
     UO_volt_second_per_square_centimeter = 400010007,
@@ -17334,8 +18457,8 @@ enum PWIZ_API_DECL CVID
     /// united states fda cup: A United States FDA cup is a unit of measurement of volume used by the US Federal Department of Agriculture as a nutritional serving measure. It equals a 240 mL volume.
     UO_united_states_fda_cup = 400010047,
 
-    /// micromole: A substance unit which is equal to one millionth of a mole.
-    UO_micromole_400010048 = 400010048,
+    /// micromole: DEPRECATED: Duplicate of http://purl.obolibrary.org/obo/UO_0000039. A substance unit which is equal to one millionth of a mole.
+    UO_micromole_OBSOLETE = 400010048,
 
     /// gram per square meter: An area density unit which is equal to the mass of an object in grams divided by the surface area in meters squared.
     UO_gram_per_square_meter = 400010049,
@@ -17386,7 +18509,541 @@ enum PWIZ_API_DECL CVID
     UO_milligray_per_hour = 400010064,
 
     /// milligray per second: A derived absorbed dose unit which is equal to one milligray absorbed per second.
-    UO_milligray_per_second = 400010065
+    UO_milligray_per_second = 400010065,
+
+    /// kilometer: A length unit which is equal to one thousand meters.
+    UO_kilometer = 400010066,
+
+    /// milligram per deciliter: A mass unit density which is equal to mass of an object in milligrams divided by the volume in deciliters.
+    UO_milligram_per_deciliter = 400010067,
+
+    /// microgram per deciliter: A mass unit density which is equal to mass of an object in micrograms divided by the volume in deciliters.
+    UO_microgram_per_deciliter = 400010068,
+
+    /// bar: A pressure unit which is equal to 100,000 pascal or the pressure or stress on a surface caused by a force of 100,000 newtons spread over a surface of 1 m^[2].
+    UO_bar = 400010069,
+
+    /// picogram per milliliter: A gram per milliliter unit which is equal to one picogram per one milliliter.
+    UO_picogram_per_milliliter = 400010070,
+
+    /// microgram per square centimeter: An area density unit which is equal to the mass of an object in micrograms divided by the surface area in square centimeters.
+    UO_microgram_per_square_centimeter = 400010071,
+
+    /// microgram per microliter: A mass unit density which is equal to mass of an object in nanograms divided by the volume in microliters.
+    UO_microgram_per_microliter = 400010072,
+
+    /// cell count: A count unit that denotes a count of cells.
+    UO_cell_count = 400010073,
+
+    /// heartbeats per minute: A rate unit which represents a measurement of the number of an organism's heartbeats per one minute.
+    UO_heartbeats_per_minute = 400010074,
+
+    /// multiplicity of infection: A ratio unit which denotes the quantity of infectious agents to infection targets.
+    UO_multiplicity_of_infection = 400010075,
+
+    /// breaths per minute: A rate unit which represents a measurement of the number of breaths taken by an organism per one minute.
+    UO_breaths_per_minute = 400010076,
+
+    /// PCR quantification cycle: A count unit of how many Polymerase Chain Reaction (PCR) cycles it took to detect a real signal from a sample. Equivalent to the PCR cycle number at which a sample's reaction curve intersects the threshold line.
+    UO_PCR_quantification_cycle = 400010077,
+
+    /// titer: A concentration unit which denotes the minimum amount of a substance in a solution that still yields a positive reading, as determined by serial dilution.
+    UO_titer = 400010080,
+
+    /// meter based unit: 
+    UO_meter_based_unit = 401000008,
+
+    /// second based unit: 
+    UO_second_based_unit = 401000010,
+
+    /// ampere based unit: 
+    UO_ampere_based_unit = 401000011,
+
+    /// kelvin based unit: 
+    UO_kelvin_based_unit = 401000012,
+
+    /// mole based unit: 
+    UO_mole_based_unit = 401000013,
+
+    /// candela based unit: 
+    UO_candela_based_unit = 401000014,
+
+    /// angstrom based unit: 
+    UO_angstrom_based_unit = 401000019,
+
+    /// gram based unit: 
+    UO_gram_based_unit = 401000021,
+
+    /// degree Celsius based unit: 
+    UO_degree_Celsius_based_unit = 401000027,
+
+    /// minute based unit: 
+    UO_minute_based_unit = 401000031,
+
+    /// hour based unit: 
+    UO_hour_based_unit = 401000032,
+
+    /// day based unit: 
+    UO_day_based_unit = 401000033,
+
+    /// week based unit: 
+    UO_week_based_unit = 401000034,
+
+    /// month based unit: 
+    UO_month_based_unit = 401000035,
+
+    /// year based unit: 
+    UO_year_based_unit = 401000036,
+
+    /// molar based unit: 
+    UO_molar_based_unit = 401000062,
+
+    /// molal based unit: 
+    UO_molal_based_unit = 401000068,
+
+    /// normal based unit: 
+    UO_normal_based_unit = 401000075,
+
+    /// mole fraction based unit: 
+    UO_mole_fraction_based_unit = 401000076,
+
+    /// meter per second per second based unit: 
+    UO_meter_per_second_per_second_based_unit = 401000077,
+
+    /// radian per second per second based unit: 
+    UO_radian_per_second_per_second_based_unit = 401000078,
+
+    /// radian per second based unit: 
+    UO_radian_per_second_based_unit = 401000079,
+
+    /// square meter based unit: 
+    UO_square_meter_based_unit = 401000080,
+
+    /// square centimeter based unit: 
+    UO_square_centimeter_based_unit = 401000081,
+
+    /// square millimeter based unit: 
+    UO_square_millimeter_based_unit = 401000082,
+
+    /// gram per cubic centimeter based unit: 
+    UO_gram_per_cubic_centimeter_based_unit = 401000084,
+
+    /// candela per square meter based unit: 
+    UO_candela_per_square_meter_based_unit = 401000085,
+
+    /// gram per mole based unit: 
+    UO_gram_per_mole_based_unit = 401000088,
+
+    /// cubic meter per mole based unit: 
+    UO_cubic_meter_per_mole_based_unit = 401000089,
+
+    /// cubic centimeter per mole based unit: 
+    UO_cubic_centimeter_per_mole_based_unit = 401000090,
+
+    /// turns per second based unit: 
+    UO_turns_per_second_based_unit = 401000092,
+
+    /// cubic meter per kilogram based unit: 
+    UO_cubic_meter_per_kilogram_based_unit = 401000093,
+
+    /// meter per second based unit: 
+    UO_meter_per_second_based_unit = 401000094,
+
+    /// cubic meter based unit: 
+    UO_cubic_meter_based_unit = 401000096,
+
+    /// cubic centimeter based unit: 
+    UO_cubic_centimeter_based_unit = 401000097,
+
+    /// liter based unit: 
+    UO_liter_based_unit = 401000099,
+
+    /// cubic decimeter based unit: 
+    UO_cubic_decimeter_based_unit = 401000100,
+
+    /// hertz based unit: 
+    UO_hertz_based_unit = 401000106,
+
+    /// newton based unit: 
+    UO_newton_based_unit = 401000108,
+
+    /// pascal based unit: 
+    UO_pascal_based_unit = 401000110,
+
+    /// joule based unit: 
+    UO_joule_based_unit = 401000112,
+
+    /// watt based unit: 
+    UO_watt_based_unit = 401000114,
+
+    /// lux based unit: 
+    UO_lux_based_unit = 401000116,
+
+    /// lumen based unit: 
+    UO_lumen_based_unit = 401000118,
+
+    /// katal based unit: 
+    UO_katal_based_unit = 401000120,
+
+    /// radian based unit: 
+    UO_radian_based_unit = 401000123,
+
+    /// steradian based unit: 
+    UO_steradian_based_unit = 401000125,
+
+    /// becquerel based unit: 
+    UO_becquerel_based_unit = 401000132,
+
+    /// curie based unit: 
+    UO_curie_based_unit = 401000133,
+
+    /// gray based unit: 
+    UO_gray_based_unit = 401000134,
+
+    /// rad based unit: 
+    UO_rad_based_unit = 401000135,
+
+    /// roentgen based unit: 
+    UO_roentgen_based_unit = 401000136,
+
+    /// sievert based unit: 
+    UO_sievert_based_unit = 401000137,
+
+    /// Roentgen equivalent man based unit: 
+    UO_Roentgen_equivalent_man_based_unit = 401000140,
+
+    /// disintegrations per minute based unit: 
+    UO_disintegrations_per_minute_based_unit = 401000147,
+
+    /// counts per minute based unit: 
+    UO_counts_per_minute_based_unit = 401000148,
+
+    /// century based unit: 
+    UO_century_based_unit = 401000151,
+
+    /// half life based unit: 
+    UO_half_life_based_unit = 401000152,
+
+    /// foot candle based unit: 
+    UO_foot_candle_based_unit = 401000153,
+
+    /// watt per square meter based unit: 
+    UO_watt_per_square_meter_based_unit = 401000155,
+
+    /// einstein per square meter per second based unit: 
+    UO_einstein_per_square_meter_per_second_based_unit = 401000156,
+
+    /// watt per steradian per square meter based unit: 
+    UO_watt_per_steradian_per_square_meter_based_unit = 401000158,
+
+    /// watt per steradian based unit: 
+    UO_watt_per_steradian_based_unit = 401000162,
+
+    /// mass percentage based unit: 
+    UO_mass_percentage_based_unit = 401000163,
+
+    /// mass volume percentage based unit: 
+    UO_mass_volume_percentage_based_unit = 401000164,
+
+    /// volume percentage based unit: 
+    UO_volume_percentage_based_unit = 401000165,
+
+    /// parts per hundred based unit: 
+    UO_parts_per_hundred_based_unit = 401000167,
+
+    /// parts per thousand based unit: 
+    UO_parts_per_thousand_based_unit = 401000168,
+
+    /// parts per million based unit: 
+    UO_parts_per_million_based_unit = 401000169,
+
+    /// parts per billion based unit: 
+    UO_parts_per_billion_based_unit = 401000170,
+
+    /// parts per trillion based unit: 
+    UO_parts_per_trillion_based_unit = 401000171,
+
+    /// parts per quadrillion based unit: 
+    UO_parts_per_quadrillion_based_unit = 401000172,
+
+    /// gram per milliliter based unit: 
+    UO_gram_per_milliliter_based_unit = 401000173,
+
+    /// gram per liter based unit: 
+    UO_gram_per_liter_based_unit = 401000175,
+
+    /// unit per milliliter based unit: 
+    UO_unit_per_milliliter_based_unit = 401000178,
+
+    /// unit per liter based unit: 
+    UO_unit_per_liter_based_unit = 401000179,
+
+    /// mass per unit volume based unit: 
+    UO_mass_per_unit_volume_based_unit = 401000180,
+
+    /// enzyme unit based unit: 
+    UO_enzyme_unit_based_unit = 401000181,
+
+    /// degree based unit: 
+    UO_degree_based_unit = 401000185,
+
+    /// pi based unit: 
+    UO_pi_based_unit = 401000188,
+
+    /// molecule count based unit: 
+    UO_molecule_count_based_unit = 401000192,
+
+    /// purity percentage based unit: 
+    UO_purity_percentage_based_unit = 401000193,
+
+    /// confluence percentage based unit: 
+    UO_confluence_percentage_based_unit = 401000194,
+
+    /// degree Fahrenheit based unit: 
+    UO_degree_Fahrenheit_based_unit = 401000195,
+
+    /// pH based unit: 
+    UO_pH_based_unit = 401000196,
+
+    /// liter per kilogram based unit: 
+    UO_liter_per_kilogram_based_unit = 401000197,
+
+    /// cells per milliliter based unit: 
+    UO_cells_per_milliliter_based_unit = 401000201,
+
+    /// katal per cubic meter based unit: 
+    UO_katal_per_cubic_meter_based_unit = 401000203,
+
+    /// katal per liter based unit: 
+    UO_katal_per_liter_based_unit = 401000204,
+
+    /// gram per deciliter based unit: 
+    UO_gram_per_deciliter_based_unit = 401000208,
+
+    /// colony forming unit based unit: 
+    UO_colony_forming_unit_based_unit = 401000210,
+
+    /// plaque forming unit based unit: 
+    UO_plaque_forming_unit_based_unit = 401000211,
+
+    /// colony forming unit per milliliter based unit: 
+    UO_colony_forming_unit_per_milliliter_based_unit = 401000213,
+
+    /// plaque forming unit per milliliter based unit: 
+    UO_plaque_forming_unit_per_milliliter_based_unit = 401000215,
+
+    /// disintegrations per second based unit: 
+    UO_disintegrations_per_second_based_unit = 401000216,
+
+    /// volt based unit: 
+    UO_volt_based_unit = 401000218,
+
+    /// coulomb based unit: 
+    UO_coulomb_based_unit = 401000220,
+
+    /// dalton based unit: 
+    UO_dalton_based_unit = 401000221,
+
+    /// watt-hour based unit: 
+    UO_watt_hour_based_unit = 401000223,
+
+    /// weber based unit: 
+    UO_weber_based_unit = 401000226,
+
+    /// tesla based unit: 
+    UO_tesla_based_unit = 401000228,
+
+    /// volt-hour based unit: 
+    UO_volt_hour_based_unit = 401000229,
+
+    /// bit based unit: 
+    UO_bit_based_unit = 401000232,
+
+    /// byte based unit: 
+    UO_byte_based_unit = 401000233,
+
+    /// chroma sampling unit based unit: 
+    UO_chroma_sampling_unit_based_unit = 401000237,
+
+    /// dynamic range unit based unit: 
+    UO_dynamic_range_unit_based_unit = 401000238,
+
+    /// dots per inch based unit: 
+    UO_dots_per_inch_based_unit = 401000240,
+
+    /// pixels per inch based unit: 
+    UO_pixels_per_inch_based_unit = 401000242,
+
+    /// pixels per millimeter based unit: 
+    UO_pixels_per_millimeter_based_unit = 401000243,
+
+    /// base pair based unit: 
+    UO_base_pair_based_unit = 401000244,
+
+    /// kibibyte based unit: 
+    UO_kibibyte_based_unit = 401000245,
+
+    /// mebibyte based unit: 
+    UO_mebibyte_based_unit = 401000246,
+
+    /// newton per meter based unit: 
+    UO_newton_per_meter_based_unit = 401000254,
+
+    /// dyne per cm based unit: 
+    UO_dyne_per_cm_based_unit = 401000255,
+
+    /// pascal second based unit: 
+    UO_pascal_second_based_unit = 401000257,
+
+    /// poise based unit: 
+    UO_poise_based_unit = 401000258,
+
+    /// effective dose unit based unit: 
+    UO_effective_dose_unit_based_unit = 401000260,
+
+    /// siemens based unit: 
+    UO_siemens_based_unit = 401000264,
+
+    /// watt per meter kelvin based unit: 
+    UO_watt_per_meter_kelvin_based_unit = 401000265,
+
+    /// electronvolt based unit: 
+    UO_electronvolt_based_unit = 401000266,
+
+    /// volt per meter based unit: 
+    UO_volt_per_meter_based_unit = 401000268,
+
+    /// absorbance unit based unit: 
+    UO_absorbance_unit_based_unit = 401000269,
+
+    /// count per nanomolar second based unit: 
+    UO_count_per_nanomolar_second_based_unit = 401000281,
+
+    /// count per molar second based unit: 
+    UO_count_per_molar_second_based_unit = 401000282,
+
+    /// count per nanomolar based unit: 
+    UO_count_per_nanomolar_based_unit = 401000284,
+
+    /// count per molar based unit: 
+    UO_count_per_molar_based_unit = 401000285,
+
+    /// dosage unit based unit: 
+    UO_dosage_unit_based_unit = 401000310,
+
+    /// relative light unit based unit: 
+    UO_relative_light_unit_based_unit = 401000312,
+
+    /// relative luminescence unit based unit: 
+    UO_relative_luminescence_unit_based_unit = 401000313,
+
+    /// relative fluorescence unit based unit: 
+    UO_relative_fluorescence_unit_based_unit = 401000314,
+
+    /// square micrometer based unit: 
+    UO_square_micrometer_based_unit = 401010001,
+
+    /// hectare based unit: 
+    UO_hectare_based_unit = 401010010,
+
+    /// inch based unit: 
+    UO_inch_based_unit = 401010011,
+
+    /// thou based unit: 
+    UO_thou_based_unit = 401010012,
+
+    /// foot based unit: 
+    UO_foot_based_unit = 401010013,
+
+    /// yard based unit: 
+    UO_yard_based_unit = 401010014,
+
+    /// chain based unit: 
+    UO_chain_based_unit = 401010015,
+
+    /// furlong based unit: 
+    UO_furlong_based_unit = 401010016,
+
+    /// mile based unit: 
+    UO_mile_based_unit = 401010017,
+
+    /// league based unit: 
+    UO_league_based_unit = 401010018,
+
+    /// maritime length unit based unit: 
+    UO_maritime_length_unit_based_unit = 401010019,
+
+    /// fathom based unit: 
+    UO_fathom_based_unit = 401010020,
+
+    /// cable based unit: 
+    UO_cable_based_unit = 401010021,
+
+    /// nautical mile based unit: 
+    UO_nautical_mile_based_unit = 401010022,
+
+    /// perch based unit: 
+    UO_perch_based_unit = 401010023,
+
+    /// rood based unit: 
+    UO_rood_based_unit = 401010024,
+
+    /// acre based unit: 
+    UO_acre_based_unit = 401010025,
+
+    /// fluid ounce based unit: 
+    UO_fluid_ounce_based_unit = 401010026,
+
+    /// gill based unit: 
+    UO_gill_based_unit = 401010027,
+
+    /// pint based unit: 
+    UO_pint_based_unit = 401010028,
+
+    /// quart based unit: 
+    UO_quart_based_unit = 401010029,
+
+    /// gallon based unit: 
+    UO_gallon_based_unit = 401010030,
+
+    /// grain based unit: 
+    UO_grain_based_unit = 401010031,
+
+    /// drachm based unit: 
+    UO_drachm_based_unit = 401010032,
+
+    /// ounce based unit: 
+    UO_ounce_based_unit = 401010033,
+
+    /// pound based unit: 
+    UO_pound_based_unit = 401010034,
+
+    /// stone based unit: 
+    UO_stone_based_unit = 401010035,
+
+    /// quarter based unit: 
+    UO_quarter_based_unit = 401010036,
+
+    /// hundredweight based unit: 
+    UO_hundredweight_based_unit = 401010037,
+
+    /// ton based unit: 
+    UO_ton_based_unit = 401010038,
+
+    /// slug based unit: 
+    UO_slug_based_unit = 401010039,
+
+    /// teaspoon based unit: 
+    UO_teaspoon_based_unit = 401010040,
+
+    /// gram per square meter based unit: 
+    UO_gram_per_square_meter_based_unit = 401010049,
+
+    /// large calorie based unit: 
+    UO_large_calorie_based_unit = 401010051,
+
+    /// gray per minute based unit: 
+    UO_gray_per_minute_based_unit = 401010060
 }; // enum CVID
 
 

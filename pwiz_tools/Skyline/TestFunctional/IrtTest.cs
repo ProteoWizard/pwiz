@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestFunctional
              * Check that the database was created successfully
              * Check that it has the correct numbers of standard and library peptides
              */
-            IrtDb db = IrtDb.GetIrtDb(databasePath, null);
+            IrtDb db = IrtDb.GetIrtDb(databasePath);
 
             Assert.AreEqual(numStandardPeps, db.StandardPeptideCount);
             Assert.AreEqual(numLibraryPeps, db.LibraryPeptideCount);
@@ -812,7 +812,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.NewDocument();
             });
             // The created irtdb should have document XML for the standard peptides
-            var irtDb = IrtDb.GetIrtDb(calcPath, null);
+            var irtDb = IrtDb.GetIrtDb(calcPath);
             Assert.IsFalse(string.IsNullOrEmpty(irtDb.DocumentXml));
             // Set RT regression to None
             RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(), dlg =>
@@ -1168,7 +1168,7 @@ namespace pwiz.SkylineTestFunctional
 
             void CheckIrtDbFile(bool expectDuplicates, out DbIrtPeptide[] arrStandards, out DbIrtPeptide[] arrLibrary, out Target[] arrOverlap)
             {
-                IrtDb.GetIrtDb(dbPath, null, out var dbPeptides);
+                IrtDb.GetIrtDb(dbPath, out var dbPeptides);
                 arrStandards = dbPeptides.Where(pep => pep.Standard).ToArray();
                 arrLibrary = dbPeptides.Where(pep => !pep.Standard).ToArray();
                 arrOverlap = arrStandards.Select(pep => pep.ModifiedTarget).Intersect(arrLibrary.Select(pep => pep.ModifiedTarget)).ToArray();
@@ -1394,7 +1394,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void CheckIrtDbFile()
         {
-            var db = IrtDb.GetIrtDb(_dbPath, null, out var dbPeptides);
+            var db = IrtDb.GetIrtDb(_dbPath, out var dbPeptides);
             Assert.AreEqual(_redundant, db.Redundant);
 
             var dbHistories = new Dictionary<long, List<double>>();

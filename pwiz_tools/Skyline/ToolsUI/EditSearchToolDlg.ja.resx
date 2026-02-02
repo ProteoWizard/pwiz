@@ -310,6 +310,9 @@
   <data name="lblExtraArgs.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
+  <data name="lblExtraArgs.Text" xml:space="preserve">
+    <value>追加のコマンドライン引数(&amp;E):</value>
+  </data>
   <data name="&gt;&gt;lblExtraArgs.Name" xml:space="preserve">
     <value>lblExtraArgs</value>
   </data>
@@ -392,8 +395,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Edit Tool</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>編集ツール</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>

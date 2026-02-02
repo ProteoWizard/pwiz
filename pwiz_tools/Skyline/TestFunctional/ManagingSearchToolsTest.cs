@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
                 editToolDlg.ToolPath = TestFilesDir.GetTestPath("msfragger.bat");
             });
             var errorDlg = ShowDialog<MessageDlg>(editToolDlg.OkDialog);
-            Assert.AreEqual("The tool MSFragger is already configured.", errorDlg.Message);
+            Assert.AreEqual(string.Format(ToolsUIResources.EditSearchToolDlg_OkDialog_The_tool__0__is_already_configured_, "MSFragger"), errorDlg.Message);
             OkDialog(errorDlg);
 
             // test empty path error

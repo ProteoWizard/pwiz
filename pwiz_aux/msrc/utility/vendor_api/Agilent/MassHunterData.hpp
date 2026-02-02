@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/BinaryData.hpp"
 #include "pwiz/utility/chemistry/MzMobilityWindow.hpp"
+#include "XmlMetadataParser.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -328,6 +329,12 @@ typedef boost::shared_ptr<Frame> FramePtr;
 
 class PWIZ_API_DECL MassHunterData
 {
+    // caching for sample_info.xml and Devices.xml
+    mutable std::map<std::string, std::string> sampleInfoMap_;
+    mutable std::vector<Device> devices_;
+    mutable bool metadataLoaded_ = false;
+    void loadMetadataIfNeeded() const;
+
     protected:
     std::string massHunterRootPath_; // path to a .d directory with AcqData in it
 
@@ -368,17 +375,21 @@ class PWIZ_API_DECL MassHunterData
     virtual const pwiz::util::BinaryData<double>& getBpcTimes(bool ms1Only = false) const = 0;
     virtual const pwiz::util::BinaryData<float>& getTicIntensities(bool ms1Only = false) const = 0;
     virtual const pwiz::util::BinaryData<float>& getBpcIntensities(bool ms1Only = false) const = 0;
+ 
+     /// rowNumber is a 0-based index
+     virtual ScanRecordPtr getScanRecord(int rowNumber) const = 0;
+     virtual SpectrumPtr getProfileSpectrumByRow(int rowNumber) const = 0;
+     virtual SpectrumPtr getPeakSpectrumByRow(int rowNumber, PeakFilterPtr peakFilter = PeakFilterPtr()) const = 0;
+ 
+     /// scanId is an identifier used for spectrum cross references (i.e. "parent scan id")
+     virtual SpectrumPtr getProfileSpectrumById(int scanId) const = 0;
+     virtual SpectrumPtr getPeakSpectrumById(int scanId, PeakFilterPtr peakFilter = PeakFilterPtr()) const = 0;
 
-    /// rowNumber is a 0-based index
-    virtual ScanRecordPtr getScanRecord(int rowNumber) const = 0;
-    virtual SpectrumPtr getProfileSpectrumByRow(int rowNumber) const = 0;
-    virtual SpectrumPtr getPeakSpectrumByRow(int rowNumber, PeakFilterPtr peakFilter = PeakFilterPtr()) const = 0;
-
-    /// scanId is an identifier used for spectrum cross references (i.e. "parent scan id")
-    virtual SpectrumPtr getProfileSpectrumById(int scanId) const = 0;
-    virtual SpectrumPtr getPeakSpectrumById(int scanId, PeakFilterPtr peakFilter = PeakFilterPtr()) const = 0;
-
-    virtual ~MassHunterData() noexcept(false) {}
+     // Sample-info (sample_info.xml) accessors: key/value pairs parsed from AcqData/sample_info.xml
+     std::map<std::string, std::string> getSampleInfoMap() const;
+     const std::string& getSampleInfoValue(const std::string& key, const std::string& defaultValue = "") const;
+ 
+     virtual ~MassHunterData() noexcept(false) {}
 };
 
 typedef MassHunterData::Ptr MassHunterDataPtr;
