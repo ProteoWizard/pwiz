@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.Irt
                 RCalcIrt calcResult;
                 if (!_loadedCalculators.TryGetValue(calc.Name, out calcResult))
                 {
-                    calcResult = calc.Initialize(loadMonitor, ref status);
+                    calcResult = calc.InitializeIrt(loadMonitor, ref status);
                     if (calcResult != null)
                         _loadedCalculators.Add(calcResult.Name, calcResult);
                 }
