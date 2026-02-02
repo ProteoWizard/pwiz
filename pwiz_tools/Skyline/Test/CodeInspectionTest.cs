@@ -702,7 +702,7 @@ namespace pwiz.SkylineTest
             var allowedBomExtensions = new[] { ".tli", ".tlh" };
 
             // Directories to skip (build outputs, test results, Git submodules, etc.)
-            var skipDirectories = new[] { "\\bin\\", "\\obj\\", "\\TestResults\\", "\\SkylineTester Results\\", "\\Executables\\BullseyeSharp\\", "\\Executables\\Hardklor\\", "\\Executables\\DevTools\\DocumentConverter\\" };
+            var skipDirectories = new[] { "\\bin\\", "\\obj\\", "\\TestResults\\", "\\SkylineTester Results\\", "\\Executables\\BullseyeSharp\\", "\\Executables\\Hardklor\\", "\\Executables\\DevTools\\DocumentConverter\\", "\\Prosit\\Config\\" };
 
             // Search paths: All projects in Skyline.sln
             var searchPaths = new List<string> { root };
