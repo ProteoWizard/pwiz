@@ -1313,7 +1313,9 @@ namespace pwiz.Skyline.Model
                         probeFile.ReadOrThrow(probeBuf, 0, CHUNKSIZE);
                         probeBuf[CHUNKSIZE - 1] = 0;
                         var probeString = Encoding.UTF8.GetString(probeBuf);
-                        if (!probeString.Contains(@"<srm_settings"))
+                        if (!probeString.Contains(@"<srm_settings") &&
+                            !path.EndsWith(EXT, StringComparison.OrdinalIgnoreCase) &&
+                            !path.EndsWith(SrmDocumentSharing.EXT_SKY_ZIP, StringComparison.OrdinalIgnoreCase))
                         {
                             // Check if this is a known mass spec data file format
                             var sourceType = DataSourceUtil.GetSourceType(path);
