@@ -1000,7 +1000,7 @@ namespace pwiz.SkylineTestUtil
                 DocViewer = ShowDialog<DocumentationViewer>(showViewer);
 
                 // Wait for the document to load completely in WebView2
-                WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Length > 0);
+                WaitForConditionUI(() => DocViewer.GetWebView2HtmlContent(100).Contains("<table"));
             }
             
             public DocumentationViewer DocViewer { get; }
