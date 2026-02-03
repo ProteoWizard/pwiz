@@ -256,6 +256,12 @@ namespace pwiz.Skyline.Util
                         item.Visible = isActive;
                     }
                     mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
+
+                    // Recursively translate submenu items (e.g. "Peptide Comparison" under the Graph submenu)
+                    foreach (var menuItem in activeItems.OfType<ToolStripMenuItem>().Where(m => m.HasDropDownItems))
+                    {
+                        TranslateMenuItems(menuItem.DropDownItems, modeUI, extender);
+                    }
                 }
             }
 

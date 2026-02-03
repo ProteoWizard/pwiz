@@ -3090,6 +3090,14 @@ namespace pwiz.Skyline
 
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);
 
+            RemoveZedGraphMenuItemsAndCheckModeUI(menuStrip, items);
+        }
+
+        /// <summary>
+        /// Removes unwanted ZedGraph menu items and translates text for UI mode.
+        /// </summary>
+        private void RemoveZedGraphMenuItemsAndCheckModeUI(ToolStrip menuStrip, ToolStripItem[] items)
+        {
             // Remove some ZedGraph menu items not of interest
             foreach (var item in items)
             {
@@ -3097,6 +3105,9 @@ namespace pwiz.Skyline
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
+
+            // Translate "Peptide" to "Molecule" etc. based on UI mode (recurses into submenus)
+            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, DocumentUI.DocumentType, modeUIHandler);
         }
 
         private void AddScopeContextMenu(ToolStrip menuStrip, int iInsert)
@@ -4050,13 +4061,7 @@ namespace pwiz.Skyline
                 ChromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
             }
 
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
+            RemoveZedGraphMenuItemsAndCheckModeUI(menuStrip, items);
         }
 
         private void OnLabelOverlapClick(object o, EventArgs eventArgs)
@@ -5098,13 +5103,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, massErrorPropsContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator28);
 
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
+            RemoveZedGraphMenuItemsAndCheckModeUI(menuStrip, items);
         }
 
         private int AddPointsContextMenu(ToolStrip menuStrip, int iInsert)
