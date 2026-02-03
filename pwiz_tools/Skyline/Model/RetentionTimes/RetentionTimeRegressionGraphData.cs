@@ -282,7 +282,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 else
                 {
                     var usableCalculators = RegressionSettings.GetCalculators().Where(calc => calc.IsUsable).ToList();
-                    if (RegressionSettings.CalculatorName == null)
+                    var calcName = RegressionSettings.CalculatorName;
+                    if (calcName == null)
                     {
                         var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL, usableCalculators, targetTimes, null, true,
                             RegressionSettings.RegressionMethod, token);
@@ -294,7 +295,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     else
                     {
                         // Initialize the one calculator
-                        var calc = usableCalculators.FirstOrDefault();
+                        var calc = usableCalculators.FirstOrDefault(c =>
+                            // If the calculator was not found, the list can end up containing all usable calculators
+                            // and returning the first will just mean showing another calculator's scores as coming
+                            // from the named one.
+                            Equals(new RtCalculatorOption.Irt(c.Name), RegressionSettings.CalculatorName));
                         if (calc != null)
                         {
                             _regressionAll = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL,
@@ -393,7 +398,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             private void Refine(CancellationToken cancellationToken)
             {
-                if(!_calculator.IsUsable)
+                if(_calculator == null || !_calculator.IsUsable)
                     return;
 
                 var outlierPoints = new List<PointInfo>();
