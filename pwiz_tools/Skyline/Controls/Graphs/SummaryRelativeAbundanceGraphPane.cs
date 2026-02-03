@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using pwiz.Common.SystemUtil;
@@ -61,6 +62,56 @@ namespace pwiz.Skyline.Controls.Graphs
         private const int PROGRESS_INITIAL_DELAY_MS = 300; // Wait before showing progress bar
         private const int PROGRESS_UPDATE_INTERVAL_MS = 100; // Throttle progress UI updates after first show
         private NodeTip _toolTip;
+        private BackgroundWorker _labelLayoutWorker;
+        private CancellationTokenSource _labelLayoutCts;
+        private IProgressStatus _labelLayoutStatus;
+        private int _labelLayoutRequestId;
+        private int _labelLayoutLastProgressMs;
+        private const int LABEL_LAYOUT_PROGRESS_INTERVAL_MS = 200;
+        private bool _suppressAxisChangeLayout;
+
+        private class LabelLayoutWorkItem
+        {
+            public int RequestId;
+            public List<LabeledPoint> VisiblePoints;
+            public List<LabeledPoint.PointLayout> SavedLayout;
+            public CancellationTokenSource Cancellation;
+        }
+
+        private class LabelLayoutWorkResult
+        {
+            public int RequestId;
+            public LabelLayout LabelLayout;
+            public LabelLayout.LayoutResult Result;
+        }
+
+        private sealed class WorkerProgress : IProgress<int>
+        {
+            private readonly BackgroundWorker _worker;
+            private readonly int _requestId;
+            private readonly CancellationTokenSource _cancellation;
+
+            public WorkerProgress(BackgroundWorker worker, int requestId, CancellationTokenSource cancellation)
+            {
+                _worker = worker;
+                _requestId = requestId;
+                _cancellation = cancellation;
+            }
+
+            public void Report(int value)
+            {
+                if (_worker.CancellationPending || _cancellation.IsCancellationRequested)
+                    return;
+                try
+                {
+                    _worker.ReportProgress(value, _requestId);
+                }
+                catch (InvalidOperationException)
+                {
+                    // Ignore race if worker has already completed.
+                }
+            }
+        }
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
@@ -73,6 +124,8 @@ namespace pwiz.Skyline.Controls.Graphs
             _labeledPoints = new List<LabeledPoint>();
 
             AxisChangeEvent += this_AxisChangeEvent;
+            LayoutRequested += this_LayoutRequested;
+            graphSummary.GraphControl.ZoomAllOutEvent += GraphControl_ZoomAllOutEvent;
             Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
             graphSummary.GraphControl.LabelDragEvent += zedGraphControl_LabelDragComplete;
             graphSummary.GraphControl.EditModifierKeys = Keys.Alt;  // enable label drag with Alt key
@@ -94,6 +147,162 @@ namespace pwiz.Skyline.Controls.Graphs
                 receiver,
                 CleanCacheForIncrementalUpdates);
             _graphDataReceiver.ProgressChange += UpdateProgressHandler;
+        }
+
+        private void StartLabelLayoutAsync(List<LabeledPoint> labeledPoints, List<LabeledPoint.PointLayout> savedLayout = null)
+        {
+            if (GraphSummary.GraphControl.IsDisposed)
+                return;
+
+            _labelLayoutRequestId++;
+            var requestId = _labelLayoutRequestId;
+
+            if (_labelLayoutWorker != null && _labelLayoutWorker.IsBusy)
+                _labelLayoutWorker.CancelAsync();
+            if (_labelLayoutCts != null)
+            {
+                try
+                {
+                    _labelLayoutCts.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Ignore race if prior worker already disposed its CTS.
+                }
+            }
+            if (_labelLayoutStatus != null && Program.MainWindow is IProgressMonitor progressMonitorCancel)
+                progressMonitorCancel.UpdateProgress(_labelLayoutStatus.Cancel());
+            _labelLayoutCts = new CancellationTokenSource();
+            var workerCancellation = _labelLayoutCts;
+
+            // DigitalRune docking panel sometimes is resized with negative chart width, which crashes the layout algorithm.
+            if (!labeledPoints.Any() || GraphSummary.GraphControl.GraphPane.Chart.Rect.Width <= 0 || GraphSummary.GraphControl.GraphPane.Chart.Rect.Height <= 0)
+                return;
+            // Need this to make sure the coordinate transforms work correctly.
+            GraphSummary.GraphControl.GraphPane.XAxis.Scale.SetupScaleData(GraphSummary.GraphControl.GraphPane, GraphSummary.GraphControl.GraphPane.XAxis);
+            GraphSummary.GraphControl.GraphPane.YAxis.Scale.SetupScaleData(GraphSummary.GraphControl.GraphPane, GraphSummary.GraphControl.GraphPane.YAxis);
+
+            var chartRect = new RectangleF((float)GraphSummary.GraphControl.GraphPane.XAxis.Scale.Min, (float)GraphSummary.GraphControl.GraphPane.YAxis.Scale.Min,
+                (float)(GraphSummary.GraphControl.GraphPane.XAxis.Scale.Max - GraphSummary.GraphControl.GraphPane.XAxis.Scale.Min),
+                (float)(GraphSummary.GraphControl.GraphPane.YAxis.Scale.Max - GraphSummary.GraphControl.GraphPane.YAxis.Scale.Min));
+            var visiblePoints = new List<LabeledPoint>();
+            foreach (var labeledPoint in labeledPoints)
+            {
+                if (chartRect.Contains(new PointF((float)labeledPoint.Point.X, (float)labeledPoint.Point.Y)))
+                {
+                    labeledPoint.Label.IsDraggable = true;
+                    labeledPoint.Label.IsVisible = true;
+                    visiblePoints.Add(labeledPoint);
+                }
+                else
+                {
+                    labeledPoint.Label.IsVisible = false;
+                    GraphSummary.GraphControl.GraphPane.GraphObjList.Remove(labeledPoint.Connector);
+                }
+            }
+
+            if (!visiblePoints.Any())
+                return;
+
+            var progressMonitor = Program.MainWindow as IProgressMonitor;
+            IProgressStatus status = new ProgressStatus("Label layout");
+            _labelLayoutStatus = status;
+            progressMonitor?.UpdateProgress(status);
+            _labelLayoutLastProgressMs = 0;
+
+            var worker = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
+            _labelLayoutWorker = worker;
+
+            worker.DoWork += (s, e) =>
+            {
+                var workItem = (LabelLayoutWorkItem)e.Argument;
+                var bw = (BackgroundWorker)s;
+                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    var heights = workItem.VisiblePoints.Select(p => GraphSummary.GraphControl.GraphPane.GetRectScreen(p.Label, g).Height).ToList();
+                    if (!heights.Any(h => h > 0))
+                    {
+                        e.Result = new LabelLayoutWorkResult { RequestId = workItem.RequestId };
+                        return;
+                    }
+                    var minLabelHeight = heights.FindAll(h => h > 0).Min();
+                    var labelLayout = new LabelLayout(GraphSummary.GraphControl.GraphPane, (int)Math.Ceiling(minLabelHeight));
+                    var progress = new WorkerProgress(bw, workItem.RequestId, workItem.Cancellation);
+
+                    var result = labelLayout.ComputePlacementsSimulatedAnnealing(workItem.VisiblePoints, g, workItem.SavedLayout,
+                        workItem.Cancellation.Token, progress);
+                    if (bw.CancellationPending || workItem.Cancellation.IsCancellationRequested)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+
+                    e.Result = new LabelLayoutWorkResult
+                    {
+                        RequestId = workItem.RequestId,
+                        LabelLayout = labelLayout,
+                        Result = result
+                    };
+                }
+            };
+
+            worker.ProgressChanged += (s, e) =>
+            {
+                if (!(e.UserState is int id) || id != _labelLayoutRequestId)
+                    return;
+                var now = Environment.TickCount;
+                if (e.ProgressPercentage < 100 &&
+                    _labelLayoutLastProgressMs != 0 &&
+                    unchecked(now - _labelLayoutLastProgressMs) < LABEL_LAYOUT_PROGRESS_INTERVAL_MS)
+                    return;
+                _labelLayoutLastProgressMs = now;
+                status = status.ChangePercentComplete(e.ProgressPercentage);
+                _labelLayoutStatus = status;
+                progressMonitor?.UpdateProgress(status);
+            };
+
+            worker.RunWorkerCompleted += (s, e) =>
+            {
+                workerCancellation.Dispose();
+                if (requestId != _labelLayoutRequestId)
+                    return;
+
+                if (e.Cancelled || _labelLayoutCts.IsCancellationRequested)
+                {
+                    status = status.Cancel();
+                }
+                else if (e.Error != null)
+                {
+                    status = status.ChangeErrorException(e.Error);
+                }
+                else
+                {
+                    var result = e.Result as LabelLayoutWorkResult;
+                    if (result?.Result != null)
+                    {
+                        using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                        {
+                            if (GraphSummary.GraphControl.GraphPane.ApplyLabelLayout(result.LabelLayout, result.Result, g))
+                            {
+                                _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                                GraphSummary.GraphControl.Invalidate();
+                            }
+                        }
+                    }
+                    status = status.ChangePercentComplete(100);
+                }
+
+                _labelLayoutStatus = status;
+                progressMonitor?.UpdateProgress(status);
+            };
+
+            worker.RunWorkerAsync(new LabelLayoutWorkItem
+            {
+                RequestId = requestId,
+                VisiblePoints = visiblePoints,
+                SavedLayout = savedLayout ?? new List<LabeledPoint.PointLayout>(),
+                Cancellation = workerCancellation
+            });
         }
 
         /// <summary>
@@ -232,8 +441,30 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             base.OnClose(e);
             AxisChangeEvent -= this_AxisChangeEvent;
+            LayoutRequested -= this_LayoutRequested;
+            GraphSummary.GraphControl.ZoomAllOutEvent -= GraphControl_ZoomAllOutEvent;
             Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
             GraphSummary.GraphControl.LabelDragEvent -= zedGraphControl_LabelDragComplete;
+            if (_labelLayoutWorker != null && _labelLayoutWorker.IsBusy)
+                _labelLayoutWorker.CancelAsync();
+            if (_labelLayoutCts != null)
+            {
+                try
+                {
+                    _labelLayoutCts.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Ignore race if worker already disposed its CTS.
+                }
+            }
+            if (_labelLayoutStatus != null && Program.MainWindow is IProgressMonitor progressMonitor)
+                progressMonitor.UpdateProgress(_labelLayoutStatus.Cancel());
+            if (_labelLayoutWorker == null || !_labelLayoutWorker.IsBusy)
+            {
+                _labelLayoutCts?.Dispose();
+                _labelLayoutCts = null;
+            }
             _toolTip?.HideTip();
             _toolTip?.Dispose();
         }
@@ -319,9 +550,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
-                    GraphSummary.GraphControl.Invalidate();
+                    StartLabelLayoutAsync(_labeledPoints);
                 }
             }
         }
@@ -489,9 +718,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Clear only when new data is ready for seamless transition
-            Clear();
-            _labeledPoints.Clear();
-            _graphData = newGraphData;
+            _suppressAxisChangeLayout = true;
+            try
+            {
+                Clear();
+                _labeledPoints.Clear();
+                _graphData = newGraphData;
             // Find selected index - quick O(n) scan on UI thread
             _graphData.SelectedIndex = _graphData.FindSelectedIndex(selectedProtein);
             bool dataChanged = _graphData.MinY != oldGraphData?.MinY || _graphData.MaxY != oldGraphData?.MaxY;
@@ -544,21 +776,25 @@ namespace pwiz.Skyline.Controls.Graphs
                     unmatchedPoints = unmatchedPoints.Except(matchedPoints).ToList();
                 }
             }
-            AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
-            if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
-                UpdateAxes();
-            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
-            {
-                AdjustLabelSpacings(_labeledPoints, _labelsLayout);
-                _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
+                if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
+                    UpdateAxes();
+                if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+                {
+                    StartLabelLayoutAsync(_labeledPoints, _labelsLayout);
+                }
+                else
+                {
+                    EnableLabelLayout = false;
+                    DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale,
+                        GraphSummary.GraphControl.GraphPane.Rect.Height);
+                }
+                GraphSummary.GraphControl.Invalidate();
             }
-            else
+            finally
             {
-                EnableLabelLayout = false;
-                DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale,
-                    GraphSummary.GraphControl.GraphPane.Rect.Height);
+                _suppressAxisChangeLayout = false;
             }
-            GraphSummary.GraphControl.Invalidate();
         }
 
         public bool IsComplete
@@ -608,20 +844,31 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void this_AxisChangeEvent(GraphPane pane)
         {
+            if (_suppressAxisChangeLayout)
+                return;
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                    StartLabelLayoutAsync(_labeledPoints);
                 }
                 else
                 {
-                    AdjustLabelSpacings(_labeledPoints, _labelsLayout);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                    StartLabelLayoutAsync(_labeledPoints, _labelsLayout);
                     //UpdateConnectors();
                 }
             }
+        }
+
+        private void this_LayoutRequested(object sender, EventArgs e)
+        {
+            if (sender is GraphPane pane)
+                this_AxisChangeEvent(pane);
+        }
+
+        private void GraphControl_ZoomAllOutEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        {
+            this_AxisChangeEvent(this);
         }
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)

@@ -42,6 +42,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 
 namespace ZedGraph
@@ -61,6 +62,12 @@ namespace ZedGraph
         private LayoutSignature? _lastSignature;
 
         public Dictionary<TextObj, LabeledPoint> LabeledPoints => _labeledPoints;
+
+        public class LayoutResult
+        {
+            internal LayoutSignature Signature;
+            public Dictionary<LabeledPoint, PointF> Placements;
+        }
 
         public List<LabeledPoint.PointLayout> PointsLayout
         {
@@ -338,6 +345,15 @@ namespace ZedGraph
             return new PointF(rect.Left + rect.Width / 2, rect.Top);
         }
 
+        private PointF GetTopCenterFromLabelLocation(TextObj label, PointF labelLocation, Graphics g)
+        {
+            var tempLabel = label.Clone();
+            tempLabel.Location.X = labelLocation.X;
+            tempLabel.Location.Y = labelLocation.Y;
+            var rect = _graph.GetRectScreen(tempLabel, g);
+            return new PointF(rect.Left + rect.Width / 2, rect.Top);
+        }
+
         private Dictionary<LabeledPoint, PointF> CopyPlacement(Dictionary<LabeledPoint, PointF> source)
         {
             return source.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -425,19 +441,26 @@ namespace ZedGraph
         /// </summary>
         public void PlaceLabelsSimulatedAnnealing(List<LabeledPoint> points, Graphics g, List<LabeledPoint.PointLayout> savedLayout = null)
         {
-            if (!points.Any())
+            var result = ComputePlacementsSimulatedAnnealing(points, g, savedLayout, CancellationToken.None, null);
+            if (result == null)
                 return;
+            ApplyPlacements(result, g);
+        }
+
+        public LayoutResult ComputePlacementsSimulatedAnnealing(List<LabeledPoint> points, Graphics g,
+            List<LabeledPoint.PointLayout> savedLayout, CancellationToken cancellationToken, IProgress<int> progress)
+        {
+            if (!points.Any())
+                return null;
             // This logic avoids recomputing the layout if the points have not changed since last time
             // ZedGraph code has a tendency to call AxisChange multiple times for each zoom.
             var signature = ComputeSignature(points);
             if (_lastSignature.HasValue && _lastSignature.Value.Equals(signature))
-                return;
-
-            _labeledPoints.Clear();
+                return null;
 
             var labelSizes = points.ToDictionary(p => p, p => _graph.GetRectScreen(p.Label, g).Size);
             if (labelSizes.Values.Any(sz => sz.Height <= 0 || sz.Width <= 0))
-                return;
+                return null;
 
             var targetPoints = points.ToDictionary(p => p, p => _graph.TransformCoord(p.Point.X, p.Point.Y, CoordType.AxisXYScale));
             var targetMarkers = new Dictionary<LabeledPoint, RectangleF>();
@@ -461,9 +484,7 @@ namespace ZedGraph
 
                 if (savedPoint != null)
                 {
-                    point.Label.Location.X = savedPoint.LabelLocation.X;
-                    point.Label.Location.Y = savedPoint.LabelLocation.Y;
-                    var topCenter = GetTopCenter(point, g);
+                    var topCenter = GetTopCenterFromLabelLocation(point.Label, savedPoint.LabelLocation, g);
                     placements[point] = ClampToAllowed(topCenter, size);
                 }
                 else
@@ -478,7 +499,7 @@ namespace ZedGraph
             }
 
             if (placements.Count == 0)
-                return;
+                return null;
             var pointList = placements.Keys.ToList();
             var baseCosts = pointList.ToDictionary(p => p,
                 p => BaseCost(p, labelSizes, targetPoints, targetMarkers, placements));
@@ -506,6 +527,8 @@ namespace ZedGraph
             var acceptanceScale = 1.0f * points.Count;
             var bestPlacement = CopyPlacement(placements);
             var bestCost = currentCost;
+            var lastPercent = -1;
+            progress?.Report(0);
 #if DEBUG
             // Log the annealing process for debugging
             StreamWriter log = null;
@@ -525,6 +548,9 @@ namespace ZedGraph
 #endif
             for (var iter = 0; iter < maxIterations; iter++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    return null;
+
                 var temp = startTemp - cooling * iter;
                 if (temp < minTemp || !movablePoints.Any())
                     break;
@@ -578,6 +604,12 @@ namespace ZedGraph
                         pairCosts[kvp.Key][point] = kvp.Value;
                     }
                 }
+                var percent = (int)Math.Round((iter + 1) * 100.0 / maxIterations);
+                if (percent != lastPercent)
+                {
+                    lastPercent = percent;
+                    progress?.Report(percent);
+                }
 #if DEBUG
                 var jump = accept && delta > 0 ? 1 : 0;
                 if (log != null)
@@ -588,9 +620,26 @@ namespace ZedGraph
             if (log != null)
                 log.Dispose();
 #endif
+            progress?.Report(100);
             placements = bestPlacement;
+            return new LayoutResult
+            {
+                Signature = signature,
+                Placements = placements
+            };
+        }
+
+        public bool ApplyPlacements(LayoutResult result, Graphics g)
+        {
+            if (result == null || result.Placements.Count == 0)
+                return false;
+
+            var labelSizes = result.Placements.Keys.ToDictionary(p => p, p => _graph.GetRectScreen(p.Label, g).Size);
+            if (labelSizes.Values.Any(sz => sz.Height <= 0 || sz.Width <= 0))
+                return false;
+
             _labeledPoints.Clear();
-            foreach (var kv in placements)
+            foreach (var kv in result.Placements)
             {
                 var point = kv.Key;
                 var labelSize = labelSizes[point];
@@ -598,7 +647,8 @@ namespace ZedGraph
                 AddLabel(point, labelLocation);
             }
 
-            _lastSignature = signature;
+            _lastSignature = result.Signature;
+            return true;
         }
 
         /// <summary>
@@ -750,7 +800,7 @@ namespace ZedGraph
                    seg.DoIntersect(new VectorF(bl, tl));
         }
 
-        private struct LayoutSignature
+        internal struct LayoutSignature
         {
             public int PointCount;
             public double Checksum;

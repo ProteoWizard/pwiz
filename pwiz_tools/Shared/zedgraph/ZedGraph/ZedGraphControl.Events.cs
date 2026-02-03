@@ -75,6 +75,25 @@ namespace ZedGraph
 		public event ZoomEventHandler ZoomEvent;
 
 		/// <summary>
+		/// A delegate that allows notification of "Zoom All Out" events.
+		/// </summary>
+		/// <param name="sender">The source <see cref="ZedGraphControl"/> object</param>
+		/// <param name="oldState">A <see cref="ZoomState"/> object that corresponds to the state of the
+		/// <see cref="GraphPane"/> before the zoom event.</param>
+		/// <param name="newState">A <see cref="ZoomState"/> object that corresponds to the state of the
+		/// <see cref="GraphPane"/> after the zoom event</param>
+		/// <seealso cref="ZoomAllOutEvent" />
+		public delegate void ZoomAllOutEventHandler( ZedGraphControl sender, ZoomState oldState, ZoomState newState );
+
+		/// <summary>
+		/// Subscribe to this event to be notified when the <see cref="GraphPane"/> is fully zoomed out
+		/// via the "Undo All Zoom/Pan" command.
+		/// </summary>
+		[Bindable( true ), Category( "Events" ),
+		 Description( "Subscribe to this event to be notified when the graph is zoomed all the way out" )]
+		public event ZoomAllOutEventHandler ZoomAllOutEvent;
+
+		/// <summary>
 		/// A delegate that allows notification of scroll events.
 		/// </summary>
 		/// <param name="sender">The source <see cref="ZedGraphControl"/> object</param>

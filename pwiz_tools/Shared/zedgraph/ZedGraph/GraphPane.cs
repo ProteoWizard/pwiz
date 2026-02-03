@@ -161,6 +161,16 @@ namespace ZedGraph
 		}
 		public LabelLayout Layout => _labelLayout;
 
+		/// <summary>
+		/// Raised when plot changes occur that should trigger a label layout update.
+		/// </summary>
+		public event EventHandler LayoutRequested;
+
+		internal void OnLayoutRequested()
+		{
+			LayoutRequested?.Invoke(this, EventArgs.Empty);
+		}
+
 	#endregion
 
 	#region Defaults
@@ -1582,6 +1592,32 @@ namespace ZedGraph
                     }
 				}
             }
+        }
+
+        public bool ApplyLabelLayout(LabelLayout labelLayout, LabelLayout.LayoutResult result, Graphics g)
+        {
+            if (labelLayout == null || result == null)
+                return false;
+
+            if (_labelLayout != null)
+            {
+                foreach (var existing in _labelLayout.LabeledPoints.Values)
+                {
+                    GraphObjList.Remove(existing.Connector);
+                }
+            }
+
+            _labelLayout = labelLayout;
+            if (!_labelLayout.ApplyPlacements(result, g))
+                return false;
+
+            foreach (var labPoint in _labelLayout.LabeledPoints.Values)
+            {
+                GraphObjList.Remove(labPoint.Connector);
+                _labelLayout.DrawConnector(labPoint, g);
+            }
+
+            return true;
         }
 
         public void UpdateConnectors()
