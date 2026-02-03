@@ -666,9 +666,9 @@
   </data>
   <data name="SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file" xml:space="preserve">
     <value>The file "{0}" appears to be a {1} mass spectrometry data file, rather than a Skyline document (.sky or .sky.zip file).
-To work with mass spec data in Skyline, first set up targets (see Help &gt; Tutorials), then use File &gt; Import &gt; Results to extract chromatograms for your targets from your mass spec data.
-If you don't have targets yet, you can use File &gt; Search to find potential targets in your data.
-If you just want to inspect your data, use a viewer like SeeMS (download from proteowizard.sourceforge.io).</value>
+If you are trying to search the file for peptides or molecules in the raw data, please use File &gt; Search.
+Otherwise, to work with mass spec data in Skyline, first set up targets (see Help &gt; Tutorials), then use File &gt; Import &gt; Results to extract chromatograms for your targets from your mass spec data.
+If you want to inspect the raw data, use a viewer like SeeMS (download from proteowizard.org).</value>
   </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>The peptide {0} was found multiple times with user modifications.</value>

@@ -71,6 +71,20 @@ namespace pwiz.SkylineTestFunctional
                     string.Format(ModelResources.SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file,
                         Path.GetFileName(mzmlFile), DataSourceUtil.TYPE_MZML));
             }
+            // .sky file with non-Skyline content - should get generic "not a Skyline document" error
+            {
+                var fakeSkyFile = TestFilesDir.GetTestPath("notreally.sky");
+                File.WriteAllText(fakeSkyFile, ExampleText.TEXT_EMPTY_MZML);
+                var fakeSkyLogFile = TestFilesDir.GetTestPath("notreally.log");
+                var process = Process.Start(GetProcessStartInfo(
+                    "\"--in=" + fakeSkyFile + "\" --log-file=\"" + fakeSkyLogFile + "\""));
+                WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
+                Assert.IsTrue(File.Exists(fakeSkyLogFile), string.Format("Missing log file {0}", fakeSkyLogFile));
+                var fakeSkyLogText = File.ReadAllText(fakeSkyLogFile, Encoding.UTF8);
+                AssertEx.Contains(fakeSkyLogText,
+                    string.Format(ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                        fakeSkyFile, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP));
+            }
             // success
             string validFile = TestFilesDir.GetTestPath("SkylineCmdTest.sky");
             string logFile = TestFilesDir.GetTestPath("success.log");

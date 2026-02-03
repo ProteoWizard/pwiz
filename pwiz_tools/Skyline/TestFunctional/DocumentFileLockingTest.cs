@@ -94,6 +94,19 @@ namespace pwiz.SkylineTestFunctional
                     messageDlg.OkDialog();
                 });
             }
+
+            // Test opening a .sky file with non-Skyline content - should show generic "not a Skyline document" error
+            {
+                var fakeSkyFile = TestFilesDir.GetTestPath("notreally.sky");
+                File.WriteAllText(fakeSkyFile, ExampleText.TEXT_EMPTY_MZML);
+                RunDlg<MessageDlg>(() => Program.MainWindow.OpenFile(fakeSkyFile), messageDlg =>
+                {
+                    AssertEx.Contains(messageDlg.Message,
+                        string.Format(ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                            fakeSkyFile, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP));
+                    messageDlg.OkDialog();
+                });
+            }
         }
     }
 }

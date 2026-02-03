@@ -1313,20 +1313,22 @@ namespace pwiz.Skyline.Model
                         probeFile.ReadOrThrow(probeBuf, 0, CHUNKSIZE);
                         probeBuf[CHUNKSIZE - 1] = 0;
                         var probeString = Encoding.UTF8.GetString(probeBuf);
-                        if (!probeString.Contains(@"<srm_settings") &&
-                            !path.EndsWith(EXT, StringComparison.OrdinalIgnoreCase) &&
-                            !path.EndsWith(SrmDocumentSharing.EXT_SKY_ZIP, StringComparison.OrdinalIgnoreCase))
+                        if (!probeString.Contains(@"<srm_settings"))
                         {
-                            // Check if this is a known mass spec data file format
-                            var sourceType = DataSourceUtil.GetSourceType(path);
-                            if (!Equals(sourceType, DataSourceUtil.UNKNOWN_TYPE) &&
-                                !Equals(sourceType, DataSourceUtil.FOLDER_TYPE))
+                            if (!PathEx.HasExtension(path, EXT) &&
+                                !PathEx.HasExtension(path, SrmDocumentSharing.EXT_SKY_ZIP))
                             {
-                                explained = string.Format(
-                                    ModelResources.SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file,
-                                    Path.GetFileName(path), sourceType);
+                                // Check if this is a known mass spec data file format
+                                var sourceType = DataSourceUtil.GetSourceType(path);
+                                if (!Equals(sourceType, DataSourceUtil.UNKNOWN_TYPE) &&
+                                    !Equals(sourceType, DataSourceUtil.FOLDER_TYPE))
+                                {
+                                    explained = string.Format(
+                                        ModelResources.SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file,
+                                        Path.GetFileName(path), sourceType);
+                                }
                             }
-                            else
+                            if (string.IsNullOrEmpty(explained))
                             {
                                 explained = string.Format(
                                     ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
