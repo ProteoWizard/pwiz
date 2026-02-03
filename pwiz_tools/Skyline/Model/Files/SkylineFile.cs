@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NHibernate.Mapping;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
