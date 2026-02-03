@@ -116,9 +116,6 @@ namespace pwiz.SkylineTestFunctional
                 _documents.Clear();
             });
             Assert.IsTrue(SkylineWindow.Document.Settings.DocumentRetentionTimes.ResultFileAlignments.IsEmpty);
-
-            // Wait for the document to be loaded so that it does not get switched out during a ReadPeaks call which might reopen a file stream
-            WaitForDocumentLoaded();
         }
 
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)

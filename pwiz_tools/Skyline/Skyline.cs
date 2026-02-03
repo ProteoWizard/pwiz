@@ -734,17 +734,19 @@ namespace pwiz.Skyline
             if (logChange != null)
                 logChange(docNew, docOriginal);
 
-            SrmDocument docResult;
-            lock (_documentChangeLock)
+            using (new DocumentStreams(this))
             {
-                docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
+                SrmDocument docResult;
+                lock (_documentChangeLock)
+                {
+                    docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
+                }
+                if (!ReferenceEquals(docResult, docOriginal))
+                    return false;
+
+                if (DocumentChangedEvent != null)
+                    DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
             }
-
-            if (!ReferenceEquals(docResult, docOriginal))
-                return false;
-
-            if (DocumentChangedEvent != null)
-                DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
 
             RunUIActionAsync(UpdateDocumentUI);
 

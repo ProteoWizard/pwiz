@@ -153,13 +153,6 @@ namespace pwiz.Skyline.Model.Results
             _multiFileLoader.Dispose();
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            if (document == null || !document.Settings.HasResults)
-                return new IPooledStream[0];
-            return document.Settings.MeasuredResults.ReadStreams;
-        }
-
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             SrmSettings settings = container.Document.Settings;

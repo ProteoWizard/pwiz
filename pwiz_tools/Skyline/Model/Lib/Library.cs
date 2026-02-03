@@ -91,18 +91,6 @@ namespace pwiz.Skyline.Model.Lib
             return !libraries.HasLibraries ? null : libraries.IsNotLoadedExplained;
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            if (document == null)
-                yield break;
-            var libraries = document.Settings.PeptideSettings.Libraries.Libraries;
-            foreach (var readStream in libraries.Where(library => library != null)
-                                                .SelectMany(library => library.ReadStreams))
-            {
-                yield return readStream;
-            }
-        }
-
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             if (tag == null)

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -29,6 +30,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
+using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -224,12 +226,41 @@ namespace pwiz.Skyline.Util
                 IDisposable connection;
                 if (_connections.TryGetValue(id.GlobalIndex, out connection))
                     return connection;
+                if (!(id is IPooledStream pooledStream))
+                {
+                    Console.Out.WriteLine("Not a pooled stream");
+                }
+                else if (!GetAllTrackedStreams().Contains(ReferenceValue.Of(pooledStream)))
+                {
+                    Console.Out.WriteLine("Untracked stream opening");
+                }
                 // Connection must be made inside lock to keep the get and add
                 // within a single synchronized block.
                 connection = connect();
                 _connections.Add(id.GlobalIndex, connection);
                 return connection;
             }            
+        }
+
+        public static HashSet<ReferenceValue<IPooledStream>> GetAllTrackedStreams()
+        {
+            var hashSet = new HashSet<ReferenceValue<IPooledStream>>();
+            lock (DocumentStreams.AllDocumentStreams)
+            {
+                hashSet.UnionWith(DocumentStreams.AllDocumentStreams.SelectMany(docStreams=>docStreams.GetTrackedStreams()).Select(ReferenceValue.Of));
+            }
+
+            var allDocuments = new List<SrmDocument>();
+            allDocuments.Add(Program.MainWindow?.Document);
+            foreach (var doc in allDocuments)
+            {
+                if (doc != null)
+                {
+                    hashSet.UnionWith(doc.GetOpenStreams().Select(ReferenceValue.Of));
+                }
+            }
+
+            return hashSet;
         }
 
         /// <summary>

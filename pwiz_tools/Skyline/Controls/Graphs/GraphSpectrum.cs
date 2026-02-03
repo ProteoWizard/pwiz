@@ -1284,7 +1284,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // And make sure it is not disposed, since rendering happens on a timer
             if (!Visible || IsDisposed)
                 return;
-
+            using var documentStreams = new DocumentStreams(_documentContainer);
             // Try to find a tree node with spectral library info associated
             // with the current selection.
             var selection = SpectrumNodeSelection.GetCurrent(_stateProvider);

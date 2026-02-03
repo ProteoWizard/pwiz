@@ -57,7 +57,6 @@ namespace pwiz.SkylineTestFunctional
                     minimizeResultsDlg.Minimize(false);
                 });
             }, manageResultsDlg => { });
-            WaitForDocumentLoaded();
             var cachedFiles = SkylineWindow.Document.MeasuredResults.CachedFilePaths.ToHashSet();
             foreach (var filePath in SkylineWindow.Document.MeasuredResults.MSDataFilePaths)
             {

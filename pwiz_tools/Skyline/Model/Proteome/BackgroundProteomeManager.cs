@@ -119,11 +119,6 @@ namespace pwiz.Skyline.Model.Proteome
             return document.Settings.PeptideSettings.BackgroundProteome;
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            yield break;
-        }
-
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             return _monitor == null ? ForegroundLoadRequested : _monitor.IsCanceled(); // Foreground task has monitor, background task may be interrupted by foreground

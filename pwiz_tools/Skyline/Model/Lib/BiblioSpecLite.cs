@@ -916,6 +916,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             ProgressStatus status = new ProgressStatus(string.Empty);
             loader.UpdateProgress(status);
+            EnsureConnections(loader.StreamManager);
+            using var documentStreams = new DocumentStreams(ReadStreams);
             try
             {
                 if (ReadFromDatabase(loader, status))
@@ -939,10 +941,6 @@ namespace pwiz.Skyline.Model.Lib
                     throw new Exception(FormatErrorMessage(x), x);
                 }
             }
-            // Close any streams that got opened
-            foreach (var pooledStream in ReadStreams)
-                pooledStream.CloseStream();
-
             return false;
         }
 
