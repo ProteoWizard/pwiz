@@ -26,7 +26,17 @@ using pwiz.Common.GUI;
 
 namespace pwiz.Common.SystemUtil
 {
-    public class CommonFormEx : Form, IFormView
+    /// <summary>
+    /// Implemented by form base classes to signal that the form is closing or disposing.
+    /// Background threads should check this before calling BeginInvoke to avoid deadlock
+    /// when .NET attempts to recreate a handle on a closing form.
+    /// </summary>
+    public interface IClosingAware
+    {
+        bool IsClosingOrDisposing { get; }
+    }
+
+    public class CommonFormEx : Form, IFormView, IClosingAware
     {
         /// <summary>
         /// Flag indicating the form is closing or disposing. Set early (in OnFormClosing)
