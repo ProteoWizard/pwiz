@@ -180,12 +180,14 @@ namespace pwiz.Skyline.Menus
             {
                 string tag = (string)item.Tag;
                 if (tag == @"set_default" || tag == @"show_val")
+                {
                     menuStrip.Items.Remove(item);
+                }
             }
             ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
 
             // Translate "Peptide" to "Molecule" etc. based on UI mode (recurses into submenus)
-            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, DocumentUI.DocumentType, modeUIHandler);
+            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, Program.ModeUI, modeUIHandler, recurse: true);
         }
 
         /// <summary>

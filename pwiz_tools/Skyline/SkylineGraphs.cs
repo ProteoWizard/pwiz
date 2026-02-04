@@ -3107,7 +3107,7 @@ namespace pwiz.Skyline
             }
 
             // Translate "Peptide" to "Molecule" etc. based on UI mode (recurses into submenus)
-            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, DocumentUI.DocumentType, modeUIHandler);
+            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, Program.ModeUI, modeUIHandler, recurse: true);
         }
 
         private void AddScopeContextMenu(ToolStrip menuStrip, int iInsert)

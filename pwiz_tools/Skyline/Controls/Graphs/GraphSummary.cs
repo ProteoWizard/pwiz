@@ -167,8 +167,7 @@ namespace pwiz.Skyline.Controls.Graphs
                              new DefaultStateProvider();
 
             Type = type;
-            Text = Controller.Text + @" - " + Type.CustomToString();
-            Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
+            SetTitleWithModeUITranslation(Controller.Text + @" - " + Type.CustomToString());
 
             UpdateUI();
         }
@@ -308,6 +307,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             UpdateGraph(selectionChanged);
             UpdateToolbar();
+            UpdateTitleForModeUI();
         }
 
         public void UpdateUIWithoutToolbar(bool selectionChanged = true)
