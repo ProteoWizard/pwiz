@@ -1447,6 +1447,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Label layout.
+        /// </summary>
+        public static string LabelLayoutRunner_Start_Label_layout {
+            get {
+                return ResourceManager.GetString("LabelLayoutRunner_Start_Label_layout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to m/z.
         /// </summary>
         public static string MassErrorHistogram2DGraphPane_Graph_Mz {

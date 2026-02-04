@@ -763,4 +763,7 @@ Here are the last 3 errors:
   <data name="GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate" xml:space="preserve">
 	  <value>Exemplary Replicate</value>
   </data>
+  <data name="LabelLayoutRunner_Start_Label_layout" xml:space="preserve">
+    <value>Label layout</value>
+  </data>
 </root>

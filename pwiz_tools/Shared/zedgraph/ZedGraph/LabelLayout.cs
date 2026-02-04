@@ -56,7 +56,7 @@ namespace ZedGraph
         private Dictionary<TextObj, LabeledPoint> _labeledPoints = new Dictionary<TextObj, LabeledPoint>();
         private const float CROSSOVER_PENALTY = 5000f;
         private const float LABEL_OVERLAP_PENALTY = 5000f;
-        private const float TARGET_OVERLAP_PENALTY = 300f;
+        private const float TARGET_OVERLAP_PENALTY = 3000f;
         private const float CONNECTOR_LABEL_OVERLAP_PENALTY = 1500f;
         private const float DISTANCE_SCALE = 10000f;
         private LayoutSignature? _lastSignature;
@@ -88,12 +88,10 @@ namespace ZedGraph
 
         private class GridCell
         {
-            public PointF _location;
             public RectangleF _bounds;
             public float _density;
             // public PointF _gradient;
             public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
-            public Point _indices;
         }
 
         // First index row, second index line
@@ -114,9 +112,7 @@ namespace ZedGraph
                     var location = new Point(j * _cellSize, i * _cellSize) + chartOffset;
                     _densityGrid[i][j] = new GridCell()
                     {
-                        _location = location,
                         _bounds = new RectangleF(location, new SizeF(_cellSize, _cellSize)),
-                        _indices = new Point(j, i)
                     };
                 }
             }
@@ -146,7 +142,7 @@ namespace ZedGraph
             }
         }
 
-        private bool GetPointMarkerRectangle(PointF pt, out RectangleF rect)
+        private void GetPointMarkerRectangle(PointF pt, out RectangleF rect)
         {
             rect = RectangleF.Empty;
             foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
@@ -163,10 +159,9 @@ namespace ZedGraph
                         }
                         var sides = Array.ConvertAll(coords.Split(','), int.Parse);
                         rect = new Rectangle(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
-                        return true;
-                    }                }
+                    }
+                }
             }
-            return false;
         }
 
         /// <summary>
@@ -319,7 +314,7 @@ namespace ZedGraph
         {
             var chartRect = _graph.Chart.Rect;
             var left = chartRect.Left + labelSize.Width / 2;
-            var top = chartRect.Top;
+            var top = chartRect.Top + labelSize.Height/2;
             var width = Math.Max(0, chartRect.Width - labelSize.Width);
             var height = Math.Max(0, chartRect.Height - labelSize.Height);
             return new RectangleF(left, top, width, height);
@@ -522,7 +517,7 @@ namespace ZedGraph
             var startTemp = 7.0f;
             var minTemp = 0.1f;
             // Linear cooling
-            var maxIterations = Math.Max(700, points.Count * 50);
+            var maxIterations = Math.Max(700, points.Count * 75);
             var cooling = (startTemp - minTemp) / maxIterations;
             var acceptanceScale = 1.0f * points.Count;
             var bestPlacement = CopyPlacement(placements);
@@ -534,15 +529,15 @@ namespace ZedGraph
             StreamWriter log = null;
             try
             {
-                var logPath = Path.Combine(Environment.CurrentDirectory, $"LabelLayoutAnneal.csv");
+                var logPath = Path.Combine(Environment.CurrentDirectory, @"LabelLayoutAnneal.csv");
                 if (File.Exists(logPath))
                     File.Delete(logPath);
                 log = new StreamWriter(logPath);
-                log.WriteLine("iteration,point_count,temperature,cost, delta, jump");
+                log.WriteLine(@"iteration,point_count,temperature,cost, delta, jump");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"LabelLayout: unable to open anneal log file: {ex.Message}");
+                Console.WriteLine(@$"LabelLayout: unable to open anneal log file: {ex.Message}");
                 log = null;
             }
 #endif
@@ -613,7 +608,8 @@ namespace ZedGraph
 #if DEBUG
                 var jump = accept && delta > 0 ? 1 : 0;
                 if (log != null)
-                    log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString()},{bestCost.ToString()}, {delta.ToString()}, {jump}");
+                    log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString(CultureInfo.InvariantCulture)}," +
+                                  $"{bestCost.ToString(CultureInfo.InvariantCulture)}, {delta.ToString(CultureInfo.InvariantCulture)}, {jump}");
 #endif
             }
 #if DEBUG
