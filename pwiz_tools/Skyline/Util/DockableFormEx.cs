@@ -105,6 +105,9 @@ namespace pwiz.Skyline.Util
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
+            // Set the flag after base call in case a handler cancelled the close.
+            // This gives background threads early warning before handle destruction,
+            // helping SafeBeginInvoke avoid deadlock.
             if (!e.Cancel)
                 _isClosingOrDisposing = true;
         }
