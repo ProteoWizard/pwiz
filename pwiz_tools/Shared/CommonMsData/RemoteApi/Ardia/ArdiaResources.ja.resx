@@ -127,4 +127,100 @@
   <data name="ArdiaAccount_GetAuthenticatedHttpClient_Failed_to_open_Ardia_connection" xml:space="preserve">
     <value>Ardia接続を開くことができませんでした</value>
   </data>
+  <data name="FileUpload_Status_ProgressWithSize" xml:space="preserve">
+    <value>{0:N0}% 完了。{1:N0}/{2:N0} MBをアップロードしました。</value>
+  </data>
+  <data name="FileUpload_Status_CreatingDocument" xml:space="preserve">
+    <value>アップロードを完了しました。ドキュメントを作成中です。</value>
+  </data>
+  <data name="FileUpload_ServerFolders" xml:space="preserve">
+    <value>Ardiaフォルダ:</value>
+  </data>
+  <data name="FileUpload_AvailableFreeSpace_Unlimited" xml:space="preserve">
+    <value>利用可能なストレージ：無制限</value>
+  </data>
+  <data name="FileUpload_AvailableFreeSpace_WithSize" xml:space="preserve">
+    <value>利用可能なストレージ： {0}</value>
+  </data>
+  <data name="FileUpload_Success" xml:space="preserve">
+    <value>ドキュメントのArdiaへのアップロードに成功しました。</value>
+  </data>
+  <data name="FileUpload_Error" xml:space="preserve">
+    <value>ドキュメントを公開できません。サーバーとの通信中に問題が発生しました。</value>
+  </data>
+  <data name="FileUpload_Error_DocumentTooLargeForServer" xml:space="preserve">
+    <value>ドキュメントを公開できません。ドキュメントのサイズはサーバー上で利用可能なストレージスペースを超えています。</value>
+  </data>
+  <data name="OpenFolder_Title" xml:space="preserve">
+    <value>フォルダを開いています {0}</value>
+  </data>
+  <data name="OpenFolder_Error_Folder" xml:space="preserve">
+    <value>「{0}」を開くことができません。サーバーとの通信中に問題が発生しました。</value>
+  </data>
+  <data name="OpenFolder_Error_Server" xml:space="preserve">
+    <value>Ardiaサーバー上のフォルダ「{0}」を開くことができません。サーバーとの通信中に問題が発生しました。</value>
+  </data>
+  <data name="GetDocument_Error" xml:space="preserve">
+    <value>ドキュメント「{0}」取得中のエラー。サーバーとの通信中に問題が発生しました。</value>
+  </data>
+  <data name="CreateFolder_DefaultFolderName" xml:space="preserve">
+    <value>新規フォルダ</value>
+  </data>
+  <data name="CreateFolder_Title" xml:space="preserve">
+    <value>フォルダを作成</value>
+  </data>
+  <data name="CreateFolder_Success" xml:space="preserve">
+    <value>フォルダ「{0}」を作成しました。</value>
+  </data>
+  <data name="CreateFolder_Error" xml:space="preserve">
+    <value>フォルダ「{0}」を作成できません。サーバーとの通信中に問題が発生しました。</value>
+  </data>
+  <data name="CreateFolder_InputValidationError_BlankName" xml:space="preserve">
+    <value>フォルダ名はブランクにできません。</value>
+  </data>
+  <data name="CreateFolder_InputValidationError_IllegalCharacter" xml:space="preserve">
+    <value>フォルダ名にこれらの文字{0}を含めることはできません。</value>
+  </data>
+  <data name="CreateFolder_InputValidationError_FileAlreadyExists" xml:space="preserve">
+    <value>フォルダ「{0}」を作成できません。その名前の項目がすでに存在します。</value>
+  </data>
+  <data name="CreateFolder_Error_Forbidden" xml:space="preserve">
+    <value>フォルダ「{0}」を作成できません。「{1}」にフォルダを作成する権限をお持ちですか？</value>
+  </data>
+  <data name="DeleteFolder_Error" xml:space="preserve">
+    <value>フォルダ「{0}」を削除できません。サーバーとの通信中に問題が発生しました。</value>
+  </data>
+  <data name="Error_Detail" xml:space="preserve">
+    <value>エラー詳細： </value>
+  </data>
+  <data name="Error_Host" xml:space="preserve">
+    <value>ホスト： {0}</value>
+  </data>
+  <data name="Error_Path" xml:space="preserve">
+    <value>パス： {0}</value>
+  </data>
+  <data name="Error_StatusCode_Unexpected" xml:space="preserve">
+    <value>予期しないエラーコード。</value>
+  </data>
+  <data name="Error_StatusCode" xml:space="preserve">
+    <value>コード：{0} ({1})</value>
+  </data>
+  <data name="Error_FileName" xml:space="preserve">
+    <value>ファイル名： {0}</value>
+  </data>
+  <data name="Error_FilePath" xml:space="preserve">
+    <value>ファイルパス： {0}</value>
+  </data>
+  <data name="Error_UploadId" xml:space="preserve">
+    <value>アップロードID： {0}</value>
+  </data>
+  <data name="Error_Size" xml:space="preserve">
+    <value>サイズ（バイト数）： {0}</value>
+  </data>
+  <data name="Error_ProblemCommunicatingWithServer" xml:space="preserve">
+    <value>Ardiaとの通信中に問題が発生しました。ネットワーク接続を確認してください。</value>
+  </data>
+  <data name="Error_InvalidToken" xml:space="preserve">
+    <value>Ardiaとの通信中に問題が発生しました。[Skylineのツール] &gt; [オプション]メニューの[リモートアカウント]タブでArdiaの接続を確認してからもう一度実行してください。</value>
+  </data>
 </root>

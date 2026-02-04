@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var uploadResultDlg = TryWaitForOpenForm<MessageDlg>(2000);
                 Assert.IsNotNull(uploadResultDlg);
-                Assert.IsTrue(uploadResultDlg.Message.StartsWith("Upload successful"), "Method upload error: \n" + uploadResultDlg.DetailMessage);
+                Assert.IsTrue(uploadResultDlg.Message.StartsWith(FileUIResources.ExportMethodDlg_OkDialog_WC_Upload_Successful), "Method upload error: \n" + uploadResultDlg.DetailedMessage);
                 uploadResultDlg.OkDialog();
             });
         }

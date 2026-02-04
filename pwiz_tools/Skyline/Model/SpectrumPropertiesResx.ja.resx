@@ -109,6 +109,9 @@
   <data name="Category_PrecursorInfo" xml:space="preserve">
     <value>プリカーサー</value>
   </data>
+  <data name="Category_SpectrumInfo" xml:space="preserve">
+    <value>スペクトル統計データ</value>
+  </data>
   <data name="CCS" xml:space="preserve">
     <value>CCS</value>
   </data>
@@ -156,6 +159,18 @@
   </data>
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>ライブラリ内にあるこのペプチドに対して測定されたスペクトルの数</value>
+  </data>
+  <data name="Description_PeakCount">
+    <value>ライブラリスペクトルのピーク数</value>
+  </data>
+  <data name="Description_TotalIC">
+    <value>ライブラリスペクトルのすべてのピーク強度の合計</value>
+  </data>
+  <data name="Description_MirrorPeakCount">
+    <value>ミラースペクトルのゼロ以外のピークの数</value>
+  </data>
+  <data name="Description_MirrorTotalIC">
+    <value>ミラースペクトルのすべてのピーク強度の合計</value>
   </data>
   <data name="Description_KoinaDotpMatch" xml:space="preserve">
     <value>ライブラリとKoinaスペクトルの注釈付きピーク間のドット積（実際には正規化平方根コントラストアングル、こちらの例を参照: https://doi.org/10.1007/s13361-016-1408-y)。ユーザーはどのイオンタイプに注釈を付け、計算に含めるかを選択できます。</value>
@@ -205,8 +220,17 @@
   <data name="SpectrumCount" xml:space="preserve">
     <value>スペクトル数</value>
   </data>
+  <data name="PeakCount">
+    <value>ピーク数</value>
+  </data>
   <data name="TotalIC">
     <value>総イオン電流</value>
+  </data>
+  <data name="MirrorPeakCount">
+    <value>ミラーピーク数</value>
+  </data>
+  <data name="MirrorTotalIC">
+    <value>ミラー総イオン電流</value>
   </data>
   <data name="KoinaDotpMatch" xml:space="preserve">
     <value>Koinaドット積</value>

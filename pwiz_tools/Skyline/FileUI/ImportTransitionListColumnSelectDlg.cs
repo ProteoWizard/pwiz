@@ -314,7 +314,7 @@ namespace pwiz.Skyline.FileUI
                     }
 
                     // Get a dictionary of peptides under consideration and the proteins they're associated with
-                    peptides.AddRange(_originalLines.Skip(hasHeaders ? 1 : 0).Take(count).Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields[_originalPeptideIndex]));
+                    peptides.AddRange(_originalLines.Skip(hasHeaders ? 1 : 0).Take(count).Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields.Length > _originalPeptideIndex ? fields[_originalPeptideIndex] : string.Empty));
                     foreach (var pep in peptides)
                     {
                         if (!stripped.ContainsKey(pep))
@@ -346,8 +346,9 @@ namespace pwiz.Skyline.FileUI
             {
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
+                var peptideSequence = fields.Length > _originalPeptideIndex ? fields[_originalPeptideIndex] : string.Empty;
                 var action = associateHelper.DetermineAssociateAction(null,
-                    fields[_originalPeptideIndex], seenPepSeq, false, dictSequenceProteins);
+                    peptideSequence, seenPepSeq, false, dictSequenceProteins);
 
                 if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurrences)
                 {
@@ -458,7 +459,7 @@ namespace pwiz.Skyline.FileUI
         private void DisplayData()
         {
             // The pasted data will be stored as a data table
-            var table = new DataTable("TransitionList");
+            var table = new DataTable(@"TransitionList");
 
             // Create the first row of columns
             var numColumns = GetColumnCount(false);
@@ -489,6 +490,7 @@ namespace pwiz.Skyline.FileUI
 
             for (var i = 0; i < numColumns; i++)
             {
+                dataGrid.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
                 if (headers != null && i < headers.Length)
                 {
                     dataGrid.Columns[i].HeaderText = headers[i];
@@ -1470,10 +1472,11 @@ namespace pwiz.Skyline.FileUI
         {
 
             // If the mouse is inside a protein name cell, display information about that protein
-            if (e.RowIndex >= 0 && e.ColumnIndex == 0 && isAssociated)
+            var proteinIndex = e.RowIndex - 1; // Row 0 is the column type selector
+            if (isAssociated && proteinIndex >= 0 && proteinIndex < _proteinList.Count && e.ColumnIndex == 0)
             {
                 // The row index is one off from the row in the transition list because the first row of the datagrid is covered by combo boxes
-                var protein = _proteinList[e.RowIndex - 1];
+                var protein = _proteinList[proteinIndex];
                 if (protein != null)
                 {
                     var tipProvider = new ProteinTipProvider(protein);
@@ -1689,6 +1692,14 @@ namespace pwiz.Skyline.FileUI
         {
             dataGrid.Columns[columnIndex].Width = width;
         }
+
+        public void TestMouseMoveToGridCell(int columnIndex, int rowIndex)
+        {
+            dataGrid_MouseMove(dataGrid, new DataGridViewCellMouseEventArgs(
+                columnIndex, rowIndex, 0, 0, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0)));
+        }
+
+        public int DataGridRowCount => dataGrid.RowCount;
 
         #endregion
 

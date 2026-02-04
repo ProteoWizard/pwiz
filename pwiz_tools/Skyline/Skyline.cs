@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -389,7 +390,7 @@ namespace pwiz.Skyline
             base.OnHandleCreated(e);
         }
 
-        public void Listen(EventHandler<DocumentChangedEventArgs> listener)
+        void IDocumentContainer.Listen(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentChangedEvent += listener;
         }
@@ -1190,8 +1191,9 @@ namespace pwiz.Skyline
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
-            foreach (var loader in BackgroundLoaders)
+            foreach (var loader in BackgroundLoaders.ToList())
             {
+                loader.Unregister(this);
                 loader.ClearCache();
             }
 
@@ -4724,6 +4726,7 @@ namespace pwiz.Skyline
             MarkQuantitative(true);
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization)]
         public void MarkQuantitative(bool quantitative)
         {
             lock (GetDocumentChangeLock())

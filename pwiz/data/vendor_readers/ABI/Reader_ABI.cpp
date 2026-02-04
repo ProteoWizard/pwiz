@@ -110,11 +110,14 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     msd.id = bfs::basename(p);
     if (!sampleName.empty())
     {
+        int sampleCount = wifffile->getSampleCount();
+
         // if the basename is in the sample name, just use the sample name;
-        // otherwise add the sample name as a suffix
-        if(sampleName.find(msd.id) != string::npos)
+        // otherwise add the sample name as a suffix;
+        // only apply redundancy-avoiding logic for single-sample files
+        if (sampleCount == 1 && sampleName.find(msd.id) != string::npos)
             msd.id = sampleName;
-        else if (msd.id.find(sampleName) == string::npos)
+        else if (sampleCount > 1 || msd.id.find(sampleName) == string::npos)
             msd.id += "-" + sampleName;
     }
 

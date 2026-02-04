@@ -3012,7 +3012,7 @@ namespace pwiz.Skyline
                         prediction.ChangeRetentionTime(retentionTimeRegression)));
                 }
                 string dbPath = calcIrt.DatabasePath;
-                IrtDb db = IrtDb.GetIrtDb(dbPath, null);
+                IrtDb db = IrtDb.GetIrtDb(dbPath);
                 if (checkPeptides)
                 {
                     var standards = docNew.Molecules.Where(m => db.IsStandard(m.ModifiedTarget)).ToArray();
