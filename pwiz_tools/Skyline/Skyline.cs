@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -4725,6 +4726,7 @@ namespace pwiz.Skyline
             MarkQuantitative(true);
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization)]
         public void MarkQuantitative(bool quantitative)
         {
             lock (GetDocumentChangeLock())
