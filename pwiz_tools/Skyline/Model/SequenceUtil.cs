@@ -559,18 +559,40 @@ namespace pwiz.Skyline.Model
             // Otherwise, build a modified sequence string like AMC[+57.0]LP[-37.1]K
             var seq = val.Sequence;
             StringBuilder sb = new StringBuilder();
-            for (int i = 0, len = seq.Length; i < len; i++)
+            var enMods = mods?.AllMods.GetEnumerator();
+            using (enMods)
             {
-                char c = seq[i];
-                var modMass = GetAAModMass(c, i, len, mods);
-                sb.Append(c);
-                if (modMass != 0)
+                ExplicitMod nextMod = null;
+                for (int i = 0, len = seq.Length; i < len; i++)
                 {
-                    StaticMod mod = mods != null ? mods.FindFirstMod(i) : null;
-                    if (mod == null && useExplicitModsOnly)
-                        continue;
+                    char c = seq[i];
+                    var modMass = GetAAModMass(c, i, len, mods);
+                    sb.Append(c);
+                    if (modMass != 0)
+                    {
+                        while (enMods != null && (nextMod == null || nextMod.IndexAA < i))
+                        {
+                            if (enMods.MoveNext())
+                            {
+                                nextMod = enMods.Current;
+                            }
+                            else
+                            {
+                                enMods = null;
+                            }
+                        }
 
-                    sb.Append(GetModDiffDescription(modMass, mod, format));
+                        StaticMod mod = null;
+                        if (nextMod?.IndexAA == i)
+                        {
+                            mod = nextMod.Modification;
+                        }
+                        if (mod == null && useExplicitModsOnly)
+                            continue;
+
+                        sb.Append(GetModDiffDescription(modMass, mod, format));
+                    }
+
                 }
             }
             return val.ChangeSequence(sb.ToString());
@@ -1419,6 +1441,7 @@ namespace pwiz.Skyline.Model
 
     public class ExplicitSequenceMods
     {
+
         public IList<ExplicitMod> Mods { get; set; }
         public IList<ExplicitMod> StaticBaseMods { get; set; }
         public IList<double> ModMasses { get; set; }
@@ -1427,13 +1450,19 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return (Mods ?? new ExplicitMod[0]).Union(StaticBaseMods ?? new ExplicitMod[0]);
+                if (Mods == null || Mods.Count == 0)
+                {
+                    return StaticBaseMods ?? Array.Empty<ExplicitMod>();
+                }
+
+                if (StaticBaseMods == null || StaticBaseMods.Count == 0)
+                {
+                    return Mods ?? Array.Empty<ExplicitMod>();
+                }
+
+                return Mods.Concat(StaticBaseMods).Distinct().OrderBy(mod => mod.IndexAA);
             }
         }
-        public StaticMod FindFirstMod(int index)
-        {
-            var firstOrDefault = AllMods.FirstOrDefault(m => m.IndexAA == index);
-            return firstOrDefault != null ? firstOrDefault.Modification : null;
-        }
+
     }
 }

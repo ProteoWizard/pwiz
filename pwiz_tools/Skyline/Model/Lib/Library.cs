@@ -723,6 +723,11 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if the library contains the key</returns>
         public abstract bool Contains(LibKey key);
 
+        public bool Contains(ModifiedSequence modifiedSequence)
+        {
+
+        }
+
         /// <summary>
         /// Determines if the library contains any spectra for a peptide, based on its
         /// unmodified amino acid sequence.

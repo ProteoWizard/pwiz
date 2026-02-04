@@ -932,6 +932,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return PeptideSettings.Libraries.Contains(new LibKey(sequenceMod, charge));
         }
 
+        public IEnumerable<Adduct> LibrariesContain(ModifiedSequence modifiedSequence, Adduct adduct)
+        {
+            return PeptideSettings.Libraries.Libraries.Any(lib => true == lib?.Contains(modifiedSequence));
+        }
+
         public bool LibrariesContainAny(Target sequence)
         {
             return PeptideSettings.Libraries.ContainsAny(sequence);
