@@ -214,6 +214,9 @@ namespace pwiz.Skyline.Util
             /// For all items in a menu, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if menu item is not purely proteomic.
             /// Update keyboard accelerators as needed.
             /// </summary>
+            /// <param name="items">The menu items to translate.</param>
+            /// <param name="modeUI">The current UI mode (proteomic, small_molecules, or mixed).</param>
+            /// <param name="extender">The ModeUIExtender that tracks which components should be translated.</param>
             /// <param name="recurse">If true, recursively translate submenu items. Use true for context menus,
             /// false when called from AdjustMenusForModeUI which handles its own recursion with text preservation.</param>
             public static void TranslateMenuItems(ToolStripItemCollection items, SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender, bool recurse = false)
