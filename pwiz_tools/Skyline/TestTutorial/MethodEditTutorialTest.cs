@@ -39,6 +39,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using TestRunnerLib;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -540,7 +541,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Tip for " + nodeText, null,
                     bmp =>
                     {
-                        var cropRect = SkylineWindow.SequenceTree.TipRect;
+                        var cropRect = SkylineWindow.SequenceTree.TipRect.AdjustToBitmapCoords(bmp.Size);
                         // Remove lower-right shadow
                         cropRect.Width -= 4;
                         cropRect.Height -= 4;
@@ -595,8 +596,9 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Auto-complete " + text, null,
                     bmp =>
                     {
-                        var completeRect = statementCompletionForm.Bounds;
-                        var skylineRect = ScreenshotManager.GetFramedWindowBounds(SkylineWindow);
+                        var completeRect = statementCompletionForm.Bounds.AdjustToBitmapCoords(bmp.Size);
+                        var skylineRect = ScreenshotManager.GetFramedWindowBounds(SkylineWindow)
+                            .AdjustToBitmapCoords(bmp.Size);
                         bmp = bmp.CleanupBorder(skylineRect, ScreenshotProcessingExtensions.CornerForm, completeRect);
 
                         int top = completeRect.Top - aboveAutoComplete;

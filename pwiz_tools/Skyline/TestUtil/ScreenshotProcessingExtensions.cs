@@ -78,6 +78,9 @@ namespace pwiz.SkylineTestUtil
 
         public static Bitmap CleanupBorder(this Bitmap bmp, Rectangle rectWindow, int cornerRadius, Rectangle? excludeRect = null)
         {
+            rectWindow = rectWindow.AdjustToBitmapCoords(bmp.Size);
+            if (excludeRect.HasValue)
+                excludeRect = excludeRect.Value.AdjustToBitmapCoords(bmp.Size);
             return bmp.CleanupBorder(STANDARD_BORDER_COLOR, rectWindow, cornerRadius, excludeRect);
         }
 
@@ -228,8 +231,30 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
+        /// <summary>
+        /// Adjusts a rectangle from screen coordinates to bitmap coordinates when necessary.
+        /// On non-primary screens, screen coordinates have offsets (e.g. x=1920 on the second
+        /// monitor) that don't correspond to bitmap pixel positions, since bitmaps are always
+        /// 0-based. This subtracts the screen origin to normalize the coordinates.
+        /// </summary>
+        public static Rectangle AdjustToBitmapCoords(this Rectangle rect, Size bmpSize)
+        {
+            // If the rect origin is within the bitmap, assume it's already bitmap-relative
+            if (rect.X >= 0 && rect.X < bmpSize.Width && rect.Y >= 0 && rect.Y < bmpSize.Height)
+                return rect;
+            // Otherwise, it's screen coordinates — subtract the screen origin
+            var screen = Screen.FromPoint(rect.Location);
+            rect.X -= screen.Bounds.X;
+            rect.Y -= screen.Bounds.Y;
+            // Clamp to bitmap bounds
+            rect.Intersect(new Rectangle(Point.Empty, bmpSize));
+            return rect;
+        }
+
         private static void AddPixel(Point point, Bitmap shotPic, IDictionary<Color, int> colorCounts)
         {
+            if (point.X < 0 || point.X >= shotPic.Width || point.Y < 0 || point.Y >= shotPic.Height)
+                return;
             var c = shotPic.GetPixel(point.X, point.Y);
             if (!colorCounts.ContainsKey(c))
                 colorCounts.Add(c, 0);

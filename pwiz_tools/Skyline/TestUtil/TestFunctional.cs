@@ -2011,13 +2011,13 @@ namespace pwiz.SkylineTestUtil
 
                         // Compare instead of saving
                         var shotPic = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot);
-                        ScreenshotComparer.Compare(ScreenshotCounter, shotPic);
+                        ScreenshotComparer.Compare(ScreenshotCounter, shotPic, description);
                     }
                     else if (!IsScreenshotComparisonMode)
                     {
                         // Original behavior - save to file
                         var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
-                        _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
+                        _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot, description: description);
                     }
                 }
                 else
@@ -2670,7 +2670,8 @@ namespace pwiz.SkylineTestUtil
             // Finalize screenshot comparison results if active
             if (IsScreenshotComparisonMode && ScreenshotComparer != null)
             {
-                var outputFolder = Path.Combine(TestContext.TestDir, ScreenshotComparisonResults.SCREENSHOT_DIFFS_DIRECTORY);
+                var outputFolder = Path.Combine(Path.GetDirectoryName(TestContext.TestDir) ?? TestContext.TestDir,
+                    ScreenshotComparisonResults.SCREENSHOT_DIFFS_DIRECTORY);
                 var testName = TestContext.TestName;
                 ScreenshotComparer.FinalizeResults(outputFolder, testName);
                 ScreenshotComparer = null; // Reset for next test

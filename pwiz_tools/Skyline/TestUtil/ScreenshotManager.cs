@@ -23,14 +23,17 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib;
 using TestRunnerLib.PInvoke;
 using ZedGraph;
 
@@ -349,7 +352,34 @@ namespace pwiz.SkylineTestUtil
 
         public Screen GetScreenshotScreen()
         {
-            return Screen.FromRectangle(GetScreenshotBounds());
+            var screenIndex = RunTests.ScreenshotScreenIndex;
+            if (screenIndex < 1 || screenIndex > Screen.AllScreens.Length)
+                throw new ArgumentOutOfRangeException(nameof(RunTests.ScreenshotScreenIndex),
+                    $"ScreenshotScreenIndex {screenIndex} is out of range. Valid range: 1-{Screen.AllScreens.Length}");
+            return Screen.AllScreens[screenIndex - 1];
+        }
+
+        /// <summary>
+        /// Moves a form to the screenshot screen if it's not already on it,
+        /// preserving its relative position within the screen's working area.
+        /// </summary>
+        public void MoveToScreenshotScreen(Form form)
+        {
+            var targetScreen = GetScreenshotScreen();
+            var currentScreen = Screen.FromControl(form);
+            if (currentScreen.DeviceName == targetScreen.DeviceName)
+                return;
+
+            // Translate the form's position relative to its current screen to the target screen
+            var location = form.Location;
+            location.X = location.X - currentScreen.WorkingArea.X + targetScreen.WorkingArea.X;
+            location.Y = location.Y - currentScreen.WorkingArea.Y + targetScreen.WorkingArea.Y;
+            // Clamp to target screen bounds
+            location.X = Math.Max(targetScreen.WorkingArea.Left,
+                Math.Min(location.X, targetScreen.WorkingArea.Right - form.Size.Width));
+            location.Y = Math.Max(targetScreen.WorkingArea.Top,
+                Math.Min(location.Y, targetScreen.WorkingArea.Bottom - form.Size.Height));
+            form.Location = location;
         }
 
         private void ForceOnScreenshotScreen(Form form)
@@ -421,11 +451,9 @@ namespace pwiz.SkylineTestUtil
             control.Invoke(action);
         }
 
-        public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
+        public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null, string description = null)
         {
             activeWindow ??= _skylineWindow;
-            _skylineWindow.Activate();
-            activeWindow.BringToFront(); // Make sure active window is in front before screenshot creation
 
             // Check UI and create a blank shot according to the user selection
             var newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
@@ -457,7 +485,7 @@ namespace pwiz.SkylineTestUtil
 
             if (pathToSave != null)
             {
-                SaveToFile(pathToSave, shotPic);
+                SaveToFile(pathToSave, shotPic, description);
             }
 
             // CopyBitmapToClipboard(shotPic);
@@ -479,7 +507,7 @@ namespace pwiz.SkylineTestUtil
             clipThread.Join();
         }
 
-        private void SaveToFile(string filePath, Bitmap bmp)
+        private void SaveToFile(string filePath, Bitmap bmp, string description = null)
         {
             if (File.Exists(filePath))
                 File.Delete(filePath);
@@ -488,6 +516,73 @@ namespace pwiz.SkylineTestUtil
                 Directory.CreateDirectory(dirPath);
 
             bmp.Save(filePath, ImageFormat.Png);
+
+            if (!string.IsNullOrEmpty(description))
+                SetFileDescription(filePath, description);
+        }
+
+        /// <summary>
+        /// Sets the Title and Comment shell properties on a file using the Windows Property System.
+        /// These show up in Explorer's Details pane and Properties > Details tab.
+        /// Must run on an STA thread for COM property store access.
+        /// </summary>
+        internal static void SetFileDescription(string filePath, string description)
+        {
+            var fullPath = Path.GetFullPath(filePath);
+            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+            {
+                SetFileDescriptionSTA(fullPath, description);
+            }
+            else
+            {
+                // Property store COM operations require STA thread
+                var thread = new Thread(() => SetFileDescriptionSTA(fullPath, description));
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start();
+                thread.Join();
+            }
+        }
+
+        private static void SetFileDescriptionSTA(string fullPath, string description)
+        {
+            try
+            {
+                var iPropertyStoreGuid = new Guid("886d8eeb-8cf2-4446-8d02-cdba1dbdcf99");
+                var hr = Shell32Test.SHGetPropertyStoreFromParsingName(fullPath, IntPtr.Zero,
+                    Shell32Test.GPS_READWRITE, ref iPropertyStoreGuid, out var propertyStore);
+                if (hr != 0 || propertyStore == null)
+                {
+                    System.Diagnostics.Trace.WriteLine(
+                        $"SetFileDescription: SHGetPropertyStoreFromParsingName failed hr=0x{hr:X8} for {fullPath}");
+                    return;
+                }
+
+                try
+                {
+                    // Set System.Title
+                    var propVar = new Shell32Test.PropVariant();
+                    propVar.vt = Shell32Test.VT_LPWSTR;
+                    propVar.pwszVal = Marshal.StringToCoTaskMemUni(description);
+                    var pkeyTitle = Shell32Test.PKEY_Title;
+                    hr = propertyStore.SetValue(ref pkeyTitle, ref propVar);
+                    System.Diagnostics.Trace.WriteLine(
+                        $"SetFileDescription: SetValue(Title) hr=0x{hr:X8}");
+                    Marshal.FreeCoTaskMem(propVar.pwszVal);
+
+                    hr = propertyStore.Commit();
+                    System.Diagnostics.Trace.WriteLine(
+                        $"SetFileDescription: Commit hr=0x{hr:X8} for {Path.GetFileName(fullPath)}");
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(propertyStore);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine(
+                    $"SetFileDescription: Exception {ex.GetType().Name}: {ex.Message}");
+            }
         }
 
         public MemoryStream SaveToMemory(Bitmap bmp)

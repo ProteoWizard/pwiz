@@ -246,7 +246,7 @@ namespace TestRunner
         static readonly string commandLineOptions =
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
-            "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
+            "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;screen=1;multi=1;wait=off;internet=off;originalurls=off;" +
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
@@ -1375,6 +1375,7 @@ namespace TestRunner
             bool randomOrder = commandLineArgs.ArgAsBool("random");
             bool demoMode = commandLineArgs.ArgAsBool("demo");
             bool offscreen = commandLineArgs.ArgAsBool("offscreen");
+            int screenshotScreenIndex = (int)commandLineArgs.ArgAsLong("screen");
             bool internet = commandLineArgs.ArgAsBool("internet");
             bool useOriginalURLs = commandLineArgs.ArgAsBool("originalurls");
             bool perftests = commandLineArgs.ArgAsBool("perftests");
@@ -1474,7 +1475,7 @@ namespace TestRunner
                 throw new ArgumentException("Coverage only works in parallel testing mode.");
 
             var runTests = new RunTests(
-                demoMode, buildMode, offscreen, internet, useOriginalURLs, showStatus, perftests,
+                demoMode, buildMode, offscreen, screenshotScreenIndex, internet, useOriginalURLs, showStatus, perftests,
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration, teamcityCleanup,
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
@@ -1897,20 +1898,11 @@ namespace TestRunner
         /// <returns>True if no screenshot comparison failures, false if there were failures.</returns>
         private static bool GenerateScreenshotComparisonReport(RunTests runTests)
         {
-            if (!ScreenshotComparisonResults.IsActive)
+            var report = ScreenshotComparisonResults.ReportSummary;
+            if (report == null)
                 return true; // No comparison was done, so no failures
 
-            if (!string.IsNullOrEmpty(ScreenshotComparisonResults.Report))
-            {
-                runTests.Log("\r\n");
-                runTests.Log(ScreenshotComparisonResults.Report);
-                runTests.Log("\r\n");
-            }
-
-            if (!string.IsNullOrEmpty(ScreenshotComparisonResults.DiffImagesFolder))
-            {
-                runTests.Log($"# Screenshot diff images saved to: {ScreenshotComparisonResults.DiffImagesFolder}\r\n");
-            }
+            runTests.Log("\r\n" + report);
 
             return ScreenshotComparisonResults.FailedCount == 0;
         }
@@ -2315,6 +2307,11 @@ Here is a list of recognized arguments:
                                     
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows
                                     from flashing on the desktop during a test run.
+
+    screen=[n]                      Specifies which screen (1-based) to use for screenshot
+                                    capture. Default is 1 (primary screen). Use screen=2
+                                    to capture screenshots on a secondary monitor while
+                                    working on the primary monitor.
 
     language=[language1,language2,...]  Choose a random language from this list before executing
                                     each test.  Default value is ""en-US,fr-FR"".  You can

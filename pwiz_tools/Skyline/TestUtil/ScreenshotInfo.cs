@@ -213,10 +213,10 @@ namespace pwiz.SkylineTestUtil
             return set;
         }
 
-        private static long ColorPairKey(int r1, int g1, int b1, int r2, int g2, int b2)
+        private static long ColorPairKey(long r1, long g1, long b1, long r2, long g2, long b2)
         {
-            return ((long)r1 << 40) | ((long)g1 << 32) | ((long)b1 << 24) |
-                   ((long)r2 << 16) | ((long)g2 << 8) | b2;
+            return (r1 << 40) | (g1 << 32) | (b1 << 24) |
+                   (r2 << 16) | (g2 << 8) | b2;
         }
 
         private readonly Size _sizeOld;
@@ -245,6 +245,8 @@ namespace pwiz.SkylineTestUtil
 
         public bool IsDiff => SizesDiffer || PixelsDiffer || BytesDiffer;
         public bool SizesDiffer => !Equals(_sizeOld, _sizeNew);
+        public Size SizeOld => _sizeOld;
+        public Size SizeNew => _sizeNew;
         public bool PixelsDiffer => PixelCount != 0;
         public bool BytesDiffer => _memoryOld.Length != _memoryNew.Length || !_memoryOld.SequenceEqual(_memoryNew);
         public Bitmap HighlightedImage { get; private set; }

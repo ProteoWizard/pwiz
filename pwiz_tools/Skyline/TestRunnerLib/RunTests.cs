@@ -165,10 +165,16 @@ namespace TestRunnerLib
             get { return false; }
         }
 
+        /// <summary>
+        /// 1-based index of the screen to use for screenshot capture.
+        /// </summary>
+        public static int ScreenshotScreenIndex { get; set; } = 1;
+
         public RunTests(
             bool demoMode,
             bool buildMode,
             bool offscreen,
+            int screenshotScreenIndex,
             bool internet,
             bool originalURLs,
             bool showStatus,
@@ -252,6 +258,7 @@ namespace TestRunnerLib
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
             RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
             TeamCityTestDecoration = teamcityTestDecoration;
+            ScreenshotScreenIndex = screenshotScreenIndex;
             Verbose = verbose;
 
             // Disable logging.
@@ -590,6 +597,7 @@ namespace TestRunnerLib
                 }
 
                 TeamCityFinishTest(test, pass);
+                LogScreenshotResults();
 
                 return true;
             }
@@ -627,7 +635,16 @@ namespace TestRunnerLib
                 test.TestMethod.Name,
                 message,
                 exception);
+            LogScreenshotResults();
             return false;
+        }
+
+        private void LogScreenshotResults()
+        {
+            var report = ScreenshotComparisonResults.ReportCurrent;
+            if (report != null)
+                Log(report);
+            ScreenshotComparisonResults.ClearCurrentResults();
         }
 
         private string SetTMP(TestInfo test)

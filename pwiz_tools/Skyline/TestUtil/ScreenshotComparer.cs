@@ -69,14 +69,15 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Compare captured screenshot against existing local screenshot.
         /// </summary>
-        public ComparisonResult Compare(int screenshotNum, Bitmap capturedScreenshot)
+        public ComparisonResult Compare(int screenshotNum, Bitmap capturedScreenshot, string description = null)
         {
             var existing = LoadExistingScreenshot(screenshotNum);
             if (existing == null)
             {
                 var result = new ComparisonResult(screenshotNum,
                     newImage: capturedScreenshot,
-                    error: "Existing screenshot not found");
+                    error: "Existing screenshot not found",
+                    description: description);
                 Results.Add(result);
                 return result;
             }
@@ -84,6 +85,13 @@ namespace pwiz.SkylineTestUtil
             var capturedInfo = new ScreenshotInfo(SaveToMemory(capturedScreenshot), capturedScreenshot);
             const int COLOR_TOLERANCE = 3; // Allow minor color differences
             var diff = new ScreenshotDiff(existing, capturedInfo, Color.FromArgb(128, 255, 0, 0), COLOR_TOLERANCE);
+
+            string sizeMismatchText = null;
+            if (diff.SizesDiffer)
+            {
+                sizeMismatchText =
+                    $"size mismatch: {diff.SizeOld.Width}x{diff.SizeOld.Height} (original) vs {diff.SizeNew.Width}x{diff.SizeNew.Height} (new)";
+            }
 
             var comparisonResult = new ComparisonResult(
                 screenshotNum,
@@ -94,7 +102,9 @@ namespace pwiz.SkylineTestUtil
                 originalImage: existing.Image,
                 newImage: capturedScreenshot,
                 diffImage: diff.HighlightedImage,
-                dominantColorPairs: diff.DominantColorPairs
+                dominantColorPairs: diff.DominantColorPairs,
+                sizeMismatchText: sizeMismatchText,
+                description: description
             );
             Results.Add(comparisonResult);
             return comparisonResult;
@@ -115,18 +125,24 @@ namespace pwiz.SkylineTestUtil
                 {
                     var originalPath = Path.Combine(outputFolder, $"{prefix}-original.png");
                     r.OriginalImage.Save(originalPath, ImageFormat.Png);
+                    if (!string.IsNullOrEmpty(r.Description))
+                        ScreenshotManager.SetFileDescription(originalPath, r.Description);
                 }
 
                 if (r.NewImage != null)
                 {
                     var newPath = Path.Combine(outputFolder, $"{prefix}-new.png");
                     r.NewImage.Save(newPath, ImageFormat.Png);
+                    if (!string.IsNullOrEmpty(r.Description))
+                        ScreenshotManager.SetFileDescription(newPath, r.Description);
                 }
 
                 if (r.DiffImage != null)
                 {
                     var diffPath = Path.Combine(outputFolder, $"{prefix}-diff.png");
                     r.DiffImage.Save(diffPath, ImageFormat.Png);
+                    if (!string.IsNullOrEmpty(r.Description))
+                        ScreenshotManager.SetFileDescription(diffPath, r.Description);
                 }
             }
         }
@@ -161,7 +177,8 @@ namespace pwiz.SkylineTestUtil
                 r.DiffPercentageWithoutTitleBar, r.DiffPixelCount, r.Error,
                 r.DominantColorPairs.OrderByDescending(kvp => kvp.Key)
                     .Select(kvp => $"({kvp.Value.Key.R},{kvp.Value.Key.G},{kvp.Value.Key.B}) -> ({kvp.Value.Value.R},{kvp.Value.Value.G},{kvp.Value.Value.B}): {kvp.Key:F1}%")
-                    .ToList())).ToList();
+                    .ToList(),
+                r.SizeMismatchText, r.Description)).ToList();
 
             ScreenshotComparisonResults.AddTestResults(testName ?? "Unknown", _tutorialPath,
                 _thresholdPercent, lightweightResults, testOutputFolder);
@@ -183,13 +200,16 @@ namespace pwiz.SkylineTestUtil
         public Bitmap NewImage { get; }
         public Bitmap DiffImage { get; }
         public string Error { get; }
+        public string SizeMismatchText { get; }
+        public string Description { get; }
         public Dictionary<float, KeyValuePair<Color, Color>> DominantColorPairs { get; }
 
         public ComparisonResult(int num, bool passed = false, double diffPercentage = 0,
             double diffPercentageWithoutTitleBar = 0, int diffPixelCount = 0,
             Bitmap originalImage = null, Bitmap newImage = null,
             Bitmap diffImage = null, string error = null,
-            Dictionary<float, KeyValuePair<Color, Color>> dominantColorPairs = null)
+            Dictionary<float, KeyValuePair<Color, Color>> dominantColorPairs = null,
+            string sizeMismatchText = null, string description = null)
         {
             ScreenshotNumber = num;
             Passed = passed && string.IsNullOrEmpty(error);
@@ -200,6 +220,8 @@ namespace pwiz.SkylineTestUtil
             NewImage = newImage;
             DiffImage = diffImage;
             Error = error;
+            SizeMismatchText = sizeMismatchText;
+            Description = description;
             DominantColorPairs = dominantColorPairs ?? new Dictionary<float, KeyValuePair<Color, Color>>();
         }
     }

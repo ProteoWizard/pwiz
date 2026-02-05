@@ -32,6 +32,10 @@ namespace TestRunnerLib
         public const string SCREENSHOT_DIFFS_DIRECTORY = "ScreenshotDiffs";
 
         private static readonly List<TestScreenshotResults> _testResults = new List<TestScreenshotResults>();
+        private static int _totalPassedCount;
+        private static int _totalFailedCount;
+        private static int _totalTestCount;
+        private static readonly List<string> _failedScreenshots = new List<string>();
 
         /// <summary>
         /// Folder where diff images were saved, or null if none were saved.
@@ -46,12 +50,22 @@ namespace TestRunnerLib
         /// <summary>
         /// Total number of screenshots that passed comparison across all tests.
         /// </summary>
-        public static int PassedCount => _testResults.Sum(t => t.PassedCount);
+        public static int PassedCount => _totalPassedCount + _testResults.Sum(t => t.PassedCount);
 
         /// <summary>
         /// Total number of screenshots that failed comparison across all tests.
         /// </summary>
-        public static int FailedCount => _testResults.Sum(t => t.FailedCount);
+        public static int FailedCount => _totalFailedCount + _testResults.Sum(t => t.FailedCount);
+
+        /// <summary>
+        /// Total number of tests with screenshot comparison results.
+        /// </summary>
+        public static int TestCount => _totalTestCount + _testResults.Count;
+
+        /// <summary>
+        /// List of "TestName s-NN.png" strings for all failed screenshot comparisons.
+        /// </summary>
+        public static IReadOnlyList<string> FailedScreenshots => _failedScreenshots;
 
         /// <summary>
         /// Checks if a test has already been compared (to avoid duplicate comparisons in multiple iterations).
@@ -74,9 +88,10 @@ namespace TestRunnerLib
         }
 
         /// <summary>
-        /// Generates the combined report for all tests.
+        /// Generates a report for the current test's screenshot comparisons (the test just run).
+        /// Returns null if no current results exist.
         /// </summary>
-        public static string Report
+        public static string ReportCurrent
         {
             get
             {
@@ -84,10 +99,6 @@ namespace TestRunnerLib
                     return null;
 
                 var sb = new StringBuilder();
-                sb.AppendLine("Screenshot Comparison Report");
-                sb.AppendLine("============================");
-                sb.AppendLine();
-
                 foreach (var test in _testResults.OrderBy(t => t.TestName))
                 {
                     sb.AppendLine($"Test: {test.TestName}");
@@ -100,6 +111,10 @@ namespace TestRunnerLib
                         if (!string.IsNullOrEmpty(r.Error))
                         {
                             sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png: ERROR - {r.Error} ***");
+                        }
+                        else if (!string.IsNullOrEmpty(r.SizeMismatchText))
+                        {
+                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png: FAIL ({r.SizeMismatchText}) ***");
                         }
                         else
                         {
@@ -117,18 +132,80 @@ namespace TestRunnerLib
                     sb.AppendLine($"  Test Summary: {test.PassedCount} passed, {test.FailedCount} failed");
                     sb.AppendLine();
                 }
-
-                sb.AppendLine($"Overall Summary: {PassedCount} passed, {FailedCount} failed across {_testResults.Count} tests");
                 return sb.ToString();
             }
         }
 
         /// <summary>
-        /// Clears all results.
+        /// Generates a summary report of all failed comparisons and overall counts across all tests.
+        /// Returns null if screenshot comparison mode was not active.
+        /// </summary>
+        public static string ReportSummary
+        {
+            get
+            {
+                if (!IsActive)
+                    return null;
+
+                var sb = new StringBuilder();
+                sb.AppendLine("Screenshot Comparison Summary");
+                sb.AppendLine("=============================");
+                sb.AppendLine($"Overall: {PassedCount} passed, {FailedCount} failed across {TestCount} tests");
+
+                if (_failedScreenshots.Count > 0)
+                {
+                    sb.AppendLine("Failed screenshots:");
+                    foreach (var failure in _failedScreenshots)
+                        sb.AppendLine($"  {failure}");
+                }
+
+                if (!string.IsNullOrEmpty(DiffImagesFolder))
+                {
+                    var parentFolder = System.IO.Path.GetDirectoryName(DiffImagesFolder) ?? DiffImagesFolder;
+                    sb.AppendLine($"# Screenshot diff images saved to: {parentFolder}");
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Moves current results' counts to running totals and clears the current results list.
+        /// Call before each test so that after the test, _testResults contains only that test's results.
+        /// </summary>
+        public static void ClearCurrentResults()
+        {
+            foreach (var test in _testResults)
+            {
+                _totalPassedCount += test.PassedCount;
+                _totalFailedCount += test.FailedCount;
+                _totalTestCount++;
+                foreach (var r in test.Results.Where(r => !r.Passed))
+                {
+                    string failureReason;
+                    if (!string.IsNullOrEmpty(r.Error))
+                        failureReason = $"ERROR - {r.Error}";
+                    else if (!string.IsNullOrEmpty(r.SizeMismatchText))
+                        failureReason = r.SizeMismatchText;
+                    else
+                        failureReason = $"{r.DiffPercentageWithoutTitleBar:F2}% diff";
+                    var screenshotDesc = string.IsNullOrEmpty(r.Description) ? "" : $" - {r.Description}";
+                    _failedScreenshots.Add($"{test.TestName} - s-{r.ScreenshotNumber:D2}.png{screenshotDesc} - {failureReason}");
+                }
+            }
+            _testResults.Clear();
+        }
+
+        /// <summary>
+        /// Clears all results including running totals.
         /// </summary>
         public static void Clear()
         {
             _testResults.Clear();
+            _failedScreenshots.Clear();
+            _totalPassedCount = 0;
+            _totalFailedCount = 0;
+            _totalTestCount = 0;
             DiffImagesFolder = null;
             IsActive = false;
         }
@@ -168,11 +245,14 @@ namespace TestRunnerLib
         public double DiffPercentageWithoutTitleBar { get; }
         public int DiffPixelCount { get; }
         public string Error { get; }
+        public string SizeMismatchText { get; }
+        public string Description { get; }
         public List<string> DominantColorPairs { get; }
 
         public ScreenshotResult(int num, bool passed, double diffPercentage,
             double diffPercentageWithoutTitleBar, int diffPixelCount, string error,
-            List<string> dominantColorPairs = null)
+            List<string> dominantColorPairs = null, string sizeMismatchText = null,
+            string description = null)
         {
             ScreenshotNumber = num;
             Passed = passed;
@@ -180,6 +260,8 @@ namespace TestRunnerLib
             DiffPercentageWithoutTitleBar = diffPercentageWithoutTitleBar;
             DiffPixelCount = diffPixelCount;
             Error = error;
+            SizeMismatchText = sizeMismatchText;
+            Description = description;
             DominantColorPairs = dominantColorPairs ?? new List<string>();
         }
     }
