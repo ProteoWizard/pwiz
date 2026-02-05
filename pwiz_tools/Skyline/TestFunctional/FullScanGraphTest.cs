@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Graph;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -195,6 +196,15 @@ namespace pwiz.SkylineTestFunctional
             SetSpectrum(false);
             TestScale(452, 456, 2.61, 4.34);
             WaitForOpenForm<GraphFullScan>();   // For localization testing
+
+            // Test Copy Data output for heatmap - should have 3 columns (m/z, ion mobility, intensity)
+            // not 100+ columns from separate intensity curves (issue #3953)
+            var graphData = GraphData.GetGraphData(SkylineWindow.GraphFullScan.ZedGraphControl.MasterPane);
+            Assert.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
+            Assert.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
+            var dataFrame = graphData.Panes[0].DataFrames[0];
+            Assert.AreEqual(3, dataFrame.ColumnCount, "Heatmap Copy Data should have 3 columns (m/z, ion mobility, intensity)");
+            Assert.IsTrue(dataFrame.RowCount > 0, "Heatmap should have data rows");
 
             // Check filtered heatmap.
             SetFilter(true);
