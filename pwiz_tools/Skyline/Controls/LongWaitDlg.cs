@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Controls
                 }
 //                Action<Action<ILongWaitBroker>> runner = RunWork;
 //                _result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
-                ActionUtil.RunAsync(() => RunWork(performWork));
+                ActionUtil.RunAsync(() => RunWork(performWork), @"LongWaitDlg.PerformWork");
 
                 // Wait as long as the caller wants before showing the progress
                 // animation to the user.

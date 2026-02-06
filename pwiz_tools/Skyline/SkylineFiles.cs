@@ -1265,7 +1265,10 @@ namespace pwiz.Skyline
                     var resultsNew = results.OptimizeCache(fileName, _chromatogramManager.StreamManager, progress);
                     if (!ReferenceEquals(resultsNew, results))
                     {
+                        using var documentStreams = new DocumentStreams(this);
+                        documentStreams.AddStreams(resultsNew);
                         SrmDocument docNew, docCurrent;
+
                         do
                         {
                             docCurrent = Document;

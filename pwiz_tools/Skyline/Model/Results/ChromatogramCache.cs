@@ -694,32 +694,17 @@ namespace pwiz.Skyline.Model.Results
         {
             status = status.ChangeMessage(string.Format(ResultsResources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
             loader.UpdateProgress(status);
+            var readStream = loader.StreamManager.CreatePooledStream(cachePath, false);
+            using var documentStreams = new DocumentStreams(readStream);
+            // DebugLog.Info("{0}. {1} - loaded", readStream.GlobalIndex, cachePath);
 
-            IPooledStream readStream = null;
-            try
-            {
-                readStream = loader.StreamManager.CreatePooledStream(cachePath, false);
-                // DebugLog.Info("{0}. {1} - loaded", readStream.GlobalIndex, cachePath);
+            LoadStructs(readStream.Stream, status, loader, out var raw);
 
-                LoadStructs(readStream.Stream, status, loader, out var raw);
-
-                var result = new ChromatogramCache(cachePath, raw, readStream);
-                result = result.UpdateChargeSigns(doc);
-                result = result.UpdateOptimizationSteps(doc);
-                loader.UpdateProgress(status.Complete());
-                return result;
-            }
-            finally
-            {
-                if (readStream != null)
-                {
-                    // Close the read stream to ensure we never leak it.
-                    // This only costs on extra open, the first time the
-                    // active document tries to read.
-                    try { readStream.CloseStream(); }
-                    catch (IOException) { }
-                }
-            }
+            var result = new ChromatogramCache(cachePath, raw, readStream);
+            result = result.UpdateChargeSigns(doc);
+            result = result.UpdateOptimizationSteps(doc);
+            loader.UpdateProgress(status.Complete());
+            return result;
         }
 
         public static void Join(string cachePath, IPooledStream streamDest, IList<string> listCachePaths,

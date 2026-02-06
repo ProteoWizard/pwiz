@@ -209,6 +209,8 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
                     libraries = libraries.ChangeLibraries(list.ToArray());
+                    using var documentStreams = new DocumentStreams(container, null);
+                    documentStreams.AddStreams(libraries);
 
                     if (missingMidasFiles.Any() && docNew.Settings.HasResults)
                     {
@@ -261,6 +263,7 @@ namespace pwiz.Skyline.Model.Lib
         private SrmDocument CallWithSettingsChangeMonitor(IDocumentContainer container, SrmDocument docCurrent,
             [InstantHandle] Func<SrmSettingsChangeMonitor, SrmDocument> changeFunc)
         {
+            using var documentStreams = new DocumentStreams(container, docCurrent);
             using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
                        new LoadMonitor(this, container, null),
                        Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container,

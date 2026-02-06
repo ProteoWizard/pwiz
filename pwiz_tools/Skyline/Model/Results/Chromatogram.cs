@@ -394,6 +394,8 @@ namespace pwiz.Skyline.Model.Results
                                 // Then update caches
                                 if (results != null)
                                     results = results.UpdateCaches(documentPath, resultsLoad);
+                                using var documentStreams = new DocumentStreams(_container);
+                                documentStreams.AddStreams(results);
                                 docNew = docCurrent.ChangeMeasuredResults(results, settingsChangeMonitor);
                                 docNew = _manager.ApplyMetadataRules(docNew);
                                 docNew = UpdateUserRevisionIndex(docCurrent, docNew);
