@@ -1186,15 +1186,25 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles(millis);
             TimeSpan maxInvokeDuration = TimeSpan.FromMilliseconds(Math.Max(waitCycles * SLEEP_INTERVAL, 60_000));
 
+            using var hangDetection = new HangDetection();
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                HangDetection.InterruptAfter(() => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
-                    maxInvokeDuration);
-                
+                try
+                {
+                    hangDetection.InterruptAfter(
+                        () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                        maxInvokeDuration);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    Console.Out.WriteLine("Open forms: {0}", GetOpenFormsString());
+                    throw;
+                }
+
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
