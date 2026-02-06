@@ -64,6 +64,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "GroupedStudies";
 
+            ForceMzmlInScreenShots = true;   // Mzml is faster for this test, and the screenshots should show mzML files.
             ForceMzml = true;   // Mzml is faster for this test.
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies-21_2.pdf";

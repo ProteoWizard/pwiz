@@ -85,14 +85,15 @@ namespace pwiz.Common.SystemUtil.PInvoke
         }
 
         // Constants for WM_CHANGEUISTATE wParam
+        // LOWORD = action (UIS_SET), HIWORD = flags (UISF_HIDEFOCUS | UISF_HIDEACCEL)
         // ReSharper disable InconsistentNaming
-        public const int UIS_SET = 1 << 16;  // LOWORD action: set UI state flags
+        public const int UIS_SET = 1;  // LOWORD action: set UI state flags
         public const int UISF_HIDEFOCUS = 0x1;  // Hide focus rectangles
         public const int UISF_HIDEACCEL = 0x2;  // Hide mnemonic underscores
         /// <summary>
         /// Combined wParam for WM_CHANGEUISTATE to hide both focus rectangles and mnemonic underscores.
         /// </summary>
-        public static readonly IntPtr UISF_HIDEALL = (IntPtr)(UIS_SET | UISF_HIDEFOCUS | UISF_HIDEACCEL);
+        public static readonly IntPtr UISF_HIDEALL = (IntPtr)(UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));
         // ReSharper restore InconsistentNaming
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
