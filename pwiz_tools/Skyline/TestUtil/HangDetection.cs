@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using Microsoft.Diagnostics.Runtime;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
