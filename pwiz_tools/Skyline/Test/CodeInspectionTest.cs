@@ -613,7 +613,7 @@ namespace pwiz.SkylineTest
                 { typeof(Gdi32Test), 1 },
                 { typeof(Kernel32Test), 5 },
                 { typeof(Ole32Test), 1 },
-                { typeof(Shell32Test), 1 },
+                { typeof(Shell32Test), 2 },
                 { typeof(User32Test), 9 }
             };
 

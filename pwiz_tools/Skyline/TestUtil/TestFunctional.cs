@@ -1701,6 +1701,10 @@ namespace pwiz.SkylineTestUtil
             rectangles.AddRange(controls.Select(ScreenshotManager.GetFramedWindowBounds));
             rectangles.AddRange(menus.Select(m => m.Bounds));
 
+            // Adjust screen coordinates to bitmap coordinates for non-primary screens
+            for (int i = 0; i < rectangles.Count; i++)
+                rectangles[i] = rectangles[i].AdjustToBitmapCoords(bmp.Size);
+
             var unionRect = rectangles.Aggregate(Rectangle.Union);
 
             var newBitmap = new Bitmap(unionRect.Width, unionRect.Height);
@@ -2007,7 +2011,18 @@ namespace pwiz.SkylineTestUtil
                     // and only for tutorials (tests with CoverShotName)
                     if (shouldCompareScreenshots)
                     {
-                        ScreenshotComparer ??= new ScreenshotComparer(TutorialPath);
+                        if (ScreenshotComparer == null)
+                        {
+                            ScreenshotComparer = new ScreenshotComparer(TutorialPath);
+
+                            // Clear any previous diff images for this test
+                            var diffDir = Path.Combine(
+                                Path.GetDirectoryName(TestContext.TestDir) ?? TestContext.TestDir,
+                                ScreenshotComparisonResults.SCREENSHOT_DIFFS_DIRECTORY,
+                                TestContext.TestName);
+                            if (Directory.Exists(diffDir))
+                                Directory.Delete(diffDir, true);
+                        }
 
                         // Compare instead of saving
                         var shotPic = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot);
@@ -2569,7 +2584,11 @@ namespace pwiz.SkylineTestUtil
                 }
 
                 if (IsRecordingScreenShots)
+                {
                     _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
+                    // Move Skyline to the chosen screenshot screen at the start of the test
+                    RunUI(() => _shotManager.MoveToScreenshotScreen(SkylineWindow));
+                }
 
                 BeginAuditLogging();
                 RunTest();
