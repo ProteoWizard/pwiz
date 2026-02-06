@@ -1184,6 +1184,8 @@ namespace pwiz.SkylineTestUtil
         public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
+            TimeSpan maxInvokeDuration = TimeSpan.FromMilliseconds(Math.Max(waitCycles * SLEEP_INTERVAL, 60_000));
+
             using var hangDetection = new HangDetection();
             for (int i = 0; i < waitCycles; i++)
             {
