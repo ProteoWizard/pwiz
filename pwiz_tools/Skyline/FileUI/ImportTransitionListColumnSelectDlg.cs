@@ -605,6 +605,23 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.PrecursorNoteColumn, Resources.PasteDlg_UpdateMoleculeType_PrecursorNote);
             SetComboBoxText(columns.MoleculeNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeNote);
             SetComboBoxText(columns.MoleculeListNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote);
+
+            // Set combo boxes for additional fragment-oriented column assignments beyond the first.
+            // When multiple columns are mapped to the same product type (e.g. three columns all
+            // assigned to "Product m/z"), the first is handled above; the rest are set here.
+            foreach (var extraCol in columns.ProductMzColumns.Skip(1))
+                SetComboBoxText(extraCol, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            foreach (var extraCol in columns.ProductFormulaColumns.Skip(1))
+                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+            foreach (var extraCol in columns.ProductNameColumns.Skip(1))
+                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+            foreach (var extraCol in columns.ProductChargeColumns.Skip(1))
+                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            foreach (var extraCol in columns.ProductAdductColumns.Skip(1))
+                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
+            foreach (var extraCol in columns.ProductNeutralLossColumns.Skip(1))
+                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
+
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
             // because if they are then we want to prioritize user headers
@@ -936,7 +953,7 @@ namespace pwiz.Skyline.FileUI
 
             var propertiesChecked = new HashSet<string>();
 
-            bool SetColumn(string headerName, string propertyName)
+            bool SetColumn(string headerName, string propertyName, List<int> columnList = null)
             {
                 headerName = AssayLibraryVsTransitionListHeaderName(headerName);
 
@@ -948,10 +965,26 @@ namespace pwiz.Skyline.FileUI
                     {
                         return false;
                     }
-                    var val = (int) property.GetValue(columns, null);
-                    CheckForComboBoxOverlap(val, 0, comboBoxIndex);
-                    columns.ResetDuplicateColumns(comboBoxIndex);
-                    property.SetValue(columns, comboBoxIndex);
+
+                    // Fragment-oriented column types are a special case: in molecule mode, the same
+                    // product type (e.g. "Product m/z") can be assigned to multiple columns, creating
+                    // one transition per assignment. This skips the overlap check that normally prevents
+                    // duplicate column type assignments.
+                    if (columnList != null && !radioPeptide.Checked)
+                    {
+                        columns.ResetDuplicateColumns(comboBoxIndex);
+                        if (!columnList.Contains(comboBoxIndex))
+                            columnList.Add(comboBoxIndex);
+                        // Primary property keeps the first assignment
+                        property.SetValue(columns, columnList[0]);
+                    }
+                    else
+                    {
+                        var val = (int) property.GetValue(columns, null);
+                        CheckForComboBoxOverlap(val, 0, comboBoxIndex);
+                        columns.ResetDuplicateColumns(comboBoxIndex);
+                        property.SetValue(columns, comboBoxIndex);
+                    }
                     return true;
                 }
 
@@ -1003,7 +1036,7 @@ namespace pwiz.Skyline.FileUI
             else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity, nameof(columns.LibraryColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name, nameof(columns.MoleculeNameColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z, nameof(columns.PrecursorColumn))) {}
-            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z, nameof(columns.ProductColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z, nameof(columns.ProductColumn), columns.ProductMzColumns)) {}
             else if (HandleProteinColumn(out var cancelled)) { if (cancelled) return;}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name, nameof(columns.FragmentNameColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, nameof(columns.ExplicitRetentionTimeColumn))) {}
@@ -1021,11 +1054,11 @@ namespace pwiz.Skyline.FileUI
             else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description, nameof(columns.ProteinDescriptionColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct, nameof(columns.PrecursorAdductColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge, nameof(columns.PrecursorChargeColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Name, nameof(columns.ProductNameColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Formula, nameof(columns.ProductFormulaColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss, nameof(columns.ProductNeutralLossColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct, nameof(columns.ProductAdductColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Charge, nameof(columns.ProductChargeColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Name, nameof(columns.ProductNameColumn), columns.ProductNameColumns)) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Formula, nameof(columns.ProductFormulaColumn), columns.ProductFormulaColumns)) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss, nameof(columns.ProductNeutralLossColumn), columns.ProductNeutralLossColumns)) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct, nameof(columns.ProductAdductColumn), columns.ProductAdductColumns)) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Charge, nameof(columns.ProductChargeColumn), columns.ProductChargeColumns)) {}
             else if (SetColumn(@"InChiKey", nameof(columns.InChiKeyColumn))) {}
             else if (SetColumn(@"CAS", nameof(columns.CASColumn))) {}
             else if (SetColumn(@"HMDB", nameof(columns.HMDBColumn))) {}
