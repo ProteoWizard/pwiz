@@ -1184,15 +1184,25 @@ namespace pwiz.SkylineTestUtil
         public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
+            using var hangDetection = new HangDetection();
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                HangDetection.InterruptAfter(() => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
-                    TimeSpan.FromMilliseconds(SLEEP_INTERVAL), waitCycles);
-                
+                try
+                {
+                    hangDetection.InterruptAfter(
+                        () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                        maxInvokeDuration);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    Console.Out.WriteLine("Open forms: {0}", GetOpenFormsString());
+                    throw;
+                }
+
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
