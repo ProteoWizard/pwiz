@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using Microsoft.Diagnostics.Runtime;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
@@ -26,42 +25,51 @@ using System.Threading;
 
 namespace pwiz.SkylineTestUtil
 {
-    public static class HangDetection
+    public class HangDetection : IDisposable
     {
+        private readonly object _lock = new object();
+        private bool _disposed;
+        private TimeSpan? _waitDuration;
+        private Thread _callerThread;
+        private readonly Thread _watchdogThread;
+
+        public HangDetection()
+        {
+            _watchdogThread = new Thread(WatchdogLoop)
+            {
+                IsBackground = true,
+                Name = nameof(HangDetection)
+            };
+            _watchdogThread.Start();
+        }
+
         /// <summary>
-        /// If action takes more than 30 minutes to complete, interrupt this thread and write threads to console.
+        /// If action takes more than 30 minutes to complete, interrupt this thread.
         /// </summary>
         public static void InterruptWhenHung(Action action)
         {
-            InterruptAfter(action, TimeSpan.FromMinutes(30));
+            using var hangDetection = new HangDetection();
+            hangDetection.InterruptAfter(action, TimeSpan.FromMinutes(30));
         }
-        
+
         /// <summary>
         /// If action takes longer than <paramref name="duration"/> then
         /// interrupt this thread and dump callstacks to the console.
         /// </summary>
-        public static void InterruptAfter(Action action, TimeSpan duration)
+        public void InterruptAfter(Action action, TimeSpan duration)
         {
-            bool[] completed = new bool[1];
-            var currentThread = Thread.CurrentThread;
+            lock (_lock)
+            {
+                _waitDuration = duration;
+                _callerThread = Thread.CurrentThread;
+                Monitor.Pulse(_lock);
+            }
+
             try
             {
-                ActionUtil.RunAsync(() =>
-                    InterruptThreadAfter(completed, currentThread, duration), nameof(HangDetection));
-                try
-                {
-                    action();
-                }
-                finally
-                {
-                    lock (completed)
-                    {
-                        completed[0] = true;
-                        Monitor.Pulse(completed);
-                    }
-                }
+                action();
             }
-            catch (ThreadInterruptedException interruptedException)
+            catch (ThreadInterruptedException)
             {
                 try
                 {
@@ -74,33 +82,64 @@ namespace pwiz.SkylineTestUtil
                 {
                     Console.Out.WriteLine("Unable to get thread dump: {0}", ex);
                 }
-                throw new AssertFailedException(string.Format("Timeout waiting {0} for action to complete", duration), interruptedException);
+
+                throw;
+            }
+            finally
+            {
+                lock (_lock)
+                {
+                    _waitDuration = null;
+                    Monitor.Pulse(_lock);
+                }
             }
         }
 
-        private static void InterruptThreadAfter(bool[] completed, Thread thread, TimeSpan duration)
+        private void WatchdogLoop()
         {
-            var stopWatch = Stopwatch.StartNew();
-            TimeSpan cycleDuration = TimeSpan.FromTicks(100);
-            long minCycleCount = duration.Ticks / cycleDuration.Ticks;
-            lock (completed)
+            lock (_lock)
             {
-                for (long cycleIndex = 0; ; cycleIndex++)
+                while (!_disposed)
                 {
-                    if (completed[0])
+                    if (!_waitDuration.HasValue)
                     {
-                        return;
+                        Monitor.Wait(_lock);
+                        continue;
                     }
 
-                    if (cycleIndex > minCycleCount && stopWatch.Elapsed > duration)
-                    {
-                        thread.Interrupt();
-                        return;
-                    }
+                    var duration = _waitDuration.Value;
+                    var stopWatch = Stopwatch.StartNew();
+                    TimeSpan cycleDuration = TimeSpan.FromTicks(100);
+                    long minCycleCount = duration.Ticks / cycleDuration.Ticks;
 
-                    Monitor.Wait(completed, cycleDuration);
+                    for (long cycleIndex = 0; ; cycleIndex++)
+                    {
+                        if (!_waitDuration.HasValue || _disposed)
+                        {
+                            break;
+                        }
+
+                        if (cycleIndex > minCycleCount && stopWatch.Elapsed > duration)
+                        {
+                            _callerThread.Interrupt();
+                            break;
+                        }
+
+                        Monitor.Wait(_lock, cycleDuration);
+                    }
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            lock (_lock)
+            {
+                _disposed = true;
+                Monitor.Pulse(_lock);
+            }
+
+            _watchdogThread.Join();
         }
 
         public static IEnumerable<string> GetAllThreadsCallstacks(int processId)
