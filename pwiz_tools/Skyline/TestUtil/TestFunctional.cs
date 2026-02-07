@@ -965,7 +965,7 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        private static string GetTextForForm(Control form)
+        public static string GetTextForForm(Control form)
         {
             var result = form.Text;
             var threadExceptionDialog = form as ThreadExceptionDialog;
@@ -998,7 +998,7 @@ namespace pwiz.SkylineTestUtil
             return text;
         }
 
-        public static string GetOpenFormsString()
+        private static string GetOpenFormsString()
         {
             var result =  string.Join(", ", OpenForms.Select(form => string.Format("{0} ({1})", form.GetType().Name, GetTextForForm(form))));
             RunUI(() =>

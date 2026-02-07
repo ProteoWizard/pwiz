@@ -21,7 +21,10 @@ using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Net.Http;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -85,7 +88,10 @@ namespace pwiz.SkylineTestUtil
 
                 try
                 {
-                    Console.Out.WriteLine("Open Forms: {0}", AbstractFunctionalTest.GetOpenFormsString());
+                    foreach (var form in FormUtil.OpenForms)
+                    {
+                        Console.Out.WriteLine("Open Form: {0}", AbstractFunctionalTest.GetTextForForm(form));
+                    }
                 }
                 catch (Exception ex)
                 {
