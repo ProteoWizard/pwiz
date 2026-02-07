@@ -83,6 +83,14 @@ namespace pwiz.SkylineTestUtil
                     Console.Out.WriteLine("Unable to get thread dump: {0}", ex);
                 }
 
+                try
+                {
+                    Console.Out.WriteLine("Open Forms: {0}", AbstractFunctionalTest.GetOpenFormsString());
+                }
+                catch (Exception ex)
+                {
+                    Console.Out.WriteLine("Unable to get open forms string: {0}", ex);
+                }
                 throw;
             }
             finally
