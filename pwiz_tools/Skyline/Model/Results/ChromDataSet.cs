@@ -822,7 +822,7 @@ namespace pwiz.Skyline.Model.Results
                     peak.Data.Peaks.Add(peak.DataPeak);
                     // Set the max peak index on the data for each transition
                     if (i == 0)
-                        peak.Data.SetMaxPeak(maxPeakIndex, (float) peakSet.CombinedScore);
+                        peak.Data.SetMaxPeak(maxPeakIndex, (float) peakSetMax.CombinedScore);
                 }
                 ++i;
             }   
