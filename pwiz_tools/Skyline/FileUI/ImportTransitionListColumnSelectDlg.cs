@@ -974,8 +974,16 @@ namespace pwiz.Skyline.FileUI
                     {
                         columns.ResetDuplicateColumns(comboBoxIndex);
                         if (!columnList.Contains(comboBoxIndex))
-                            columnList.Add(comboBoxIndex);
-                        // Primary property keeps the first assignment
+                        {
+                            // Insert in sorted order so columnList[0] is always the leftmost column
+                            // and the list order matches left-to-right input column order
+                            var insertIndex = columnList.FindIndex(idx => idx > comboBoxIndex);
+                            if (insertIndex < 0)
+                                columnList.Add(comboBoxIndex);
+                            else
+                                columnList.Insert(insertIndex, comboBoxIndex);
+                        }
+                        // Primary property keeps the first assignment (leftmost column)
                         property.SetValue(columns, columnList[0]);
                     }
                     else

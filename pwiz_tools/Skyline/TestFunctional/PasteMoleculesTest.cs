@@ -1495,8 +1495,9 @@ namespace pwiz.SkylineTestFunctional
             // assigning the same product type to multiple columns creates one transition per
             // assigned column. The nth repeat of each product type maps to the nth fragment.
             // Types with fewer repeats than Product m/z use "fill-forward" - the last specified
-            // value applies to all remaining fragments. Empty or "NA" values in a Product m/z
-            // column cause that fragment to be skipped for that row.
+            // value applies to all remaining fragments. A fragment is skipped for that row only
+            // when both its Product m/z and Product Formula are empty or "NA", allowing
+            // formula-only fragments when Product m/z is not provided.
 
             // Format A: Compound Discoverer style - generic "Fragment" columns containing m/z values.
             // The "Fragment" headers aren't auto-detected as Product m/z, so the user manually

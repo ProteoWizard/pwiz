@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model
         public abstract void UpdateCellBackingStore(int row, int col, object value);
         public abstract void ShowTransitionError(PasteError error);
         public abstract int ColumnIndex(string columnName);
-        // Supports multiple fragment desciptions per line
+        // Supports multiple fragment descriptions per line
         public virtual List<int> ColumnIndicesMulti(string columnName)
         {
             var single = ColumnIndex(columnName);
@@ -2497,7 +2497,7 @@ namespace pwiz.Skyline.Model
         /// Create a transition for the nth fragment in a multi-fragment-per-line row.
         /// For fragment 0, delegates to GetMoleculeTransition (original behavior).
         /// For subsequent fragments, reads product columns for the specific fragment index.
-        /// Returns null if the fragment's m/z is empty/NA (skip this fragment).
+        /// Returns null if the fragment's m/z and formula are both empty/NA (skip this fragment).
         /// </summary>
         private TransitionDocNode GetMoleculeTransitionForFragment(SrmDocument document, Row row,
             Peptide pep, TransitionGroup group, ExplicitTransitionGroupValues explicitTransitionGroupValues,
@@ -2514,7 +2514,7 @@ namespace pwiz.Skyline.Model
             bool hasInconsistentProductIonColumns = false;
             var ion = ReadProductColumnsForFragment(document, row, precursorIon, fragmentIndex, ref hasInconsistentProductIonColumns);
             if (ion == null)
-                return null; // Empty/NA m/z - skip this fragment
+                return null; // No fragment m/z or formula (both empty/NA) - skip this fragment
 
             var customMolecule = ion.ToCustomMolecule();
             var ionType = FragmentColumnsIdenticalToPrecursorColumns(precursorIon, ion)

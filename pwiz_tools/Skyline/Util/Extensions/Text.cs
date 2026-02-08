@@ -903,7 +903,7 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 var fieldName = fields[i].Trim();
                 FieldNames.Add(fieldName);
-                // Track all indices for each field name (supports duplicate column headers as in small molevule list reader)
+                // Track all indices for each field name (supports duplicate column headers as in small molecule list reader)
                 if (!FieldIndicesMulti.TryGetValue(fieldName, out var multiList))
                 {
                     FieldIndicesMulti[fieldName] = multiList = new List<int>();
@@ -918,12 +918,17 @@ namespace pwiz.Skyline.Util.Extensions
                     if (!string.IsNullOrEmpty(key))
                     {
                         var syn = headerSynonyms[key];
-                        // Track all indices for synonym too
-                        if (!FieldIndicesMulti.TryGetValue(syn, out var synList))
+                        // Track all indices for canonical synonym name too, but only if it
+                        // differs from the field name (avoid double-counting identity mappings
+                        // like "ProductMz" → "ProductMz" which would inflate FragmentCount)
+                        if (!string.Equals(syn, fieldName, StringComparison.OrdinalIgnoreCase))
                         {
-                            FieldIndicesMulti[syn] = synList = new List<int>();
+                            if (!FieldIndicesMulti.TryGetValue(syn, out var synList))
+                            {
+                                FieldIndicesMulti[syn] = synList = new List<int>();
+                            }
+                            synList.Add(i);
                         }
-                        synList.Add(i);
                         if (!FieldDict.ContainsKey(syn))
                         {
                             // Note the internal name for this field

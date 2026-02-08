@@ -2705,13 +2705,22 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
-            // Also remove from multi-fragment lists
-            ProductMzColumns.RemoveAll(i => i == index);
-            ProductFormulaColumns.RemoveAll(i => i == index);
-            ProductNameColumns.RemoveAll(i => i == index);
-            ProductChargeColumns.RemoveAll(i => i == index);
-            ProductAdductColumns.RemoveAll(i => i == index);
-            ProductNeutralLossColumns.RemoveAll(i => i == index);
+            // Also remove from multi-fragment lists and re-point primary properties
+            RemoveFromColumnList(ProductMzColumns, index, v => ProductColumn = v);
+            RemoveFromColumnList(ProductFormulaColumns, index, v => ProductFormulaColumn = v);
+            RemoveFromColumnList(ProductNameColumns, index, v => ProductNameColumn = v);
+            RemoveFromColumnList(ProductChargeColumns, index, v => ProductChargeColumn = v);
+            RemoveFromColumnList(ProductAdductColumns, index, v => ProductAdductColumn = v);
+            RemoveFromColumnList(ProductNeutralLossColumns, index, v => ProductNeutralLossColumn = v);
+        }
+
+        private static void RemoveFromColumnList(List<int> columnList, int index, Action<int> setPrimary)
+        {
+            columnList.RemoveAll(i => i == index);
+            // If the primary property was reset to -1 but the list still has entries,
+            // re-point the primary to the first remaining entry
+            if (columnList.Count > 0)
+                setPrimary(columnList[0]);
         }
 
         /// <summary>
