@@ -965,7 +965,7 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        private static string GetTextForForm(Control form)
+        public static string GetTextForForm(Control form)
         {
             var result = form.Text;
             var threadExceptionDialog = form as ThreadExceptionDialog;
@@ -1193,17 +1193,9 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                try
-                {
-                    hangDetection.InterruptAfter(
-                        () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
-                        maxInvokeDuration);
-                }
-                catch (ThreadInterruptedException)
-                {
-                    Console.Out.WriteLine("Open forms: {0}", GetOpenFormsString());
-                    throw;
-                }
+                hangDetection.InterruptAfter(
+                    () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                    maxInvokeDuration);
 
                 if (isCondition)
                     return true;
