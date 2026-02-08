@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -83,6 +84,17 @@ namespace pwiz.SkylineTestUtil
                     Console.Out.WriteLine("Unable to get thread dump: {0}", ex);
                 }
 
+                try
+                {
+                    foreach (var form in FormUtil.OpenForms)
+                    {
+                        Console.Out.WriteLine("Open Form: {0}", AbstractFunctionalTest.GetTextForForm(form));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Out.WriteLine("Unable to get open forms string: {0}", ex);
+                }
                 throw;
             }
             finally
