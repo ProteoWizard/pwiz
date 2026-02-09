@@ -424,14 +424,25 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// Hides keyboard-triggered UI cues (focus rectangles and mnemonic underscores)
-        /// by sending WM_CHANGEUISTATE to the top-level form.
+        /// by sending WM_CHANGEUISTATE to the form and all descendant controls.
+        /// Some controls (like TabControl/WizardPages) don't properly propagate
+        /// WM_CHANGEUISTATE to their children, so we send it recursively.
         /// </summary>
         private static void HideKeyboardCues(Control control)
         {
             var form = control.FindForm();
             if (form != null)
             {
-                User32.SendMessage(form.Handle, User32.WinMessageType.WM_CHANGEUISTATE, User32.UISF_HIDEALL, IntPtr.Zero);
+                HideKeyboardCuesRecursive(form);
+            }
+        }
+
+        private static void HideKeyboardCuesRecursive(Control control)
+        {
+            User32.SendMessage(control.Handle, User32.WinMessageType.WM_CHANGEUISTATE, User32.UISF_HIDEALL, IntPtr.Zero);
+            foreach (Control child in control.Controls)
+            {
+                HideKeyboardCuesRecursive(child);
             }
         }
 
