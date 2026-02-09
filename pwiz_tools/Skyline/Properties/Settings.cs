@@ -2427,29 +2427,49 @@ namespace pwiz.Skyline.Properties
             return RetentionTimeRegression.CalculatorXmlHelpers;
         }
 
-        public void Initialize(IProgressMonitor loadMonitor)
+        public static RetentionScoreCalculatorSpec[] Initialize(RetentionScoreCalculatorSpec[] calculatorSpecs,
+            IProgressMonitor loadMonitor)
         {
-            foreach (var calc in this.ToArray())
-                Initialize(loadMonitor, calc);
+            var status = new ProgressStatus().ChangeSegments(0, calculatorSpecs.Length);
+            var list = new List<RetentionScoreCalculatorSpec>();
+            foreach (var calc in calculatorSpecs)
+            {
+                list.Add(Initialize(calc, loadMonitor, ref status));
+                status = status.NextSegment();
+                loadMonitor?.UpdateProgress(status);
+            }
+            return list.ToArray();
         }
 
-        public RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor, RetentionScoreCalculatorSpec calc)
+
+        public static RetentionScoreCalculatorSpec Initialize(RetentionScoreCalculatorSpec calc,
+            IProgressMonitor loadMonitor)
+        {
+            IProgressStatus status = new ProgressStatus();
+            return Initialize(calc, loadMonitor, ref status);
+        }
+
+        private static RetentionScoreCalculatorSpec Initialize(RetentionScoreCalculatorSpec calc,
+            IProgressMonitor loadMonitor, ref IProgressStatus status)
         {
             if (calc == null)
                 return null;
 
             try
             {
-                var calcInit = calc.Initialize(loadMonitor);
-                if (!Equals(calc.Name, XmlNamedElement.NAME_INTERNAL) && !ReferenceEquals(calcInit, calc))
-                    SetValue(calcInit);
-                calc = calcInit;
+                return calc.Initialize(loadMonitor, ref status);
             }
             catch (CalculatorException)
             {
                 //Consider: Should we really fail silently?
+                return calc;
             }
-            return calc;
+        }
+
+        public void SetInitializedValue(RetentionScoreCalculatorSpec calcOrig, RetentionScoreCalculatorSpec calcInit)
+        {
+            if (calcInit != null && !Equals(calcOrig.Name, XmlNamedElement.NAME_INTERNAL) && !ReferenceEquals(calcInit, calcOrig))
+                SetValue(calcInit);
         }
 
         public override string Title { get { return PropertiesResources.RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators; } }
