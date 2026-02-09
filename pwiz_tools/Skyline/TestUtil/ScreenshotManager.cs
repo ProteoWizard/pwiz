@@ -29,7 +29,6 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -355,7 +354,7 @@ namespace pwiz.SkylineTestUtil
             var screenIndex = RunTests.ScreenshotScreenIndex;
             if (screenIndex < 1 || screenIndex > Screen.AllScreens.Length)
                 throw new ArgumentOutOfRangeException(nameof(RunTests.ScreenshotScreenIndex),
-                    $"ScreenshotScreenIndex {screenIndex} is out of range. Valid range: 1-{Screen.AllScreens.Length}");
+                    $@"ScreenshotScreenIndex {screenIndex} is out of range. Valid range: 1-{Screen.AllScreens.Length}");
             return Screen.AllScreens[screenIndex - 1];
         }
 

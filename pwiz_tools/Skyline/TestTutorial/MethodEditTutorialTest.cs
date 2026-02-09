@@ -39,7 +39,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
-using TestRunnerLib;
 
 namespace pwiz.SkylineTestTutorial
 {

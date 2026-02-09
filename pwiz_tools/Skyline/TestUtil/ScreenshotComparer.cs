@@ -112,12 +112,25 @@ namespace pwiz.SkylineTestUtil
 
 
         /// <summary>
-        /// Save original, new, and diff images to output folder for any comparison with differences.
+        /// Gets results that should be saved to disk.
+        /// On TeamCity, only failed comparisons are saved to reduce artifacts.
+        /// Locally, any comparison with non-zero diff is saved for easier debugging.
+        /// </summary>
+        private IEnumerable<ComparisonResult> GetResultsToSave()
+        {
+            bool isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TEAMCITY_VERSION"));
+            return isTeamCity
+                ? Results.Where(r => !r.Passed)
+                : Results.Where(r => r.DiffPercentage > 0);
+        }
+
+        /// <summary>
+        /// Save original, new, and diff images to output folder for comparisons with differences.
         /// </summary>
         public void SaveComparisonImages(string outputFolder)
         {
             Directory.CreateDirectory(outputFolder);
-            foreach (var r in Results.Where(r => r.DiffPercentage > 0))
+            foreach (var r in GetResultsToSave())
             {
                 var prefix = $"s-{r.ScreenshotNumber:D2}";
 
@@ -163,9 +176,7 @@ namespace pwiz.SkylineTestUtil
         public void FinalizeResults(string outputFolder, string testName)
         {
             string testOutputFolder = null;
-            bool hasDiffs = Results.Any(r => r.DiffPercentage > 0);
-
-            if (hasDiffs && !string.IsNullOrEmpty(outputFolder))
+            if (GetResultsToSave().Any() && !string.IsNullOrEmpty(outputFolder))
             {
                 testOutputFolder = Path.Combine(outputFolder, testName ?? "Unknown");
                 SaveComparisonImages(testOutputFolder);
