@@ -267,17 +267,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
                 if (IsRunToRun)
                 {
-                    var targetTimesDict = pointInfos.Where(pt => pt.Y.HasValue)
-                        .ToDictionary(pt => pt.ModifiedTarget, pt => pt.Y.Value);
                     var origTimesDict = pointInfos.Where(pt => pt.X.HasValue)
                         .ToDictionary(pt => pt.ModifiedTarget, pt => pt.X.Value);
                     _calculator = new DictionaryRetentionScoreCalculator(XmlNamedElement.NAME_INTERNAL, DocumentRetentionTimes.ConvertToMeasuredRetentionTimes(origTimesDict));
-                    var alignedRetentionTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimesDict, origTimesDict, refine ? RegressionSettings.Threshold : 0, RegressionSettings.RegressionMethod, token);
-                    if (alignedRetentionTimes != null)
-                    {
-                        _regressionAll = alignedRetentionTimes.Regression;
-                        _statisticsAll = alignedRetentionTimes.RegressionStatistics;
-                    }
                 }
                 else
                 {
@@ -302,30 +294,31 @@ namespace pwiz.Skyline.Model.RetentionTimes
                         // CONSIDER: If another calculator type is added that requires loading and
                         //           could be unavailable, this name check would need to be
                         //           generalized for that type.
-                        var calc = calcName is RtCalculatorOption.Irt irtOption
+                        _calculator = calcName is RtCalculatorOption.Irt irtOption
                             ? usableCalculators.FirstOrDefault(c => c.Name == irtOption.Name)
                             : usableCalculators.FirstOrDefault();
-                        if (calc != null)
-                        {
-                            _regressionAll = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL,
-                                calc,
-                                targetTimes,
-                                null,
-                                true,
-                                RegressionSettings.RegressionMethod,
-                                out _statisticsAll,
-                                out _,
-                                token);
-                        }
-                        token.ThrowIfCancellationRequested();
-                        _calculator = calc;
                     }
+                }
 
-                    if (_calculator != null)
-                    {
-                        pointInfos = pointInfos.Select(pt =>
-                            pt.ChangeX(_calculator.ScoreSequence(pt.ModifiedTarget))).ToList();
-                    }
+                if (_calculator != null && _regressionAll == null)
+                {
+                    _regressionAll = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL,
+                        _calculator,
+                        targetTimes,
+                        null,
+                        true,
+                        RegressionSettings.RegressionMethod,
+                        out _statisticsAll,
+                        out _,
+                        token);
+                }
+
+                token.ThrowIfCancellationRequested();
+
+                if (_calculator != null)
+                {
+                    pointInfos = pointInfos.Select(pt =>
+                        pt.ChangeX(_calculator.ScoreSequence(pt.ModifiedTarget))).ToList();
                 }
 
                 _regressionPredict = (IsRunToRun || RegressionSettings.RegressionMethod != RegressionMethodRT.linear)  ? null : document.Settings.PeptideSettings.Prediction.RetentionTime;
