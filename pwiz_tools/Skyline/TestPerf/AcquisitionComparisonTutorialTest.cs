@@ -330,7 +330,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 var dataFolder = Path.GetDirectoryName(GetTestPath(Path.Combine(PRM_DATA_DIR, "PRM_100fmol.mzML")));
-                openDataSourceDialog.CurrentDirectory = new MsDataFilePath(dataFolder);
+                openDataSourceDialog.SetCurrentDirectory(new MsDataFilePath(dataFolder));
                 openDataSourceDialog.SelectAllFileType(DataExt);
             });
             OkDialog(openDataSourceDialog, openDataSourceDialog.Open);

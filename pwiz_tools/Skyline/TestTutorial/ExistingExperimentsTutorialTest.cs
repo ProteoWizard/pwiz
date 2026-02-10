@@ -389,7 +389,7 @@ namespace pwiz.SkylineTestTutorial
                                                                         importResultsDlg1.GetDataSourcePathsFile(null));
             RunUI(() =>
             {
-                openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Study 7"));
+                openDataSourceDialog1.SetCurrentDirectory(new MsDataFilePath(GetTestPath("Study 7")));
                 openDataSourceDialog1.SelectAllFileType(UseRawFilesOrFullData ? ".wiff" : ".mzML"); // Force true wiff for FullData
             });
             if (UseRawFilesOrFullData)

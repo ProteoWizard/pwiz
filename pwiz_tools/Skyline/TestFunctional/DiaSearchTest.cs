@@ -91,7 +91,8 @@ namespace pwiz.SkylineTestFunctional
                     RunDlg<OpenDataSourceDialog>(isolationScheme.ImportRanges, importRangesDlg =>
                     {
                         var diaSource = importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources[0];
-                        importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath()));
+                        importRangesDlg.SetCurrentDirectory(
+                            new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath())));
                         importRangesDlg.SelectFile(importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources.First().GetFileName());
                         importRangesDlg.Open();
                     });
@@ -226,7 +227,7 @@ namespace pwiz.SkylineTestFunctional
                     RunDlg<OpenDataSourceDialog>(editIsolationSchemeDlg.ImportRanges, importRangesDlg =>
                     {
                         var diaSource = importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources[0];
-                        importRangesDlg.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath()));
+                        importRangesDlg.SetCurrentDirectory(new MsDataFilePath(Path.GetDirectoryName(diaSource.GetFilePath())));
                         importRangesDlg.SelectFile(importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources.First().GetFileName());
                         importRangesDlg.Open();
                     });

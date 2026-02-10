@@ -234,7 +234,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 RunUI(() =>
                 {
                     var path = Path.GetDirectoryName(GetFullDataPath(Flies_M));
-                    openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(path);
+                    openDataSourceDialog1.SetCurrentDirectory(new MsDataFilePath(path));
                     openDataSourceDialog1.SelectAllFileType(ExtAgilentRaw);
                     openDataSourceDialog1.Left = importResultsDlg1.Left;
                     openDataSourceDialog1.Top = importResultsDlg1.Bottom + 10;
