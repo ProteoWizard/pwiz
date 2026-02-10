@@ -152,7 +152,7 @@ namespace pwiz.Skyline.FileUI
             // in the document folder. Always starting in the document folder is painful
             // to watch, if the user is adding a single file at a time from a different
             // directory.
-            if (string.IsNullOrEmpty(initialDir) || !Equals(state?.DocumentPath, documentPath))
+            if (string.IsNullOrEmpty(initialDir) || !Equals(state.DocumentPath, documentPath))
             {
                 string docDir = Path.GetDirectoryName(documentPath);
                 if (!string.IsNullOrEmpty(docDir))

@@ -2873,7 +2873,7 @@ namespace pwiz.SkylineTestUtil
                 Equals(targetName, nodePep.Peptide.Target.DisplayName));
 
             Assert.IsNotNull(nodePeptide);
-            RemovePeptide(nodePeptide?.Target);
+            RemovePeptide(nodePeptide.Target);
         }
 
         public static void RemovePeptide(Target peptideSequence, bool isDecoy = false)
@@ -2904,8 +2904,8 @@ namespace pwiz.SkylineTestUtil
             AssertEx.IsDocumentState(SkylineWindow.Document, null,
                                      docStart.MoleculeGroupCount,
                                      docStart.MoleculeCount - 1,
-                                     docStart.MoleculeTransitionGroupCount - nodePeptide?.TransitionGroupCount,
-                                     docStart.MoleculeTransitionCount - nodePeptide?.TransitionCount);
+                                     docStart.MoleculeTransitionGroupCount - nodePeptide.TransitionGroupCount,
+                                     docStart.MoleculeTransitionCount - nodePeptide.TransitionCount);
         }
 
         public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI(int millis = WAIT_TIME)
