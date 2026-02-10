@@ -1973,7 +1973,7 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
+                    Thread.Sleep(1500); // Wait for UI to settle down - or screenshots can end up blurry
                     _shotManager.ActivateScreenshotForm(screenshotForm);
                     var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);

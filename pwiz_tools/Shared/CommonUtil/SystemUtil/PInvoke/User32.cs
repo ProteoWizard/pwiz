@@ -75,6 +75,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_NCPAINT = 0x0085,
             WM_CHAR = 0x0102,
             WM_TIMER = 0x0113,
+            WM_HSCROLL = 0x0114,
             WM_VSCROLL = 0x0115,
             WM_CHANGEUISTATE = 0x0127,
             WM_MOUSEMOVE = 0x0200,
