@@ -123,4 +123,14 @@
   <data name="Unifi_Label_Unifi" xml:space="preserve">
     <value>Unifi</value>
   </data>
+  <data name="WatersConnect_Label_Waters_Connect" xml:space="preserve">
+    <value>waters_connect</value>
+    <comment>Lower case is intentional branding.</comment>
+  </data>
+  <data name="Unifi_GroupBox_Label" xml:space="preserve">
+    <value>Unifiの詳細設定</value>
+  </data>
+  <data name="Waters_Connect_GroupBox_Label" xml:space="preserve">
+    <value>waters_connectの詳細設定</value>
+  </data>
 </root>

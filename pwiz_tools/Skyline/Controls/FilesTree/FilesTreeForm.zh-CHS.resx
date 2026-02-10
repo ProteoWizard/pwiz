@@ -187,11 +187,7 @@
     <value>201, 22</value>
   </data>
   <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
-    <value>Open Library Explorer</value>
-    <comment>Needs Review:English text changed
-Old English:Library &amp;Explorer
-Current English:Open Library Explorer
-Old Localized:库浏览器(&amp;E)</comment>
+    <value>打开库浏览器</value>
   </data>
   <data name="manageResultsMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -209,26 +205,37 @@ Old Localized:库浏览器(&amp;E)</comment>
     <value>201, 22</value>
   </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
-    <value>Open Containing Folder</value>
-    <comment>Needs Review:English text changed
-Old English:Open &amp;containing folder
-Current English:Open Containing Folder
-Old Localized:打开包含文件夹(&amp;C)</comment>
+    <value>打开包含文件夹</value>
   </data>
   <data name="openLibraryInLibraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
+  <data name="openLibraryInLibraryExplorerMenuItem.Text" xml:space="preserve">
+    <value>在库浏览器中打开</value>
+  </data>
   <data name="selectReplicateMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
+  </data>
+  <data name="selectReplicateMenuItem.Text" xml:space="preserve">
+    <value>选择重复测定</value>
   </data>
   <data name="openAuditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
+  <data name="openAuditLogMenuItem.Text" xml:space="preserve">
+    <value>打开审计日志</value>
+  </data>
   <data name="editMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
+  <data name="editMenuItem.Text" xml:space="preserve">
+    <value>编辑...</value>
+  </data>
   <data name="removeAllMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
+  </data>
+  <data name="removeAllMenuItem.Text" xml:space="preserve">
+    <value>删除全部</value>
   </data>
   <data name="removeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
@@ -239,11 +246,17 @@ Old Localized:打开包含文件夹(&amp;C)</comment>
   <data name="debugRefreshTreeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
+  <data name="debugRefreshTreeMenuItem.Text" xml:space="preserve">
+    <value>调试：刷新</value>
+  </data>
   <data name="contextMenuSeparator.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 6</value>
   </data>
   <data name="showFileNamesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
+  </data>
+  <data name="showFileNamesMenuItem.Text" xml:space="preserve">
+    <value>显示文件名</value>
   </data>
   <data name="filesTreeContextMenu.Size" type="System.Drawing.Size, System.Drawing">
     <value>202, 252</value>

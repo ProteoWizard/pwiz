@@ -364,11 +364,7 @@
     <value>9</value>
   </data>
   <data name="btnTest.Text" xml:space="preserve">
-    <value>&amp;Test</value>
-    <comment>Needs Review:English text changed
-Old English:Test
-Current English:&amp;Test
-Old Localized:测试</comment>
+    <value>测试(&amp;T)</value>
   </data>
   <data name="&gt;&gt;btnTest.Name" xml:space="preserve">
     <value>btnTest</value>
@@ -416,11 +412,7 @@ Old Localized:测试</comment>
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Account type:</value>
-    <comment>Needs Review:English text changed
-Old English:Account type:
-Current English:&amp;Account type:
-Old Localized:账户类型：</comment>
+    <value>帐户类型(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -584,6 +576,9 @@ Old Localized:账户类型：</comment>
   <data name="lblClientId.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
+  <data name="lblClientId.Text" xml:space="preserve">
+    <value>客户端 ID(&amp;D)：</value>
+  </data>
   <data name="tbxClientSecret.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -612,11 +607,7 @@ Old Localized:账户类型：</comment>
     <value>4</value>
   </data>
   <data name="lblClientSecret.Text" xml:space="preserve">
-    <value>Client sec&amp;ret:</value>
-    <comment>Needs Review:English text changed
-Old English:Client secret:
-Current English:Client sec&amp;ret:
-Old Localized:客户密钥：</comment>
+    <value>客户端密钥(&amp;R)：</value>
   </data>
   <data name="tbxClientScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -643,11 +634,7 @@ Old Localized:客户密钥：</comment>
     <value>2</value>
   </data>
   <data name="lblClientScope.Text" xml:space="preserve">
-    <value>Client s&amp;cope:</value>
-    <comment>Needs Review:English text changed
-Old English:Client scope:
-Current English:Client s&amp;cope:
-Old Localized:客户范围：</comment>
+    <value>客户端范围(&amp;C)：</value>
   </data>
   <data name="tbxIdentityServer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -674,11 +661,7 @@ Old Localized:客户范围：</comment>
     <value>0</value>
   </data>
   <data name="lblIdentityServer.Text" xml:space="preserve">
-    <value>Ide&amp;ntity server:</value>
-    <comment>Needs Review:English text changed
-Old English:Identity server:
-Current English:Ide&amp;ntity server:
-Old Localized:身份服务器：</comment>
+    <value>身份服务器(&amp;N)：</value>
   </data>
   <data name="wizardPagesByAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -977,6 +960,9 @@ Old Localized:身份服务器：</comment>
   <data name="lblAlias.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
+  <data name="lblAlias.Text" xml:space="preserve">
+    <value>帐户别名：</value>
+  </data>
   <data name="&gt;&gt;lblAlias.Name" xml:space="preserve">
     <value>lblAlias</value>
   </data>
@@ -1012,5 +998,8 @@ Old Localized:身份服务器：</comment>
   </data>
   <data name="&gt;&gt;textAlias.ZOrder" xml:space="preserve">
     <value>4</value>
+  </data>
+  <data name="textAlias.ToolTip" xml:space="preserve">
+    <value>帐户的用户友好名称。该信息将显示在 UI 中。</value>
   </data>
 </root>

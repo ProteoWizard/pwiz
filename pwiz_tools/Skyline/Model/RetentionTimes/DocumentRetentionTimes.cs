@@ -624,7 +624,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     continue;
                 }
 
-                if (Equals(new LibraryAlignmentParam(AlignmentTarget, entry.Value.Library), param))
+                if (param == null || Equals(new LibraryAlignmentParam(AlignmentTarget, entry.Value.Library), param))
                 {
                     newLibraries.Add(key, entry.Value);
                     continue;

@@ -135,6 +135,9 @@
   <data name="lblServerFolders.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
+  <data name="lblServerFolders.Text" xml:space="preserve">
+    <value>フォルダ：</value>
+  </data>
   <data name="&gt;&gt;lblServerFolders.Name" xml:space="preserve">
     <value>lblServerFolders</value>
   </data>
@@ -357,6 +360,9 @@
   <data name="createRemoteFolder.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
+  <data name="createRemoteFolder.Text" xml:space="preserve">
+    <value>フォルダを作成</value>
+  </data>
   <data name="createRemoteFolder.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -389,6 +395,9 @@
   </data>
   <data name="lblAvailableStorage.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
+  </data>
+  <data name="lblAvailableStorage.Text" xml:space="preserve">
+    <value>利用可能なストレージ：</value>
   </data>
   <data name="&gt;&gt;lblAvailableStorage.Name" xml:space="preserve">
     <value>lblAvailableStorage</value>

@@ -965,7 +965,7 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        private static string GetTextForForm(Control form)
+        public static string GetTextForForm(Control form)
         {
             var result = form.Text;
             var threadExceptionDialog = form as ThreadExceptionDialog;
@@ -1186,15 +1186,17 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles(millis);
             TimeSpan maxInvokeDuration = TimeSpan.FromMilliseconds(Math.Max(waitCycles * SLEEP_INTERVAL, 60_000));
 
+            using var hangDetection = new HangDetection();
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                HangDetection.InterruptAfter(() => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                hangDetection.InterruptAfter(
+                    () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
                     maxInvokeDuration);
-                
+
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -1238,7 +1240,7 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForGraphs();
             WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
-            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => pane.IsComplete);
         }
 
         private static void WaitForBackgroundLoaders()

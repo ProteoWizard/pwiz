@@ -524,6 +524,9 @@
   <data name="removed_replicate" xml:space="preserve">
     <value>繰り返し測定{0}が削除されました</value>
   </data>
+  <data name="removed_library" xml:space="preserve">
+    <value>ライブラリを削除しました {0}</value>
+  </data>
   <data name="accepted_peptide" xml:space="preserve">
     <value>ペプチド{0}が許可されました</value>
   </data>
@@ -678,5 +681,50 @@
   </data>
   <data name="added_spectrum_filter" xml:space="preserve">
     <value>スペクトルフィルタを追加しました</value>
+  </data>
+  <data name="imputed_boundaries" xml:space="preserve">
+    <value>「{0}」の境界を補間しました</value>
+  </data>
+  <data name="files_tree_node_renamed" xml:space="preserve">
+    <value>[ファイル]ウィンドウでノード{0}の名前が{1}に変更されました</value>
+  </data>
+  <data name="files_tree_node_drag_and_drop" xml:space="preserve">
+    <value>[ファイル]ウィンドウで{0}個のノードを{1}にドラッグアンドドロップしました</value>
+  </data>
+  <data name="files_tree_nodes_drag_and_drop" xml:space="preserve">
+    <value>[ファイル]ウィンドウで{0}個のノードを{1}にドラッグアンドドロップしました</value>
+  </data>
+  <data name="files_tree_replicates_remove_one" xml:space="preserve">
+    <value>[ファイル]ウィンドウで繰り返し測定{0}を削除しました</value>
+  </data>
+  <data name="files_tree_replicates_remove_several" xml:space="preserve">
+    <value>[ファイル]ウィンドウで{0}個の繰り返し測定を削除しました</value>
+  </data>
+  <data name="files_tree_replicates_remove_all" xml:space="preserve">
+    <value>[ファイル]ウィンドウですべての繰り返し測定を削除しました</value>
+  </data>
+  <data name="files_tree_libraries_remove_one" xml:space="preserve">
+    <value>[ファイル]ウィンドウでスペクトルライブラリ{0}を削除しました</value>
+  </data>
+  <data name="files_tree_libraries_remove_several" xml:space="preserve">
+    <value>[ファイル]ウィンドウで{0}個のスペクトルライブラリを削除しました</value>
+  </data>
+  <data name="files_tree_libraries_remove_all" xml:space="preserve">
+    <value>[ファイル]ウィンドウですべてのスペクトルライブラリを削除しました</value>
+  </data>
+  <data name="files_tree_background_proteome_update" xml:space="preserve">
+    <value>[ファイル]ウィンドウから{0}という名前のバックグラウンドプロテオームを編集しました</value>
+  </data>
+  <data name="files_tree_rt_calculator_update" xml:space="preserve">
+    <value>[ファイル]ウィンドウから{0}という名前の保持時間カリキュレータを編集しました</value>
+  </data>
+  <data name="files_tree_optimization_library_update" xml:space="preserve">
+    <value>[ファイル]ウィンドウから{0}という名前の最適化ライブラリを編集しました</value>
+  </data>
+  <data name="files_tree_ion_mobility_library_update" xml:space="preserve">
+    <value>[ファイル]ウィンドウから{0}という名前の移動度ライブラリを編集しました</value>
+  </data>
+  <data name="files_tree_spectral_library_update" xml:space="preserve">
+    <value>[ファイル]ウィンドウから{0}という名前のスペクトルライブラリを編集しました</value>
   </data>
 </root>

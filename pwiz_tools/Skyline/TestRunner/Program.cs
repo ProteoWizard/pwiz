@@ -260,7 +260,8 @@ namespace TestRunner
             "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;" +
             "teamcitytestdecoration=off;teamcitytestsuite=;teamcitycleanup=off;" +
             "verbose=off;listonly;showheader=on;" +
-            "reportheaps=off;reporthandles=off;sorthandlesbycount=off";
+            "reportheaps=off;reporthandles=off;sorthandlesbycount=off;" +
+            "dotmemorywarmup=5;dotmemorywaitruns=0;dotmemorycollectallocations=off";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -1404,6 +1405,9 @@ namespace TestRunner
             bool reportHeaps = commandLineArgs.ArgAsBool("reportheaps");
             bool reportHandles = commandLineArgs.ArgAsBool("reporthandles");
             bool sortHandlesByCount = commandLineArgs.ArgAsBool("sorthandlesbycount");
+            int dotMemoryWarmup = (int) commandLineArgs.ArgAsLong("dotmemorywarmup");
+            int dotMemoryWaitRuns = (int) commandLineArgs.ArgAsLong("dotmemorywaitruns");
+            bool dotMemoryCollectAllocations = commandLineArgs.ArgAsBool("dotmemorycollectallocations");
             string parallelMode = commandLineArgs.ArgAsString("parallelmode");
             bool serverMode = parallelMode == "server";
             bool clientMode = parallelMode == "client";
@@ -1479,6 +1483,14 @@ namespace TestRunner
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
                 results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
+
+            // Configure dotMemory snapshot settings if wait runs specified
+            if (dotMemoryWaitRuns > 0)
+            {
+                runTests.DotMemoryWarmupRuns = dotMemoryWarmup;
+                runTests.DotMemoryWaitRuns = dotMemoryWaitRuns;
+                runTests.DotMemoryCollectAllocations = dotMemoryCollectAllocations;
+            }
 
             var timer = new Stopwatch();
             timer.Start();
@@ -1965,7 +1977,10 @@ namespace TestRunner
                 testDict.Add(testNames[i], i);
             }
 
-            var testArray = new TestInfo[testNames.Count];
+            // Use List<TestInfo> per slot to support class names (which may have multiple tests)
+            var testArray = new List<TestInfo>[testNames.Count];
+            for (int i = 0; i < testNames.Count; i++)
+                testArray[i] = new List<TestInfo>();
 
             var skipList = LoadList(commandLineArgs.ArgAsString("skip"));
 
@@ -1976,7 +1991,8 @@ namespace TestRunner
                 {
                     var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
                     if (testNames.Count == 0 || testNames.Contains(testName) ||
-                        testNames.Contains(testInfo.TestMethod.Name))
+                        testNames.Contains(testInfo.TestMethod.Name) ||
+                        testNames.Contains(testInfo.TestClassType.Name))
                     {
                         if (!skipList.Contains(testName) && !skipList.Contains(testInfo.TestMethod.Name))
                         {
@@ -1984,15 +2000,18 @@ namespace TestRunner
                                 testList.Add(testInfo);
                             else
                             {
-                                string lookup = testNames.Contains(testName) ? testName : testInfo.TestMethod.Name;
-                                testArray[testDict[lookup]] = testInfo;
+                                // Lookup in priority order: full name, method name, class name
+                                string lookup = testNames.Contains(testName) ? testName :
+                                    testNames.Contains(testInfo.TestMethod.Name) ? testInfo.TestMethod.Name :
+                                    testInfo.TestClassType.Name;
+                                testArray[testDict[lookup]].Add(testInfo);
                             }
                         }
                     }
                 }
             }
             if (testNames.Count > 0)
-                testList.AddRange(testArray.Where(testInfo => testInfo != null));
+                testList.AddRange(testArray.SelectMany(list => list));
 
             // Sort tests alphabetically, but run perf tests last for best coverage in a fixed amount of time.
             // However, if tests were explicitly specified (via file or command line), preserve that order.
@@ -2231,9 +2250,10 @@ in the current directory.  You can get a summary of errors and memory leaks by r
 Here is a list of recognized arguments:
 
     test=[test1,test2,...]          Run one or more tests by name (separated by ',').
-                                    Test names can be just the method name, or the method
-                                    name prefixed by the class name and a period
-                                    (such as IrtTest.IrtFunctionalTest).  Tests must belong
+                                    Test names can be just the method name, the class name
+                                    (to run all tests in that class), or the method name
+                                    prefixed by the class name and a period (such as
+                                    IrtTest.IrtFunctionalTest).  Tests must belong
                                     to a class marked [TestClass], although the method does
                                     not need to be marked [TestMethod] to be included in a
                                     test run.  A name prefixed by '@' (such as ""@fail.txt"")

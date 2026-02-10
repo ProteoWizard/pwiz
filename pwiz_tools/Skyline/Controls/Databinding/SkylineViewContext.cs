@@ -659,7 +659,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public override int GetImageIndex(ViewSpec viewSpec)
         {
             Tuple<int, int> imageIndex;
-            if (_imageIndexes.TryGetValue(viewSpec.RowSource, out imageIndex))
+            if (_imageIndexes.TryGetValue(viewSpec.RowSource ?? string.Empty, out imageIndex))
             {
                 if (DataSchema.NormalizeUiMode(viewSpec.UiMode) == UiModes.PROTEOMIC)
                 {
