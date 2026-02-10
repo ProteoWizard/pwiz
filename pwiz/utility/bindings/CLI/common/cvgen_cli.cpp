@@ -24,9 +24,11 @@
 
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/common/obo.hpp"
+#include "pwiz/data/common/cvgen_common.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 
 using namespace pwiz::data;
+using namespace pwiz::cv;
 namespace bfs = boost::filesystem;
 
 
@@ -93,20 +95,13 @@ void namespaceEnd(ostream& os, const string& name)
 }
 
 
-inline char toAllowableChar(char a)
-{
-    return isalnum(a) ? a : '_';
-}
-
-
 string enumName(const string& prefix, const string& name, bool isObsolete)
 {
-    string result = name;
-    transform(result.begin(), result.end(), result.begin(), toAllowableChar);
+    // Always use escaped characters for better handling of special chars
+    string result = toEscapedCharacters(name);
     result = prefix + "_" + result + (isObsolete ? "_OBSOLETE" : "");
     return result;
 }
-
 
 string enumName(const Term& term)
 {
