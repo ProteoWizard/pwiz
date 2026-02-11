@@ -87,14 +87,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         /// <summary>
-        /// Whether missing values should be included in linear regressions.
-        /// All versions of Skyline have included missing values as zeroes when performing the initial linear regression
-        /// before outliers are removed.
-        /// We will probably want to change this behavior.
-        /// </summary>
-        private static bool _regressionIncludesMissingValues = true;
-
-        /// <summary>
         /// Calculate peptide outliers for RT regression based on the given parameters.
         /// Returns all outliers plus any peptides with missing values (treated as outliers for removal).
         /// </summary>
@@ -260,7 +252,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     pointInfos.Add(new PointInfo(identityPath, nodePeptide.ModifiedTarget, rtOrig, rtTarget));
                 }
 
-                bool includeMissingValues = _regressionIncludesMissingValues &&
+                bool includeMissingValues = IncludeMissingValuesInRegression &&
                                             RegressionSettings.RegressionMethod == RegressionMethodRT.linear;
                 var targetTimes = pointInfos.Where(pt => includeMissingValues || pt.Y.HasValue)
                     .Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y ?? 0)).ToList();
@@ -365,6 +357,26 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
             }
 
+            /// <summary>
+            /// Whether missing values should be included in the regression.
+            /// All versions of Skyline have included missing values in the "unrefined" linear regression
+            /// for the "Score to Run" graph.
+            /// We should probably change this since it makes no sense mathematically, but that would require
+            /// changing a few tutorials and updating expected values in a few unit tests.
+            /// </summary>
+            private bool IncludeMissingValuesInRegression
+            {
+                get
+                {
+                    if (IsRunToRun)
+                    {
+                        // Missing values have always been filtered out of the run-to-run regression.
+                        return false;
+                    }
+                    return true;
+                }
+            }
+
             public SrmDocument Document => RegressionSettings.Document;
             public RetentionTimeRegressionSettings RegressionSettings { get; }
 
@@ -414,7 +426,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     {
                         validPoints.Add(pt);
                     }
-                    else if (_regressionIncludesMissingValues)
+                    else if (IncludeMissingValuesInRegression)
                     {
                         validPoints.Add(pt.ChangeX(pt.X ?? _calculator?.UnknownScore ?? 0).ChangeY(pt.Y ?? 0));
                     }
