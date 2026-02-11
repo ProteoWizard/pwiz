@@ -184,7 +184,9 @@
     <Compile Include="FilesTreeFileSystemTest.cs" />
     <Compile Include="ParquetReportExporterTest.cs" />
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
+    <Compile Include="OriginalPeakScoreTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
+    <Compile Include="RunToRunRecalcRegressionTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
     <Compile Include="FilesModelTest.cs" />
     <Compile Include="ChromatogramExtractionRangeTest.cs" />
