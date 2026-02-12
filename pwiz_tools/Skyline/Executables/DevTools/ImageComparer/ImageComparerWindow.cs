@@ -291,6 +291,14 @@ namespace ImageComparer
             toolStripNext.Enabled = toolStripFileList.SelectedIndex < toolStripFileList.Items.Count - 1;
             toolStripRevert.Enabled = _diff?.IsDiff ?? false;
             toolStripGotoWeb.Enabled = _fileToShow != null;
+            UpdateChangeCount();
+        }
+
+        private void UpdateChangeCount()
+        {
+            int total = toolStripFileList.Items.Count;
+            int current = toolStripFileList.SelectedIndex + 1;
+            labelChangeCount.Text = total > 0 ? $@"{current}/{total} changes" : string.Empty;
         }
 
         private void UpdateScreenshotsAsync(ImageSource oldImageSource, Color highlightColor)
@@ -416,7 +424,7 @@ namespace ImageComparer
 
         private void SetPreviewImage(PictureBox previewBox, ScreenshotInfo screenshot, ScreenshotDiff diff = null)
         {
-            var baseImage = diff?.HighlightedImage ?? screenshot.Image;
+            var baseImage = GetDisplayImage(diff, screenshot);
             var newImage = baseImage;
             if (baseImage != null && !screenshot.IsPlaceholder)
             {
@@ -431,6 +439,53 @@ namespace ImageComparer
             }
 
             previewBox.Image = newImage;
+        }
+
+        /// <summary>
+        /// Gets the appropriate image to display based on diff-only and amplification settings.
+        /// </summary>
+        private Bitmap GetDisplayImage(ScreenshotDiff diff, ScreenshotInfo screenshot)
+        {
+            if (diff == null)
+                return screenshot.Image;
+
+            int amplifyRadius = GetAmplifyRadius();
+            bool diffOnly = toolStripDiffOnly.Checked;
+
+            if (amplifyRadius > 0)
+            {
+                // Amplified view - fall back to normal view if no diff pixels
+                var amplifiedImage = diffOnly
+                    ? diff.CreateAmplifiedDiffOnlyImage(amplifyRadius)
+                    : diff.CreateAmplifiedImage(amplifyRadius);
+                if (amplifiedImage != null)
+                    return amplifiedImage;
+                // Fall through to non-amplified handling when no diff pixels
+            }
+
+            if (diffOnly)
+            {
+                // Diff-only view - show white rectangle if no diff pixels
+                return diff.DiffOnlyImage ?? CreateWhiteImage(screenshot.ImageSize);
+            }
+
+            // Normal highlighted view
+            return diff.HighlightedImage ?? screenshot.Image;
+        }
+
+        private static Bitmap CreateWhiteImage(Size size)
+        {
+            var result = new Bitmap(size.Width, size.Height);
+            using (var g = Graphics.FromImage(result))
+            {
+                g.Clear(Color.White);
+            }
+            return result;
+        }
+
+        private int GetAmplifyRadius()
+        {
+            return toolStripAmplify.Checked ? 5 : 0;
         }
 
         private Size CalcBitmapSize(ScreenshotInfo screenshot, Size containerSize)
@@ -740,6 +795,14 @@ namespace ImageComparer
                 case Keys.Control | Keys.V:
                     Paste();
                     return true;
+
+                // Diff view toggles
+                case Keys.D:
+                    toolStripDiffOnly.Checked = !toolStripDiffOnly.Checked;
+                    return true;
+                case Keys.A:
+                    toolStripAmplify.Checked = !toolStripAmplify.Checked;
+                    return true;
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
@@ -792,15 +855,7 @@ namespace ImageComparer
         private void NextOldImageSource()
         {
             OldImageSource = OLD_IMAGE_SOURCES[(Settings.Default.OldImageSource + 1) % OLD_IMAGE_SOURCES.Length];
-
-            UpdateImageSourceButtons();
-
-            lock (_lock)
-            {
-                _oldScreenshot = new OldScreenshot(_oldScreenshot, null, OldImageSource);
-            }
-
-            FormStateChanged();
+            SetOldImageSource(OldImageSource);
         }
 
         private void UpdateImageSourceButtons()
@@ -867,7 +922,38 @@ namespace ImageComparer
 
         private void buttonImageSource_Click(object sender, EventArgs e)
         {
-            NextOldImageSource();
+            // Update menu check marks
+            menuItemGit.Checked = OldImageSource == ImageSource.git;
+            menuItemWeb.Checked = OldImageSource == ImageSource.web;
+
+            // Show context menu below the button
+            contextMenuImageSource.Show(buttonImageSource, new Point(0, buttonImageSource.Height));
+        }
+
+        private void menuItemGit_Click(object sender, EventArgs e)
+        {
+            SetOldImageSource(ImageSource.git);
+        }
+
+        private void menuItemWeb_Click(object sender, EventArgs e)
+        {
+            SetOldImageSource(ImageSource.web);
+        }
+
+        private void SetOldImageSource(ImageSource source)
+        {
+            if (OldImageSource == source)
+                return;
+
+            OldImageSource = source;
+            UpdateImageSourceButtons();
+
+            lock (_lock)
+            {
+                _oldScreenshot = new OldScreenshot(_oldScreenshot, null, OldImageSource);
+            }
+
+            FormStateChanged();
         }
 
         private void toolStripPickColorButton_ColorChanged(object sender, EventArgs e)
@@ -875,6 +961,16 @@ namespace ImageComparer
             HighlightColor = toolStripPickColorButton.SelectedColor;
             if (oldScreenshotPictureBox.Visible)
                 UpdateScreenshotsAsync(OldImageSource, HighlightColor); // On foreground thread because the screenshots are already loaded - just updating the diff
+        }
+
+        private void toolStripDiffOnly_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdatePreviewImages();
+        }
+
+        private void toolStripAmplify_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdatePreviewImages();
         }
 
         private void Paste()

@@ -741,12 +741,9 @@ namespace pwiz.SkylineTestTutorial
 
                 var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                 var minimizeResultsDlg = ShowDialog<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults);
-                RunUI(() =>
-                {
-                    minimizeResultsDlg.LimitNoiseTime = true;
-                    minimizeResultsDlg.NoiseTimeRange = 2; // Not L10N
-                });
+                RunUI(() => minimizeResultsDlg.SetNoiseLimit(true, 2));
                 WaitForConditionUI(() => minimizeResultsDlg.IsComplete);
+                RunUI(() => Assert.AreEqual(55, minimizeResultsDlg.PercentOfTotalCompression));
                 PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form");   // old p. 23
 
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));
