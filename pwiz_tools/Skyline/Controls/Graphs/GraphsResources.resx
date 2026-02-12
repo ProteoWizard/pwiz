@@ -535,6 +535,15 @@ Here are the last 3 errors:
   <data name="GraphFullScan_SetSpectraUI__peak_type_not_available" xml:space="preserve">
     <value>{0} spectra are not available in this data file. Showing {1} instead.</value>
   </data>
+  <data name="GraphFullScan_ToolTip_HeatMap" xml:space="preserve">
+    <value>m/z: {0}
+{1}: {2}
+Intensity: {3}</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_Spectrum" xml:space="preserve">
+    <value>m/z: {0}
+Intensity: {1}</value>
+  </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
     <value>{0:0.0000}</value>
   </data>
