@@ -200,12 +200,36 @@ namespace pwiz.SkylineTestFunctional
             // Test Copy Data output for heatmap - should have 3 columns (m/z, ion mobility, intensity)
             // not 100+ columns from separate intensity curves (issue #3953)
             var graphData = GraphData.GetGraphData(SkylineWindow.GraphFullScan.ZedGraphControl.MasterPane);
-            Assert.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
-            Assert.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
+            AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
+            AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
             var dataFrame = graphData.Panes[0].DataFrames[0];
-            Assert.AreEqual(3, dataFrame.ColumnCount, "Heatmap Copy Data should have 3 columns (m/z, ion mobility, intensity)");
-            Assert.IsTrue(dataFrame.RowCount > 0, "Heatmap should have data rows");
+            AssertEx.AreEqual(3, dataFrame.ColumnCount, "Heatmap Copy Data should have 3 columns");
+            AssertEx.IsTrue(dataFrame.RowCount > 100, "Heatmap should have substantial data rows");
 
+            // Verify data values are physically reasonable by spot-checking rows
+            foreach (var i in new[] { 0, dataFrame.RowCount / 2, dataFrame.RowCount - 1 })
+            {
+                var row = dataFrame.GetRow(i);
+                AssertEx.AreEqual(3, row.Length);
+                var mz = (double) row[0];
+                var ionMobility = (double) row[1];
+                var intensity = (double) row[2];
+                AssertEx.IsTrue(mz > 0, "m/z should be positive");
+                AssertEx.IsTrue(ionMobility > 0, "Ion mobility should be positive");
+                AssertEx.IsTrue(intensity >= 0, "Intensity should be non-negative");
+            }
+
+            // Check a couple specific points
+            void VerifyHeatMapRow(int rowIndex, double expectedMz, double expectedIm, double expectedIntensity)
+            {
+                var row = dataFrame.GetRow(rowIndex);
+                AssertEx.AreEqual(expectedMz, (double)row[0], 0.0001, "m/z");
+                AssertEx.AreEqual(expectedIm, (double)row[1], 0.0001, "IM");
+                AssertEx.AreEqual(expectedIntensity, (double)row[2], 0.0001, "intensity");
+            }
+            VerifyHeatMapRow(55355, 621.3006, 5.31291, 14);
+            VerifyHeatMapRow(1, 95.984268, 0.068998, 6);
+PauseTest();
             // Check filtered heatmap.
             SetFilter(true);
             TestScale(452, 456, 3.2, 3.8);
