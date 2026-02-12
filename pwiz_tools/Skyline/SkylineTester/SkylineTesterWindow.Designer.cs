@@ -1351,11 +1351,13 @@ namespace SkylineTester
             "Quality",
             "Demo",
             "Screenshots",
-            "Auto-Screenshots",
+            "Auto-Screenshots for publishing",
+            "Auto-Screenshots for development",
+            "Screenshot Comparisons",
             "Covershot"});
-            this.runMode.Location = new System.Drawing.Point(276, 553);
+            this.runMode.Location = new System.Drawing.Point(173, 553);
             this.runMode.Name = "runMode";
-            this.runMode.Size = new System.Drawing.Size(121, 21);
+            this.runMode.Size = new System.Drawing.Size(224, 21);
             this.runMode.TabIndex = 0;
             this.runMode.SelectedIndexChanged += new System.EventHandler(this.runMode_SelectedIndexChanged);
             // 
@@ -1363,7 +1365,7 @@ namespace SkylineTester
             // 
             this.label21.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(273, 536);
+            this.label21.Location = new System.Drawing.Point(170, 538);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(37, 13);
             this.label21.TabIndex = 35;
@@ -2796,7 +2798,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 332;
+            this.outputSplitContainer.SplitterDistance = 320;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2818,7 +2820,7 @@ namespace SkylineTester
             this.commandShell.NextCommand = 0;
             this.commandShell.RestartCount = 0;
             this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
-            this.commandShell.Size = new System.Drawing.Size(671, 332);
+            this.commandShell.Size = new System.Drawing.Size(671, 320);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2836,7 +2838,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(671, 220);
+            this.errorConsole.Size = new System.Drawing.Size(671, 232);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);

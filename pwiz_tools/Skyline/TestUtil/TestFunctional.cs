@@ -1305,7 +1305,7 @@ namespace pwiz.SkylineTestUtil
         public static bool IsPauseForScreenShots
         {
             // Code written to depend on IsPauseForScreenShots also applies to IsAutoScreenShotMode.
-            get { return _isPauseForScreenShots || Program.PauseSeconds == -1 || IsAutoScreenShotMode; }
+            get { return _isPauseForScreenShots || (!IsPass0 && (Program.PauseSeconds == -1 || IsAutoScreenShotMode)); }
             set
             {
                 _isPauseForScreenShots = value;
@@ -1320,8 +1320,8 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsAutoScreenShotMode
         {
-            // -3 is auto screenshot mode, -4 is screenshot comparison mode (which also enables auto screenshot mode)
-            get { return _isAutoScreenShotMode || Program.PauseSeconds == -3 || Program.PauseSeconds == -4; }
+            // -3 is auto screenshot mode, -4 is screenshot comparison mode, -5 is record to comparison path mode
+            get { return _isAutoScreenShotMode || (!IsPass0 && (Program.PauseSeconds == -3 || Program.PauseSeconds == -4 || Program.PauseSeconds == -5)); }
             set
             {
                 _isAutoScreenShotMode = value;
@@ -1350,6 +1350,13 @@ namespace pwiz.SkylineTestUtil
                 }
             }
         }
+
+        /// <summary>
+        /// When true, screenshots are automatically recorded to <see cref="TutorialScreenshotPath"/>
+        /// (TestTutorial/TutorialScreenshots) instead of <see cref="TutorialPath"/> (Documentation/Tutorials).
+        /// Use pause=-5 to enable this mode.
+        /// </summary>
+        public static bool IsRecordToComparisonPath => Program.PauseSeconds == -5;
 
         /// <summary>
         /// The screenshot comparer used when <see cref="IsScreenshotComparisonMode"/> is true.
@@ -1409,10 +1416,27 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 return IsTutorial
-                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
+                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{TutorialScreenshotSubdirectory}")
                     : null;
             }
         }
+
+        /// <summary>
+        /// Path to tutorial screenshots used for comparison testing.
+        /// These are stored in TestTutorial/TutorialScreenshots instead of Documentation/Tutorials
+        /// to keep comparison screenshots separate from the documentation.
+        /// </summary>
+        protected string TutorialScreenshotPath
+        {
+            get
+            {
+                return IsTutorial
+                    ? TestContext.GetProjectDirectory($"TestTutorial\\TutorialScreenshots\\{TutorialScreenshotSubdirectory}")
+                    : null;
+            }
+        }
+
+        private string TutorialScreenshotSubdirectory => $"{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}";
 
         public static string GetFolderNameForLanguage(CultureInfo cultureInfo)
         {
@@ -2013,7 +2037,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         if (ScreenshotComparer == null)
                         {
-                            ScreenshotComparer = new ScreenshotComparer(TutorialPath);
+                            ScreenshotComparer = new ScreenshotComparer(TutorialScreenshotPath);
 
                             // Clear any previous diff images for this test
                             var diffDir = Path.Combine(
@@ -2583,11 +2607,18 @@ namespace pwiz.SkylineTestUtil
                         @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
 
+                // Move Skyline to the chosen screenshot screen at the start of the test
+                // This works for any mode, not just screenshot recording/comparison
+                if (RunTests.ScreenshotScreenIndex > 1)
+                {
+                    RunUI(() => ScreenshotManager.MoveToScreenshotScreen(SkylineWindow));
+                }
+
                 if (IsRecordingScreenShots)
                 {
-                    _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
-                    // Move Skyline to the chosen screenshot screen at the start of the test
-                    RunUI(() => _shotManager.MoveToScreenshotScreen(SkylineWindow));
+                    // Use TutorialScreenshotPath for -5 mode, TutorialPath for other modes
+                    var screenshotPath = IsRecordToComparisonPath ? TutorialScreenshotPath : TutorialPath;
+                    _shotManager = new ScreenshotManager(SkylineWindow, screenshotPath);
                 }
 
                 BeginAuditLogging();

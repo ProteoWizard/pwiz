@@ -349,7 +349,7 @@ namespace pwiz.SkylineTestUtil
             return GetScreenshotScreen().Bounds;
         }
 
-        public Screen GetScreenshotScreen()
+        public static Screen GetScreenshotScreen()
         {
             var screenIndex = RunTests.ScreenshotScreenIndex;
             if (screenIndex < 1 || screenIndex > Screen.AllScreens.Length)
@@ -362,7 +362,7 @@ namespace pwiz.SkylineTestUtil
         /// Moves a form to the screenshot screen if it's not already on it,
         /// preserving its relative position within the screen's working area.
         /// </summary>
-        public void MoveToScreenshotScreen(Form form)
+        public static void MoveToScreenshotScreen(Form form)
         {
             var targetScreen = GetScreenshotScreen();
             var currentScreen = Screen.FromControl(form);

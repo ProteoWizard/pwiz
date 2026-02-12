@@ -102,24 +102,24 @@ namespace TestRunnerLib
                 {
                     sb.AppendLine($"Test: {test.TestName}");
                     sb.AppendLine($"  Tutorial Path: {test.TutorialPath}");
-                    sb.AppendLine($"  Threshold: {test.ThresholdPercent}% (excluding title bar)");
+                    sb.AppendLine($"  Threshold: {test.ThresholdPercent}%");
                     sb.AppendLine($"  Screenshots: {test.Results.Count}");
 
                     foreach (var r in test.Results.OrderBy(r => r.ScreenshotNumber))
                     {
                         if (!string.IsNullOrEmpty(r.Error))
                         {
-                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png: ERROR - {r.Error} ***");
+                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png - ERROR - {r.Error} - {r.Description} ***");
                         }
                         else if (!string.IsNullOrEmpty(r.SizeMismatchText))
                         {
-                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png: FAIL ({r.SizeMismatchText}) ***");
+                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png - FAIL ({r.SizeMismatchText}) - {r.Description} ***");
                         }
                         else
                         {
                             var status = r.Passed ? "PASS" : "FAIL";
                             var marker = r.Passed ? "" : " ***";
-                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png: {status} ({r.DiffPercentageWithoutTitleBar:F2}% diff){marker}");
+                            sb.AppendLine($"    s-{r.ScreenshotNumber:D2}.png - {status} ({r.DiffPercentageWithoutTitleBar:F2}% diff) - {r.Description}{marker}");
                             if (!r.Passed && r.DominantColorPairs.Count > 0)
                             {
                                 foreach (var pair in r.DominantColorPairs)
