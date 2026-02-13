@@ -475,15 +475,22 @@ namespace pwiz.SkylineTestUtil
             RunUI(SkylineWindow.FocusDocument);
         }
 
-        public static void JiggleSelection()
+        public static void JiggleSelection(bool up = false)
         {
             if (!IsPauseForScreenShots)
                 return;
 
             // Node change apparently required to get x-axis labels in peak areas view the way they should be
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
+            MoveSelection(up);
             WaitForGraphs();
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
+            MoveSelection(!up);
+        }
+
+        private static void MoveSelection(bool up)
+        {
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = up
+                ? SkylineWindow.SelectedNode.PrevVisibleNode
+                : SkylineWindow.SelectedNode.NextVisibleNode);
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)
@@ -965,7 +972,7 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        private static string GetTextForForm(Control form)
+        public static string GetTextForForm(Control form)
         {
             var result = form.Text;
             var threadExceptionDialog = form as ThreadExceptionDialog;
@@ -1186,15 +1193,17 @@ namespace pwiz.SkylineTestUtil
             int waitCycles = GetWaitCycles(millis);
             TimeSpan maxInvokeDuration = TimeSpan.FromMilliseconds(Math.Max(waitCycles * SLEEP_INTERVAL, 60_000));
 
+            using var hangDetection = new HangDetection();
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                HangDetection.InterruptAfter(() => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                hangDetection.InterruptAfter(
+                    () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
                     maxInvokeDuration);
-                
+
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -1887,7 +1896,9 @@ namespace pwiz.SkylineTestUtil
             }
 
             PauseForScreenShot(allChromGraph, description,
-                processShot: bmp => bmp.CleanupBorder().FillProgressBar(allChromGraph.ProgressBarTotal));
+                processShot: bmp => bmp.CleanupBorder()
+                    .FillProgressBar(allChromGraph.ProgressBarTotal)
+                    .FillProgressBars(allChromGraph.GetVisibleFileProgressBars()));
             allChromGraph.ReleaseFrozenProgress();
 
             if (IsTestingResultsProgressOnly)
@@ -1969,7 +1980,7 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
+                    Thread.Sleep(1500); // Wait for UI to settle down - or screenshots can end up blurry
                     _shotManager.ActivateScreenshotForm(screenshotForm);
                     var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);

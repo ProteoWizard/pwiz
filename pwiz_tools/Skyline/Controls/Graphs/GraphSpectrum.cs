@@ -221,6 +221,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly GraphHelper _graphHelper;
         private MSGraphControl graphControl => msGraphExtension.Graph;
 
+        public ZedGraphControl ZedGraphControl => graphControl;
+
         public GraphSpectrum(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
@@ -420,11 +422,6 @@ namespace pwiz.Skyline.Controls.Graphs
             axis.Scale.MinAuto = axis.Scale.MinAuto = false;
             axis.Scale.Min = xMin;
             axis.Scale.Max = xMax;
-        }
-
-        public void ZoomXAxis(double xMin, double xMax)
-        {
-            ZoomXAxis(GraphPane.XAxis, xMin, xMax);
         }
 
         public void ZoomSpectrumToSettings()
