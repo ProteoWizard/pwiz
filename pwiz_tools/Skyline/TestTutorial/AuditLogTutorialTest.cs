@@ -671,11 +671,11 @@ namespace pwiz.SkylineTestTutorial
         private TimeSpan _elapsedTime = TimeSpan.Zero;
         private Random _random = new Random(1); // A consistent random series
 
-        public TestTimeProvider()
+        public TestTimeProvider(DateTime? startTime = null)
         {
             _previousProvider = AuditLogEntry.TimeProvider;
             // Start with a consistent local time of 2025-1-1 at 9:35 AM
-            var localTime = new DateTime(2025, 1, 1, 9, 35, 0, DateTimeKind.Local);
+            var localTime = startTime ?? new DateTime(2025, 1, 1, 9, 35, 0, DateTimeKind.Local);
             // The audit logging system expects a UTC time.
             _startTime = localTime.ToUniversalTime();
             AuditLogEntry.TimeProvider = this;

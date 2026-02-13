@@ -326,6 +326,7 @@
     <None Include="Resources\save_and_continue.png" />
     <None Include="Resources\webdestination.png" />
     <None Include="Resources\autosizeoptimize.png" />
+    <None Include="Resources\blank.png" />
     <None Include="Resources\imagebutton.png" />
     <None Include="Resources\textbutton.png" />
     <None Include="Resources\websource.png" />
