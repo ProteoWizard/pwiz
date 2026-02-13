@@ -360,8 +360,15 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // === Test 4: Undo - verify the restored peptides are recalculated ===
-            RunUI(SkylineWindow.Undo);
-            WaitForConditionUI(() => pane.IsComplete);
+            // Track cached results to investigate whether multiple DocumentChanged events
+            // cause parallel calculations during undo (same pattern as Test 6/PR #3830)
+            using (new ScopedAction(
+                       () => GraphDataCachingReceiver.TrackCaching = true,
+                       () => GraphDataCachingReceiver.TrackCaching = false))
+            {
+                RunUI(SkylineWindow.Undo);
+                WaitForConditionUI(() => pane.IsComplete);
+            }
 
             RunUI(() =>
             {
@@ -369,11 +376,26 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(originalPeptideCount, afterUndoCount,
                     "Undo should restore peptide count");
 
-                // Verify incremental update: existing peptides cached, restored peptides recalculated
-                Assert.AreEqual(originalPeptideCount - peptidesToDelete, pane.CachedNodeCount,
-                    "After undo, existing peptides should be cached");
-                Assert.AreEqual(peptidesToDelete, pane.RecalculatedNodeCount,
-                    $"After undo, only the {peptidesToDelete} restored peptides should be recalculated");
+                var cachedResults = GraphDataCachingReceiver.CachedSinceTracked.ToList();
+                Assert.IsTrue(cachedResults.Count > 0,
+                    "Should have cached at least one result during undo");
+
+                // Expect a single calculation. If multiple DocumentChanged events fired,
+                // there will be multiple results -- fail with diagnostic info to investigate.
+                var diagnosticInfo = string.Join("\n", cachedResults.Select((r, i) =>
+                    $"  [{i}]: {r.GetDiagnosticInfo()}"));
+                Assert.AreEqual(1, cachedResults.Count,
+                    $"Expected a single calculation during undo, but got {cachedResults.Count}. " +
+                    $"Multiple DocumentChanged events may be causing parallel calculations:\n{diagnosticInfo}");
+
+                // Single calculation -- verify incremental update
+                var result = cachedResults.First();
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, result.CachedNodeCount,
+                    $"After undo, existing peptides should be cached. " +
+                    $"Result: {result.GetDiagnosticInfo()}");
+                Assert.AreEqual(peptidesToDelete, result.RecalculatedNodeCount,
+                    $"After undo, only the {peptidesToDelete} restored peptides should be recalculated. " +
+                    $"Result: {result.GetDiagnosticInfo()}");
             });
 
             // === Test 5: Change quantification settings - verify full recalculation ===
