@@ -781,6 +781,10 @@ namespace TestPerf
 
             if (!IsDiaNN)
             {
+                // Get rid of the DIANN directory for the screenshot if it is there
+                if (IsPauseForScreenShots && Directory.Exists(Path.Combine(diaDir, "DIANN")))
+                    Directory.Delete(Path.Combine(diaDir, "DIANN"), true);
+
                 var importResultsDia = importResults as ImportResultsDIAControl;
                 Assert.IsNotNull(importResults);
                 var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResultsDia.Browse(diaDir));
