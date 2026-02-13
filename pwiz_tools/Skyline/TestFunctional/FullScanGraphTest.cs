@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestFunctional
             }
             VerifyHeatMapRow(55355, 621.3006, 5.31291, 14);
             VerifyHeatMapRow(1, 95.984268, 0.068998, 6);
-PauseTest();
+
             // Check filtered heatmap.
             SetFilter(true);
             TestScale(452, 456, 3.2, 3.8);
