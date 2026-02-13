@@ -2540,11 +2540,14 @@ namespace pwiz.Skyline.Model
         /// Number of fragments per line, driven by the maximum repeat count across all
         /// fragment-oriented column types (Product m/z, Product Formula, Product Name, etc.)
         /// </summary>
-        public int FragmentCount => Math.Max(1, new[]
-        {
+        public int FragmentCount => GetFragmentCount(
             ProductMzColumns.Count, ProductFormulaColumns.Count, ProductNameColumns.Count,
-            ProductChargeColumns.Count, ProductAdductColumns.Count, ProductNeutralLossColumns.Count
-        }.Max());
+            ProductChargeColumns.Count, ProductAdductColumns.Count, ProductNeutralLossColumns.Count);
+
+        public static int GetFragmentCount(params int[] fragmentColumnCounts)
+        {
+            return Math.Max(1, fragmentColumnCounts.Max());
+        }
 
         /// <summary>
         /// Get the column index for a given fragment, with fill-forward for types that have
@@ -2552,7 +2555,10 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public static int GetProductColumnForFragment(List<int> columnList, int fragmentIndex)
         {
-            if (columnList.Count == 0) return -1;
+            if (columnList.Count == 0)
+            {
+                return -1;
+            }
             return fragmentIndex < columnList.Count
                 ? columnList[fragmentIndex]
                 : columnList[columnList.Count - 1]; // fill-forward

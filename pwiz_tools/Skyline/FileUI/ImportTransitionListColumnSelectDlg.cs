@@ -609,18 +609,12 @@ namespace pwiz.Skyline.FileUI
             // Set combo boxes for additional fragment-oriented column assignments beyond the first.
             // When multiple columns are mapped to the same product type (e.g. three columns all
             // assigned to "Product m/z"), the first is handled above; the rest are set here.
-            foreach (var extraCol in columns.ProductMzColumns.Skip(1))
-                SetComboBoxText(extraCol, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-            foreach (var extraCol in columns.ProductFormulaColumns.Skip(1))
-                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
-            foreach (var extraCol in columns.ProductNameColumns.Skip(1))
-                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-            foreach (var extraCol in columns.ProductChargeColumns.Skip(1))
-                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
-            foreach (var extraCol in columns.ProductAdductColumns.Skip(1))
-                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
-            foreach (var extraCol in columns.ProductNeutralLossColumns.Skip(1))
-                SetComboBoxText(extraCol, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
+            SetComboBoxTextExtra(columns.ProductMzColumns, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            SetComboBoxTextExtra(columns.ProductFormulaColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+            SetComboBoxTextExtra(columns.ProductNameColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+            SetComboBoxTextExtra(columns.ProductChargeColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            SetComboBoxTextExtra(columns.ProductAdductColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
+            SetComboBoxTextExtra(columns.ProductNeutralLossColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
 
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
@@ -889,6 +883,12 @@ namespace pwiz.Skyline.FileUI
             SetColumnColor(ComboBoxes[comboBoxIndex]);
         }
 
+        private void SetComboBoxTextExtra(List<int> columns, string text)
+        {
+            foreach (var extraCol in columns.Skip(1))
+                SetComboBoxText(extraCol, text);
+        }
+
         // Ensures two combo boxes do not have the same value. Usually newSelectedIndex will be zero, because that is IgnoreColumn.
         private void CheckForComboBoxOverlap(int indexOfPreviousComboBox, int newSelectedIndex, int indexOfNewComboBox)
         {
@@ -966,12 +966,19 @@ namespace pwiz.Skyline.FileUI
                         return false;
                     }
 
-                    // Fragment-oriented column types are a special case: in molecule mode, the same
-                    // product type (e.g. "Product m/z") can be assigned to multiple columns, creating
-                    // one transition per assignment. This skips the overlap check that normally prevents
-                    // duplicate column type assignments.
-                    if (columnList != null && !radioPeptide.Checked)
+                    if (columnList == null || radioPeptide.Checked)
                     {
+                        var val = (int) property.GetValue(columns, null);
+                        CheckForComboBoxOverlap(val, 0, comboBoxIndex);
+                        columns.ResetDuplicateColumns(comboBoxIndex);
+                        property.SetValue(columns, comboBoxIndex);
+                    }
+                    else
+                    {
+                        // Fragment-oriented column types are a special case: in molecule mode, the same
+                        // product type (e.g. "Product m/z") can be assigned to multiple columns, creating
+                        // one transition per assignment. This skips the overlap check that normally prevents
+                        // duplicate column type assignments.
                         columns.ResetDuplicateColumns(comboBoxIndex);
                         if (!columnList.Contains(comboBoxIndex))
                         {
@@ -985,13 +992,6 @@ namespace pwiz.Skyline.FileUI
                         }
                         // Primary property keeps the first assignment (leftmost column)
                         property.SetValue(columns, columnList[0]);
-                    }
-                    else
-                    {
-                        var val = (int) property.GetValue(columns, null);
-                        CheckForComboBoxOverlap(val, 0, comboBoxIndex);
-                        columns.ResetDuplicateColumns(comboBoxIndex);
-                        property.SetValue(columns, comboBoxIndex);
                     }
                     return true;
                 }

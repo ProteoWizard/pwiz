@@ -445,46 +445,12 @@ namespace pwiz.Skyline.Model
                             }
 
                             tranGroupFound = true;
-                            string errmsg = null;
-                            try
-                            {
-                                // We allow for more than one fragment per input line
-                                var fragmentCount = FragmentCount;
-                                for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
-                                {
-                                    var tranNode = GetMoleculeTransitionForFragment(document, row, pep.Peptide,
-                                        tranGroup.TransitionGroup, tranGroup.ExplicitValues, fragmentIndex);
-                                    if (tranNode == null)
-                                    {
-                                        if (fragmentIndex == 0)
-                                            return true; // First fragment must succeed
-                                        continue; // Skip empty/NA fragments
-                                    }
-                                    var tranFound = false;
-                                    foreach (var tran in tranGroup.Transitions)
-                                    {
-                                        if (Equals(tranNode.Transition.CustomIon, tran.Transition.CustomIon))
-                                        {
-                                            tranFound = true;
-                                            break;
-                                        }
-                                    }
-
-                                    if (!tranFound)
-                                    {
-                                        document = (SrmDocument) document.Add(pathGroup, tranNode);
-                                        _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
-                                    }
-                                }
-                            }
-                            catch (Exception exception) when (IsParserException(exception))
-                            {
-                                errmsg = exception.Message;
-                            }
+                            string errmsg;
+                            if (AddFragmentTransitions(ref document, row, pep, tranGroup, pathGroup, out errmsg))
+                                return true; // First fragment must succeed
 
                             if (errmsg != null)
                             {
-                                // Some error we didn't catch in the basic checks
                                 ShowTransitionError(new PasteError
                                 {
                                     Column = 0,
@@ -727,28 +693,13 @@ namespace pwiz.Skyline.Model
         /// Number of fragments per line, driven by the maximum repeat count across all
         /// fragment-oriented column types (Product m/z, Product Formula, Product Name, etc.)
         /// </summary>
-        protected int FragmentCount
-        {
-            get
-            {
-                int max = 0;
-                foreach (var name in new[]
-                {
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.adductProduct,
-                    SmallMoleculeTransitionListColumnHeaders.neutralLossProduct
-                })
-                {
-                    var count = ColumnIndicesMulti(name).Count;
-                    if (count > max)
-                        max = count;
-                }
-                return Math.Max(1, max);
-            }
-        }
+        protected int FragmentCount => ColumnIndices.GetFragmentCount(
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.mzProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.formulaProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.nameProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.chargeProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.adductProduct).Count,
+            ColumnIndicesMulti(SmallMoleculeTransitionListColumnHeaders.neutralLossProduct).Count);
 
         /// <summary>
         /// Get the column index for the nth fragment of a given product column type, with fill-forward
@@ -2491,6 +2442,44 @@ namespace pwiz.Skyline.Model
             }
 
             return new TransitionDocNode(transition, annotations, null, mass, transitionQuantInfo, ionExplicitTransitionValues, null);
+        }
+
+        /// <summary>
+        /// Add transitions for all fragments in a multi-fragment-per-line row to an existing
+        /// transition group, skipping any that already exist or have empty/NA product columns.
+        /// Returns true if the first fragment fails (caller should treat as error).
+        /// Sets errmsg on parser exceptions.
+        /// </summary>
+        private bool AddFragmentTransitions(ref SrmDocument document, Row row,
+            PeptideDocNode pep, TransitionGroupDocNode tranGroup, IdentityPath pathGroup, out string errmsg)
+        {
+            errmsg = null;
+            try
+            {
+                var fragmentCount = FragmentCount;
+                for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
+                {
+                    var tranNode = GetMoleculeTransitionForFragment(document, row, pep.Peptide,
+                        tranGroup.TransitionGroup, tranGroup.ExplicitValues, fragmentIndex);
+                    if (tranNode == null)
+                    {
+                        if (fragmentIndex == 0)
+                            return true; // First fragment must succeed
+                        continue; // Skip empty/NA fragments
+                    }
+
+                    if (!tranGroup.Transitions.Any(t => Equals(tranNode.Transition.CustomIon, t.Transition.CustomIon)))
+                    {
+                        document = (SrmDocument) document.Add(pathGroup, tranNode);
+                        _firstAddedPathPepGroup = _firstAddedPathPepGroup ?? pathGroup;
+                    }
+                }
+            }
+            catch (Exception exception) when (IsParserException(exception))
+            {
+                errmsg = exception.Message;
+            }
+            return false;
         }
 
         /// <summary>
