@@ -381,14 +381,14 @@ namespace pwiz.SkylineTestFunctional
                     "Should have cached at least one result during undo");
 
                 // Expect a single calculation. If multiple DocumentChanged events fired,
-                // there will be multiple results — fail with diagnostic info to investigate.
+                // there will be multiple results -- fail with diagnostic info to investigate.
                 var diagnosticInfo = string.Join("\n", cachedResults.Select((r, i) =>
                     $"  [{i}]: {r.GetDiagnosticInfo()}"));
                 Assert.AreEqual(1, cachedResults.Count,
                     $"Expected a single calculation during undo, but got {cachedResults.Count}. " +
                     $"Multiple DocumentChanged events may be causing parallel calculations:\n{diagnosticInfo}");
 
-                // Single calculation — verify incremental update
+                // Single calculation -- verify incremental update
                 var result = cachedResults.First();
                 Assert.AreEqual(originalPeptideCount - peptidesToDelete, result.CachedNodeCount,
                     $"After undo, existing peptides should be cached. " +
