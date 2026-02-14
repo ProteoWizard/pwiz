@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -448,7 +448,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 return IonMobilityWindow.EMPTY; // Expect exact value match for FAIMS
             }
 
-            var ionMobility = ionMobilityValue.Mobility.Value;
+            return ionMobilityValue.Mobility.HasValue
+                ? WidthAt(ionMobilityValue.Mobility.Value, ionMobilityMax)
+                : IonMobilityWindow.EMPTY;
+        }
+
+        public IonMobilityWindow WidthAt(double ionMobility, double ionMobilityMax)
+        {
             switch (WindowWidthMode)
             {
                 case IonMobilityWindowWidthType.resolving_power:
@@ -1119,13 +1125,18 @@ namespace pwiz.Skyline.Model.DocSettings
             if ((offsetLow == 0 && offsetHigh == 0) || !IonMobility.HasValue)
                 return this;
             // Original bounds
-            var boundsLow = IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth??0;
-            var boundsHigh = boundsLow + IonMobilityExtractionWindowWidth??0;
+            GetBounds(out double boundsLow, out double boundsHigh);
+
             // Apply offsets
             boundsLow += offsetLow;
             boundsHigh += offsetHigh;
+
             var width = Math.Abs(boundsHigh - boundsLow);
-            return GetIonMobilityFilter(Math.Min(boundsHigh, boundsLow) + 0.5*width, IonMobilityUnits, width, CollisionalCrossSectionSqA);
+            var center = boundsLow + width / 2;
+            // ReSharper disable once PossibleInvalidOperationException
+            var offset = center - IonMobility.Mobility.Value;
+            var imWindow = IonMobilityWindow.FromWidthAndOffset(width, offset);
+            return GetIonMobilityFilter(IonMobilityAndCCS, imWindow);
         }
 
         public bool ContainsIonMobility(double val, bool useHighEnergyOffset)

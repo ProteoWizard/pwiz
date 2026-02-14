@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -1038,7 +1038,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (imAndCCS.IonMobility.Mobility.HasValue) // Did CCS conversion succeed?
                 {
                     // Now get the window width
-                    var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
+                    var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility, ionMobilityMax);
                     return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
                 }
             }

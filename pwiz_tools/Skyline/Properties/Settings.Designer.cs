@@ -1941,7 +1941,19 @@ namespace pwiz.Skyline.Properties {
                 this["SumScansFullScan"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowMobilogramFullScan {
+            get {
+                return ((bool)(this["ShowMobilogramFullScan"]));
+            }
+            set {
+                this["ShowMobilogramFullScan"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]

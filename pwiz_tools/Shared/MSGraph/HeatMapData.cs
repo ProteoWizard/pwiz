@@ -34,6 +34,12 @@ namespace pwiz.MSGraph
         private readonly Cell _cell;
         public string ZAxisName { get; private set; }
 
+        /// <summary>
+        /// 1D projection: for each Y bin, the summed intensity across all X values.
+        /// Populated only when plot2D is true.
+        /// </summary>
+        public List<KeyValuePair<float, double>> PlotY2D { get; private set; }
+
         public class TaggedPoint3D
         {
             public Point3D Point { get; private set; }
@@ -64,6 +70,20 @@ namespace pwiz.MSGraph
         {
             _cell = new Cell(points);
             ZAxisName = zAxisName;
+        }
+
+        private void ComputePlotY2D(List<TaggedPoint3D> points)
+        {
+            var y2D = new Dictionary<float, double>();
+            foreach (var point in points)
+            {
+                if (point.Point != null && point.Point.Z > 0)
+                {
+                    y2D.TryGetValue(point.Point.Y, out var sum);
+                    y2D[point.Point.Y] = sum + point.Point.Z;
+                }
+            }
+            PlotY2D = y2D.OrderBy(p => p.Key).ToList();
         }
 
         /// <summary>

@@ -944,6 +944,56 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ImsDB {
+            get {
+                object obj = ResourceManager.GetObject("ImsDB", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Mobilogram {
+            get {
+                object obj = ResourceManager.GetObject("Mobilogram", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap IrtCalculator {
+            get {
+                object obj = ResourceManager.GetObject("IrtCalculator", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap OptDB {
+            get {
+                object obj = ResourceManager.GetObject("OptDB", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ProtDB {
+            get {
+                object obj = ResourceManager.GetObject("ProtDB", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Start value must be less than End value..
         /// </summary>
         public static string CalculateIsolationSchemeDlg_OkDialog_Start_value_must_be_less_than_End_value {

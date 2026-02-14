@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -56,6 +57,19 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly IDocumentUIContainer _documentContainer;
         private readonly GraphHelper _graphHelper;
         private HeatMapData _heatMapData;
+        private HeatMapGraphPane _heatMapPane;
+        /// <summary>
+        /// Compute right margin so mobilogram is approximately 1/3 the width of the heatmap chart area.
+        /// Setting margin to ~1/4 of pane width gives mobilogram ≈ 1/3 of the remaining chart width.
+        /// </summary>
+        private float MobilogramMargin
+        {
+            get
+            {
+                float scaleFactor = _heatMapPane.CalcScaleFactor();
+                return scaleFactor > 0 ? graphControl.Width / (4f * scaleFactor) : 150f;
+            }
+        }
         private double _maxMz;
         private double _maxIntensity;
         private double _minIonMobility;
@@ -90,11 +104,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 MaxDotRadius = MAX_DOT_RADIUS,
                 ShowHeatMap = !Settings.Default.SumScansFullScan
             };
+            graphControl.GraphPane = _heatMapPane;
             graphControl.GraphPane.AllowLabelOverlap = true;
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMoveEvent += graphControl_MouseMove;
             graphControl.MouseClick += graphControl_MouseClick;
             graphControl.ZoomEvent += graphControl_ZoomEvent;
+            graphControl.Resize += graphControl_Resize;
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -116,14 +132,18 @@ namespace pwiz.Skyline.Controls.Graphs
             toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations;
             _showIonSeriesAnnotations = Settings.Default.ShowFullScanAnnotations;
 
+            mobilogramBtn.Checked = Settings.Default.ShowMobilogramFullScan;
+
             magnifyBtn.CheckedChanged += magnifyBtn_CheckedChanged;
             spectrumBtn.CheckedChanged += spectrumBtn_CheckedChanged;
             filterBtn.CheckedChanged += filterBtn_CheckedChanged;
+            mobilogramBtn.CheckedChanged += mobilogramBtn_CheckedChanged;
             toolStripButtonShowAnnotations.CheckedChanged += toolStripButtonShowAnnotations_CheckedChanged;
 
 
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
+            mobilogramBtn.Visible = false;
             lblScanId.Visible = false; // you might want to show the scan index for debugging
             comboBoxPeakType.Items.Clear();
             comboBoxPeakType.Items.Add(_msDataFileScanHelper.GetPeakTypeLocalizedName(PeakType.chromDefault));
@@ -227,7 +247,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private MSGraphPane GraphPane
         {
-            get { return (MSGraphPane) graphControl.MasterPane[0]; }
+            get { return _heatMapPane; }
         }
 
         private Color GetTransitionColor(TransitionFullScanInfo t)
@@ -351,6 +371,7 @@ namespace pwiz.Skyline.Controls.Graphs
             bool useHeatMap = hasIonMobilityDimension && !Settings.Default.SumScansFullScan;
 
             filterBtn.Visible = spectrumBtn.Visible = hasIonMobilityDimension;
+            mobilogramBtn.Visible = hasIonMobilityDimension && !spectrumBtn.Checked;
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom = useHeatMap;
             GraphPane.Legend.IsVisible = useHeatMap;
 
@@ -380,11 +401,18 @@ namespace pwiz.Skyline.Controls.Graphs
             double[] massErrors = null;
             if (useHeatMap)
             {
+                bool showMobilogram = mobilogramBtn.Checked;
+                _heatMapPane.Margin.Right = showMobilogram
+                    ? ZedGraph.Margin.Default.Right + MobilogramMargin
+                    : ZedGraph.Margin.Default.Right;
                 ZoomYAxis(); // Call this again now that cues are there to indicate need for drift scale
                 CreateIonMobilityHeatmap();
+                if (showMobilogram)
+                    CreateMobilogram();
             }
             else
             {
+                _heatMapPane.Margin.Right = ZedGraph.Margin.Default.Right;
                 CreateSingleScan(out massErrors);
             }
 
@@ -487,7 +515,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         points.Add(new Point3D(scan.Mzs[j],  mobilityValue, scan.Intensities[j]));
                     }
                 }
-                _heatMapData = new HeatMapData(points);
+                _heatMapData = new HeatMapData(points, mobilogramBtn.Checked);
             }
 
             double minDrift;
@@ -526,6 +554,27 @@ namespace pwiz.Skyline.Controls.Graphs
                     Border = new Border(Color.FromArgb(100, Color.DarkViolet), 2)
                 };
                 GraphPane.GraphObjList.Add(driftTimeOutline);
+
+                // Add dashed line at peak center ion mobility
+                var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
+                if (imFilter != null && imFilter.HasIonMobilityValue)
+                {
+                    double peakCenter = imFilter.IonMobility.Mobility.Value;
+                    var centerLine = new LineObj(
+                        Color.FromArgb(180, Color.DarkViolet),
+                        0.0, peakCenter, 1.0, peakCenter)
+                    {
+                        Location = { CoordinateFrame = CoordType.XChartFractionYScale },
+                        ZOrder = ZOrder.C_BehindChartBorder,
+                        IsClippedToChartRect = true,
+                        Line =
+                        {
+                            Style = System.Drawing.Drawing2D.DashStyle.Dash,
+                            Width = 1.5f
+                        }
+                    };
+                    GraphPane.GraphObjList.Add(centerLine);
+                }
             }
 
             if (!Settings.Default.FilterIonMobilityFullScan)
@@ -1157,7 +1206,7 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxScanType.Enabled = false;
             lblScanId.Text = string.Empty;
             leftButton.Enabled = rightButton.Enabled = false;
-            graphControl.GraphPane.Title.Text = _msDataFileScanHelper.FileName;
+            GraphPane.Title.Text = _msDataFileScanHelper.FileName;
         }
 
         [Browsable(true)]
@@ -1269,6 +1318,12 @@ namespace pwiz.Skyline.Controls.Graphs
             FireZoomEvent(newState);
         }
 
+        private void graphControl_Resize(object sender, EventArgs e)
+        {
+            if (mobilogramBtn.Visible && mobilogramBtn.Checked)
+                _heatMapPane.Margin.Right = ZedGraph.Margin.Default.Right + MobilogramMargin;
+        }
+
         private void FireZoomEvent(ZoomState zoomState = null)
         {
             if (ZoomEvent != null && Settings.Default.SyncMZScale)
@@ -1355,7 +1410,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // And make sure it is not disposed, since rendering happens on a timer
             if (!Visible || IsDisposed || _msDataFileScanHelper.ScanProvider == null)
                 return;
-            GraphHelper.FormatGraphPane(graphControl.GraphPane);
+            GraphHelper.FormatGraphPane(GraphPane);
             comboBoxPeakType.Visible = spectrumBtn.Checked;
             toolStripLabelPeakType.Visible = spectrumBtn.Checked;
 
@@ -1483,12 +1538,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             HeatMapGraphPane.ShowHeatMap = show;
             Settings.Default.SumScansFullScan = spectrumBtn.Checked = !show;
+            mobilogramBtn.Visible = show && spectrumBtn.Visible;
             UpdateUI();
             ZoomYAxis();
             graphControl.Invalidate();
         }
 
-        private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
+        private HeatMapGraphPane HeatMapGraphPane { get { return _heatMapPane; } }
 
         private struct ExtractionBoxInfo
         {
@@ -1540,6 +1596,309 @@ namespace pwiz.Skyline.Controls.Graphs
             Settings.Default.FilterIonMobilityFullScan = filterBtn.Checked = filter;
             _zoomYAxis = true;
             SetSpectraUI(_msDataFileScanHelper.MsDataSpectra);
+        }
+
+        private void mobilogramBtn_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.ShowMobilogramFullScan = mobilogramBtn.Checked;
+            _heatMapData = null; // Force recompute with/without PlotY2D
+            UpdateUI();
+        }
+
+        private void CreateMobilogram()
+        {
+            if (_heatMapData?.PlotY2D == null)
+                return;
+
+            // Use the same filter display range as the heatmap for the band
+            double filterMin = double.NaN, filterMax = double.NaN, filterPeak = double.NaN;
+            double minDrift, maxDrift;
+            _msDataFileScanHelper.GetIonMobilityFilterDisplayRange(
+                out minDrift, out maxDrift, _msDataFileScanHelper.Source);
+            if (minDrift > 0 && maxDrift < double.MaxValue)
+            {
+                filterMin = minDrift;
+                filterMax = maxDrift;
+            }
+
+            // Peak center is only meaningful when the filter band is shown
+            if (!double.IsNaN(filterMin))
+            {
+                var imFilter = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo;
+                if (imFilter != null && imFilter.HasIonMobilityValue)
+                    filterPeak = imFilter.IonMobility.Mobility.Value;
+            }
+
+            var overlay = new MobilogramOverlay(_heatMapData.PlotY2D, filterMin, filterMax, filterPeak)
+            {
+                ZOrder = ZOrder.A_InFront
+            };
+            GraphPane.GraphObjList.Add(overlay);
+        }
+
+        /// <summary>
+        /// Custom GraphObj that draws a mobilogram (summed intensity vs ion mobility) in the
+        /// left margin area of the heatmap pane. Because it uses the pane's own Y-axis transform,
+        /// the Y-axes are guaranteed to align pixel-for-pixel.
+        /// </summary>
+        private class MobilogramOverlay : GraphObj
+        {
+            private readonly List<KeyValuePair<float, double>> _plotData;
+            private readonly double _filterMin, _filterMax, _filterPeak;
+
+            public MobilogramOverlay(List<KeyValuePair<float, double>> plotData,
+                double filterMin, double filterMax, double filterPeak)
+                : base(0, 0)
+            {
+                _plotData = plotData;
+                _filterMin = filterMin;
+                _filterMax = filterMax;
+                _filterPeak = filterPeak;
+            }
+
+            public override void Draw(Graphics g, PaneBase paneBase, float scaleFactor)
+            {
+                var pane = paneBase as GraphPane;
+                if (pane == null || _plotData == null || _plotData.Count == 0)
+                    return;
+
+                var chartRect = pane.Chart.Rect;
+                if (chartRect.Width <= 0 || chartRect.Height <= 0)
+                    return;
+
+                // Small gap between heatmap chart edge and mobilogram plot area
+                float gapWidth = 6 * scaleFactor;
+
+                // Mobilogram plot area: right margin space, vertically aligned with chart rect
+                // Reserve space on right so rightmost tick label can be centered on its tick
+                float rightLabelPad = 18 * scaleFactor;
+                float mobLeft = chartRect.Right + gapWidth;
+                float mobRight = paneBase.Rect.Right - rightLabelPad;
+                float mobTop = chartRect.Top;
+                float mobBottom = chartRect.Bottom; // Same bottom as heatmap chart area
+                float mobWidth = mobRight - mobLeft;
+                float plotBottom = mobBottom;
+                float plotHeight = plotBottom - mobTop;
+
+                if (mobWidth < 10 || plotHeight < 10)
+                    return;
+
+                // Find max intensity for X scaling
+                double maxIntensity = 0;
+                foreach (var kvp in _plotData)
+                {
+                    if (kvp.Value > maxIntensity)
+                        maxIntensity = kvp.Value;
+                }
+                if (maxIntensity <= 0)
+                    return;
+
+                // Compute magnitude and nice round max (same approach as ZedGraph LinearScale.PickScale)
+                int mag = (int)Math.Floor(Math.Log10(maxIntensity));
+                mag = Math.Max(0, (mag / 3) * 3);
+                double scaleMult = mag > 0 ? Math.Pow(10.0, mag) : 1.0;
+                double scaledRawMax = maxIntensity / scaleMult;
+                // Pick a nice step size targeting ~4 major divisions
+                double xMajorStep = CalcNiceStepSize(scaledRawMax, 4);
+                double xMinorStep = CalcNiceStepSize(xMajorStep, 5);
+                // Round max up to next major step
+                double scaledMax = xMajorStep * Math.Ceiling(scaledRawMax / xMajorStep);
+                double displayMax = scaledMax * scaleMult; // unscaled max for curve drawing
+
+                var savedClip = g.ClipBounds;
+
+                // Get axis styling from the heatmap pane for consistent appearance
+                var yAxis = pane.YAxis;
+                var xAxis = pane.XAxis;
+                var axisColor = yAxis.Color;
+                var majorTicSize = yAxis.MajorTic.ScaledTic(scaleFactor);
+                var minorTicSize = yAxis.MinorTic.ScaledTic(scaleFactor);
+                var axisPenWidth = pane.ScaledPenWidth(yAxis.MajorTic.PenWidth, scaleFactor);
+                var minorPenWidth = pane.ScaledPenWidth(yAxis.MinorTic.PenWidth, scaleFactor);
+                var xLabelFontSpec = xAxis.Scale.FontSpec;
+                var charHeight = xLabelFontSpec.GetHeight(scaleFactor);
+
+                // Draw border frame around plot area using axis color
+                var plotRect = new RectangleF(mobLeft, mobTop, mobWidth, plotHeight);
+                using (var framePen = new Pen(axisColor, axisPenWidth))
+                    g.DrawRectangle(framePen, plotRect.X, plotRect.Y, plotRect.Width, plotRect.Height);
+
+                // Clip to plot area for data drawing
+                g.SetClip(plotRect);
+
+                // Draw filter region (behind curve)
+                if (!double.IsNaN(_filterMin) && !double.IsNaN(_filterMax))
+                {
+                    float filterTopPx = yAxis.Scale.Transform(_filterMax);
+                    float filterBottomPx = yAxis.Scale.Transform(_filterMin);
+                    var filterRect = new RectangleF(mobLeft, filterTopPx,
+                        mobWidth, filterBottomPx - filterTopPx);
+
+                    using (var fillBrush = new SolidBrush(Color.FromArgb(50, Color.Gray)))
+                        g.FillRectangle(fillBrush, filterRect);
+                    using (var borderPen = new Pen(Color.FromArgb(100, Color.DarkViolet), 2))
+                        g.DrawRectangle(borderPen, filterRect.X, filterRect.Y,
+                            filterRect.Width, filterRect.Height);
+                }
+
+                // Build polygon points for filled curve (scaled to displayMax for nice round axis)
+                var polyPoints = new List<PointF>(_plotData.Count + 2);
+                polyPoints.Add(new PointF(mobLeft, yAxis.Scale.Transform(_plotData[0].Key)));
+
+                foreach (var kvp in _plotData)
+                {
+                    float px = mobLeft + (float)(kvp.Value / displayMax) * mobWidth;
+                    float py = yAxis.Scale.Transform(kvp.Key);
+                    polyPoints.Add(new PointF(px, py));
+                }
+
+                polyPoints.Add(new PointF(mobLeft,
+                    yAxis.Scale.Transform(_plotData[_plotData.Count - 1].Key)));
+
+                // Fill under curve
+                using (var fillBrush = new SolidBrush(Color.FromArgb(40, Color.DarkBlue)))
+                    g.FillPolygon(fillBrush, polyPoints.ToArray());
+
+                // Draw curve line
+                if (polyPoints.Count > 3)
+                {
+                    var linePoints = polyPoints.GetRange(1, polyPoints.Count - 2).ToArray();
+                    using (var linePen = new Pen(Color.DarkBlue, 1.5f))
+                        g.DrawLines(linePen, linePoints);
+                }
+
+                // Draw peak center line
+                if (!double.IsNaN(_filterPeak))
+                {
+                    float peakPx = yAxis.Scale.Transform(_filterPeak);
+                    using (var dashPen = new Pen(Color.FromArgb(180, Color.DarkViolet), 1.5f))
+                    {
+                        dashPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                        g.DrawLine(dashPen, mobLeft, peakPx, mobRight, peakPx);
+                    }
+                }
+
+                g.SetClip(savedClip);
+
+                // Draw X-axis major and minor ticks straddling the border, and labels below
+                using (var majorPen = new Pen(axisColor, axisPenWidth))
+                using (var minorPen = new Pen(axisColor, minorPenWidth))
+                {
+                    float tickY = plotBottom;
+                    float labelY = tickY + majorTicSize + xLabelFontSpec.GetHeight(scaleFactor) * 0.1f;
+                    string tickFormat = scaledMax >= 10 ? @"0" :
+                        scaledMax >= 1 ? @"0.#" : @"0.##";
+
+                    // Draw minor ticks (straddling the axis)
+                    if (xMinorStep > 0 && scaledMax / xMinorStep < 100)
+                    {
+                        for (double val = xMinorStep; val < scaledMax; val += xMinorStep)
+                        {
+                            float px = mobLeft + (float)(val / scaledMax) * mobWidth;
+                            g.DrawLine(minorPen, px, tickY - minorTicSize, px, tickY + minorTicSize);
+                        }
+                    }
+
+                    // Draw major ticks with labels (straddling the axis, all labels centered)
+                    for (double val = 0; val <= scaledMax + xMajorStep * 0.001; val += xMajorStep)
+                    {
+                        float px = mobLeft + (float)(val / scaledMax) * mobWidth;
+
+                        // Major tick straddling the axis
+                        g.DrawLine(majorPen, px, tickY - majorTicSize, px, tickY + majorTicSize);
+
+                        // Label centered on tick
+                        string label = val.ToString(tickFormat);
+                        xLabelFontSpec.Draw(g, paneBase, label, px, labelY,
+                            AlignH.Center, AlignV.Top, scaleFactor);
+                    }
+
+                    // Draw axis title with magnitude indicator, bold to match heatmap axis titles
+                    float titleY = labelY + charHeight + charHeight * 0.1f;
+                    float titleX = (mobLeft + mobRight) / 2;
+                    string title = mag > 0
+                        ? string.Format(@"{0} (10^{1})",
+                            GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity, mag)
+                        : GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+                    var titleFontSpec = xAxis.Title.FontSpec;
+                    titleFontSpec.IsItalic = false; // Override italic (only m/z is italic)
+                    titleFontSpec.Draw(g, paneBase, title,
+                        titleX, titleY, AlignH.Center, AlignV.Top, scaleFactor);
+                }
+
+                // Draw Y-axis major and minor ticks straddling the left border
+                var yScale = yAxis.Scale;
+                double yMin = yScale.Min;
+                double yMax = yScale.Max;
+                double yMajorStep = yScale.MajorStep;
+                double yMinorStep = yScale.MinorStep;
+                if (yMajorStep > 0 && (yMax - yMin) / yMajorStep < 100)
+                {
+                    using (var majorPen = new Pen(axisColor, axisPenWidth))
+                    using (var minorPen = new Pen(axisColor, minorPenWidth))
+                    {
+                        // Draw minor ticks (straddling the axis)
+                        if (yMinorStep > 0 && (yMax - yMin) / yMinorStep < 500)
+                        {
+                            double firstMinor = Math.Ceiling(yMin / yMinorStep) * yMinorStep;
+                            for (double val = firstMinor; val <= yMax; val += yMinorStep)
+                            {
+                                float py = yAxis.Scale.Transform(val);
+                                if (py < mobTop || py > plotBottom)
+                                    continue;
+                                g.DrawLine(minorPen, mobLeft - minorTicSize, py, mobLeft + minorTicSize, py);
+                            }
+                        }
+
+                        // Draw major ticks straddling the axis (over minor ticks)
+                        double firstMajor = Math.Ceiling(yMin / yMajorStep) * yMajorStep;
+                        for (double val = firstMajor; val <= yMax; val += yMajorStep)
+                        {
+                            float py = yAxis.Scale.Transform(val);
+                            if (py < mobTop || py > plotBottom)
+                                continue;
+                            g.DrawLine(majorPen, mobLeft - majorTicSize, py, mobLeft + majorTicSize, py);
+                        }
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Calculate a nice step size for a given range and target number of steps.
+            /// Same algorithm as ZedGraph Scale.CalcStepSize: promotes MSD to 1, 2, or 5.
+            /// </summary>
+            private static double CalcNiceStepSize(double range, double targetSteps)
+            {
+                double tempStep = range / targetSteps;
+                double mag = Math.Floor(Math.Log10(tempStep));
+                double magPow = Math.Pow(10.0, mag);
+                double magMsd = (int)(tempStep / magPow + 0.5);
+
+                if (magMsd > 5.0)
+                    magMsd = 10.0;
+                else if (magMsd > 2.0)
+                    magMsd = 5.0;
+                else if (magMsd > 1.0)
+                    magMsd = 2.0;
+
+                return magMsd * magPow;
+            }
+
+            public override bool PointInBox(PointF pt, PaneBase pane, Graphics g, float scaleFactor)
+            {
+                return false;
+            }
+
+            public override void GetCoords(PaneBase pane, Graphics g, float scaleFactor,
+                out string shape, out string coords)
+            {
+                shape = string.Empty;
+                coords = string.Empty;
+            }
+
+            public override void GetObjectData(SerializationInfo info, StreamingContext context)
+            {
+            }
         }
 
         // CONSIDER: This button is never visible and appears to be completely idle. Remove?
@@ -1981,6 +2340,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
+
+        public void SetMobilogram(bool isChecked)
+        {
+            mobilogramBtn.Checked = isChecked;
+        }
+
+        public bool IsMobilogramVisible => mobilogramBtn.Visible && mobilogramBtn.Checked;
 
         public ToolStripButton PropertyButton => propertiesBtn;
         public ToolStripButton LeftButton => leftButton;
