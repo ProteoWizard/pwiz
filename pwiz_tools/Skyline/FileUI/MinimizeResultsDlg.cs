@@ -302,24 +302,25 @@ namespace pwiz.Skyline.FileUI
             lock (worker)
             {
                 CheckDisposed();
-                bool updateUi = _minStatistics == null || 
+                // Ignore results from stale workers that are still running after
+                // settings changed and a new worker was started
+                if (!ReferenceEquals(_minimizeResults.StatisticsCollector, worker))
+                    return;
+                bool updateUi = _minStatistics == null ||
                                 _minStatistics.PercentComplete != minStatistics.PercentComplete ||
                                 _minStatistics.MinimizedRatio != minStatistics.MinimizedRatio;
                 _minStatistics = minStatistics;
-                var _this = this;
-                if (ReferenceEquals(_minimizeResults.StatisticsCollector, worker))
+                if (updateUi && !_updatePending)
                 {
-                    if (updateUi && !_updatePending)
+                    //_updatePending = true;
+                    var _this = this;
+                    try
                     {
-                        //_updatePending = true;
-                        try
-                        {
-                            BeginInvoke(new Action(() => UpdateStatistics(worker)));
-                        }
-                        catch (Exception x)
-                        {
-                            throw new ObjectDisposedException(_this.GetType().FullName, x);
-                        }
+                        BeginInvoke(new Action(() => UpdateStatistics(worker)));
+                    }
+                    catch (Exception x)
+                    {
+                        throw new ObjectDisposedException(_this.GetType().FullName, x);
                     }
                 }
             }
@@ -395,7 +396,10 @@ namespace pwiz.Skyline.FileUI
         {
             if (noiseTimeRange.HasValue)
                 tbxNoiseTimeRange.Text = noiseTimeRange.Value.ToString(CultureInfo.CurrentCulture);
-            cbxLimitNoiseTime.Checked = limitNoiseTime; // This triggers recalculation
+            // Make sure the checkbox is the right state and that recalculation happens
+            if (cbxLimitNoiseTime.Checked == limitNoiseTime)
+                cbxLimitNoiseTime.Checked = !limitNoiseTime;
+            cbxLimitNoiseTime.Checked = limitNoiseTime;
         }
 
         public int PercentOfTotalCompression => (int)Math.Round((_minStatistics?.MinimizedRatio ?? 0) * 100);
