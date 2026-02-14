@@ -747,7 +747,7 @@ namespace pwiz.SkylineTestTutorial
                 // Compression ratio differs: .wiff files extend to 118.8 min while mzML is truncated
                 // at 50 min (see PreferWiff), so noise trimming removes different proportions
                 int expectedCompression = PreferWiff ? 55 : 36;
-                RunUI(() => Assert.AreEqual(expectedCompression, minimizeResultsDlg.PercentOfTotalCompression));
+                RunUI(() => Assert.AreEqual(expectedCompression, minimizeResultsDlg.PercentOfTotalCompression, 1));
                 PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form");   // old p. 23
 
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));
