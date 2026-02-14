@@ -184,9 +184,14 @@ namespace pwiz.Skyline.FileUI
 
         private void cbxLimitNoiseTime_CheckedChanged(object sender, EventArgs e)
         {
+            UpdateLimitNoiseTime();
+        }
+
+        private void UpdateLimitNoiseTime()
+        {
             Settings = cbxLimitNoiseTime.Checked
-                           ? Settings.ChangeNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text))
-                           : Settings.ChangeNoiseTimeRange(null);
+                ? Settings.ChangeNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text))
+                : Settings.ChangeNoiseTimeRange(null);
         }
 
         private void btnMinimize_Click(object sender, EventArgs e)
@@ -302,25 +307,26 @@ namespace pwiz.Skyline.FileUI
             lock (worker)
             {
                 CheckDisposed();
-                // Ignore results from stale workers that are still running after
-                // settings changed and a new worker was started
-                if (!ReferenceEquals(_minimizeResults.StatisticsCollector, worker))
-                    return;
-                bool updateUi = _minStatistics == null ||
-                                _minStatistics.PercentComplete != minStatistics.PercentComplete ||
-                                _minStatistics.MinimizedRatio != minStatistics.MinimizedRatio;
-                _minStatistics = minStatistics;
-                if (updateUi && !_updatePending)
+                // Only update statistics from the current collector, not stale workers
+                // that are still running after settings changed and a new worker started
+                if (ReferenceEquals(_minimizeResults.StatisticsCollector, worker))
                 {
-                    //_updatePending = true;
-                    var _this = this;
-                    try
+                    bool updateUi = _minStatistics == null ||
+                                    _minStatistics.PercentComplete != minStatistics.PercentComplete ||
+                                    _minStatistics.MinimizedRatio != minStatistics.MinimizedRatio;
+                    _minStatistics = minStatistics;
+                    if (updateUi && !_updatePending)
                     {
-                        BeginInvoke(new Action(() => UpdateStatistics(worker)));
-                    }
-                    catch (Exception x)
-                    {
-                        throw new ObjectDisposedException(_this.GetType().FullName, x);
+                        //_updatePending = true;
+                        var _this = this;
+                        try
+                        {
+                            BeginInvoke(new Action(() => UpdateStatistics(worker)));
+                        }
+                        catch (Exception x)
+                        {
+                            throw new ObjectDisposedException(_this.GetType().FullName, x);
+                        }
                     }
                 }
             }
@@ -397,9 +403,13 @@ namespace pwiz.Skyline.FileUI
             if (noiseTimeRange.HasValue)
                 tbxNoiseTimeRange.Text = noiseTimeRange.Value.ToString(CultureInfo.CurrentCulture);
             // Make sure the checkbox is the right state and that recalculation happens
-            if (cbxLimitNoiseTime.Checked == limitNoiseTime)
-                cbxLimitNoiseTime.Checked = !limitNoiseTime;
-            cbxLimitNoiseTime.Checked = limitNoiseTime;
+            if (cbxLimitNoiseTime.Checked != limitNoiseTime)
+                cbxLimitNoiseTime.Checked = limitNoiseTime;
+            else
+            {
+                // If already set correctly, then just trigger the update directly
+                UpdateLimitNoiseTime();
+            }
         }
 
         public int PercentOfTotalCompression => (int)Math.Round((_minStatistics?.MinimizedRatio ?? 0) * 100);
