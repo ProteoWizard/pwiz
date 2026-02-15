@@ -187,8 +187,6 @@ namespace pwiz.SkylineTestUtil
         private const int SLEEP_INTERVAL = 100;
         public const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
 
-        private static string _screenshotOverridePath;
-
         private bool _testCompleted;
         private ScreenshotManager _shotManager;
 
@@ -1756,30 +1754,18 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Sets a one-shot screenshot override path. When active, the next
-        /// PauseForScreenShot call captures a screenshot to the specified path
-        /// regardless of screenshot mode.
+        /// When set, the next PauseForScreenShot call captures a screenshot to this
+        /// path regardless of screenshot mode. Consumed (set to null) after use.
         /// </summary>
-        public class ScreenShotOverride : IDisposable
-        {
-            public ScreenShotOverride(string path)
-            {
-                _screenshotOverridePath = path;
-            }
-
-            public void Dispose()
-            {
-                _screenshotOverridePath = null;
-            }
-        }
+        public string NextScreenShotOverridePath { get; set; }
 
         /// <summary>
         /// Captures a screenshot of the Skyline main window to the specified path.
         /// </summary>
         public void TakeScreenShot(string pathToFile)
         {
-            using (new ScreenShotOverride(pathToFile))
-                PauseForScreenShot();
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot();
         }
 
         /// <summary>
@@ -1787,8 +1773,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public void TakeScreenShot(string pathToFile, Control screenshotForm)
         {
-            using (new ScreenShotOverride(pathToFile))
-                PauseForScreenShot(screenshotForm);
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot(screenshotForm);
         }
 
         public void PauseForScreenShot(string description = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
@@ -2029,18 +2015,18 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Handles a one-shot screenshot override. If <see cref="_screenshotOverridePath"/>
+        /// Handles a one-shot screenshot override. If <see cref="NextScreenShotOverridePath"/>
         /// is set, captures the screenshot and returns true. Handles the offscreen case
         /// by logging a warning and consuming the override.
         /// </summary>
         private bool TakeOverrideScreenShot(Type formType, Control screenshotForm,
             bool fullScreen, Func<Bitmap, Bitmap> processShot)
         {
-            if (_screenshotOverridePath == null)
+            if (NextScreenShotOverridePath == null)
                 return false;
 
-            var overridePath = _screenshotOverridePath;
-            _screenshotOverridePath = null; // Consume before taking shot
+            var overridePath = NextScreenShotOverridePath;
+            NextScreenShotOverridePath = null; // Consume before taking shot
 
             if (Program.SkylineOffscreen)
             {
