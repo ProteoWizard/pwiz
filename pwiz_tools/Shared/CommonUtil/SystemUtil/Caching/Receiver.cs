@@ -74,7 +74,11 @@ namespace pwiz.Common.SystemUtil.Caching
 
         private void BeginInvoke(Action action)
         {
-            _synchronizationContext?.Post(_ => action(), null);
+            _synchronizationContext?.Post(_ =>
+            {
+                if (OwnerControl != null)
+                    action();
+            }, null);
         }
 
         private void OnProductStatusChanged()
