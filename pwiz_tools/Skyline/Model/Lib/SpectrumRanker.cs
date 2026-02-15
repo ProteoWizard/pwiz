@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -173,11 +173,19 @@ namespace pwiz.Skyline.Model.Lib
                     var ionMasses =
                         new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), IonTable<TypedMass>.EMPTY)
                             .ChangeKnownFragments(knownFragments);
-                    moleculeMasses =
-                        new MoleculeMasses(
-                            SequenceMassCalc.GetMZ(
-                                calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct,
-                                    out _), PrecursorAdduct), ionMasses);
+                    try
+                    {
+                        moleculeMasses =
+                            new MoleculeMasses(
+                                SequenceMassCalc.GetMZ(
+                                    calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct,
+                                        out _), PrecursorAdduct), ionMasses);
+                    }
+                    catch (InvalidChemicalModificationException)
+                    {
+                        moleculeMasses =
+                            new MoleculeMasses(double.NaN, ionMasses); // Precursor m/z can't be calculated
+                    }
                 }
                 else
                 {

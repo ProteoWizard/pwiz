@@ -178,12 +178,6 @@
   <data name="DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_" xml:space="preserve">
     <value>「{0}」を必要なタイプに変換中のエラー：{1}</value>
   </data>
-  <data name="DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
-    <value>ファイル{0}から試料情報を読み込もうとした際にエラーが発生しました。</value>
-  </data>
-  <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
-    <value>ファイルが壊れているか、ファイルがないか、または正しいライブラリがインストールされていない可能性があります。</value>
-  </data>
   <data name="DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" xml:space="preserve">
     <value>ソースディレクトリが存在しない、または見つかりませんでした： </value>
   </data>
@@ -313,5 +307,17 @@
   </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
     <value>Panoramaサーバー{0}でインポートエラーが発生しました。</value>
+  </data>
+  <data name="DsvStreamReader_this_Header__0__not_found_in_DSV_file_" xml:space="preserve">
+    <value>DSVファイルにヘッダー{0}がありません。</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_" xml:space="preserve">
+    <value>ストリームがヌルまたは空です。</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Empty_stream_" xml:space="preserve">
+    <value>空のストリーム。</value>
+  </data>
+  <data name="ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_" xml:space="preserve">
+    <value>クリップボードにアクセスできませんでした。</value>
   </data>
 </root>

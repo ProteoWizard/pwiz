@@ -117,6 +117,7 @@ local clr-requirement = <conditional>@msvc-requirement <define>UNICODE <define>_
 
 obj ParamTypes        : common/ParamTypes.cpp        : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/ParamTypes.xdc" ;
 obj IterationListener : common/IterationListener.cpp : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/IterationListener.xdc" ;
+obj util              : common/util.cpp              : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/util.xdc" ;
 obj Unimod            : common/Unimod.cpp            : $(bound_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/Unimod.xdc" ;
 
 obj MSDataDiff       : msdata/Diff.cpp       : $(data_libs) $(clr-requirement) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataDiff.xdc" ;
@@ -168,6 +169,7 @@ lib pwiz_bindings_cli
         TraDataFile
         TraDataReader
         TraData_examples
+        util
     : # requirements
         $(bound_libs)
         <link>shared
@@ -191,6 +193,7 @@ lib pwiz_data_cli
         spectrum_processing
         SpectrumList_PeakFilter
         chemistry
+        util
     : # requirements
         $(data_libs)
         <link>shared

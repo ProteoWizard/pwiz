@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // test that the auto-installed tool was copied to the current version's tools directory
             StringAssert.StartsWith(Settings.Default.SearchToolList[SearchToolType.EncyclopeDIA].Path, ToolDescriptionHelpers.GetToolsDirectory());
-            Assert.IsTrue(File.Exists(Settings.Default.SearchToolList[SearchToolType.EncyclopeDIA].Path));
+            AssertEx.FileExists(Settings.Default.SearchToolList[SearchToolType.EncyclopeDIA].Path);
 
             EditToolListDlg = ShowDialog<EditListDlg<SettingsListBase<SearchTool>, SearchTool>>(SkylineWindow.ShowSearchToolsDlg);
             
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
                 editToolDlg.ToolPath = TestFilesDir.GetTestPath("msfragger.bat");
             });
             var errorDlg = ShowDialog<MessageDlg>(editToolDlg.OkDialog);
-            Assert.AreEqual("The tool MSFragger is already configured.", errorDlg.Message);
+            Assert.AreEqual(string.Format(ToolsUIResources.EditSearchToolDlg_OkDialog_The_tool__0__is_already_configured_, "MSFragger"), errorDlg.Message);
             OkDialog(errorDlg);
 
             // test empty path error
@@ -148,12 +148,13 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errorDlg);
 
             // test bad path error
+            const string badFileName = "msfragger.not";
             RunUI(() =>
             {
-                editToolDlg.ToolPath = "msfragger.not";
+                editToolDlg.ToolPath = badFileName;
             });
             errorDlg = ShowDialog<MessageDlg>(editToolDlg.OkDialog);
-            Assert.AreEqual("The file msfragger.not does not exist.", errorDlg.Message);
+            Assert.AreEqual(string.Format(ToolsUIResources.EditSearchToolDlg_OkDialog_The_file__0__does_not_exist_, badFileName), errorDlg.Message);
             OkDialog(errorDlg);
             
             CancelDialog(editToolDlg);

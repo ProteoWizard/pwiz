@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: TableExporter.cs 287 2011-08-05 16:41:22Z holmanjd $
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,7 +30,7 @@ namespace ResourcesOrganizer
     public class AddVerb : Options
     {
         [Value(0, MetaName = "path", Required = true, HelpText = ".resx, directory, or resources.db")]
-        public IEnumerable<string> Path { get; set; }
+        public IEnumerable<string> Path { get; set; } = [];
 
         [Option("exclude")] public IEnumerable<string> Exclude { get; set; } = [];
         [Option("createnew", Default = false)] public bool CreateNew { get; set; } = false;
@@ -52,7 +52,7 @@ namespace ResourcesOrganizer
     public class ExportResx : Options
     {
         [Value(0, MetaName = "output", Required = true)]
-        public string Output { get; set; }
+        public string Output { get; set; } = string.Empty;
 
         [Option("overrideAll", Default = false)]
         public bool OverrideAll { get; set; } = false;

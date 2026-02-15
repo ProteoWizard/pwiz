@@ -224,6 +224,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForRegression();
 
             RestoreViewOnScreen(9);
+            WaitForRegression();
             PauseForRetentionTimeGraphScreenShot("Retention Times Regression graph metafile");   // RT Regression graph
 
             RunUI(() =>

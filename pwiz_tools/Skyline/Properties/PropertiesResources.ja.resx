@@ -163,6 +163,12 @@
   <data name="EnzymeList_Title_Edit_Enzymes" xml:space="preserve">
     <value>酵素を編集</value>
   </data>
+  <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
+    <value>グループ比較</value>
+  </data>
+  <data name="GroupComparisonDefList_Title_Define_Group_Comparisons" xml:space="preserve">
+    <value>グループ比較を定義</value>
+  </data>
   <data name="HeavyModList_EditItem_Edit_Isotope_Modification" xml:space="preserve">
     <value>同位体修飾を編集</value>
   </data>
@@ -202,6 +208,12 @@
   <data name="IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments" xml:space="preserve">
     <value>同位体標識濃縮を編集</value>
   </data>
+  <data name="ListDefList_Label_Lists" xml:space="preserve">
+    <value>リスト</value>
+  </data>
+  <data name="ListDefList_Title_Define_Lists" xml:space="preserve">
+    <value>リストの定義</value>
+  </data>
   <data name="MeasuredIonList_Label_Special_ion" xml:space="preserve">
     <value>特殊イオン(&amp;S)：</value>
   </data>
@@ -238,6 +250,12 @@
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>リモートアカウントを編集</value>
   </data>
+  <data name="ReportSpecList_Label_Report" xml:space="preserve">
+    <value>レポート(&amp;R)：</value>
+  </data>
+  <data name="ReportSpecList_Title_Edit_Reports" xml:space="preserve">
+    <value>レポートを編集</value>
+  </data>
   <data name="RetentionTimeList_Label_Retention_Time_Regression" xml:space="preserve">
     <value>保持時間回帰を編集(&amp;R)：</value>
   </data>
@@ -255,6 +273,15 @@
   </data>
   <data name="RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators" xml:space="preserve">
     <value>保持時間カルキュレータを編集</value>
+  </data>
+  <data name="SearchToolList_Label_Internal__Tools" xml:space="preserve">
+    <value>内部ツール(&amp;T)</value>
+  </data>
+  <data name="SearchToolList_Label_Search__Tools" xml:space="preserve">
+    <value>検索ツール(&amp;T)</value>
+  </data>
+  <data name="SearchToolList_Title_Edit_Search_Tools" xml:space="preserve">
+    <value>検索ツールを編集</value>
   </data>
   <data name="ServerList_Label__Servers" xml:space="preserve">
     <value>サーバー(&amp;S)</value>

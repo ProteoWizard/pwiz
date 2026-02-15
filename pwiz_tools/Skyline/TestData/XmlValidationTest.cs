@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -75,7 +75,7 @@ namespace pwiz.SkylineTestData
             using (var docContainer = new ResultsTestDocumentContainer(docCurrent, docCurrentPath))
             {
                 string replicateName = Path.GetFileNameWithoutExtension(resultsPath);
-                var lockMassParameters = new LockMassParameters(456.78, 567.89, 12.34);
+                var lockMassParameters = LockMassParameters.Create(456.78, 567.89, 12.34);
                 var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(replicateName, new[] { new MsDataFilePath(resultsPath, lockMassParameters) }) };
 
                 // Lockmass values are Waters only so don't expect them to be saved to the doc which has no Waters results
@@ -292,7 +292,7 @@ namespace pwiz.SkylineTestData
 
         private static void WriteDocument(SrmDocument doc, string docPath)
         {
-            using (var writer = new XmlTextWriter(docPath, Encoding.UTF8))
+            using (var writer = new XmlTextWriter(docPath, new UTF8Encoding(false))) // UTF-8 without BOM
             {
                 writer.Formatting = Formatting.Indented;
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));

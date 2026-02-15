@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI.Irt
+namespace pwiz.Skyline.SettingsUI.Irt
 {
     partial class CalibrateIrtDlg
     {

@@ -1,4 +1,4 @@
-﻿using pwiz.Common.Controls;
+using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {

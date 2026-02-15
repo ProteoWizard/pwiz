@@ -65,7 +65,10 @@ void cat(const char* filename)
     // open the data file
 
     FullReaderList readers; // for vendor Reader support
-    MSDataFile msd(filename, &readers);
+    MSData msd;
+    Reader::Config config;
+    config.combineIonMobilitySpectra = true;
+    readers.read(filename, msd, 0, config);
 
     // verify that we have a SpectrumList
 
@@ -78,16 +81,31 @@ void cat(const char* filename)
     {
 
         SpectrumList& spectrumList = *msd.run.spectrumListPtr;
+        pwiz::util::BinaryData<double> dummyIonMobility;
 
         // write header
 
         const size_t columnWidth = 14;
 
+        auto firstSpectrum = spectrumList.spectrum(0, true);
+        bool hasScanNumber = !id::translateNativeIDToScanNumber(id::getDefaultNativeIDFormat(msd), firstSpectrum->id).empty();
+
         cout << "#"
-             << setw(columnWidth) << "scanNumber"
-             << setw(columnWidth) << "msLevel"
-             << setw(columnWidth) << "m/z"
-             << setw(columnWidth) << "intensity" << endl;
+            << setw(columnWidth) << (hasScanNumber ? "scanNumber" : "id")
+            << setw(columnWidth) << "msLevel"
+            << setw(columnWidth) << "m/z"
+            << setw(columnWidth) << "intensity";
+
+        // check for ion mobility data
+        auto firstIonMobilityArray = firstSpectrum->getArrayByCVID(MS_ion_mobility_array, true);
+        bool hasIonMobility = false;
+        if (firstIonMobilityArray && firstIonMobilityArray->data.size() == firstSpectrum->defaultArrayLength)
+        {
+            cout << setw(columnWidth) << "ionMobility";
+            hasIonMobility = true;
+        }
+
+        cout << endl;
 
         // iterate through the spectra in the SpectrumList
         for (size_t i=0, size=spectrumList.size(); i!=size; i++)
@@ -97,17 +115,40 @@ void cat(const char* filename)
             SpectrumPtr spectrum = spectrumList.spectrum(i, getBinaryData);
 
             // fill in MZIntensityPair vector for convenient access to binary data
-            vector<MZIntensityPair> pairs;
-            spectrum->getMZIntensityPairs(pairs);
+            const auto& mzArray = spectrum->getMZArray()->data;
+            const auto& intensityArray = spectrum->getIntensityArray()->data;
+            auto ionMobilityArrayPtr = spectrum->getArrayByCVID(MS_ion_mobility_array, true);
+            const auto& ionMobilityArray = ionMobilityArrayPtr ? ionMobilityArrayPtr->data : dummyIonMobility;
 
-            // iterate through the m/z-intensity pairs
-            for (vector<MZIntensityPair>::const_iterator it=pairs.begin(), end=pairs.end(); it!=end; ++it)
+            if (ionMobilityArrayPtr && ionMobilityArray.size() == mzArray.size())
             {
-                cout << " "
-                     << setw(columnWidth) << id::value(spectrum->id, "scan")
-                     << setw(columnWidth) << "ms" + spectrum->cvParam(MS_ms_level).value
-                     << setw(columnWidth) << fixed << setprecision(4) << it->mz
-                     << setw(columnWidth) << fixed << setprecision(2) << it->intensity << endl;
+                for (auto mzBegin = mzArray.begin(), mzEnd = mzArray.end(),
+                    intensityBegin = intensityArray.begin(), intensityEnd = intensityArray.end(),
+                    imBegin = ionMobilityArray.begin(), imEnd = ionMobilityArray.end();
+                    mzBegin != mzEnd && intensityBegin != intensityEnd && imBegin != imEnd;
+                    ++mzBegin, ++intensityBegin, ++imBegin)
+                {
+                    cout << " "
+                        << setw(columnWidth) << (hasScanNumber ? id::value(spectrum->id, "scan") : spectrum->id)
+                        << setw(columnWidth) << "ms" + spectrum->cvParam(MS_ms_level).value
+                        << setw(columnWidth) << fixed << setprecision(4) << *mzBegin
+                        << setw(columnWidth) << fixed << setprecision(2) << *intensityBegin
+                        << setw(columnWidth) << fixed << setprecision(2) << *imBegin << "\n";
+                }
+            }
+            else
+            {
+                for (auto mzBegin = mzArray.begin(), mzEnd = mzArray.end(),
+                    intensityBegin = intensityArray.begin(), intensityEnd = intensityArray.end();
+                    mzBegin != mzEnd && intensityBegin != intensityEnd;
+                    ++mzBegin, ++intensityBegin)
+                {
+                    cout << " "
+                         << setw(columnWidth) << (hasScanNumber ? id::value(spectrum->id, "scan") : spectrum->id)
+                         << setw(columnWidth) << "ms" + spectrum->cvParam(MS_ms_level).value
+                         << setw(columnWidth) << fixed << setprecision(4) << *mzBegin
+                         << setw(columnWidth) << fixed << setprecision(2) << *intensityBegin << "\n";
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using SharedBatch;
@@ -37,8 +37,8 @@ namespace SkylineBatch
             fileControl = new DownloadingFileControl(Resources.RScriptForm_RScriptForm_R_script_file_path,
                 Resources.RScriptForm_RScriptForm_R_Script, currentPath,
                 TextUtil.FILTER_R, remoteFile, false, "Download R script from Panorama", mainControl, 
-                new Action<SkylineBatchConfigManagerState>((newState) => State = newState),
-                new Func<SkylineBatchConfigManagerState>(() => State));
+                newState => State = newState,
+                () => State);
             fileControl.Dock = DockStyle.Fill;
             fileControl.Show();
             panelPath.Controls.Add(fileControl);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -126,7 +126,11 @@ namespace SkylineTester
                 : "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
             var git = MainWindow.Git;
             
-            var toolsetArg = string.Empty; // Let bjam pick the newest available - currently VS2017 and VS2019 work equally well for Skyline builds
+            // Default to VS 2022 (msvc-14.3) for compatibility with vendor DLLs.
+            // VS 2026 (msvc-14.5) can cause access violations with some vendor libraries.
+            // Set environment variable SKYLINE_BUILD_TOOLSET to override (e.g., "msvc-14.5" for VS 2026)
+            var toolset = Environment.GetEnvironmentVariable("SKYLINE_BUILD_TOOLSET") ?? "msvc-14.3";
+            var toolsetArg = "toolset=" + toolset;
             /* But retain this code in case we someday get back to a state where we need to choose
 
             // Determine toolset requirement based on .Net usage
@@ -143,7 +147,10 @@ namespace SkylineTester
                      csProjFileUrl = GetMasterUrl().Equals(branchUrl)
                         ? "https://raw.githubusercontent.com/ProteoWizard/pwiz/master/pwiz_tools/Skyline/Skyline.csproj"
                         : "https://raw.githubusercontent.com/ProteoWizard/pwiz/" + GetBranchPath(branchUrl) + "/pwiz_tools/Skyline/Skyline.csproj";
-                    var csProjText = (new WebClient()).DownloadString(csProjFileUrl);
+                    using var httpClient = new HttpClient();
+                    var response = httpClient.GetAsync(csProjFileUrl).Result;
+                    response.EnsureSuccessStatusCode();
+                    var csProjText = response.Content.ReadAsStringAsync().Result;
                     var dotNetVersion = csProjText.Split(new[] {"TargetFrameworkVersion"}, StringSplitOptions.None)[1].Split('v')[1].Split(new []{'.'});
                     if ((int.Parse(dotNetVersion[0]) >= 4) && (int.Parse(dotNetVersion[1]) >= 7))
                     {

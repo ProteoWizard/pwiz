@@ -1,4 +1,6 @@
-﻿namespace pwiz.Common.GUI
+using System.Drawing;
+
+namespace pwiz.Common.GUI
 {
     partial class CommonAlertDlg
     {
@@ -35,6 +37,8 @@
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.btnMoreInfo = new System.Windows.Forms.Button();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.iconAndMessageSplitContainer = new System.Windows.Forms.SplitContainer();
+            this.iconPictureBox = new System.Windows.Forms.PictureBox();
             this.messageScrollPanel = new System.Windows.Forms.Panel();
             this.labelMessage = new System.Windows.Forms.Label();
             this.tbxDetail = new System.Windows.Forms.TextBox();
@@ -45,6 +49,11 @@
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.iconAndMessageSplitContainer)).BeginInit();
+            this.iconAndMessageSplitContainer.Panel1.SuspendLayout();
+            this.iconAndMessageSplitContainer.Panel2.SuspendLayout();
+            this.iconAndMessageSplitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.iconPictureBox)).BeginInit();
             this.messageScrollPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -99,7 +108,7 @@
             // splitContainer.Panel1
             // 
             this.splitContainer.Panel1.BackColor = System.Drawing.SystemColors.Window;
-            this.splitContainer.Panel1.Controls.Add(this.messageScrollPanel);
+            this.splitContainer.Panel1.Controls.Add(this.iconAndMessageSplitContainer);
             this.splitContainer.Panel1.Controls.Add(this.lowerPanel);
             // 
             // splitContainer.Panel2
@@ -107,12 +116,32 @@
             this.splitContainer.Panel2.Controls.Add(this.tbxDetail);
             this.splitContainer.Panel2Collapsed = true;
             // 
+            // iconAndMessageSplitContainer
+            // 
+            resources.ApplyResources(this.iconAndMessageSplitContainer, "iconAndMessageSplitContainer");
+            this.iconAndMessageSplitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.iconAndMessageSplitContainer.Name = "iconAndMessageSplitContainer";
+            // 
+            // iconAndMessageSplitContainer.Panel1
+            // 
+            this.iconAndMessageSplitContainer.Panel1.Controls.Add(this.iconPictureBox);
+            // 
+            // iconAndMessageSplitContainer.Panel2
+            // 
+            this.iconAndMessageSplitContainer.Panel2.Controls.Add(this.messageScrollPanel);
+            // 
+            // iconPictureBox
+            // 
+            this.iconPictureBox.Image = global::pwiz.Common.CommonResources.Images.SuccessMessageIcon;
+            resources.ApplyResources(this.iconPictureBox, "iconPictureBox");
+            this.iconPictureBox.Name = "iconPictureBox";
+            this.iconPictureBox.TabStop = false;
+            // 
             // messageScrollPanel
             // 
             resources.ApplyResources(this.messageScrollPanel, "messageScrollPanel");
             this.messageScrollPanel.Controls.Add(this.labelMessage);
             this.messageScrollPanel.Name = "messageScrollPanel";
-            this.messageScrollPanel.Resize += new System.EventHandler(this.messageScrollPanel_Resize);
             // 
             // labelMessage
             // 
@@ -125,7 +154,7 @@
             this.tbxDetail.Name = "tbxDetail";
             this.tbxDetail.ReadOnly = true;
             // 
-            // AlertDlg
+            // CommonAlertDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -147,6 +176,11 @@
             this.splitContainer.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
+            this.iconAndMessageSplitContainer.Panel1.ResumeLayout(false);
+            this.iconAndMessageSplitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.iconAndMessageSplitContainer)).EndInit();
+            this.iconAndMessageSplitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.iconPictureBox)).EndInit();
             this.messageScrollPanel.ResumeLayout(false);
             this.messageScrollPanel.PerformLayout();
             this.ResumeLayout(false);
@@ -164,5 +198,7 @@
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton toolStripButtonCopy;
+        protected System.Windows.Forms.SplitContainer iconAndMessageSplitContainer;
+        private System.Windows.Forms.PictureBox iconPictureBox;
     }
 }

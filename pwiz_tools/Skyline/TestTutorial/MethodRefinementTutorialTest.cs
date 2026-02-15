@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -54,6 +54,7 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
+//            ForceMzmlInScreenShots = true;
             CoverShotName = "MethodRefine";
 
             // Multi-file import has problems with mzML on this test
@@ -149,11 +150,15 @@ namespace pwiz.SkylineTestTutorial
                     new[] {new KeyValuePair<string, MsDataFileUri[]>(replicateName, namedPathSets[0].Value.Take(15).ToArray())};
                 importResultsDlg.OkDialog();
             });
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();   // To make the AllChromatogramsGraph form accessible to the SkylineTester forms tab
-            allChrom.SetFreezeProgressPercent(98, @"00:00:01");
-            WaitForConditionUI(() => allChrom.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms: Take screenshot at about 25% loaded...");
-            allChrom.SetFreezeProgressPercent(null, null);
+            // SRM data - no progress line shown
+            if (!PauseForAllChromatogramsGraphScreenShot("Loading Chromatograms form",
+                19, @"00:00:01", null, 2.19e7f, new Dictionary<string, int>
+                {
+                    { "worm_0001", 96 },
+                    { "worm_0002", 98 },
+                    { "worm_0003", 98 }
+                }))
+                return;
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 15 minutes
 
             Assert.IsTrue(SkylineWindow.Document.Settings.HasResults);
@@ -234,6 +239,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual("YLAEVASEDR", SkylineWindow.SequenceTree.SelectedNode.Text); // Not L10N
                 });
             RestoreViewOnScreen(12);
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             //  Restoring the view changes the selection
             RunUI(SkylineWindow.CollapsePeptides);
             FindNode("YLAEVASEDR");
@@ -257,6 +263,9 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AutoZoomNone();
             });
             RestoreViewOnScreen(13);
+            WaitForGraphs();
+            JiggleSelection(true);  // To ensure the zoom none set above
+            WaitForGraphs();
             PauseForScreenShot<GraphChromatogram>("Unrefined chromatogram graph page clipped from main window"); // Not L10N
 
 //            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
@@ -279,6 +288,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             PauseForScreenShot<SequenceTreeForm>("Targets view clipped");
             PauseForGraphScreenShot("Chromatogram graph", SkylineWindow.GetGraphChrom(replicateName));
             RestoreViewOnScreen(16);
@@ -292,7 +302,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SelectedNode.Expand();
                 SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
             });
-
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             PauseForScreenShot<SequenceTreeForm>("Targets view clipped"); // Not L10N
 
             RunUI(() =>
@@ -353,6 +363,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
             RestoreViewOnScreen(17);
+            RunUI(() => SkylineWindow.ShowFilesTreeForm(false));
             PauseForScreenShot<SequenceTreeForm>("Targets view clipped");
             PauseForGraphScreenShot("Chromatogram graph", SkylineWindow.GetGraphChrom(replicateName));
 

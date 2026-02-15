@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,6 +32,7 @@ namespace pwiz.Common.Spectra
             HasScanWindow = 2,
             HasTotalIonCurrent = 4,
             HasInjectionTime = 8,
+            HasConstantNeutralLoss = 16,
         }
         private ImmutableList<ImmutableList<SpectrumPrecursor>> _precursorsByMsLevel =
             ImmutableList<ImmutableList<SpectrumPrecursor>>.EMPTY;
@@ -160,6 +161,27 @@ namespace pwiz.Common.Spectra
                 _totalIonCurrent = value.GetValueOrDefault();
             }
         }
+
+        private double _constantNeutralLoss;
+
+        public double? ConstantNeutralLoss // As found in Constant Neutral Loss scans, where Q1 peaks are only reported if there's a Q3 peak with this mz offset. Positive value implies loss, negative value implies gain
+        {
+            get
+            {
+                return GetFlag(Flags.HasConstantNeutralLoss) ? _constantNeutralLoss : (double?)null;
+            }
+            private set
+            {
+                _constantNeutralLoss = value.GetValueOrDefault();
+                SetFlag(Flags.HasConstantNeutralLoss, _constantNeutralLoss != 0);
+            }
+        }
+        
+        public SpectrumMetadata ChangeConstantNeutralLoss(double? value)
+        {
+            return ChangeProp(ImClone(this), im => im.ConstantNeutralLoss = value);
+        }
+
 
         public SpectrumMetadata ChangeTotalIonCurrent(double? value)
         {

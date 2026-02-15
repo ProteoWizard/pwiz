@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
             // Note that this iRT db file is not actually being used by the current Skyline document. Because
             // of IrtDbManager._loadedCalculators, it is required that you exit Skyline if you want to change
             // the file location of a particular irt database.
-            var minimizedIrtDb = IrtDb.GetIrtDb(minimizedIrtPath, null);
+            var minimizedIrtDb = IrtDb.GetIrtDb(minimizedIrtPath);
             irtPeptideSequences = minimizedIrtDb.ReadPeptides()
                 .Select(peptide => FastaSequence.StripModifications(peptide.ModifiedTarget.Sequence)).ToHashSet();
             // Verify that a peptide sequence can be found in the iRT database if and only if the peptide had not

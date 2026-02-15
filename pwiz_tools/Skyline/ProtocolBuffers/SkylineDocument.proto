@@ -1,4 +1,4 @@
-﻿syntax = "proto3";
+syntax = "proto3";
 import "google/protobuf/wrappers.proto";
 option csharp_namespace = "pwiz.Skyline.Model.Serialization";
 option java_package = "org.labkey.targetedms.parser.proto";

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Hibernate;

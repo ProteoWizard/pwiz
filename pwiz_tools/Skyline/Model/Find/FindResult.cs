@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Util.Extensions;
 using static pwiz.Skyline.Util.Helpers;
 
@@ -67,7 +66,9 @@ namespace pwiz.Skyline.Model.Find
         public bool IsValid { get; private set; }
         public string LocationName { get; private set; }
         public string LocationType { get; private set; }
-#region object overrides
+        
+        #region object overrides
+        
         public bool Equals(FindResult other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -146,6 +147,7 @@ namespace pwiz.Skyline.Model.Find
             return currentDocNode.GetDisplayText(resultDisplaySettings) + @" (" + chromatogramSet.Name + @")";
 
         }
+        
         #endregion
 
         /// <summary>
@@ -160,13 +162,13 @@ namespace pwiz.Skyline.Model.Find
                     nodeType = FindResources.BookmarkEnumerator_GetNodeTypeName_Protein;
                     break;
                 case (int)SrmDocument.Level.Molecules:
-                    nodeType = PeptideTreeNode.TITLE;
+                    nodeType = PeptideDocNode.TITLE;
                     break;
                 case (int)SrmDocument.Level.TransitionGroups:
-                    nodeType = TransitionGroupTreeNode.TITLE;
+                    nodeType = TransitionGroupDocNode.TITLE;
                     break;
                 case (int)SrmDocument.Level.Transitions:
-                    nodeType = TransitionTreeNode.TITLE;
+                    nodeType = TransitionDocNode.TITLE;
                     break;
                 default:
                     nodeType = FindResources.BookmarkEnumerator_GetNodeTypeName_Unknown;

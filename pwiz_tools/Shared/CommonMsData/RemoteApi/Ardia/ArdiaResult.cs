@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2025 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
  */
 
 using System;
-using System.Net;
+using System.Net; // HttpStatusCode
 
 namespace pwiz.CommonMsData.RemoteApi.Ardia
 {

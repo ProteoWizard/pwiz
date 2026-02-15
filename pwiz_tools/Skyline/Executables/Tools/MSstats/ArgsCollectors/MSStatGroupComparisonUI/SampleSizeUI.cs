@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

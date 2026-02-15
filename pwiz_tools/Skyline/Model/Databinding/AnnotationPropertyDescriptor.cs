@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -117,11 +116,11 @@ namespace pwiz.Skyline.Model.Databinding
             }
             else if (annotationDef.Type == AnnotationDef.AnnotationType.true_false)
             {
-                attributes.Add(new DataGridViewColumnTypeAttribute(typeof(DataGridViewCheckBoxColumn)));
+                attributes.Add(new DataTypeSpecifierAttribute(typeof(TrueFalseAnnotation)));
             }
             else if (annotationDef.Type == AnnotationDef.AnnotationType.value_list)
             {
-                attributes.Add(new DataGridViewColumnTypeAttribute(typeof(AnnotationValueListDataGridViewColumn)));
+                attributes.Add(new DataTypeSpecifierAttribute(typeof(ValueListAnnotation)));
             }
             return attributes.ToArray();
         }
@@ -130,6 +129,24 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return SkylineDataSchema.Document.Settings.DataSettings.AnnotationDefs
                        .FirstOrDefault(def => def.Name == annotationDef.Name) ?? annotationDef;
+        }
+
+        /// <summary>
+        /// Marker type used with DataTypeSpecifierAttribute to indicate that a boolean property
+        /// represents a true/false annotation and should use DataGridViewCheckBoxColumn
+        /// in the UI without creating a compile-time dependency from Model to UI.
+        /// </summary>
+        public class TrueFalseAnnotation
+        {
+        }
+
+        /// <summary>
+        /// Marker type used with DataTypeSpecifierAttribute to indicate that a string property
+        /// represents a value list annotation and should use AnnotationValueListDataGridViewColumn
+        /// in the UI without creating a compile-time dependency from Model to UI.
+        /// </summary>
+        public class ValueListAnnotation
+        {
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -79,13 +79,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(string.IsNullOrEmpty(editGroupComparisonDlg.TextBoxName.Text));
                 editGroupComparisonDlg.TextBoxName.Text = "One-Two";
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = "DilutionNumber";
+                editGroupComparisonDlg.ControlAnnotation = "DilutionNumber";
             });
-            WaitForConditionUI(() => editGroupComparisonDlg.ComboControlValue.Items.Count > 0);
+            WaitForConditionUI(() => editGroupComparisonDlg.ControlValueOptions.Any());
             RunUI(() =>
             {
-                editGroupComparisonDlg.ComboControlValue.SelectedItem = "1";
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = "2";
+                editGroupComparisonDlg.ControlValue = "1";
+                editGroupComparisonDlg.CaseValue = "2";
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
             });
             var foldChangeGrid = ShowDialog<FoldChangeGrid>(editGroupComparisonDlg.ShowPreview);
@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = "One-Three";
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = "3";
+                editGroupComparisonDlg.CaseValue = "3";
             });
             // Show the preview window
             var foldChangeGrid = ShowDialog<FoldChangeGrid>(editGroupComparisonDlg.ShowPreview);

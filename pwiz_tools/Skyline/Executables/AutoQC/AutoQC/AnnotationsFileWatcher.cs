@@ -1,15 +1,17 @@
-﻿using System.IO;
+using System;
+using System.IO;
 using SharedBatch;
 
 namespace AutoQC
 {
 
-    public class AnnotationsFileWatcher
+    public class AnnotationsFileWatcher : IDisposable
     {
         private readonly Logger _logger;
         private readonly ConfigRunner _configRunner;
 
         private readonly FileSystemWatcher _fileWatcher;
+        private bool _cancelled;
 
         public AnnotationsFileWatcher(Logger logger, ConfigRunner configRunner)
         {
@@ -47,18 +49,31 @@ namespace AutoQC
 
         public void Stop()
         {
+            _cancelled = true;
             _fileWatcher.EnableRaisingEvents = false;
         }
 
         private void FileChanged()
         {
+            if (_cancelled)
+                return;
+
             _logger.Log("Annotations file was updated.");
             _configRunner.AnnotationsFileUpdated = true;
         }
 
         private void OnFileWatcherError(ErrorEventArgs e)
         {
+            if (_cancelled)
+                return;
+
             _logger.LogError(string.Format("There was an error watching the annotations file {0}.", _fileWatcher.Filter), e.GetException().ToString());
+        }
+
+        public void Dispose()
+        {
+            Stop();
+            _fileWatcher?.Dispose();
         }
     }
 }

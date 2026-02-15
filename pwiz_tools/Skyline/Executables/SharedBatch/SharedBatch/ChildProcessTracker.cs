@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This class was taken from Ron's answer at https://stackoverflow.com/questions/3342941/kill-child-process-when-parent-process-is-killed
  */
 

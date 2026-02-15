@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -93,6 +93,7 @@ namespace pwiz.Skyline.SettingsUI
             InitializeGraphPanes();
             lblColinearWarning.Visible = false;
             toolStripFind.Visible = false;
+            toolStripFindUnknownModelScores.Visible = false;
 
             comboModel.Items.Add(MProphetPeakScoringModel.NAME);
             comboModel.Items.Add(LegacyScoringModel.DEFAULT_NAME);
@@ -190,7 +191,7 @@ namespace pwiz.Skyline.SettingsUI
 
             try
             {
-                TrainModel(true);
+                TrainModel();
             }
             catch (InvalidDataException x)
             {
@@ -205,9 +206,9 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// Train mProphet scoring model. If suppressWeights is true, disable the weights unchecked by the user
+        /// Train mProphet scoring model. Weights which have been unchecked by the user will be suppressed.
         /// </summary>
-        public void TrainModel(bool suppressWeights = false)
+        public void TrainModel()
         {
             // Create new scoring model using the default calculators.
             IPeakScoringModel peakScoringModel;
@@ -230,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI
                                                              .Where((type, i) => indicesToSuppress[i])
                                                              .ToList();
             var weightSuppressors =
-                peakScoringModel.PeakFeatureCalculators.Select(calc => suppressWeights && calculatorsToSuppress.Contains(calc.GetType())).ToList();
+                peakScoringModel.PeakFeatureCalculators.Select(calc => calculatorsToSuppress.Contains(calc.GetType())).ToList();
 
 
             // Need to regenerate the targets and decoys if the set of calculators has changed (backward compatibility)
@@ -252,12 +253,12 @@ namespace pwiz.Skyline.SettingsUI
             if (!decoyCheckBox.Checked)
                 decoyTransitionGroups = new List<IList<FeatureScores>>();
 
-            // Set intial weights based on previous model (with NaN's reset to 0)
+            // Set initial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[peakScoringModel.PeakFeatureCalculators.Count];
             // But then set to NaN the weights that were suppressed by the user or have unknown values for this dataset
             for (int i = 0; i < initialWeights.Length; ++i)
             {
-                if (!_targetDecoyGenerator.EligibleScores[i] || weightSuppressors[i])
+                if (!_targetDecoyGenerator.EligibleScores[i].Eligible || weightSuppressors[i])
                     initialWeights[i] = double.NaN;
             }
             var initialParams = new LinearModelParams(initialWeights);
@@ -327,14 +328,23 @@ namespace pwiz.Skyline.SettingsUI
 
         public void FindMissingValues(int selectedCalculatorIndex)
         {
-            string calculatorName = _peakScoringModel.PeakFeatureCalculators[selectedCalculatorIndex].Name;
             var featureDictionary = _targetDecoyGenerator.PeakTransitionGroupDictionary;
-            var finders = new[]
-                {
-                    new MissingScoresFinder(calculatorName, selectedCalculatorIndex, featureDictionary)
-                };
-            var findOptions = new FindOptions().ChangeCustomFinders(finders).ChangeCaseSensitive(false).ChangeText(string.Empty);
+            FindMissingValues(new MissingScoresFinder(_peakScoringModel.PeakFeatureCalculators, new[]{selectedCalculatorIndex}, featureDictionary));
+        }
+
+        private void FindMissingValues(MissingScoresFinder missingScoresFinder)
+        {
+            var findOptions = new FindOptions().ChangeCustomFinders(new[]{missingScoresFinder}).ChangeCaseSensitive(false).ChangeText(string.Empty);
             Program.MainWindow.FindAll(this, findOptions);
+        }
+
+        public void FindUnknownModelScores()
+        {
+            var calculatorIndices = Enumerable.Range(0, _peakScoringModel.Parameters.Weights.Count)
+                .Where(i => !double.IsNaN(_peakScoringModel.Parameters.Weights[i])).ToList();
+            var finder = new MissingScoresFinder(_peakScoringModel.PeakFeatureCalculators, calculatorIndices,
+                _targetDecoyGenerator.PeakTransitionGroupDictionary);
+            FindMissingValues(finder);
         }
 
         /// <summary>
@@ -615,6 +625,7 @@ namespace pwiz.Skyline.SettingsUI
                 graphPane.CurveList.Add(curve);
             }
 
+            toolStripFindUnknownModelScores.Visible = hasUnknownScores && !allUnknownScores;
             ScaleGraph(graphPane, min, max, hasUnknownScores);
             ScaleGraph(graphPaneQ, minQ, maxQ, hasUnknownScores);
             ScaleGraph(graphPaneP, minP, maxP, hasUnknownScores);
@@ -683,6 +694,7 @@ namespace pwiz.Skyline.SettingsUI
             var secondBestPoints = modelHistograms.BinGroups[2];
             _hasUnknownScores = modelHistograms.HasUnknownScores;
             _allUnknownScores = modelHistograms.AllUnknownScores;
+            toolStripFind.Visible = _hasUnknownScores && !_allUnknownScores;
             if (decoyCheckBox.Checked)
                 graphPane.AddBar(SettingsUIResources.EditPeakScoringModelDlg_UpdateModelGraph_Decoys, decoyPoints, _decoyColor);
             if (secondBestCheckBox.Checked)
@@ -766,6 +778,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 _targetDecoyGenerator.GetScoresForCalculator(selectedCalculator, targetScores, decoyScores, secondBestScores);
             }
+
             // Evaluate each score on the best peak according to that score (either individual calculator or composite)
             var scoreGroups = new List<List<double>> {targetScores, decoyScores, secondBestScores};
             scoreHistograms = new HistogramGroup(scoreGroups);
@@ -990,7 +1003,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
                 // Show row in disabled style if the score is not eligible
-                if (!_targetDecoyGenerator.EligibleScores[unsortedIndex])
+                if (!_targetDecoyGenerator.EligibleScores[unsortedIndex].Eligible)
                 {
                     for (int i = 0; i < 4; i++)
                     {
@@ -1118,17 +1131,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             FindMissingValues(_selectedCalculator);
         }
-
-        private bool zedGraphSelectedCalculator_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        private void findUnknownModelScoresButton_Click(object sender, EventArgs e)
         {
-            // Find button is visible on the right side of graph, if some scores are unknown, but not if all scores are unknown
-            bool isMouseOverUnknown = _hasUnknownScores && !_allUnknownScores && e.X > sender.Width - 100;
-            // It is also unconditionally visible if calculator is ineligible but without unknown scores, if the unknown scores aren't for the best peak
-            bool isEligibleCalculator = _selectedCalculator == -1 || _targetDecoyGenerator.EligibleScores[_selectedCalculator];
-            bool overrideVisible = !isEligibleCalculator && !_hasUnknownScores;
-            toolStripFind.Visible = isMouseOverUnknown || overrideVisible;
-            return true;
+            FindUnknownModelScores();
         }
+
         #endregion
 
         #region Functional test support
@@ -1188,11 +1195,6 @@ namespace pwiz.Skyline.SettingsUI
 
         public Control GraphsControl => tabControl1;
         public Control SelectedGraphControl => tabControl1.TabPages[tabControl1.SelectedIndex];
-
-        public void ShowFindButton(bool show)
-        {
-            findPeptidesButton.Visible = show;
-        }
 
         #endregion
 
@@ -1294,5 +1296,6 @@ namespace pwiz.Skyline.SettingsUI
             }
             return null;
         }
+
     }
 }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -36,7 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -65,6 +65,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="BcfgFileTest.cs" />
+    <Compile Include="AbstractSkylineBatchUnitTest.cs" />
     <Compile Include="RemoteFileSourceFunctionalTest.cs" />
     <Compile Include="DataDownloadFunctionalTest.cs" />
     <Compile Include="FunctionalTestUtil.cs" />
@@ -105,6 +106,9 @@
       <Project>{7ab2d7ad-6760-450e-bccd-b08502307b99}</Project>
       <Name>SkylineBatch</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Test\" />

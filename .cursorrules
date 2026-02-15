@@ -1,4 +1,28 @@
 # Cursor project orientation for ProteoWizard (pwiz)
+#
+# This file provides Cursor-specific behavior guidance.
+# For detailed coding conventions, style guidelines, and testing patterns,
+# see ai/STYLEGUIDE.md - the comprehensive style guide used by all AI tools.
+# For project context, common gotchas, and architectural patterns,
+# see ai/MEMORY.md - essential context for AI tools working on this project.
+
+[CRITICAL_FOR_AI_TOOLS]
+# READ THESE FILES AT THE START OF EVERY CONVERSATION AND AFTER ANY CONTEXT RESET/SUMMARY:
+# 
+# 1. MEMORY.md - DRY principle, common patterns, architectural decisions, project gotchas
+# 2. STYLEGUIDE.md - Code style, file headers, testing patterns, localization, file I/O (FileSaver)
+# 3. TESTING.md - Test structure, AbstractFunctionalTestEx helpers, translation-proof testing
+# 4. WORKFLOW.md - Git workflow, TODO lifecycle, branch management
+#
+# These files contain essential context that MUST be maintained across conversation summaries.
+# When writing code or tests, actively apply the principles documented in these files:
+# - DRY: Extract common patterns into parameterized helpers (see MEMORY.md examples)
+# - Use AbstractFunctionalTestEx helpers (TestMessageDlgShownContaining, TestHttpClientCancellation, etc.)
+# - Always use resource strings for assertions (never hardcoded English)
+# - Always use FileSaver for atomic file writes (see STYLEGUIDE.md)
+# - Follow established patterns in similar existing code
+#
+# If you notice yourself writing repetitive code or tests, STOP and refactor to be DRY.
 
 [project]
 name = "ProteoWizard (pwiz)"
@@ -34,6 +58,7 @@ entry_points = [
 - When adding sources, update the appropriate Jamfile or Visual Studio project.
 - Use existing vendor libraries from `libraries/`; do not fetch replacements.
 - For documentation, add concise notes to `README.md` and `doc/`.
+- Project conventions: See ai/MEMORY.md for essential project context and common gotchas.
 
 [skyline]
 primary_solution = "pwiz_tools/Skyline/Skyline.sln"
@@ -50,127 +75,44 @@ docs = [
 - Provide minimal, actionable explanations.
 - Use fenced code blocks only for relevant snippets or commands.
 - Default to read-only discovery before edits; then apply focused edits.
+- When referring to the person working with the AI, use "the developer" not "the user".
+  - "The user" refers to end-users of Skyline software.
+  - "The developer" refers to the person pair-programming with the AI.
+  - This avoids confusion when discussing both developers and end-users in the same conversation.
+
+[async_patterns]
+# See ai/STYLEGUIDE.md for comprehensive async/await guidelines
+reference = "ai/STYLEGUIDE.md"
+
+[build_and_testing]
+- LLM agents CANNOT build or run this project directly.
+- Build and test operations must be performed by the developer using Visual Studio.
+- When code changes are made, request that the developer build and test the changes.
+- Do not attempt to run quickbuild.bat, bs.bat, or any build commands.
+- Do not attempt to run tests or execute the application.
 
 [file_headers]
-standard_header = """
-/*
- * Original author: [Author Name] <[email] .at. [domain]>,
- *                  [Affiliation]
- * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
- *
- * Copyright [Year] University of Washington - Seattle, WA
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-"""
-ai_attribution = {
-  required = "Always include AI assistance line when code is created or significantly modified with AI tools"
-  format = "Cursor ([model names]) <cursor .at. anysphere.co>"
-  position = "After original author, before copyright"
-  email_format = "Use .at. format to avoid spam harvesting"
-  multiple_models = "List all models used if multiple AI systems contributed significantly"
-}
+# See ai/STYLEGUIDE.md for file header format and AI attribution guidelines
+reference = "ai/STYLEGUIDE.md"
 
 [testing]
-unit_tests = {
-  projects = ["Test", "TestData"]
-  base_classes = ["AbstractUnitTest", "AbstractUnitTestEx"]
-  characteristics = "Fast execution, no UI overhead (no SkylineWindow)"
-  test_project = "General unit tests, may access file system but no UI"
-  testdata_project = "Unit tests with mass spectrometry data files, must access file system"
-}
-functional_tests = {
-  projects = ["TestFunctional", "TestPerf", "TestTutorial"]
-  base_classes = ["AbstractFunctionalTest", "AbstractFunctionalTestEx"]
-  overhead = "Significant - must show/destroy SkylineWindow and drive UI"
-  performance = "Much slower than unit tests (in-memory, no file system/network)"
-  consolidation = "Prefer multiple validations in single test class with one [TestMethod]"
-  helpers = "Use private helper methods for different validation concerns"
-  avoid = "Separate test classes for related functional validations that could share SkylineWindow"
-}
-test_perf = {
-  purpose = "Performance tests with large datasets (>100MB)"
-  requirements = ">100GB free disk space, Downloads folder storage"
-  frequency = "Run less often than standard functional tests"
-}
-test_tutorial = {
-  purpose = "Automated tutorial implementation and screenshot capture"
-  source = "Skyline/Documentation/Tutorials/*"
-  screenshots = "s-01.png, s-02.png, cover.png in language subfolders (en, ja, zh-CHS)"
-  examples = ["TestIrtTutorial for iRT tutorial"]
-}
+# See ai/TESTING.md for comprehensive testing guidelines
+reference = "ai/TESTING.md"
 
 [style_skyline_csharp]
-control_flow = {
-  single_line_if = false
-  allow_no_braces_single_statement = true
-}
-member_order = [
-  "static_fields",
-  "static_public_methods",
-  "private_instance_fields",
-  "constructors",
-  "public_instance_api",
-  "private_helpers_after_usage"
-]
-naming = {
-  descriptive_names = true
-  avoid_abbreviations = true
-  private_instance_field_prefix = "_"
-  private_static_field_prefix = "_"
-  interface_prefix = "I"
-  type_parameter_prefix = "T"
-  enum_member_style = "snake_case"
-}
-formatting = {
-  preserve_existing_indentation = true
-  avoid_unrelated_reformatting = true
-  tabs_disallowed = true
-}
+# See ai/STYLEGUIDE.md for comprehensive C# coding conventions
+reference = "ai/STYLEGUIDE.md"
 docs = [
-  "STYLEGUIDE.md"
+  "ai/STYLEGUIDE.md"
 ]
 
 [localization]
-resource_system = {
-  primary_location = "pwiz_tools/Skyline/Properties/Resources.resx"
-  auxiliary_locations = [
-    "pwiz_tools/Skyline/Menus/MenusResources.resx",
-    "pwiz_tools/Skyline/FileUI/FileUIResources.resx",
-    "pwiz_tools/Skyline/Controls/Graphs/GraphResources.resx"
-  ]
-  organization_tool = "pwiz_tools/Skyline/Executables/AssortResources/ResourceAssorter.cs"
-  static_analysis_test = "pwiz_tools/Skyline/Test/CodeInspectionTest.cs"
-}
-guidelines = [
-  "For folder-specific strings (e.g., menu items), add directly to <folder-name>Resources.resx (e.g., MenusResources.resx)",
-  "For general UI strings, add to Properties/Resources.resx and let ResourceAssorter organize them",
-  "ResourceAssorter moves strings from Properties/Resources.resx to appropriate <folder-name>Resources.resx files based on usage context",
-  "Generate resource keys by replacing non-alphanumerics with '_' and trimming",
-  "Prefer context prefixes like SkylineWindow_ or EditMenu_ where appropriate",
-  "CRITICAL: When adding .resx entries, also add corresponding public static string properties to .Designer.cs in ALPHABETICAL ORDER",
-  "Compiler will fail with CS0117 errors if Designer.cs is not updated",
-  "ReSharper static analysis and CodeInspectionTest.cs verify proper resource placement",
-  "AssortResources.exe can clean up misplaced resources if needed"
-]
+# See ai/STYLEGUIDE.md for detailed localization guidelines
+reference = "ai/STYLEGUIDE.md"
 
 [ui_guidelines]
-menu_items = [
-  "All menuMain items and submenus must have mnemonics (e.g., '&Keyboard Shortcuts')",
-  "Use title-case for menu text and action buttons (e.g., 'Keyboard Shortcuts')",
-  "Only menuMain items can have mnemonics and keyboard shortcuts",
-  "Context menus should not have mnemonics or keyboard shortcuts"
-]
+# See ai/STYLEGUIDE.md for detailed UI guidelines
+reference = "ai/STYLEGUIDE.md"
 
 [executables]
 note = "Projects under pwiz_tools/Skyline/Executables are separate solutions (stand-alone tools and utilities). Not built by Skyline.sln; prefer Skyline conventions unless local overrides are required."

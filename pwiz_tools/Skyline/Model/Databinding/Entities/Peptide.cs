@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -51,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [OneToMany(ForeignKey = "Peptide")]
-        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [HideWhen(AncestorOfType = typeof(FoldChangeRow))]
         public IList<Precursor> Precursors
         {
             get
@@ -63,7 +62,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [ProteomicDisplayName("PeptideResults")]
         [InvariantDisplayName("MoleculeResults")]
         [OneToMany(ForeignKey = "Peptide")]
-        [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
+        [HideWhen(AncestorOfType = typeof(FoldChangeRow))]
         public IDictionary<ResultKey, PeptideResult> Results
         {
             get { return _cachedValues.GetValue2(this); }
@@ -84,7 +83,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return new PeptideDocNode(new Model.Peptide(null, @"X", null, null, 0));
         }
 
-        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeBindingSource.FoldChangeRow)})]
+        [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(Protein),typeof(FoldChangeRow)})]
         [InvariantDisplayName("MoleculeList", ExceptInUiMode = UiModes.PROTEOMIC)]
         public Protein Protein
         {
@@ -177,7 +176,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
         [Importable(Formatter = typeof(StandardType.PropertyFormatter))]
         public StandardType StandardType
         {
@@ -331,7 +329,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DataGridViewColumnType(typeof(NormalizationMethodDataGridViewColumn))]
         [Importable(Formatter = typeof(NormalizationMethod.PropertyFormatter))]
         public NormalizationMethod NormalizationMethod
         {
@@ -344,7 +341,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
 
-        [DataGridViewColumnType(typeof(SurrogateStandardDataGridViewColumn))]
+        [DataTypeSpecifier(typeof(SurrogateStandardName))]
         [Importable]
         public string SurrogateExternalStandard
         {
@@ -592,5 +589,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return owner.MakeResults();
             }
         }
+    }
+
+    /// <summary>
+    /// Marker type used with DataTypeSpecifierAttribute to indicate that a string property
+    /// represents a surrogate standard name and should use SurrogateStandardDataGridViewColumn
+    /// in the UI without creating a compile-time dependency from Model to UI.
+    /// </summary>
+    public class SurrogateStandardName
+    {
     }
 }

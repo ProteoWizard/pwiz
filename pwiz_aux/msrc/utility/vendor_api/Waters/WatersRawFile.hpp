@@ -551,7 +551,7 @@ struct PWIZ_API_DECL RawData
             }
             if (workingSonarFunctionIndex_ < 0)
             {
-                throw std::runtime_error("[MassLynxRaw::FindSonarFunction] could not identify any function index for SONAR mz-to-bin conversion");
+                throw std::runtime_error("[MassLynxRaw::FindSonarFunction] could not identify any function index for SONAR mz-to-bin conversion (_sonar.inf calibration file missing or corrupt?)");
             }
         }
     }
@@ -597,7 +597,7 @@ struct PWIZ_API_DECL RawData
                 // Likely just an empty channel - if there's a real problem the folllowing calls will probably throw too
             }
             analogChannelNames[ch] = cp1252toUtf8(AnalogChromatogramReader.GetChannelDescription(ch));
-            analogChannelUnits[ch] = AnalogChromatogramReader.GetChannelUnits(ch);
+            analogChannelUnits[ch] = cp1252toUtf8(AnalogChromatogramReader.GetChannelUnits(ch));
         }
     }
 };

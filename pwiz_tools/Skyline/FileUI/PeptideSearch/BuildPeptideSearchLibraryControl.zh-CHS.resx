@@ -522,10 +522,6 @@ TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</val
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
     <value>选择一组已知的 iRT 标准肽段用于保留时间归一化。</value>
-    <comment>Needs Review:English text changed
-Old English:Choose a set of know iRT standard peptides to use for retention time normalization.
-Current English:Choose a set of known iRT standard peptides to use for retention time normalization.
-Old Localized:选择一组已知的 iRT 标准肽段，用于保留时间归一化。</comment>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
@@ -748,6 +744,9 @@ Old Localized:选择一组已知的 iRT 标准肽段，用于保留时间归一�
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>381, 452</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 652</value>

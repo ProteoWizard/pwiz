@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -26,15 +26,15 @@ using SkylineBatch;
 namespace SkylineBatchTest
 {
     [TestClass]
-    public class SkylineBatchLoggerTest
+    public class SkylineBatchLoggerTest : AbstractSkylineBatchUnitTest
     {
         [TestMethod]
         public void TestTinyLog()
         {
-            var logFolder = TestUtils.GetTestFilePath("OldLogs\\TestTinyLog");
+            var logFolder = GetTestResultsPath("TestTinyLog");
             if (!Directory.Exists(logFolder)) Directory.CreateDirectory(logFolder);
 
-            var logger = TestUtils.GetTestLogger(logFolder);
+            var logger = GetTestLogger("TestTinyLog");
             var logFile = logger.LogFile;
             Assert.IsTrue(File.Exists(logFile));
             var fileInfo = new FileInfo(logFile);
@@ -46,7 +46,7 @@ namespace SkylineBatchTest
 
             var oldLogger = logger.Archive();
             var fileLengthAfterArchive = new FileInfo(logger.LogFile).Length;
-            var logFilesAfterArchive = TestUtils.GetAllLogFiles();
+            var logFilesAfterArchive = TestUtils.GetAllLogFiles(TestContext, logFolder);
             var archivedFileLength = logFilesAfterArchive.Count > 1 ? new FileInfo(logFilesAfterArchive[1]).Length : -1;
             logger.Delete();
             oldLogger.Delete();
@@ -66,7 +66,7 @@ namespace SkylineBatchTest
         {
             TestUtils.InitializeRInstallation();
 
-            var logFolder = TestUtils.GetTestFilePath("MultipleLogsTest");
+            var logFolder = GetTestResultsPath("MultipleLogsTest");
             if (Directory.Exists(logFolder))
             {
                 foreach (var file in Directory.EnumerateFiles(logFolder))
@@ -96,15 +96,15 @@ namespace SkylineBatchTest
                     Assert.IsTrue(success);
                     completed = true;
                 });
-                TestUtils.WaitForCondition(() =>
+                WaitForCondition(() =>
                 {
                     return completed;
                 }, new TimeSpan(0, 0, 10), 100, "Could not start run");
                 testConfigManager.StartBatchRun();
-                TestUtils.WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
+                WaitForCondition(ConfigRunnersStarted, timeout, timestep, startErrorMessage);
                 Thread.Sleep(1000);
                 testConfigManager.State.CancelRunners();
-                TestUtils.WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
+                WaitForCondition(ConfigRunnersStopped, timeout, timestep, cancelErrorMessage);
 
             }
 

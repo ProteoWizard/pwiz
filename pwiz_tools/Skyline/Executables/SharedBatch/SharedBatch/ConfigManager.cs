@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -756,7 +756,8 @@ namespace SharedBatch
                 if (string.IsNullOrEmpty(forceReplaceRoot))
                     addingConfig = RunRootReplacement(config);
                 else
-                    addingConfig = ForceRootReplacement(config, forceReplaceRoot, RootReplacement[forceReplaceRoot], out _);
+                    // Force root replacement; if it fails, original config is retained.
+                    addingConfig = ForceRootReplacement(config, forceReplaceRoot, RootReplacement[forceReplaceRoot]);
                 numAddedConfigs++;
                 var existingConfigIndex = GetConfigIndex(addingConfig.GetName());
                 ModelChanged = true;
@@ -991,17 +992,15 @@ namespace SharedBatch
             return config;
         }
 
-        // replaces all roots and creates the folders of the new paths. Throws exception if path replacement fails
-        private IConfig ForceRootReplacement(IConfig config, string oldRoot, string newRoot, out string errorMessage)
+        // Attempts to force path root replacement; returns original config if replacement fails (never returns null).
+        private IConfig ForceRootReplacement(IConfig config, string oldRoot, string newRoot)
         {
-            errorMessage = null;
             try
             {
                 return config.ForcePathReplace(oldRoot, newRoot);
             }
-            catch (ArgumentException e)
+            catch (ArgumentException)
             {
-                errorMessage = e.Message;
                 return config;
             }
         }

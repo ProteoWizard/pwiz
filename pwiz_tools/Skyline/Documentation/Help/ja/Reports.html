@@ -1,0 +1,738 @@
+<html><head>
+<meta charset="utf-8">
+<style>body {
+    font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+}
+.RowType {
+    font-size: 1.769em;
+    line-height: 1.3em;
+    font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+    color: #000;
+}
+table {
+border: 1px solid #bbb;
+border-collapse: collapse;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+th {
+    background-color: #ededed;
+    color: #636363;
+    text-align: left;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    font-weight: bold;
+    border: 1px solid #bbb;
+}
+td {
+    color: #2a2a2a;
+    vertical-align: top;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    border: 1px solid #bbb;
+}
+.Hidden {
+    font-style: italic; 
+}
+.Obsolete {
+    text-decoration: line-through;
+}</style>
+</head><body>
+<div id="pwiz.Skyline.Model.Databinding.Entities.SkylineDocument"><span class="RowType">SkylineDocument</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子リスト</td><td class="ColumnDescription">Skylineドキュメントにある分子すべてのグループ化の最上位セットです。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">分子リスト</a>のリスト</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定</td><td class="ColumnDescription">繰り返し測定</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">繰り返し測定</a>のリスト</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Protein"><span class="RowType">分子リスト</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子</td><td class="ColumnDescription">分子リストにある分子です。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">分子</a>のリスト</td></tr>
+<tr><td class="ColumnCaption">分子リスト結果</td><td class="ColumnDescription">分子リスト結果</td><td class="ColumnType">ResultKeyから<a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">分子リスト結果</a>のマップ</td></tr>
+<tr><td class="ColumnCaption">分子リスト名</td><td class="ColumnDescription">分子リストの名前です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">タンパク質の説明</td><td class="ColumnDescription">タンパク質をFASTAシークエンスファイルからSkylineにインポートすると、タンパク質の表記が加えられます。また、ペプチドツリー表示内でタンパク質名にマウスをポイントしてもタンパク質の表記が表示されます。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">タンパク質アクセッション</td><td class="ColumnDescription">タンパク質アクセッション番号</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">タンパク質推奨名</td><td class="ColumnDescription">タンパク質推奨名</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">タンパク質遺伝子</td><td class="ColumnDescription">タンパク質遺伝子</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">タンパク質種</td><td class="ColumnDescription">タンパク質生物種</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">タンパク質シークエンス</td><td class="ColumnDescription">タンパク質をFASTAシークエンスファイルからSkylineにインポート すると、タンパク質のフルシークエンスにアクセスできます。また、ペプチドツリー表示内でタンパク質名に マウスをポイントしてもタンパク質のシークエンスが表示されます。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子を自動選択</td><td class="ColumnDescription">真の場合、Skylineは現在の設定に基づき分子リストから自動的に分子を追加または削除します。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">タンパク質シーケンスカバー率</td><td class="ColumnDescription">子ペプチドの1つ以上のシークエンスの一部である可能性があるタンパク質シークエンス内のアミノ酸の割合</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子リストメモ</td><td class="ColumnDescription">分子リストに関連付けられたフリーテキストのメモです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子リストロケーター</td><td class="ColumnDescription">ドキュメント内の分子リストの一意の識別子です。これは「MoleculeGroup:」で始まります。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Replicate"><span class="RowType">繰り返し測定</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">繰り返し測定名</td><td class="ColumnDescription">インポート時にデータに割り当てられる繰り返し測定の名前。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ファイル</td><td class="ColumnDescription">ファイル</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ResultFile">結果ファイル</a>のリスト</td></tr>
+<tr><td class="ColumnCaption">試料タイプ</td><td class="ColumnDescription">試料のタイプです。以下のいずれかとなります。
+Unknown（測定試料） 
+Standard（校正曲線で使用する既知量のアナライトを含む標準試料） 
+QC（校正を確認する既知量のアナライトを含む）
+Solvent（溶媒）
+Blank（ブランク）
+Double Blank（ダブルブランク）</td><td class="ColumnType">試料タイプ</td></tr>
+<tr><td class="ColumnCaption">アナライト濃度</td><td class="ColumnDescription">外部標準試料または、QC試料にスパイクしたアナライトの既知量です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">試料希釈倍数</td><td class="ColumnDescription">試料が分析される前に希釈される量です。
+外部標準の希釈倍率は一般的に1で、不明の試料は、装置の定量可能範囲に収まるようにするため1を上回る倍率で希釈された可能性があります。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">バッチ名</td><td class="ColumnDescription">この繰り返し測定が属するバッチの名前です。特定の繰り返し測定に対する検量線は、バッチ名が同じである外部標準のサブセットを用いて計算されます。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定ロケーター</td><td class="ColumnDescription">ドキュメント内の繰り返し測定の一意の識別子です。これは必ず「Replicate:/」で始まり、繰り返し測定の名前が続きます。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Peptide"><span class="RowType">分子</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">プリカーサー</td><td class="ColumnDescription">プリカーサー</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">プリカーサー</a>のリスト</td></tr>
+<tr><td class="ColumnCaption">分子結果</td><td class="ColumnDescription">分子に関連付けられた結果です。</td><td class="ColumnType">ResultKeyから<a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">分子結果</a>のマップ</td></tr>
+<tr><td class="ColumnCaption">分子リスト</td><td class="ColumnDescription">Skylineドキュメントにある分子のグループ化です。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">分子リスト</a></td></tr>
+<tr><td class="ColumnCaption">ペプチドシークエンス</td><td class="ColumnDescription">ペプチドのアミノ酸シークエンスです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ペプチドシーケンス長</td><td class="ColumnDescription">ペプチドシークエンスのアミノ酸数です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">ペプチド修飾シークエンス</td><td class="ColumnDescription">修飾構造の質量差のみで注釈が付く アミノ酸のシークエンス（例：AC[+57]GR）。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.ProteomicSequence">ProteomicSequence</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">ペプチド修飾シークエンスのモノアイソトピック質量</td><td class="ColumnDescription">「C[+57.021464]」のように修飾部分がモノアイソトピック質量で言い表される、ペプチドの修飾シークエンスです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ペプチド修飾シークエンスの平均質量</td><td class="ColumnDescription">「C[+57.05162]」のように修飾部分が平均質量で言い表される、ペプチドの修飾シークエンスです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ペプチド修飾シークエンスの3文字コード</td><td class="ColumnDescription">「C[CAM]」のように修飾部分が3文字コードで言い表される、ペプチドの修飾シークエンスです。修飾部分に3文字コードがない場合、代わりにフルネームが使用されます。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ペプチド修飾シークエンスのフルネーム</td><td class="ColumnDescription">「C[Carbamidomethyl (C)]」のように修飾部分がフルネームで言い表される、ペプチドの修飾シークエンスです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ペプチド修飾シークエンスのUnimod Id</td><td class="ColumnDescription">「C(unimod:4)」のように修飾部分がUnimod idで言い表される、ペプチドの修飾シークエンスです。修飾部分にUnimod idがない場合、代わりにフルネームが使用されます。</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">分子名</td><td class="ColumnDescription">荷電されていない非標識の分子に割り当てできる一般的な名前です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子式</td><td class="ColumnDescription">質量分析計で測定される荷電されていない非標識の分子の原子化学式。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">標準タイプ</td><td class="ColumnDescription">標準タイプ</td><td class="ColumnType">標準タイプ</td></tr>
+<tr><td class="ColumnCaption">前へAa</td><td class="ColumnDescription">前のAa</td><td class="ColumnType">Char</td></tr>
+<tr><td class="ColumnCaption">次のAa</td><td class="ColumnDescription">タンパク質配列中のペプチドの直後に位置するアミノ酸残基。</td><td class="ColumnType">Char</td></tr>
+<tr><td class="ColumnCaption">最初の位置</td><td class="ColumnDescription">ペプチドに含まれるタンパク質シークエンスの最初の（N末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">最後の位置</td><td class="ColumnDescription">ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">ミス開裂</td><td class="ColumnDescription">ペプチドシークエンスにおけるmissed cleavage siteの数</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">保持時間カルキュレータスコア</td><td class="ColumnDescription">現在の保持時間のスコアカルキュレーター（SSRCalcまたは iRTスコアなど）を使用している場合のカルキュレーターから計算されたペプチドの生のスコア。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">予測保持時間</td><td class="ColumnDescription">測定結果と保持時間カルキュレーター（現在はSSRCalc 3.0のみ利用可能）との間の保持時間の回帰式によって予測される保持時間です。保持時間の回帰式が割り当てられていない場合には#N/Aとなります。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">平均測定保持時間</td><td class="ColumnDescription">全繰り返し測定のペプチドの平均保持時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示的保持時間</td><td class="ColumnDescription">ターゲットに使用する予測保持時間（分）です。他のすべての予測メソッドを無効にします。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示的保持時間ウィンドウ</td><td class="ColumnDescription">ターゲットに使用することが望まれる保持時間の幅（分）です。この値の計算に使用されるその他すべての設定を無効にします。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">正規化メソッド</td><td class="ColumnDescription">絶対定量とグループ比較のために、特定の分子で使用する正規化のメソッドを無効にします。</td><td class="ColumnType">正規化メソッド</td></tr>
+<tr><td class="ColumnCaption">サロゲート外部標準</td><td class="ColumnDescription">このペプチドまたは分子の定量に使用される、適合した校正曲線を有する別のペプチドまたは分子の名前</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子メモ</td><td class="ColumnDescription">分子に関連付けられたフリーテキストのメモです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子ロケーター</td><td class="ColumnDescription">ドキュメント内の分子の一意の識別子です。これは「Molecule:」で始まります。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">内部標準濃度</td><td class="ColumnDescription">試料中の内標準の量です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">濃度乗数</td><td class="ColumnDescription">特定のペプチドまたは分子の特定の濃度を得るために繰り返し測定の「アナライト濃度」に乗じる値です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">校正曲線</td><td class="ColumnDescription">試料タイプが[標準]で[アナライト濃度]が指定されている繰り返し測定を使用して計算された校正曲線です。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics">校正曲線</a></td></tr>
+<tr><td class="ColumnCaption">性能指数</td><td class="ColumnDescription">ペプチドまたは分子の検出限界と定量限界です。これらの数量算出メソッドは、[ペプチド設定]の[定量化]タブで選択できます。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit">性能指数</a></td></tr>
+<tr><td class="ColumnCaption">InChiKey</td><td class="ColumnDescription">標準分子ID</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">CAS</td><td class="ColumnDescription">標準分子ID</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">HMDB</td><td class="ColumnDescription">標準分子ID</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">InChI</td><td class="ColumnDescription">標準分子ID</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">SMILES</td><td class="ColumnDescription">標準分子ID</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">KEGG</td><td class="ColumnDescription">標準分子ID</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プリカーサーを自動選択</td><td class="ColumnDescription">真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどに基づき自動的にプリカーサーを追加または削除します。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">属性グループID</td><td class="ColumnDescription">属性面積率の算出においてペプチドまたは分子のグループ化に影響します。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics"><span class="RowType">校正曲線</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">勾配</td><td class="ColumnDescription">近似曲線または直線の線形項の係数。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">切片</td><td class="ColumnDescription">近似直線または曲線のY切片</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">転回点</td><td class="ColumnDescription">双線形回帰の場合、2つの線が交差するX座標です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">点数</td><td class="ColumnDescription">曲線のフィッティングで使用されたデータポイント数です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">二次係数</td><td class="ColumnDescription">二次回帰におけるx2乗項の係数</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">R平方</td><td class="ColumnDescription">決定係数</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">エラーメッセージ</td><td class="ColumnDescription">この値の計算中にエラーが発生した場合のエラーメッセージのテキストです。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit"><span class="RowType">性能指数</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">検出限界</td><td class="ColumnDescription">アナライトをブランクから高い信頼性で区別できる、濃度下限です。       検出下限を計算するオプションは[ペプチド設定]の[定量化]タブで指定できます。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">定量限界</td><td class="ColumnDescription">アナライトを定量できるとされている、濃度下限です。 この値を決定するオプションは[ペプチド設定]の[定量化]タブで指定できます。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.ProteinResult"><span class="RowType">分子リスト結果</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">繰り返し測定</td><td class="ColumnDescription">繰り返し測定</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">繰り返し測定</a></td></tr>
+<tr><td class="ColumnCaption">分子リスト存在量</td><td class="ColumnDescription">分子リストの存在量を示す数字。
+通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue">AbundanceValue</a></td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Collections.ResultKey"><span class="RowType">ResultKey</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">繰り返し測定インデックス</td><td class="ColumnDescription">繰り返し測定インデックス</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定名</td><td class="ColumnDescription">インポート時にデータに割り当てられる繰り返し測定の名前。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ファイルインデックス</td><td class="ColumnDescription">ファイルインデックス</td><td class="ColumnType">Int32</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.ResultFile"><span class="RowType">結果ファイル</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">繰り返し測定</td><td class="ColumnDescription">繰り返し測定</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">繰り返し測定</a></td></tr>
+<tr><td class="ColumnCaption">ファイル名</td><td class="ColumnDescription">データをインポートしたファイルの名前</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ファイルパス</td><td class="ColumnDescription">データのインポート元のファイルのフルパスとファイル名です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">試料名</td><td class="ColumnDescription">試料が複数あるwiffファイルからデータがインポートされた場合の試料名です。もしくは、他のファイルタイプの場合には再度ファイル名を入力します。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修飾時間</td><td class="ColumnDescription">ディスク上で元の質量分析計のファイルが前回編集された日時</td><td class="ColumnType">DateTime</td></tr>
+<tr><td class="ColumnCaption">取得時間</td><td class="ColumnDescription">質量分析計が前回この繰り返し測定データの取得を開始した日時です。1.1より古いバージョンでファイルがインポートされた場合には#N/Aとなります。</td><td class="ColumnType">DateTime</td></tr>
+<tr><td class="ColumnCaption">明示的グローバル標準領域</td><td class="ColumnDescription">「グローバル標準に対する比率」の計算に使用する値です。  特定の繰り返し測定のピーク面積を、Skyline以外で計算した値で除算して正規化するときにこれを使用します。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総イオン電流領域</td><td class="ColumnDescription">実行時間全体における総イオン電流の積分</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">イオン移動度の単位</td><td class="ColumnDescription">クロマトグラムの抽出に使用するイオン移動度の単位です。</td><td class="ColumnType">eIonMobilityUnits</td></tr>
+<tr><td class="ColumnCaption">結果ファイルロケーター</td><td class="ColumnDescription">ドキュメント内の結果ファイルの一意の識別子です。これは「ResultFile:/」で始まり、繰り返し測定の名前が続きます。
+通常、結果ファイル名で終わりますが、ファイル名が繰り返し測定内で一意でない場合にはフルパスなど追加属性が含まれる場合があります。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">試料ID</td><td class="ColumnDescription">試料を参照するフリーテキスト識別子（複数のファイルで共有可能）。インポートされた結果ファイルの「試料ID」属性から読み込まれます。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">装置のシリアル番号</td><td class="ColumnDescription">インポートされた結果ファイルから読み込まれた装置のシリアル番号</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ピーク面積の中央値</td><td class="ColumnDescription">特定の結果ファイルに示されるトランジション結果のトランジションピーク面積の中央値。
+中央値ピーク面積は正規化メソッドが「中央値を均一化」である場合に使用されます。
+内標準標識タイプがある場合、ピーク面積の中央値はプリカーサー標識タイプが内標準のトランジションで示されるピーク面積のみを使って計算されます。
+内標準ピーク面積がない場合はすべてのトランジションピーク面積からトランジションピーク面積の中央値が計算されます。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">正規化約数</td><td class="ColumnDescription">デフォルトの正規化メソッドの使用時に観測値を割った数字。
+デフォルトの正規化メソッドは、 [ペプチド] または [分子] 設定ダイアログボックスにある [定量化] タブで指定されます。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Precursor"><span class="RowType">プリカーサー</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子</td><td class="ColumnDescription">分子は分子リストに属し、プリカーサーを含みます。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">分子</a></td></tr>
+<tr><td class="ColumnCaption">トランジション</td><td class="ColumnDescription">トランジション</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">トランジション</a>のリスト</td></tr>
+<tr><td class="ColumnCaption">プリカーサー結果</td><td class="ColumnDescription">プリカーサー結果</td><td class="ColumnType">ResultKeyから<a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">プリカーサー結果</a>のマップ</td></tr>
+<tr><td class="ColumnCaption">プリカーサー結果概要</td><td class="ColumnDescription">プリカーサー結果概要</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary">PrecursorResultSummary</a></td></tr>
+<tr><td class="ColumnCaption">プリカーサー電荷</td><td class="ColumnDescription">プリカーサーイオンと関連付けられた電荷。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">同位体標識タイプ</td><td class="ColumnDescription">プリカーサーイオンに関連付けられた標識タイプ名（Light/Heavy）です。 どの同位体修飾が適用されたかを示します</td><td class="ColumnType">同位体標識タイプ</td></tr>
+<tr><td class="ColumnCaption">プリカーサーニュートラル質量</td><td class="ColumnDescription">プリカーサーのニュートラルな質量（Da）</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">トランジション数</td><td class="ColumnDescription">このプリカーサーのトランジションの数。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">プリカーサーイオン名</td><td class="ColumnDescription">プリカーサーの名前です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プリカーサーイオン式</td><td class="ColumnDescription">プリカーサーイオン式です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プリカーサーのニュートラル式</td><td class="ColumnDescription">プリカーサーイオン式です。この用語は非推奨で、代わりに「PrecursorIonFomula」を使用してください。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プリカーサー付加物</td><td class="ColumnDescription">プリカーサーを作成するよう分子に適用される付加物です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プリカーサーMz</td><td class="ColumnDescription">プリカーサーイオンの質量電荷比（m/z）。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">衝突エネルギー</td><td class="ColumnDescription">Skylineでの装置/ベンダー固有のデフォルトの衝突エネルギーの算出式による プリカーサーイオンの衝突エネルギー</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">デクラスタリングポテンシャル</td><td class="ColumnDescription">Skylineでの装置/ベンダー固有のデフォルトのデクラスタリング ポテンシャルの算出式によるプリカーサーイオンのデクラスタリングポテンシャル（DP）</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">修飾シークエンス</td><td class="ColumnDescription">システインアルキル化など、アミノ酸のすべての修飾を含んだペプチドのシークエンス。 （例：AGLC[+57]QTFVYGGC[+57]R）</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.ProteomicSequence">ProteomicSequence</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">修飾シークエンスのモノアイソトピック質量</td><td class="ColumnDescription">「C[+57.021464]」のように修飾部分がモノアイソトピック質量で言い表される、プリカーサーの修飾シークエンスです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修飾シークエンスの平均質量</td><td class="ColumnDescription">「C[+57.05162]」のように修飾部分が平均質量で言い表される、プリカーサーの修飾シークエンスです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修飾シークエンスの3文字コード</td><td class="ColumnDescription">「C[CAM]」のように修飾部分が3文字コードで言い表される、プリカーサーの修飾シークエンスです。修飾部分に3文字コードがない場合、代わりにフルネームが使用されます。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修飾シークエンスのフルネーム</td><td class="ColumnDescription">「C[Carbamidomethyl (C)]」のように修飾部分がフルネームで言い表される、プリカーサーの修飾シークエンスです。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">修飾シークエンスのUnimod Id</td><td class="ColumnDescription">「C(unimod:4)」のように修飾部分がUnimod idで言い表される、プリカーサーの修飾シークエンスです。修飾部分にUnimod idがない場合、代わりにフルネームが使用されます。</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">表示されたプリカーサー衝突エネルギー</td><td class="ColumnDescription">ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれる正確な衝突エネルギーです。すべてのモデルや最適化ライブラリ値を無効にします。トランジション当たりの明示的な衝突エネルギーによって無効になることもあります。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示的補償電圧</td><td class="ColumnDescription">ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれる補償電圧（イオン移動度フィルタ）です。他のすべてのモデルと最適化されたライブラリの値を無効にします。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">指定されたイオン移動度</td><td class="ColumnDescription">クロマトグラム抽出時に使用されたフィルタウィンドウの中央にあるイオン移動度値です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">指定されたイオン移動度の単位</td><td class="ColumnDescription">指定されたイオン移動度値の単位です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">明示的衝突断面積</td><td class="ColumnDescription">イオン移動度質量スペクトルからのクロマトグラムの抽出に使用され、イオン移動度に変換するために望まれる衝突断面積（オングストロームの二乗の単位）です。他のすべてのモデル値を無効にします。 </td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">プリカーサー濃度</td><td class="ColumnDescription">このプリカーサーが試料にスパイクされた濃度です。これを使用してアイソトポログ反応曲線を作成します。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ライブラリイオン移動度</td><td class="ColumnDescription">イオン移動度ライブラリからのプリカーサーのイオン移動度情報</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.IonMobilityObject">IonMobilityObject</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">ライブラリイオン移動度値</td><td class="ColumnDescription">イオン移動度ライブラリからのプリカーサーのイオン移動度</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ライブラリイオン移動度単位</td><td class="ColumnDescription">ライブラリイオン移動度値の単位</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ライブラリ衝突断面積</td><td class="ColumnDescription">イオン移動度ライブラリからのプリカーサーの衝突断面積</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ライブラリイオン移動度高エネルギーオフセット</td><td class="ColumnDescription">イオン移動度ライブラリからのプリカーサーの高エネルギーオフセット</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">スペクトルフィルタ</td><td class="ColumnDescription">抽出イオンクロマトグラムに含まれるようにスペクトルが満たさなければならない追加基準</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プリカーサーメモ</td><td class="ColumnDescription">編集メニューで[メモを編集]をクリックすると表示される、プリカーサーに関連付けられるフリーテキストのメモ</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ライブラリ名</td><td class="ColumnDescription">MS/MSスペクトルライブラリのスペクトルがプリカーサーイオンに関連付けられている場合には、MS/MSスペクトルライブラリの名前となります。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ライブラリタイプ</td><td class="ColumnDescription">MS/MSスペクトルライブラリのスペクトルがプリカーサーイオンに関連付けられている場合の、MS/MSスペクトルライブラリのタイプ（BiblioSpec、GPM、NIST）</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ライブラリ確率スコア</td><td class="ColumnDescription">スペクトラルライブラリの構築に使用される入力ファイルの中で、この一致に割り当てられている確率スコアです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ライブラリスコア1</td><td class="ColumnDescription">タンパク質のプリカーサーの順位付けに使用される、または、使用されない可能性のある生のペプチドライブラリスコアです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ライブラリスコア2</td><td class="ColumnDescription">タンパク質のプリカーサーの順位付けに使用される、または、使用されない可能性のある生のペプチドライブラリスコアです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ライブラリスコア3</td><td class="ColumnDescription">タンパク質のプリカーサーの順位付けに使用される、または、使用されない可能性のある生のペプチドライブラリスコアです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">同位体デコイ</td><td class="ColumnDescription">デコイのプリカーサーであれば真です。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">デコイMzシフト</td><td class="ColumnDescription">デコイm/zを作成するためにプリカーサーに加えるm/zのシフト値です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">トランジションを自動選択</td><td class="ColumnDescription">真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどによってプリカーサーから自動的にトランジションを追加または削除します。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">ターゲット定性イオン比</td><td class="ColumnDescription">校正から除外されていない外部標準繰り返し測定全体での定性イオン比の平均値です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的ピーク</td><td class="ColumnDescription">ドキュメントの繰り返し測定のうちの1つ、またはライブラリの指定されたピーク境界のうち1つ、いずれかの最良スコアのピーク</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">例示的保持時間</td><td class="ColumnDescription">最良スコアのピークの頂点の正規化された保持時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的開始時間</td><td class="ColumnDescription">最良スコアの繰り返し測定またはライブラリファイルのピークの正規化された保持開始時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的終了時間</td><td class="ColumnDescription">最良スコアの繰り返し測定またはライブラリファイルのピークの正規化された保持終了時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的スコア</td><td class="ColumnDescription">繰り返し測定またはライブラリいずれかの最高スコアのピークのスコア</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的繰り返し測定名</td><td class="ColumnDescription">最良スコアのピークの繰り返し測定の名前</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">例示的ライブラリ名</td><td class="ColumnDescription">最良スコアのピークを含むライブラリの名前</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">例示的ファイルパス</td><td class="ColumnDescription">最良スコアのピークを含む結果ファイルのファイルパス</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">プリカーサーロケーター</td><td class="ColumnDescription">ドキュメント内のプリカーサーの一意の識別子です。これは「Precursor:」で始まり、通常終わりにはプリカーサーの標識タイプの後、付加物が続きます。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary"><span class="RowType">PrecursorResultSummary</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">最良保持時間</td><td class="ColumnDescription">プリカーサーに対し、最も強度が高いトランジションの 保持時間の値です。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.RetentionTimeSummary">RetentionTimeSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">最小最良保持時間</td><td class="ColumnDescription">プリカーサーのBestRetentionTimeの最小値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大最良保持時間</td><td class="ColumnDescription">プリカーサーBestRetentionTimeの最大値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">範囲最良保持時間</td><td class="ColumnDescription">MaxBestRetentionTimeとMinBestRetentionTime との差です。これを使用すると測定された保持時間の広がりの幅を評価できます。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">平均最良保持時間</td><td class="ColumnDescription">プリカーサーのBestRetentionTimeの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev最良保持時間</td><td class="ColumnDescription">プリカーサーのBestRetentionTime値の標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv最良保持時間</td><td class="ColumnDescription">プリカーサーのBestRetentionTime値の 変動係数（CV）です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">検知Q値</td><td class="ColumnDescription">mProphetモデルの適用後に選択された各ターゲットのピークに割り当てられるfalse discovery rate（FDR）スコアです。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.DetectionQValueSummary">DetectionQValueSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">最小検出Q値</td><td class="ColumnDescription">mProphetモデルの適用後に、選択された各ターゲットのピークに割り当てられるfalse discovery rate（FDR）スコアの最小値です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大検出Q値</td><td class="ColumnDescription">mProphetモデルの適用後に、選択された各ターゲットのピークに割り当てられるfalse discovery rate（FDR）スコアの最大値です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">検出Q値の中央値</td><td class="ColumnDescription">mProphetモデルの適用後に、選択された各ターゲットのピークに割り当てられるfalse discovery rate（FDR）スコアの中央値です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">最大Fwhm</td><td class="ColumnDescription">プリカーサーのトランジション半値全幅（FWHM）の最大値</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.FwhmSummary">FwhmSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均最大Fwhm</td><td class="ColumnDescription">プリカーサーのMaxFwhm（ピーク幅）の平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev最大Fwhm</td><td class="ColumnDescription">プリカーサーのMaxFwhm（ピーク幅）値の標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv最大Fwhm</td><td class="ColumnDescription">プリカーサーのMaxFwhm（ピーク幅）値の変動係数（CV） です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">総面積</td><td class="ColumnDescription">特定のプリカーサーに対する各トランジションすべてを合計したArea値。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均総面積</td><td class="ColumnDescription">プリカーサーのTotalAreaの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev総面積</td><td class="ColumnDescription">プリカーサーのTotalArea値の標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv総面積</td><td class="ColumnDescription">プリカーサーのTotalArea値の変動係数（CV） です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">総面積比</td><td class="ColumnDescription">最初の内標準標識のタイプに対するこのプリカーサーの TotalArea比です。バージョン0.7の前は、これは常にLight/Heavyであり、Heavyプリカーサーに表示されていました。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaRatioSummary">AreaRatioSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均総面積比</td><td class="ColumnDescription">  プリカーサーのTotalAreaRatioの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev総面積比</td><td class="ColumnDescription">プリカーサーのTotalAreaNormalized値の標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv総面積比</td><td class="ColumnDescription">プリカーサーのTotalAreaRatio値の変動係数（CV） です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">総面積の正規化</td><td class="ColumnDescription">ドキュメント内の全ペプチドプリカーサーに対するTotalArea値の合計に対して正規化された TotalArea値。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaNormalizedSummary">AreaNormalizedSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均総面積の正規化</td><td class="ColumnDescription">プリカーサーのTotalAreaNormalizedの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev総面積の正規化</td><td class="ColumnDescription">正規化された総面積の標準偏差</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv総面積の正規化</td><td class="ColumnDescription">プリカーサーのTotalAreaNormalized値の変動係数（CV） です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">最大高さ</td><td class="ColumnDescription">最大高さ</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均最大高さ</td><td class="ColumnDescription">最大高さの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev最大高さ</td><td class="ColumnDescription">最大高さの標準偏差</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv最大高さ</td><td class="ColumnDescription">最大のピーク高さのCv</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PeptideResult"><span class="RowType">分子結果</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子ピーク検出率</td><td class="ColumnDescription">分子ピーク検出率</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子保持時間</td><td class="ColumnDescription">特定の繰り返し測定におけるプリカーサーに対する最良保持時間の平均値です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">予測結果保持時間</td><td class="ColumnDescription">各繰り返し測定でのペプチドの保持時間。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">標準に対する比率</td><td class="ColumnDescription">LightのHeavyに対するペプチドの面積比</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最良の繰り返し測定</td><td class="ColumnDescription">この繰り返し測定で全体的なペプチドのピークスコアが最も高くなる場合には真となります。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">修飾された面積率</td><td class="ColumnDescription">このペプチドの結果の正規化された面積を、同じタンパク質および繰り返し測定された同じ非修飾シークエンスを持つすべてのペプチドの結果の合計で割ったものです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">属性面積率</td><td class="ColumnDescription">同じ属性面積率を持つドキュメント内における、正規化された面積と他のすべてのペプチドまたは分子の正規化面積の和に対する比率です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">結果ファイル</td><td class="ColumnDescription">結果ファイル</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ResultFile">結果ファイル</a></td></tr>
+<tr><td class="ColumnCaption">分子リスト結果</td><td class="ColumnDescription">分子リスト結果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">分子リスト結果</a></td></tr>
+<tr><td class="ColumnCaption">校正から除外</td><td class="ColumnDescription">繰り返し測定結果をペプチドの校正曲線計算から除外すべきか。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">定量化</td><td class="ColumnDescription">アナライトを定量するための校正曲線や正規化メソッドの使用に関連する値。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.QuantificationResult">QuantificationResult</a></td></tr>
+<tr><td class="ColumnCaption">繰り返し測定検量線</td><td class="ColumnDescription">この繰り返し測定と同じバッチ名を持つ繰り返し測定を用いて作成した検量線です。
+プリカーサー濃度がこのペプチドのプリカーサーで指定されている場合、検量線はアイソトポログ反応曲線となります。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics">校正曲線</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">繰り返し測定勾配</td><td class="ColumnDescription">繰り返し測定の検量線の傾きです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定切片</td><td class="ColumnDescription">繰り返し測定の検量線の切片</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定転回点</td><td class="ColumnDescription">繰り返し測定の検量線における双線形転回点です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定点数</td><td class="ColumnDescription">繰り返し測定の検量線に適合したデータポイントの数です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定二次係数</td><td class="ColumnDescription">繰り返し測定の検量線におけるx2乗項の係数です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定平方根</td><td class="ColumnDescription">繰り返し測定の検量線における決定係数です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">繰り返し測定エラーメッセージ</td><td class="ColumnDescription">繰り返し測定の検量線に適合する試みを行う間に発生したエラーメッセージ（ある場合）のテキストです。</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">バッチ性能指数</td><td class="ColumnDescription">性能指数は、バッチ名がこの繰り返し測定と同じである外部標準の繰り返し測定サブセットを用いて計算されました。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit">性能指数</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">バッチ検出限界</td><td class="ColumnDescription">検出下限は、バッチ名がこの繰り返し測定と同じである外部標準の繰り返し測定サブセットを用いて計算されました。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">バッチ定量限界</td><td class="ColumnDescription">定量下限は、バッチ名がこの繰り返し測定と同じである外部標準の繰り返し測定サブセットを用いて計算されました。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">表示されたアナライト濃度</td><td class="ColumnDescription">この特定の繰り返し測定内のこの特定の分子またはペプチド濃度です。
+アナライト濃度が表示されていない場合は、アナライトの濃度は繰り返し測定に
+ペプチドまたは分子の濃度乗数を乗じたものと推定されます。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ペプチドスペクトルマッチ数</td><td class="ColumnDescription">ペプチドと結果ファイルに一致するスペクトルライブラリ内のスペクトル数。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">分子結果ロケーター</td><td class="ColumnDescription">ドキュメント内の分子結果の一意の識別子です。これは「MoleculeResult:」で始まり、分子名および繰り返し測定名を含みます。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">RatioLightToHeavy</td><td class="ColumnDescription"></td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">DotProductLightToHeavy</td><td class="ColumnDescription"></td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue"><span class="RowType">AbundanceValue</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">分子リスト存在量生データ</td><td class="ColumnDescription">分子リストの存在量を示す数字。
+通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。
+繰り返し測定間の比較に欠損データの影響がある場合でも利用可能です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子リスト存在量（厳密なデータ）</td><td class="ColumnDescription">分子リストの存在量を示す数字。
+通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。
+繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子リスト存在量（メッセージ）</td><td class="ColumnDescription">繰り返し測定間の「分子リスト存在量」の比較に欠損データが影響する場合に警告を表示</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Transition"><span class="RowType">トランジション</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">プリカーサー</td><td class="ColumnDescription">プリカーサー</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">プリカーサー</a></td></tr>
+<tr><td class="ColumnCaption">トランジション結果</td><td class="ColumnDescription">トランジション結果</td><td class="ColumnType">ResultKeyから<a href="#pwiz.Skyline.Model.Databinding.Entities.TransitionResult">トランジション結果</a>のマップ</td></tr>
+<tr><td class="ColumnCaption">トランジション結果概要</td><td class="ColumnDescription">トランジション結果概要</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.TransitionResultSummary">TransitionResultSummary</a></td></tr>
+<tr><td class="ColumnCaption">プロダクト電荷</td><td class="ColumnDescription">プロダクトイオンの電荷（z）です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">プロダクトニュートラル質量</td><td class="ColumnDescription">ペプチドのプロダクトイオンのニュートラルな質量（Da）。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">プロダクトMz</td><td class="ColumnDescription">プロダクトイオンの質量電荷比（m/z）</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">断片イオン</td><td class="ColumnDescription">プロダクトイオンペプチドのフラグメントの名前です（y8、y10、b7など）。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プロダクトイオン式</td><td class="ColumnDescription">プロダクトイオン式です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プロダクトのニュートラル式</td><td class="ColumnDescription">プロダクトイオン式です。この用語は非推奨で、代わりに「ProductIonFormula」を使用してください。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プロダクトの付加物</td><td class="ColumnDescription">プロダクトイオンに適用される付加物です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">断片イオンタイプ</td><td class="ColumnDescription">プロダクトイオンのタイプ（y、b、c、z、a、x、プリカーサー）</td><td class="ColumnType">IonType</td></tr>
+<tr><td class="ColumnCaption">断片イオン序数</td><td class="ColumnDescription">ペプチドが断片化によって開裂されているペプチド内のアミノ酸の 位置（C末端）です。（8、10、7など）</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">開裂Aa</td><td class="ColumnDescription">フラグメンテーションの際に切断された（C末端の）ペプチドの後の特定のアミノ酸残基 （例えば、P、M、S、Tなど）。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ロスニュートラル質量</td><td class="ColumnDescription">このフラグメントからのすべてのニュートラルロスの合計質量</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ロス</td><td class="ColumnDescription">このフラグメントからのすべてのニュートラルロスのカンマで区切られたリスト</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">損失式</td><td class="ColumnDescription">このフラグメントによるすべてのニュートラルロスに対する化学式のカンマ区切りのリストです。あるいはすべてのロスに式がない場合、空となります。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">定量</td><td class="ColumnDescription">ペプチドを定量化する際にトランジションのピーク面積を含めるべきか。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">明示的衝突エネルギー</td><td class="ColumnDescription">ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれる正確な衝突エネルギーです。他のすべてのモデルや最適化されたライブラリ、プリカーサー毎の指定値を無効にします。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">指定されたSレンズ</td><td class="ColumnDescription">ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるS-レンズ値（Thermo製装置のみ）です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示的コーン電圧</td><td class="ColumnDescription">ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるコーン電圧（Waters製装置のみ）です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">明示的デクラスタリングポテンシャル</td><td class="ColumnDescription">ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるデクラスタリングポテンシャル（SCIEX製装置のみ）です。他のすべてのモデルの値を無効にします。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">指定されたイオン移動度の高エネルギーのオフセット</td><td class="ColumnDescription">クロマトグラム抽出時に使用されるイオン移動度の高エネルギーのオフセットです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">トランジションメモ</td><td class="ColumnDescription">編集メニューで[メモを編集]をクリックすると表示される、トランジションに関連付けられて いるフリーテキストのメモ</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">ライブラリランク</td><td class="ColumnDescription">トランジションフィルタ設定で許可されるすべてのトランジションでの、このトランジションのLibraryIntensityに基づく順位です。ユーザーインターフェイスでは[(rank #)]と表示されます。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">ライブラリ強度</td><td class="ColumnDescription">一致するライブラリスペクトルでトランジションのプロダクトイオンに該当するMS/MSのピーク強度です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">同位体分布インデックス</td><td class="ColumnDescription">モノアイソトピックピークであればゼロ、M+1であれば1、M+2であれば2などとなります。 </td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">同位体分布ランク</td><td class="ColumnDescription">予測された同位体分布に対してすべての同位体ピークでのIsotopeDistProportion に基づく順位です。ユーザーインターフェイスでは[(irank #)]と表示されます。現在は、高分解能のMS1スキャンからフィルタされたプリカーサートランジションに対してのみ利用可能です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">同位体分布比率</td><td class="ColumnDescription">この同位体ピークに対して予測される全体的な同位体分布の比率です。現在は、高分解能のMS1スキャンからフィルタされたプリカーサートランジションに対してのみ利用可能です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">フルスキャンフィルタ幅</td><td class="ColumnDescription">フルスキャンフィルタ幅</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">トランジション同位体デコイ</td><td class="ColumnDescription">デコイトランジションの場合は真です。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">プロダクトデコイMzシフト</td><td class="ColumnDescription">デコイm/zを作成するためにプロダクトイオンに適用されるm/zのシフト値</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">トランジションロケーター</td><td class="ColumnDescription">ドキュメント内のトランジションの一意の識別子です。これは「Transition:」で始まります。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.TransitionResultSummary"><span class="RowType">TransitionResultSummary</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">保持時間</td><td class="ColumnDescription">トランジションのピークの最大強度での保持時間。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.RetentionTimeSummary">RetentionTimeSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">最小保持時間</td><td class="ColumnDescription">トランジションのRetentionTimeの最小値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大保持時間</td><td class="ColumnDescription">トランジションのRetentionTimeの最大値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">範囲保持時間</td><td class="ColumnDescription">MaxRetentionTimeとMinRetentionTime との差です。これを使用すると測定された保持時間の広がりの幅を評価できます。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">平均保持時間</td><td class="ColumnDescription">トランジションのRetentionTimeの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev保持時間</td><td class="ColumnDescription">トランジションのRetentionTime値の標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv保持時間</td><td class="ColumnDescription">トランジションのRetentionTime値の変動係数（CV）です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Fwhm</td><td class="ColumnDescription">トランジションピークの半値全幅（FWHM）です。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.FwhmSummary">FwhmSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均Fwhm</td><td class="ColumnDescription">トランジションのFwhm（ピーク幅）の平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Fwhm</td><td class="ColumnDescription">トランジションのFwhm（ピーク幅）値の標準偏差です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Fwhm</td><td class="ColumnDescription">トランジションのFwhm（ピーク幅）値の変動係数（CV）です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">面積</td><td class="ColumnDescription">トランジションピークの曲線下の面積（AUC）からバックグラウンドを引いたものです。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均面積</td><td class="ColumnDescription">トランジションのAreaの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev面積</td><td class="ColumnDescription">トランジションのArea値の標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv面積</td><td class="ColumnDescription">トランジションのArea値の変動係数（CV）です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">面積の正規化</td><td class="ColumnDescription">ドキュメント内の全トランジションのArea値合計に対して正規化された Areaです。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaNormalizedSummary">AreaNormalizedSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均面積の正規化</td><td class="ColumnDescription">トランジションのAreaNormalizedの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev面積の正規化</td><td class="ColumnDescription">トランジションのAreaNormalized値の標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv面積の正規化</td><td class="ColumnDescription">トランジションのAreaNormalized値 の変動係数（CV）です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">面積比</td><td class="ColumnDescription">最初の内標準標識のタイプでの該当するトランジションに対するこのトランジションの Area比です。バージョン0.7より前では、これは常にLight/Heavyであり、 Heavyトランジション上に表示されていました。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaRatioSummary">AreaRatioSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">平均面積比</td><td class="ColumnDescription">トランジションのAreaRatioの平均値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev面積比</td><td class="ColumnDescription">トランジションのAreaRatio値の標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv面積比</td><td class="ColumnDescription">トランジションのAreaRatio値の変動係数（CV）です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PrecursorResult"><span class="RowType">プリカーサー結果</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">プリカーサー</td><td class="ColumnDescription">プリカーサー</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">プリカーサー</a></td></tr>
+<tr><td class="ColumnCaption">検知Q値</td><td class="ColumnDescription">mProphetモデルの適用後に選択された各ターゲットのピークに割り当てられるfalse discovery rate（FDR）スコアです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">検知Zスコア</td><td class="ColumnDescription">mProphetモデルの適用後に選択された各ピーク（ターゲットおよびデコイ）に割り当てられる正規化されたmProphetスコアです。デコイスコアの平均から標準偏差（SD）の数として表現されます。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">プリカーサーピーク検出率</td><td class="ColumnDescription">ペプチドのトランジション総数に対する、ピークが測定されたトランジションの比です。ペプチドツリー表示でのピークインジケーターは、 緑＝1.0（すべてのトランジションを積分）、オレンジ＞＝0.5、赤＜0.5に該当します。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最良保持時間</td><td class="ColumnDescription">プリカーサーに対し、最も強度が高いトランジションの 保持時間の値です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大Fwhm</td><td class="ColumnDescription">プリカーサーのトランジション半値全幅（FWHM）の最大値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最小開始時間</td><td class="ColumnDescription">プリカーサーの全トランジションStartTimeの最小値です。手動で編集されない限り、プリカーサーのすべてのトランジションでは同じ積分の境界を使用します。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大終了時間</td><td class="ColumnDescription">プリカーサーの全トランジションEndTimeの最大値です。手動で編集されない限り、プリカーサーのすべてのトランジションでは同じ積分の境界を使用します。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総面積</td><td class="ColumnDescription">特定のプリカーサーに対する各トランジションすべてを合計したArea値。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総面積MS1</td><td class="ColumnDescription">MS1の総面積値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総面積断片</td><td class="ColumnDescription">フラグメントの総面積値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総バックグラウンド</td><td class="ColumnDescription">特定のプリカーサーに対する各トランジションすべてを合計したBackground値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総バックグラウンドMS1</td><td class="ColumnDescription">MS1の総バックグラウンド</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総バックグラウンド断片</td><td class="ColumnDescription">フラグメントの総バックグラウンド</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総面積比</td><td class="ColumnDescription">最初の内標準標識のタイプに対するこのプリカーサーの TotalArea比です。バージョン0.7の前は、これは常にLight/Heavyであり、Heavyプリカーサーに表示されていました。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">比率内積</td><td class="ColumnDescription">ユーザーインターフェイスに表示される「rdotp」と同じ意味です。[ライブラリ内積] の内積計算を示していますが、これはプリカーサーのピーク面積（例えばlight）と標準用プリカーサーのピーク面積（例えばheavy）との間の場合であり、標準が存在しないまたはプリカーサーが標準の場合は#N/Aとなります。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">総面積の正規化</td><td class="ColumnDescription">ドキュメント内の全ペプチドプリカーサーに対するTotalArea値の合計に対して正規化された TotalArea値。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最大高さ</td><td class="ColumnDescription">最大高さ</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">平均質量誤差PPM</td><td class="ColumnDescription">100万分の1(PPM)の単位で表される予測m/z値と測定m/z値の間の差のすべてのトランジションの面積加重平均</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">切断数</td><td class="ColumnDescription">データ取得時間範囲のいずれかの終端の
+境界でピーク積分するプリカーサーのトランジション数。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高いものを対象とします。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">切断比</td><td class="ColumnDescription">データ取得時間範囲のいずれかの終端の
+境界でピーク積分するプリカーサーのトランジションの面積加重平均(0～1.0)。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高いものを対象とします。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">同定済み</td><td class="ColumnDescription">ピークの積分の境界の間において結果ファイルにMS/MSペプチド同定がある場合には真となります。</td><td class="ColumnType">PeakIdentification</td></tr>
+<tr><td class="ColumnCaption">ライブラリ内積</td><td class="ColumnDescription">ユーザーインターフェイスに表示される「dotp」と同じ意味です。プリカーサーの各トランジションピーク面積
+と一致したMS/MSスペクトルライブラリスペクトルにおける一致するイオンピーク強度との内積です（注：v1.4同様、 これは現在1 &#226;€“ Arcos(dotp)/(Pi/2)となっています。ここでdotpが上記に説明する値であり、 正規化スペクトルコントラスト角度とも言います）。
+プリカーサーに一致するライブラリスペクトルがない場合やトランジションが4個未満の場合には#N/Aとなります。これは35であり、
+メソッドの最適化に使用します。トランジションが6個以上
+ある場合に最もうまく機能します。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">同位体内積</td><td class="ColumnDescription">上記には内積の計算を説明していますが、これはプリカーサーの各プリカーサー （M、M+1、M+2など）ピーク面積と予測される同位体分布の強度との間のものです。トランジションが プリカーサー同位体でない場合やクロマトグラムが高分解能のMS1データから抽出されなかった場合には #N/Aとなります。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ユーザーセットの合計</td><td class="ColumnDescription">デフォルトのピーク選択または境界が手動で変更された場合は真です。</td><td class="ColumnType">UserSet</td></tr>
+<tr><td class="ColumnCaption">最適ステップ</td><td class="ColumnDescription">最適化されているパラメーターのデフォルト値からの隔たりを示す最適化のステップの値です。デフォルトのパラメーター値または繰り返し測定で最適化が実施されていない 場合には0となります。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">最適衝突エネルギー</td><td class="ColumnDescription">衝突エネルギーの最適化がされている場合には、OptStepに該当する衝突エネルギーの値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最適デクラスタリングポテンシャル</td><td class="ColumnDescription">デクラスタリングポテンシャルの最適化がされている場合には、OptStepに該当するデクラスタリングポテンシャルの値</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">最適補償電圧</td><td class="ColumnDescription">補償電圧の最適化がされている場合には、OptStepに該当する補償電圧の値（イオン移動度フィルタリング用）</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">衝突断面積</td><td class="ColumnDescription">イオン移動度をオングストロームの二乗で表したものです。通常は適切な単位（ドリフト時間、K0の逆数など）に変換され、イオン移動度質量スペクトルからのクロマトグラムの抽出に使用されます。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">イオン移動度のMS1</td><td class="ColumnDescription">プリカーサーイオンのクロマトグラムの抽出に使用するイオン移動度フィルタウィンドウの中心です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">イオン移動度のフラグメント</td><td class="ColumnDescription">フラグメントイオンのクロマトグラム抽出に使用するイオン移動度フィルタウィンドウの中心です。高エネルギーでの衝突のため、フラグメントイオンの移動が速くなり、プリカーサーイオンの値とは異なることがあります。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">イオン移動度ウィンドウ</td><td class="ColumnDescription">クロマトグラムの抽出に使用するイオン移動度フィルタウィンドウの幅です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">イオン移動度の単位</td><td class="ColumnDescription">クロマトグラムの抽出に使用するイオン移動度の単位です。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">プリカーサー定量化</td><td class="ColumnDescription">プリカーサー結果を定量化するためのアイソトポログ反応曲線の使用に関する値です。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult">PrecursorQuantificationResult</a></td></tr>
+<tr><td class="ColumnCaption">LCピークイオンメトリクスMS1</td><td class="ColumnDescription">ピーク積分境界間のMS1スペクトルを取得する間に質量分析装置内に存在するイオン数に関係する値</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.LcPeakIonMetrics">LcPeakIonMetrics</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LCピーク総イオン電流面積MS1</td><td class="ColumnDescription">ピーク積分境界間のMS1スペクトルの総イオン電流値の総和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">頂点総イオンカウントMS1</td><td class="ColumnDescription">総プリカーサー強度とプリカーサー強度が最高のMS1スペクトルの注入時間の積</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LCピーク総イオンカウントMS1</td><td class="ColumnDescription">ピーク積分境界間のMS1スペクトルの総イオン電流値と注入時間の積の総和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">頂点アナライトイオンカウントMS1</td><td class="ColumnDescription">総プリカーサー強度とプリカーサー強度が最高のMS1スペクトルの注入時間の積</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LCピークアナライトイオンカウントMS1</td><td class="ColumnDescription">総プリカーサー強度とピーク積分境界間でのMS1スペクトルの注入時間との積の合計</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">頂点スペクトルID MS1</td><td class="ColumnDescription">プリカーサー強度が最高のMS1スペクトルの識別子</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">LCピークイオンメトリクスフラグメント</td><td class="ColumnDescription">ピーク積分境界間のMS2スペクトルを取得する間に質量分析装置内に存在するイオン数に関係する値</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.LcPeakIonMetrics">LcPeakIonMetrics</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LCピーク総イオン電流面積フラグメント</td><td class="ColumnDescription">ピーク積分境界間のMS2スペクトルの総イオン電流値の総和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">頂点総イオンカウントフラグメント</td><td class="ColumnDescription">総イオン電流値とトランジション強度が最高のMS2スペクトルの注入時間の積</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LCピーク総イオンカウントフラグメント</td><td class="ColumnDescription">ピーク積分境界間のMS2スペクトルの総イオン電流値と注入時間の積の総和</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">頂点アナライトイオンカウントフラグメント</td><td class="ColumnDescription">総トランジション強度とトランジション強度が最高のMS2スペクトルの注入時間の積</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LCピークアナライトイオンカウントフラグメント</td><td class="ColumnDescription">トランジション強度とピーク積分境界間でのMS2スペクトルの注入時間との積の合計</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">頂点スペクトルIDフラグメント</td><td class="ColumnDescription">トランジション強度が最高のMS2スペクトルの識別子</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">元のピーク</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより選択されたピーク境界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">元の保持時間</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより選択されたピークの頂点の保持時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">元の開始時間</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより選択されたピークの保持開始時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">元の終了時間</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより選択されたピークの保持終了時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">元のスコア</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより割り当てられたピークスコア</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">再積分されたピーク</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークのピーク境界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">再積分された保持時間</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークの頂点の保持時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">再積分された開始時間</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークの保持開始時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">再積分された終了時間</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークの保持終了時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">再積分されたスコア</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークに割り当てられたスコア</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">プリカーサー繰り返し測定メモ</td><td class="ColumnDescription">結果グリッドを使用すると表示される、プリカーサーの結果セットに関連付けられているフリーテキストのメモ。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">分子結果</td><td class="ColumnDescription">分子結果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">分子結果</a></td></tr>
+<tr><td class="ColumnCaption">補間されたピーク</td><td class="ColumnDescription">この繰り返し測定に対する保持時間アライメントを使用してマッピングされた最良スコアの繰り返し測定のピーク境界</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">補間された開始時間</td><td class="ColumnDescription">この繰り返し測定に対する保持時間アライメントを使用してマッピングされた最良スコアの繰り返し測定のピーク開始時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">補間された終了時間</td><td class="ColumnDescription">この繰り返し測定に対する保持時間アライメントを使用してマッピングされた最良スコアの繰り返し測定のピーク終了時間</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">プリカーサー結果ロケーター</td><td class="ColumnDescription">ドキュメント内のプリカーサー結果の一意の識別子です。これは「PrecursorResult:」で始まり、通常繰り返し測定の名前で終わりますが、最適化ステップと結果ファイルのための追加属性が含まれる場合があります。</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.QuantificationResult"><span class="RowType">QuantificationResult</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">正規化面積</td><td class="ColumnDescription">そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">正規化面積（生データ）</td><td class="ColumnDescription">そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。繰り返し測定間の比較に欠損データの影響がある場合に利用可能です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">正規化面積（厳密なデータ）</td><td class="ColumnDescription">そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">正規化面積（メッセージ）</td><td class="ColumnDescription">繰り返し測定間で「正規化面積」の値に欠損データの影響がある場合に警告を表示</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">計算濃度</td><td class="ColumnDescription">アナライト濃度は、以下のいずれかによって計算されます： 
+1. 校正曲線（[ペプチド設定] &gt; [定量] に[回帰適合] が指定されている場合）
+2. 内部標準（またはサロゲート）に対する比率を [内部標準濃度] で乗算</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">計算濃度（生データ）</td><td class="ColumnDescription">繰り返し測定間の比較に欠損データの影響がある場合でも計算濃度値が利用可能</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">計算濃度（厳密なデータ）</td><td class="ColumnDescription">繰り返し測定間の比較に欠損データの影響がある場合には計算濃度値が利用不可能</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">計算濃度（メッセージ）</td><td class="ColumnDescription">繰り返し測定間の「計算濃度」の比較に欠損データの影響がある場合に警告を表示</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">精度</td><td class="ColumnDescription">指定したアナライト濃度に対する算出された濃度の比率</td><td class="ColumnType">Double</td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.TransitionResult"><span class="RowType">トランジション結果</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">トランジション</td><td class="ColumnDescription">トランジション</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">トランジション</a></td></tr>
+<tr><td class="ColumnCaption">保持時間</td><td class="ColumnDescription">トランジションのピークの最大強度での保持時間。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Fwhm</td><td class="ColumnDescription">トランジションピークの半値全幅（FWHM）です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Fwhm縮退</td><td class="ColumnDescription">FWHM縮退</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">開始時間</td><td class="ColumnDescription">トランジションのピークの積分の開始境界における保持時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">終了時間</td><td class="ColumnDescription">トランジションのピークの積分の終了境界における保持時間です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">面積</td><td class="ColumnDescription">トランジションピークの曲線下の面積（AUC）からバックグラウンドを引いたものです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">バックグラウンド</td><td class="ColumnDescription">両側の積分境界線とベースライン、および積分境界線とトランジションピークのクロマトグラムの 交点の強度の低い方から引いたその境界線に垂直な直線とで形成される長方形の面積です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">面積比</td><td class="ColumnDescription">最初の内標準標識のタイプでの該当するトランジションに対するこのトランジションの Area比です。バージョン0.7より前では、これは常にLight/Heavyであり、 Heavyトランジション上に表示されていました。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">面積の正規化</td><td class="ColumnDescription">ドキュメント内の全トランジションのArea値合計に対して正規化された Areaです。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">高さ</td><td class="ColumnDescription">トランジションピークの積分境界の間の点の最大強度です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">質量誤差PPM</td><td class="ColumnDescription">期待値と測定値のm/z値の差を百万分率（PPM）で表示</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">切断</td><td class="ColumnDescription">積分ピークの境界がデータ取得時間幅のいずれかの終端にあり、その終端がもう一方の終端よりもバックグラウンドを差し引いたピーク高さが25%以上高い場合は真となります。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">ピークのランク</td><td class="ColumnDescription">同じプリカーサーのその他すべてのトランジションの中での、このトランジションの Areaに基づく順位です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">レベル別のピークのランク</td><td class="ColumnDescription">MSレベルによる特定の繰り返し測定におけるピーク面積順位付け（MS1とMS/MSの順位付けは別になります）</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">ユーザーセットピーク</td><td class="ColumnDescription">デフォルトのピーク選択または境界が手動で変更された場合は真です。</td><td class="ColumnType">UserSet</td></tr>
+<tr><td class="ColumnCaption">最適ステップ</td><td class="ColumnDescription">最適化されているパラメーターのデフォルト値からの隔たりを示す最適化のステップの値です。デフォルトのパラメーター値または繰り返し測定で最適化が実施されていない 場合には0となります。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">ピーク全体でのポイント数</td><td class="ColumnDescription">積分されたピークの開始時間と終了時間の間のクロマトグラムの点の数です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">ピーク全体でのサイクルタイム</td><td class="ColumnDescription">積分ピーク全体でのサイクルタイム (秒単位)。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">歪度</td><td class="ColumnDescription">クロマトグラムピークの非対称性の尺度。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">尖度</td><td class="ColumnDescription">クロマトグラムピークの「裾」の尺度。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">ピーク標準偏差</td><td class="ColumnDescription">クロマトグラフピークの標準偏差。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">形状相関</td><td class="ColumnDescription">プリカーサーが同一のすべてのトランジションの中央値ピーク形状と比較した場合の、このトランジションのクロマトグラフピークのピアソンの相関関係。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">共溶出</td><td class="ColumnDescription">このトランジションのピークがピークグループ内で他のトランジションと同様の頂点と幅を有する場合、真となります。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">イオン移動度のフラグメント</td><td class="ColumnDescription">フラグメントイオンのクロマトグラム抽出に使用するイオン移動度フィルタウィンドウの中心です。高エネルギーでの衝突のため、フラグメントイオンの移動が速くなり、プリカーサーイオンの値とは異なることがあります。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">クロマトグラム</td><td class="ColumnDescription">トランジションおよび繰り返し測定のクロマトグラム。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram">クロマトグラム</a></td></tr>
+<tr><td class="ColumnCaption">トランジション繰り返し測定メモ</td><td class="ColumnDescription">結果グリッドを使用すると表示される、トランジションの結果セットに関連付けられているフリーテキストのメモ。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">トランジション結果は定量的</td><td class="ColumnDescription">ユーザーが変更可能なトランジションの定量プロパティに基づいてこの結果が定量的として扱われるかどうか、またMS/MSフルスキャン取得メソッドがすべてのフラグメントイオンを非定量的として扱うDDAであるかどうかです。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">トランジション結果はMS1</td><td class="ColumnDescription">この結果がMS1スキャンから取得されたかどうかです。</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">プリカーサー結果</td><td class="ColumnDescription">プリカーサー結果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">プリカーサー結果</a></td></tr>
+<tr><td class="ColumnCaption">トランジション結果ロケーター</td><td class="ColumnDescription">ドキュメント内のトランジション結果の一意の識別子です。これは「TransitionResult:」で始まり、通常繰り返し測定の名前で終わりますが、最適化ステップと結果ファイルのための追加属性が含まれる場合があります。</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">トランジションイオンメトリック</td><td class="ColumnDescription">質量分析装置内のイオン数に関係する値</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">トランジションイオンメトリック</a></td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult"><span class="RowType">PrecursorQuantificationResult</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">プリカーサー正規化面積</td><td class="ColumnDescription">プリカーサー結果の正規化面積。ペプチド正規化メソッドに従って正規化されたプリカーサー結果の総面積に等しい。ペプチド正規化メソッドが「なし」またはラベルに対する比率の場合、プリカーサーの正規化面積はプリカーサーの総面積と等しくなります。</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">プリカーサー正規化面積（生データ）</td><td class="ColumnDescription">プリカーサー結果の正規化面積。ペプチドの正規化メソッドに従って正規化されたプリカーサー結果の総面積に等しい。ペプチド正規化メソッドが「なし」またはラベルに対する比率の場合、プリカーサーの正規化面積はプリカーサーの総面積と等しくなります。繰り返し測定間の比較に欠損データの影響がある場合でも利用可能です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">プリカーサー正規化面積（厳密なデータ）</td><td class="ColumnDescription">プリカーサー結果の正規化面積。ペプチドの正規化メソッドに従って正規化されたプリカーサー結果の総面積に等しい。ペプチド正規化メソッドが「なし」またはラベルに対する比率の場合、プリカーサーの正規化面積はプリカーサーの総面積と等しくなります。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">プリカーサー正規化面積（メッセージ）</td><td class="ColumnDescription">繰り返し測定間の「プリカーサー正規化面積」の値の比較に欠損値の影響がある場合に警告を表示</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">プリカーサー計算濃度</td><td class="ColumnDescription">アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">プリカーサー計算濃度（生データ）</td><td class="ColumnDescription">アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。繰り返し測定間の比較に欠損データの影響がある場合でも利用可能です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">プリカーサー計算濃度（厳密なデータ）</td><td class="ColumnDescription">アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">プリカーサー計算濃度（メッセージ）</td><td class="ColumnDescription">繰り返し測定間の「プリカーサー計算濃度」の比較に欠損データの影響がある場合に警告を表示</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">プリカーサー精度</td><td class="ColumnDescription">プリカーサーで指定されたプリカーサー濃度に対するプリカーサー計算濃度の比率です。</td><td class="ColumnType">Double</td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">定性イオン比</td><td class="ColumnDescription">この分子またはペプチドの定量トランジションのピーク面積の合計に対する非定量トランジションのピーク面積の合計の比率です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">定性イオン比ステータス</td><td class="ColumnDescription">定性イオン比をどのようにターゲットイオン比と比較するかの説明です。
+定量設定で定性イオン比閾値が指定されている場合は、定性イオン比ステータスは「合格」または「不合格」となります。
+定性イオン比閾値が指定されていない場合は、定性イオン比ステータスはターゲット定性イオン比と比較して「等しい」、「低」、「高」のいずれかとなります。</td><td class="ColumnType">ValueStatus</td></tr>
+<tr><td class="ColumnCaption">バッチターゲット定性イオン比</td><td class="ColumnDescription">この繰り返し測定と同じバッチ名を持つ外部標準繰り返し測定のサブセットを使用して計算されたターゲット定性イオン比です。</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Chromatogram"><span class="RowType">クロマトグラム</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">クロマトグラムのプリカーサーイオンM/Z</td><td class="ColumnDescription">クロマトグラムのプリカーサーm/z</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">クロマトグラムのプロダクトイオンM/Z</td><td class="ColumnDescription">クロマトグラムのプロダクトm/z</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">クロマトグラムの抽出幅</td><td class="ColumnDescription">スペクトル強度の合計におけるチャネルの全幅です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">クロマトグラム開始時間</td><td class="ColumnDescription">クロマトグラム中での最初の保持時間です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">クロマトグラム終了時間</td><td class="ColumnDescription">クロマトグラム中での最後の保持時間です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">イオン移動度のクロマトグラム</td><td class="ColumnDescription">クロマトグラム抽出時にスペクトルをフィルタするのに使用されるイオン移動度ウィンドウの中心です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">イオン移動度のクロマトグラムの抽出幅</td><td class="ColumnDescription">クロマトグラム抽出時にスペクトルをフィルタするのに使用されるイオン移動度ウィンドウの全幅です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">イオン移動度のクロマトグラムの単位</td><td class="ColumnDescription">クロマトグラムイオン移動度およびクロマトグラムイオン移動度抽出幅の単位</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">クロマトグラムのソース</td><td class="ColumnDescription">クロマトグラムが抽出されたスキャンのタイプで、「fragment（フラグメント）」、「sim」、「ms1」か「unknown（不明）」のいずれかです。</td><td class="ColumnType">ChromSource</td></tr>
+<tr><td class="ColumnCaption">生データ</td><td class="ColumnDescription">生（未補間）のクロマトグラムデータです。クロマトグラムの間隔が均一でなく、各トランジションのクロマトグラムにはそれぞれ異なる点の数があります。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram+Data">Data</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">生データポイント数</td><td class="ColumnDescription">生（未補間）のクロマトグラムの点の数です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">生データ時間</td><td class="ColumnDescription">生（未補間）のクロマトグラムの保持時間です。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">生データ強度</td><td class="ColumnDescription">生（未補間）のクロマトグラムの強度です。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">生データ質量誤差</td><td class="ColumnDescription">生（未補間）のクロマトグラムの質量誤差です。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">生スペクトルID</td><td class="ColumnDescription">生（未補間）のクロマトグラムにある点に寄与するスペクトルの識別子です。</td><td class="ColumnType">FormattableList`1</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">補間されたデータ</td><td class="ColumnDescription">保持時間の間隔が均一となるように区切られたクロマトグラムのデータで、ペプチドまたは分子内のすべてのトランジションには同じポイント数があります。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram+Data">Data</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">補間されたポイント数</td><td class="ColumnDescription">補間済みクロマトグラムにある点の数です。</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">補間された時間</td><td class="ColumnDescription">補間済みクロマトグラムの保持時間です。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">補間された強度</td><td class="ColumnDescription">補間済みデータからのクロマトグラム強度です。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">補間された質量誤差</td><td class="ColumnDescription">補間済みデータからのクロマトグラム質量誤差です。</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">補間されたスペクトルID</td><td class="ColumnDescription">補間済みクロマトグラム内の点に寄与するスペクトルの識別子です。</td><td class="ColumnType">FormattableList`1</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">トランジションイオンメトリック</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LCピークトランジションイオン数</td><td class="ColumnDescription">ピーク積分境界間のMS2スペクトルの強度と注入時間の積の合計</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">頂点トランジションイオン数</td><td class="ColumnDescription">トランジション抽出イオン強度が最高のスペクトルの強度と注入時間の積</td><td class="ColumnType">Double</td></tr>
+</table>
+
+
+</body></html>

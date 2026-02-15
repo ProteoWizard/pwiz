@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Lucia Espona <espona .at. imsb.biol.ethz.ch>,
  *                  IMSB, ETHZ
  *

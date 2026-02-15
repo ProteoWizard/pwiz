@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using SharedBatch;
 using SkylineBatch;
 using SharedBatchTest;
 using SkylineBatch.Properties;
@@ -10,9 +11,22 @@ namespace SkylineBatchTest
 {
     /// <summary>
     /// All functional tests MUST derive from this base class.
+    /// Inherits from AbstractSkylineBatchUnitTest to provide TestContext and helper methods.
     /// </summary>
     public abstract class AbstractSkylineBatchFunctionalTest : AbstractBaseFunctionalTest
     {
+        // Helper: test-specific results path (uses TestUtils for backward compatibility)
+        protected string GetTestResultsPath(string relativePath = null)
+        {
+            return TestUtils.GetTestResultsPath(TestContext, relativePath);
+        }
+
+        // Helper: logger rooted in TestResults (returns SkylineBatch Logger instance)
+        protected Logger GetTestLogger(string logSubfolder = "")
+        {
+            return TestUtils.GetTestLogger(TestContext, logSubfolder);
+        }
+
         public const string SKYLINE_BATCH_FOLDER = @"Executables\SkylineBatch\";
 
 

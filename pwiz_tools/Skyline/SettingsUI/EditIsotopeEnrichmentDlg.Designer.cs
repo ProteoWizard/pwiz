@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.SettingsUI
 {
     partial class EditIsotopeEnrichmentDlg
     {
@@ -40,7 +40,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.gridEnrichments = new pwiz.Common.Controls.CommonDataGridView();
+            this.gridEnrichments = new pwiz.Skyline.Controls.DataGridViewEx();
             this.Atom = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Symbol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PercentEnrichment = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -168,7 +168,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
-        private pwiz.Common.Controls.CommonDataGridView gridEnrichments;
+        private pwiz.Skyline.Controls.DataGridViewEx gridEnrichments;
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.DataGridViewTextBoxColumn Atom;

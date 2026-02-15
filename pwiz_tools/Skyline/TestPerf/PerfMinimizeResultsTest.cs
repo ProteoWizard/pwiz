@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -63,10 +63,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
                 var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                 var minimizeResultsDlg = ShowDialog<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults);
-                RunUI(() =>
-                {
-                    minimizeResultsDlg.LimitNoiseTime = false;
-                });
+                RunUI(() => minimizeResultsDlg.SetNoiseLimit(false));
 
                 loadStopwatch.Start();
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));

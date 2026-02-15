@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,15 +20,23 @@ using System;
 
 namespace pwiz.CommonMsData.RemoteApi
 {
+    public enum AccessType
+    {
+        unknown,
+        no_access,
+        read,
+        read_write
+    }
     public class RemoteItem
     {
-        public RemoteItem(MsDataFileUri msDataFileUri, string label, string type, DateTime? lastModified, long fileSizeBytes, bool hasChildren = false)
+        public RemoteItem(MsDataFileUri msDataFileUri, string label, string type, DateTime? lastModified, long fileSizeBytes, bool hasChildren = false, AccessType access = AccessType.unknown)
         {
             MsDataFileUri = msDataFileUri;
             Label = label;
             Type = type;
             LastModified = lastModified;
             FileSize = (ulong) fileSizeBytes;
+            Access = access;
             HasChildren = hasChildren;
         }
 
@@ -37,6 +45,8 @@ namespace pwiz.CommonMsData.RemoteApi
         public string Type { get; private set; }
         public DateTime? LastModified { get; private set; }
         public ulong FileSize { get; private set; }
+        public object Data { get; private set; }
+        public AccessType Access { get; private set; }
         public bool HasChildren { get; }
     }
 }

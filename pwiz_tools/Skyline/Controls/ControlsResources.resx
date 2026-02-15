@@ -193,4 +193,7 @@
   <data name="UndoRedoList_GetLabelText_Undo_1_Action" xml:space="preserve">
     <value>Undo 1 Action</value>
   </data>
+  <data name="NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_" xml:space="preserve">
+    <value>An error occurred displaying a tooltip.</value>
+  </data>
 </root>

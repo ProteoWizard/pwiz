@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -33,6 +33,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public LibKeyModificationMatcher Matcher { get; private set; }
         private readonly LibKey[] _libKeys;
+        private readonly string _libraryName;
         private readonly HashSet<StaticMod> _userDefinedTypedMods;
         private readonly IsotopeLabelType _defaultHeavyLabelType;
 
@@ -57,6 +58,7 @@ namespace pwiz.Skyline.SettingsUI
 
             Matcher = new LibKeyModificationMatcher();
             _libKeys = library.Keys.ToArray();
+            _libraryName = library.Name;
             _userDefinedTypedMods = new HashSet<StaticMod>();
             _settings = settings;
             NewDocumentModsStatic = new StaticMod[0];
@@ -94,7 +96,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Update matcher
             Matcher.ClearMatches();
-            Matcher.CreateMatches(_settings, _libKeys, DefaultStatic, DefaultHeavy);
+            Matcher.CreateMatches(_settings, _libKeys, DefaultStatic, DefaultHeavy, _libraryName);
 
             // Update UI
             listMatched.Items.Clear();

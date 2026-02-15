@@ -1,0 +1,378 @@
+<html><head>
+<meta charset="utf-8">
+<style>body {
+    font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+}
+.RowType {
+    font-size: 1.769em;
+    line-height: 1.3em;
+    font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+    color: #000;
+}
+table {
+border: 1px solid #bbb;
+border-collapse: collapse;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+th {
+    background-color: #ededed;
+    color: #636363;
+    text-align: left;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    font-weight: bold;
+    border: 1px solid #bbb;
+}
+td {
+    color: #2a2a2a;
+    vertical-align: top;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    border: 1px solid #bbb;
+}
+.Hidden {
+    font-style: italic; 
+}
+.Obsolete {
+    text-decoration: line-through;
+}</style>
+</head><body>
+<p>若要访问 Skyline 的命令行界面，您可以使用 SkylineRunner.exe 或 SkylineCmd.exe。</p><p>SkylineRunner.exe 是一个小于 10 KB 的可执行小文件。 它需要在运行 SkylineRunner 的计算机上通过自更新网页安装程序来执行 Skyline 安装。 SkylineRunner 将启动一个可在没有任何用户界面的情况下运行的单独的 Skyline 进程，并将参数选项从命令行传递到正在运行的 Skyline 实例，以及将其 Skyline 实例的输出打印到命令控制台。您仍然可以运行 SkylineRunner 的多个实例，它将启动 Skyline 的多个实例。SkylineRunner 启动的 Skyline 实例独立于可能已在同一台计算机上运行的任何其他实例。 您无需在您的计算机上运行 Skyline 的可见实例即可使 SkylineRunner 正常工作。</p><p>SkylineCmd.exe 是一个更简单的可执行文件，始终安装在 Skyline.exe 旁边。它使用 Skyline.exe 模块作为DLL，提供比 SkylineRunner.exe 更清晰的命令行实现，但您必须知道 SkylineCmd.exe 在磁盘上的位置才能运行它，而在使用网页安装程序的情况下这个位置通常不可知。通常，如果要使用 SkylineCmd.exe，您将使用“Unplugged”安装程序或“Administrator”安装程序（或最近的 Linux 系统版 Wine Docker Container）。“Unplugged”安装程序以 ZIP 文件形式提供，您只需将其解压缩，找到 SkylineCmd.exe 并在原地运行即可。“Administrator”安装程序将 SkylineCmd.exe 放在 C:\Program Files\Skyline 目录下中。</p><p>Skyline 命令行界面用于在采集期间自动执行质量控制、预定和细化等任务。 使用 Skyline 命令行界面，您可以打开 Skyline 文档，导入新获取的数据文件，以及导出报告或新方法。与使用完整的图形用户界面相比，您还可以更快地为全蛋白质组 DIA 和 DDA 实验运行大规模色谱图提取和峰值拣选，并且消耗的内存更少。（参见网络研讨会 14：https://skyline.ms/webinar14.url）</p><div class="RowType">一般输入/输出</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--in</nobr>=路径/到/文件.sky</td><td>打开 Skyline 文件</td></tr>
+<tr><td><nobr>--save</nobr></td><td>保存对文件的任何更改</td></tr>
+<tr><td><nobr>--save-settings</nobr></td><td>让设置更改为全局环境，例如 添加的报告、库、酶等，以保存到程序配置文件中。</td></tr>
+<tr><td><nobr>--out</nobr>=路径/到/文件.sky</td><td>与“保存”相同，但会写入指定的文件</td></tr>
+<tr><td><nobr>--new</nobr>=路径/到/文件.sky</td><td>使用当前的 Skyline 设置创建新文档。</td></tr>
+<tr><td><nobr>--overwrite</nobr></td><td>如果 <nobr>--new</nobr> 指定的文件路径已存在，则覆盖该文件路径且不报错。</td></tr>
+<tr><td><nobr>--share-zip</nobr>[=路径/到/文件.sky.zip]</td><td>将整个项目（文档、结果、库等）保存到 ZIP 档案。默认为最小档案。</td></tr>
+<tr><td><nobr>--share-type</nobr>=&lt;minimal | complete&gt;</td><td>指定当指定了“<nobr>--share-zip</nobr>”时要共享的档案类型：“最小”或“完整”。“最小”是默认尝试将档案的大小减小到代表文档中目标所需的最小值，而“完整”则会保留所有项目文件的完全保真度。</td></tr>
+<tr><td><nobr>--batch-commands</nobr>=路径/到/文件</td><td>按照“SkylineRunner/Cmd”输入的方式处理每一行，逐行运行文件。用于自动执行多个命令。 打开的 Skyline 文件在所有命令中保持活动状态。</td></tr>
+<tr><td><nobr>--dir</nobr>=路径/到/文件夹</td><td>用于为所有其他路径参数指定默认根目录，而不是运行命令的目录。</td></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>所有日志记录输出都将以时间和日期作为开头。</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>所有日志记录输出都将以两个受控内存使用值作为开头，并以 MB 为单位处理专用字节（四舍五入到最接近的数字）。</td></tr>
+<tr><td><nobr>--log-file</nobr>=路径/到/文件</td><td>将所有记录的输出发送到文件。</td></tr>
+<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr>&gt;]</td><td>显示此文本。</td></tr>
+<tr><td><nobr>--version</nobr></td><td>发出正在运行的安装的版本信息</td></tr>
+<tr><td><nobr>--verbose-errors</nobr></td><td>请在出错时为程序输出添加额外信息，此举可能对 Skyline 开发人员有所帮助。</td></tr>
+</table>
+<p>在出现标题为“设置自定义”的部分之前，所有其他命令行参数都依赖于“--in”参数，因为它们都依赖于有一个已打开的 Skyline 文档。</p><div class="RowType">正在导入结果重复测定</div>
+<table>
+<tr><td><nobr>--import-file</nobr>=路径/到/文件</td><td>将重复测定附加到打开文档中。</td></tr>
+<tr><td><nobr>--import-replicate-name</nobr>=&lt;名称&gt;</td><td>在“<nobr>-</nobr>–<nobr>import-file</nobr>”操作中提供给新重复测定的名称。</td></tr>
+<tr><td><nobr>--import-optimizing</nobr>=&lt;CE | DP&gt;</td><td>表示正在导入的数据包含用于检测最优碰撞能量或去簇电压的额外离子对。</td></tr>
+<tr><td><nobr>--import-append</nobr></td><td>将导入文件附加到给定的重复测定。这是意图检查，以防文档已经具有给定名称的重复测定。默认情况下，此值设置为“false”。此选项仅适用于“<nobr>-</nobr>–<nobr>import-file</nobr>”选项。</td></tr>
+<tr><td><nobr>--import-all</nobr>=路径/到/文件夹</td><td>从文件夹中导入所有文件以及文档中尚未存在的子文件夹，并使用文件或子文件夹的基本名称进行命名，除非还提供了“<nobr>--import-naming-pattern</nobr>”参数。如果提供了“<nobr>--import-replicate-name</nobr>”参数，则会将所有文件添加到一个多次进样重复测定中。</td></tr>
+<tr><td><nobr>--import-all-files</nobr>=路径/到/文件夹</td><td>从文件夹中导入所有文件，但不包含文档中尚未存在的子文件夹，并使用文件的基本名称进行命名，除非还提供了“<nobr>--import-naming-pattern</nobr>”参数。如果提供了“<nobr>--import-replicate-name</nobr>”参数，则会将所有文件添加到一个多次进样重复测定中。</td></tr>
+<tr><td><nobr>--import-naming-pattern</nobr>=&lt;正则表达式&gt;</td><td>常规表达式，其中第一组将用于在“<nobr>--import-all</nobr>”操作中命名重复测定（例如，用“[^_]_(.*)”表示第一个下划线后的所有内容）。</td></tr>
+<tr><td><nobr>--import-filename-pattern</nobr>=&lt;正则表达式&gt;</td><td>应用于文件名的正则表达式以便选择要导入的各项。</td></tr>
+<tr><td><nobr>--import-samplename-pattern</nobr>=&lt;正则表达式&gt;</td><td>应用于样本名称的正则表达式（以 <nobr>multi-injection</nobr> .wiff 文件）以便选择要导入的各项。</td></tr>
+<tr><td><nobr>--import-before</nobr>=&lt;日期&gt;</td><td>在从文件夹导入时，仅导入在给定日期之前修改的文件。</td></tr>
+<tr><td><nobr>--import-on-or-after</nobr>=&lt;日期&gt;</td><td>在从文件夹导入时，仅导入在给定日期或之后修改的文件。</td></tr>
+<tr><td><nobr>--import-no-join</nobr></td><td>将结果文件导入至单个 .skyd 文件，而不将它们加入到主文档 .skyd 文件中。这对于分布式处理非常有用，例如在 HPC 群集上。</td></tr>
+<tr><td><nobr>--import-process-count</nobr>=&lt;整数&gt;</td><td>对于单一文件导入，将运行多个子流程，之后每个文件的结果将由主流程合并。在适当的条件下，这可将 24 核 NUMA 服务器的性能提高 10 倍，即便在 i7 处理器上也可以提高 <nobr>3-4</nobr> 倍。务必使用您的系统进行测试。</td></tr>
+<tr><td><nobr>--import-threads</nobr>=&lt;整数&gt;</td><td>将使用主进程中的线程并行导入的文件数量（相当于用户界面中的“同时导入的文件”），之后各个文件的结果将被汇集。在适当的条件下，这可以带来 <nobr>2-4</nobr> 倍的性能提升。务必使用您的系统进行测试。</td></tr>
+<tr><td><nobr>--import-warn-on-failure</nobr></td><td>如果导入文件失败并显示错误，则消息将作为警告发出，重复测定将被删除，并且导入将继续完成。</td></tr>
+<tr><td><nobr>--import-lockmass-positive</nobr>=&lt;数&gt;</td><td>用于正离子扫描的 Waters Lockmass 修正质荷比。</td></tr>
+<tr><td><nobr>--import-lockmass-negative</nobr>=&lt;数&gt;</td><td>用于负离子扫描的 Waters Lockmass 修正质荷比。</td></tr>
+<tr><td><nobr>--import-lockmass-tolerance</nobr>=&lt;数&gt;</td><td>Waters Lockmass 修正耐受性质荷比。</td></tr>
+<tr><td><nobr>--import-peak-boundaries</nobr>=路径/到/文件</td><td>从逗号或制表符分隔的文件中读取峰边界</td></tr>
+</table>
+<div class="RowType">与高级峰值拣选模型重新整合</div>
+<table>
+<tr><td><nobr>--reintegrate-model-name</nobr>=&lt;名称&gt;</td><td>用于重新合并操作的评分模型的名称。模型可以是预定义的（例如，使用“编辑&gt;细化&gt;重新整合”表单），也可以在此操作期间使用“<nobr>--reintegrate-create-model</nobr>”来自动创建。</td></tr>
+<tr><td><nobr>--reintegrate-create-model</nobr></td><td>此选项将通过 mProphet 算法以及可在文档中找到的结果的所有可用得分来创建新模型。（需要“<nobr>--reintegrate-model-name</nobr>”）</td></tr>
+<tr><td><nobr>--reintegrate-model-type</nobr>=<br/>&lt;mProphet | Skyline | SkylineML&gt;</td><td>峰得分模型类型进行培训以产生 z 得分和 q 值。（默认 mProphet） Skyline <nobr>-</nobr> 仅需缩放默认 Skyline 模型的系数，以便预估诱饵单位正态分布。SkylineML <nobr>-</nobr> 使用此 mProphet 机器学习算法培训一个仅凭借特征得分的默认设置的模型。</td></tr>
+<tr><td><nobr>--reintegrate-model-second-best</nobr></td><td>在重新整合期间强制使用次佳峰值。默认是仅使用诱饵。</td></tr>
+<tr><td><nobr>--reintegrate-model-both</nobr></td><td>在重新整合期间强制使用诱饵和次佳峰值。默认是仅使用诱饵。</td></tr>
+<tr><td><nobr>--reintegrate-overwrite-peaks</nobr></td><td>现有的手动合并的峰将被重新整合模型选择的峰覆盖。（需要“<nobr>--reintegrate-model-name</nobr>”）</td></tr>
+<tr><td><nobr>--reintegrate-exclude-feature</nobr>=<br/>&lt;特征名称&gt;</td><td>用于从模型中按名称排除特定特征得分。名称可以在用户界面中找到。可以多次使用此参数来排除多个特征。</td></tr>
+</table>
+<div class="RowType">正在删除结果重复测定</div>
+<table>
+<tr><td><nobr>--remove-before</nobr>=&lt;日期&gt;</td><td>从打开文档中删除所有采集时间早于给定日期的结果。</td></tr>
+<tr><td><nobr>--remove-all</nobr></td><td>从打开文档中删除所有结果。</td></tr>
+</table>
+<div class="RowType">最小化结果文件大小</div>
+<table>
+<tr><td><nobr>--chromatograms-limit-noise</nobr>=&lt;数&gt;</td><td>将色谱图的长度限制为色谱峰周围的分钟数，即 &#177; 分钟。</td></tr>
+<tr><td><nobr>--chromatograms-discard-unused</nobr></td><td>丢弃文档中所有未使用的色谱图。</td></tr>
+</table>
+<div class="RowType">正在导入其他 Skyline 文档</div>
+<table>
+<tr><td><nobr>--import-document</nobr>=路径/到/文件.sky</td><td>将另一个 Skyline 文档文件导入至打开的文档。对于多个文件，可以多次指定。</td></tr>
+<tr><td><nobr>--import-document-results</nobr>=<br/>&lt;remove | merge_names | merge_indices | add&gt;</td><td>确定如何处理导入文档中的任何结果。默认是删除它们。</td></tr>
+<tr><td><nobr>--import-document-merge-peptides</nobr></td><td>如果使用匹配肽段，匹配的肽段将合并，否则不合并。</td></tr>
+</table>
+<div class="RowType">正在导入注释</div>
+<table>
+<tr><td><nobr>--import-annotations</nobr>=路径/到/文件.csv</td><td>将 CSV 文件中的注释导入至文档中。使用“文件&gt;导出&gt;注释”创建所需格式的示例文件，并提供将注释与文档元素相关联的路径。</td></tr>
+</table>
+<div class="RowType">正在导入 FASTA 文件</div>
+<table>
+<tr><td><nobr>--import-fasta</nobr>=路径/到/文件</td><td>将 FASTA 文件导入到打开文档中。</td></tr>
+<tr><td><nobr>--keep-empty-proteins</nobr></td><td>在导入 FASTA 文件后，在打开的文档中保留任何空蛋白质。</td></tr>
+</table>
+<div class="RowType">正在导入肽段搜索</div>
+<table>
+<tr><td><nobr>--import-search-file</nobr>=路径/到/文件</td><td>将肽段搜索结果文件导入至打开的文档中，以构建特定于文档的谱图库。对于多个文件，可以多次指定。使用“<nobr>-</nobr>–<nobr>import-fasta</nobr>”参数将匹配的肽段添加为目标。</td></tr>
+<tr><td><nobr>--import-search-cutoff-score</nobr>=&lt;数&gt;</td><td>定义要在从肽段搜索结果文件构建谱图库时使用的截止值分数（介于 0 和 1 之间），其中 1 表示最高置信度匹配，0 表示所有结果。[默认值为 0.95]</td></tr>
+<tr><td><nobr>--import-search-irts</nobr>=&lt;名称&gt;</td><td>构建谱图库时要使用的 iRT 标准名称。</td></tr>
+<tr><td><nobr>--import-search-num-cirts</nobr>=&lt;整数&gt;</td><td>如果构建以 CiRT 肽段作为 iRT 标准的谱图库，请指定要用作 iRT 标准的 CiRT 肽段数量。</td></tr>
+<tr><td><nobr>--import-search-recalibrate-irts</nobr></td><td>如果使用 iRT 标准构建谱图库，请重新校准相对于所添加肽段的 iRT 标准值。</td></tr>
+<tr><td><nobr>--import-search-add-mods</nobr></td><td>将肽段搜索结果文件中的所有修改添加到打开文档中。</td></tr>
+<tr><td><nobr>--import-search-include-ambiguous</nobr></td><td>在构建谱图库时，防止具有多个模糊肽段匹配的谱图被丢弃。</td></tr>
+<tr><td><nobr>--import-search-exclude-library-sources</nobr></td><td>在提取色谱图时，排除用于建立库的结果文件。对用于肽段谱图匹配的文件进行转换和预处理(可能不适合于色谱图提取)时，这非常有用。</td></tr>
+<tr><td><nobr>--import-search-prefer-embedded-spectra</nobr></td><td>对于 MaxQuant msms.txt 文件，应强制使用文件中的谱图而不是打开原始谱图的原始数据文件。MaxQuant msms.txt 文件包含电荷状态解卷积谱图，可能不适合目标选择。</td></tr>
+</table>
+<div class="RowType">正在关联肽段与蛋白质</div>
+<table>
+<tr><td><nobr>--associate-proteins-fasta</nobr>=路径/到/文件</td><td>关联文档中的肽段与给定 FASTA 中的蛋白质。如果未提供此参数，但提供了其他 <nobr>--associate-proteins</nobr> 选项，将使用 <nobr>--import-fasta</nobr> 中的 FASTA。如果 <nobr>--import-fasta</nobr> 也未提供，则使用上次用来关联蛋白质的 FASTA。</td></tr>
+<tr><td><nobr>--associate-proteins-group-proteins</nobr></td><td>与同一组肽段匹配的蛋白质将组合为文档中的单个目标。</td></tr>
+<tr><td><nobr>--associate-proteins-gene-level-parsimony</nobr></td><td>关联肽段与基因（或基因组）而不关联蛋白质，并对这种关联应用简约法选项。</td></tr>
+<tr><td><nobr>--associate-proteins-shared-peptides</nobr>=<br/>&lt;DuplicatedBetweenProteins | AssignedToFirstProtein | AssignedToBestProtein | Removed&gt;</td><td>设置如何分配 FASTA 或背景蛋白质组中多种蛋白质包含的肽段。</td></tr>
+<tr><td><nobr>--associate-proteins-minimal-protein-list</nobr></td><td>运用算法来找到能解释所有肽段的最小(简约)蛋白质组。</td></tr>
+<tr><td><nobr>--associate-proteins-min-peptides</nobr>=<br/>&lt;整数&gt;</td><td>添加到文档中的蛋白质肽段必须达到的最小数量。</td></tr>
+<tr><td><nobr>--associate-proteins-remove-subsets</nobr></td><td>删除蛋白质子集，但保留非简约的非子集蛋白质。</td></tr>
+</table>
+<div class="RowType">正在导入离子对列表和分析库</div>
+<table>
+<tr><td><nobr>--import-pep-list</nobr>=路径/到/文件</td><td>导入肽段或肽段母离子（带电荷状态）列表，列表名称可由 <nobr>--import-pep-list-name</nobr> 指定。</td></tr>
+<tr><td><nobr>--import-pep-list-name</nobr>=&lt;名称&gt;</td><td>导入的肽段列表名称由 <nobr>--import-pep-list</nobr> 指定。</td></tr>
+<tr><td><nobr>--import-transition-list</nobr>=路径/到/文件</td><td>导入包含 Q1、Q3 和肽段序列的简单离子对列表。 还支持 CSV 格式并具有合适标题的分子离子对列表。</td></tr>
+<tr><td><nobr>--import-assay-library</nobr>=路径/到/文件</td><td>导入分析库离子对列表，列表中应包含 iRT 和相对子离子丰度列，以创建 iRT 计算器和谱图库，从而增强峰值拣选。</td></tr>
+<tr><td><nobr>--ignore-transition-errors</nobr></td><td>当存在时，从离子对列表或分析库导入所有已识别的离子对，并将错误行报告为警告。</td></tr>
+<tr><td><nobr>--irt-standards-group-name</nobr>=&lt;名称&gt;</td><td>包含了导入的分析库中的 iRT 标准的蛋白质或肽段列表的名称。（可选）</td></tr>
+<tr><td><nobr>--irt-standards-file</nobr>=路径/到/文件</td><td>包含 iRT 标准的单独分析库的路径将被应用于导入的分析库。 （可选）</td></tr>
+<tr><td><nobr>--irt-database-path</nobr>=路径/到/文件.irtdb</td><td>对导入的分析库使用现有 iRT 计算器(.irtdb 文件)的路径。如果使用  <nobr>-</nobr>–<nobr>irt-standards-group-name</nobr> 或 <nobr>-</nobr>–<nobr>irt-standards-file</nobr>，则是创建 .irtdb 文件的输出路径。(可选)默认 iRT 计算器路径为 path/to/document.irtdb</td></tr>
+<tr><td><nobr>--irt-calc-name</nobr>=&lt;名称&gt;</td><td>在分析库导入期间创建的 iRT 计算器的名称。 （可选）默认名称是文档基名。</td></tr>
+</table>
+<div class="RowType">正在添加谱图库</div>
+<table>
+<tr><td><nobr>--add-library-path</nobr>=路径/到/文件</td><td>指定要添加到打开文档中的谱图库。</td></tr>
+<tr><td><nobr>--add-library-name</nobr>=&lt;名称&gt;</td><td>在“<nobr>-</nobr>–<nobr>add-library-path</nobr>”操作中提供给谱图库的名称。</td></tr>
+</table>
+<div class="RowType">创建离子迁移库</div>
+<table>
+<tr><td><nobr>--ionmobility-library-create</nobr>=路径/到/文件.imsdb</td><td>根据当前加载的色谱图，将离子迁移库添加到打开的文档中。</td></tr>
+<tr><td><nobr>--ionmobility-library-name</nobr>=&lt;名称&gt;</td><td>在 <nobr>--ionmobility-library-create</nobr> operation 指令中为离子迁移库指定的名称。</td></tr>
+</table>
+<div class="RowType">正在添加诱饵肽段</div>
+<table>
+<tr><td><nobr>--decoys-add</nobr>[=&lt;reverse | shuffle&gt;]</td><td>将诱饵添加到模板文档中，以便使用 mProphet 重新整合模型。（诱饵生成方法是可选的，默认为“反向”）</td></tr>
+<tr><td><nobr>--decoys-add-count</nobr>=&lt;整数&gt;</td><td>要添加的诱饵数量（可选 <nobr>-</nobr> 默认是生成与目标数量一样多的诱饵）</td></tr>
+<tr><td><nobr>--decoys-discard</nobr></td><td>当使用“<nobr>--decoys-add</nobr>”时，所有现有的诱饵都将被强制丢弃。</td></tr>
+</table>
+<div class="RowType">正在细化目标列表</div>
+<table>
+<tr><td><nobr>--refine-min-peptides</nobr>=&lt;整数&gt;</td><td>含有少于此数目肽段的蛋白质将被从文档中删除。</td></tr>
+<tr><td><nobr>--refine-remove-repeats</nobr></td><td>将删除所有重复的肽段以仅留下首次出现的任何肽段。</td></tr>
+<tr><td><nobr>--refine-remove-duplicates</nobr></td><td>所有在文档中不是唯一的肽段将被删除。</td></tr>
+<tr><td><nobr>--refine-missing-library</nobr></td><td>将删除与库匹配不对应的所有目标。</td></tr>
+<tr><td><nobr>--refine-min-transitions</nobr>=&lt;整数&gt;</td><td>含有少于此数目离子对的母离子将被从文档中删除。</td></tr>
+<tr><td><nobr>--refine-label-type</nobr>=&lt;标记类型&gt;</td><td>如果还使用了“<nobr>--refine-add-label-type</nobr>”，则将删除（默认）或添加指定同位素标记类型的母离子。</td></tr>
+<tr><td><nobr>--refine-add-label-type</nobr></td><td>加回同位素标记类型的母离子。</td></tr>
+<tr><td><nobr>--refine-auto-select-peptides</nobr></td><td>所有蛋白质都将重置，以自动选择它们包含的肽段。</td></tr>
+<tr><td><nobr>--refine-auto-select-precursors</nobr></td><td>所有肽段都将重置，以自动选择它们包含的母离子。</td></tr>
+<tr><td><nobr>--refine-auto-select-transitions</nobr></td><td>所有母离子都将重置，以自动选择它们包含的离子对。</td></tr>
+</table>
+<div class="RowType">正在根据导入的结果细化目标列表</div>
+<table>
+<tr><td><nobr>--refine-min-peak-found-ratio</nobr>=<br/>&lt;数&gt;</td><td>所有峰值检出比大于此数目的元素都将被从文档中删除：
+
+绿色 = 1.0
+橙色 &gt;= 0.5
+红色 &lt; 0.5</td></tr>
+<tr><td><nobr>--refine-max-peak-found-ratio</nobr>=<br/>&lt;数&gt;</td><td>峰值发现率高于此数字的所有元素将从文件中删除：
+
+绿色 = 1.0
+橙色 &gt;= 0.5
+红色 &lt; 0.5</td></tr>
+<tr><td><nobr>--refine-max-peptide-peak-rank</nobr>=<br/>&lt;整数&gt;</td><td>所有平均峰面积值排名大于此数目的离子对将被从文档中删除。</td></tr>
+<tr><td><nobr>--refine-max-transition-peak-rank</nobr>=<br/>&lt;整数&gt;</td><td>所有平均峰面积值排名大于此数目的离子对将被从文档中删除。</td></tr>
+<tr><td><nobr>--refine-max-precursor-only</nobr></td><td>仅保留具有最大峰面积的母离子电荷状态。</td></tr>
+<tr><td><nobr>--refine-prefer-larger-products</nobr></td><td>当较小的、选择性较低的离子仅产生少量更大的峰面积时，导致细化以选择更大的产物离子。</td></tr>
+<tr><td><nobr>--refine-missing-results</nobr></td><td>没有测量结果的所有元素都将被从文档中删除。</td></tr>
+<tr><td><nobr>--refine-min-time-correlation</nobr>=<br/>&lt;数&gt;</td><td>母离子将被从文档中删除直到具有最佳保留时间计算的线性回归相关系数的目标值超过此阈值。</td></tr>
+<tr><td><nobr>--refine-min-dotp</nobr>=&lt;数&gt;</td><td>所有对库谱图点积的子离子峰面积小于此阈值的母离子都将被从文档中删除。</td></tr>
+<tr><td><nobr>--refine-min-idotp</nobr>=&lt;数&gt;</td><td>所有对预期同位素峰分布点积的 MS1 母离子峰面积小于此阈值的母离子都将被从文档中删除。</td></tr>
+<tr><td><nobr>--refine-use-best-result</nobr></td><td>在细化值计算中仅使用每种肽段的最佳重复测定。（用于分段洗脱）</td></tr>
+<tr><td><nobr>--refine-cv-remove-above-cutoff</nobr>=<br/>&lt;数&gt;</td><td>将删除峰面积 CV 高于截止值的所有目标母离子。</td></tr>
+<tr><td><nobr>--refine-cv-global-normalize</nobr>=<br/>&lt;global_standards | equalize_medians | tic&gt;</td><td>CV 计算中使用的面积按规定进行标准化。（默认没有标准化）</td></tr>
+<tr><td><nobr>--refine-cv-reference-normalize</nobr>=<br/>&lt;标记类型&gt;</td><td>CV 计算中使用的面积被归一化为一种参考类型，如“重型”。</td></tr>
+<tr><td><nobr>--refine-cv-transitions</nobr>=&lt;all | best&gt;</td><td>指定求和峰面积且在 CV 计算中用于 CV 调整的离子对。 （全部或单个最佳离子对）</td></tr>
+<tr><td><nobr>--refine-cv-transitions-count</nobr>=&lt;整数&gt;</td><td>指明通过库离子对排名选择的离子对计数（母离子同位素和片段库），其中求和峰面积并在 CV 计算中用于 CV 调整。</td></tr>
+<tr><td><nobr>--refine-cv-ms-level</nobr>=&lt;precursors | products&gt;</td><td>CV 计算中所使用的 MS 级别。默认值为“子离子”，在 PRM 和 DIA 等方法中其 CV 值通常低于母离子。</td></tr>
+<tr><td><nobr>--refine-qvalue-cutoff</nobr>=&lt;数&gt;</td><td>将删除最大检测 q 值高于截止值的所有目标母离子。若使用了调整最低检测，则至少指定数量的重复测定必须具有低于截止值的检测 q 值。</td></tr>
+<tr><td><nobr>--refine-minimum-detections</nobr>=&lt;整数&gt;</td><td>重复测定少于指定次数且检测 q 值低于调整的 q 截止值的所有目标母离子被删除。</td></tr>
+<tr><td><nobr>--refine-gc-p-value-cutoff</nobr>=&lt;数&gt;</td><td>仅保留群组比较已调整的 p 值低于指定截止值的目标。（对群组比较细化为必要项）</td></tr>
+<tr><td><nobr>--refine-gc-fold-change-cutoff</nobr>=&lt;数&gt;</td><td>仅保留群组比较倍数变化高于该截止值的目标。(对群组比较细化为可选项）</td></tr>
+<tr><td><nobr>--refine-gc-ms-level</nobr>=&lt;数&gt;</td><td>MS 级别（1 或 2）用于计算峰面积，来进行群组比较细化。如果同时存在两种级别，则默认为级别 2，否则使用存在的任何一种级别。</td></tr>
+<tr><td><nobr>--refine-gc-name</nobr>=&lt;标记类型&gt;</td><td>先前定义的群组比较名称，用于显著变化目标的细化。用多个名称多次指定此参数，以保留多个比较的并集。</td></tr>
+</table>
+<div class="RowType">正在导出报告</div>
+<table>
+<tr><td><nobr>--report-name</nobr>=&lt;名称&gt;</td><td>导出报告的名称，与在 Skyline 导出报告表单中显示的名称相同。</td></tr>
+<tr><td><nobr>--report-file</nobr>=路径/到/文件.csv</td><td>导出报告的路径。如果指定了“<nobr>--report-name</nobr>”，则为必需。</td></tr>
+<tr><td><nobr>--report-add</nobr>=路径/到/文件.skyr</td><td>将保存的报告模板文件中的报告添加到正在运行的程序中。</td></tr>
+<tr><td><nobr>--report-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td>指定在使用“<nobr>--report-add</nobr>”参数时，如何通过覆盖或跳过报告名称冲突来解决报告名称冲突问题（默认情况下是为冲突输出错误消息）</td></tr>
+<tr><td><nobr>--report-format</nobr>=&lt;csv | tsv&gt;</td><td>CSV 用于以逗号分隔的报告（或以分号分隔，取决于您的本地化方式）或者TSV 用于以制表符分隔的报告[默认为 CSV]</td></tr>
+<tr><td><nobr>--report-invariant</nobr></td><td>使用“不变量”语言设置导出报告，使用“英语（美国）”数字格式和不带空格的标题文本，适合与 R 统计编程环境一起使用。</td></tr>
+</table>
+<div class="RowType">正在导出色谱图</div>
+<table>
+<tr><td><nobr>--chromatogram-file</nobr>=路径/到/文件.tsv</td><td>以制表符分隔的文件的路径，用于导出色谱图。默认为导出母离子和子离子。</td></tr>
+<tr><td><nobr>--chromatogram-precursors</nobr></td><td>导出母离子色谱图。需要“<nobr>--chromatogram-file</nobr>”参数。</td></tr>
+<tr><td><nobr>--chromatogram-products</nobr></td><td>导出子离子色谱图。需要“<nobr>--chromatogram-file</nobr>”参数。</td></tr>
+<tr><td><nobr>--chromatogram-base-peaks</nobr></td><td>导出基峰色谱图。需要“<nobr>--chromatogram-file</nobr>”参数。</td></tr>
+<tr><td><nobr>--chromatogram-tics</nobr></td><td>输出总离子流色谱图。需要“<nobr>--chromatogram-file</nobr>”参数。</td></tr>
+</table>
+<div class="RowType">导出其他文件类型</div>
+<table>
+<tr><td><nobr>--exp-speclib-file</nobr>=路径/到/文件.blib</td><td>将当前文档中的实验数据导出为谱图库文件。峰面积用作谱图强度，峰顶点时间用作保留时间，如果文档中有 iRT 值，这些值也会存储在库中。</td></tr>
+<tr><td><nobr>--exp-mprophet-features</nobr>=路径/到/文件.csv</td><td>以 mProphet 格式导出每个肽段的所有单个特征得分、复合物得分、p 值和 q 值。</td></tr>
+<tr><td><nobr>--exp-mprophet-best-peaks-only</nobr></td><td>仅包含最佳得分峰的特征得分。需要使用 <nobr>--exp-mprophet-features</nobr> 参数。</td></tr>
+<tr><td><nobr>--exp-mprophet-targets-only</nobr></td><td>只包含目标特征得分。需要使用 <nobr>--exp-mprophet-features</nobr> 参数。</td></tr>
+<tr><td><nobr>--exp-mprophet-exclude-feature</nobr>=<br/>&lt;特征名称&gt;</td><td>用于从导出的文件中按名称排除特定的特征得分。用户界面中可以找到这些名称。该参数可多次使用，以排除多个特征。需要使用 <nobr>--exp-mprophet-features</nobr> 参数。</td></tr>
+<tr><td><nobr>--exp-annotations</nobr>=路径/到/文件.csv</td><td>按照 <nobr>--import-annotations</nobr> 要求的格式，将文档中的所有注释导出到包含 ElementLocator 字段的文本文件。也可以使用 <nobr>--exp-annotations-include-properties</nobr> 来包含属性。</td></tr>
+<tr><td><nobr>--exp-annotations-include-object</nobr>=<br/>&lt;MoleculeGroup | Molecule | Precursor | Transition | Replicate | ResultFile | MoleculeResult | PrecursorResult | TransitionResult&gt;</td><td>用于指定在导出的注释中包含哪些对象类型。默认为包含所有对象类型。该参数可多次使用，来指定多种对象类型。需要使用 <nobr>--exp-annotations</nobr> 参数。</td></tr>
+<tr><td><nobr>--exp-annotations-include-properties</nobr></td><td>用于在导出的注释中包含所有属性。默认为不包含任何属性。需要使用 <nobr>--exp-annotations</nobr> 参数。</td></tr>
+<tr><td><nobr>--exp-annotations-remove-blank-rows</nobr></td><td>用于删除所导出注释中的空白行。需要使用 <nobr>--exp-annotations</nobr> 参数。</td></tr>
+</table>
+<div class="RowType">正在导出分离/离子对列表</div>
+<table>
+<tr><td><nobr>--exp-isolationlist-instrument</nobr>=<br/>&lt;Agilent QTOF | SCIEX QTOF <nobr>-</nobr> Analyst | Bruker timsTOF | Thermo Q Exactive | Thermo Fusion | Thermo Stellar | Waters Synapt (trap) | Waters Synapt (transfer) | Waters Xevo QTOF&gt;</td><td>导出分离列表。导出分离列表时必须选择此选项，并且没有默认值。此选项不能与“<nobr>-</nobr>–<nobr>exp-translist-instrument</nobr>”或“<nobr>-</nobr>–<nobr>exp-method-instrument</nobr>”参数一起使用，因为您无法同时导出分离列表和离子对列表或方法。</td></tr>
+<tr><td><nobr>--exp-translist-instrument</nobr>=<br/>&lt;Agilent MH 10.1 and lower | Agilent MassHunter 12 | Agilent MassHunter 12 Ultivo | Agilent MassHunter 12 6495D | Bruker | SCIEX | Shimadzu | Thermo | Thermo Quantiva | Thermo Altis | Waters&gt;</td><td>导出离子对列表。导出离子对列表时必须选择此选项，并且没有默认值。此选项不能与“<nobr>--exp-isolation-list</nobr>”或“<nobr>--exp-method-instrument</nobr>”参数一起使用，因为您无法同时导出离子对列表和分离列表或方法。</td></tr>
+</table>
+<div class="RowType">正在导出本机仪器方法</div>
+<table>
+<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Thermo Quantiva | Thermo Altis | Thermo Stellar | Thermo Exploris | Thermo Eclipse | Thermo Fusion | Thermo Fusion Lumos | Waters TQ (MassLynx) | Waters TQ (waters_connect) | Waters Quattro Premier&gt;</td><td>导出方法。导出方法时必须选择此选项，并且没有默认值。此选项不能与“<nobr>--exp-isolationlist-instrument</nobr>”或“<nobr>--exp-translist-instrument</nobr>”参数一起使用，因为您无法同时导出方法和分离/离子对列表。</td></tr>
+<tr><td><nobr>--exp-template</nobr>=路径/到/文件</td><td>方法模板的路径。可以是文件或目录，具体取决于您的仪器。导出方法时必须选择此选项。</td></tr>
+</table>
+<div class="RowType">方法和离子对列表选项</div>
+<table>
+<tr><td><nobr>--exp-file</nobr>=路径/到/文件</td><td>导出方法或离子对列表文件的路径（或目录）。导出方法和离子对列表时必须选择此选项。</td></tr>
+<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets | WcDecide&gt;</td><td>将单个方法划分为多次进样所用的策略。默认为“单个”。默认为“单个”。</td></tr>
+<tr><td><nobr>--exp-method-type</nobr>=<br/>&lt;Standard | Scheduled | Triggered&gt;</td><td>设置标准、预定或触发方法。默认为“标准”。</td></tr>
+<tr><td><nobr>--exp-max-trans</nobr>=&lt;名称&gt;</td><td>导出策略“蛋白质”和“存储桶”的每次进样的最大离子对数目，或预定方法的最大同时离子对数目。默认为 100。</td></tr>
+<tr><td><nobr>--exp-optimizing</nobr>=&lt;CE | DP&gt;</td><td>导出包含额外离子对的方法，以查找最优碰撞能量或去簇电压。</td></tr>
+<tr><td><nobr>--exp-scheduling-replicate</nobr>=&lt;名称&gt;</td><td>仅在创建预定或触发方法时使用此选项。默认是根据所有重复测定的平均值预定时间，但如果指定了一个重复测定，则将根据该重复测定来预定该方法时间。</td></tr>
+<tr><td><nobr>--exp-order-by-mz</nobr></td><td>以升序按照质荷比优化导出方法（母离子质荷比，之后子离子质荷比，若适用）以实现优化的四极转换。</td></tr>
+<tr><td><nobr>--exp-ignore-proteins</nobr></td><td>在创建方法时忽略蛋白质边界。</td></tr>
+<tr><td><nobr>--exp-primary-count</nobr>=&lt;整数&gt;</td><td>对于“<nobr>--exp-method-type</nobr>=triggered”，指定要设为主要离子对的离子对数目。</td></tr>
+<tr><td><nobr>--exp-polarity</nobr>=<br/>&lt;all | positive | negative | separate&gt;</td><td>控制同时含有阳性和阴性离子对的文档的导出行为。允许输出仅阳性或仅阴性离子对，或为每个极性创建单独的输出。默认为全部，并且对于单极性文档，其将被忽略。</td></tr>
+</table>
+<div class="RowType">特定于供应商的方法和离子对列表选项</div>
+<table>
+<tr><td>Agilent
+SCIEX</td><td><nobr>--exp-dwell-time</nobr>=&lt;毫秒&gt;</td><td>每个离子对的驻留时间。非预定的离子对列表需要选择此选项。</td></tr>
+<tr><td>Thermo</td><td><nobr>--exp-add-energy-ramp</nobr></td><td>在离子对列表中添加额外的能量斜坡列。 可选。默认为“false”。</td></tr>
+<tr><td>Thermo</td><td><nobr>--exp-use-s-lens</nobr></td><td>在离子对列表中添加额外的 SLens 列（默认值为 50）。 可选。默认为“false”。</td></tr>
+<tr><td>Thermo
+Waters</td><td><nobr>--exp-run-length</nobr>=&lt;分钟&gt;</td><td>运行整个梯度的时间长度，以分钟表示。非预定的实验需要选择此选项。</td></tr>
+</table>
+<div class="RowType">正在发布到 Panorama</div>
+<table>
+<tr><td><nobr>--panorama-server</nobr>=&lt;服务器网址&gt;</td><td>发布“<nobr>--in</nobr>”文件的目标 Panorama 服务器 URL。如果需要，URL 应包含协议（http 或 https）、主机名和端口。例子：
+https://panoramaweb.org
+或者
+http://localhost:8080</td></tr>
+<tr><td><nobr>--panorama-username</nobr>=&lt;用户名&gt;</td><td>有权在 Panorama 服务器上发布文件的用户的用户名/电子邮件地址。</td></tr>
+<tr><td><nobr>--panorama-password</nobr>=&lt;密码&gt;</td><td>有权在 Panorama 服务器上发布文件的用户的密码。</td></tr>
+<tr><td><nobr>--panorama-folder</nobr>=路径/到/文件夹</td><td>发布文件的目标 Panorama 服务器文件夹的路径（例如 MyProject/MyFolder）。</td></tr>
+</table>
+<p>如果上述参数与将结果文件导入文档的参数（“--import-file”或“--import-all”）一起使用，则只有在将新结果添加到文档中时，才会将 Skyline 文档上传到给定的 Panorama 服务器。</p>
+<div class="RowType">文档设置</div>
+<table>
+<tr><td><nobr>--annotation-name</nobr>=&lt;名称&gt;</td><td>向文档添加指定名称的注释。具有相同名称的现有注释将被覆盖。</td></tr>
+<tr><td><nobr>--annotation-targets</nobr>=<br/>&quot;protein, molecule_list, peptide, molecule, precursor, transition, replicate, precursor_result, transition_result&quot;</td><td>逗号分隔的目标类型列表，用于在 <nobr>--annotation-name</nobr> 操作中应用注释。</td></tr>
+<tr><td><nobr>--annotation-type</nobr>=&lt;text | number | true_false | value_list&gt;</td><td>在 <nobr>--annotation-name</nobr> 操作中定义注释的数据类型。默认为文本。</td></tr>
+<tr><td><nobr>--annotation-values</nobr>=&quot;&lt;value&gt;,&nbsp;&lt;value&gt;,&nbsp;&lt;value&gt;...&quot;</td><td>在 <nobr>--annotation-name</nobr> 操作中为 value_list 类型注释提供的逗号分隔值列表。仅在 <nobr>--annotation-type</nobr>=value_list 操作中需要使用。</td></tr>
+<tr><td><nobr>--integrate-all</nobr>[=True&nbsp;或&nbsp;False]</td><td>如果设置，所有在积分边界之间贡献任何信号的离子对都会被视为找到的离子对。如未设置，只有共洗脱的离子对才视为找到的离子对。无论设置与否，积分边界之间的所有定量离子对信号都会相加，从而得出母离子的总面积。</td></tr>
+</table>
+<div class="RowType">肽段设置</div>
+<table>
+<tr><td><nobr>--pep-digest-enzyme</nobr>=<br/>&lt;Trypsin | Trypsin (semi) | Trypsin/P | TrypsinK | TrypsinR | Chymotrypsin | ArgC | AspN | Clostripain | CNBr | Elastase | Formic Acid | GluC | GluC bicarb | Iodosobenzoate | LysC | LysC/P | LysN | LysN promisc | PepsinA | Protein endopeptidase | Staph protease | <nobr>Trypsin-CNBr</nobr> | <nobr>Trypsin-GluC</nobr>&gt;</td><td>蛋白酶定义用于解析蛋白质序列（作为目标添加到文档）中的肽段序列。作为目标添加的肽段列表会忽略此设置，但会计算酶解的漏切位点数。</td></tr>
+<tr><td><nobr>--pep-max-missed-cleavages</nobr>=&lt;整数&gt;</td><td>当考虑到蛋白质酶解时，肽段中允许最大的酶解漏切位点数。</td></tr>
+<tr><td><nobr>--pep-unique-by</nobr>=<br/>&lt;none | protein | gene | species&gt;</td><td>“蛋白质”不包括出现在背景蛋白质组中的多个蛋白质中的任何肽段。 “基因”不包括出现在背景蛋白质组中的多个基因蛋白质中的任何肽段。 “物种”不包括出现在背景蛋白质组中的多个物种蛋白质中的任何肽段。适用于包含多个物种的样品混合物。</td></tr>
+<tr><td><nobr>--background-proteome-name</nobr>=<br/>&lt;None | 为通过 <nobr>--background-proteome-file</nobr> 导入的 protdb 命名&gt;</td><td>要应用于打开的文档的背景蛋白质组名称。背景蛋白质组指定注入质谱仪的样品基质中可能存在的全部蛋白质。如果 Skyline 中尚未定义该名称，还必须通过 <nobr>--background-proteome-file</nobr> 设置 protdb 文件路径。</td></tr>
+<tr><td><nobr>--background-proteome-file</nobr>=<br/>路径/到/文件.protdb</td><td>要应用于打开的文档的背景蛋白质组 (protdb) 文件的路径。可以通过 <nobr>--background-proteome-name</nobr> 指定文件名，否则默认为此文件名。</td></tr>
+<tr><td><nobr>--pep-min-length</nobr>=&lt;整数&gt;</td><td>要向文档添加的肽段的最小长度。</td></tr>
+<tr><td><nobr>--pep-max-length</nobr>=&lt;整数&gt;</td><td>要向文档添加的肽段的最大长度。</td></tr>
+<tr><td><nobr>--pep-exclude-nterminal-aas</nobr>=&lt;整数&gt;</td><td>在每个蛋白质中排除所有在此氨基酸位置前开始的肽段。</td></tr>
+<tr><td><nobr>--pep-exclude-potential-ragged-ends</nobr></td><td>排除因紧邻前方或后方位置具有剪切位点而产生的肽段， 例如，针对胰蛋白酶的 RR、KK、RK 和 KR</td></tr>
+<tr><td><nobr>--pep-add-mod</nobr>=<br/>完整名称（如“Oxidation (M)” | 简称 (Oxi)</td><td>向文档中添加 UniMod 修饰。必须通过 <nobr>PSI-MS</nobr> 名称和位点（“Oxidation (M)”）来指定修饰。</td></tr>
+<tr><td><nobr>--pep-add-unimod</nobr>=UniMod&nbsp;ID&nbsp;(如“35”)</td><td>通过 UniMod ID 向文档中添加 UniMod 修饰。如果修饰有多个特异性，必须使用 <nobr>--pep-add-unimod-aa</nobr> 或 <nobr>--pep-add-unimod-term</nobr> 来选择要向文档添加的特异性。</td></tr>
+<tr><td><nobr>--pep-add-unimod-aa</nobr>=<br/>ACDEFGHIKLMNOPQRSTUVWY</td><td>提供 <nobr>--pep-add-unimod</nobr> 添加的最后一个肽段修饰的氨基酸特异性。</td></tr>
+<tr><td><nobr>--pep-add-unimod-term</nobr>=&lt;N | C&gt;</td><td>提供 <nobr>--pep-add-unimod</nobr> 添加的最后一个肽段修饰的末端特异性。</td></tr>
+<tr><td><nobr>--pep-add-mod-variable</nobr>=True&nbsp;或&nbsp;False</td><td>若为“true”，则添加可变修饰；若为“false”，则添加静态修饰。仅对结构修饰有效，但仅限丢失的修饰（如氨和水损失）除外。</td></tr>
+<tr><td><nobr>--pep-clear-mods</nobr></td><td>清除当前打开文档中的所有肽段修饰。</td></tr>
+<tr><td><nobr>--pep-max-variable-mods</nobr>=&lt;整数&gt;</td><td>在任何肽段上允许出现的 最大可变修饰数目。</td></tr>
+<tr><td><nobr>--pep-max-losses</nobr>=&lt;整数&gt;</td><td>在任何肽段上允许出现的最大 中性丢失数目。</td></tr>
+</table>
+<div class="RowType">离子对设置</div>
+<table>
+<tr><td><nobr>--tran-precursor-ion-charges</nobr>=<br/>&quot;1,&nbsp;2,&nbsp;3...&quot;</td><td>以逗号分隔的母离子电荷状态列表，应用于肽段分子以产生母离子目标。更改打开文档的离子对筛选器设置。</td></tr>
+<tr><td><nobr>--tran-product-ion-charges</nobr>=<br/>&quot;1,&nbsp;2,&nbsp;3...&quot;</td><td>以逗号分隔的子离子电荷状态列表，应用于肽片段以产生子离子离子对。更改打开文档的离子对筛选器设置。</td></tr>
+<tr><td><nobr>--tran-product-ion-types</nobr>=<br/>&quot;a,&nbsp;b,&nbsp;c,&nbsp;x,&nbsp;y,&nbsp;z,&nbsp;p&quot;</td><td>以逗号分隔的在肽片段中预期存在的子离子类型列表，用于产生子离子离子对。更改打开文档的离子对筛选器设置。</td></tr>
+<tr><td><nobr>--tran-product-start-ion</nobr>=<br/>&lt;离子 1 | 离子 2 | 离子 3 | 离子 4 | 质荷比 &gt; 母离子 | （质荷比 &gt; 母离子） <nobr>-</nobr> 1 | （质荷比 &gt; 母离子） <nobr>-</nobr> 2 | （质荷比 &gt; 母离子） + 1 | （质荷比 &gt; 母离子） + 2&gt;</td><td>允许生成离子对的最小子离子。</td></tr>
+<tr><td><nobr>--tran-product-end-ion</nobr>=<br/>&lt;最后一个离子 | 最后一个离子 <nobr>-</nobr> 1 | 最后一个离子 <nobr>-</nobr> 2 | 最后一个离子 <nobr>-</nobr> 3 | 1 个离子 | 2 个离子 | 3 个离子 | 4 个离子 | 5 个离子 | 6 个离子&gt;</td><td>允许生成离子对的最大子离子。</td></tr>
+<tr><td><nobr>--tran-product-clear-special-ions</nobr></td><td>删除离子对过滤器设置中的所有特殊离子。</td></tr>
+<tr><td><nobr>--tran-product-add-special-ion</nobr>=<br/>&lt;<nobr>N-terminal</nobr> to Proline | <nobr>C-terminal</nobr> to Glu or Asp | <nobr>iTRAQ-114</nobr> | <nobr>iTRAQ-115</nobr> | <nobr>iTRAQ-116</nobr> | <nobr>iTRAQ-117</nobr> | <nobr>TMT-126</nobr> | <nobr>TMT-127L</nobr> | <nobr>TMT-127H</nobr> | <nobr>TMT-128L</nobr> | <nobr>TMT-128H</nobr> | <nobr>TMT-129L</nobr> | <nobr>TMT-129H</nobr> | <nobr>TMT-130L</nobr> | <nobr>TMT-130H</nobr> | <nobr>TMT-131L</nobr> | <nobr>TMT-131H</nobr> | <nobr>TMT-132L</nobr> | <nobr>TMT-132H</nobr> | <nobr>TMT-133L</nobr> | <nobr>TMT-133H</nobr> | <nobr>TMT-134L</nobr> | <nobr>TMT-134H</nobr> | <nobr>TMT-135</nobr>&gt;</td><td>添加一个已命名预定义的特殊离子为“离子对设置”表单中指定的离子。</td></tr>
+<tr><td><nobr>--tran-predict-ce</nobr>=<br/>&lt;无 | Agilent QQQ | SCIEX | Shimadzu QQQ | Thermo TSQ Quantiva | Thermo TSQ Ultra | Thermo TSQ Vantage | Waters Xevo&gt;</td><td>将离子对设置碰撞能量预测设置更改为之前定义的选项之一。</td></tr>
+<tr><td><nobr>--tran-predict-dp</nobr>=<br/>&lt;无 | SCIEX&gt;</td><td>将离子对设置去簇电压预测设置更改为之前定义的选项之一。</td></tr>
+<tr><td><nobr>--tran-predict-cov</nobr>=<br/>&lt;无 | SCIEX&gt;</td><td>将离子对设置补偿电压预测设置更改为之前定义的选项之一。</td></tr>
+<tr><td><nobr>--tran-predict-optdb</nobr>=<br/>&lt;无&gt;</td><td>将预测仪器参数中使用的离子对设置最优化库更改为之前定义的选项之一。</td></tr>
+<tr><td><nobr>--tran-use-dia-window-exclusion</nobr></td><td>排除质荷比值位于母离子隔离窗口范围内的子离子离子对。鉴于来自未碎片母离子的信号会提高干扰可能性，建议分析 DIA/SWATH 数据时使用这种方法。</td></tr>
+<tr><td><nobr>--library-match-tolerance</nobr>=<br/>&quot;0.5mz&nbsp;or&nbsp;15ppm&quot;</td><td>预测的子离子质荷比值与测量的 MS/MS 谱图库峰值质荷比值匹配时允许的最大增量值。增量值可以用质荷比或 PPM 单位指定。 </td></tr>
+<tr><td><nobr>--library-pick-product-ions</nobr>=<br/>&lt;none | all | filter | all_plus&gt;</td><td>在挑选与谱图库峰质荷比值匹配的离子对时要考虑的子离子集。(all:所有指定的离子电荷和类型，filter:基于开始和结束离子对以及特殊离子的过滤器，或 all_plus:其他两个选项的联合)</td></tr>
+<tr><td><nobr>--library-product-ions</nobr>=<br/>&lt;整数&gt;</td><td>库谱图中每个母离子匹配峰的最大子离子离子对数，并按峰强度排序。</td></tr>
+<tr><td><nobr>--library-min-product-ions</nobr>=<br/>&lt;整数&gt;</td><td>仅保留至少有这些数量的子离子离子对与库谱图中的峰相匹配的母离子。</td></tr>
+<tr><td><nobr>--full-scan-precursor-isotopes</nobr>=<br/>&lt;None | Count | Percent&gt;</td><td>母离子阈值的含义用于从高分辨率质谱中提取母离子同位素而选择离子对时。计数表示从单一同位素母离子开始的常数。百分比表示最强母离子物种(即基峰)的最小百分比。默认为计数。</td></tr>
+<tr><td><nobr>--full-scan-precursor-threshold</nobr>=<br/>&lt;数&gt;</td><td>从高分辨率谱图中提取的同位素常数(从单一同位素母离子开始)或基础同位素强度的百分比。</td></tr>
+<tr><td><nobr>--full-scan-precursor-ignore-sim</nobr></td><td>从全扫描 MS1 谱中提取时跳过 SIM 扫描。用于同时存在调查 MS1 和 SIM 扫描的情况，以避免从两者中提取色谱图。 </td></tr>
+<tr><td><nobr>--full-scan-precursor-isotope-enrichment</nobr>=<br/>&lt;默认&gt;</td><td>用于从全扫描数据中提取的预定义同位素富集设置的名称。如果都不可用，请使用用户界面中的“离子对设置”表单添加新的同位素富集设置。</td></tr>
+<tr><td><nobr>--full-scan-precursor-analyzer</nobr>=<br/>&lt;centroided | qit | tof | orbitrap | ft_icr | none&gt;</td><td>母离子谱图的质量分析器或使用“棒状图形式”而不是轮廓(和分辨能力)的棒状谱图(和 PPM 中的质量误差)。</td></tr>
+<tr><td><nobr>--full-scan-precursor-res</nobr>=&lt;解决权力&gt;</td><td>母离子质量分析器的分辨能力。如果质量分析器是“Centroided”，则该值为 PPM。</td></tr>
+<tr><td><nobr>--full-scan-precursor-res-mz</nobr>=&lt;质荷比值&gt;</td><td>指定母离子质量分析器分辨能力的质荷比值。 （仅适用于 Orbitrap 和 ft_icr 质量分析器）</td></tr>
+<tr><td><nobr>--full-scan-acquisition-method</nobr>=<br/>&lt;None | DIA | PRM | DDA | SureQuant | EI&gt;</td><td>用于从全扫描数据中提取的采集方法(无、DIA、PRM、DDA、SureQuant)。</td></tr>
+<tr><td><nobr>--full-scan-isolation-scheme</nobr>=<br/>&lt;All Ions | Results only | Results (0.5 margin) | SWATH (15 m/z) | SWATH (25 m/z) | SWATH (VW 64) | SWATH (VW 100) | 用于从中导入分离方案的 path/to/<nobr>result-file</nobr>&gt;</td><td>在全扫描 DIA 数据中提取时，使用从预定义分离方案的名称或数据文件的路径而导入的分离方案。</td></tr>
+<tr><td><nobr>--full-scan-product-analyzer</nobr>=<br/>&lt;centroided | qit | tof | orbitrap | ft_icr | none&gt;</td><td>子离子谱图的质量分析器或使用“棒状图形式”而不是轮廓(和分辨能力)的棒状谱图(和 PPM 中的质量误差)。</td></tr>
+<tr><td><nobr>--full-scan-product-res</nobr>=&lt;解决权力&gt;</td><td>子离子质量分析器的分辨能力。如果质量分析器是“Centroided”，则该值为 PPM。</td></tr>
+<tr><td><nobr>--full-scan-product-res-mz</nobr>=&lt;质荷比值&gt;</td><td>指定子离子质量分析器分辨能力的质荷比值。 （仅适用于 Orbitrap 和 ft_icr 质量分析器）</td></tr>
+<tr><td><nobr>--full-scan-rt-filter</nobr>=<br/>&lt;none | scheduling_windows | ms2_ids&gt;</td><td>设置色谱图起止时间是否受预测的保留时间或 MS/MS ID 保留时间范围的限制。</td></tr>
+<tr><td><nobr>--full-scan-rt-filter-tolerance</nobr>=<br/>&lt;分钟&gt;</td><td>预测时间或 MS/MS ID 左右的分钟数，即“&#177;分钟数”。</td></tr>
+<tr><td><nobr>--ims-library-res</nobr>=&lt;解决权力&gt;</td><td>离子迁移维度的分辨力用于过滤谱图库中的离子迁移值。</td></tr>
+<tr><td><nobr>--instrument-min-mz</nobr>=&lt;质荷比值&gt;</td><td>目标仪器可测的最小质荷比值，避免添加无法测量的母离子和离子对。</td></tr>
+<tr><td><nobr>--instrument-max-mz</nobr>=&lt;质荷比值&gt;</td><td>目标仪器可测的最大质荷比值，避免添加无法测量的母离子和离子对。</td></tr>
+<tr><td><nobr>--instrument-dynamic-min-mz</nobr></td><td>如果设置，则使用 <nobr>Thermo-Scientific</nobr> 为 LTQ 仪器提供的特定方程，根据母离子质荷比动态计算子离子的最小质荷比值。</td></tr>
+<tr><td><nobr>--instrument-method-mz-tolerance</nobr>=&lt;质荷比值&gt;</td><td>仪器方法中离子对质荷比值与预测离子对质荷比值匹配的最大增量值。(仅适用于 SRM 和 PRM 分离的质荷比值。)</td></tr>
+<tr><td><nobr>--instrument-min-time</nobr>=&lt;分钟&gt;</td><td>色谱图中允许的最短时间(无论采集方式如何）。设置此项可以节省可能用于梯度中不感兴趣的部分的内存和磁盘空间。</td></tr>
+<tr><td><nobr>--instrument-max-time</nobr>=&lt;分钟&gt;</td><td>色谱图中允许的最长时间(无论采集方式如何)。设置此项可以节省可能用于梯度中不感兴趣的部分的内存和磁盘空间。</td></tr>
+<tr><td><nobr>--instrument-triggered-chromatograms</nobr></td><td>指示在获取某些分析物的谱图时，保留时间之间可能存在很大的间隙。为了不与这些间隙重叠，峰值将被截断，并且不执行背景减除。</td></tr>
+</table>
+<div class="RowType">工具安装</div>
+<p>下面的参数可用于在“工具”菜单上安装工具，而不依赖于“--in”参数，因为它们独立于特定的 Skyline 文档。</p>
+<table>
+<tr><td><nobr>--tool-add</nobr>=&lt;名称&gt;</td><td>需要通过设置而不是安装 ZIP 文件进行添加的工具的名称。</td></tr>
+<tr><td><nobr>--tool-command</nobr>=&lt;程序 | 网址&gt;</td><td>对于需要通过设置而不是安装 ZIP 文件进行添加的命令，这是要为其运行的命令或网页 URL。</td></tr>
+<tr><td><nobr>--tool-arguments</nobr>=&quot;&lt;参数&gt;&quot;</td><td>要添加的工具的可选命令行参数，在执行该工具时使用。（不适用于网页 URL 命令）</td></tr>
+<tr><td><nobr>--tool-initial-dir</nobr>=路径/到/文件夹</td><td>要添加的工具的可选初始目录，在执行该工具时使用。 （不适用于网页 URL 命令）</td></tr>
+<tr><td><nobr>--tool-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td>说明如何通过覆盖现有安装或跳过新工具的安装来解决工具名称冲突。</td></tr>
+<tr><td><nobr>--tool-report</nobr>=&lt;报告名称&gt;</td><td>设置中的报告名称，用作工具的输入报告。</td></tr>
+<tr><td><nobr>--tool-output-to-immediate-window</nobr></td><td>当存在时，工具输出在运行时传送到“即时窗口”。</td></tr>
+<tr><td><nobr>--tool-add-zip</nobr>=路径/到/文件.zip</td><td>从工具安装 ZIP 文件导入工具。</td></tr>
+<tr><td><nobr>--tool-zip-conflict-resolution</nobr>=<br/>&lt;overwrite | parallel&gt;</td><td>指定是否应通过覆盖或并行安装来解决提供的 ZIP 文件中的工具冲突。这是针对与工具版本控制和报告名称相关的冲突。</td></tr>
+<tr><td><nobr>--tool-zip-overwrite-annotations</nobr>=<br/>&lt;true | false&gt;</td><td>指定提供的 ZIP 文件中的冲突的自定义注释是否应覆盖（“true”）或跳过（“false”）现有注释。</td></tr>
+<tr><td><nobr>--tool-program-macro</nobr>=<br/>&lt;程序命令&gt;[,&lt;程序版本&gt;]</td><td>指定要与“<nobr>-</nobr>–<nobr>tool-program-path</nobr>”命令一起使用的程序标题和版本。这些命令一起用于从 ZIP 文件导入工具，这些文件使用 $(ProgramPath()) 宏作为命令。有关更多信息，请参阅外部工具文档。例如
+<nobr>--tool-program-macro</nobr>=R,2.15.2</td></tr>
+<tr><td><nobr>--tool-program-path</nobr>=路径/到/文件</td><td>为由“<nobr>--tool-program-macro</nobr>”标志指定的程序标题和版本指定在本地计算机上的可执行文件路径。</td></tr>
+<tr><td><nobr>--tool-ignore-required-packages</nobr></td><td>从 ZIP 文件安装工具时忽略必需软件包。</td></tr>
+</table>
+</body></html>

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -52,8 +52,6 @@ namespace pwiz.SkylineTestFunctional
             public MzTolerance FragmentMzTolerance { get; set; }
             public List<KeyValuePair<string, string>> AdditionalSettings { get; set; }
 
-            public bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine);
-
             public class DocumentCounts
             {
                 public int ProteinCount;
@@ -103,9 +101,10 @@ namespace pwiz.SkylineTestFunctional
             };
         }
 
+        public bool HasMissingDependencies() => CallUI(() => !SearchSettingsControl.HasRequiredFilesDownloaded(_testDetails.SearchEngine));
+
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindows()
         {
@@ -121,7 +120,6 @@ namespace pwiz.SkylineTestFunctional
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsgfPlus()
         {
@@ -138,7 +136,6 @@ namespace pwiz.SkylineTestFunctional
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsFragger()
         {
@@ -167,7 +164,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearchFixedWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -209,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearch()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -467,7 +464,7 @@ namespace pwiz.SkylineTestFunctional
             // Run the search
             SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
 
-            if (testDetails.HasMissingDependencies)
+            if (HasMissingDependencies())
             {
                 if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {
@@ -759,7 +756,7 @@ namespace pwiz.SkylineTestFunctional
             // Run the search
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
 
-            if (testDetails.HasMissingDependencies)
+            if (HasMissingDependencies())
             {
                 if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {

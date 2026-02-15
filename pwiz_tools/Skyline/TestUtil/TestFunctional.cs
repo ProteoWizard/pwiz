@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -47,6 +47,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
@@ -91,7 +92,11 @@ namespace pwiz.SkylineTestUtil
 
     /// <summary>
     /// Test method attribute which specifies a test is not suitable for use with Unicode paths
-    /// Note that the constructor expects a string explaining why a test is unsuitable for use with Unicde 
+    /// N.B. it's usually better to fix the test than to exclude it from Unicode testing
+    /// The problem is that some external tool or library doesn't handle Unicode properly. We deal with
+    /// that by passing windows 8.3 short paths in arguments to such tools where Skyline invokes them.
+    /// 
+    /// Note that the constructor expects a string explaining why a test is unsuitable for use with Unicode 
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class NoUnicodeTestingAttribute : Attribute
@@ -100,23 +105,7 @@ namespace pwiz.SkylineTestUtil
 
         public NoUnicodeTestingAttribute(string reason)
         {
-            Reason = reason; // e.g. "calls MSFragger", "uses mz5" etc
-        }
-
-    }
-
-    /// <summary>
-    /// Test method attribute which specifies a test is not suitable for use with odd characters in the TMP path (e.g. ^ and &amp;)
-    /// Note that the constructor expects a string explaining why a test is unsuitable for use with odd TMP paths
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class NoOddTmpPathTestingAttribute : Attribute
-    {
-        public string Reason { get; private set; } // Reason for declaring test as unsuitable for unicode
-
-        public NoOddTmpPathTestingAttribute(string reason)
-        {
-            Reason = reason; // e.g. "uses Java"[
+            Reason = reason; // e.g. "Invokes external tool that doesn't handle unicode"
         }
 
     }
@@ -150,13 +139,6 @@ namespace pwiz.SkylineTestUtil
         public const string EXCESSIVE_TIME = "Requires more time than can be justified in nightly tests";
         public const string VENDOR_FILE_LOCKING = "Vendor readers require exclusive read access";
         public const string SHARED_DIRECTORY_WRITE = "Requires write access to directory shared by all workers";
-        public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
-        public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
-        public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
-        public const string COMET_UNICODE_ISSUES = "Comet doesn't handle unicode paths";
-        public const string TIDE_UNICODE_ISSUES = "Tide doesn't handle unicode paths";
-        public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
-        public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
         public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
         public const string WEB_BROWSER_USE = "WebBrowser class throws UnauthorizedAccessException on Wine";
@@ -366,6 +348,23 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        public static T RunUIFunc<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            SkylineInvoke(() =>
+            {
+                try
+                {
+                    result = func();
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail(e.ToString());
+                }
+            });
+            return result;
+        }
+
         /// <summary>
         /// Convenience function for getting a value from the UI thread
         /// e.g. var value = CallUI(() => control.Value);
@@ -382,13 +381,14 @@ namespace pwiz.SkylineTestUtil
 
         private static void SkylineInvoke(Action act)
         {
-            if (null != SkylineWindow)
+            var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
+            if (form.InvokeRequired)
             {
-                SkylineWindow.Invoke(act);
+                HangDetection.InterruptWhenHung(()=> form.Invoke(act));
             }
             else
             {
-                FindOpenForm<StartPage>().Invoke(act);
+                act(); // Already on the UI thread
             }
         }
 
@@ -475,15 +475,22 @@ namespace pwiz.SkylineTestUtil
             RunUI(SkylineWindow.FocusDocument);
         }
 
-        public static void JiggleSelection()
+        public static void JiggleSelection(bool up = false)
         {
             if (!IsPauseForScreenShots)
                 return;
 
             // Node change apparently required to get x-axis labels in peak areas view the way they should be
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
+            MoveSelection(up);
             WaitForGraphs();
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
+            MoveSelection(!up);
+        }
+
+        private static void MoveSelection(bool up)
+        {
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = up
+                ? SkylineWindow.SelectedNode.PrevVisibleNode
+                : SkylineWindow.SelectedNode.NextVisibleNode);
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)
@@ -965,7 +972,7 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        private static string GetTextForForm(Control form)
+        public static string GetTextForForm(Control form)
         {
             var result = form.Text;
             var threadExceptionDialog = form as ThreadExceptionDialog;
@@ -1184,13 +1191,19 @@ namespace pwiz.SkylineTestUtil
         public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
+            TimeSpan maxInvokeDuration = TimeSpan.FromMilliseconds(Math.Max(waitCycles * SLEEP_INTERVAL, 60_000));
+
+            using var hangDetection = new HangDetection();
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                Program.MainWindow.Invoke(new Action(() => isCondition = func()));
+                hangDetection.InterruptAfter(
+                    () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                    maxInvokeDuration);
+
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
@@ -1227,14 +1240,14 @@ namespace pwiz.SkylineTestUtil
 
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, false);
+            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, throwOnProgramException);
         }
 
         public static void WaitForRegression()
         {
             WaitForGraphs();
             WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
-            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
+            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => pane.IsComplete);
         }
 
         private static void WaitForBackgroundLoaders()
@@ -1823,6 +1836,81 @@ namespace pwiz.SkylineTestUtil
             PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), timeout, processShot);
         }
 
+        public void PauseForRelativeAbundanceGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            var graphSummary = FindGraphSummaryByGraphType<SummaryRelativeAbundanceGraphPane>();
+            Assert.IsNotNull(graphSummary, "Relative abundance graph not found");
+            PauseForGraphScreenShot(description, graphSummary, timeout, processShot);
+        }
+
+        public void PauseForVolcanoPlotGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            var volcanoPlot = FindOpenForm<FoldChangeVolcanoPlot>();
+            Assert.IsNotNull(volcanoPlot, "Volcano plot not found");
+            PauseForGraphScreenShot(description, volcanoPlot, timeout, processShot);
+        }
+
+        /// <summary>
+        /// Set this value to true to have PauseForAllChromatogramsGraphScreenShot
+        /// cancel the import after taking the screenshot, and then return false.
+        /// The calling test should return early when false is returned from
+        /// PauseForAllChromatogramsGraphScreenShot.
+        /// </summary>
+        protected bool IsTestingResultsProgressOnly => false;
+
+        /// <summary>
+        /// Takes a screenshot of the AllChromatogramsGraph (Importing Results form) with frozen
+        /// progress display. Handles the complete freeze/wait/screenshot/release cycle.
+        /// The freeze is only performed in screenshot mode - in normal test runs the screenshot
+        /// is skipped and no freezing occurs.
+        /// Also makes the AllChromatogramsGraph form accessible to the SkylineTester Forms tab.
+        /// </summary>
+        /// <param name="description">Screenshot description for the tutorial</param>
+        /// <param name="totalProgress">Total progress bar percentage to display</param>
+        /// <param name="elapsedTime">Elapsed time text to display (e.g., "00:00:01")</param>
+        /// <param name="graphTime">Exact retention time (in minutes) where the progress line should appear.
+        /// Null for SRM data that doesn't show a progress line.</param>
+        /// <param name="graphIntensityMax">Y-axis maximum to lock the scale. Null to leave scale unlocked.</param>
+        /// <param name="fileProgress">Dictionary mapping filename to progress percentage</param>
+        /// <returns>True to continue the test, false to end early (when IsTestingResultsProgressOnly is true)</returns>
+        public bool PauseForAllChromatogramsGraphScreenShot(
+            string description,
+            int totalProgress,
+            string elapsedTime,
+            float? graphTime = null,
+            float? graphIntensityMax = null,
+            Dictionary<string, int> fileProgress = null)
+        {
+            if (!IsPauseForScreenShots)
+                return true;
+
+            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
+            allChromGraph.SetFrozenProgress(totalProgress, elapsedTime, graphTime, graphIntensityMax, fileProgress);
+            WaitForConditionUI(() => allChromGraph.IsReadyForScreenshot());
+
+            // Output the current intensity max to help determine what value to use
+            if (!graphIntensityMax.HasValue)
+            {
+                var currentMax = allChromGraph.CurrentIntensityMax;
+                Console.WriteLine($@"AllChromatogramsGraph graphIntensityMax: {currentMax:0.00e0}f");
+            }
+
+            PauseForScreenShot(allChromGraph, description,
+                processShot: bmp => bmp.CleanupBorder()
+                    .FillProgressBar(allChromGraph.ProgressBarTotal)
+                    .FillProgressBars(allChromGraph.GetVisibleFileProgressBars()));
+            allChromGraph.ReleaseFrozenProgress();
+
+            if (IsTestingResultsProgressOnly)
+            {
+                RunUI(() => allChromGraph.ClickCancel());
+                WaitForConditionUI(() => allChromGraph.Finished);
+                OkDialog(allChromGraph, allChromGraph.Close);
+                return false;
+            }
+            return true;
+        }
+
         protected ZedGraphControl FindZedGraph(Control graphContainer)
         {
             var zedGraphControl = graphContainer as ZedGraphControl;
@@ -1892,7 +1980,7 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
+                    Thread.Sleep(1500); // Wait for UI to settle down - or screenshots can end up blurry
                     _shotManager.ActivateScreenshotForm(screenshotForm);
                     var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
@@ -2049,11 +2137,10 @@ namespace pwiz.SkylineTestUtil
             {
                 //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
                 const string errorSeparator = "------------------------------------------------------";
-                Assert.Fail("{0}{1}{2}{3}",
-                    Environment.NewLine + Environment.NewLine,
-                    errorSeparator + Environment.NewLine,
-                    Program.TestExceptions[0],
-                    Environment.NewLine + errorSeparator + Environment.NewLine);
+                Assert.Fail(new StringBuilder().AppendLine().AppendLine()
+                    .AppendLine(errorSeparator)
+                    .AppendLine(Program.TestExceptions[0].ToString())
+                    .AppendLine(errorSeparator).ToString());
             }
 
             if (!_testCompleted)
@@ -2079,6 +2166,8 @@ namespace pwiz.SkylineTestUtil
             // Delete unzipped test files.
             if (TestFilesDirs != null)
             {
+                using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
+
                 CleanupPersistentDir(); // Clean before checking for modifications
 
                 foreach (var dir in TestFilesDirs.Where(d => d != null))
@@ -2527,7 +2616,7 @@ namespace pwiz.SkylineTestUtil
 
             DoTest();
 
-            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Avoid merging code with record mode left on.
+            CheckRecordMode();
 
             if (null != SkylineWindow)
             {
@@ -2582,6 +2671,11 @@ namespace pwiz.SkylineTestUtil
                 WaitForGraphs(false);
                 // Wait for any background loaders to notice the change and stop what they're doing
                 WaitForBackgroundLoaders();
+                // Wait for FileSystemWatchers to be completely shut down before test cleanup
+                // This prevents race conditions where watchers might access directories during cleanup
+                // Note: FilesTree may be null if already destroyed, in which case watching is already complete
+                WaitForConditionUI(5000, () => SkylineWindow.IsFileSystemWatchingComplete(), 
+                    () => "FileSystemWatchers should be shut down before test cleanup", false);
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
 
@@ -2742,16 +2836,13 @@ namespace pwiz.SkylineTestUtil
 
         public void RestoreViewOnScreen(string viewFilePath)
         {
-            if (!Program.SkylineOffscreen)
+            RunUI(() =>
             {
-                RunUI(() =>
+                using (var fileStream = new FileStream(viewFilePath, FileMode.Open))
                 {
-                    using (var fileStream = new FileStream(viewFilePath, FileMode.Open))
-                    {
-                        SkylineWindow.LoadLayout(fileStream);
-                    }
-                });
-            }
+                    SkylineWindow.LoadLayout(fileStream);
+                }
+            });
         }
 
         protected abstract void DoTest();
@@ -3021,6 +3112,40 @@ namespace pwiz.SkylineTestUtil
                 intercept = -intercept;
             }
         }
+
+        /// <summary>
+        /// Moves all the FloatingWindow's off the screen so they are not in the way of the
+        /// main Skyline window's screenshots.
+        /// </summary>
+        /// <returns>A list of the original locations of the windows that were moved</returns>
+        public static List<(FloatingWindow Window, Rectangle Bounds)> HideFloatingWindows()
+        {
+            var list = new List<(FloatingWindow Window, Rectangle Bounds)>();
+            RunUI(() =>
+            {
+                foreach (var floatingWindow in FormUtil.OpenForms.OfType<FloatingWindow>())
+                {
+                    list.Add((floatingWindow, floatingWindow.Bounds));
+                    floatingWindow.Location = FormEx.GetOffscreenPoint();
+                }
+            });
+            return list;
+        }
+        /// <summary>
+        /// Move the windows back to their original locations
+        /// </summary>
+        public static void RestoreFloatingWindows(List<(FloatingWindow Window, Rectangle Bounds)> list)
+        {
+            RunUI(() =>
+            {
+                foreach (var tuple in list)
+                {
+                    tuple.Window.Bounds = tuple.Bounds;
+                }
+            });
+        }
+
+
 
         #region Modification helpers
 

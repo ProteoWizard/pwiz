@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
+    <value>{0}バイトの読み込みに失敗しました。ソースが壊れている可能性があります。</value>
+  </data>
+  <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
+    <value>実行コマンド：</value>
+  </data>
+  <data name="Kernel32_CopyFileWithProgress_Failed_to_copy___0___to___1__" xml:space="preserve">
+    <value>「{0}」を「{1}」にコピーできませんでした</value>
+  </data>
+  <data name="FileEx_SafeDelete_Path_is_empty" xml:space="preserve">
+    <value>パスが空です</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_" xml:space="preserve">
+    <value>ディレクトリは削除できません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_" xml:space="preserve">
+    <value>パスに無効な文字が含まれています：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_" xml:space="preserve">
+    <value>使用中のファイルは削除できません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_" xml:space="preserve">
+    <value>読み取り専用ファイルは削除できません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_" xml:space="preserve">
+    <value>ファイルを削除するのに十分な権限がありません：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_too_long___0_" xml:space="preserve">
+    <value>ファイルパスが長すぎます：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_File_path_is_invalid___0_" xml:space="preserve">
+    <value>ファイルパスが無効です：{0}</value>
+  </data>
+  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
+    <value>ディレクトリを見つけることができませんでした：{0}</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_" xml:space="preserve">
+    <value>{0}へのリクエストはタイムアウトしました。もう一度実行してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_No_network_connection_detected__Please_check_your_internet_connection_and_try_again_" xml:space="preserve">
+    <value>ネットワーク接続を検出できませんでした。インターネット接続を確認してからもう一度実行してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_" xml:space="preserve">
+    <value>ホスト{0}を解決できませんでした。DNS設定またはVPN/プロキシを確認してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_" xml:space="preserve">
+    <value>{0}に接続できませんでした。ネットワーク接続、VPN/プロキシ、ファイアウォールを確認してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_The_connection_was_lost_during_download__Please_check_your_internet_connection_and_try_again_" xml:space="preserve">
+    <value>ダウンロード中に接続が失われました。インターネット接続を確認してからもう一度実行してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_ReadWithTimeout_The_read_operation_timed_out_while_downloading_from__0__" xml:space="preserve">
+    <value>{0}からダウンロード中に読み取り操作がタイムアウトしました。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_server" xml:space="preserve">
+    <value>サーバー</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_The_requested_resource_at__0__was_not_found__HTTP_404___Please_verify_the_URL_" xml:space="preserve">
+    <value>{0}でリクエストされたリソースが見つかりませんでした（HTTP 404）。URLを確認してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_The_server__0__encountered_an_internal_error__HTTP_500___Please_try_again_later_or_contact_the_server_administrator_" xml:space="preserve">
+    <value>サーバー{0}で内部エラーが発生しました（HTTP 500）。後でもう一度実行するか、サーバー管理者に連絡してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_Access_to__0__was_denied__HTTP_401___Authentication_may_be_required_" xml:space="preserve">
+    <value>{0}へのアクセスが拒否されました（HTTP 401）。認証が必要な場合があります。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_Access_to__0__was_forbidden__HTTP_403___You_may_not_have_permission_to_access_this_resource_" xml:space="preserve">
+    <value>{0}へのアクセスは禁止されました（HTTP 403）。このリソースにアクセスする権限がない可能性があります。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_Too_many_requests_to__0___HTTP_429___Please_wait_before_trying_again_" xml:space="preserve">
+    <value>{0}へのリクエストが多すぎます（HTTP 429）。少し待ってからもう一度実行してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_MapHttpException_The_server__0__returned_an_error__HTTP__1____Please_try_again_or_contact_support_" xml:space="preserve">
+    <value>サーバー{0}からエラーが返されました（HTTP {1}）。もう一度実行するか、サポートに連絡してください。</value>
+  </data>
+  <data name="HttpClientWithProgress_GetProgressMessageWithSize_Downloaded__0__of__1_" xml:space="preserve">
+    <value>ダウンロード終了： {0}/{1}</value>
+  </data>
+  <data name="HttpClientWithProgress_GetProgressMessageWithSize_Uploaded__0__of__1_" xml:space="preserve">
+    <value>アップロード終了： {0}/{1}</value>
+  </data>
+  <data name="HttpClientWithProgress_GetProgressMessageWithSize__0____1_" xml:space="preserve">
+    <value>{0} / {1}</value>
+  </data>
+  <data name="HttpClientWithProgress_CreateResponseFailedException_Response_status_code_does_not_indicate_success___0____1___for__2_" xml:space="preserve">
+    <value>応答ステータスコードは成功を示していません：{2}に対して{0}（{1}） </value>
+  </data>
+  <data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__" xml:space="preserve">
+    <value>ファイル「{0}」はロックされましたが、「{1}」から削除されました</value>
+  </data>
+  <data name="FileLockingProcessFinder_ToFileLockingException_this_process" xml:space="preserve">
+    <value>このプロセス</value>
+  </data>
+  <data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_" xml:space="preserve">
+    <value>ファイル「{0}」は {1}によりロックされています</value>
+  </data>
+</root>

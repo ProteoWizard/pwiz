@@ -1,4 +1,4 @@
-﻿namespace Forms.Controls
+namespace Forms.Controls
 {
     partial class AttestationDialog
     {

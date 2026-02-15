@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,6 +32,7 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 using pwiz.Common;
 using pwiz.Common.Collections;
+using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -80,10 +81,25 @@ namespace pwiz.Skyline
                 CommonApplicationSettings.FunctionalTest = value;
             }
         }
+
+        public static HttpMessageHandlerFactory HttpMessageHandlerFactory
+        {
+            get { return CommonApplicationSettings.HttpMessageHandlerFactory; }
+        }
+
+        // TODO(nicksh): Remove this once intermittent failures in these tests are fixed
+        public static bool IsVerboseLogging(string name)
+        {
+            return FunctionalTest && new[]
+            {
+                @"ShareDocumentTest", @"InternationalFilenamesTest"
+            }.Any(folder => name.IndexOf(folder, StringComparison.Ordinal) >= 0);
+        }
         public static string TestName { get; set; }                 // Set during unit and functional tests
+        public static bool DoNotTestUnicodeHandling { get; set; }   // Set true to skip unicode handling tests, either because the platform doesn't support it or test attribute forbids it
         public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
-        public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == "PauseAndContinueForm");
+        public static bool IsPaused => FormUtil.OpenForms.Any(form => form.GetType().Name == @"PauseAndContinueForm");
 
         public static bool SkylineOffscreen
         {

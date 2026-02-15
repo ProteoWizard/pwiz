@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +10,7 @@ using pwiz.Common.SystemUtil;
 
 namespace SharedBatchTest
 {
-    public abstract class AbstractBaseFunctionalTest
+    public abstract class AbstractBaseFunctionalTest : AbstractUnitTest
     {
         protected const int SLEEP_INTERVAL = 100;
         public const int WAIT_TIME = 60 * 1000;    // 60 seconds
@@ -507,8 +507,9 @@ namespace SharedBatchTest
         // -------------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Tracks which zip files were downloaded this run, and which might possibly be stale
+        /// Tracks which zip files were downloaded this run, and which might be stale (for debugging purposes).
         /// </summary>
+        // ReSharper disable once CollectionNeverQueried.Global
         public Dictionary<string, bool> DictZipFileIsKnownCurrent { get; private set; }
         public string TestFilesZip
         {
@@ -525,12 +526,6 @@ namespace SharedBatchTest
         private string[] _testFilesZips;
         public TestFilesDir[] TestFilesDirs { get; set; }
         public string TestDirectoryName { get; set; }
-
-        // ReSharper disable UnusedAutoPropertyAccessor.Global
-        // ReSharper disable MemberCanBeProtected.Global
-        public TestContext TestContext { get; set; }
-        // ReSharper restore MemberCanBeProtected.Global
-        // ReSharper restore UnusedAutoPropertyAccessor.Global
 
         public bool IsExtractHere(int zipPathIndex)
         {

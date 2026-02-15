@@ -1,4 +1,4 @@
-﻿syntax = "proto3";
+syntax = "proto3";
 import "google/protobuf/wrappers.proto";
 option csharp_namespace = "pwiz.Skyline.Model.Results.ProtoBuf";
 option java_package = "org.labkey.targetedms.parser.proto";
@@ -47,6 +47,7 @@ message ResultFileMetaDataProto {
 		google.protobuf.DoubleValue compensationVoltage = 11;
 		bool negativeCharge = 12;
 		int32 msLevel = 13;
+		google.protobuf.DoubleValue constantNeutralLoss = 14;
 	}
 
 	message Precursor {
@@ -110,6 +111,7 @@ message ChromatogramGroupIdsProto {
 		int32 targetIndex = 1; // one-based index into "targets"
 		repeated int32 filterIndexes = 2; // zero-based indexes into "filter"
 		string qcTraceName = 3;
+		string qcTraceTypeWithUnits = 4; // e.g. "pressure (psi)", "temperature (°C)" etc
 	}
 
 	message SpectrumFilter {

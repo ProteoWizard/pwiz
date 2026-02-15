@@ -1,0 +1,382 @@
+<html><head>
+<meta charset="utf-8">
+<style>body {
+    font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+}
+.RowType {
+    font-size: 1.769em;
+    line-height: 1.3em;
+    font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+    color: #000;
+}
+table {
+border: 1px solid #bbb;
+border-collapse: collapse;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+th {
+    background-color: #ededed;
+    color: #636363;
+    text-align: left;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    font-weight: bold;
+    border: 1px solid #bbb;
+}
+td {
+    color: #2a2a2a;
+    vertical-align: top;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    border: 1px solid #bbb;
+}
+.Hidden {
+    font-style: italic; 
+}
+.Obsolete {
+    text-decoration: line-through;
+}</style>
+</head><body>
+<p>Skylineのコマンドラインインターフェイスにアクセスするには、SkylineRunner.exeかSkylineCmd.exeのいずれかを使用できます。</p><p>SkylineRunner.exeはサイズが10 KB未満の超小型shim実行可能ファイルです。  Skylineのインストールが必要で、SkylineRunner使用中のコンピュータ上で自動更新型ウェブインストーラーを用いて実行されます。  SkylineRunnerはユーザーインターフェイスなしで別のSkylineプロセスの実行を開始し、実行中のSkylineインスタンスにコマンドラインからパラメータオプションをパイプ処理し、Skylineインスタンスからコマンドコンソールまで出力をプリントします。SkylineRunnerの複数インスタンスを実行することができ、Skylineの複数インスタンスを開始します。SkylineRunnerが開始したSkylineインスタンスは、同じマシンで既に実行中の可能性がある他のインスタンスから影響を受けることはありません。  SkylineRunnerが機能するのに、実行中のSkylineの参照可能なインスタンスは不要です。</p><p>SkylineCmd.exeは、Skyline.exeに加えて常にインストールされているシンプルな実行可能ファイルです。DLLとしてSkyline.exeモジュールを使用しており、SkylineRunner.exeよりはるかにクリーンなコマンドライン実装を提供していますが、ウェブインストーラーとしては珍しく、SkylineCmd.exeを実行するのにディスク上での常駐場所を知っておく必要があります。通常は、SkylineCmd.exeをご利用になりたい場合、「アンプラグド」インストーラーまたは「管理者権限」インストーラーのいずれか（または最近ではLIinuxシステムの場合Wine Docker Container）をご利用になれます。「アンプラグド」インストーラーはZIPファイルに入っており、ファイルを解凍し、SkylineCmd.exeを見つけて適切な位置で実行するだけです。「管理者権限」インストーラーでは、SkylineCmd.exeはC:\Program Files\Skylineｍにあります。</p><p>Skylineのコマンドラインインターフェイスは取得中のQC、スケジュール、最適化などのタスクの自動化に向いています。  Skylineコマンドラインインターフェイスを用いると、Skylineドキュメントを開き、新たに取得したデータファイルをインポートし、レポートまたは新しいメソッドをエクスポートすることができます。また、プロテオーム全体にわたるDIAとDDA実験を、完全なグラフィックユーザーインターフェイスを使用した場合より、さらに迅速で消費メモリを削減して大規模なクロマトグラム抽出およびピーク選択を実施できます。（ウェビナー14を参照：https://skyline.ms/webinar14.url）</p><div class="RowType">一般的な入力/出力</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--in</nobr>=path/to/file（ファイル）.sky</td><td>Skylineファイルを開きます</td></tr>
+<tr><td><nobr>--save</nobr></td><td>どんな変更もファイルに保存します。</td></tr>
+<tr><td><nobr>--save-settings</nobr></td><td>グローバル環境の設定変更が（追加されたレポート、ライブラリ、酵素など）がプログラム設定ファイルに保存されます。</td></tr>
+<tr><td><nobr>--out</nobr>=path/to/file（ファイル）.sky</td><td>指定されたファイルに書き込まれること以外は、保存と同じです。</td></tr>
+<tr><td><nobr>--new</nobr>=path/to/file（ファイル）.sky</td><td>現在のSkyline設定を使用して新規ドキュメントを作成します。</td></tr>
+<tr><td><nobr>--overwrite</nobr></td><td><nobr>--newで指定されたファイルパスが既に存在する場合に</nobr>、エラーとなる代わりにファイルパスを上書きします。</td></tr>
+<tr><td><nobr>--share-zip</nobr>[=path/to/file（ファイル）.sky.zip]</td><td>プロジェクト全体（ドキュメント、結果、ライブラリなど）をZIPアーカイブに保存します。デフォルトは最小限のアーカイブです。</td></tr>
+<tr><td><nobr>--share-type</nobr>=&lt;minimal | complete&gt;</td><td><nobr>--share-zipが指定されている場合</nobr>、共有するのが「最小限」または「完全」であるアーカイブタイプを特定します。「最小限」がデフォルトで、アーカイブのサイズを、ドキュメント内ターゲットを表すのに必要最小限に減らすようにしており、一方「完全」はすべてのプロジェクトファイルの完全な正確さを維持します。</td></tr>
+<tr><td><nobr>--batch-commands</nobr>=path/to/file（ファイル）</td><td>各行をSkylineRunner/Cmd入力のように扱ってファイルを行毎に実行します。複数コマンド実行の自動化に役立ちます。  開いているSkylineファイルはすべてのコマンド中、有効な状態を保ちます。</td></tr>
+<tr><td><nobr>--dir</nobr>=path/to/folder（フォルダ）</td><td>コマンドが実行されているディレクトリ以外で、他のすべてのパス引数にデフォルトとなるルートディレクトリを指定するのに使用します。</td></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>記録中のすべての出力は、日時の後に続きます。</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>記録中のすべての出力は、管理されている2つのメモリ使用量の値と、プロセスプライベートバイト数（四捨五入されたMB単位）の後に続きます。</td></tr>
+<tr><td><nobr>--log-file</nobr>=path/to/file（ファイル）</td><td>記録されたすべての出力をファイルに送信します。</td></tr>
+<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr>&gt;]</td><td>このテキストを表示します。</td></tr>
+<tr><td><nobr>--version</nobr></td><td>実行中のインストールのバージョン情報が表示されます</td></tr>
+<tr><td><nobr>--verbose-errors</nobr></td><td>エラーが発生した場合、Skylineの開発者に役立つ可能性のある追加情報をプログラムの出力に追加します。</td></tr>
+</table>
+<p>設定のカスタマイズという名前のセクションまでは、他のすべてのコマンドライン引数は「--in」引数に依存しています。その理由は、これらすべてがSkylineドキュメントが開いた状態であることに依存しているからです。</p><div class="RowType">結果の繰り返し測定をインポート中</div>
+<table>
+<tr><td><nobr>--import-file</nobr>=path/to/file（ファイル）</td><td>開いているドキュメントに繰り返し測定を添付します。</td></tr>
+<tr><td><nobr>--import-replicate-name</nobr>=&lt;名前&gt;</td><td>–<nobr>import-file操作で新しい繰り返し測定に与える名前です</nobr>。</td></tr>
+<tr><td><nobr>--import-optimizing</nobr>=&lt;CE | DP&gt;</td><td>インポート中のデータは、最適な衝突エネルギーまたはデクラスタリングポテンシャルを検出するための、追加のトランジションが含まれていることを示します。</td></tr>
+<tr><td><nobr>--import-append</nobr></td><td><nobr>指定された繰り返し測定にimport-fileを追加します</nobr>。該当ドキュメントに指定された名前を持つ繰り返し測定が既にある場合に、意向を確認します。デフォルトではFalseに設定されています。<nobr>このオプションは-</nobr>–<nobr>import-fileオプションでのみ機能します</nobr>。</td></tr>
+<tr><td><nobr>--import-all</nobr>=path/to/folder（フォルダ）</td><td>ドキュメント内にまだ存在しないすべてのファイルまたはサブフォルダをフォルダからインポートし、<nobr>--import-naming-patternパラメータが提供されていなければそれぞれをファイルまたはサブフォルダのベース名で命名します</nobr>。<nobr>--import-replicate-nameが提供されている場合は</nobr>、すべてのファイルを1つのマルチインジェクション繰り返し測定に追加します。</td></tr>
+<tr><td><nobr>--import-all-files</nobr>=path/to/folder（フォルダ）</td><td>ドキュメント内にまだ存在しないサブフォルダ以外のすべてのファイルをフォルダからインポートし、<nobr>--import-naming-patternパラメータが提供されていなければそれぞれをファイルまたはサブフォルダのベース名で命名します</nobr>。<nobr>--import-replicate-nameが提供されている場合は</nobr>、すべてのファイルを1つのマルチインジェクション繰り返し測定に追加します。</td></tr>
+<tr><td><nobr>--import-naming-pattern</nobr>=&lt;正規表現&gt;</td><td><nobr>--import-all操作で繰り返し測定に名前を付けるために</nobr>、最初のグループに使用される正規表現です。（例：最初のアンダースコアの後のすべてに対し[^_]_(.*)）</td></tr>
+<tr><td><nobr>--import-filename-pattern</nobr>=&lt;正規表現&gt;</td><td>インポート対象を選択するためファイル名に適用される正規表現です。</td></tr>
+<tr><td><nobr>--import-samplename-pattern</nobr>=&lt;正規表現&gt;</td><td>インポート対象を選択するために試料名（<nobr>multi-injection</nobr> .wiffファイルなど）に適用される正規表現です。</td></tr>
+<tr><td><nobr>--import-before</nobr>=&lt;日付&gt;</td><td>フォルダからインポートする際には、変更された時間が指定された日付前のファイルのみインポートします。</td></tr>
+<tr><td><nobr>--import-on-or-after</nobr>=&lt;日付&gt;</td><td>フォルダからインポートする際には、変更された時間が指定された日付以降のファイルのみインポートします。</td></tr>
+<tr><td><nobr>--import-no-join</nobr></td><td>結果ファイルをメインドキュメント.skydファイルに結合することなく、個々の.skydファイルにインポートします。これはHPCクラスタとして分散処理をする際に有用です。</td></tr>
+<tr><td><nobr>--import-process-count</nobr>=&lt;整数&gt;</td><td>単一ファイルのインポートに対して多数のサブプロセスが実行されます。その後、各々のファイルの結果がメインプロセスによって統合されます。これによって、条件が適切であれば、24コアのNUMAサーバーでは性能利得が10倍に、i7プロセッサでも3から4倍になります。必ずご利用のシステムでテストしてください。</td></tr>
+<tr><td><nobr>--import-threads</nobr>=&lt;整数&gt;</td><td>多数のファイルが、メインプロセスのスレッド（ユーザーインターフェイスの[同時にインポートするファイル]に相当）を使用して並行にインポートされます。その後、それぞれの単一ファイルからの結果が結合されます。これにより、正しい条件の下では2～4倍に性能がアップされる可能性があります。お使いのシステムで必ずテストしてください。</td></tr>
+<tr><td><nobr>--import-warn-on-failure</nobr></td><td>ファイルのインポートが失敗しエラーが表示される場合、メッセージは警告として現れ、繰り返し測定は削除され、インポートは最後まで続行します。</td></tr>
+<tr><td><nobr>--import-lockmass-positive</nobr>=&lt;数字&gt;</td><td>正イオンスキャンのWatersのロックマスによる補正m/zです。</td></tr>
+<tr><td><nobr>--import-lockmass-negative</nobr>=&lt;数字&gt;</td><td>負イオンスキャンのWatersのロックマスによる補正m/zです。</td></tr>
+<tr><td><nobr>--import-lockmass-tolerance</nobr>=&lt;数字&gt;</td><td>Watersのロックマスによる許容誤差m/zです。</td></tr>
+<tr><td><nobr>--import-peak-boundaries</nobr>=path/to/file（ファイル）</td><td>カンマやタブで区切られたファイルのピーク境界を読み取る</td></tr>
+</table>
+<div class="RowType">高度なピーク選択モデルと再積分</div>
+<table>
+<tr><td><nobr>--reintegrate-model-name</nobr>=&lt;名前&gt;</td><td>再積分操作で使用するスコアモデルの名前です。モデルはあらかじめ定義する（[編集] &gt; [最適化] &gt; [再積分]フォーム）ことも、<nobr>この操作中に--reintegrate-create-modelを使用して自動的に作成することもできます</nobr>。</td></tr>
+<tr><td><nobr>--reintegrate-create-model</nobr></td><td>このオプションでは、ドキュメント内で検出された結果に対し、利用可能なすべてのスコアのmProphetアルゴリズムを使用し、新しいモデルを作成します。（必要なのは、<nobr>--reintegrate-model-nameです</nobr>。）</td></tr>
+<tr><td><nobr>--reintegrate-model-type</nobr>=<br/>&lt;mProphet | Skyline | SkylineML&gt;</td><td>zスコアおよびq値を生成するためにトレーニングするピークスコアモデルのタイプです。（デフォルトはmProphet）<nobr>Skyline-デフォルトのSkylineモデルの係数を単純にスケーリングし</nobr>、デコイからユニット正規分布を推定します。<nobr>SkylineML-mProphet機械学習アルゴリズムを使用して</nobr>、フィーチャースコアのデフォルトセットのみを使用してモデルをトレーニングします。</td></tr>
+<tr><td><nobr>--reintegrate-model-second-best</nobr></td><td>再積分中に2番目に良いピークを強制的に使用します。デフォルトはデコイのみの使用です。</td></tr>
+<tr><td><nobr>--reintegrate-model-both</nobr></td><td>再積分中にデコイと2番目に良いピークのどちらも強制的に使用します。デフォルトはデコイのみの使用です。</td></tr>
+<tr><td><nobr>--reintegrate-overwrite-peaks</nobr></td><td>手動で積分された既存のピークは、再積分モデルで選択されたピークによって上書きされます。（必要なのは、<nobr>--reintegrate-model-nameです</nobr>。）</td></tr>
+<tr><td><nobr>--reintegrate-exclude-feature</nobr>=<br/>&lt;フィーチャー名&gt;</td><td>モデルから名前別で特定のフィーチャースコアを除外するのに使用します。名前はユーザーインターフェイスで見つけることができます。この引数は複数フィーチャーを除外するため複数回使用することができます。</td></tr>
+</table>
+<div class="RowType">結果の繰り返し測定を削除中</div>
+<table>
+<tr><td><nobr>--remove-before</nobr>=&lt;日付&gt;</td><td>指定された日付以前に取得時間のある、開いているドキュメントからすべての結果を削除します。</td></tr>
+<tr><td><nobr>--remove-all</nobr></td><td>開いているドキュメントからすべての結果を削除します。</td></tr>
+</table>
+<div class="RowType">結果ファイルサイズを最小にする</div>
+<table>
+<tr><td><nobr>--chromatograms-limit-noise</nobr>=&lt;数字&gt;</td><td>クロマトグラムの幅を、クロマトグラムピークの前後の時間（&#177;分）に限定します。</td></tr>
+<tr><td><nobr>--chromatograms-discard-unused</nobr></td><td>使用しないクロマトグラムをドキュメントからすべて破棄します。</td></tr>
+</table>
+<div class="RowType">他のSkylineドキュメントをインポート中</div>
+<table>
+<tr><td><nobr>--import-document</nobr>=path/to/file（ファイル）.sky</td><td>開いているドキュメントにSkylineの別のドキュメントをインポートします。これは複数ファイルに複数回、指定されている場合があります。</td></tr>
+<tr><td><nobr>--import-document-results</nobr>=<br/>&lt;remove | merge_names | merge_indices | add&gt;</td><td>インポート済みドキュメントの結果をどのように取り扱うか決定します。デフォルトは削除です。</td></tr>
+<tr><td><nobr>--import-document-merge-peptides</nobr></td><td>一致するペプチドを使用する場合、まとめられますが、そうでない場合、まとめられません。</td></tr>
+</table>
+<div class="RowType">注釈をインポート中</div>
+<table>
+<tr><td><nobr>--import-annotations</nobr>=path/to/file（ファイル）.csv</td><td>ドキュメントにCSVファイルからの注釈をインポートします。[ファイル] &gt; [エクスポート] &gt; [注釈]を使用して、ドキュメントの要素に注釈を関連付けるパスを用いて、必要な形式のサンプルファイルを作成します。</td></tr>
+</table>
+<div class="RowType">FASTAファイルをインポート中</div>
+<table>
+<tr><td><nobr>--import-fasta</nobr>=path/to/file（ファイル）</td><td>開いているドキュメントにFASTAファイルをインポートします。</td></tr>
+<tr><td><nobr>--keep-empty-proteins</nobr></td><td>FASTAファイルをインポート後、開いているドキュメントに空欄のタンパク質を保持します。</td></tr>
+</table>
+<div class="RowType">ペプチド検索をインポート中</div>
+<table>
+<tr><td><nobr>--import-search-file</nobr>=path/to/file（ファイル）</td><td>開いているドキュメントにペプチド検索結果ファイルをインポートし、ドキュメント特有のスペクトルライブラリを構築します。これは複数ファイルに複数回、指定されている場合があります。ターゲットとして一致したペプチドを追加するには、–<nobr>import-fasta引数を使用します</nobr>。</td></tr>
+<tr><td><nobr>--import-search-cutoff-score</nobr>=&lt;数字&gt;</td><td>ペプチド検索結果ファイルからスペクトルライブラリを構築する際に、使用されるカットオフスコア（0～1）を定義します。ここで、1は最も高い信頼性一致で、0はすべてを含みます。[デフォルトは0.95]</td></tr>
+<tr><td><nobr>--import-search-irts</nobr>=&lt;名前&gt;</td><td>スペクトルライブラリを構築するときに使用するiRT標準の名前。</td></tr>
+<tr><td><nobr>--import-search-num-cirts</nobr>=&lt;整数&gt;</td><td>CiRTペプチドをiRT標準としてスペクトルライブラリを構築する場合は、iRT標準として使用するCiRTペプチド数を指定します。</td></tr>
+<tr><td><nobr>--import-search-recalibrate-irts</nobr></td><td>iRT標準を使ってスペクトルライブラリを構築する場合は、追加されるペプチドに対するiRT標準値を再キャリブレーションします。</td></tr>
+<tr><td><nobr>--import-search-add-mods</nobr></td><td>開いているドキュメントにペプチド検索結果ファイルで検出したすべての修飾を追加します。</td></tr>
+<tr><td><nobr>--import-search-include-ambiguous</nobr></td><td>スペクトルライブラリ構築時に、ペプチドの曖昧一致が複数あるスペクトルが破棄されないようにします。</td></tr>
+<tr><td><nobr>--import-search-exclude-library-sources</nobr></td><td>ライブラリの構築に使用した結果ファイルをクロマトグラム抽出の考慮から除外します。これは、ペプチドスペクトル一致に使用したファイルに変換や前処理が使用され、クロマトグラム抽出に適切ではない可能性があるときに有用となることがあります。</td></tr>
+<tr><td><nobr>--import-search-prefer-embedded-spectra</nobr></td><td>MaxQuant msms.txtファイルが、元のスペクトルの生データファイルを開く方法ではなく、ファイル内のスペクトルを強制的に使用するようにします。MaxQuant msms.txtファイルには、ターゲット選択に不適切な可能性がある、荷電状態のデコンボリューションスペクトルが含まれています。</td></tr>
+</table>
+<div class="RowType">ペプチドをタンパク質に関連付け</div>
+<table>
+<tr><td><nobr>--associate-proteins-fasta</nobr>=path/to/file（ファイル）</td><td>ドキュメント内のペプチドを、指定されたFASTAファイル内のタンパク質と関連付けます。この引数がなく、<nobr>他の--associate-proteinsオプションがある場合は</nobr>、<nobr>--import-fastaからのFASTAが使用されます</nobr>。<nobr>--import-fastaもない場合は</nobr>、タンパク質の関連付けに使用された最後のFASTAが使用されます。</td></tr>
+<tr><td><nobr>--associate-proteins-group-proteins</nobr></td><td>同じセットのペプチドと一致するタンパク質は、ドキュメント中で1つのターゲットにまとめられます。</td></tr>
+<tr><td><nobr>--associate-proteins-gene-level-parsimony</nobr></td><td>タンパク質ではなく遺伝子（または遺伝子グループ）とペプチドを関連付け、その関連付けにパーシモニーオプションを適用します。</td></tr>
+<tr><td><nobr>--associate-proteins-shared-peptides</nobr>=<br/>&lt;DuplicatedBetweenProteins | AssignedToFirstProtein | AssignedToBestProtein | Removed&gt;</td><td>FASTAまたはバックグラウンドプロテオームで2つ以上のタンパク質に含まれているペプチドの割り当て方を設定します。</td></tr>
+<tr><td><nobr>--associate-proteins-minimal-protein-list</nobr></td><td>ペプチドすべてを説明するタンパク質の最小セット(簡素化)を求めるアルゴリズムを適用します。</td></tr>
+<tr><td><nobr>--associate-proteins-min-peptides</nobr>=<br/>&lt;整数&gt;</td><td>ドキュメントに追加するためにタンパク質に必要な最小ペプチド数。</td></tr>
+<tr><td><nobr>--associate-proteins-remove-subsets</nobr></td><td>サブセットタンパク質を削除しますが、最小ではなくサブセットではないタンパク質は残します。</td></tr>
+</table>
+<div class="RowType">トランジションリストとアッセイライブラリをインポート中</div>
+<table>
+<tr><td><nobr>--import-pep-list</nobr>=path/to/file（ファイル）</td><td>ペプチドまたはペプチドプリカーサー（電荷状態）<nobr>のリストを--import-pep-list-nameで指定したオプションのリスト名でインポートします</nobr>。</td></tr>
+<tr><td><nobr>--import-pep-list-name</nobr>=&lt;名前&gt;</td><td><nobr>--import-pep-listで指定されたインポート対象のペプチドリストの名前です</nobr>。</td></tr>
+<tr><td><nobr>--import-transition-list</nobr>=path/to/file（ファイル）</td><td>Q1、Q3とペプチドシーケンスがあるシンプルなトランジションリストをインポートします。  また、ヘッダーが適切な分子トランジションリストもCSV形式でサポートします。</td></tr>
+<tr><td><nobr>--import-assay-library</nobr>=path/to/file（ファイル）</td><td>iRTと相対プロダクトイオン存在量の列を持つアッセイライブラリのトランジションリストをインポートし、iRTカルキュレータとスペクトルライブラリを作成しピーク選択を高めます。</td></tr>
+<tr><td><nobr>--ignore-transition-errors</nobr></td><td>認識されたトランジションがあれば、そのすべてをトランジションリストかアッセイライブラリからインポートします。その際、エラー行は警告として報告されます。</td></tr>
+<tr><td><nobr>--irt-standards-group-name</nobr>=&lt;名前&gt;</td><td>インポート済みのアッセイライブラリ内にiRT標準を含むタンパク質かペプチドのリスト名です。（オプション）</td></tr>
+<tr><td><nobr>--irt-standards-file</nobr>=path/to/file（ファイル）</td><td>インポート済みのアッセイライブラリに適用されるiRT標準を含む別個のアッセイライブラリへのパスです。（オプション）</td></tr>
+<tr><td><nobr>--irt-database-path</nobr>=path/to/file（ファイル）.irtdb</td><td>インポートしたアッセイライブラリでは、既存のiRTカルキュレータ(.irtdbファイル)へのパスを使用します。<nobr>-</nobr>–<nobr>irt-standards-group-nameまたは-</nobr>–<nobr>irt-standards-fileを使用する場合は</nobr>、これが作成される.irtdbファイルへの出力パスとなります。(オプション) デフォルトのiRTカルキュレータパスは、path/to/document.irtdbです</td></tr>
+<tr><td><nobr>--irt-calc-name</nobr>=&lt;名前&gt;</td><td>アッセイライブラリのインポート中に作成されるiRTカルキュレータの名前です。（オプション）デフォルト名はドキュメントのベース名です。</td></tr>
+</table>
+<div class="RowType">スペクトルライブラリを追加中</div>
+<table>
+<tr><td><nobr>--add-library-path</nobr>=path/to/file（ファイル）</td><td>開いているドキュメントに追加するようスペクトルライブラリを指定します。</td></tr>
+<tr><td><nobr>--add-library-name</nobr>=&lt;名前&gt;</td><td><nobr>-</nobr>–<nobr>add-library-path操作でスペクトルライブラリに付与する名前です</nobr>。</td></tr>
+</table>
+<div class="RowType">イオン移動度ライブラリを作成中</div>
+<table>
+<tr><td><nobr>--ionmobility-library-create</nobr>=path/to/file（ファイル）.imsdb</td><td>現在読み込まれているクロマトグラムに基づき、開いているドキュメントにイオン移動度ライブラリを追加します。</td></tr>
+<tr><td><nobr>--ionmobility-library-name</nobr>=&lt;名前&gt;</td><td><nobr>--ionmobility-library-create操作でイオン移動度ライブラリに与える名前</nobr>。</td></tr>
+</table>
+<div class="RowType">デコイペプチドを追加中</div>
+<table>
+<tr><td><nobr>--decoys-add</nobr>[=&lt;reverse | shuffle&gt;]</td><td>mProphetを用いたモデル生成を再積分するテンプレートドキュメントにデコイを追加します。（デコイ生成法はオプションで、デフォルトは「反転」です。）</td></tr>
+<tr><td><nobr>--decoys-add-count</nobr>=&lt;整数&gt;</td><td>追加するデコイの数です。（オプション。デフォルトではターゲットと同じ数のデコイを生成します。）</td></tr>
+<tr><td><nobr>--decoys-discard</nobr></td><td><nobr>--decoys-addを使用時に</nobr>、既存のデコイを強制的に破棄します。</td></tr>
+</table>
+<div class="RowType">ターゲットリストを最適化中</div>
+<table>
+<tr><td><nobr>--refine-min-peptides</nobr>=&lt;整数&gt;</td><td>ペプチドがこの数より少ないタンパク質はドキュメントから削除されます。</td></tr>
+<tr><td><nobr>--refine-remove-repeats</nobr></td><td>すべての重複ペプチドは削除され、最初に記載された各ペプチドだけが残ります。</td></tr>
+<tr><td><nobr>--refine-remove-duplicates</nobr></td><td>ドキュメント内で一意でないペプチドはすべて削除されます。</td></tr>
+<tr><td><nobr>--refine-missing-library</nobr></td><td>ライブラリ一致に対応しないすべてのターゲットが削除されます。</td></tr>
+<tr><td><nobr>--refine-min-transitions</nobr>=&lt;整数&gt;</td><td>トランジションがこの数より少ないプリカーサーは ドキュメントから削除されます。</td></tr>
+<tr><td><nobr>--refine-label-type</nobr>=&lt;標識タイプ&gt;</td><td><nobr>--refine-add-label-typeも使用されている場合</nobr>、指定されている同位体標識タイプのプリカーサーが削除される（デフォルト）か、追加されます。</td></tr>
+<tr><td><nobr>--refine-add-label-type</nobr></td><td>同位体標識タイプのプリカーサーを追加し直します。</td></tr>
+<tr><td><nobr>--refine-auto-select-peptides</nobr></td><td>すべてのタンパク質は、中に含むペプチドを自動選択するようリセットされます。</td></tr>
+<tr><td><nobr>--refine-auto-select-precursors</nobr></td><td>すべてのペプチドは、中に含むプリカーサーを自動選択するようリセットされます。</td></tr>
+<tr><td><nobr>--refine-auto-select-transitions</nobr></td><td>すべてのプリカーサーは、中に含むトランジションを自動選択するようリセットされます。</td></tr>
+</table>
+<div class="RowType">インポートされた結果に基づいてターゲットリストを最適化中</div>
+<table>
+<tr><td><nobr>--refine-min-peak-found-ratio</nobr>=<br/>&lt;数字&gt;</td><td>次の数値を下回るピーク検出率を持つ全ての成分はドキュメントから削除されます。
+
+緑色 = 1.0
+橙色 &gt;= 0.5
+赤色 &lt; 0.5</td></tr>
+<tr><td><nobr>--refine-max-peak-found-ratio</nobr>=<br/>&lt;数字&gt;</td><td>次の数値を超えるピーク検出率を持つ全ての成分はドキュメントから削除されます。
+
+緑色 = 1.0
+橙色 &gt;= 0.5
+赤色 &lt; 0.5</td></tr>
+<tr><td><nobr>--refine-max-peptide-peak-rank</nobr>=<br/>&lt;整数&gt;</td><td>平均面積ピークランクがこの数値より大きいトランジションは全てドキュメントから削除されます。
+
+</td></tr>
+<tr><td><nobr>--refine-max-transition-peak-rank</nobr>=<br/>&lt;整数&gt;</td><td>平均面積ピークランクがこの数値より大きいトランジションは全てドキュメントから削除されます。
+</td></tr>
+<tr><td><nobr>--refine-max-precursor-only</nobr></td><td>最大ピーク面積を持つプリカーサーの荷電状態のみが保持されます。</td></tr>
+<tr><td><nobr>--refine-prefer-larger-products</nobr></td><td>小さく選択性が低いイオンが部分的により大きなピーク面積になる場合のみ、大きいプロダクトイオンを選択するように修正します。</td></tr>
+<tr><td><nobr>--refine-missing-results</nobr></td><td>測定結果の無い成分は全てドキュメントから削除されます。</td></tr>
+<tr><td><nobr>--refine-min-time-correlation</nobr>=<br/>&lt;数字&gt;</td><td>プリカーサーは、最適保持時間カルキュレータによる線形回帰の相関係数目標値がこの閾値を超えるまで、ドキュメントから削除されます。</td></tr>
+<tr><td><nobr>--refine-min-dotp</nobr>=&lt;数字&gt;</td><td>プロダクトイオンピーク面積を持つプリカーサーのライブラリスペクトル内積がこの閾値を下回るものは全てドキュメントから削除されます。
+</td></tr>
+<tr><td><nobr>--refine-min-idotp</nobr>=&lt;数字&gt;</td><td>MS1プリカーサーピーク面積を持つプリカーサーの予測される同位体分布の内積がこの閾値を下回るものは全てドキュメントから削除されます。</td></tr>
+<tr><td><nobr>--refine-use-best-result</nobr></td><td>最適化値の計算では各ペプチドに対して、最良の繰り返し測定のみ使用します。（分割に使用する）</td></tr>
+<tr><td><nobr>--refine-cv-remove-above-cutoff</nobr>=<br/>&lt;数字&gt;</td><td>カットオフを超えるピーク面積CVを持つすべてのターゲットプリカーサーが削除されます。</td></tr>
+<tr><td><nobr>--refine-cv-global-normalize</nobr>=<br/>&lt;global_standards | equalize_medians | tic&gt;</td><td>CVの計算に使用される面積が指定通りに正規化されます（デフォルトは正規化しない）。</td></tr>
+<tr><td><nobr>--refine-cv-reference-normalize</nobr>=<br/>&lt;標識タイプ&gt;</td><td>CVの計算で使用される面積が「heavy」などのリファレンスタイプに正規化されます。</td></tr>
+<tr><td><nobr>--refine-cv-transitions</nobr>=&lt;all | best&gt;</td><td>CV最適化のためにピーク面積を合計し、CVの計算に使用されるトランジションを指定します。（すべてまたは単一の最良トランジションのいずれか）</td></tr>
+<tr><td><nobr>--refine-cv-transitions-count</nobr>=&lt;整数&gt;</td><td>CVの最適化のためにピーク面積を合計してCVの計算に使用するライブラリトランジションランク（プリカーサーでは同位体、フラグメントではライブラリ）によって選択されるトランジション数を指定します。</td></tr>
+<tr><td><nobr>--refine-cv-ms-level</nobr>=&lt;precursors | products&gt;</td><td>CVの計算で使用されるMSレベルです。デフォルトは、通常PRMおよびDIAのようなメソッドのプリカーサーより低いCVを持つ「プロダクト」です。</td></tr>
+<tr><td><nobr>--refine-qvalue-cutoff</nobr>=&lt;数字&gt;</td><td>カットオフを超える最大検出q値を持つすべてのターゲットプリカーサーが削除されます。 <nobr>--refine-minimum-detectionsを用いた場合</nobr>、少なくとも指定された数の繰り返し測定がカットオフより下の検出q値を持つはずです。</td></tr>
+<tr><td><nobr>--refine-minimum-detections</nobr>=&lt;整数&gt;</td><td><nobr>検出q値が--refine-qvalue-cutoff</nobr> より下で、指定した数の繰り返し測定に満たないすべてのターゲットプリカーサーが削除されます。</td></tr>
+<tr><td><nobr>--refine-gc-p-value-cutoff</nobr>=&lt;数字&gt;</td><td>グループ比較調整されたp値が指定されたカットオフよりも低いターゲットのみを維持します。（グループ比較最適化の場合は必須）</td></tr>
+<tr><td><nobr>--refine-gc-fold-change-cutoff</nobr>=&lt;数字&gt;</td><td>グループ比較倍率変化がこのカットオフよりも高いターゲットのみを維持します。（グループ比較最適化の場合はオプション）</td></tr>
+<tr><td><nobr>--refine-gc-ms-level</nobr>=&lt;数字&gt;</td><td>グループ比較最適化のピーク面積の計算に使用するMSレベル（1または2）です。両レベルが存在する場合にはレベル2がデフォルトとなり、それ以外の場合には存在するレベルを使用します。</td></tr>
+<tr><td><nobr>--refine-gc-name</nobr>=&lt;標識タイプ&gt;</td><td>大きく変化するターゲットの最適化に使用するために以前に定義されたグループ比較名です。複数比較の和集合を維持するため、複数の名前を使って引数を複数回指定してください。</td></tr>
+</table>
+<div class="RowType">レポートをエクスポート中</div>
+<table>
+<tr><td><nobr>--report-name</nobr>=&lt;名前&gt;</td><td>Skylineの[レポートをエクスポート]フォームに表示される通りにエクスポートされるレポートの名前です。</td></tr>
+<tr><td><nobr>--report-file</nobr>=path/to/file（ファイル）.csv</td><td>レポートのエクスポート先のパスです。<nobr>--report-nameが指定されている場合</nobr>、必要です。</td></tr>
+<tr><td><nobr>--report-add</nobr>=path/to/file（ファイル）.skyr</td><td>保存済みのレポートテンプレートファイルからレポートを実行中のプログラムに追加します。</td></tr>
+<tr><td><nobr>--report-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td><nobr>--report-addを使用する際</nobr>、レポート名の重複を解決する方法を、上書きするか重複をスキップするかのいずれかで指定します。（デフォルトは、重複のエラーメッセージを出力することです。）</td></tr>
+<tr><td><nobr>--report-format</nobr>=&lt;csv | tsv&gt;</td><td>カンマ区切り（地域に応じてセミコロン区切り）のレポート用CSVか、タブ区切りのレポート用TSVです（デフォルトはCSV）。</td></tr>
+<tr><td><nobr>--report-invariant</nobr></td><td>[インバリアント]（特定の言語や国・地域に依存しない）の言語設定でレポートをエクスポートします。米国英語の番号書式とスペースなしのヘッダーテキストを用いており、R統計解析プログラミング環境での使用に理想的です。</td></tr>
+</table>
+<div class="RowType">クロマトグラムをエクスポート中</div>
+<table>
+<tr><td><nobr>--chromatogram-file</nobr>=path/to/file（ファイル）.tsv</td><td>クロマトグラムのエクスポート先となるタブ区切りファイルへのパスです。デフォルトはプリカーサーとプロダクトのエクスポートです。</td></tr>
+<tr><td><nobr>--chromatogram-precursors</nobr></td><td>プリカーサーイオンクロマトグラムをエクスポートします。<nobr>--chromatogram-file引数が必要です</nobr>。</td></tr>
+<tr><td><nobr>--chromatogram-products</nobr></td><td>プロダクトイオンクロマトグラムをエクスポートします。<nobr>--chromatogram-file引数が必要です</nobr>。</td></tr>
+<tr><td><nobr>--chromatogram-base-peaks</nobr></td><td>ベースピーククロマトグラムをエクスポートします。<nobr>--chromatogram-file引数が必要です</nobr>。</td></tr>
+<tr><td><nobr>--chromatogram-tics</nobr></td><td>全イオン電流クロマトグラムをエクスポートします。<nobr>--chromatogram-file引数が必要です</nobr>。</td></tr>
+</table>
+<div class="RowType">他のファイルタイプをエクスポート中</div>
+<table>
+<tr><td><nobr>--exp-speclib-file</nobr>=path/to/file（ファイル）.blib</td><td>現在のドキュメントの実験データをスペクトルライブラリファイルにエクスポートします。ピーク面積はスペクトル強度として、ピーク頂点時間は保持時間として使用され、ドキュメントにiRT値がある場合は、それもライブラリに保存されます。</td></tr>
+<tr><td><nobr>--exp-mprophet-features</nobr>=path/to/file（ファイル）.csv</td><td>各ペプチドの個々のフィーチャースコア、複合スコア、p値、q値をすべてmProphet形式にエクスポートします。</td></tr>
+<tr><td><nobr>--exp-mprophet-best-peaks-only</nobr></td><td>最良スコアのピークに対してのみフィーチャースコアを含めます。<nobr>--exp-mprophet-features引数が必要です</nobr>。</td></tr>
+<tr><td><nobr>--exp-mprophet-targets-only</nobr></td><td>ターゲットに対してのみフィーチャースコアを含めます。<nobr>--exp-mprophet-features引数が必要です</nobr>。</td></tr>
+<tr><td><nobr>--exp-mprophet-exclude-feature</nobr>=<br/>&lt;フィーチャー名&gt;</td><td>エクスポートしたファイルから名前で特定のフィーチャースコアを除外するために使用します。名前はユーザーインターフェイスで見つけられます。この引数を複数回使用すると、複数のフィーチャーを除外できます。<nobr>--exp-mprophet-features引数が必要です</nobr>。</td></tr>
+<tr><td><nobr>--exp-annotations</nobr>=path/to/file（ファイル）.csv</td><td><nobr>ElementLocatorフィールドがあるテキストファイルにドキュメント内のすべての注釈を--import-annotationsで要求される形式でエクスポートします</nobr>。<nobr>--exp-annotations-include-propertiesを使用すると</nobr>、プロパティも含まれます。</td></tr>
+<tr><td><nobr>--exp-annotations-include-object</nobr>=<br/>&lt;MoleculeGroup | Molecule | Precursor | Transition | Replicate | ResultFile | MoleculeResult | PrecursorResult | TransitionResult&gt;</td><td>エクスポートする注釈に含めるオブジェクトタイプの指定に使用します。デフォルトでは、すべてのオブジェクトタイプが含まれます。この引数を複数回使用すると、複数のオブジェクトタイプを指定できます。<nobr>--exp-annotations引数が必要です</nobr>。</td></tr>
+<tr><td><nobr>--exp-annotations-include-properties</nobr></td><td>エクスポートされた注釈にすべてのプロパティを含めるために使用します。デフォルトではどのプロパティも含まれません。<nobr>--exp-annotations引数が必要です</nobr>。</td></tr>
+<tr><td><nobr>--exp-annotations-remove-blank-rows</nobr></td><td>エクスポートした注釈から空白行を削除するために使用します。 <nobr>--exp-annotations引数が必要です</nobr>。</td></tr>
+</table>
+<div class="RowType">単離/トランジションリストをエクスポート中</div>
+<table>
+<tr><td><nobr>--exp-isolationlist-instrument</nobr>=<br/>&lt;Agilent QTOF | SCIEX QTOF <nobr>-</nobr> Analyst | Bruker timsTOF | Thermo Q Exactive | Thermo Fusion | Thermo Stellar | Waters Synapt (trap) | Waters Synapt (transfer) | Waters Xevo QTOF&gt;</td><td>単離リストをエクスポートします。このオプションは単離リストのエクスポートに必要で、デフォルトはありません。単離リストとトランジションリストまたはメソッドを同時にエクスポートできないので、<nobr>このオプションは-</nobr>–<nobr>exp-translist-instrumentまたは-</nobr>–<nobr>exp-method-instrumentとは併用できません</nobr>。</td></tr>
+<tr><td><nobr>--exp-translist-instrument</nobr>=<br/>&lt;Agilent MH 10.1 and lower | Agilent MassHunter 12 | Agilent MassHunter 12 Ultivo | Agilent MassHunter 12 6495D | Bruker | SCIEX | Shimadzu | Thermo | Thermo Quantiva | Thermo Altis | Waters&gt;</td><td>トランジションリストをエクスポートします。このオプションはトランジションリストのエクスポートに必要で、デフォルトはありません。トランジションリストと単離リストまたはメソッドを同時にエクスポートできないので、<nobr>このオプションは-</nobr>–<nobr>exp-isolation-listまたは--exp-method-instrumentとは併用できません</nobr>。</td></tr>
+</table>
+<div class="RowType">装置メソッドのネイティブファイルをエクスポート中</div>
+<table>
+<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Thermo Quantiva | Thermo Altis | Thermo Stellar | Thermo Exploris | Thermo Eclipse | Thermo Fusion | Thermo Fusion Lumos | Waters TQ (MassLynx) | Waters TQ (waters_connect) | Waters Quattro Premier&gt;</td><td>メソッドをエクスポートします。このオプションはメソッドのエクスポートに必要で、デフォルトはありません。メソッドと単離リスト/トランジションリストを同時にエクスポートできないので、<nobr>このオプションは-</nobr>–<nobr>exp-isolationlist-instrumentまたは--exp-translist-instrumentとは併用できません</nobr>。</td></tr>
+<tr><td><nobr>--exp-template</nobr>=path/to/file（ファイル）</td><td>メソッドテンプレートのパスです。お使いの装置によって、これはファイルである場合もあれば、ディレクトリである場合もあります。このオプションはメソッドのエクスポートに必要です。</td></tr>
+</table>
+<div class="RowType">メソッドとトランジションリストのオプション</div>
+<table>
+<tr><td><nobr>--exp-file</nobr>=path/to/file（ファイル）</td><td>エクスポート先のメソッドかトランジションのリストファイル（またはディレクトリ）へのパスです。このオプションはメソッドおよびトランジションのリストのエクスポートに必要です。</td></tr>
+<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets | WcDecide&gt;</td><td>メソッドをインジェクション回数に分ける方法です。デフォルトは「単一」です。</td></tr>
+<tr><td><nobr>--exp-method-type</nobr>=<br/>&lt;Standard | Scheduled | Triggered&gt;</td><td>標準メソッド、スケジュールメソッドかトリガーメソッドを設定します。デフォルトは「標準」です。</td></tr>
+<tr><td><nobr>--exp-max-trans</nobr>=&lt;名前&gt;</td><td>エクスポート方法「タンパク質」と「バケット」のインジェクション毎の最大トランジション数、またはスケジュールメソッドに対する最大同時トランジションの数です。デフォルトは100です。</td></tr>
+<tr><td><nobr>--exp-optimizing</nobr>=&lt;CE | DP&gt;</td><td>最適な衝突エネルギーまたはデクラスタリングポテンシャルを見つけるために、追加のトランジションを含むメソッドをエクスポートします。</td></tr>
+<tr><td><nobr>--exp-scheduling-replicate</nobr>=&lt;名前&gt;</td><td>スケジュールメソッドか、トリガーメソッドを作成する場合のみ、これを使用してください。デフォルトでは、すべての繰り返し測定の平均に基づいてスケジュールしますが、1つの測定を指定する場合、メソッドはその繰り返し測定に基づきスケジュールされます。</td></tr>
+<tr><td><nobr>--exp-order-by-mz</nobr></td><td>最適化された四重極スイッチングのためにエクスポートされたメソッドをm/zで昇順に並べます（プリカーサーm/z、次に適用される場合はプロダクトm/z）。</td></tr>
+<tr><td><nobr>--exp-ignore-proteins</nobr></td><td>メソッド作成時にタンパク質の境界を無視します。</td></tr>
+<tr><td><nobr>--exp-primary-count</nobr>=&lt;整数&gt;</td><td><nobr>--exp-method-type</nobr>=triggeredでは、プライマリを作成するトランジション数を指定します。</td></tr>
+<tr><td><nobr>--exp-polarity</nobr>=<br/>&lt;all | positive | negative | separate&gt;</td><td>正と負イオンモードのトランジション両方のドキュメントのエクスポート動作を制御します。正または負イオンモードのみのトランジションの出力を許可するか、各極性に対して別々の出力を作成します。デフォルトはすべてで、単極性ドキュメントでは無視されます。</td></tr>
+</table>
+<div class="RowType">ベンダー特有のメソッドとトランジションリストのオプション</div>
+<table>
+<tr><td>Agilent
+SCIEX</td><td><nobr>--exp-dwell-time</nobr>=&lt;ミリ秒&gt;</td><td>トランジション毎のドウェル時間です。このオプションはスケジュールされていないトランジションリストに必要です。</td></tr>
+<tr><td>Thermo</td><td><nobr>--exp-add-energy-ramp</nobr></td><td>トランジションリストにエネルギー勾配の列をさらに追加します。  オプションです。デフォルトはFalseです。</td></tr>
+<tr><td>Thermo</td><td><nobr>--exp-use-s-lens</nobr></td><td>トランジションリストにSレンズの列（デフォルトは50）をさらに追加します。  オプションです。デフォルトはFalseです。</td></tr>
+<tr><td>Thermo
+Waters</td><td><nobr>--exp-run-length</nobr>=&lt;分&gt;</td><td>分単位で表したグラジエント全体の実行時間です。このオプションはスケジュール化されていない実験に必要です。</td></tr>
+</table>
+<div class="RowType">Panoramaに公開中</div>
+<table>
+<tr><td><nobr>--panorama-server</nobr>=&lt;サーバーURL&gt;</td><td><nobr>--inファイルの公開先のPanoramaサーバーのURLです</nobr>。URLにはプロトコル（httpかhttps）、ホスト名かポート（必要である場合）が、含まれていなければなりません。例：
+https://panoramaweb.org
+または
+http://localhost:8080</td></tr>
+<tr><td><nobr>--panorama-username</nobr>=&lt;ユーザー名&gt;</td><td>Panoramaサーバーに公開するアクセスのあるユーザーのユーザー名/電子メールアドレスです。</td></tr>
+<tr><td><nobr>--panorama-password</nobr>=&lt;パスワード&gt;</td><td>Panoramaサーバーに公開するアクセスのあるユーザーのパスワードです。</td></tr>
+<tr><td><nobr>--panorama-folder</nobr>=path/to/folder（フォルダ）</td><td>ファイルの公開先となるPanoramaサーバー上のフォルダへのパスです（例：MyProject/MyFolder）。</td></tr>
+</table>
+<p>結果ファイルをインポートする引数（--import-fileまたは-–import-all）を上記の引数と併せて使用する場合で、新しい結果がSkylineドキュメントに追加される場合のみ、そのドキュメントが指定されたPanoramaサーバーにアップロードされます。</p>
+<div class="RowType">ドキュメント設定</div>
+<table>
+<tr><td><nobr>--annotation-name</nobr>=&lt;名前&gt;</td><td>指定した名前でドキュメントに注釈を追加します。同一の名前を持つ既存の注釈は上書きされます。</td></tr>
+<tr><td><nobr>--annotation-targets</nobr>=<br/>&quot;protein, molecule_list, peptide, molecule, precursor, transition, replicate, precursor_result, transition_result&quot;</td><td><nobr>--annotation-name操作で注釈を適用するターゲットタイプのカンマ区切りリスト</nobr>。</td></tr>
+<tr><td><nobr>--annotation-type</nobr>=&lt;text | number | true_false | value_list&gt;</td><td><nobr>--annotation-name操作の注釈のデータタイプを定義します</nobr>。デフォルトはテキストです。</td></tr>
+<tr><td><nobr>--annotation-values</nobr>=「&lt;value&gt;、&lt;value&gt;、&lt;value&gt;...」</td><td><nobr>--annotation-name操作でvalue_listタイプの注釈で使う値のカンマ区切りリスト</nobr>。<nobr>--annotation-type</nobr>=value_list操作でのみ必須となります。</td></tr>
+<tr><td><nobr>--integrate-all</nobr>[=True&nbsp;または&nbsp;False]</td><td>設定すると、積分領域間のシグナルに寄与するすべてのトランジションが検出されたと見なされます。設定しない場合、共溶出しているトランジションのみが検出されたと見なされます。設定にかかわらず、積分領域間の定量的トランジションのシグナルはすべて合計され、プリカーサーの [総面積] となります。</td></tr>
+</table>
+<div class="RowType">ペプチド設定</div>
+<table>
+<tr><td><nobr>--pep-digest-enzyme</nobr>=<br/>&lt;Trypsin | Trypsin (semi) | Trypsin/P | TrypsinK | TrypsinR | Chymotrypsin | ArgC | AspN | Clostripain | CNBr | Elastase | Formic Acid | GluC | GluC bicarb | Iodosobenzoate | LysC | LysC/P | LysN | LysN promisc | PepsinA | Protein endopeptidase | Staph protease | <nobr>Trypsin-CNBr</nobr> | <nobr>Trypsin-GluC</nobr>&gt;</td><td>ドキュメントにターゲットとして追加されたタンパク質配列からペプチド配列を解析するために使用されるプロテアーゼ酵素の定義。ペプチドリストがターゲットとして追加された場合、この設定は未切断数をカウントする以外は無視されます。</td></tr>
+<tr><td><nobr>--pep-max-missed-cleavages</nobr>=&lt;整数&gt;</td><td>タンパク質消化時に許容される最大未切断数。</td></tr>
+<tr><td><nobr>--pep-unique-by</nobr>=<br/>&lt;none | protein | gene | species&gt;</td><td>「タンパク質」は、バックグラウンドプロテオームで2つ以上のタンパク質に出現するペプチドを全て除外します。 「遺伝子」は、バックグラウンドプロテオームで2つ以上の遺伝子のタンパク質に出現するペプチドを全て除外します。 「種」は、バックグラウンドプロテオームで2つ以上の種のタンパク質に出現するペプチドを全て除外します。複数の種を含む試料混合物に有用です。</td></tr>
+<tr><td><nobr>--background-proteome-name</nobr>=<br/>&lt;None | <nobr>--background-proteome-file操作でインポートされたprotdbに与える名前</nobr>&gt;</td><td>開いたドキュメントに適用するバックグラウンドプロテオームの名前。バックグラウンドプロテオームは、質量分析計に導入される試料マトリックス内に存在し得るすべてのタンパク質を指定します。名前がSkylineで定義されていない場合は、<nobr>protdbファイルへのパスも--background-proteome-fileで設定する必要があります</nobr>。</td></tr>
+<tr><td><nobr>--background-proteome-file</nobr>=<br/>path/to/file（ファイル）.protdb</td><td>開いたドキュメントに適用するバックグラウンドプロテオーム（protdb）ファイルへのパス。この名前は、<nobr>オプションで--background-proteome-nameを使って指定できます</nobr>。指定しない場合、ファイル名がデフォルトとして使用されます。</td></tr>
+<tr><td><nobr>--pep-min-length</nobr>=&lt;整数&gt;</td><td>ドキュメントに追加するペプチドの最小長。</td></tr>
+<tr><td><nobr>--pep-max-length</nobr>=&lt;整数&gt;</td><td>ドキュメントに追加するペプチドの最大長。</td></tr>
+<tr><td><nobr>--pep-exclude-nterminal-aas</nobr>=&lt;整数&gt;</td><td>各タンパク質内でこのアミノ酸の位置より前にあるすべてのペプチドを除外します。</td></tr>
+<tr><td><nobr>--pep-exclude-potential-ragged-ends</nobr></td><td>切断部位の直前か直後に切断部位を持つペプチドを除外します。 例：トリプシンのRR、KK、RK、KR</td></tr>
+<tr><td><nobr>--pep-add-mod</nobr>=<br/>フルネーム（例「Oxidation (M)」）| ショートネーム(Oxi)</td><td>ドキュメントにUniMod修飾を追加します。修飾は、<nobr>PSI-MS名と部位を共に指定する必要があります</nobr>（「酸化(M)」）。</td></tr>
+<tr><td><nobr>--pep-add-unimod</nobr>=UniMod&nbsp;ID（例「35」）</td><td>UniMod IDでドキュメントにUniMod修飾を追加します。修飾に複数の特異性がある場合は、<nobr>--pep-add-unimod-aaまたは--pep-add-unimod-termを使用して</nobr>、ドキュメントに追加する特異性を選ぶ必要があります。</td></tr>
+<tr><td><nobr>--pep-add-unimod-aa</nobr>=<br/>ACDEFGHIKLMNOPQRSTUVWY</td><td><nobr>--pep-add-unimod</nobr> により最後に追加されたペプチド修飾のアミノ酸特異性が提供されます。</td></tr>
+<tr><td><nobr>--pep-add-unimod-term</nobr>=&lt;N | C&gt;</td><td><nobr>--pep-add-unimod</nobr> により最後に追加されたペプチド修飾の末端特異性が提供されます。</td></tr>
+<tr><td><nobr>--pep-add-mod-variable</nobr>=True&nbsp;または&nbsp;False</td><td>「true」の場合は修飾を変数として、「false」の場合は静的として追加します。損失のみの修飾（アンモニアと水の損失など）を除く構造修飾にのみ有効です。</td></tr>
+<tr><td><nobr>--pep-clear-mods</nobr></td><td>現在開いているドキュメントからすべてのペプチド修飾を消去します。</td></tr>
+<tr><td><nobr>--pep-max-variable-mods</nobr>=&lt;整数&gt;</td><td>どのペプチドインスタンスにおける組み合わせでも発生可能な 最大可変修飾数。</td></tr>
+<tr><td><nobr>--pep-max-losses</nobr>=&lt;整数&gt;</td><td>単一のフラグメントイオンから許可される最大ニュートラルロス数。</td></tr>
+</table>
+<div class="RowType">トランジションの設定</div>
+<table>
+<tr><td><nobr>--tran-precursor-ion-charges</nobr>=<br/>&quot;1,&nbsp;2,&nbsp;3...&quot;</td><td>プリカーサーターゲットを生成するペプチド分子に適用するプリカーサーイオン荷電状態のカンマ区切りのリストです。開いているドキュメント用にトランジションフィルタ設定を変更します。</td></tr>
+<tr><td><nobr>--tran-product-ion-charges</nobr>=<br/>&quot;1,&nbsp;2,&nbsp;3...&quot;</td><td>プロダクトイオンのトランジションを生成するペプチド断片に適用する、プロダクトイオン荷電状態のカンマ区切りのリストです。開いているドキュメント用にトランジションフィルタ設定を変更します。</td></tr>
+<tr><td><nobr>--tran-product-ion-types</nobr>=<br/>&quot;a,&nbsp;b,&nbsp;c,&nbsp;x,&nbsp;y,&nbsp;z,&nbsp;p&quot;</td><td>プロダクトイオンのトランジションを生成するペプチド断片で予想される、プロダクトイオンタイプのカンマ区切りのリストです。開いているドキュメント用にトランジションフィルタ設定を変更します。</td></tr>
+<tr><td><nobr>--tran-product-start-ion</nobr>=<br/>&lt;イオン1 | イオン2 | イオン3 | イオン4 | m/z &gt;プリカーサー | （m/z &gt;プリカーサー） <nobr>-</nobr> 1 | （m/z &gt;プリカーサー） <nobr>-</nobr> 2 | （m/z &gt;プリカーサー） + 1 | （m/z &gt;プリカーサー） + 2&gt;</td><td>トランジションが許可される最小プロダクトイオン。</td></tr>
+<tr><td><nobr>--tran-product-end-ion</nobr>=<br/>&lt;最後のイオン | 最後のイオン <nobr>-</nobr> 1 | 最後のイオン <nobr>-</nobr> 2 | 最後のイオン <nobr>-</nobr> 3 | 1個のイオン | 2個のイオン | 3個のイオン | 4個のイオン | 5個のイオン | 6個のイオン&gt;</td><td>トランジションが許可される最大プロダクトイオン。</td></tr>
+<tr><td><nobr>--tran-product-clear-special-ions</nobr></td><td>トランジションフィルタ設定からすべての特殊イオンを削除します。</td></tr>
+<tr><td><nobr>--tran-product-add-special-ion</nobr>=<br/>&lt;<nobr>N-terminal</nobr> to Proline | <nobr>C-terminal</nobr> to Glu or Asp | <nobr>iTRAQ-114</nobr> | <nobr>iTRAQ-115</nobr> | <nobr>iTRAQ-116</nobr> | <nobr>iTRAQ-117</nobr> | <nobr>TMT-126</nobr> | <nobr>TMT-127L</nobr> | <nobr>TMT-127H</nobr> | <nobr>TMT-128L</nobr> | <nobr>TMT-128H</nobr> | <nobr>TMT-129L</nobr> | <nobr>TMT-129H</nobr> | <nobr>TMT-130L</nobr> | <nobr>TMT-130H</nobr> | <nobr>TMT-131L</nobr> | <nobr>TMT-131H</nobr> | <nobr>TMT-132L</nobr> | <nobr>TMT-132H</nobr> | <nobr>TMT-133L</nobr> | <nobr>TMT-133H</nobr> | <nobr>TMT-134L</nobr> | <nobr>TMT-134H</nobr> | <nobr>TMT-135</nobr>&gt;</td><td>トランジション設定フォームで指定した、名前の付いた事前に定義された特殊イオンを追加します。</td></tr>
+<tr><td><nobr>--tran-predict-ce</nobr>=<br/>&lt;なし | Agilent QQQ | SCIEX | Shimadzu QQQ | Thermo TSQ Quantiva | Thermo TSQ Ultra | Thermo TSQ Vantage | Waters Xevo&gt;</td><td>トランジション設定衝突エネルギーの予測設定を以前設定したオプションの1つに変更します。</td></tr>
+<tr><td><nobr>--tran-predict-dp</nobr>=<br/>&lt;なし | SCIEX&gt;</td><td>トランジション設定デクラスタリングポテンシャルの予測設定を以前に定義したオプションの1つに変更します。</td></tr>
+<tr><td><nobr>--tran-predict-cov</nobr>=<br/>&lt;なし | SCIEX&gt;</td><td>トランジション設定補償電圧の予測設定を以前に定義したオプションの1つに変更します。</td></tr>
+<tr><td><nobr>--tran-predict-optdb</nobr>=<br/>&lt;なし&gt;</td><td>装置パラメータの予測に使用するトランジション設定最適化ライブラリを以前に定義したオプションの1つに変更します。</td></tr>
+<tr><td><nobr>--tran-use-dia-window-exclusion</nobr></td><td>m/z値がプリカーサー単離ウィンドウ範囲に収まるプロダクトイオントランジションを除外します。これは断片化していないプリカーサーからの信号によって干渉の可能性が高まる可能性のあるDIA/SWATHデータに対して推奨されます。</td></tr>
+<tr><td><nobr>--library-match-tolerance</nobr>=<br/>&quot;0.5mz&nbsp;or&nbsp;15ppm&quot;</td><td>予測されるプロダクトイオンのm/z値を測定されたMS/MSスペクトルライブラリピークm/z値に一致させる際に許容される最大デルタ。デルタはm/zまたはPPM単位のいずれかで指定できます。</td></tr>
+<tr><td><nobr>--library-pick-product-ions</nobr>=<br/>&lt;none | all | filter | all_plus&gt;</td><td>トランジション一致ライブラリスペクトルからのピークm/z値の選択で考慮されるプロダクトイオンのセット。(all：指定されたすべてのイオン電荷および種類、filter：開始トランジション、終了トランジションおよび特殊イオンに基づくフィルタ、all_plus：2つの他のオプションの和)</td></tr>
+<tr><td><nobr>--library-product-ions</nobr>=<br/>&lt;整数&gt;</td><td>ライブラリスペクトルのピークと一致する、各プリカーサーの最大プロダクトトランジション数。順序はピーク強度順。</td></tr>
+<tr><td><nobr>--library-min-product-ions</nobr>=<br/>&lt;整数&gt;</td><td>ライブラリスペクトルでこの数以上のプロダクトトランジションがピークと一致するプリカーサーのみを維持します。</td></tr>
+<tr><td><nobr>--full-scan-precursor-isotopes</nobr>=<br/>&lt;None | Count | Percent&gt;</td><td>高分解能質量スペクトルからの抽出でプリカーサー同位体トランジションを選択する際に適用されるプリカーサー閾値の意味。数値は、モノアイソトピックプリカーサーから始まる定数を示します。パーセントは、ベースピークなど、最も強度の高いプリカーサー種からの最低パーセントを示し、デフォルトの数になります。</td></tr>
+<tr><td><nobr>--full-scan-precursor-threshold</nobr>=<br/>&lt;数字&gt;</td><td>高分解能スペクトルから抽出される同位体の定数(モノアイソトピックプリカーサーから始まる)または基本の同位体の割合。</td></tr>
+<tr><td><nobr>--full-scan-precursor-ignore-sim</nobr></td><td>フルスキャンMS1スペクトルから抽出する場合にはSIMスキャンをスキップします。両者からクロマトグラムが抽出されるのを回避するため、MS1サーベイおよびSIMスキャンの両者が存在する場合に使用します。</td></tr>
+<tr><td><nobr>--full-scan-precursor-isotope-enrichment</nobr>=<br/>&lt;デフォルト&gt;</td><td>フルスキャンデータからの抽出に使用する、事前に定義された同位体濃縮設定名。利用できるものがない場合は、ユーザーインターフェースにあるトランジション設定フォームを使用し、新しい同位体濃縮設定を追加します。</td></tr>
+<tr><td><nobr>--full-scan-precursor-analyzer</nobr>=<br/>&lt;centroided | qit | tof | orbitrap | ft_icr | none&gt;</td><td>プリカーサースペクトル(MS1)の場合は質量アナライザー、またはプロファイル(および分解能)の代わりにセントロイドスペクトル(およびPPMでの質量誤差)を使用する場合には「セントロイド化」。</td></tr>
+<tr><td><nobr>--full-scan-precursor-res</nobr>=&lt;分解能&gt;</td><td>プリカーサー質量アナライザーの分解能です。質量アナライザーが「セントロイド化」されている場合、値はPPMです。</td></tr>
+<tr><td><nobr>--full-scan-precursor-res-mz</nobr>=&lt;m/z値&gt;</td><td>プリカーサー質量アナライザーの分解能が指定されているm/z値です。（OrbitrapおよびFT_ICRの質量アナライザーのみに適用されます。）</td></tr>
+<tr><td><nobr>--full-scan-acquisition-method</nobr>=<br/>&lt;None | DIA | PRM | DDA | SureQuant | EI&gt;</td><td>フルスキャンデータから抽出するための取得メソッド(なし、DIA、DDA、SureQuant)。</td></tr>
+<tr><td><nobr>--full-scan-isolation-scheme</nobr>=<br/>&lt;All Ions | Results only | Results (0.5 margin) | SWATH (15 m/z) | SWATH (25 m/z) | SWATH (VW 64) | SWATH (VW 100) | 単離スキームのインポート元となるpath/to/<nobr>result-file</nobr>&gt;</td><td>フルスキャンDIAデータから抽出するときに使用した、事前に定義した単離スキームの名前または単離スキームのインポート元であるデータファイルへのパス。</td></tr>
+<tr><td><nobr>--full-scan-product-analyzer</nobr>=<br/>&lt;centroided | qit | tof | orbitrap | ft_icr | none&gt;</td><td>プロダクトスペクトルの場合には質量アナライザー、またはプロファイル(および分解能)の代わりにセントロイドスペクトル(およびPPMでの質量誤差)を使用する場合には「セントロイド化」。</td></tr>
+<tr><td><nobr>--full-scan-product-res</nobr>=&lt;分解能&gt;</td><td>プロダクト質量アナライザーの分解能です。質量アナライザーが「セントロイド化」されている場合、値はPPMです。</td></tr>
+<tr><td><nobr>--full-scan-product-res-mz</nobr>=&lt;m/z値&gt;</td><td>プロダクト質量アナライザーの分解能が指定されているm/z値です。（OrbitrapおよびFT_ICRの質量アナライザーのみに適用されます。）</td></tr>
+<tr><td><nobr>--full-scan-rt-filter</nobr>=<br/>&lt;none | scheduling_windows | ms2_ids&gt;</td><td>クロマトグラムの開始時間および停止時間を、予測される保持時間またはMS/MS ID保持時間のいずれかの範囲で制限するかどうかを設定します。</td></tr>
+<tr><td><nobr>--full-scan-rt-filter-tolerance</nobr>=<br/>&lt;分&gt;</td><td>予測時間かMS/MS IDのいずれか側の（&#177;分で表した）分数です。</td></tr>
+<tr><td><nobr>--ims-library-res</nobr>=&lt;分解能&gt;</td><td>スペクトルライブラリからイオン移動度付近の値をフィルタリングするために使用するイオン移動度次元の分解能です。</td></tr>
+<tr><td><nobr>--instrument-min-mz</nobr>=&lt;m/z値&gt;</td><td>測定できないプリカーサーやトランジションを追加しないようにするための、ターゲット装置に対して測定可能な最小m/z値。</td></tr>
+<tr><td><nobr>--instrument-max-mz</nobr>=&lt;m/z値&gt;</td><td>測定できないプリカーサーやトランジションを追加しないようにするための、ターゲット装置に対して測定可能な最大m/z値。</td></tr>
+<tr><td><nobr>--instrument-dynamic-min-mz</nobr></td><td>設定すると、<nobr>Thermo-ScientificがLTQ装置に提供する特定の式を使用して</nobr>、プリカーサーm/zから動的にプロダクトイオンの最小m/z値が計算されます。</td></tr>
+<tr><td><nobr>--instrument-method-mz-tolerance</nobr>=&lt;m/z値&gt;</td><td>装置メソッドトランジションm/z値を予測されるトランジションm/z値に一致させるための最大デルタ。(SRMおよびPRM単離したm/z値にのみ適用。)</td></tr>
+<tr><td><nobr>--instrument-min-time</nobr>=&lt;分&gt;</td><td>分析方法を問わず、クロマトグラムで許容される最小時間。 これを設定すると、データ採取に関与しない部分のグラジエントで使用されるメモリやディスク空き容量を節約できます。</td></tr>
+<tr><td><nobr>--instrument-max-time</nobr>=&lt;分&gt;</td><td>分析方法を問わず、クロマトグラムで許容される最大時間。 これを設定すると、データ採取に関与しない部分のグラジエントで使用されるメモリやディスク空き容量を節約できます。</td></tr>
+<tr><td><nobr>--instrument-triggered-chromatograms</nobr></td><td>特定のアナライトに対してスペクトルを取得した時に保持時間に大きなギャップがあり得ることを示しています。ピークは、これらのギャップと重ならないように切り詰められ、バックグラウンドは差し引かれません。</td></tr>
+</table>
+<div class="RowType">ツールのインストール</div>
+<p>下記の引数を使用して[ツール]メニューにツールをインストールできます。これらの引数は特定のSkylineドキュメントには依存していないので、「--in」引数に依存することはありません。</p>
+<table>
+<tr><td><nobr>--tool-add</nobr>=&lt;名前&gt;</td><td>インストール用ZIPファイルではなく、設定によって追加されるツールの名前です。</td></tr>
+<tr><td><nobr>--tool-command</nobr>=&lt;コマンド | URL&gt;</td><td>インストール用ZIPファイルではなく、設定によって追加されるコマンドを実行するコマンドまたはウェブページのURLのコマンドです。</td></tr>
+<tr><td><nobr>--tool-arguments</nobr>=&quot;&lt;引数&gt;&quot;</td><td>ツールを追加するためのオプションのコマンドライン引数で、ツール実行時に使用されます。（ウェブのURLコマンドには適用されません。）</td></tr>
+<tr><td><nobr>--tool-initial-dir</nobr>=path/to/folder（フォルダ）</td><td>ツールを追加するための初期ディレクトリ（オプション）で、ツール実行時に使用されます。  （ウェブのURLコマンドには適用されません。）</td></tr>
+<tr><td><nobr>--tool-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td>既存のインストールを上書きするか、新しいツールのインストールをスキップするかいずれかにより、ツール名の重複を解決する方法を指示します。</td></tr>
+<tr><td><nobr>--tool-report</nobr>=&lt;レポート名&gt;</td><td>ツール用の入力レポートとして使用する設定にあるレポートの名前です。</td></tr>
+<tr><td><nobr>--tool-output-to-immediate-window</nobr></td><td>ツール出力があれば、出力はランタイム時に[イミディエイトウィンドウ]に送信されます。</td></tr>
+<tr><td><nobr>--tool-add-zip</nobr>=path/to/file（ファイル）.zip</td><td>ツールのインストール用ZIPファイルからツールをインポートします。</td></tr>
+<tr><td><nobr>--tool-zip-conflict-resolution</nobr>=<br/>&lt;overwrite | parallel&gt;</td><td>提供されたZIPファイルに起因するツールの重複を解決するのに、上書きすべきか並行インストールすべきかを指定します。これは、ツールのバージョン管理とレポート名に関連する重複向けです。</td></tr>
+<tr><td><nobr>--tool-zip-overwrite-annotations</nobr>=<br/>&lt;true | false&gt;</td><td>提供されたZIPファイルが原因で重複となったカスタム注釈が、既存の注釈を上書きすべき（True）かスキップすべき(False)かを指定します。</td></tr>
+<tr><td><nobr>--tool-program-macro</nobr>=<br/>&lt;プログラムタイトル&gt;[,&lt;プログラムバージョン&gt;]</td><td><nobr>-</nobr>–<nobr>tool-program-pathコマンドと使用するプログラムのタイトルとバージョンを指定します</nobr>。これらのコマンドを併せるのは、$(ProgramPath())マクロをコマンドとして使用するZIPファイルからツールをインポートするためです。詳細は、外部ツール、<nobr>--tool-program-macro</nobr>=R,2.15.2
+などのドキュメンテーションを参照してください。</td></tr>
+<tr><td><nobr>--tool-program-path</nobr>=path/to/file（ファイル）</td><td><nobr>--tool-program-macroのフラグによって指定されたプログラムのタイトルとバージョン用のローカルマシン上で</nobr>、実行可能ファイルへのパスを指定します。</td></tr>
+<tr><td><nobr>--tool-ignore-required-packages</nobr></td><td>ZIPファイルからツールをインストールする際に、必要なパッケージを無視します。</td></tr>
+</table>
+</body></html>

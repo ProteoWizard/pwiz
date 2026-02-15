@@ -1,4 +1,4 @@
-﻿<HeavyModList>
+<HeavyModList>
   <static_modification name="ICAT-C:13C(9) (C)" aminoacid="C" formula="C'9-C9" unimod_id="106" short_name="C9I" />
   <static_modification name="ICPL:13C(6)2H(4) (K)" aminoacid="K" formula="C'6H'4-C6H4" unimod_id="866" />
   <static_modification name="ICPL:13C(6)2H(4) (N-term)" terminus="N" formula="C'6H'4-C6H4" unimod_id="866" />

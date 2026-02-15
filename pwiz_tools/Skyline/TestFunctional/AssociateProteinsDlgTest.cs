@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

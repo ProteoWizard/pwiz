@@ -1,10 +1,10 @@
-﻿body {
+body {
     font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
 }
 .RowType {
     font-size: 1.769em;
     line-height: 1.3em;
-	    font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+    font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
     color: #000;
 }
 table {
@@ -17,17 +17,17 @@ th {
     background-color: #ededed;
     color: #636363;
     text-align: left;
-	    padding-top: 10px;
+    padding-top: 10px;
     padding-bottom: 10px;
     padding-right: 8px;
     padding-left: 8px;
-	font-weight: bold;
-	    border: 1px solid #bbb;
+    font-weight: bold;
+    border: 1px solid #bbb;
 }
 td {
-	color: #2a2a2a;
+    color: #2a2a2a;
     vertical-align: top;
-	padding-top: 10px;
+    padding-top: 10px;
     padding-bottom: 10px;
     padding-right: 8px;
     padding-left: 8px;

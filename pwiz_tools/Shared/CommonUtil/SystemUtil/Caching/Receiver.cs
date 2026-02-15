@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
@@ -28,14 +30,21 @@ namespace pwiz.Common.SystemUtil.Caching
     public class Receiver : IDisposable
     {
         private bool _notificationPending;
+        private bool _progressNotificationPending;
         private WorkOrder _workOrder;
         private readonly IProductionListener _listener;
+        private TaskScheduler _taskScheduler;
         public Receiver(ProductionFacility cache, Control ownerControl, Producer factory)
         {
             Cache = cache;
             OwnerControl = ownerControl;
             Producer = factory;
             OwnerControl.HandleDestroyed += OwnerControlHandleDestroyed;
+            if (OwnerControl.InvokeRequired)
+            {
+                throw new InvalidOperationException(@"Must be constructed on event thread");
+            }
+            _taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             _listener = new Listener(this);
         }
 
@@ -56,8 +65,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 if (!_notificationPending)
                 {
                     _notificationPending = true;
-                    CommonActionUtil.SafeBeginInvoke(OwnerControl, () =>
-                    {
+                    BeginInvoke(()=> {
                         _notificationPending = false;
                         productAvailable();
                     });
@@ -65,16 +73,34 @@ namespace pwiz.Common.SystemUtil.Caching
             }
         }
 
+        private void BeginInvoke(Action action)
+        {
+            Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
+        }
+
         private void OnProductStatusChanged()
         {
+            Action progressChange;
+
             lock (this)
             {
-                var progressChange = ProgressChange;
-                if (progressChange != null)
+                progressChange = ProgressChange;
+                if (progressChange == null || _progressNotificationPending)
                 {
-                    CommonActionUtil.SafeBeginInvoke(OwnerControl, () => { progressChange(); });
+                    return;
                 }
+                _progressNotificationPending = true;
             }
+
+            BeginInvoke(() =>
+            {
+                lock (this)
+                {
+                    _progressNotificationPending = false;
+                }
+
+                progressChange();
+            });
         }
 
         public event Action ProductAvailable;

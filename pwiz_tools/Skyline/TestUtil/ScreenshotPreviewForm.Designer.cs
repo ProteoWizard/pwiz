@@ -1,4 +1,4 @@
-﻿using pwiz.Common.Controls;
+using pwiz.Common.Controls;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -55,7 +55,13 @@ namespace pwiz.SkylineTestUtil
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripAutoSize = new System.Windows.Forms.ToolStripButton();
             this.toolStripPickColorButton = new pwiz.SkylineTestUtil.AlphaColorPickerButton();
+            this.toolStripDiffOnly = new System.Windows.Forms.ToolStripButton();
+            this.toolStripAmplify = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.contextMenuImageSource = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.menuItemDisk = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemGit = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemWeb = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripGotoWeb = new System.Windows.Forms.ToolStripButton();
             this.toolStripDescription = new System.Windows.Forms.ToolStripLabel();
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).BeginInit();
@@ -237,6 +243,8 @@ namespace pwiz.SkylineTestUtil
             this.toolStripSeparator1,
             this.toolStripAutoSize,
             this.toolStripPickColorButton,
+            this.toolStripDiffOnly,
+            this.toolStripAmplify,
             this.toolStripSeparator2,
             this.toolStripGotoWeb,
             this.toolStripDescription});
@@ -336,12 +344,65 @@ namespace pwiz.SkylineTestUtil
             this.toolStripPickColorButton.Size = new System.Drawing.Size(13, 22);
             this.toolStripPickColorButton.ToolTipText = "Selected Color: Color [A=128, R=255, G=0, B=0] (Alpha: 128)";
             this.toolStripPickColorButton.ColorChanged += new System.EventHandler(this.toolStripPickColorButton_ColorChanged);
-            // 
+            //
+            // toolStripDiffOnly
+            //
+            this.toolStripDiffOnly.CheckOnClick = true;
+            this.toolStripDiffOnly.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripDiffOnly.Image = global::pwiz.SkylineTestUtil.Properties.Resources.blank;
+            this.toolStripDiffOnly.Name = "toolStripDiffOnly";
+            this.toolStripDiffOnly.Size = new System.Drawing.Size(23, 22);
+            this.toolStripDiffOnly.ToolTipText = "Show diff pixels only on white background (D)";
+            this.toolStripDiffOnly.CheckedChanged += new System.EventHandler(this.toolStripDiffOnly_CheckedChanged);
+            //
+            // toolStripAmplify
+            //
+            this.toolStripAmplify.CheckOnClick = true;
+            this.toolStripAmplify.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripAmplify.Name = "toolStripAmplify";
+            this.toolStripAmplify.Size = new System.Drawing.Size(23, 22);
+            this.toolStripAmplify.Text = "Amp";
+            this.toolStripAmplify.ToolTipText = "Amplify diff pixels to 5x larger squares (A)";
+            this.toolStripAmplify.CheckedChanged += new System.EventHandler(this.toolStripAmplify_CheckedChanged);
+            //
             // toolStripSeparator2
-            // 
+            //
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
-            // 
+            //
+            // contextMenuImageSource
+            //
+            this.contextMenuImageSource.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemDisk,
+            this.menuItemGit,
+            this.menuItemWeb});
+            this.contextMenuImageSource.Name = "contextMenuImageSource";
+            this.contextMenuImageSource.Size = new System.Drawing.Size(120, 70);
+            //
+            // menuItemDisk
+            //
+            this.menuItemDisk.Image = global::pwiz.SkylineTestUtil.Properties.Resources.save;
+            this.menuItemDisk.Name = "menuItemDisk";
+            this.menuItemDisk.Size = new System.Drawing.Size(119, 22);
+            this.menuItemDisk.Text = "Disk";
+            this.menuItemDisk.Click += new System.EventHandler(this.menuItemDisk_Click);
+            //
+            // menuItemGit
+            //
+            this.menuItemGit.Image = global::pwiz.SkylineTestUtil.Properties.Resources.gitsource;
+            this.menuItemGit.Name = "menuItemGit";
+            this.menuItemGit.Size = new System.Drawing.Size(119, 22);
+            this.menuItemGit.Text = "Git HEAD";
+            this.menuItemGit.Click += new System.EventHandler(this.menuItemGit_Click);
+            //
+            // menuItemWeb
+            //
+            this.menuItemWeb.Image = global::pwiz.SkylineTestUtil.Properties.Resources.websource;
+            this.menuItemWeb.Name = "menuItemWeb";
+            this.menuItemWeb.Size = new System.Drawing.Size(119, 22);
+            this.menuItemWeb.Text = "Web";
+            this.menuItemWeb.Click += new System.EventHandler(this.menuItemWeb_Click);
+            //
             // toolStripGotoWeb
             // 
             this.toolStripGotoWeb.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -418,5 +479,11 @@ namespace pwiz.SkylineTestUtil
         private System.Windows.Forms.PictureBox pictureMatching;
         private AlphaColorPickerButton toolStripPickColorButton;
         private System.Windows.Forms.ToolStripButton toolStripRevert;
+        private System.Windows.Forms.ToolStripButton toolStripDiffOnly;
+        private System.Windows.Forms.ToolStripButton toolStripAmplify;
+        private System.Windows.Forms.ContextMenuStrip contextMenuImageSource;
+        private System.Windows.Forms.ToolStripMenuItem menuItemDisk;
+        private System.Windows.Forms.ToolStripMenuItem menuItemGit;
+        private System.Windows.Forms.ToolStripMenuItem menuItemWeb;
     }
 }

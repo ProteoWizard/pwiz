@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls
+namespace pwiz.Skyline.Controls
 {
     partial class LongWaitDlg
     {

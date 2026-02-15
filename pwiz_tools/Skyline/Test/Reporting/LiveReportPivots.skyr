@@ -1,4 +1,4 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <ReportSpecList>
   <report name="ResultSummaryPivot" rowsource="pwiz.Skyline.Model.Databinding.Entities.Precursor" sublist="Results!*">
     <column name="Peptide.Sequence" />

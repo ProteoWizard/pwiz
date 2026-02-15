@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: MSGraphControl.cs 1599 2009-12-04 01:35:39Z brendanx $
 //
 //
@@ -332,6 +332,10 @@ namespace pwiz.MSGraph
                 pane.ZoomStack.PopAll( pane );
                 item.CustomizeXAxis( pane.XAxis );
                 item.CustomizeYAxis( pane.YAxis );
+            }
+            else if (item.GraphItemType == MSGraphItemType.chromatogram)
+            {
+                item.CustomizeYAxis(pane.YAxis); // Update units if needed
             }
 
             CurveItem newItem = makeMSGraphItem( item );

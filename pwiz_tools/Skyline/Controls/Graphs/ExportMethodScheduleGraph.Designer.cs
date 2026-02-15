@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Graphs
+namespace pwiz.Skyline.Controls.Graphs
 {
     partial class ExportMethodScheduleGraph
     {
@@ -33,7 +33,7 @@
             this.graphControl = new ZedGraph.ZedGraphControl();
             this.btnOk = new System.Windows.Forms.Button();
             this.cbGraphType = new System.Windows.Forms.ComboBox();
-            this.dataGridView = new pwiz.Common.Controls.CommonDataGridView();
+            this.dataGridView = new pwiz.Skyline.Controls.DataGridViewEx();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -101,6 +101,6 @@
         private ZedGraph.ZedGraphControl graphControl;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.ComboBox cbGraphType;
-        private pwiz.Common.Controls.CommonDataGridView dataGridView;
+        private pwiz.Skyline.Controls.DataGridViewEx dataGridView;
     }
 }

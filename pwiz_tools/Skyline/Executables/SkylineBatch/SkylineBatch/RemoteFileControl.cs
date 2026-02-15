@@ -1,10 +1,11 @@
-﻿using SharedBatch;
+using SharedBatch;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.GUI;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using SkylineBatch.Properties;
 using PanoramaClientServer = pwiz.PanoramaClient.PanoramaServer;
@@ -132,7 +133,7 @@ namespace SkylineBatch
         public void CheckPanoramaServer(CancellationToken cancelToken, Action<PanoramaFile, Exception> callback)
         {
             RemoteFileSource remoteFileSource = GetRemoteFileSource();
-            new Thread(() =>
+            CommonActionUtil.RunAsync(() =>
             {
                 try
                 {
@@ -145,7 +146,7 @@ namespace SkylineBatch
                     callback(null, ex);
                 }
 
-            }).Start();
+            });
         }
 
         public RemoteFileSource RemoteFileSourceFromUi()
@@ -263,7 +264,10 @@ namespace SkylineBatch
                     bool showWebdav = !_templateFile;
                     using (var dlg = new PanoramaFilePicker(panoramaServers, state, showWebdav, selectedPath))
                     {
-                        dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
+                        // Load server data before showing dialog
+                        // TODO: Should use LongWaitDlg.PerformWork() to show busy-wait UI with progress monitor
+                        dlg.LoadServerData(new SilentProgressMonitor());
+                        
                         dlg.OkButtonText = "Select";
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
@@ -277,7 +281,10 @@ namespace SkylineBatch
                 {
                     using (var dlg = new PanoramaDirectoryPicker(panoramaServers, state, true, selectedPath))
                     {
-                        dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
+                        // Load server data before showing dialog
+                        // TODO: Should use LongWaitDlg.PerformWork() to show busy-wait UI with progress monitor
+                        dlg.LoadServerData(new SilentProgressMonitor());
+                        
                         dlg.OkButtonText = "Select";
                         if (dlg.ShowDialog() != DialogResult.Cancel)
 

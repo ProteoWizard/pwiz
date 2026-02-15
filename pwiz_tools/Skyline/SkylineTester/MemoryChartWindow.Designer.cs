@@ -1,4 +1,4 @@
-﻿using ZedGraph;
+using ZedGraph;
 
 namespace SkylineTester
 {

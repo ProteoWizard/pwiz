@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -116,23 +116,24 @@ namespace AutoQCTest
             ProgramLog.Init("TestLog");
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://fake_panoramaweb.org/", "testEmail", "testPassword", "testFolder"),
                 TextUtil.LineSeparate("The server https://fake_panoramaweb.org/ does not exist.", 
-                    "Error: The remote name could not be resolved: 'fake_panoramaweb.org'"));
+                    "Error: Failed to resolve host fake_panoramaweb.org. Please check your DNS settings or VPN/proxy.",
+                    "URL: https://fake_panoramaweb.org/admin-healthCheck.view"));
             TestInvalidPanoramaSettings(new PanoramaSettings(true, string.Empty, "testEmail", "testPassword", "testFolder"),
                 "The Panorama server Url cannot be empty. Please specify a Panorama server Url.");
             TestInvalidPanoramaSettings(
                 new PanoramaSettings(true, "https://panoramaweb.org/", "bad_email@bad.bad", "testPassword",
                     "testFolder"),
                 TextUtil.LineSeparate("The username and password could not be authenticated with the panorama server.",
-                    "Error: The remote server returned an error: (401) Unauthorized.",
-                    "The email address and password you entered did not match any accounts on file.",
+                    // "Error: The remote server returned an error: (401) Unauthorized.",
+                    "Error: The email address and password you entered did not match any accounts on file.",
                     "URL: https://panoramaweb.org/security/home/ensureLogin.view"));
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", string.Empty, "testPassword", "testFolder"),
                 "The Panorama login email cannot be empty. Please specify a Panorama login email.");
             TestInvalidPanoramaSettings(
                 new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "not_the_password", "testFolder"),
                 TextUtil.LineSeparate("The username and password could not be authenticated with the panorama server.",
-                    "Error: The remote server returned an error: (401) Unauthorized.",
-                    "The email address and password you entered did not match any accounts on file.",
+                    // "Error: The remote server returned an error: (401) Unauthorized.",
+                    "Error: The email address and password you entered did not match any accounts on file.",
                     "URL: https://panoramaweb.org/security/home/ensureLogin.view"));
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", string.Empty, "testFolder"),
                 "The Panorama user password cannot be empty. Please specify a Panorama user password.");

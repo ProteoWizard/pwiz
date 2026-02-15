@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Trevor Killeen <killeent .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -155,10 +155,18 @@ namespace pwiz.Common.SystemUtil
         protected void ExpandTreeFromString(string persistentString)
         {
             IEnumerator<char> dataEnumerator = persistentString.GetEnumerator();
-            ExpandTreeFromString(Tree.Nodes, dataEnumerator);
+            TraverseTreeFromString(Tree.Nodes, dataEnumerator, node => node.Expand());
         }
 
-        private static bool ExpandTreeFromString(TreeNodeCollection nodes, IEnumerator<char> data)
+        /// <summary>
+        /// Traverses the tree structure described by the TreeState string, applying an action to each node.
+        /// Used for both expanding nodes (action = Expand) and validating compatibility (action = no-op).
+        /// </summary>
+        /// <param name="nodes">The TreeNodeCollection to traverse</param>
+        /// <param name="data">Enumerator for the TreeState string</param>
+        /// <param name="action">Action to apply to each node (e.g., node => node.Expand() or node => { })</param>
+        /// <returns>True if traversal completed successfully, false if invalid node index encountered</returns>
+        private static bool TraverseTreeFromString(TreeNodeCollection nodes, IEnumerator<char> data, Action<TreeNode> action)
         {
             bool finishedEnumerating = !data.MoveNext();
             int currentNode = 0;
@@ -171,7 +179,10 @@ namespace pwiz.Common.SystemUtil
                         finishedEnumerating = !data.MoveNext();
                         break;
                     case '(':
-                        finishedEnumerating = ExpandTreeFromString(nodes[currentNode].Nodes, data);
+                        // Before descending, check if current node is valid
+                        if (currentNode >= nodes.Count)
+                            return false;
+                        finishedEnumerating = TraverseTreeFromString(nodes[currentNode].Nodes, data, action);
                         break;
                     case ')':
                         return !data.MoveNext();
@@ -189,10 +200,12 @@ namespace pwiz.Common.SystemUtil
 
                         currentNode = int.Parse(dataIndex.ToString());
 
-                        // if invalid node in tree, return
+                        // if invalid node in tree, return false
                         if (currentNode >= nodes.Count)
-                            return true;
-                        nodes[currentNode].Expand();
+                            return false;
+                        
+                        // Apply the action to the node (e.g., expand it)
+                        action(nodes[currentNode]);
                         break;
                 }
             }
@@ -200,7 +213,7 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Reselects tree nodes from the persistent string data
+        /// Re-selects tree nodes from the persistent string data
         /// </summary>
         protected virtual void SelectTreeFromString(string persistentString)
         {
@@ -227,7 +240,7 @@ namespace pwiz.Common.SystemUtil
             return nodes[index];
         }
 
-        protected TreeNode NextTopNode { get; set; }
+        public TreeNode NextTopNode { get; protected set; }
 
         /// <summary>
         /// Updates the top node in order to establish the correct scrolling of the tree. This should
@@ -248,6 +261,150 @@ namespace pwiz.Common.SystemUtil
                 for (TreeNode node = Tree.Nodes.Count > 0 ? Tree.Nodes[0] : null; node != null; node = node.NextVisibleNode)
                     yield return node;
             }
+        }
+
+        /// <summary>
+        /// Generates a TreeState string for a given path by finding the actual nodes in the tree
+        /// and generating TreeState from their indices. This is used for InitialPath where we can't
+        /// assume nodes are at index 0.
+        /// </summary>
+        /// <param name="pathSegments">Array of path segment names to find in the tree</param>
+        /// <param name="startNode">The TreeNode to start searching from (typically root)</param>
+        /// <returns>TreeState string in format "expansion|selection|scroll", or null if path not found</returns>
+        public string GenerateTreeStateForPath(string[] pathSegments, TreeNode startNode)
+        {
+            if (pathSegments == null || pathSegments.Length == 0 || startNode == null)
+                return null;
+
+            // Find the path by traversing the tree
+            var pathNodes = new List<TreeNode> { startNode };
+            TreeNode currentNode = startNode;
+
+            foreach (var segment in pathSegments)
+            {
+                if (string.IsNullOrEmpty(segment))
+                    continue;
+
+                // Find the child node with matching name
+                TreeNode foundNode = null;
+                foreach (TreeNode child in currentNode.Nodes)
+                {
+                    if (child.Text.Equals(segment, StringComparison.Ordinal))
+                    {
+                        foundNode = child;
+                        break;
+                    }
+                }
+
+                if (foundNode == null)
+                    return null; // Path segment not found
+
+                pathNodes.Add(foundNode);
+                currentNode = foundNode;
+            }
+
+            // Generate expansion string from the actual node indices
+            // We expand all nodes in the path except the last one (which is selected)
+            var expansion = new StringBuilder();
+            
+            // Build expansion string by finding indices at each level
+            // For path "A/B/C", we expand A and B, then select C
+            // Format: A_index(B_index(C_index))
+            for (int i = 0; i < pathNodes.Count; i++)
+            {
+                TreeNode node = pathNodes[i];
+                TreeNodeCollection parentCollection = i == 0 ? Tree.Nodes : pathNodes[i - 1].Nodes;
+
+                // Find the index of this node in its parent's collection
+                int nodeIndex = parentCollection.IndexOf(node);
+                if (nodeIndex < 0)
+                    return null; // Should not happen
+
+                if (i > 0)
+                    expansion.Append('(');
+                expansion.Append(nodeIndex);
+            }
+
+            // Close all the parentheses (one for each level after root)
+            for (int i = 1; i < pathNodes.Count; i++)
+            {
+                expansion.Append(')');
+            }
+
+            // Expand all nodes in the path (except the last, which will be selected)
+            // This ensures they're visible for calculating the selection index
+            for (int i = 0; i < pathNodes.Count - 1; i++)
+            {
+                if (!pathNodes[i].IsExpanded && pathNodes[i].Nodes.Count > 0)
+                {
+                    pathNodes[i].Expand();
+                }
+            }
+
+            // Calculate selection index by counting visible nodes up to the selected node
+            int index = 0;
+            int selectionIndex = 0;
+            foreach (TreeNode visibleNode in VisibleNodes)
+            {
+                if (visibleNode == pathNodes[pathNodes.Count - 1])
+                {
+                    selectionIndex = index;
+                    break;
+                }
+                index++;
+            }
+            
+            int scrollPosition = Math.Max(0, selectionIndex - 1);
+
+            return $@"{expansion}|{selectionIndex}|{scrollPosition}";
+        }
+
+        /// <summary>
+        /// Validates if a TreeState string is compatible with the current TreeView structure.
+        /// Checks that all node indices referenced in the TreeState are within bounds of the actual tree.
+        /// </summary>
+        /// <param name="treeState">The TreeState string to validate (format: "expansion|selection|scroll")</param>
+        /// <returns>True if TreeState is compatible with the current tree, false if it should be discarded</returns>
+        public bool IsTreeStateCompatible(string treeState)
+        {
+            if (string.IsNullOrEmpty(treeState))
+                return true; // Empty state is always compatible
+            
+            string[] parts = treeState.Split('|');
+            if (parts.Length < 3)
+                return true; // Invalid format - consider compatible (let RestoreExpansionAndSelection handle it)
+            
+            string expansionString = parts[0];
+            string selectionString = parts[1];
+            string scrollString = parts[2];
+            
+            // Validate expansion string by traversing the tree structure
+            // Use a no-op action to just check bounds without modifying the tree
+            IEnumerator<char> expansionEnumerator = expansionString.GetEnumerator();
+            bool expansionValid = TraverseTreeFromString(Tree.Nodes, expansionEnumerator, node => { });
+            
+            if (!expansionValid)
+                return false;
+            
+            // Validate selection index - check if it's within bounds of visible nodes
+            // We need to expand the tree according to the expansion string first to get accurate visible node count
+            // But we can't modify the tree during validation, so we'll do a simplified check
+            // The actual validation happens in SelectTreeFromString which returns early if out of bounds
+            if (!string.IsNullOrEmpty(selectionString))
+            {
+                if (!int.TryParse(selectionString, out int selectionIndex) || selectionIndex < 0)
+                    return false;
+                // We can't accurately count visible nodes without expanding, but negative indices are definitely invalid
+            }
+            
+            // Validate scroll index similarly
+            if (!string.IsNullOrEmpty(scrollString))
+            {
+                if (!int.TryParse(scrollString, out int scrollIndex) || scrollIndex < 0)
+                    return false;
+            }
+            
+            return true;
         }
     }
 }

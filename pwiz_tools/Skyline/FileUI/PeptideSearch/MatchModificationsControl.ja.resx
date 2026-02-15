@@ -336,9 +336,9 @@
   <data name="&gt;&gt;btnAddModification.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="menuAddModification.TrayLocation" type="System.Drawing.Point, System.Drawing">
+  <metadata name="menuAddModification.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
-  </data>
+  </metadata>
   <data name="menuItemAddStructuralModification.Size" type="System.Drawing.Size, System.Drawing">
     <value>229, 22</value>
   </data>
@@ -360,11 +360,14 @@
   <data name="&gt;&gt;menuAddModification.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="$this.Localizable" type="System.Boolean, mscorlib">
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
-  </data>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>381, 225</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 425</value>

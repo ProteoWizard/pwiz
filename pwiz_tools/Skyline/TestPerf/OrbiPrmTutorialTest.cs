@@ -1016,7 +1016,8 @@ namespace TestPerf
             RunUI(() => foldChangeGridWithGraph.ShowGraph());
             RestoreViewOnScreen(38);
             var foldChangeGraph = WaitForOpenForm<FoldChangeBarGraph>();
-            WaitForConditionUI(() => foldChangeGraph.ZedGraphControl.GraphPane.CurveList.Any());
+            WaitForConditionUI(() => (foldChangeGraph.ZedGraphControl.GraphPane.CurveList.FirstOrDefault()?.Points.Count ?? 0) ==
+                                     foldChangeGridWithGraph.DataboundGridControl.RowCount);
             RunUI(() =>
             {
                 Assert.AreEqual(foldChangeGridWithGraph.DataboundGridControl.RowCount,
@@ -1060,17 +1061,14 @@ namespace TestPerf
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                Assert.IsTrue(editGroupComparisonDlg.ComboControlAnnotation.Items.Contains(controlAnnotation));
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = controlAnnotation;
+                editGroupComparisonDlg.ControlAnnotation = controlAnnotation;
             });
-            WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.Items.Contains(controlValue));
+            WaitForConditionUI(2000, () => editGroupComparisonDlg.ControlValueOptions.Contains(controlValue));
             RunUI(() =>
             {
-                editGroupComparisonDlg.ComboControlValue.SelectedItem = controlValue;
-                editGroupComparisonDlg.ComboCaseValue.SelectedItem = caseValue;
-                Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
-                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
-                Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
+                editGroupComparisonDlg.ControlValue = controlValue;
+                editGroupComparisonDlg.CaseValue= caseValue;
+                editGroupComparisonDlg.IdentityAnnotation = identityAnnotation;
                 editGroupComparisonDlg.NormalizeOption =
                     NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName("heavy"));
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 95.ToString(CultureInfo.CurrentCulture);
@@ -1144,7 +1142,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 var foldChangeRows = foldChangeGrid.FoldChangeBindingSource.GetBindingListSource().Cast<RowItem>()
-                    .Select(rowItem => (FoldChangeBindingSource.FoldChangeRow)rowItem.Value).ToList();
+                    .Select(rowItem => (FoldChangeRow)rowItem.Value).ToList();
                 float[] actualValues = foldChangeRows.Select(foldChangeResult => (float) foldChangeResult.FoldChangeResult.FoldChange).ToArray();
                 if (IsRecordMode)
                 {

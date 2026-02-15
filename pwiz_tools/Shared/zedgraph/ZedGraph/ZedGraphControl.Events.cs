@@ -706,8 +706,6 @@ namespace ZedGraph
 			{
 				Point mousePt = new Point( e.X, e.Y );
 
-				SetCursor( mousePt );
-
                 GraphPane pane = this.MasterPane.FindPane(mousePt);
 				// Provide Callback for MouseMove events
 				if ( !(_isTextDragging || _isZooming || _isPanning || _isSelecting) )
@@ -717,6 +715,9 @@ namespace ZedGraph
                     if (this.MouseMoveEvent != null && this.MouseMoveEvent(this, e))
 						return;
 				}
+
+				// Only set default cursor if event wasn't handled
+				SetCursor( mousePt );
 
 				//Point tempPt = this.PointToClient( Control.MousePosition );
 

@@ -1,0 +1,849 @@
+<html><head>
+<meta charset="utf-8">
+<style>body {
+    font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+}
+.RowType {
+    font-size: 1.769em;
+    line-height: 1.3em;
+    font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+    color: #000;
+}
+table {
+border: 1px solid #bbb;
+border-collapse: collapse;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+th {
+    background-color: #ededed;
+    color: #636363;
+    text-align: left;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    font-weight: bold;
+    border: 1px solid #bbb;
+}
+td {
+    color: #2a2a2a;
+    vertical-align: top;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    border: 1px solid #bbb;
+}
+.Hidden {
+    font-style: italic; 
+}
+.Obsolete {
+    text-decoration: line-through;
+}</style>
+</head><body>
+<div id="pwiz.Skyline.Model.Databinding.Entities.SkylineDocument"><span class="RowType">SkylineDocument</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Molecule Lists</td><td class="ColumnDescription">The top level set of the groupings of all of the molecules in a Skyline document.</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">Molecule List</a></td></tr>
+<tr><td class="ColumnCaption">Replicates</td><td class="ColumnDescription">Replicates</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">Replicate</a></td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Protein"><span class="RowType">Molecule List</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Molecules</td><td class="ColumnDescription">The molecules in a Molecule List.</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">Molecule</a></td></tr>
+<tr><td class="ColumnCaption">Molecule List Results</td><td class="ColumnDescription">Molecule List Results</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">Molecule List Result</a></td></tr>
+<tr><td class="ColumnCaption">Molecule List Name</td><td class="ColumnDescription">The name of the molecule list.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Description</td><td class="ColumnDescription">When proteins are imported into Skyline through public FASTA
+sequence files, a Protein Description is provided. You can see the Protein Description
+also when you hover over the protein name in the peptide tree view.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Accession</td><td class="ColumnDescription">Protein Accession</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Preferred Name</td><td class="ColumnDescription">Protein Preferred Name</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Gene</td><td class="ColumnDescription">Protein Gene</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Species</td><td class="ColumnDescription">Protein Species</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Protein Sequence</td><td class="ColumnDescription">When proteins are imported into Skyline through public FASTA
+sequence files the full protein sequence is accessible. You can see the protein sequence
+also when you hover over the protein name in the peptide tree view.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Auto Select Molecules</td><td class="ColumnDescription">If true, then Skyline will automatically add or remove molecules from the Molecule List based on the current settings.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Protein Sequence Coverage</td><td class="ColumnDescription">The fraction of amino acids in the protein sequence which could be part of one or more of the sequences of the child peptides.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Molecule List Note</td><td class="ColumnDescription">A free text note associated with the molecule list.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Molecule List Locator</td><td class="ColumnDescription">Unique identifier of the molecule list within the document. This begins with &quot;MoleculeGroup:&quot;.</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Replicate"><span class="RowType">Replicate</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Replicate Name</td><td class="ColumnDescription">The replicate name assigned to the data during import.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Files</td><td class="ColumnDescription">Files</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.ResultFile">Result File</a></td></tr>
+<tr><td class="ColumnCaption">Sample Type</td><td class="ColumnDescription">Type of the sample.  One of the following: 
+      Unknown (sample being measured)
+      Standard (external standard containing a known amount of analyte to be used in calibration curve)
+      Quality Control (containing a known amount of analyte to verify calibration)
+      Solvent
+      Blank
+      Double Blank</td><td class="ColumnType">Sample Type</td></tr>
+<tr><td class="ColumnCaption">Analyte Concentration</td><td class="ColumnDescription">Known quantity of analyte that was spiked into the external or quality control standard.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Sample Dilution Factor</td><td class="ColumnDescription">The amount by which the sample was diluted before being analyzed. 
+External standards typically have a dilution factor of 1, and unknown samples may have been diluted by a factor greater than 1 in order to bring them into the quantifiable range for the instrument.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Batch Name</td><td class="ColumnDescription">Name of the batch that this replicate belongs to. The calibration curve for a particular replicate
+will be calculated using the subset of external standards with the same batch name.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Replicate Locator</td><td class="ColumnDescription">Unique identifier of the replicate within the document. This is always &quot;Replicate:/&quot; followed by the name of the replicate.</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Peptide"><span class="RowType">Molecule</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Precursors</td><td class="ColumnDescription">Precursors</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">Precursor</a></td></tr>
+<tr><td class="ColumnCaption">Molecule Results</td><td class="ColumnDescription">The results associated with the molecule.</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">Molecule Result</a></td></tr>
+<tr><td class="ColumnCaption">Molecule List</td><td class="ColumnDescription">A grouping of molecules in a Skyline document.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein">Molecule List</a></td></tr>
+<tr><td class="ColumnCaption">Peptide Sequence</td><td class="ColumnDescription">Amino acid sequence of the peptide.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptide Sequence Length</td><td class="ColumnDescription">Amino acid count in the sequence of the peptide.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Peptide Modified Sequence</td><td class="ColumnDescription">Amino acid sequence annotated with only structural
+modification delta masses (e.g. AC[+57]GR).</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.ProteomicSequence">ProteomicSequence</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Peptide Modified Sequence Monoisotopic Masses</td><td class="ColumnDescription">The modified sequence of the peptide where modifications are referred to by their monoisotopic masses, e.g. &quot;C[+57.021464]&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptide Modified Sequence Average Masses</td><td class="ColumnDescription">The modified sequence of the peptide where modifications are referred to by their average masses, e.g. &quot;C[+57.05162]&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptide Modified Sequence Three Letter Codes</td><td class="ColumnDescription">The modified sequence of the peptide where modifications are referred to by their three letter codes, e.g. &quot;C[CAM]&quot;. If the modification does not have a three letter code, then its full name is used instead.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptide Modified Sequence Full Names</td><td class="ColumnDescription">The modified sequence of the peptide where modifications are referred to by their full names, e.g. &quot;C[Carbamidomethyl (C)]&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Peptide Modified Sequence Unimod Ids</td><td class="ColumnDescription">The modified sequence of the peptide where modifications are referred to by their unimod id, e.g. &quot;C(unimod:4)&quot;. If the modification does not have a unimod id, then its full name is used instead.</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Molecule Name</td><td class="ColumnDescription">A general name that may be assigned to a molecule in its neutral, unlabeled form.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Molecule Formula</td><td class="ColumnDescription">An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Standard Type</td><td class="ColumnDescription">Standard Type</td><td class="ColumnType">Standard Type</td></tr>
+<tr><td class="ColumnCaption">Previous Aa</td><td class="ColumnDescription">Previous Aa</td><td class="ColumnType">Char</td></tr>
+<tr><td class="ColumnCaption">Next Aa</td><td class="ColumnDescription">The amino acid residue found immediately after the peptide in the protein sequence.</td><td class="ColumnType">Char</td></tr>
+<tr><td class="ColumnCaption">First Position</td><td class="ColumnDescription">The position of the first (N-terminal) amino acid of the peptide within its
+containing protein sequence, or #N/A if no protein sequence is available.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Last Position</td><td class="ColumnDescription">The position of the last (C-terminal) amino acid of the peptide within its
+containing protein sequence, or #N/A if no protein sequence is available</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Missed Cleavages</td><td class="ColumnDescription">The number of missed cleavage sites in the peptide sequence</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Retention Time Calculator Score</td><td class="ColumnDescription">The raw score for the peptide from the current
+retention score calculator, if one is used (e.g. SSRCalc or iRT score)
+    </td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Predicted Retention Time</td><td class="ColumnDescription">The retention time predicted by a retention time regression
+between a set of measured results and a retention time calculator (currently only
+SSRCalc 3.0 is available), or #N/A if no retention time regression has been assigned.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Average Measured Retention Time</td><td class="ColumnDescription">The average peptide retention time over all replicates</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit Retention Time</td><td class="ColumnDescription">The exact predicted retention time (in minutes) to be used for a target, overriding all other methods of prediction.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit Retention Time Window</td><td class="ColumnDescription">The exact desired retention time window (in minutes) to be used for a target, overriding all other settings used to derive this value.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Normalization Method</td><td class="ColumnDescription">Override of the normalization method to use with this particular molecule for absolute quantification and group comparisons.</td><td class="ColumnType">Normalization Method</td></tr>
+<tr><td class="ColumnCaption">Surrogate External Standard</td><td class="ColumnDescription">Name of another peptide or molecule whose fitted calibration curve will be used for quantification of this peptide or molecule</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Molecule Note</td><td class="ColumnDescription">A free text note associated with the molecule.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Molecule Locator</td><td class="ColumnDescription">Unique identifier of the molecule within the document. This begins with &quot;Molecule:&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Internal Standard Concentration</td><td class="ColumnDescription">Quantity of internal standard in the sample.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Concentration Multiplier</td><td class="ColumnDescription">Value to multiply the replicate&#39;s &quot;analyte concentration&quot; by in order to get the specific concentration of the specific peptide or molecule.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Calibration Curve</td><td class="ColumnDescription">Calibration Curve that was calculated using Replicates whose Sample Type was &quot;Standard&quot; and that had an &quot;Analyte Concentration&quot; specified.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics">Calibration Curve</a></td></tr>
+<tr><td class="ColumnCaption">Figures Of Merit</td><td class="ColumnDescription">The limits of detection and quantification for the peptide or molecule. The method for calculating these quantities can be chosen on the Quantification tab of the Peptide Settings.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit">Figures Of Merit</a></td></tr>
+<tr><td class="ColumnCaption">InChiKey</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">CAS</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">HMDB</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">InChI</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">SMILES</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">KEGG</td><td class="ColumnDescription">Standardized molecular identifier</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Auto Select Precursors</td><td class="ColumnDescription">If true, then Skyline will automatically add or remove precursors based on the Transition Settings Filter, spectral library, etc.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Attribute Group ID</td><td class="ColumnDescription">Affects the grouping of peptides or molecules in the calculation of Attribute Area Proportion.</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics"><span class="RowType">Calibration Curve</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Slope</td><td class="ColumnDescription">Coefficient of the linear term in the fitted curve or line.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Intercept</td><td class="ColumnDescription">Y-intercept in the fitted line or curve</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Turning Point</td><td class="ColumnDescription">For bilinear regressions, the X-coordinate where the two lines intersect.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Point Count</td><td class="ColumnDescription">Number of data points that were used in the curve fit.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Quadratic Coefficient</td><td class="ColumnDescription">Coefficient of the x-squared term in a quadratic regression.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">R Squared</td><td class="ColumnDescription">Coefficient of determination</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Error Message</td><td class="ColumnDescription">Text of the error message, if any, which occurred while trying to calculate this value.</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit"><span class="RowType">Figures Of Merit</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Limit Of Detection</td><td class="ColumnDescription"> The lower concentration limit at which the analyte can be reliably distinguished from a blank.
+      The options about for calculating the lower limit of detection can be specified on the Quantification tab of the Peptide Settings.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Limit Of Quantification</td><td class="ColumnDescription">The lower concentration limit where the analyte is said to be quantifiable.
+The options for determining this value can be specified on the Quantification tab of the Peptide Settings.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.ProteinResult"><span class="RowType">Molecule List Result</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Replicate</td><td class="ColumnDescription">Replicate</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">Replicate</a></td></tr>
+<tr><td class="ColumnCaption">Molecule List Abundance</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue">AbundanceValue</a></td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Collections.ResultKey"><span class="RowType">ResultKey</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Replicate Index</td><td class="ColumnDescription">Replicate Index</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Replicate Name</td><td class="ColumnDescription">The replicate name assigned to the data during import.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">File Index</td><td class="ColumnDescription">File Index</td><td class="ColumnType">Int32</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.ResultFile"><span class="RowType">Result File</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Replicate</td><td class="ColumnDescription">Replicate</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">Replicate</a></td></tr>
+<tr><td class="ColumnCaption">File Name</td><td class="ColumnDescription">The name of the file from which the data was imported</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">File Path</td><td class="ColumnDescription">The full path and file name of the file from which the data was imported.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Sample Name</td><td class="ColumnDescription">The sample name, if the data was imported from a multi-sample WIFF
+file, or the file name again for other file types.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Modified Time</td><td class="ColumnDescription">Last time and date at which the original mass spectrometer file was
+modified on disk</td><td class="ColumnType">DateTime</td></tr>
+<tr><td class="ColumnCaption">Acquired Time</td><td class="ColumnDescription">Last time and date at which the mass spectrometer began acquiring this
+replicate data. Or #N/A if the file was imported with a version older than 1.1.</td><td class="ColumnType">DateTime</td></tr>
+<tr><td class="ColumnCaption">Explicit Global Standard Area</td><td class="ColumnDescription">Value to use when calculating &quot;ratio to global standards&quot;. 
+    Use this when you want to normalize peak areas in a particular replicate by dividing by a value that you calculated outside of Skyline.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Ion Current Area</td><td class="ColumnDescription">Integral of the total ion current over the entire run.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility Units</td><td class="ColumnDescription">Units for ion mobility used in chromatogram extraction.</td><td class="ColumnType">eIonMobilityUnits</td></tr>
+<tr><td class="ColumnCaption">Result File Locator</td><td class="ColumnDescription">Unique identifier of the result file within the document. This begins with &quot;ResultFile:/&quot; followed by the replicate name. 
+This usually ends with the result filename, but may have additional attributes such as the full path if the filename is not unique within the replicate.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Sample Id</td><td class="ColumnDescription">A free text identifier for referring to a sample (which may be shared among multiple files). Read from the &quot;sample id&quot; attribute in an imported result file</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Instrument Serial Number</td><td class="ColumnDescription">The instrument serial number read from an imported result file</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Median Peak Area</td><td class="ColumnDescription">The median transition peak area of transition results in the particular result file.
+This median peak area is used when the normalization method is &quot;Equalize Medians&quot;.
+If there is an internal standard label type, then the median peak area is calculated using only the peak areas from transitions whose precursor&#39;s label type is an internal standard.
+If there are no internal standard peak areas, then the median transition peak area is calculated from all transition peak areas.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Normalization Divisor</td><td class="ColumnDescription">Number which observed values are divided by when using the default normalization method.
+The default normalization method is specified on the Quantification tab of the Peptide or Molecule settings dialog.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Precursor"><span class="RowType">Precursor</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Molecule</td><td class="ColumnDescription">Molecules belong to Molecule Lists and contain Precursors.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">Molecule</a></td></tr>
+<tr><td class="ColumnCaption">Transitions</td><td class="ColumnDescription">Transitions</td><td class="ColumnType">List of <a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">Transition</a></td></tr>
+<tr><td class="ColumnCaption">Precursor Results</td><td class="ColumnDescription">Precursor Results</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">Precursor Result</a></td></tr>
+<tr><td class="ColumnCaption">Precursor Results Summary</td><td class="ColumnDescription">Precursor Results Summary</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary">PrecursorResultSummary</a></td></tr>
+<tr><td class="ColumnCaption">Precursor Charge</td><td class="ColumnDescription">The charge associated with the precursor ion.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Isotope Label Type</td><td class="ColumnDescription">A label type name associated with the precursor ion (light/heavy),
+indicating which isotope modifications are applied</td><td class="ColumnType">Isotope Label Type</td></tr>
+<tr><td class="ColumnCaption">Precursor Neutral Mass</td><td class="ColumnDescription">Neutral mass of the precursor in Daltons</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Transition Count</td><td class="ColumnDescription">Number of transitions under this precursor.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Precursor Ion Name</td><td class="ColumnDescription">The name of the precursor.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Precursor Ion Formula</td><td class="ColumnDescription">The formula of the precursor ion.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Precursor Neutral Formula</td><td class="ColumnDescription">The formula of the precursor ion. This is deprecated and &quot;PrecursorIonFomula&quot; should be used instead.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Precursor Adduct</td><td class="ColumnDescription">The adduct which is applied to the molecule to make the precursor.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Precursor Mz</td><td class="ColumnDescription">The mass to charge ratio (m/z) of the precursor ion.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Collision Energy</td><td class="ColumnDescription">Collision Energy for the precursor ion according to instrument/vendor
+specific default collision energy equation within Skyline</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Declustering Potential</td><td class="ColumnDescription">Declustering Potential for the precursor ion according to
+instrument/vendor specific default declustering potential equation within Skyline</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Modified Sequence</td><td class="ColumnDescription">Peptide sequence including any amino acid modifications such as
+cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.ProteomicSequence">ProteomicSequence</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Modified Sequence Monoisotopic Masses</td><td class="ColumnDescription">The modified sequence of the precursor where modifications are referred to by their monoisotopic masses, e.g. &quot;C[+57.021464]&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Modified Sequence Average Masses</td><td class="ColumnDescription">The modified sequence of the precursor where modifications are referred to by their average masses, e.g. &quot;C[+57.05162]&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Modified Sequence Three Letter Codes</td><td class="ColumnDescription">The modified sequence of the precursor where modifications are referred to by their three letter codes, e.g. &quot;C[CAM]&quot;. If the modification does not have a three letter code, then its full name is used instead.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Modified Sequence Full Names</td><td class="ColumnDescription">The modified sequence of the precursor where modifications are referred to by their full names, e.g. &quot;C[Carbamidomethyl (C)]&quot;.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Modified Sequence Unimod Ids</td><td class="ColumnDescription">The modified sequence of the precursor where modifications are referred to by their unimod id, e.g. &quot;C(unimod:4)&quot;. If the modification does not have a unimod id, then its full name is used instead.</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Precursor Explicit Collision Energy</td><td class="ColumnDescription">The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values. May in turn be overridden by per-transition Explicit Collision Energy.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit Compensation Voltage</td><td class="ColumnDescription">The exact desired compensation voltage (ion mobility filter) to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit Ion Mobility</td><td class="ColumnDescription">The ion mobility value of the center of the filter window used when extracting chromatograms</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit Ion Mobility Units</td><td class="ColumnDescription">The units of the Explicit Ion Mobility values.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Explicit Collisional Cross Section</td><td class="ColumnDescription">The exact desired collisional cross section (in square angstroms) to be converted to ion mobility and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. </td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Precursor Concentration</td><td class="ColumnDescription">The concentration at which this precursor was spiked into the sample. This is used for generating Isotopolog Response Curves.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Library Ion Mobility</td><td class="ColumnDescription">The ion mobility information for the precursor from the ion mobility library</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.IonMobilityObject">IonMobilityObject</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Library Ion Mobility Value</td><td class="ColumnDescription">The ion mobility of the precursor from the ion mobility library</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Library Ion Mobility Units</td><td class="ColumnDescription">The units of the Library Ion Mobility Value</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Library Collision Cross Section</td><td class="ColumnDescription">The collision cross section for the precursor from the ion mobility library</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Library Ion Mobility High Energy Offset</td><td class="ColumnDescription">The high energy offset for the precursor from the ion mobility library</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Spectrum Filter</td><td class="ColumnDescription">Extra criteria that spectra must pass to be included in the extracted ion chromatogram</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Precursor Note</td><td class="ColumnDescription">A free text note associated with a precursor by clicking Edit Note on
+the Edit menu</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Library Name</td><td class="ColumnDescription">The name of a MS/MS spectral library, if a MS/MS spectral library
+spectrum is associated with the precursor ion.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Library Type</td><td class="ColumnDescription">The type of MS/MS spectral library (BiblioSpec, GPM, NIST), if a MS/MS
+spectral library spectrum is associated with the precursor ion.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Library Probability Score</td><td class="ColumnDescription">The probability score assigned to this match in the input files used to build the spectral library.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Library Score1</td><td class="ColumnDescription">Raw peptide library score that may or may not be used to rank among
+precursors of a protein.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Library Score2</td><td class="ColumnDescription">Raw peptide library score that may or may not be used to rank among
+precursors of a protein.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Library Score3</td><td class="ColumnDescription">Raw peptide library score that may or may not be used to rank among
+precursors of a protein.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Is Decoy</td><td class="ColumnDescription">True if this is a decoy precursor.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Decoy Mz Shift</td><td class="ColumnDescription">Shift in m/z applied to the precursor to create
+the decoy m/z</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Auto Select Transitions</td><td class="ColumnDescription">If true, then Skyline will automatically add or remove transitions from the precursor depending on the Transition Settings Filter, spectral library, etc.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Target Qualitative Ion Ratio</td><td class="ColumnDescription">The average of the Qualitative Ion Ratio values across all of the external standard replicates that have not been excluded from calibration.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Exemplary Peak</td><td class="ColumnDescription">Best-scoring peak either from one of the Replicates in the document or one of the explicit peak boundaries from a library</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Exemplary Retention Time</td><td class="ColumnDescription">Normalized retention time of the apex of the best-scoring peak</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Exemplary Start Time</td><td class="ColumnDescription">Normalized start retention time of the peak from the best-scoring replicate or library file</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Exemplary End Time</td><td class="ColumnDescription">Normalized end retention time of the peak from the best-scoring replicate or library file</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Exemplary Score</td><td class="ColumnDescription">Score of the highest scoring peak in either a replicate or a library</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Exemplary Replicate Name</td><td class="ColumnDescription">Name of the replicate with the best-scoring peak</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Exemplary Library Name</td><td class="ColumnDescription">Name of the library with the best-scoring peak</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Exemplary File Path</td><td class="ColumnDescription">File path of the result file with the best-scoring peak</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Precursor Locator</td><td class="ColumnDescription">Unique identifier of the precursor within the document. This will begin with &quot;Precursor:&quot; and usually ends with the precursor&#39;s label type followed by its adduct.</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary"><span class="RowType">PrecursorResultSummary</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Best Retention Time</td><td class="ColumnDescription">The RetentionTime value of the transition with the highest
+maximum intensity for the precursor.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.RetentionTimeSummary">RetentionTimeSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Min Best Retention Time</td><td class="ColumnDescription">Minimum of the precursor BestRetentionTime values</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Max Best Retention Time</td><td class="ColumnDescription">Maximum of the precursor BestRetentionTime values</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Range Best Retention Time</td><td class="ColumnDescription">The difference between MaxBestRetentionTime and
+MinBestRetentionTime, which can be used to gauge the spread of retention times
+measured.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Mean Best Retention Time</td><td class="ColumnDescription">Mean of the precursor BestRetentionTime values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Best Retention Time</td><td class="ColumnDescription">Standard deviation of the precursor BestRetentionTime
+      values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Best Retention Time</td><td class="ColumnDescription">Coefficient of variation (CV) of the precursor
+BestRetentionTime values.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Detection Q Value</td><td class="ColumnDescription">A false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.DetectionQValueSummary">DetectionQValueSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Min Detection Q Value</td><td class="ColumnDescription">A  minimum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Max Detection Q Value</td><td class="ColumnDescription">A  maximum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mPro
+phet model.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Median Detection Q Value</td><td class="ColumnDescription">A  median of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Max Fwhm</td><td class="ColumnDescription">The maximum full width at half max (FWHM) of the transitions for the
+precursor.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.FwhmSummary">FwhmSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Max Fwhm</td><td class="ColumnDescription">Mean of the precursor MaxFwhm (peak width) values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Max Fwhm</td><td class="ColumnDescription">Standard deviation of the precursor MaxFwhm (peak width) values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Max Fwhm</td><td class="ColumnDescription">Coefficient of variation (CV) of the precursor MaxFwhm (peak width)
+values.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Total Area</td><td class="ColumnDescription">The summed Area values of all individual transitions for the particular
+precursor.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Total Area</td><td class="ColumnDescription">Mean of the precursor TotalArea values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Total Area</td><td class="ColumnDescription">Standard deviation of the precursor TotalArea values</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Total Area</td><td class="ColumnDescription">Coefficient of variation (CV) of the precursor TotalArea values</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Total Area Ratio</td><td class="ColumnDescription">The ratio of the TotalArea of this precursor to the first internal
+standard label type, before version 0.7 this was always light/heavy, and appeared on the
+heavy precursor.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaRatioSummary">AreaRatioSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Total Area Ratio</td><td class="ColumnDescription"> Mean of the precursor TotalAreaRatio values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Total Area Ratio</td><td class="ColumnDescription">Standard deviation of the precursor TotalAreaNormalized
+values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Total Area Ratio</td><td class="ColumnDescription">Coefficient of variation (CV) of the precursor TotalAreaRatio values</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Total Area Normalized</td><td class="ColumnDescription">The TotalArea normalized to the sum of the TotalArea values
+for all peptide precursors in the document</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaNormalizedSummary">AreaNormalizedSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Total Area Normalized</td><td class="ColumnDescription">Mean of the precursor TotalAreaNormalized values</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Total Area Normalized</td><td class="ColumnDescription">Stdev Total Area Normalized</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Total Area Normalized</td><td class="ColumnDescription">Coefficient of variation (CV) of the precursor TotalAreaNormalized values.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Max Height</td><td class="ColumnDescription">Max Height</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Max Height</td><td class="ColumnDescription">Mean Max Height</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Max Height</td><td class="ColumnDescription">Stdev Max Height</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Max Height</td><td class="ColumnDescription">Cv Max Height</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PeptideResult"><span class="RowType">Molecule Result</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Molecule Peak Found Ratio</td><td class="ColumnDescription">Molecule Peak Found Ratio</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Molecule Retention Time</td><td class="ColumnDescription">The average of the Best Retention Time values for the precursors in a particular replicate.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Predicted Result Retention Time</td><td class="ColumnDescription">Peptide retention time for each replicate run.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ratio To Standard</td><td class="ColumnDescription">Peptide area ratio of light to heavy</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Best Replicate</td><td class="ColumnDescription">True if this replicate has the highest overall peptide peak score.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Modified Area Proportion</td><td class="ColumnDescription">The normalized area of this peptide result divided by the sum of all peptide results in this protein and replicate that have the same unmodified sequence.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Attribute Area Proportion</td><td class="ColumnDescription">The ratio of the normalized area to the sum of the normalized areas of all of the other peptides or molecules in the document that have the same Attribute Area Proportion.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Result File</td><td class="ColumnDescription">Result File</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ResultFile">Result File</a></td></tr>
+<tr><td class="ColumnCaption">Molecule List Result</td><td class="ColumnDescription">Molecule List Result</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.ProteinResult">Molecule List Result</a></td></tr>
+<tr><td class="ColumnCaption">Exclude From Calibration</td><td class="ColumnDescription">Whether the results in the replicate should be excluded from the peptide&#39;s calibration curve calculation.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Quantification</td><td class="ColumnDescription">Values related to using the calibration curve or normalization method to quantify the analyte.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.QuantificationResult">QuantificationResult</a></td></tr>
+<tr><td class="ColumnCaption">Replicate Calibration Curve</td><td class="ColumnDescription">The calibration curve made using the replicates that have the same Batch Name as this replicate.
+If the Precursor Concentration is specified on any of the Precursors in this Peptide then the Calibration Curve will be an isotopolog response curve.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.CalibrationCurveMetrics">Calibration Curve</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Replicate Slope</td><td class="ColumnDescription">The slope of the Replicate Calibration Curve</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Replicate Intercept</td><td class="ColumnDescription">The intercept of the Replicate Calibration Curve</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Replicate Turning Point</td><td class="ColumnDescription">The bilinear turning point on the Replicate Calibration Curve</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Replicate Point Count</td><td class="ColumnDescription">The number of data points that were fitted on the Replicate Calibration Curve</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Replicate Quadratic Coefficient</td><td class="ColumnDescription">The coefficient of the x-squared term on the Replicate Calibration Curve</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Replicate R Squared</td><td class="ColumnDescription">The coefficient of determination on the Replicate Calibration Curve</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Replicate Error Message</td><td class="ColumnDescription">Text of the error message, if any, which occurred while trying to fit the Replicate Calibration Curve</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Batch Figures Of Merit</td><td class="ColumnDescription">Figures of merit calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.FiguresOfMerit">Figures Of Merit</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Batch Limit Of Detection</td><td class="ColumnDescription">Lower limit of detection calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Batch Limit Of Quantification</td><td class="ColumnDescription">Lower limit of quantification calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Explicit Analyte Concentration</td><td class="ColumnDescription">The concentration of this particular molecule or peptide in this particular replicate.
+If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
+to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Peptide Spectrum Match Count</td><td class="ColumnDescription">Number of spectra in the spectral library which match the peptide and result file.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Molecule Result Locator</td><td class="ColumnDescription">Unique identifier of the Molecule Result within the document. This will begin with &quot;MoleculeResult:&quot; and will contain the molecule name and the replicate name.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">RatioLightToHeavy</td><td class="ColumnDescription"></td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">DotProductLightToHeavy</td><td class="ColumnDescription"></td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue"><span class="RowType">AbundanceValue</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Molecule List Abundance Raw</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Available even when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Molecule List Abundance Strict</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
+Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
+Unavailable when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Molecule List Abundance Message</td><td class="ColumnDescription">Warning if missing data impacts comparisons of &quot;Molecule List Abundance&quot; between replicates</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Transition"><span class="RowType">Transition</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Precursor</td><td class="ColumnDescription">Precursor</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">Precursor</a></td></tr>
+<tr><td class="ColumnCaption">Transition Results</td><td class="ColumnDescription">Transition Results</td><td class="ColumnType">Map of ResultKey to <a href="#pwiz.Skyline.Model.Databinding.Entities.TransitionResult">Transition Result</a></td></tr>
+<tr><td class="ColumnCaption">Transition Results Summary</td><td class="ColumnDescription">Transition Results Summary</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.TransitionResultSummary">TransitionResultSummary</a></td></tr>
+<tr><td class="ColumnCaption">Product Charge</td><td class="ColumnDescription">Charge (z) of the product ion.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Product Neutral Mass</td><td class="ColumnDescription">Neutral mass of the product ion peptide fragment in Daltons.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Product Mz</td><td class="ColumnDescription">The mass to charge ratio (m/z) of the product ion.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Fragment Ion</td><td class="ColumnDescription">The name of the product ion peptide fragment (e.g. y8, y10, b7, etc.).</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Product Ion Formula</td><td class="ColumnDescription">The formula of the product ion.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Product Neutral Formula</td><td class="ColumnDescription">The formula of the product ion. This is deprecated, and &quot;ProductIonFormula&quot; should be used instead.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Product Adduct</td><td class="ColumnDescription">The adduct applied to the product ion.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Fragment Ion Type</td><td class="ColumnDescription">The type of the product ion (y, b, c, z, a, x, precursor)</td><td class="ColumnType">IonType</td></tr>
+<tr><td class="ColumnCaption">Fragment Ion Ordinal</td><td class="ColumnDescription">Position of the amino acid in the peptide after (C-terminal of)
+which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Cleavage Aa</td><td class="ColumnDescription">Specific amino acid residue in the peptide after (C-terminal of) which the
+peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Loss Neutral Mass</td><td class="ColumnDescription">The total mass of all neutral losses from this fragment.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Losses</td><td class="ColumnDescription">A comma separated list of all neutral losses from this fragment</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Loss Formulas</td><td class="ColumnDescription">A comma separated list of the chemical forumulas for all neutral losses from this fragment, or empty if not all losses have formulas</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Quantitative</td><td class="ColumnDescription">Whether the transition&#39;s peak area should be included when quantifying peptides.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Explicit Collision Energy</td><td class="ColumnDescription">The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit SLens</td><td class="ColumnDescription">The exact desired SLens value (Thermo instruments only) to be used in SRM methods or transitions lists for a target.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit Cone Voltage</td><td class="ColumnDescription">The exact desired cone voltage (Waters instruments only) to be used in SRM methods or transitions lists for a target.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit Declustering Potential</td><td class="ColumnDescription">The exact desired declustering potential (SCIEX instruments only) to be used in SRM methods or transitions lists for a target, overriding all model values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Explicit Ion Mobility High Energy Offset</td><td class="ColumnDescription">The ion mobility high energy offset to be used when extracting chromatograms</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Transition Note</td><td class="ColumnDescription">A free text note associated with the transition by clicking Edit Note on
+the Edit menu</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Library Rank</td><td class="ColumnDescription">The rank based on LibraryIntensity of this transition among all transitions
+allowed by the transition Filter settings, shown in the user interface as “(rank #)”.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Library Intensity</td><td class="ColumnDescription">The MS/MS peak intensity corresponding to the transition product
+ion in the matching library spectrum.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Isotope Dist Index</td><td class="ColumnDescription">Zero for the monoisotopic peak, 1 for M+1, 2 for M+2, etc. </td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Isotope Dist Rank</td><td class="ColumnDescription">The rank based on the IsotopeDistProportion among all isotope
+peaks for the predicted isotope distribution, shown in the user interface as “(irank #)”.
+Currently only available for precursor transitions filtered from high resolution MS1
+scans.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Isotope Dist Proportion</td><td class="ColumnDescription">The proportion of the entire isotope distribution predicted for
+this isotope peak. Currently only available for precursor transitions filtered from high
+resolution MS1 scans.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Full Scan Filter Width</td><td class="ColumnDescription">Full Scan Filter Width</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Transition Is Decoy</td><td class="ColumnDescription">True if this is a decoy transition</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Product Decoy Mz Shift</td><td class="ColumnDescription">Shift in m/z applied to the product ion to create
+the decoy m/z.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Transition Locator</td><td class="ColumnDescription">Unique identifier of the transition within the document. This begins with &quot;Transition:&quot;.</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.TransitionResultSummary"><span class="RowType">TransitionResultSummary</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Retention Time</td><td class="ColumnDescription">Retention time at the maximum intensity for a transition peak.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.RetentionTimeSummary">RetentionTimeSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Min Retention Time</td><td class="ColumnDescription">Minimum of the transition RetentionTime values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Max Retention Time</td><td class="ColumnDescription">Maximum of the transition RetentionTime values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Range Retention Time</td><td class="ColumnDescription">The difference between MaxRetentionTime and
+MinRetentionTime, which can be used to gauge the spread of retention times
+measured.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Mean Retention Time</td><td class="ColumnDescription">Mean of the transition RetentionTime values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Retention Time</td><td class="ColumnDescription">Standard deviation of the transition RetentionTime values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Retention Time</td><td class="ColumnDescription">Coefficient of variation (CV) of the transition RetentionTime values.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Fwhm</td><td class="ColumnDescription">Full width at half max (FWHM) for the transition peak.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.FwhmSummary">FwhmSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Fwhm</td><td class="ColumnDescription">Mean of the transition Fwhm (peak width) values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Fwhm</td><td class="ColumnDescription">Standard deviation of the transition Fwhm (peak width) values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Fwhm</td><td class="ColumnDescription">Coefficient of variation (CV) of the transition Fwhm (peak width) values</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Area</td><td class="ColumnDescription">Area under the curve (AUC), minus background, for the transition peak.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaSummary">AreaSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Area</td><td class="ColumnDescription">Mean of the transition Area values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Area</td><td class="ColumnDescription">Standard deviation of the transition Area values</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Area</td><td class="ColumnDescription">Coefficient of variation (CV) of the transition Area values.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Area Normalized</td><td class="ColumnDescription">The Area normalized to the sum of the Area values for all transitions
+in the document.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaNormalizedSummary">AreaNormalizedSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Area Normalized</td><td class="ColumnDescription">Mean of the transition AreaNormalized values</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Area Normalized</td><td class="ColumnDescription">Standard deviation of the transition AreaNormalized values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Area Normalized</td><td class="ColumnDescription">Coefficient of variation (CV) of the transition AreaNormalized
+values.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Area Ratio</td><td class="ColumnDescription">The ratio of the Area of this transition to its corresponding transition in the
+first internal standard label type, before version 0.7 this was always light/heavy, and
+appeared on the heavy transitions.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.AreaRatioSummary">AreaRatioSummary</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Mean Area Ratio</td><td class="ColumnDescription">Mean of the transition AreaRatio values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Stdev Area Ratio</td><td class="ColumnDescription">Standard deviation of the transition AreaRatio values.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Cv Area Ratio</td><td class="ColumnDescription">Coefficient of variation (CV) of the transition AreaRatio values.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.PrecursorResult"><span class="RowType">Precursor Result</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Precursor</td><td class="ColumnDescription">Precursor</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Precursor">Precursor</a></td></tr>
+<tr><td class="ColumnCaption">Detection Q Value</td><td class="ColumnDescription">A false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Detection Z Score</td><td class="ColumnDescription">A normalized mProphet score assigned to each chosen peak (target and decoy) after applying a mProphet model, expressed as the number of standard deviations (SD) from the mean decoy score.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Precursor Peak Found Ratio</td><td class="ColumnDescription">The ratio of transitions for which a peak was measured to the
+total number of transitions in the peptide. Peak indicators in the peptide tree view
+correspond to green = 1.0 (all transitions integrated), orange &gt;= 0.5, red &lt; 0.5.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Best Retention Time</td><td class="ColumnDescription">The RetentionTime value of the transition with the highest
+maximum intensity for the precursor.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Max Fwhm</td><td class="ColumnDescription">The maximum full width at half max (FWHM) of the transitions for the
+precursor.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Min Start Time</td><td class="ColumnDescription">Minimum StartTime of all transitions for a precursor. Unless manually
+edited all transitions for a precursor use the same integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Max End Time</td><td class="ColumnDescription">Maximum EndTime of all transitions for a precursor. Unless manually
+edited all transitions for a precursor use the same integration boundaries.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Area</td><td class="ColumnDescription">The summed Area values of all individual transitions for the particular
+precursor.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Area MS1</td><td class="ColumnDescription">Total Area MS1</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Area Fragment</td><td class="ColumnDescription">Total Area Fragment</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Background</td><td class="ColumnDescription">The summed Background values of all individual transitions for the
+particular precursor</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Background MS1</td><td class="ColumnDescription">Total Background MS1</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Background Fragment</td><td class="ColumnDescription">Total Background Fragment</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Area Ratio</td><td class="ColumnDescription">The ratio of the TotalArea of this precursor to the first internal
+standard label type, before version 0.7 this was always light/heavy, and appeared on the
+heavy precursor.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ratio Dot Product</td><td class="ColumnDescription">Equivalent to &quot;rdotp&quot; displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Total Area Normalized</td><td class="ColumnDescription">The TotalArea normalized to the sum of the TotalArea values
+for all peptide precursors in the document</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Max Height</td><td class="ColumnDescription">Max Height</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Average Mass Error PPM</td><td class="ColumnDescription">The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Count Truncated</td><td class="ColumnDescription">The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 25% of the background-subtracted peak height higher than the other extent.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Proportion Truncated</td><td class="ColumnDescription">The area weighted mean (0 to 1.0) of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 25% of the background-subtracted peak height higher than the other extent.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Identified</td><td class="ColumnDescription">True if a MS/MS peptide identification exists for the result file at a time
+between the peak integration boundaries.</td><td class="ColumnType">PeakIdentification</td></tr>
+<tr><td class="ColumnCaption">Library Dot Product</td><td class="ColumnDescription">Equivalent to &quot;dotp&quot; displayed in the user interface. The dot-product between the individual transition peak areas
+of the precursor and the intensities of the matching ion peaks in the matched MS/MS
+spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
+is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
+precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
+useful value for method refinement. It works best when 6 or more transitions are
+present.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Isotope Dot Product</td><td class="ColumnDescription">The dot-product calculation described above, but between the
+individual precursor (M, M+1, M+2, etc.) peak areas of the precursor and the intensities
+of the predicted isotope distribution, or #N/A if the transition is not a precursor isotope,
+or the chromatogram was not extracted from high resolution MS1 data.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">User Set Total</td><td class="ColumnDescription">True if the default choice of peak or its boundaries was manually altered.</td><td class="ColumnType">UserSet</td></tr>
+<tr><td class="ColumnCaption">Opt Step</td><td class="ColumnDescription">Optimization step value indicating distance from the default value for the
+parameter being optimized, 0 for the default parameter value, or if no optimization is
+being performed in the replicate.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Opt Collision Energy</td><td class="ColumnDescription">The collision energy value corresponding to the OptStep if
+collision energy optimization is being performed</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Opt Declustering Potential</td><td class="ColumnDescription">The declustering potential value corresponding to the
+OptStep if declustering potential optimization is being performed</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Opt Compensation Voltage</td><td class="ColumnDescription">The compensation voltage value (for ion mobility filtering) corresponding to the OptStep if compensation voltage optimization is being performed</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Collisional Cross Section</td><td class="ColumnDescription">A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility MS1</td><td class="ColumnDescription">Center of the ion mobility filter window used in chromatogram extraction for a precursor ion.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility Fragment</td><td class="ColumnDescription">Center of the ion mobility filter window used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility Window</td><td class="ColumnDescription">Width of the ion mobility filter window used in chromatogram extraction.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility Units</td><td class="ColumnDescription">Units for ion mobility used in chromatogram extraction.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Precursor Quantification</td><td class="ColumnDescription">Values related to using the isotopolog response curve to quantify the precursor result.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult">PrecursorQuantificationResult</a></td></tr>
+<tr><td class="ColumnCaption">LC Peak Ion Metrics MS1</td><td class="ColumnDescription">Values related to the number of ions in the mass spectrometer while collecting MS1 spectra between the peak integration boundaries</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.LcPeakIonMetrics">LcPeakIonMetrics</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LC Peak Total Ion Current Area MS1</td><td class="ColumnDescription">Integral of the total ion current of the MS1 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Total Ion Count MS1</td><td class="ColumnDescription">Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LC Peak Total Ion Count MS1</td><td class="ColumnDescription">Sum of the products of the total ion current and the injection time of the MS1 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Analyte Ion Count MS1</td><td class="ColumnDescription">Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LC Peak Analyte Ion Count MS1</td><td class="ColumnDescription">Sum of the products of the total precursor intensity and the injection time of the MS1 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Spectrum ID MS1</td><td class="ColumnDescription">Identifier of the MS1 spectrum with the highest precursor intensity</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">LC Peak Ion Metrics Fragment</td><td class="ColumnDescription">Values related to the number of ions in the mass spectrometer while collecting MS2 spectra between the peak integration boundaries</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.LcPeakIonMetrics">LcPeakIonMetrics</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LC Peak Total Ion Current Area Fragment</td><td class="ColumnDescription">Integral of the total ion current of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Total Ion Count Fragment</td><td class="ColumnDescription">Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LC Peak Total Ion Count Fragment</td><td class="ColumnDescription">Sum of the products of the total ion current and the injection time of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Analyte Ion Count Fragment</td><td class="ColumnDescription">Product of the total transition intensity and the injection time of the MS2 spectrum with the highest transition intensity</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LC Peak Analyte Ion Count Fragment</td><td class="ColumnDescription">Sum of the products of the transition intensities and the injection time of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Spectrum ID Fragment</td><td class="ColumnDescription">Identifier of the MS2 spectrum with the highest transition intensity</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Original Peak</td><td class="ColumnDescription">Peak boundaries chosen by Skyline during chromatogram extraction</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Original Retention Time</td><td class="ColumnDescription">Retention time of the apex of the peak chosen by Skyline during the initial chromatogram extraction</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Original Start Time</td><td class="ColumnDescription">Start retention time of the peak chosen by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Original End Time</td><td class="ColumnDescription">End retention time of the peak chosen by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Original Score</td><td class="ColumnDescription">Peak score assigned by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Reintegrated Peak</td><td class="ColumnDescription">Peak boundaries of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Reintegrated Retention Time</td><td class="ColumnDescription">Retention time of the apex of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Reintegrated Start Time</td><td class="ColumnDescription">Start retention time of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Reintegrated End Time</td><td class="ColumnDescription">End retention time of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Reintegrated Score</td><td class="ColumnDescription">Score assigned to the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Precursor Replicate Note</td><td class="ColumnDescription">A free text note associated with a result set of the precursor
+using the Results Grid.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Molecule Result</td><td class="ColumnDescription">Molecule Result</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">Molecule Result</a></td></tr>
+<tr><td class="ColumnCaption">Imputed Peak</td><td class="ColumnDescription">Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Imputed Start Time</td><td class="ColumnDescription">Start time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Imputed End Time</td><td class="ColumnDescription">End time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType">Double</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Precursor Result Locator</td><td class="ColumnDescription">Unique identifier of the precursor result within the document. This begins with &quot;PrecursorResult:&quot; and usually ends with the replicate name but may have additional attributes for the optimization step and result file.</td><td class="ColumnType">String</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.QuantificationResult"><span class="RowType">QuantificationResult</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Normalized Area</td><td class="ColumnDescription">Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit &quot;Normalization Method&quot; for the peptide/molecule 
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Normalized Area Raw</td><td class="ColumnDescription">Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit &quot;Normalization Method&quot; for the peptide/molecule
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification.
+Available even when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Normalized Area Strict</td><td class="ColumnDescription">Value obtained by normalizing the peptide/molecule intensity according to either
+the explicit &quot;Normalization Method&quot; for the peptide/molecule
+or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification.
+Unavailable when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Normalized Area Message</td><td class="ColumnDescription">Warning if missing data impacts of the &quot;Normalized Area&quot; value between replicates</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Calculated Concentration</td><td class="ColumnDescription">The concentration of the analyte calculated using either:
+1. The calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
+2. The ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Calculated Concentration Raw</td><td class="ColumnDescription">Calculated concentration value available even when missing data impacts comparisons between replicates</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Calculated Concentration Strict</td><td class="ColumnDescription">Calculated concentration value unavailable when missing data impacts comparisons between replicates</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Calculated Concentration Message</td><td class="ColumnDescription">Warning if missing data impacts comparisons of the &quot;Calculated Concentration&quot; between replicates</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Accuracy</td><td class="ColumnDescription">Ratio of Calculated Concentration to the specified Analyte Concentration</td><td class="ColumnType">Double</td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.TransitionResult"><span class="RowType">Transition Result</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Transition</td><td class="ColumnDescription">Transition</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">Transition</a></td></tr>
+<tr><td class="ColumnCaption">Retention Time</td><td class="ColumnDescription">Retention time at the maximum intensity for a transition peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Fwhm</td><td class="ColumnDescription">Full width at half max (FWHM) for the transition peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Fwhm Degenerate</td><td class="ColumnDescription">Fwhm Degenerate</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Start Time</td><td class="ColumnDescription">Retention time at the starting integration boundary for the transition peak</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">End Time</td><td class="ColumnDescription">Retention time at the ending integration boundary for the transition peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Area</td><td class="ColumnDescription">Area under the curve (AUC), minus background, for the transition peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Background</td><td class="ColumnDescription">The area of the rectangle formed by the integration boundaries, and the
+baseline and a line perpendicular to minimum intersection intensity between the
+integration boundaries and the chromatogram for the transition peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Area Ratio</td><td class="ColumnDescription">The ratio of the Area of this transition to its corresponding transition in the
+first internal standard label type, before version 0.7 this was always light/heavy, and
+appeared on the heavy transitions.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Area Normalized</td><td class="ColumnDescription">The Area normalized to the sum of the Area values for all transitions
+in the document.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Height</td><td class="ColumnDescription">The maximum intensity of the points between the transition peak integration
+boundaries.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Mass Error PPM</td><td class="ColumnDescription">The difference between the expected and measured m/z values expressed in parts per million (PPM)</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Truncated</td><td class="ColumnDescription">True if the integrate peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 25% of the background-subtracted peak height
+higher than the other extent.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Peak Rank</td><td class="ColumnDescription">The rank based on Area of this transition among all other transitions of the
+same precursor.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Peak Rank By Level</td><td class="ColumnDescription">Peak area ranking in a specific replicate by MS level (i.e. MS1 and MS/MS get ranked separately)</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">User Set Peak</td><td class="ColumnDescription">True if the default choice of peak or its boundaries was manually altered</td><td class="ColumnType">UserSet</td></tr>
+<tr><td class="ColumnCaption">Opt Step</td><td class="ColumnDescription">Optimization step value indicating distance from the default value for the
+parameter being optimized, 0 for the default parameter value, or if no optimization is
+being performed in the replicate.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Points Across Peak</td><td class="ColumnDescription">Number of chromatogram points between the start and end time of the integrated peak.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Cycle Time Across Peak</td><td class="ColumnDescription">Cycle time (in seconds) across the integrated peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Skewness</td><td class="ColumnDescription">A measure of the asymmetry of the chromatogram peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Kurtosis</td><td class="ColumnDescription">A measure of the &quot;tailedness&quot; of the chromatogram peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Peak StdDev</td><td class="ColumnDescription">The standard deviation of the chromatographic peak.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Shape Correlation</td><td class="ColumnDescription">The Pearson correlation of this transition&#39;s chromatographic peak compared to the median peak shape of all of the transitions under the same precursor.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Coeluting</td><td class="ColumnDescription">True if this transition&#39;s peak has similar apex and extents as the other transitions within the peak group.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Ion Mobility Fragment</td><td class="ColumnDescription">Center of the ion mobility filter window used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram</td><td class="ColumnDescription">Chromatogram for the transition and replicate.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram">Chromatogram</a></td></tr>
+<tr><td class="ColumnCaption">Transition Replicate Note</td><td class="ColumnDescription">A free text note associated with a result set of the transition
+using the Results Grid.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Transition Result Is Quantitative</td><td class="ColumnDescription">Whether this result is treated as quantitative, based on the user-modifiable Quantitative property of the Transition and whether the MS/MS Full Scan Acquisition Method is DDA which treats all fragment ions as non-quantitative.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Transition Result Is MS1</td><td class="ColumnDescription">Whether this result was obtained from an MS1 scan.</td><td class="ColumnType">Boolean</td></tr>
+<tr><td class="ColumnCaption">Precursor Result</td><td class="ColumnDescription">Precursor Result</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">Precursor Result</a></td></tr>
+<tr><td class="ColumnCaption">Transition Result Locator</td><td class="ColumnDescription">Unique identifier of the transition result within the document. This begins with &quot;TransitionResult:&quot; and usually ends with the replicate name, but may have additional attributes for the optimization step and result file.</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Transition Ion Metrics</td><td class="ColumnDescription">Values related to the number of ions in the mass spectrometer</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">Transition Ion Metrics</a></td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult"><span class="RowType">PrecursorQuantificationResult</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Precursor Normalized Area</td><td class="ColumnDescription">Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If Peptide Normalization Method is &quot;None&quot; or ratio to a label, then Precursor Normalized Area will be equal to the Total Area of the Precursor.</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Precursor Normalized Area Raw</td><td class="ColumnDescription">Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is &quot;None&quot; or ratio to a label, then the Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Available even when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Precursor Normalized Area Strict</td><td class="ColumnDescription">Normalized area of the Precursor Result.
+Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
+If the Peptide Normalization Method is &quot;None&quot; or ratio to a label, then the Precursor Normalized Area will be equal to the Total Area of the Precursor.
+Unavailable when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Precursor Normalized Area Message</td><td class="ColumnDescription">Warning if missing values impacts comparisons of the &quot;Precursor Normalized Area&quot; value between replicates</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Precursor Calculated Concentration</td><td class="ColumnDescription">The concentration of the Precursor Result calculated using the isotopolog response curve.</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.AnnotatedDouble">AnnotatedDouble</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Precursor Calculated Concentration Raw</td><td class="ColumnDescription">The concentration of the Precursor Result calculated using the isotopolog response curve.
+Available even when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Precursor Calculated Concentration Strict</td><td class="ColumnDescription">The concentration of the Precursor Result calculated using the isotopolog response curve.
+Unavailable when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Precursor Calculated Concentration Message</td><td class="ColumnDescription">Warning if missing data impacts comparisons of &quot;Precursor Calculated Concentration&quot; between replicates</td><td class="ColumnType">String</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Precursor Accuracy</td><td class="ColumnDescription">Ratio of the Precursor Calculated Concentration to the Precursor Concentration specified on the Precursor.</td><td class="ColumnType">Double</td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Qualitative Ion Ratio</td><td class="ColumnDescription">Ratio of the sum of peak areas of the the non-quantitative transitions to the sum of the peak areas of the quantitative transitions under this molecule or peptide.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Qualitative Ion Ratio Status</td><td class="ColumnDescription">Description of how the Qualitative Ion Ratio compares to the Target Qualitative Ion Ratio.
+If the Qualitative Ion Ratio Threshold has been specified in the Quantification Settings, then Qualitative Ion Ratio Status will be either &quot;pass&quot; or &quot;fail&quot;.
+If the Qualitative Ion Ratio Threshold has not been specified then Qualitative Ion Ratio Status will be either &quot;equal&quot;, &quot;low&quot;, or &quot;high&quot;, depending on how it compares to the Target Qualitative Ion Ratio.</td><td class="ColumnType">ValueStatus</td></tr>
+<tr><td class="ColumnCaption">Batch Target Qualitative Ion Ratio</td><td class="ColumnDescription">Target Qualitative Ion Ratio calculated using the subset of external standard replicates that have the same Batch Name as this replicate.</td><td class="ColumnType">Double</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Databinding.Entities.Chromatogram"><span class="RowType">Chromatogram</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Chromatogram Precursor M/Z</td><td class="ColumnDescription">Precursor m/z of the chromatogram</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram Product M/Z</td><td class="ColumnDescription">Product m/z of the chromatogram</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram Extraction Width</td><td class="ColumnDescription">Full width of the channel over which the spectrum intensities were summed</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram Start Time</td><td class="ColumnDescription">First retention time in the chromatogram</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram End Time</td><td class="ColumnDescription">Last retention time in the chromatogram</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram Ion Mobility</td><td class="ColumnDescription">Center of the ion mobility window that was used to filter spectra during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram Ion Mobility Extraction Width</td><td class="ColumnDescription">Full width of the ion mobility window that was used to filter spectra during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Chromatogram Ion Mobility Units</td><td class="ColumnDescription">Units of the chromatogram ion mobility and chromatogram ion mobility extraction width</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">Chromatogram Source</td><td class="ColumnDescription">Type of scans from which the chromatogram was extracted: one of &quot;fragment&quot;, &quot;sim&quot;, &quot;ms1&quot;, or &quot;unknown&quot;</td><td class="ColumnType">ChromSource</td></tr>
+<tr><td class="ColumnCaption">Raw Data</td><td class="ColumnDescription">The raw (uninterpolated) chromatogram data. The chromatograms have unevenly spaced times, and the chromatograms of each transition potentially has a different number of points.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram+Data">Data</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Raw Number of Points</td><td class="ColumnDescription">The number of points in the raw (uninterpolated) chromatogram.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Raw Times</td><td class="ColumnDescription">The retention times in the raw (uninterpolated) chromatogram.</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">Raw Intensities</td><td class="ColumnDescription">The intensities of the raw (uninterpolated) chromatogram.</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">Raw Mass Errors</td><td class="ColumnDescription">The mass errors of the raw (uninterpolated) chromatogram.</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">Raw Spectrum Ids</td><td class="ColumnDescription">Identifiers of the spectra that contributed to the points in the raw (uninterpolated) chromatogram.</td><td class="ColumnType">FormattableList`1</td></tr>
+</table>
+
+</td></tr>
+<tr><td class="ColumnCaption">Interpolated Data</td><td class="ColumnDescription">Chromatogram data which was interpolated in the time dimension so that the retention times are evenly spaced, and all transitions within the peptide or molecule have the same number of points.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Chromatogram+Data">Data</a></td></tr>
+<tr><td>&nbsp;</td><td colspan="2">
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">Interpolated Number of Points</td><td class="ColumnDescription">The number of points in the interpolated chromatogram.</td><td class="ColumnType">Int32</td></tr>
+<tr><td class="ColumnCaption">Interpolated Times</td><td class="ColumnDescription">The retention times in the interpolated chromatogram.</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">Interpolated Intensities</td><td class="ColumnDescription">Chromatogram intensities from the interpolated data.</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">Interpolated Mass Errors</td><td class="ColumnDescription">Chromatogram mass errors from the interpolated data.</td><td class="ColumnType">FormattableList`1</td></tr>
+<tr><td class="ColumnCaption">Interpolated Spectrum Ids</td><td class="ColumnDescription">Identifiers of the spectra that contributed to the points in the interpolated chromatogram.</td><td class="ColumnType">FormattableList`1</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">Transition Ion Metrics</span>
+</div>
+<table><tr><th>Name</th><th>Description</th><th>Type</th>
+<tr><td class="ColumnCaption">LC Peak Transition Ion Count</td><td class="ColumnDescription">Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">Apex Transition Ion Count</td><td class="ColumnDescription">Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition</td><td class="ColumnType">Double</td></tr>
+</table>
+
+
+</body></html>

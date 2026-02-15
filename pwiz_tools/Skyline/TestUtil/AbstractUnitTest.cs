@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,6 +19,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -28,7 +29,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using TestRunnerLib;
 
 // Once-per-application setup information to perform logging with log4net.
@@ -87,6 +87,18 @@ namespace pwiz.SkylineTestUtil
         {
             get { return TestContext.GetBoolValue("RunPerfTests", true); }  // Return true if unspecified
             set { TestContext.Properties["RunPerfTests"] = value.ToString(CultureInfo.InvariantCulture); }
+        }
+
+        /// <summary>
+        /// When true, enables ConsoleTraceListener during test cleanup to capture
+        /// DetailedTrace.WriteLine() output in Console (and TeamCity logs).
+        /// This is useful for debugging cleanup issues but should be used sparingly
+        /// as it can make logs harder to read.
+        /// </summary>
+        protected bool EnableTraceOutputDuringCleanup
+        {
+            get { return TestContext.GetBoolValue("EnableTraceOutputDuringCleanup", false); }  // Return false if unspecified
+            set { TestContext.Properties["EnableTraceOutputDuringCleanup"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -252,7 +264,7 @@ namespace pwiz.SkylineTestUtil
                 for (int i = 0; i < TestFilesZipPaths.Length; i++)
                 {
                     TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                        TestFilesPersistent, IsExtractHere(i));
+                        TestFilesPersistent, IsExtractHere(i), TestFilesZipSuffix);
                 }
                 CleanupPersistentDir(); // Clean up before recording metrics
                 foreach (var dir in TestFilesDirs)
@@ -287,13 +299,13 @@ namespace pwiz.SkylineTestUtil
 
                 try
                 {
-                    WebClient webClient = new WebClient();
+                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
                     using (var fs = new FileSaver(zipFilePath))
                     {
                         var timer = new Stopwatch();
                         Console.Write(@"# Downloading test data file {0}...", zipURL);
                         timer.Start();
-                        webClient.DownloadFile(zipURL.Split('\\')[0],
+                        httpClient.DownloadFile(zipURL.Split('\\')[0],
                             fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
                         Console.Write(@" done. Download time {0} sec ", timer.ElapsedMilliseconds / 1000);
                         fs.Commit();
@@ -302,6 +314,8 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception x)
                 {
+                    // HttpClientWithProgress already provides detailed error messages (network issues, DNS, proxy, etc.)
+                    // Just preserve the message and add context about which URL failed
                     message += string.Format("Could not download {0}: {1} ", zipURL, x.Message);
                     if (!retry)
                     {
@@ -325,6 +339,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         public string TestDirectoryName { get; set; }
+        /// <summary>
+        /// Optional suffix to append to ZIP file base name to differentiate tests using the same ZIP file.
+        /// For example, if two tests use "ImportDocTest.zip", one could use suffix "-functional" and the other "-unit".
+        /// </summary>
+        public string TestFilesZipSuffix { get; set; }
         public TestFilesDir TestFilesDir
         {
             get
@@ -402,6 +421,7 @@ namespace pwiz.SkylineTestUtil
         {
             Program.UnitTest = true;
             Program.TestName = TestContext.TestName;
+            Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
@@ -438,6 +458,10 @@ namespace pwiz.SkylineTestUtil
 
             Settings.Release();
 
+            // Release cached NHibernate SessionFactories to prevent managed memory growth.
+            // Normally only called in Skyline.OnClosed(), but unit tests have no main window.
+            DatabaseResources.ReleaseAll();
+
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();
             Settings.Init();
@@ -457,6 +481,8 @@ namespace pwiz.SkylineTestUtil
 
         private void CleanupFiles()
         {
+            using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
+
             // If test passed, dispose the working directories to make sure file handles are not still open.
             // Note: Normally this has no impact on the directory contents, because the directory is
             // simply renamed and then renamed back. If the rename fails, the directory gets
@@ -528,6 +554,31 @@ namespace pwiz.SkylineTestUtil
                 return true;
             }
             return false;
+        }
+    }
+
+    /// <summary>
+    /// IDisposable wrapper for ConsoleTraceListener that adds it to Trace.Listeners
+    /// on construction and removes it on disposal. This ensures trace output appears
+    /// in Console (and TeamCity logs) only for the scope where it's used.
+    /// </summary>
+    internal class ScopedConsoleTraceListener : IDisposable
+    {
+        private readonly ConsoleTraceListener _listener;
+
+        public ScopedConsoleTraceListener()
+        {
+            _listener = new ConsoleTraceListener();
+            Trace.Listeners.Add(_listener);
+        }
+
+        public void Dispose()
+        {
+            if (_listener != null)
+            {
+                Trace.Listeners.Remove(_listener);
+                _listener.Dispose();
+            }
         }
     }
 }

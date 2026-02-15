@@ -257,7 +257,11 @@ namespace TestRunner
             "runsmallmoleculeversions=off;" +
             "recordauditlogs=off;" +
             "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;teamcitytestsuite=;verbose=off;listonly;showheader=on";
+            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;" +
+            "teamcitytestdecoration=off;teamcitytestsuite=;teamcitycleanup=off;" +
+            "verbose=off;listonly;showheader=on;" +
+            "reportheaps=off;reporthandles=off;sorthandlesbycount=off;" +
+            "dotmemorywarmup=5;dotmemorywaitruns=0;dotmemorycollectallocations=off";
 
         private static readonly string dotCoverFilters = "/Filters=+:module=TestRunner /Filters=+:module=Skyline-daily /Filters=+:module=Skyline* /Filters=+:module=CommonTest " +
                                                          "/Filters=+:module=Test* /Filters=+:module=MSGraph /Filters=+:module=ProteomeDb /Filters=+:module=BiblioSpec " +
@@ -267,6 +271,7 @@ namespace TestRunner
         [STAThread, MethodImpl(MethodImplOptions.NoOptimization)]
         static int Main(string[] args)
         {
+            Console.OutputEncoding = Encoding.UTF8;
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
@@ -288,9 +293,6 @@ namespace TestRunner
                     Report(commandLineArgs.ArgAsString("report"));
                     return 0;
             }
-
-            if (commandLineArgs.ArgAsString("language") != "en" && commandLineArgs.ArgAsString("language") != "en-US")
-                Console.OutputEncoding = Encoding.UTF8;  // So we can send Japanese to SkylineTester, which monitors our stdout
 
             Console.WriteLine();
             if (!commandLineArgs.ArgAsBool("status") && !commandLineArgs.ArgAsBool("buildcheck") && !commandLineArgs.HasArg("listonly") && commandLineArgs.ArgAsBool("showheader"))
@@ -383,8 +385,9 @@ namespace TestRunner
 
                     TeamCityStartTestSuite(commandLineArgs);
 
+                    bool autoScreenshots = commandLineArgs.ArgAsLong("pause") == 3;
                     // Prevent system sleep.
-                    using (new Kernel32Test.SystemSleep())
+                    using (new Kernel32Test.SystemSleep(autoScreenshots))
                     {
                         // Pause before first test for profiling.
                         bool profiling = commandLineArgs.ArgAsBool("profile");
@@ -463,7 +466,7 @@ namespace TestRunner
             }
 
             // delete per-process tools directory
-            if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != "Tools")
+            if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != ToolDescriptionHelpers.GetToolsDirectoryBasis())
                 DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
 
             return allTestsPassed ? 0 : 1;
@@ -663,7 +666,7 @@ namespace TestRunner
         {
             var dockerVersionOutput = RunTests.RunCommand("docker", "version -f \"{{json .}}\"", RunTests.IS_DOCKER_RUNNING_MESSAGE);
             var dockerVersionJson = JObject.Parse(dockerVersionOutput);
-            if (dockerVersionJson["Server"]["Os"].Value<string>() != "windows")
+            if (dockerVersionJson["Server"]!["Os"]!.Value<string>() != "windows")
             {
                 Console.WriteLine("Switching Docker engine to Windows containers (this will stop any running containers)...");
                 RunTests.RunCommand($"{Environment.GetEnvironmentVariable("ProgramFiles")}\\Docker\\Docker\\DockerCli.exe",
@@ -700,12 +703,20 @@ namespace TestRunner
                 if (!File.Exists(RunTests.ALWAYS_UP_SERVICE_EXE))
                 {
                     using var tmpDir = new TemporaryDirectory();
-                    using var webClient = new WebClient();
-                    string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
-                    webClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
+                    try
+                    {
+                        using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                        string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
+                        httpClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
 
-                    using var alwaysUpRunnerCode = new ZipFile(tmpFile);
-                    alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+                        using var alwaysUpRunnerCode = new ZipFile(tmpFile);
+                        alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to download AlwaysUpRunner: {ex.Message}");
+                        throw new IOException($"Cannot build Docker image without AlwaysUpRunner. {ex.Message}", ex);
+                    }
 
                     Console.Write("Enter password to extract AlwaysUpCLT_licensed_binaries: ");
                     var pass = commandLineArgs.ArgAsStringOrDefault("alwaysupcltpassword") ?? GetPasswordFromConsole();
@@ -936,7 +947,9 @@ namespace TestRunner
 
             if (testQueue.Count < dockerWorkerCount)
             {
-                Console.WriteLine($"There are fewer parallelizable test/language pairs ({testQueue.Count}) than the number of specified parallel workers; reducing workercount to {testQueue.Count + 1}.");
+                Console.WriteLine($"There are fewer parallelizable test/language pairs ({testQueue.Count}) than the number of specified parallel workers ({dockerWorkerCount}); reducing workercount to {testQueue.Count + 1}.");
+                Console.WriteLine($"  Parallelizable: {testQueue.Count} test/language pairs");
+                Console.WriteLine($"  Non-parallelizable: {nonParallelTestQueue.Count} test/language pairs (will run serially on hostWorker)");
                 workerCount = testQueue.Count + 1;
                 dockerWorkerCount = testQueue.Count;
             }
@@ -1387,7 +1400,14 @@ namespace TestRunner
             var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
             var dmpDir = commandLineArgs.ArgAsString("dmpdir");
             bool teamcityTestDecoration = commandLineArgs.ArgAsBool("teamcitytestdecoration");
+            bool teamcityCleanup = commandLineArgs.ArgAsBool("teamcitycleanup");
             bool verbose = commandLineArgs.ArgAsBool("verbose");
+            bool reportHeaps = commandLineArgs.ArgAsBool("reportheaps");
+            bool reportHandles = commandLineArgs.ArgAsBool("reporthandles");
+            bool sortHandlesByCount = commandLineArgs.ArgAsBool("sorthandlesbycount");
+            int dotMemoryWarmup = (int) commandLineArgs.ArgAsLong("dotmemorywarmup");
+            int dotMemoryWaitRuns = (int) commandLineArgs.ArgAsLong("dotmemorywaitruns");
+            bool dotMemoryCollectAllocations = commandLineArgs.ArgAsBool("dotmemorycollectallocations");
             string parallelMode = commandLineArgs.ArgAsString("parallelmode");
             bool serverMode = parallelMode == "server";
             bool clientMode = parallelMode == "client";
@@ -1414,10 +1434,11 @@ namespace TestRunner
                 testList.RemoveAll(test => test.IsPerfTest);
                 unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
-            else
+            else if (asNightly)
             {
-                // Take advantage of the extra time available in perftest runs to do the leak tests we
-                // skip in regular nightlies - but skip leak tests covered in regular nightlies
+                // Take advantage of the extra time available in nightly perftest runs to do the leak tests we
+                // skip in regular nightlies - but skip leak tests covered in regular nightlies.
+                // Only apply this inversion during actual nightly runs, not when perftests=on is used interactively.
                 foreach (var test in unfilteredTestList)
                 {
                     test.DoNotLeakTest = !test.DoNotLeakTest;
@@ -1458,10 +1479,18 @@ namespace TestRunner
 
             var runTests = new RunTests(
                 demoMode, buildMode, offscreen, internet, useOriginalURLs, showStatus, perftests,
-                runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
+                runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration, teamcityCleanup,
                 retrydatadownloads,
-                pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier, 
-                results, log, verbose, clientMode);
+                pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
+                results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
+
+            // Configure dotMemory snapshot settings if wait runs specified
+            if (dotMemoryWaitRuns > 0)
+            {
+                runTests.DotMemoryWarmupRuns = dotMemoryWarmup;
+                runTests.DotMemoryWaitRuns = dotMemoryWaitRuns;
+                runTests.DotMemoryCollectAllocations = dotMemoryCollectAllocations;
+            }
 
             var timer = new Stopwatch();
             timer.Start();
@@ -1738,10 +1767,14 @@ namespace TestRunner
                     runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
                 }
 
-                // Move any tests with the NoLeakTesting attribute to the front of the list for pass 2, as we skipped them in pass 1
-                testList = testList.Where(t => t.DoNotLeakTest)
-                    .Concat(testList.Where(t => !t.DoNotLeakTest))
-                    .ToList();
+                // Move any tests with the NoLeakTesting attribute to the front of the list for pass 2, as we skipped them in pass 1.
+                // Only apply this reordering during actual nightly runs, not when perftests=on is used interactively.
+                if (asNightly)
+                {
+                    testList = testList.Where(t => t.DoNotLeakTest)
+                        .Concat(testList.Where(t => !t.DoNotLeakTest))
+                        .ToList();
+                }
 
                 int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
                 bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
@@ -1944,7 +1977,10 @@ namespace TestRunner
                 testDict.Add(testNames[i], i);
             }
 
-            var testArray = new TestInfo[testNames.Count];
+            // Use List<TestInfo> per slot to support class names (which may have multiple tests)
+            var testArray = new List<TestInfo>[testNames.Count];
+            for (int i = 0; i < testNames.Count; i++)
+                testArray[i] = new List<TestInfo>();
 
             var skipList = LoadList(commandLineArgs.ArgAsString("skip"));
 
@@ -1955,7 +1991,8 @@ namespace TestRunner
                 {
                     var testName = testInfo.TestClassType.Name + "." + testInfo.TestMethod.Name;
                     if (testNames.Count == 0 || testNames.Contains(testName) ||
-                        testNames.Contains(testInfo.TestMethod.Name))
+                        testNames.Contains(testInfo.TestMethod.Name) ||
+                        testNames.Contains(testInfo.TestClassType.Name))
                     {
                         if (!skipList.Contains(testName) && !skipList.Contains(testInfo.TestMethod.Name))
                         {
@@ -1963,18 +2000,30 @@ namespace TestRunner
                                 testList.Add(testInfo);
                             else
                             {
-                                string lookup = testNames.Contains(testName) ? testName : testInfo.TestMethod.Name;
-                                testArray[testDict[lookup]] = testInfo;
+                                // Lookup in priority order: full name, method name, class name
+                                string lookup = testNames.Contains(testName) ? testName :
+                                    testNames.Contains(testInfo.TestMethod.Name) ? testInfo.TestMethod.Name :
+                                    testInfo.TestClassType.Name;
+                                testArray[testDict[lookup]].Add(testInfo);
                             }
                         }
                     }
                 }
             }
             if (testNames.Count > 0)
-                testList.AddRange(testArray.Where(testInfo => testInfo != null));
+                testList.AddRange(testArray.SelectMany(list => list));
 
             // Sort tests alphabetically, but run perf tests last for best coverage in a fixed amount of time.
-            return testList.OrderBy(e => e.IsPerfTest).ThenBy(e => e.TestMethod.Name).ToList();
+            // However, if tests were explicitly specified (via file or command line), preserve that order.
+            if (testNames.Count == 0)
+            {
+                return testList.OrderBy(e => e.IsPerfTest).ThenBy(e => e.TestMethod.Name).ToList();
+            }
+            else
+            {
+                // User explicitly specified test order - preserve it exactly
+                return testList;
+            }
         }
 
         private static List<TestInfo> GetTestList(IEnumerable<string> dlls)
@@ -2201,9 +2250,10 @@ in the current directory.  You can get a summary of errors and memory leaks by r
 Here is a list of recognized arguments:
 
     test=[test1,test2,...]          Run one or more tests by name (separated by ',').
-                                    Test names can be just the method name, or the method
-                                    name prefixed by the class name and a period
-                                    (such as IrtTest.IrtFunctionalTest).  Tests must belong
+                                    Test names can be just the method name, the class name
+                                    (to run all tests in that class), or the method name
+                                    prefixed by the class name and a period (such as
+                                    IrtTest.IrtFunctionalTest).  Tests must belong
                                     to a class marked [TestClass], although the method does
                                     not need to be marked [TestMethod] to be included in a
                                     test run.  A name prefixed by '@' (such as ""@fail.txt"")

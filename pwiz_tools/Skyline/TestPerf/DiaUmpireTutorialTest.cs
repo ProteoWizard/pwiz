@@ -132,7 +132,7 @@ namespace TestPerf
             return bmp;
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaTtofDiaUmpireTutorial()
         {
             // Not yet translated
@@ -151,7 +151,6 @@ namespace TestPerf
 
         [TestMethod, 
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
-         NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)]
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
@@ -196,7 +195,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaQeDiaUmpireTutorialExtra()
         {
             ReadExpectedValues("TestDiaQeDiaUmpireTutorialExtra");
@@ -213,7 +212,6 @@ namespace TestPerf
 
         [TestMethod, 
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
-         NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // do not run full filesets for nightly tests
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {
@@ -671,11 +669,16 @@ namespace TestPerf
             PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form");
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
-            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
-            WaitForCondition(() => allChrom.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
-            allChrom.SetFreezeProgressPercent(null, null);
+            if (!PauseForAllChromatogramsGraphScreenShot("Loading chromatograms window", 40, @"00:00:22", 39f, 1e4f,
+                    new Dictionary<string, int>
+                    {
+                        { "collinsb_I180316_001", 40 },
+                        { "collinsb_I180316_002", 41 }
+                    }))
+            {
+                CleanUpPersistentDir(diaDir);
+                return;
+            }
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
@@ -847,8 +850,7 @@ namespace TestPerf
             // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
             if (!IsRecordMode)
             {
-                foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
-                    FileEx.SafeDelete(file);
+                CleanUpPersistentDir(diaDir);
             }
 
             if (IsRecordMode)
@@ -862,6 +864,12 @@ namespace TestPerf
                     Formatting = Formatting.Indented
                 }).Serialize(jsonTextWriter, _expectedValues);
             }
+        }
+
+        private static void CleanUpPersistentDir(string diaDir)
+        {
+            foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
+                FileEx.SafeDelete(file);
         }
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)

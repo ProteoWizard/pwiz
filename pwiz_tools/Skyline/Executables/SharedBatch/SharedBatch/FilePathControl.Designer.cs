@@ -1,4 +1,4 @@
-﻿namespace SharedBatch
+namespace SharedBatch
 {
     partial class FilePathControl
     {

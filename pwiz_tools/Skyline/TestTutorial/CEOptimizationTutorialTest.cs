@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -176,7 +176,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandProteins();
                 SkylineWindow.ExpandPeptides();
             });
-
+            WaitForDocumentLoaded();
             RestoreViewOnScreen(5);
             PauseForScreenShot("Main Skyline window");
 

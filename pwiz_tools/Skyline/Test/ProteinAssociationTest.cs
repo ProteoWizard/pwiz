@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,13 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -111,11 +110,6 @@ ADISMIGQFGVGFYSAYLVAEKVVVITKHNDDEQYAWESSAGGSFTVRADHGEPIGRGTK";
             public bool IsDocumentChanged(SrmDocument docOrig)
             {
                 return false;
-            }
-
-            public DialogResult ShowDialog(Func<IWin32Window, DialogResult> show)
-            {
-                throw new InvalidOperationException();
             }
 
             public void SetProgressCheckCancel(int step, int totalSteps)

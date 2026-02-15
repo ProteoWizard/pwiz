@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,7 +21,6 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls.SeqNode;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs

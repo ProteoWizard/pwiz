@@ -10,7 +10,23 @@ if errorlevel 1 goto :no-vswhere
 set VSWHERE_REQ=-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
 set VSWHERE_PRP=-property installationPath
 
-REM Visual Studio Unknown Version, Beyond 2019
+
+REM Visual Studio Unknown Version, Beyond 2026
+set VSWHERE_LMT=-version "[18.0,19.0)"
+set VSWHERE_PRERELEASE=-prerelease
+SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT% %VSWHERE_PRERELEASE%
+IF "%2"=="145" (
+    for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
+        endlocal
+            echo Found with vswhere %%i
+        set "VSUNKCOMNTOOLS=%%i\Common7\Tools\"
+        IF EXIST "%%i\Common7\Tools\VsDevCmd.bat" (CALL "%%i\Common7\Tools\VsDevCmd.bat" -arch=%1 && exit /b 0)
+    )
+    echo VS2026 not found.
+    exit /b 1
+)
+
+REM Visual Studio Version 2022
 set VSWHERE_LMT=-version "[17.0,18.0)"
 set VSWHERE_PRERELEASE=-prerelease
 SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT% %VSWHERE_PRERELEASE%

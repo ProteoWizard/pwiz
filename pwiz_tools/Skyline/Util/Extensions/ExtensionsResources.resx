@@ -145,4 +145,7 @@
   <data name="TextUtil_FileDialogFiltersAll_All_Files" xml:space="preserve">
     <value>All Files</value>
   </data>
+  <data name="ListItemSeparator" xml:space="preserve">
+	  <value>, </value>
+  </data>
 </root>

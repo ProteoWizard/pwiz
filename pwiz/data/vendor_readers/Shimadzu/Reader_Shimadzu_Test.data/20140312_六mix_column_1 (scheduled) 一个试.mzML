@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="20140312_六mix_column_1 (scheduled) 一个试" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.41" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.197" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,24 +9,24 @@
       <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
     </fileContent>
     <sourceFileList count="1">
-      <sourceFile id="_x0032_0140312__x00e5__x0085__x00ad_mix_column_1_x0020__x0028_scheduled_x0029__x0020__x00e4__x00b8__x0080__x00e4__x00b8__x00aa__x00e8__x00af__x0095_.lcd" name="20140312_六mix_column_1 (scheduled) 一个试.lcd" location="file:///C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.data">
-        <cvParam cvRef="MS" accession="MS:1000776" name="scan number only nativeID format" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000560" name="mass spectrometer file format" value=""/>
+      <sourceFile id="_x0032_0140312__x00e5__x0085__x00ad_mix_column_1_x0020__x0028_scheduled_x0029__x0020__x00e4__x00b8__x0080__x00e4__x00b8__x00aa__x00e8__x00af__x0095_.lcd" name="20140312_六mix_column_1 (scheduled) 一个试.lcd" location="file:///C:\dev\pwiz\pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.data">
+        <cvParam cvRef="MS" accession="MS:1002898" name="Shimadzu Biotech QTOF nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1003009" name="Shimadzu Biotech LCD format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="74e7b9e84c1135dcf9f94fc1def85fccd7eeecf7"/>
       </sourceFile>
     </sourceFileList>
   </fileDescription>
   <softwareList count="2">
-    <software id="Shimadzu_x0020_software" version="4.0">
+    <software id="Shimadzu_x0020_software" version="5.0">
       <cvParam cvRef="MS" accession="MS:1001557" name="Shimadzu Corporation software" value=""/>
     </software>
-    <software id="pwiz" version="3.0.20255">
+    <software id="pwiz" version="3.0.25282">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
   <instrumentConfigurationList count="1">
     <instrumentConfiguration id="IC1">
-      <cvParam cvRef="MS" accession="MS:1000124" name="Shimadzu instrument model" value=""/>
+      <cvParam cvRef="MS" accession="MS:1003000" name="LCMS-8050" value=""/>
       <componentList count="5">
         <source order="1">
           <cvParam cvRef="MS" accession="MS:1000073" name="electrospray ionization" value=""/>

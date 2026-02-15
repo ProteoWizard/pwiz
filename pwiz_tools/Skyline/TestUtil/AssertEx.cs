@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -718,7 +718,7 @@ namespace pwiz.SkylineTestUtil
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (var memStream = new MemoryStream())
             {
-                XmlTextWriter writer = new XmlTextWriter(memStream, Encoding.UTF8);
+                XmlTextWriter writer = new XmlTextWriter(memStream, new UTF8Encoding(false)); // UTF-8 without BOM
                 writer.Formatting = Formatting.Indented;
 
                 try
@@ -1026,9 +1026,9 @@ namespace pwiz.SkylineTestUtil
             }
 
             // If only difference appears to be a generated ISO timestamp, let it pass
-            // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
+            // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc or just 2020-07-10T10:40:03 (no timezone)
             var regexTimestamp =
-                new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
+                new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))?("".*)");
             matchExpected = regexTimestamp.Match(lineExpected);
             matchActual = regexTimestamp.Match(lineActual);
             if (matchExpected.Success && matchActual.Success
@@ -1053,14 +1053,14 @@ namespace pwiz.SkylineTestUtil
             {
             }
 
-            public ColumnTolerances(double defaultTolerance, bool forceScientificNotation = false)
+            public ColumnTolerances(double defaultTolerance)
             {
-                _defaultTolerance = new ColumnToleranceValue(defaultTolerance, forceScientificNotation);
+                _defaultTolerance = new ColumnToleranceValue(defaultTolerance);
             }
 
-            public void AddTolerance(int column, double tolerance, bool forceScientificNotation = false)
+            public void AddTolerance(int column, double tolerance)
             {
-                _explicitTolerances.Add(column, new ColumnToleranceValue(tolerance, forceScientificNotation));
+                _explicitTolerances.Add(column, new ColumnToleranceValue(tolerance));
             }
 
             public bool LinesEquivalent(string lineExpected, string lineActual, out string failureMessage)
@@ -1095,30 +1095,23 @@ namespace pwiz.SkylineTestUtil
                     if (toleranceValue == null)
                         return false; // No tolerance given for this column
                 }
-                if (!TextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
-                    !TextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
+                if (!CommonTextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
+                    !CommonTextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
                 {
                     return false;
                 }
 
                 char[] expChars = { 'E', 'e' };
-                var textSplitActual = textActual;
-                if (toleranceValue.ForceScientificNotation && textSplitActual.Split(expChars).Length != 2)
-                    textSplitActual = valActual.ToString("E");
-                var textSplitExpected = textExpected;
-                if (toleranceValue.ForceScientificNotation && textSplitExpected.Split(expChars).Length != 2)
-                    textSplitExpected = valExpected.ToString("E");
-
-                var actualParts = textSplitActual.Split(expChars);
-                var expectedParts = textSplitExpected.Split(expChars);
+                var actualParts = textActual.Split(expChars);
+                var expectedParts = textExpected.Split(expChars);
 
                 if (actualParts.Length == 2 && expectedParts.Length == 2)
                 {
-                    // Both strings have exponent, so check if they are equal
+                    // Both strings naturally have exponent, so check if they are equal
                     if (!Equals(expectedParts[1], actualParts[1]) ||
                         // Then check the mantissas match to the expected tolerance
-                        !TextUtil.TryParseDoubleUncertainCulture(actualParts[0], out valActual) ||
-                        !TextUtil.TryParseDoubleUncertainCulture(expectedParts[0], out valExpected))
+                        !CommonTextUtil.TryParseDoubleUncertainCulture(actualParts[0], out valActual) ||
+                        !CommonTextUtil.TryParseDoubleUncertainCulture(expectedParts[0], out valExpected))
                     {
                         failureMessage = string.Format(
                             "Expected decimal value: {0} does not match actual {1}",
@@ -1141,7 +1134,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         failureMessage = string.Format(
                             "Expected decimal value: {0} does not match actual {1} to within {2}",
-                            textSplitExpected, textSplitActual, tolerance);
+                            textExpected, textActual, tolerance);
                     }
                     return false; // Can't account for difference
                 }
@@ -1152,14 +1145,12 @@ namespace pwiz.SkylineTestUtil
 
         private class ColumnToleranceValue
         {
-            public ColumnToleranceValue(double tolerance, bool forceScientificNotation = false)
+            public ColumnToleranceValue(double tolerance)
             {
                 Tolerance = tolerance;
-                ForceScientificNotation = forceScientificNotation;
             }
 
             public double Tolerance { get; }
-            public bool ForceScientificNotation { get; }
         }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)

@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Databinding
+namespace pwiz.Skyline.Controls.Databinding
 {
     partial class ExportLiveReportDlg
     {

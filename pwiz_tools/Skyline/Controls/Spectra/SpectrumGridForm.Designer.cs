@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Spectra
+namespace pwiz.Skyline.Controls.Spectra
 {
     partial class SpectrumGridForm
     {

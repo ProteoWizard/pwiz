@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: RunDirecTagAction.cs 18 2010-12-06 19:05:26Z zeqiangma $
 //
 // The contents of this file are subject to the Mozilla Public License

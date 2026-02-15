@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -26,8 +26,32 @@ using pwiz.Common.GUI;
 
 namespace pwiz.Common.SystemUtil
 {
-    public class CommonFormEx : Form, IFormView
+    /// <summary>
+    /// Implemented by form base classes to signal that the form is closing or disposing.
+    /// Background threads should check this before calling BeginInvoke to avoid deadlock
+    /// when .NET attempts to recreate a handle on a closing form.
+    /// </summary>
+    public interface IClosingAware
     {
+        bool IsClosingOrDisposing { get; }
+    }
+
+    public class CommonFormEx : Form, IFormView, IClosingAware
+    {
+        /// <summary>
+        /// Flag indicating the form is closing or disposing. Set early (in OnFormClosing)
+        /// to give background threads maximum warning before the handle is destroyed.
+        /// Used by SafeBeginInvoke to avoid deadlock when BeginInvoke tries to recreate
+        /// a handle on a closing form.
+        /// </summary>
+        private volatile bool _isClosingOrDisposing;
+
+        /// <summary>
+        /// Returns true if this form is in the process of closing or disposing.
+        /// Background threads should check this before calling BeginInvoke.
+        /// </summary>
+        public bool IsClosingOrDisposing => _isClosingOrDisposing;
+
         public static bool TestMode
         {
             get { return CommonApplicationSettings.FunctionalTest; }
@@ -77,8 +101,26 @@ namespace pwiz.Common.SystemUtil
             get { return (TestMode || Offscreen) && !PauseMode; }
         }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            // Set the flag after base call in case a handler cancelled the close.
+            // This gives background threads early warning before handle destruction,
+            // helping SafeBeginInvoke avoid deadlock.
+            if (!e.Cancel)
+                _isClosingOrDisposing = true;
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            // Belt-and-suspenders: also set when handle is destroyed
+            _isClosingOrDisposing = true;
+            base.OnHandleDestroyed(e);
+        }
+
         protected override void Dispose(bool disposing)
         {
+            _isClosingOrDisposing = true;
             base.Dispose(disposing);
 
             if (TestMode && disposing)
@@ -118,8 +160,8 @@ namespace pwiz.Common.SystemUtil
             var offscreenPoint = new Point(0, 0);
             foreach (var screen in Screen.AllScreens)
             {
-                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Right);
-                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Bottom);
+                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Left);
+                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Top);
             }
             return offscreenPoint - Screen.PrimaryScreen.Bounds.Size;    // position one screen away to top left
         }

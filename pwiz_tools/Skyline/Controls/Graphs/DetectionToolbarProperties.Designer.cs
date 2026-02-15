@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Graphs
+namespace pwiz.Skyline.Controls.Graphs
 {
     partial class DetectionToolbarProperties
     {

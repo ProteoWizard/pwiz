@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -129,7 +129,7 @@ namespace pwiz.Common.Chemistry
                 return FormatMassModification(massModMono, desiredDecimals);
             }
             var sign = massModMono > 0 ? @"+" : string.Empty;
-            return string.Format($@"[{sign}{massModMono.ToString($"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}/{Math.Abs(massModAverage).ToString($"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}]");
+            return string.Format($@"[{sign}{massModMono.ToString($@"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}/{Math.Abs(massModAverage).ToString($@"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}]");
         }
 
         public static string FormatMassModification(double massMod, int desiredDecimals)
@@ -139,7 +139,7 @@ namespace pwiz.Common.Chemistry
                 return string.Empty;
             }
             var sign = massMod > 0 ? @"+" : string.Empty;
-            return string.Format($@"[{sign}{massMod.ToString($"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}]");
+            return string.Format($@"[{sign}{massMod.ToString($@"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}]");
         }
 
         protected bool Equals(MoleculeMassOffset other)

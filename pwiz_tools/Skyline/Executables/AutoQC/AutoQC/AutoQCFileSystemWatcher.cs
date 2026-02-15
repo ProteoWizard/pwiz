@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -28,7 +28,7 @@ using SharedBatch;
 namespace AutoQC
 {
 
-    public class AutoQCFileSystemWatcher
+    public class AutoQCFileSystemWatcher : IDisposable
     {
         private readonly Logger _logger;
         private readonly ConfigRunner _configRunner;
@@ -235,6 +235,9 @@ namespace AutoQC
 
         private void FileAdded(FileSystemEventArgs e)
         {
+            if (_cancelled)
+                return;
+
             _lastFileEvent = DateTime.Now;
 
             var path = e.FullPath;
@@ -248,12 +251,15 @@ namespace AutoQC
                 || (!_dataInDirectories && File.Exists(path)))
             {
                 _logger.Log(string.Format(Resources.AutoQCFileSystemWatcher_FileAdded__0__added_to_directory_, e.Name));
-                _dataFiles.Enqueue(e.FullPath);   
+                _dataFiles.Enqueue(e.FullPath);
             }
         }
 
         private void OnFileWatcherError(ErrorEventArgs e)
         {
+            if (_cancelled)
+                return;
+
             var folder = _fileWatcher != null ? _fileWatcher.Path : "UNKNOWN";
             _logger.LogError(string.Format(Resources.AutoQCFileSystemWatcher_OnFileWatcherError_There_was_an_error_watching_the_folder__0__, folder), e.GetException().ToString());
             _fileWatcherError = e;
@@ -582,6 +588,12 @@ namespace AutoQC
             _retryFilePaths.Remove(rawFile.FilePath);
 
             return rawFile;
+        }
+
+        public void Dispose()
+        {
+            Stop();
+            _fileWatcher?.Dispose();
         }
     }
 

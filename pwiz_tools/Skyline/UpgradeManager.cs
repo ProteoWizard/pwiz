@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,7 @@
 using System;
 using System.ComponentModel;
 using System.Deployment.Application;
-using System.Net;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -220,7 +220,15 @@ namespace pwiz.Skyline
 
         private static string GetVersionDiff(Version versionCurrent, Version versionAvailable)
         {
-            if (versionCurrent.Major != versionAvailable.Major || versionCurrent.Minor != versionAvailable.Minor)
+            // For Skyline versioning: Major.Minor.Build.Revision = YY.N.B.DDD
+            // B=0 is release, B=1 is daily, B=9 is feature complete
+            // Only show abbreviated version (YY.N) for actual releases (Build=0)
+            // when the release number (YY.N) has changed
+            bool majorUpgrade = versionCurrent.Major != versionAvailable.Major ||
+                                versionCurrent.Minor != versionAvailable.Minor;
+            bool isRelease = versionAvailable.Build == 0;
+
+            if (majorUpgrade && isRelease)
                 return string.Format(@"{0}.{1}", versionAvailable.Major, versionAvailable.Minor);
             return versionAvailable.ToString();
         }
@@ -372,16 +380,18 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    var webClient = new WebClient();
-                    string applicationPage = webClient.DownloadString(_applicationDeployment.UpdateLocation);
+                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                    string applicationPage = httpClient.DownloadString(_applicationDeployment.UpdateLocation);
                     // ReSharper disable once LocalizableElement
                     Match match = Regex.Match(applicationPage, "<assemblyIdentity .*version=\"([^\"]*)\"");
                     if (match.Success)
                         return new Version(match.Groups[1].Value);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // Fall through to returning null
+                    // Ignore but log to debug console in debug builds
+                    // Detailed error from HttpClientWithProgress preserved for diagnostics
+                    Debug.WriteLine($@"Failed to check for updates: {ex.Message}");
                 }
                 return null;
             }

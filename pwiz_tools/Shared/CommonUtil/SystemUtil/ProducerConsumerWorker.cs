@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -100,7 +100,7 @@ namespace pwiz.Common.SystemUtil
                         ((produceThreads == 0 && _produceThreads == null) || (produceThreads > 0 && _produceThreads != null && produceThreads == _produceThreads.Length)) &&
                         _queue.BoundedCapacity == maxQueueSize)
                         return;
-                    Abort();
+                    Abort(true);  // Wait for old threads to exit before creating new ones
                 }
                 _queue = new BlockingCollection<TItem>(new TProducerConsumerCollection(), maxQueueSize);
             }
@@ -244,7 +244,7 @@ namespace pwiz.Common.SystemUtil
             else
             {
                 Interlocked.Increment(ref _itemsWaiting);
-                _queue.Add(item);
+                _queue?.Add(item);
             }
         }
 

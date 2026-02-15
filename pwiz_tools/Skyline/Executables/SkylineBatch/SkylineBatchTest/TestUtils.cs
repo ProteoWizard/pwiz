@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -23,7 +23,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SkylineBatch;
 using SharedBatch;
 using System.Linq;
-using System.Threading;
 using SharedBatch.Properties;
 using System.Text.RegularExpressions;
 
@@ -31,6 +30,51 @@ namespace SkylineBatchTest
 {
     public class TestUtils
     {
+        /// <summary>
+        /// Sets up mock R installations for testing without requiring actual R on the system.
+        /// 
+        /// OPTIONAL: Tests currently work with real R if installed on your machine.
+        /// Use this to run tests on TeamCity clients or machines without R installed.
+        /// 
+        /// SkylineBatch tests validate R versions exist but DO NOT execute R code.
+        /// This test seam bypasses registry/filesystem R detection.
+        /// 
+        /// Usage (in test class):
+        ///   [TestInitialize]
+        ///   public void TestInit()
+        ///   {
+        ///       TestUtils.SetupMockRInstallations();  // Provides 4.0.3, 4.5.1, 5.0.0
+        ///   }
+        ///   
+        ///   [TestCleanup]
+        ///   public void TestCleanup()
+        ///   {
+        ///       TestUtils.ClearMockRInstallations();
+        ///   }
+        /// </summary>
+        /// <param name="mockVersions">Dictionary of version -> path (e.g., "4.5.1" -> "mock/Rscript.exe")</param>
+        public static void SetupMockRInstallations(Dictionary<string, string> mockVersions = null)
+        {
+            // Default to common R versions if none specified
+            mockVersions ??= new Dictionary<string, string>
+            {
+                { "4.0.3", @"mock\R-4.0.3\bin\Rscript.exe" },
+                { "4.5.1", @"mock\R-4.5.1\bin\Rscript.exe" },
+                { "5.0.0", @"mock\R-5.0.0\bin\Rscript.exe" }
+            };
+            
+            RInstallations.TestRVersions = mockVersions;
+        }
+
+        /// <summary>
+        /// Clears mock R installations, restoring normal R detection behavior.
+        /// Call this in test cleanup if SetupMockRInstallations was used.
+        /// </summary>
+        public static void ClearMockRInstallations()
+        {
+            RInstallations.TestRVersions = null;
+        }
+
         public static string GetTestFilePath(string fileName)
         {
             var currentPath = Directory.GetCurrentDirectory();
@@ -41,7 +85,7 @@ namespace SkylineBatchTest
                 currentPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
             }
 
-            var batchTestPath = Path.Combine(currentPath, "Test");
+            var batchTestPath = Path.Combine(currentPath ?? string.Empty, "Test");
             if (!Directory.Exists(batchTestPath))
                 throw new DirectoryNotFoundException("Unable to find test data directory at: " + batchTestPath);
             return Path.Combine(batchTestPath, fileName);
@@ -198,8 +242,53 @@ namespace SkylineBatchTest
 
         public static ReportInfo GetTestReportInfo()
         {
+            var rVersion = RInstallations.GetMostRecentInstalledRVersion();
             return new ReportInfo("UniqueReport", false, GetTestFilePath("UniqueReport.skyr"),
-                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), "4.0.3")}, new Dictionary<string, PanoramaFile>(), false);
+                new List<Tuple<string, string>> {new Tuple<string, string>(GetTestFilePath("testScript.r"), rVersion)}, new Dictionary<string, PanoramaFile>(), false);
+        }
+
+        /// <summary>
+        /// Replaces R version references in a line with the current installed version.
+        /// Handles both formats: &lt;r_script&gt; and &lt;script_path&gt;.
+        /// </summary>
+        public static string ReplaceRVersionWithCurrent(string line)
+        {
+            var rVersion = RInstallations.GetMostRecentInstalledRVersion();
+            
+            // Replace ONLY R script version references, in both formats:
+            // 1. Newer: <r_script path="..." version="X.Y.Z" ...>
+            // 2. Older: <script_path>(..., X.Y.Z)</script_path>
+            // This avoids replacing xml_version, program version, etc.
+            
+            // Handle newer <r_script> format
+            var updatedLine = Regex.Replace(line, 
+                @"(<r_script [^>]*version="")(\d+\.\d+(\.\d+)?)("")", 
+                match => match.Groups[1].Value + rVersion + match.Groups[4].Value);
+            
+            // Handle older <script_path> format
+            updatedLine = Regex.Replace(updatedLine, 
+                @"(<script_path>\([^,)]+,\s*)(\d+\.\d+(\.\d+)?)(\)</script_path>)", 
+                match => match.Groups[1].Value + rVersion + match.Groups[4].Value);
+            
+            return updatedLine;
+        }
+
+        /// <summary>
+        /// Creates a FileSaver for a temporary copy of a .bcfg file with all R version references
+        /// replaced with the most recent installed R version.
+        /// The caller should dispose the FileSaver when done (auto-cleanup on dispose).
+        /// </summary>
+        public static FileSaver CreateBcfgWithCurrentRVersion(string originalBcfgPath)
+        {
+            // Create temp file in the same folder as the original
+            // In theory, this FileSaver would overwrite the original if it were ever committed,
+            // but it will never be committed.
+            var fileSaver = new FileSaver(originalBcfgPath);
+            
+            // Apply R version replacement using the general-purpose transform function
+            CopyFileWithLineTransformAbsolute(originalBcfgPath, ReplaceRVersionWithCurrent, fileSaver.SafeName);
+            
+            return fileSaver;
         }
 
         public static SkylineSettings GetTestSkylineSettings()
@@ -239,18 +328,14 @@ namespace SkylineBatchTest
                 },  false, false, GetTestFilePath("RefineOutput.sky"));
 
             var reportList = new List<ReportInfo>();
+            var rVersion = RInstallations.GetMostRecentInstalledRVersion();
             var script = new List<Tuple<string, string>>()
-                {new Tuple<string, string>(GetTestFilePath("testScript.R"), "4.0.2")};
+                {new Tuple<string, string>(GetTestFilePath("testScript.R"), rVersion)};
             reportList.Add(new ReportInfo("Unique Report", false, GetTestFilePath("uniqueReport.skyr"), script, new Dictionary<string, PanoramaFile>(), false));
             reportList.Add(new ReportInfo("Another Unique Report", true, GetTestFilePath("uniqueReport.skyr"), script, new Dictionary<string, PanoramaFile>(), true));
             var reports = new ReportSettings(reportList);
             var skyline = GetTestSkylineSettings();
             return new SkylineBatchConfig(name, true, false, DateTime.Now, main, file, refine, reports, skyline);
-        }
-
-        public static ConfigRunner GetTestConfigRunner(string configName = "name")
-        {
-            return new ConfigRunner(GetTestConfig(configName), GetTestLogger());
         }
 
         public static List<IConfig> ConfigListFromNames(List<string> names)
@@ -261,15 +346,6 @@ namespace SkylineBatchTest
                 configList.Add(GetTestConfig(name));
             }
             return configList;
-        }
-
-        public static SkylineBatchConfigManager GetTestConfigManager()
-        {
-            var testConfigManager = new SkylineBatchConfigManager(GetTestLogger());
-            testConfigManager.UserAddConfig(GetTestConfig("one"));
-            testConfigManager.UserAddConfig(GetTestConfig("two"));
-            testConfigManager.UserAddConfig(GetTestConfig("three"));
-            return testConfigManager;
         }
 
         public static string GetSkylineDir()
@@ -290,9 +366,30 @@ namespace SkylineBatchTest
             return null;
         }
 
-        public static Logger GetTestLogger(string logFolder = "")
+        /// <summary>
+        /// Gets the TestResults path for a specific test.
+        /// Creates a test-specific folder similar to Skyline's ExtensionTestContext.GetTestResultsPath().
+        /// </summary>
+        public static string GetTestResultsPath(TestContext testContext, string relativePath = null)
         {
-            logFolder = string.IsNullOrEmpty(logFolder) ? GetTestFilePath("OldLogs") : logFolder;
+            // Build path similar to Skyline: <project_root>/TestResults/<TestName>/<relativePath>
+            var testResultsDir = Path.Combine(GetProjectDirectory("TestResults"), testContext.TestName);
+            if (!string.IsNullOrEmpty(relativePath))
+                testResultsDir = Path.Combine(testResultsDir, relativePath);
+            
+            return Path.GetFullPath(testResultsDir);
+        }
+
+        public static Logger GetTestLogger(TestContext testContext, string logSubfolder = "")
+        {
+            // Use test-specific folder in TestResults
+            var logFolder = string.IsNullOrEmpty(logSubfolder)
+                ? GetTestResultsPath(testContext, "Logs")
+                : GetTestResultsPath(testContext, logSubfolder);
+
+            if (!Directory.Exists(logFolder))
+                Directory.CreateDirectory(logFolder);
+
             var logName = "TestLog" + DateTime.Now.ToString("_HHmmssfff") + ".log";
             return new Logger(Path.Combine(logFolder, logName), logName, true);
         }
@@ -308,9 +405,10 @@ namespace SkylineBatchTest
             ConfigList.XmlVersion = SkylineBatch.Properties.Settings.Default.XmlVersion;
         }
 
-        public static List<string> GetAllLogFiles(string directory = null)
+        public static List<string> GetAllLogFiles(TestContext testContext, string directory = null)
         {
-            directory = directory == null ? GetTestFilePath("OldLogs\\TestTinyLog") : directory;
+            directory ??= GetTestResultsPath(testContext, "TestTinyLog");
+
             var files = Directory.GetFiles(directory);
             var logFiles = new List<string>();
             foreach (var fullName in files)
@@ -320,19 +418,6 @@ namespace SkylineBatchTest
                     logFiles.Add(fullName);
             }
             return logFiles;
-        }
-
-        public delegate bool ConditionDelegate();
-
-        public static void WaitForCondition(ConditionDelegate condition, TimeSpan timeout, int timestep, string errorMessage)
-        {
-            var startTime = DateTime.Now;
-            while (DateTime.Now - startTime < timeout)
-            {
-                if (condition()) return;
-                Thread.Sleep(timestep);
-            }
-            throw new Exception(errorMessage);
         }
 
         public static void CompareFiles(string expectedFilePath, string actualFilePath, List<Regex> skipLines = null)
@@ -383,14 +468,40 @@ namespace SkylineBatchTest
             }
         }
 
-        public static string CopyFileFindReplace(string fileName, string stringToBeReplaced, string replacementString, string newName = null)
+        /// <summary>
+        /// Copies a file from the test directory, replacing all occurrences of a string.
+        /// </summary>
+        public static string CopyFileFindReplace(string fileName, string stringToBeReplaced, string replacementString, string newName)
+        {
+            // String.Replace() replaces all occurrences - no while loop needed
+            return CopyFileWithLineTransform(fileName,
+                line => line.Replace(stringToBeReplaced, replacementString),
+                newName);
+        }
+
+        /// <summary>
+        /// Copies a file from the test directory, applying a transformation function to each line.
+        /// </summary>
+        /// <param name="fileName">Source file name (relative to test directory)</param>
+        /// <param name="lineTransform">Function to transform each line (input line -> output line)</param>
+        /// <param name="newName">Destination file path (required)</param>
+        /// <returns>Path to the created file</returns>
+        public static string CopyFileWithLineTransform(string fileName, Func<string, string> lineTransform, string newName)
         {
             var originalFilePath = GetTestFilePath(fileName);
-            newName = newName ?? Path.GetTempFileName();
-            if (File.Exists(newName)) File.Delete(newName);
+            return CopyFileWithLineTransformAbsolute(originalFilePath, lineTransform, newName);
+        }
 
-            using (var fileStream = new FileStream(originalFilePath, FileMode.Open, FileAccess.Read))
-            using (var writeStream = File.OpenWrite(newName))
+        /// <summary>
+        /// Copies a file (absolute path), applying a transformation function to each line.
+        /// </summary>
+        private static string CopyFileWithLineTransformAbsolute(string sourceFilePath, Func<string, string> lineTransform, string destFilePath)
+        {
+            if (File.Exists(destFilePath))
+                File.Delete(destFilePath);
+
+            using (var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read))
+            using (var writeStream = File.OpenWrite(destFilePath))
             using (var streamReader = new StreamReader(fileStream))
             using (var streamWriter = new StreamWriter(writeStream))
             {
@@ -398,13 +509,12 @@ namespace SkylineBatchTest
                 {
                     var line = streamReader.ReadLine();
                     if (line == null) continue;
-                    var tempLine = line;
-                    while (tempLine.Contains(stringToBeReplaced))
-                        tempLine = tempLine.Replace(stringToBeReplaced, replacementString);
-                    streamWriter.WriteLine(tempLine);
+                    var transformedLine = lineTransform(line);
+                    streamWriter.WriteLine(transformedLine);
                 }
             }
-            return newName;
+            return destFilePath;
         }
     }
 }
+

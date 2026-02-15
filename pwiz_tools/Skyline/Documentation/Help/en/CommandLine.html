@@ -1,0 +1,381 @@
+<html><head>
+<meta charset="utf-8">
+<style>body {
+    font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+}
+.RowType {
+    font-size: 1.769em;
+    line-height: 1.3em;
+    font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif;
+    color: #000;
+}
+table {
+border: 1px solid #bbb;
+border-collapse: collapse;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+th {
+    background-color: #ededed;
+    color: #636363;
+    text-align: left;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    font-weight: bold;
+    border: 1px solid #bbb;
+}
+td {
+    color: #2a2a2a;
+    vertical-align: top;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 8px;
+    padding-left: 8px;
+    border: 1px solid #bbb;
+}
+.Hidden {
+    font-style: italic; 
+}
+.Obsolete {
+    text-decoration: line-through;
+}</style>
+</head><body>
+<p>To access the command-line interface for Skyline you can use either SkylineRunner.exe or SkylineCmd.exe.</p><p>SkylineRunner.exe is a tiny shim executable less than 10 KB in size.  It requires a Skyline installation, performed with the self-updating web installers, on the computer on which SkylineRunner is run.  SkylineRunner simply starts a separate Skyline process running without any user interface, pipes the parameter options from the command-line to the running Skyline instance, and prints output from its Skyline instance to the command console. You can still run multiple instances of SkylineRunner and it will start multiple instances of Skyline. The Skyline instance started by SkylineRunner is independent of any other instances that may already be running on the same machine.  It is not necessary to have a visible instance of Skyline running on your computer for SkylineRunner to work.</p><p>SkylineCmd.exe is a much simpler executable which is always installed beside Skyline.exe. It uses the Skyline.exe module as a DLL providing a much cleaner command-line implementation than SkylineRunner.exe, but you must know where SkylineCmd.exe lives on disk to run it, which is usually not the case with the web installer. Usually, you will use either the “Unplugged” installer or the Administrator installer (or recently the Wine Docker Container for Linux systems) if you want to use SkylineCmd.exe. The “Unplugged” installer comes in a ZIP file and you can just unzip it, find SkylineCmd.exe and run it in-place. The Administrator installer puts SkylineCmd.exe in C:\Program Files\Skyline.</p><p>The Skyline command-line interface is intended for automating tasks such as quality control, scheduling and refinement, during acquisition.  With the Skyline command-line interface, you can open a Skyline document, import a newly acquired data file, and export a report or new method. You can also run large-scale chromatogram extraction and peak picking for proteomewide DIA and DDA experiments faster and consuming less memory than using the full graphic user interface. (See Webinar 14: https://skyline.ms/webinar14.url)</p><div class="RowType">General input/output</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--in</nobr>=path/to/file.sky</td><td>Open a Skyline file</td></tr>
+<tr><td><nobr>--save</nobr></td><td>Saves any changes to the file</td></tr>
+<tr><td><nobr>--save-settings</nobr></td><td>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</td></tr>
+<tr><td><nobr>--out</nobr>=path/to/file.sky</td><td>Same as save except writes to the specified file</td></tr>
+<tr><td><nobr>--new</nobr>=path/to/file.sky</td><td>Create a new document using the current Skyline settings.</td></tr>
+<tr><td><nobr>--overwrite</nobr></td><td>Overwrite the filepath specified by <nobr>--new</nobr> if it already exists, instead of producing an error.</td></tr>
+<tr><td><nobr>--share-zip</nobr>[=path/to/file.sky.zip]</td><td>Saves the entire project (document, results, libraries, etc.) to a ZIP archive. Defaults to a minimal archive.</td></tr>
+<tr><td><nobr>--share-type</nobr>=&lt;minimal | complete&gt;</td><td>Specifies the type, &#39;minimal&#39; or &#39;complete&#39;, of archive to share when <nobr>--share-zip</nobr> is specified. Minimal is the default attempting to reduce the size of the archive to the minimum necessary to represent the targets in the document while &#39;complete&#39; maintains full fidelity of all project files.</td></tr>
+<tr><td><nobr>--batch-commands</nobr>=path/to/file</td><td>Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands.</td></tr>
+<tr><td><nobr>--dir</nobr>=path/to/folder</td><td>Used to specify a default root directory for all other path arguments, other than the directory in which the command is run.</td></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>All logging output will be preceded by a time and date.</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>All logging output will be preceded by two memory usage values managed and process private bytes in MB, rounded to the nearest MB.</td></tr>
+<tr><td><nobr>--log-file</nobr>=path/to/file</td><td>Sends all logged output to a file.</td></tr>
+<tr><td><nobr>--help</nobr>[=&lt;ascii | <nobr>no-borders</nobr>&gt;]</td><td>Shows this text.</td></tr>
+<tr><td><nobr>--version</nobr></td><td>Emits version information for the running installation</td></tr>
+<tr><td><nobr>--verbose-errors</nobr></td><td>Adds additional information to the program output in the case of an error, that may be helpful to Skyline developers.</td></tr>
+</table>
+<p>Until the section titled Settings Customization all other command line arguments rely on the '--in' argument because they all rely on having a Skyline document open.</p><div class="RowType">Importing results replicates</div>
+<table>
+<tr><td><nobr>--import-file</nobr>=path/to/file</td><td>Attach a replicate to the open document.</td></tr>
+<tr><td><nobr>--import-replicate-name</nobr>=&lt;name&gt;</td><td>Name to give the new replicate in an –<nobr>import-file</nobr> operation.</td></tr>
+<tr><td><nobr>--import-optimizing</nobr>=&lt;CE | DP&gt;</td><td>Indicates the data being imported contains extra transitions for detecting optimal collision energy or declustering potential.</td></tr>
+<tr><td><nobr>--import-append</nobr></td><td>Append the <nobr>import-file</nobr> to the given replicate. This is an intention check in case the document already has a replicate with the given name. By default this is set to false. This option only works with the <nobr>-</nobr>–<nobr>import-file</nobr> option.</td></tr>
+<tr><td><nobr>--import-all</nobr>=path/to/folder</td><td>Imports from a folder all files or <nobr>sub-folders</nobr> which are not already in the document, naming each with the <nobr>base-name</nobr> of the file or <nobr>sub-folder</nobr>, unless the <nobr>--import-naming-pattern</nobr> parameter is also supplied. If <nobr>--import-replicate-name</nobr> is supplied, then all files are added to one <nobr>multi-injection</nobr> replicate.</td></tr>
+<tr><td><nobr>--import-all-files</nobr>=path/to/folder</td><td>Imports from a folder all files but not subfolders which are not already in the document, naming each with the <nobr>base-name</nobr> of the file, unless the <nobr>--import-naming-pattern</nobr> parameter is also supplied. If <nobr>--import-replicate-name</nobr> is supplied, then all files are added to one <nobr>multi-injection</nobr> replicate.</td></tr>
+<tr><td><nobr>--import-naming-pattern</nobr>=&lt;<nobr>reg-ex</nobr>&gt;</td><td>A regular expression from which the first group will be used to name replicates in an <nobr>--import-all</nobr> operation (e.g. [^_]_(.*) for everything after the first underscore).</td></tr>
+<tr><td><nobr>--import-filename-pattern</nobr>=&lt;<nobr>reg-ex</nobr>&gt;</td><td>A regular expression that is applied to file names to select the ones that will be imported.</td></tr>
+<tr><td><nobr>--import-samplename-pattern</nobr>=&lt;<nobr>reg-ex</nobr>&gt;</td><td>A regular expression that is applied to sample names (e.g. in a <nobr>multi-injection</nobr> .wiff file) to select the ones that will be imported.</td></tr>
+<tr><td><nobr>--import-before</nobr>=&lt;date&gt;</td><td>When importing from a folder, only import from files with modified time before the given date.</td></tr>
+<tr><td><nobr>--import-on-or-after</nobr>=&lt;date&gt;</td><td>When importing from a folder, only import from files with modified time on or after the given date.</td></tr>
+<tr><td><nobr>--import-no-join</nobr></td><td>Import results files to individual .skyd files without joining them to the main document .skyd file. This is useful for distributed processing, as on HPC cluster.</td></tr>
+<tr><td><nobr>--import-process-count</nobr>=&lt;integer&gt;</td><td>A number of <nobr>sub-processes</nobr> will be run for <nobr>single-file</nobr> import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on <nobr>24-core</nobr> NUMA servers and <nobr>3-4x</nobr> even on i7 processors, under the right conditions. Be sure to test with your system.</td></tr>
+<tr><td><nobr>--import-threads</nobr>=&lt;integer&gt;</td><td>A number of files will be imported in parallel using threads in the main process (equivalent to “Files to import simultaneously” in the user interface), after which the results from each single file will be joined. This can produce <nobr>2-4x</nobr> performance gains under the right conditions. Be sure to test with your system.</td></tr>
+<tr><td><nobr>--import-warn-on-failure</nobr></td><td>If importing a file fails with an error the message is emitted as a warning, the replicate is removed, and importing continues to completion.</td></tr>
+<tr><td><nobr>--import-lockmass-positive</nobr>=&lt;number&gt;</td><td>Waters lockmass correction m/z for positive ion scans.</td></tr>
+<tr><td><nobr>--import-lockmass-negative</nobr>=&lt;number&gt;</td><td>Waters lockmass correction m/z for negative ion scans.</td></tr>
+<tr><td><nobr>--import-lockmass-tolerance</nobr>=&lt;number&gt;</td><td>Waters lockmass correction tolerance m/z.</td></tr>
+<tr><td><nobr>--import-peak-boundaries</nobr>=path/to/file</td><td>Read peak boundaries from a comma or tab separated file</td></tr>
+</table>
+<div class="RowType">Reintegrate with advanced peak picking models</div>
+<table>
+<tr><td><nobr>--reintegrate-model-name</nobr>=&lt;name&gt;</td><td>The name of a scoring model to use for the reintegrate operation. The model can either be <nobr>pre-defined</nobr> (e.g. using the Edit &gt; Refine &gt; Reintegrate form) or created automatically during this operation by using <nobr>--reintegrate-create-model</nobr>.</td></tr>
+<tr><td><nobr>--reintegrate-create-model</nobr></td><td>This option will cause a new model to be created, using the mProphet algorithm with all available scores for the results found in the document. (requires <nobr>--reintegrate-model-name</nobr>)</td></tr>
+<tr><td><nobr>--reintegrate-model-type</nobr>=<br/>&lt;mProphet | Skyline | SkylineML&gt;</td><td>The type of peak scoring model to train to produce z scores and q values. (dafault mProphet) Skyline <nobr>-</nobr> simply scales coefficients of the default Skyline model to estimate a unit normal distribution from the decoys. SkylineML <nobr>-</nobr> uses the mProphet machine learning algorithm to train a model using only the default set of feature scores.</td></tr>
+<tr><td><nobr>--reintegrate-model-second-best</nobr></td><td>Forces the use of second best peaks during reintegration. The default is to use decoys only.</td></tr>
+<tr><td><nobr>--reintegrate-model-both</nobr></td><td>Forces the use of both decoys and second best peaks during reintegration. The default is to use decoys only.</td></tr>
+<tr><td><nobr>--reintegrate-overwrite-peaks</nobr></td><td>Existing manually integrated peaks will be overwritten with peaks chosen by the reintegration model. (requires <nobr>--reintegrate-model-name</nobr>)</td></tr>
+<tr><td><nobr>--reintegrate-exclude-feature</nobr>=<br/>&lt;feature&nbsp;name&gt;</td><td>Use to exclude a particular feature score by name from the model. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features.</td></tr>
+</table>
+<div class="RowType">Removing results replicates</div>
+<table>
+<tr><td><nobr>--remove-before</nobr>=&lt;date&gt;</td><td>Remove all results from the open document with an acquired time before the given date.</td></tr>
+<tr><td><nobr>--remove-all</nobr></td><td>Remove all results from the open document.</td></tr>
+</table>
+<div class="RowType">Minimizing results file size</div>
+<table>
+<tr><td><nobr>--chromatograms-limit-noise</nobr>=&lt;number&gt;</td><td>Limits the length of the chromatograms to a number of minutes around the chromatogram peak, i.e. &#177; minutes.</td></tr>
+<tr><td><nobr>--chromatograms-discard-unused</nobr></td><td>Discard all unused chromatograms from the document.</td></tr>
+</table>
+<div class="RowType">Importing other Skyline documents</div>
+<table>
+<tr><td><nobr>--import-document</nobr>=path/to/file.sky</td><td>Import another Skyline document file into the open document. This may be specified multiple times for multiple files.</td></tr>
+<tr><td><nobr>--import-document-results</nobr>=<br/>&lt;remove | merge_names | merge_indices | add&gt;</td><td>Determines how any results in the imported document are handled. The default is to remove them.</td></tr>
+<tr><td><nobr>--import-document-merge-peptides</nobr></td><td>Matching peptides are merged if used, otherwise not.</td></tr>
+</table>
+<div class="RowType">Importing annotations</div>
+<table>
+<tr><td><nobr>--import-annotations</nobr>=path/to/file.csv</td><td>Imports annotations from a CSV file into the document. Use File &gt; Export &gt; Annotations to create example files of the required format with paths to associate the annotations to document elements.</td></tr>
+</table>
+<div class="RowType">Importing FASTA files</div>
+<table>
+<tr><td><nobr>--import-fasta</nobr>=path/to/file</td><td>Import a FASTA file into the open document.</td></tr>
+<tr><td><nobr>--keep-empty-proteins</nobr></td><td>Keeps any empty proteins in the open document after importing a FASTA file.</td></tr>
+</table>
+<div class="RowType">Importing peptide searches</div>
+<table>
+<tr><td><nobr>--import-search-file</nobr>=path/to/file</td><td>Import a peptide search results file into the open document, building a <nobr>document-specific</nobr> spectral library. This may be specified multiple times for multiple files. Use –<nobr>import-fasta</nobr> argument to add matched peptides as targets.</td></tr>
+<tr><td><nobr>--import-search-cutoff-score</nobr>=&lt;number&gt;</td><td>Defines a cutoff score (between 0 and 1) to be used when building a spectral library from peptide search results files, where 1 is for highest confidence matches and 0 includes everything. [default 0.95]</td></tr>
+<tr><td><nobr>--import-search-irts</nobr>=&lt;name&gt;</td><td>Name of iRT standard to to be used when building a spectral library.</td></tr>
+<tr><td><nobr>--import-search-num-cirts</nobr>=&lt;integer&gt;</td><td>Specify the number of CiRT peptides to use as iRT standards if building a spectral library with CiRT peptides as iRT standards.</td></tr>
+<tr><td><nobr>--import-search-recalibrate-irts</nobr></td><td>If building a spectral library with iRT standards, recalibrate the iRT standard values relative to the peptides being added.</td></tr>
+<tr><td><nobr>--import-search-add-mods</nobr></td><td>Adds all modifications found in peptide search results files to the open document.</td></tr>
+<tr><td><nobr>--import-search-include-ambiguous</nobr></td><td>Prevent spectra with multiple ambiguous peptide matches from being discarded when building the spectral library.</td></tr>
+<tr><td><nobr>--import-search-exclude-library-sources</nobr></td><td>Exclude the result files used to build a library from consideration for chromatogram extraction. This can be useful when conversion and <nobr>pre-processing</nobr> were used on the files used for peptide spectrum matching which may not be appropriate for chromatogram extraction.</td></tr>
+<tr><td><nobr>--import-search-prefer-embedded-spectra</nobr></td><td>For MaxQuant msms.txt files to force use of the spectra in the file rather than opening raw data files for the original spectra. The MaxQuant msms.txt files contain <nobr>charge-state</nobr> deconvoluted spectra which may not be appropriate for target selection.</td></tr>
+</table>
+<div class="RowType">Associating peptides with proteins</div>
+<table>
+<tr><td><nobr>--associate-proteins-fasta</nobr>=path/to/file</td><td>Associate peptides in the document with proteins from the given FASTA. If this argument is not provided but other <nobr>--associate-proteins</nobr> options are, then the FASTA from <nobr>--import-fasta</nobr> will be used. If <nobr>--import-fasta</nobr> is not provided either, then the last FASTA used for protein association will be used.</td></tr>
+<tr><td><nobr>--associate-proteins-group-proteins</nobr></td><td>Proteins that match the same set of peptides will be combined into a single target in the document.</td></tr>
+<tr><td><nobr>--associate-proteins-gene-level-parsimony</nobr></td><td>Associate peptides with genes (or gene groups) instead of proteins, and apply parsimony options to that association.</td></tr>
+<tr><td><nobr>--associate-proteins-shared-peptides</nobr>=<br/>&lt;DuplicatedBetweenProteins | AssignedToFirstProtein | AssignedToBestProtein | Removed&gt;</td><td>Sets how to assign peptides that are contained in more than one protein in the FASTA or background proteome.</td></tr>
+<tr><td><nobr>--associate-proteins-minimal-protein-list</nobr></td><td>Apply an algorithm to find the smallest (parsimonious) set of proteins that explains all of the peptides.</td></tr>
+<tr><td><nobr>--associate-proteins-min-peptides</nobr>=<br/>&lt;integer&gt;</td><td>The minimum number of peptides a protein must have to be added to the document.</td></tr>
+<tr><td><nobr>--associate-proteins-remove-subsets</nobr></td><td>Remove subset proteins but keep <nobr>non-parsimonious</nobr>, <nobr>non-subset</nobr> proteins.</td></tr>
+</table>
+<div class="RowType">Importing transition lists and assay libraries</div>
+<table>
+<tr><td><nobr>--import-pep-list</nobr>=path/to/file</td><td>Import a list of peptides or peptide precursors (with charge state) with an optional list name specified by <nobr>--import-pep-list-name</nobr>.</td></tr>
+<tr><td><nobr>--import-pep-list-name</nobr>=&lt;name&gt;</td><td>Name of imported peptide list specified by <nobr>--import-pep-list</nobr>.</td></tr>
+<tr><td><nobr>--import-transition-list</nobr>=path/to/file</td><td>Import a simple transition list with Q1, Q3 and peptide sequence.  Also supports molecule transition lists in CSV format with suitable headers.</td></tr>
+<tr><td><nobr>--import-assay-library</nobr>=path/to/file</td><td>Import an assay library transition list with columns for iRT and relative product ion abundance to create an iRT calculator and spectral library for enhanced peak picking.</td></tr>
+<tr><td><nobr>--ignore-transition-errors</nobr></td><td>When present imports all recognized transitions from a transition list or assay library, with error rows reported as warnings.</td></tr>
+<tr><td><nobr>--irt-standards-group-name</nobr>=&lt;name&gt;</td><td>The name of a protein or peptide list containing the iRT standards within an imported assay library. (optional)</td></tr>
+<tr><td><nobr>--irt-standards-file</nobr>=path/to/file</td><td>The path to a separate assay library containing the iRT standards to be applied to an imported assay library. (optional)</td></tr>
+<tr><td><nobr>--irt-database-path</nobr>=path/to/file.irtdb</td><td>The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if <nobr>-</nobr>–<nobr>irt-standards-group-name</nobr> or <nobr>-</nobr>–<nobr>irt-standards-file</nobr> are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb</td></tr>
+<tr><td><nobr>--irt-calc-name</nobr>=&lt;name&gt;</td><td>The name for the iRT calculator created during assay library import. (optional) The default name is the document base name.</td></tr>
+</table>
+<div class="RowType">Adding spectral libraries</div>
+<table>
+<tr><td><nobr>--add-library-path</nobr>=path/to/file</td><td>Specify a spectral library to be added to the open document.</td></tr>
+<tr><td><nobr>--add-library-name</nobr>=&lt;name&gt;</td><td>Name to give the spectral library in an –<nobr>-add-library-path</nobr> operation.</td></tr>
+</table>
+<div class="RowType">Creating an ion mobility library</div>
+<table>
+<tr><td><nobr>--ionmobility-library-create</nobr>=path/to/file.imsdb</td><td>Add an ion mobility library to the open document, based on its currently loaded chromatograms.</td></tr>
+<tr><td><nobr>--ionmobility-library-name</nobr>=&lt;name&gt;</td><td>Name to give the ion mobility library in an –<nobr>-ionmobility-library-create</nobr> operation.</td></tr>
+</table>
+<div class="RowType">Adding decoy peptides</div>
+<table>
+<tr><td><nobr>--decoys-add</nobr>[=&lt;reverse | shuffle&gt;]</td><td>Add decoys to a template document for reintegrate model generation with mProphet. (decoy generation method is optional and defaults to “reverse”)</td></tr>
+<tr><td><nobr>--decoys-add-count</nobr>=&lt;integer&gt;</td><td>A number of decoys to add. (optional – default is to generate as many decoys as targets)</td></tr>
+<tr><td><nobr>--decoys-discard</nobr></td><td>Forces any existing decoys to be discarded when <nobr>--decoys-add</nobr> is used.</td></tr>
+</table>
+<div class="RowType">Refining the targets list</div>
+<table>
+<tr><td><nobr>--refine-min-peptides</nobr>=&lt;integer&gt;</td><td>Proteins with fewer than this number of peptides will be removed from the document.</td></tr>
+<tr><td><nobr>--refine-remove-repeats</nobr></td><td>All repeated peptides will be removed to leave only the first occurrence of any peptide.</td></tr>
+<tr><td><nobr>--refine-remove-duplicates</nobr></td><td>All peptides that are not unique within the document will be removed.</td></tr>
+<tr><td><nobr>--refine-missing-library</nobr></td><td>All targets that do not correspond to a library match will be removed.</td></tr>
+<tr><td><nobr>--refine-min-transitions</nobr>=&lt;integer&gt;</td><td>Precursors with fewer than this number of transitions will be removed from the document.</td></tr>
+<tr><td><nobr>--refine-label-type</nobr>=&lt;label&nbsp;type&gt;</td><td>Precursors of the specified isotope label type will be removed (default) or added if <nobr>--refine-add-label-type</nobr> is also used.</td></tr>
+<tr><td><nobr>--refine-add-label-type</nobr></td><td>Add back precursors of an isotope label type.</td></tr>
+<tr><td><nobr>--refine-auto-select-peptides</nobr></td><td>All proteins will be reset to <nobr>auto-select</nobr> the peptides they contain.</td></tr>
+<tr><td><nobr>--refine-auto-select-precursors</nobr></td><td>All peptides will be reset to <nobr>auto-select</nobr> the precursors they contain.</td></tr>
+<tr><td><nobr>--refine-auto-select-transitions</nobr></td><td>All precursors will be reset to <nobr>auto-select</nobr> the transitions they contain.</td></tr>
+</table>
+<div class="RowType">Refining the targets list based on imported results</div>
+<table>
+<tr><td><nobr>--refine-min-peak-found-ratio</nobr>=<br/>&lt;number&gt;</td><td>All elements with peak found ratio below this number will be removed from the document:
+
+Green = 1.0
+Orange &gt;= 0.5
+Red &lt; 0.5</td></tr>
+<tr><td><nobr>--refine-max-peak-found-ratio</nobr>=<br/>&lt;number&gt;</td><td>All elements with peak found ratio above this number will be removed from the document:
+
+Green = 1.0
+Orange &gt;= 0.5
+Red &lt; 0.5</td></tr>
+<tr><td><nobr>--refine-max-peptide-peak-rank</nobr>=<br/>&lt;integer&gt;</td><td>All transitions with an average area peak ranking greater than this number will be removed from the document.</td></tr>
+<tr><td><nobr>--refine-max-transition-peak-rank</nobr>=<br/>&lt;integer&gt;</td><td>All transitions with an average area peak ranking greater than this number will be removed from the document.</td></tr>
+<tr><td><nobr>--refine-max-precursor-only</nobr></td><td>Only the precursor charge state with the maximum peak area will be retained.</td></tr>
+<tr><td><nobr>--refine-prefer-larger-products</nobr></td><td>Causes refinement to choose larger product ions when smaller, less selective ions yeild only fractionally greater peak area.</td></tr>
+<tr><td><nobr>--refine-missing-results</nobr></td><td>All elements without measured results will be removed from the document.</td></tr>
+<tr><td><nobr>--refine-min-time-correlation</nobr>=<br/>&lt;number&gt;</td><td>Precursors will be removed from the document until the target value for the correlation coefficient of a linear regression with the optimal retention time calculator exceed this threshold.</td></tr>
+<tr><td><nobr>--refine-min-dotp</nobr>=&lt;number&gt;</td><td>All precursors with a product ion peak area to library spectrum <nobr>dot-product</nobr> below this threshold will be removed from the document.</td></tr>
+<tr><td><nobr>--refine-min-idotp</nobr>=&lt;number&gt;</td><td>All precursors with a MS1 precursor peak area to expected isotope distribution <nobr>dot-product</nobr> below this threshold will be removed from the document.</td></tr>
+<tr><td><nobr>--refine-use-best-result</nobr></td><td>Use only the best replicate for each peptide in refinement value calculations. (use for fractionation)</td></tr>
+<tr><td><nobr>--refine-cv-remove-above-cutoff</nobr>=<br/>&lt;number&gt;</td><td>All target precursors with peak area CV above the cutoff will be removed.</td></tr>
+<tr><td><nobr>--refine-cv-global-normalize</nobr>=<br/>&lt;global_standards | equalize_medians | tic&gt;</td><td>Areas used in CV calculations are normalized as specified. (default no normalization)</td></tr>
+<tr><td><nobr>--refine-cv-reference-normalize</nobr>=<br/>&lt;label&nbsp;type&gt;</td><td>Areas used in CV calculations are normalized to a reference type, e.g. &quot;heavy&quot;.</td></tr>
+<tr><td><nobr>--refine-cv-transitions</nobr>=&lt;all | best&gt;</td><td>Specifies the transitions for which peak areas are summed and used in CV calculations for CV refinement. (either all or a single best transition)</td></tr>
+<tr><td><nobr>--refine-cv-transitions-count</nobr>=&lt;integer&gt;</td><td>Specifies the count of transitions selected by library transition rank (isotopes for precursors and library for fragments) for which peak areas are summed and used in CV calculations for CV refinement.</td></tr>
+<tr><td><nobr>--refine-cv-ms-level</nobr>=&lt;precursors | products&gt;</td><td>The MS level used in the CV calculations. Defaults to &quot;products&quot; which will usually have lower CVs than precursors in methods like PRM and DIA.</td></tr>
+<tr><td><nobr>--refine-qvalue-cutoff</nobr>=&lt;number&gt;</td><td>All target precursors with a maximum detection q value above the cutoff will be removed. If <nobr>--refine-minimum-detections</nobr> is used then at least the specified number of replicates must have a detection q value below the cutoff.</td></tr>
+<tr><td><nobr>--refine-minimum-detections</nobr>=&lt;integer&gt;</td><td>All target precursors with less than the specified number of replicates with detection q value below the <nobr>--refine-qvalue-cutoff</nobr> are removed.</td></tr>
+<tr><td><nobr>--refine-gc-p-value-cutoff</nobr>=&lt;number&gt;</td><td>Keep only targets with a group comparison adjusted p value below the specified <nobr>cut-off</nobr>. (required for group comparison refinement)</td></tr>
+<tr><td><nobr>--refine-gc-fold-change-cutoff</nobr>=&lt;number&gt;</td><td>Keep only targets with a group comparision fold change above this cutoff. (optional for group comparison refinement)</td></tr>
+<tr><td><nobr>--refine-gc-ms-level</nobr>=&lt;number&gt;</td><td>The MS level (1 or 2) to use in calculating peak areas for a group comparison refinement. Defaults to level 2 if both levels are present, and otherwise uses whichever level is present.</td></tr>
+<tr><td><nobr>--refine-gc-name</nobr>=&lt;label&nbsp;type&gt;</td><td>The name of a previously defined group comparison to use in refining for significantly changing targets. Specify the argument multiple times with multiple names to keep the union of multiple comparisons.</td></tr>
+</table>
+<div class="RowType">Exporting reports</div>
+<table>
+<tr><td><nobr>--report-name</nobr>=&lt;name&gt;</td><td>The name of a report to export as it appears in the Skyline Export Report form.</td></tr>
+<tr><td><nobr>--report-file</nobr>=path/to/file.csv</td><td>The path to export the report to. Required if <nobr>--report-name</nobr> is specified.</td></tr>
+<tr><td><nobr>--report-add</nobr>=path/to/file.skyr</td><td>Add reports from a saved report template file to the running program.</td></tr>
+<tr><td><nobr>--report-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td>Specifies how to resolve report name conflicts, by either overwriting or skipping them, when using <nobr>--report-add</nobr> (default is to output an error message for conflicts)</td></tr>
+<tr><td><nobr>--report-format</nobr>=&lt;csv | tsv&gt;</td><td>CSV for <nobr>comma-separated</nobr> reports (or semicolon separated, depending on your localization) or TSV for tab separated reports [default CSV]</td></tr>
+<tr><td><nobr>--report-invariant</nobr></td><td>Exports the report with the “Invariant” language setting, using English (US) number formats and header text without spaces, ideal for use with the R statistical programming environment.</td></tr>
+</table>
+<div class="RowType">Exporting chromatograms</div>
+<table>
+<tr><td><nobr>--chromatogram-file</nobr>=path/to/file.tsv</td><td>The path to the tab delimited file to export chromatograms to. Defaults to exporting precursors and products.</td></tr>
+<tr><td><nobr>--chromatogram-precursors</nobr></td><td>Export precursor ion chromatograms. Requires the <nobr>--chromatogram-file</nobr> argument.</td></tr>
+<tr><td><nobr>--chromatogram-products</nobr></td><td>Export product ion chromatograms. Requires the <nobr>--chromatogram-file</nobr> argument.</td></tr>
+<tr><td><nobr>--chromatogram-base-peaks</nobr></td><td>Export base peak chromatograms. Requires the <nobr>--chromatogram-file</nobr> argument.</td></tr>
+<tr><td><nobr>--chromatogram-tics</nobr></td><td>Export total ion current chromatograms. Requires the <nobr>--chromatogram-file</nobr> argument.</td></tr>
+</table>
+<div class="RowType">Exporting other file types</div>
+<table>
+<tr><td><nobr>--exp-speclib-file</nobr>=path/to/file.blib</td><td>Export experimental data in the current document to a spectral library file. Peak areas are used as spectrum intensities, peak apex times are used as retention times, and if the document has iRT values they will also be stored in the library.</td></tr>
+<tr><td><nobr>--exp-mprophet-features</nobr>=path/to/file.csv</td><td>Export all the individual feature scores for each peptide, as well as the composite score, the p value, and the q value into the mProphet format.</td></tr>
+<tr><td><nobr>--exp-mprophet-best-peaks-only</nobr></td><td>Include feature scores only for the best scoring peaks. Requires the <nobr>--exp-mprophet-features</nobr> argument.</td></tr>
+<tr><td><nobr>--exp-mprophet-targets-only</nobr></td><td>Include feature scores only for targets. Requires the <nobr>--exp-mprophet-features</nobr> argument.</td></tr>
+<tr><td><nobr>--exp-mprophet-exclude-feature</nobr>=<br/>&lt;feature&nbsp;name&gt;</td><td>Use to exclude a particular feature score by name from the exported file. Names can be found in the user interface. This argument may be used multiple times to exclude multiple features. Requires the <nobr>--exp-mprophet-features</nobr> argument.</td></tr>
+<tr><td><nobr>--exp-annotations</nobr>=path/to/file.csv</td><td>Export all the annotations in the document into a text file with an ElementLocator field in the format required by <nobr>--import-annotations</nobr>. Use <nobr>--exp-annotations-include-properties</nobr> to include properties as well.</td></tr>
+<tr><td><nobr>--exp-annotations-include-object</nobr>=<br/>&lt;MoleculeGroup | Molecule | Precursor | Transition | Replicate | ResultFile | MoleculeResult | PrecursorResult | TransitionResult&gt;</td><td>Use to specify which object types to include in the exported annotations. By default all object types are included. This argument can be used multiple times to specify multiple object types. Requires the <nobr>--exp-annotations</nobr> argument.</td></tr>
+<tr><td><nobr>--exp-annotations-include-properties</nobr></td><td>Use to include all properties in the exported annotations. By default no properties are included. Requires the <nobr>--exp-annotations</nobr> argument.</td></tr>
+<tr><td><nobr>--exp-annotations-remove-blank-rows</nobr></td><td>Use to remove blank rows from the exported annotations. Requires the <nobr>--exp-annotations</nobr> argument.</td></tr>
+</table>
+<div class="RowType">Exporting isolation/transition lists</div>
+<table>
+<tr><td><nobr>--exp-isolationlist-instrument</nobr>=<br/>&lt;Agilent QTOF | SCIEX QTOF <nobr>-</nobr> Analyst | Bruker timsTOF | Thermo Q Exactive | Thermo Fusion | Thermo Stellar | Waters Synapt (trap) | Waters Synapt (transfer) | Waters Xevo QTOF&gt;</td><td>Export an isolation list. This option is required for exporting an isolation list and has no default. This option cannot be used with <nobr>-</nobr>–<nobr>exp-translist-instrument</nobr> or –<nobr>exp-method-instrument</nobr>, because you cannot export an isolation list and a transition list or method simultaneously.</td></tr>
+<tr><td><nobr>--exp-translist-instrument</nobr>=<br/>&lt;Agilent MH 10.1 and lower | Agilent MassHunter 12 | Agilent MassHunter 12 Ultivo | Agilent MassHunter 12 6495D | Bruker | SCIEX | Shimadzu | Thermo | Thermo Quantiva | Thermo Altis | Waters&gt;</td><td>Export a transition list. This option is required for exporting a transition list and has no default. This option cannot be used with <nobr>--exp-isolation-list</nobr> or <nobr>--exp-method-instrument</nobr>, because you cannot export a transition list and an isolation list or method simultaneously.</td></tr>
+</table>
+<div class="RowType">Exporting native instrument methods</div>
+<table>
+<tr><td><nobr>--exp-method-instrument</nobr>=<br/>&lt;Agilent 6400 Series | Agilent MassHunter 12 and higher | Bruker QTOF | Bruker timsTOF | SCIEX QQQ/QTRAP <nobr>-</nobr> Analyst | SCIEX QTOF <nobr>-</nobr> Analyst | SCIEX QQQ/QTRAP <nobr>-</nobr> SCIEX OS | SCIEX QTOF <nobr>-</nobr> SCIEX OS | Shimadzu | Thermo | Thermo TSQ Vantage/Ultra | Thermo LTQ (legacy) | Thermo Quantiva | Thermo Altis | Thermo Stellar | Thermo Exploris | Thermo Eclipse | Thermo Fusion | Thermo Fusion Lumos | Waters TQ (MassLynx) | Waters TQ (waters_connect) | Waters Quattro Premier&gt;</td><td>Export a method. This option is required for exporting a method and has no default. This option cannot be used with <nobr>--exp-isolationlist-instrument</nobr> or <nobr>--exp-translist-instrument</nobr>, because you cannot export a method and an isolation/transition list simultaneously.</td></tr>
+<tr><td><nobr>--exp-template</nobr>=path/to/file</td><td>Path of the method template. This can be a file or a directory depending on your instrument. This option is required for method export.</td></tr>
+</table>
+<div class="RowType">Method and transition list options</div>
+<table>
+<tr><td><nobr>--exp-file</nobr>=path/to/file</td><td>Path to the method or transition list file (or directory) to export to. This option is required for method and transition list export.</td></tr>
+<tr><td><nobr>--exp-strategy</nobr>=<br/>&lt;Single | Protein | Buckets | WcDecide&gt;</td><td>Strategy for dividing a method into injections. The default is “single”.</td></tr>
+<tr><td><nobr>--exp-method-type</nobr>=<br/>&lt;Standard | Scheduled | Triggered&gt;</td><td>Sets a standard, scheduled or triggered method. The default is “standard”.</td></tr>
+<tr><td><nobr>--exp-max-trans</nobr>=&lt;name&gt;</td><td>Maximum number of transitions per injection for export strategies “protein” and “buckets” OR maximum number of simultaneous transitions for scheduled methods. The default is 100.</td></tr>
+<tr><td><nobr>--exp-optimizing</nobr>=&lt;CE | DP&gt;</td><td>Export a method with extra transitions for finding optimal collision energy or declustering potential.</td></tr>
+<tr><td><nobr>--exp-scheduling-replicate</nobr>=&lt;name&gt;</td><td>Use this only if creating a scheduled or triggered method. The default is to schedule based on an average of all replicates, but if you specify one, the method will be scheduled based on that replicate.</td></tr>
+<tr><td><nobr>--exp-order-by-mz</nobr></td><td>Order exported method by m/z values in ascending order (precursor m/z, then product m/z when applicable) for optimized quadrupole switching.</td></tr>
+<tr><td><nobr>--exp-ignore-proteins</nobr></td><td>Ignore protein boundaries in creating methods.</td></tr>
+<tr><td><nobr>--exp-primary-count</nobr>=&lt;integer&gt;</td><td>For <nobr>--exp-method-type</nobr>=triggered specifies the number of transitions to make primary.</td></tr>
+<tr><td><nobr>--exp-polarity</nobr>=<br/>&lt;all | positive | negative | separate&gt;</td><td>Controls export behavior for documents with both positive and negative transitions. Allows for output of only positive or only negative transitions, or creates separate outputs for each polarity. Defaults to all, and is ignored for single polarity documents.</td></tr>
+</table>
+<div class="RowType"><nobr>Vendor-specific</nobr> method and transition list options</div>
+<table>
+<tr><td>Agilent
+SCIEX</td><td><nobr>--exp-dwell-time</nobr>=&lt;millis&gt;</td><td>Dwell time per transition. This option is required for unscheduled transition lists.</td></tr>
+<tr><td>Thermo</td><td><nobr>--exp-add-energy-ramp</nobr></td><td>Adds an extra column for energy ramp to the transition list.  Optional. Defaults to false.</td></tr>
+<tr><td>Thermo</td><td><nobr>--exp-use-s-lens</nobr></td><td>Adds an extra column for SLens (which defaults to 50) to the transition list.  Optional. Defaults to false.</td></tr>
+<tr><td>Thermo
+Waters</td><td><nobr>--exp-run-length</nobr>=&lt;minutes&gt;</td><td>Run length of the entire gradient in minutes. This option is required for unscheduled experiments.</td></tr>
+</table>
+<div class="RowType">Publishing to Panorama</div>
+<table>
+<tr><td><nobr>--panorama-server</nobr>=&lt;server&nbsp;url&gt;</td><td>URL of the Panorama server to which the <nobr>--in</nobr> file is to be published. The URL should contain the protocol (http or https), hostname and port, if required. Examples:
+https://panoramaweb.org
+or
+http://localhost:8080</td></tr>
+<tr><td><nobr>--panorama-username</nobr>=&lt;username&gt;</td><td>The username/email address for a user with access to publish to the Panorama server.</td></tr>
+<tr><td><nobr>--panorama-password</nobr>=&lt;password&gt;</td><td>The password for a user with access to publish to the Panorama server.</td></tr>
+<tr><td><nobr>--panorama-folder</nobr>=path/to/folder</td><td>The path to a folder on the Panorama server to which the file is to be published (e.g. MyProject/MyFolder).</td></tr>
+</table>
+<p>If the arguments above are used along with arguments to import results files into the document (--import-file or -–import-all) the Skyline document will be uploaded to the given Panorama server only if new results are added to the document.</p>
+<div class="RowType">Document settings</div>
+<table>
+<tr><td><nobr>--annotation-name</nobr>=&lt;name&gt;</td><td>Add an annotation to the document with the specified name. Existing annotations with the same name will be overwritten.</td></tr>
+<tr><td><nobr>--annotation-targets</nobr>=<br/>&quot;protein, molecule_list, peptide, molecule, precursor, transition, replicate, precursor_result, transition_result&quot;</td><td>A <nobr>comma-separated</nobr> list of target types to apply the annotation to in an <nobr>--annotation-name</nobr> operation.</td></tr>
+<tr><td><nobr>--annotation-type</nobr>=&lt;text | number | true_false | value_list&gt;</td><td>Define the data type of the annotation in an <nobr>--annotation-name</nobr> operation. Defaults to text.</td></tr>
+<tr><td><nobr>--annotation-values</nobr>=&quot;&lt;value&gt;,&nbsp;&lt;value&gt;,&nbsp;&lt;value&gt;...&quot;</td><td>A <nobr>comma-separated</nobr> list of values for a value_list type annotation in an <nobr>--annotation-name</nobr> operation. Required only in an <nobr>--annotation-type</nobr>=value_list operation.</td></tr>
+<tr><td><nobr>--integrate-all</nobr>[=True&nbsp;or&nbsp;False]</td><td>When set all transitions contributing any signal between the integration boundaries are considered found. When not set, only transitions that are coeluting are considered found. Regardless of the setting all signal from the quantitative transitions between the integration boundaries is summed to produce the TotalArea for the precursor.</td></tr>
+</table>
+<div class="RowType">Peptide Settings</div>
+<table>
+<tr><td><nobr>--pep-digest-enzyme</nobr>=<br/>&lt;Trypsin | Trypsin (semi) | Trypsin/P | TrypsinK | TrypsinR | Chymotrypsin | ArgC | AspN | Clostripain | CNBr | Elastase | Formic Acid | GluC | GluC bicarb | Iodosobenzoate | LysC | LysC/P | LysN | LysN promisc | PepsinA | Protein endopeptidase | Staph protease | <nobr>Trypsin-CNBr</nobr> | <nobr>Trypsin-GluC</nobr>&gt;</td><td>The protease enzyme definition used to parse peptide sequences from protein sequences added as targets to the document. Peptide lists added as targets ignore this setting other than counting missed cleavages.</td></tr>
+<tr><td><nobr>--pep-max-missed-cleavages</nobr>=&lt;integer&gt;</td><td>The maximum number of missed cleavages allowed in a peptide when considering protein digestion.</td></tr>
+<tr><td><nobr>--pep-unique-by</nobr>=<br/>&lt;none | protein | gene | species&gt;</td><td>&quot;Protein&quot; excludes any peptide that appears in more than one protein in the background proteome.  
+&quot;Gene&quot; excludes any peptide that appears in proteins for more than one gene in the background proteome.  
+&quot;Species&quot; excludes any peptide that appears in proteins for more than one species in the background proteome.
+Useful in sample mixtures including multiple species.</td></tr>
+<tr><td><nobr>--background-proteome-name</nobr>=<br/>&lt;None | name to give protdb imported by <nobr>--background-proteome-file</nobr>&gt;</td><td>The name of a background proteome to apply to the opened document. The background proteome specifies the full set of proteins that may be present in the sample matrix to be injected into the mass spectrometer. If the name is not already defined in Skyline, the path to the protdb file must also be set by <nobr>--background-proteome-file</nobr>.</td></tr>
+<tr><td><nobr>--background-proteome-file</nobr>=<br/>path/to/file.protdb</td><td>The path to the background proteome (protdb) file to apply to the opened document. The name may be optionally specified by <nobr>--background-proteome-name</nobr>, and if not it defaults to the filename.</td></tr>
+<tr><td><nobr>--pep-min-length</nobr>=&lt;integer&gt;</td><td>The minimum length of a peptide to add to the document.</td></tr>
+<tr><td><nobr>--pep-max-length</nobr>=&lt;integer&gt;</td><td>The maximum length of a peptide to add to the document.</td></tr>
+<tr><td><nobr>--pep-exclude-nterminal-aas</nobr>=&lt;integer&gt;</td><td>Exclude all peptides starting before this amino acid position in each protein.</td></tr>
+<tr><td><nobr>--pep-exclude-potential-ragged-ends</nobr></td><td>Exclude peptides resulting from cleavage sites with immediate preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</td></tr>
+<tr><td><nobr>--pep-add-mod</nobr>=<br/>full name (e.g. &quot;Oxidation (M)&quot;) | short name (Oxi)</td><td>Add a UniMod modification to the document. The modification must be specified by <nobr>PSI-MS</nobr> name and site together (&quot;Oxidation (M)&quot;).</td></tr>
+<tr><td><nobr>--pep-add-unimod</nobr>=UniMod&nbsp;ID&nbsp;(e.g.&nbsp;&quot;35&quot;)</td><td>Add a UniMod modification to the document by its UniMod ID. If the modification has multiple specificities, you must use <nobr>--pep-add-unimod-aa</nobr> or <nobr>--pep-add-unimod-term</nobr> to choose which specificity you want to add to the document.</td></tr>
+<tr><td><nobr>--pep-add-unimod-aa</nobr>=<br/>ACDEFGHIKLMNOPQRSTUVWY</td><td>Provides the amino acid specificity for the last peptide modification added by <nobr>--pep-add-unimod</nobr>.</td></tr>
+<tr><td><nobr>--pep-add-unimod-term</nobr>=&lt;N | C&gt;</td><td>Provides the terminus specificity for the last peptide modification added by <nobr>--pep-add-unimod</nobr>.</td></tr>
+<tr><td><nobr>--pep-add-mod-variable</nobr>=True&nbsp;or&nbsp;False</td><td>Adds a modification as variable if &#39;true&#39; or static if &#39;false&#39;. Only valid for structural modifications except for <nobr>loss-only</nobr> modifications(e.g. Ammonia and Water Loss).</td></tr>
+<tr><td><nobr>--pep-clear-mods</nobr></td><td>Clears all peptide modifications from the currently open document.</td></tr>
+<tr><td><nobr>--pep-max-variable-mods</nobr>=&lt;integer&gt;</td><td>The maximum number of variable modifications allowed to occur in combination on any peptide instance.</td></tr>
+<tr><td><nobr>--pep-max-losses</nobr>=&lt;integer&gt;</td><td>The maximum number of neutral loss events allowed to occur in combination on any fragment instance.</td></tr>
+</table>
+<div class="RowType">Transition Settings</div>
+<table>
+<tr><td><nobr>--tran-precursor-ion-charges</nobr>=<br/>&quot;1,&nbsp;2,&nbsp;3...&quot;</td><td>A <nobr>comma-separated</nobr> list of precursor ion charge states to apply to peptide molecules to generate precursor targets. Changes the transition filter settings for the open document.</td></tr>
+<tr><td><nobr>--tran-product-ion-charges</nobr>=<br/>&quot;1,&nbsp;2,&nbsp;3...&quot;</td><td>A <nobr>comma-separated</nobr> list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document.</td></tr>
+<tr><td><nobr>--tran-product-ion-types</nobr>=<br/>&quot;a,&nbsp;b,&nbsp;c,&nbsp;x,&nbsp;y,&nbsp;z,&nbsp;p&quot;</td><td>A <nobr>comma-separated</nobr> list of product ion types expected in peptide fragmentation to generate product ion transitions. Changes the transition filter settings for the open document.</td></tr>
+<tr><td><nobr>--tran-product-start-ion</nobr>=<br/>&lt;ion 1 | ion 2 | ion 3 | ion 4 | m/z &gt; precursor | (m/z &gt; precursor) <nobr>-</nobr> 1 | (m/z &gt; precursor) <nobr>-</nobr> 2 | (m/z &gt; precursor) + 1 | (m/z &gt; precursor) + 2&gt;</td><td>The smallest product ion to allow a transition for.</td></tr>
+<tr><td><nobr>--tran-product-end-ion</nobr>=<br/>&lt;last ion | last ion <nobr>-</nobr> 1 | last ion <nobr>-</nobr> 2 | last ion <nobr>-</nobr> 3 | 1 ion | 2 ions | 3 ions | 4 ions | 5 ions | 6 ions&gt;</td><td>The largest product ion to allow a transition for.</td></tr>
+<tr><td><nobr>--tran-product-clear-special-ions</nobr></td><td>Remove all special ions from the transition filter settings.</td></tr>
+<tr><td><nobr>--tran-product-add-special-ion</nobr>=<br/>&lt;<nobr>N-terminal</nobr> to Proline | <nobr>C-terminal</nobr> to Glu or Asp | <nobr>iTRAQ-114</nobr> | <nobr>iTRAQ-115</nobr> | <nobr>iTRAQ-116</nobr> | <nobr>iTRAQ-117</nobr> | <nobr>TMT-126</nobr> | <nobr>TMT-127L</nobr> | <nobr>TMT-127H</nobr> | <nobr>TMT-128L</nobr> | <nobr>TMT-128H</nobr> | <nobr>TMT-129L</nobr> | <nobr>TMT-129H</nobr> | <nobr>TMT-130L</nobr> | <nobr>TMT-130H</nobr> | <nobr>TMT-131L</nobr> | <nobr>TMT-131H</nobr> | <nobr>TMT-132L</nobr> | <nobr>TMT-132H</nobr> | <nobr>TMT-133L</nobr> | <nobr>TMT-133H</nobr> | <nobr>TMT-134L</nobr> | <nobr>TMT-134H</nobr> | <nobr>TMT-135</nobr>&gt;</td><td>Add a named predefined special ion as specified in the Transition Settings form.</td></tr>
+<tr><td><nobr>--tran-predict-ce</nobr>=<br/>&lt;None | Agilent QQQ | SCIEX | Shimadzu QQQ | Thermo TSQ Quantiva | Thermo TSQ Ultra | Thermo TSQ Vantage | Waters Xevo&gt;</td><td>Changes the transition settings collision energy prediction setting to one of the previously defined options.</td></tr>
+<tr><td><nobr>--tran-predict-dp</nobr>=<br/>&lt;None | SCIEX&gt;</td><td>Changes the transition settings declustering potential prediction setting to one of the previously defined options.</td></tr>
+<tr><td><nobr>--tran-predict-cov</nobr>=<br/>&lt;None | SCIEX&gt;</td><td>Changes the transition settings compensation voltage prediction setting to one of the previously defined options.</td></tr>
+<tr><td><nobr>--tran-predict-optdb</nobr>=<br/>&lt;None&gt;</td><td>Changes the transition settings optimization library used in predicting instrument parameters to one of the previously defined options.</td></tr>
+<tr><td><nobr>--tran-use-dia-window-exclusion</nobr></td><td>Exclude product ion transitions with m/z values that fall within the precursor isolation window range. This is recommended for DIA/SWATH data where signal from unfragmented precursors can increase the probability of interference.</td></tr>
+<tr><td><nobr>--library-match-tolerance</nobr>=<br/>&quot;0.5mz&nbsp;or&nbsp;15ppm&quot;</td><td>Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values. The delta may be specified in either m/z or PPM units.</td></tr>
+<tr><td><nobr>--library-pick-product-ions</nobr>=<br/>&lt;none | all | filter | all_plus&gt;</td><td>The set of product ions to consider in picking transitions matching library spectrum peak m/z values. (all: all specified ion charges and types, filter: filter based on start and end transitions and special ions, or all_plus: the union of the two other options)</td></tr>
+<tr><td><nobr>--library-product-ions</nobr>=<br/>&lt;integer&gt;</td><td>The maximum number of product transitions for each precursor matching peaks in a library spectrum, ordered by peak intensity ranking.</td></tr>
+<tr><td><nobr>--library-min-product-ions</nobr>=<br/>&lt;integer&gt;</td><td>Keep only precursors with at least this many product transitions matching peaks in a library spectrum.</td></tr>
+<tr><td><nobr>--full-scan-precursor-isotopes</nobr>=<br/>&lt;None | Count | Percent&gt;</td><td>The meaning of the precursor threshold value applied when choosing precursor isotope transitions for extraction from <nobr>high-resolution</nobr> mass spectra. Count indicates a constant number starting from the monoisotopic precursor. Percent indicates a minimum percentage from the most intense precursor species, i.e. the base peak. Defaults to Count.</td></tr>
+<tr><td><nobr>--full-scan-precursor-threshold</nobr>=<br/>&lt;number&gt;</td><td>The constant number of isotopes (starting with the monoisotopic precursor) or the percentage of base isotope intensity to extract from high resolution spectra.</td></tr>
+<tr><td><nobr>--full-scan-precursor-ignore-sim</nobr></td><td>Skip SIM scans when extracting from full scan MS1 spectra. For use when both survey MS1 and SIM scans are present to avoid chromatograms extracted from both.</td></tr>
+<tr><td><nobr>--full-scan-precursor-isotope-enrichment</nobr>=<br/>&lt;Default&gt;</td><td>The name of predefined isotope enrichment settings to use for extracting from full scan data. If none are available, use the Transition Settings form in the user interface to add a new isotope enrichment settings.</td></tr>
+<tr><td><nobr>--full-scan-precursor-analyzer</nobr>=<br/>&lt;centroided | qit | tof | orbitrap | ft_icr | none&gt;</td><td>The mass analyzer for precursor spectra (MS1), or &quot;centroided&quot; to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power).</td></tr>
+<tr><td><nobr>--full-scan-precursor-res</nobr>=&lt;resolving&nbsp;power&gt;</td><td>Resolving power of the precursor mass analyzer. If the mass analyzer is &#39;Centroided&#39; the value is in PPM.</td></tr>
+<tr><td><nobr>--full-scan-precursor-res-mz</nobr>=&lt;m/z&nbsp;value&gt;</td><td>The m/z value at which the precursor mass analyzer resolving power is specified. (applies only to orbitrap and ft_icr mass analyzers)</td></tr>
+<tr><td><nobr>--full-scan-acquisition-method</nobr>=<br/>&lt;None | DIA | PRM | DDA | SureQuant | EI&gt;</td><td>The acquisition method (None, DIA, PRM, DDA, SureQuant) for extracting from full scan data.</td></tr>
+<tr><td><nobr>--full-scan-isolation-scheme</nobr>=<br/>&lt;All Ions | Results only | Results (0.5 margin) | SWATH (15 m/z) | SWATH (25 m/z) | SWATH (VW 64) | SWATH (VW 100) | path/to/<nobr>result-file</nobr> to import the isolation scheme from&gt;</td><td>The name of a predefined isolation scheme or a path to a data file from which to import the isolation scheme used when extracting from full scan DIA data.</td></tr>
+<tr><td><nobr>--full-scan-product-analyzer</nobr>=<br/>&lt;centroided | qit | tof | orbitrap | ft_icr | none&gt;</td><td>The mass analyzer for product spectra, or &quot;centroided&quot; to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power).</td></tr>
+<tr><td><nobr>--full-scan-product-res</nobr>=&lt;resolving&nbsp;power&gt;</td><td>Resolving power of the product mass analyzer. If the mass analyzer is &#39;Centroided&#39; the value is in PPM.</td></tr>
+<tr><td><nobr>--full-scan-product-res-mz</nobr>=&lt;m/z&nbsp;value&gt;</td><td>The m/z value at which the product mass analyzer resolving power is specified. (applies only to orbitrap and ft_icr mass analyzers)</td></tr>
+<tr><td><nobr>--full-scan-rt-filter</nobr>=<br/>&lt;none | scheduling_windows | ms2_ids&gt;</td><td>Sets whether chromatogram start and stop times will be limited by a range around either predicted retention times or MS/MS ID retention times.</td></tr>
+<tr><td><nobr>--full-scan-rt-filter-tolerance</nobr>=<br/>&lt;minutes&gt;</td><td>The number of minutes on either side of the predicted time or MS/MS IDs, i.e. &#177; minutes.</td></tr>
+<tr><td><nobr>--ims-library-res</nobr>=&lt;resolving&nbsp;power&gt;</td><td>Resolving power of ion mobility dimension used to filter around ion mobility values from the spectral libraries.</td></tr>
+<tr><td><nobr>--instrument-min-mz</nobr>=&lt;m/z&nbsp;value&gt;</td><td>Minimum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured.</td></tr>
+<tr><td><nobr>--instrument-max-mz</nobr>=&lt;m/z&nbsp;value&gt;</td><td>Maximum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured.</td></tr>
+<tr><td><nobr>--instrument-dynamic-min-mz</nobr></td><td>If set, minimum m/z value for product ions is calculated dynamically from the precursor m/z using a specific equation provided by <nobr>Thermo-Scientific</nobr> for LTQ instruments.</td></tr>
+<tr><td><nobr>--instrument-method-mz-tolerance</nobr>=&lt;m/z&nbsp;value&gt;</td><td>Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and PRM isolated m/z values.)</td></tr>
+<tr><td><nobr>--instrument-min-time</nobr>=&lt;minutes&gt;</td><td>Minimum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient.</td></tr>
+<tr><td><nobr>--instrument-max-time</nobr>=&lt;minutes&gt;</td><td>Maximum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient.</td></tr>
+<tr><td><nobr>--instrument-triggered-chromatograms</nobr></td><td>Indicates that there may be large gaps in the retention times when spectra were acquired for certain analytes. Peaks will be truncated to not overlap with these gaps and background subtraction will not be performed.</td></tr>
+</table>
+<div class="RowType">Tools Installation</div>
+<p>The arguments below can be used to install tools onto the Tools menu and do not rely on the '--in' argument because they independent of a specific Skyline document.</p>
+<table>
+<tr><td><nobr>--tool-add</nobr>=&lt;name&gt;</td><td>The name of a tool to be added by its settings rather than an installation ZIP file.</td></tr>
+<tr><td><nobr>--tool-command</nobr>=&lt;command | url&gt;</td><td>The command or webpage URL to run for a command being added by its settings rather than an installation ZIP file.</td></tr>
+<tr><td><nobr>--tool-arguments</nobr>=&quot;&lt;arguments&gt;&quot;</td><td>Optional <nobr>command-line</nobr> arguments for the tool to be added, used when the tool is executed. (Not applicable to web URL commands)</td></tr>
+<tr><td><nobr>--tool-initial-dir</nobr>=path/to/folder</td><td>Optional initial directory for the tool to be added, used when the tool is executed.  (Not applicable to web URL commands)</td></tr>
+<tr><td><nobr>--tool-conflict-resolution</nobr>=<br/>&lt;overwrite | skip&gt;</td><td>Tells how to resolve a tool name conflict, by either overwriting an existing installation or skipping installation of the new tool.</td></tr>
+<tr><td><nobr>--tool-report</nobr>=&lt;report&nbsp;name&gt;</td><td>The name of a report in the settings to use as the input report for the tool.</td></tr>
+<tr><td><nobr>--tool-output-to-immediate-window</nobr></td><td>When present the tool output is piped to the Immediate Window at runtime.</td></tr>
+<tr><td><nobr>--tool-add-zip</nobr>=path/to/file.zip</td><td>Import tools from a tool installation ZIP file.</td></tr>
+<tr><td><nobr>--tool-zip-conflict-resolution</nobr>=<br/>&lt;overwrite | parallel&gt;</td><td>Specify whether tool conflicts from the provided ZIP file should be resolved by overwriting or installing in parallel. This is for conflicts related to tool versioning and report names.</td></tr>
+<tr><td><nobr>--tool-zip-overwrite-annotations</nobr>=<br/>&lt;true | false&gt;</td><td>Specify whether conflicting custom annotations from the provided ZIP file should overwrite (true) existing annotations or be skipped (false).</td></tr>
+<tr><td><nobr>--tool-program-macro</nobr>=<br/>&lt;program&nbsp;title&gt;[,&lt;program&nbsp;version&gt;]</td><td>Specifies a program title and version to use with the <nobr>-</nobr>–<nobr>tool-program-path</nobr> command. Together these commands are for importing tools from a ZIP file that use the $(ProgramPath()) macro as their command. For more information see the documentation on External Tools. e.g.
+<nobr>--tool-program-macro</nobr>=R,2.15.2</td></tr>
+<tr><td><nobr>--tool-program-path</nobr>=path/to/file</td><td>Specifies the path to an executable on the local machine for the program title and version specified by the <nobr>--tool-program-macro</nobr> flag.</td></tr>
+<tr><td><nobr>--tool-ignore-required-packages</nobr></td><td>Ignore required packages when installing a tool from a ZIP file.</td></tr>
+</table>
+</body></html>

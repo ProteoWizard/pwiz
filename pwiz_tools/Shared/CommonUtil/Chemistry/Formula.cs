@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -430,7 +430,7 @@ namespace pwiz.Common.Chemistry
                 return result.ToString();
             }
 
-            result.Append("-");
+            result.Append(@"-");
             foreach (var entry in this)
             {
                 if (entry.Value < 0)

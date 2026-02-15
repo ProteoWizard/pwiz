@@ -100,4 +100,106 @@
   <data name="DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times" xml:space="preserve">
     <value>保持時間をアライン中</value>
   </data>
+  <data name="RtGraphValue_FWB_Time" xml:space="preserve">
+    <value>FWB時間</value>
+  </data>
+  <data name="RtGraphValue_FWHM_Time" xml:space="preserve">
+    <value>FWHM時間</value>
+  </data>
+  <data name="RtGraphValue_Retention_Time" xml:space="preserve">
+    <value>保持時間</value>
+  </data>
+  <data name="LibraryTarget_GetAxisTitle_Retention_time_aligned_to_library___0__" xml:space="preserve">
+    <value>保持時間はライブラリ「{0}」にアラインしました</value>
+  </data>
+  <data name="LibraryTarget_GetAxisTitle__0__aligned_to_library___1__" xml:space="preserve">
+    <value>{0}はライブラリ「{1}」にアラインしました</value>
+  </data>
+  <data name="LibraryTarget_GetAlignmentMenuItemText_Align_to_Library___0__" xml:space="preserve">
+    <value>ライブラリ「{0}」にアラインする</value>
+  </data>
+  <data name="RetentionTimeManager_UpdateResultFileAlignments_Performing_replicate_retention_time_alignments" xml:space="preserve">
+    <value>繰り返し保持時間のアライメントを実行中</value>
+  </data>
+  <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_itself" xml:space="preserve">
+    <value>ライブラリ{0}とそれ自体のアライメントを実行中</value>
+  </data>
+  <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_libraries__0__and__1_" xml:space="preserve">
+    <value>ライブラリ{0}と{1}のアライメントを実行中</value>
+  </data>
+  <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_between_library__0__and_calculator__1_" xml:space="preserve">
+    <value>ライブラリ{0}とカルキュレータ{1}のアライメントを実行中</value>
+  </data>
+  <data name="RetentionTimeManager_GetAlignmentDescription_Performing_alignment_on_library__0_" xml:space="preserve">
+    <value>ライブラリ上でアライメントを実行中 {0}</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel_Default" xml:space="preserve">
+    <value>デフォルト</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel___Invalid__" xml:space="preserve">
+    <value>!!無効です!!</value>
+  </data>
+  <data name="Library_DisplayName_Library__0_" xml:space="preserve">
+    <value>ライブラリ{0}</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Times" xml:space="preserve">
+    <value>LCピーク時間中央値</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_GetAxisTitle_Normalized_retention_time" xml:space="preserve">
+    <value>正規化された保持時間</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_GetAxisTitle_Normalized__0_" xml:space="preserve">
+    <value>正規化 {0}</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_GetAlignmentMenuItemText_Align_to_Median_Document_Retention_Times" xml:space="preserve">
+    <value>ドキュメント保持時間中央値にアラインする</value>
+  </data>
+  <data name="MedianDocumentRetentionTimes_DisplayName_Median_LC_Peak_Time" xml:space="preserve">
+    <value>LCピーク時間中央値</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel_Default__None_" xml:space="preserve">
+    <value>デフォルト（なし）</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel_Retention_time_calculator" xml:space="preserve">
+    <value>保持時間カルキュレータ</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel_RT_calculator__0_" xml:space="preserve">
+    <value>RTカルキュレータ {0}</value>
+  </data>
+  <data name="RetentionTimeManager_PerformNextAlignment_Updating_retention_time_alignment" xml:space="preserve">
+    <value>保持時間アライメントを更新中</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetLabel__default_" xml:space="preserve">
+    <value>（デフォルト）</value>
+  </data>
+  <data name="Library_AxisTitle_Median_Time_from_Library__0_" xml:space="preserve">
+    <value>ライブラリからの時間中央値 {0}</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip_Retention_time_values_will_be_unchanged_when_mapping_between_runs" xml:space="preserve">
+    <value>ラン間のマッピング中保持時間の値は変わりません</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip_Use_the_retention_time_calculator_if_there_is_one_or_the_first_library" xml:space="preserve">
+    <value>ライブラリが1つの場合または最初のライブラリの場合は保持時間カリキュレータを使用します</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip_Invalid" xml:space="preserve">
+    <value>無効</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip__0__regression_against__1__standard_peptides_in_calculator__2_" xml:space="preserve">
+    <value>カリキュレータ{2}の{1}個の標準ペプチドに対する{0}回帰</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip__0__regression_against__1__standard_molecules_in_calculator__2_" xml:space="preserve">
+    <value>カリキュレータ{2}の{1}個の標準分子に対する{0}回帰</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip__0__regression_against_all_peptides_in_calculator__1_" xml:space="preserve">
+    <value>{0} カリキュレータのすべてのペプチドに対する回帰 {1}</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip__0__regression_against_all_molecules_in_calculator__1_" xml:space="preserve">
+    <value>{0} カリキュレータのすべての分子に対する回帰 {1}</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip__0__regression_against_median_retention_times_from_library__1_" xml:space="preserve">
+    <value>{0} ライブラリからの保持時間中央値に対する回帰 {1}</value>
+  </data>
+  <data name="AlignmentTargetSpec_GetTooltip__0__regression_against_median_chromatogram_peak_apex_times_across_replicate_in_this_document" xml:space="preserve">
+    <value>{0} このドキュメント中の繰り返し測定全体のクロマトグラムピーク頂点時間中央値に対する回帰</value>
+  </data>
 </root>

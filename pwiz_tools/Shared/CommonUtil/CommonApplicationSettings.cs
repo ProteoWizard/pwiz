@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,6 +21,11 @@ namespace pwiz.Common
 {
     public static class CommonApplicationSettings
     {
+        static CommonApplicationSettings()
+        {
+            HttpMessageHandlerFactory = new Mock.HttpMessageHandlerFactory();
+        }
+
         private static string _programNameAndVersion;
         public static bool Offscreen { get; set; }
         public static bool FunctionalTest { get; set; }
@@ -42,5 +47,7 @@ namespace pwiz.Common
                 _programNameAndVersion = value;
             }
         }
+
+        public static Mock.HttpMessageHandlerFactory HttpMessageHandlerFactory { get; set; }
     }
 }

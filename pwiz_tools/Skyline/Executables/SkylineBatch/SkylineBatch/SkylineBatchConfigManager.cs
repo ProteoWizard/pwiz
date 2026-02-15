@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -25,9 +25,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using SharedBatch;
 using SkylineBatch.Properties;
 using Resources = SkylineBatch.Properties.Resources;
@@ -426,7 +426,7 @@ namespace SkylineBatch
             ArchiveFirstLog();
             var runOption = _startingRunOption ?? RunBatchOptions.ALL;
             _startingRunOption = null;
-            new Thread(() => _ = RunAsync(runOption, serverFiles)).Start();
+            CommonActionUtil.RunAsync(() => _ = RunAsync(runOption, serverFiles));
         }
         
         public async Task RunAsync(RunBatchOptions runOption, ServerFilesManager serverFiles)
@@ -766,6 +766,7 @@ namespace SkylineBatch
             return this;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Global
         public SkylineBatchConfigManagerState ProgramaticallyInsertConfig(int index, IConfig iconfig, IMainUiControl uiControl)
         {
             var newConfig = ((SkylineBatchConfig)iconfig).UpdateRemoteFileSet(FileSources,
@@ -776,9 +777,10 @@ namespace SkylineBatch
             return this;
         }
 
-        private SkylineBatchConfigManagerState AddConfig(IConfig iconfig, IMainUiControl uiControl)
+        // ReSharper disable once UnusedMethodReturnValue.Local
+        private SkylineBatchConfigManagerState AddConfig(IConfig configInterface, IMainUiControl uiControl)
         {
-            var config = (SkylineBatchConfig)iconfig;
+            var config = (SkylineBatchConfig)configInterface;
             if (ConfigRunners.ContainsKey(config.GetName()))
                 return this; // this will fail state validation
             var runner = new ConfigRunner(config, _mainLogger, uiControl);
@@ -795,9 +797,10 @@ namespace SkylineBatch
             return this;
         }
 
-        private SkylineBatchConfigManagerState RemoveConfig(IConfig iconfig)
+        // ReSharper disable once UnusedMethodReturnValue.Local
+        private SkylineBatchConfigManagerState RemoveConfig(IConfig configInterface)
         {
-            var config = (SkylineBatchConfig)iconfig;
+            var config = (SkylineBatchConfig)configInterface;
             if (!ConfigRunners.ContainsKey(config.Name))
                 throw new Exception("Config runner does not exist.");
             ConfigRunners = ConfigRunners.Remove(config.Name);
@@ -909,17 +912,17 @@ namespace SkylineBatch
 
         public SkylineBatchConfigManagerState UpdateFromBaseState(IMainUiControl uiControl)
         {
-            foreach (var iconfig in BaseState.ConfigList)
+            foreach (var config in BaseState.ConfigList)
             {
-                var name = iconfig.GetName();
+                var name = config.GetName();
                 if (ConfigRunners.ContainsKey(name))
                 {
-                    if (!ConfigRunners[name].GetConfig().Equals(iconfig))
-                        ConfigRunners = ConfigRunners.Remove(name).Add(name, new ConfigRunner((SkylineBatchConfig)iconfig, _mainLogger, uiControl));
+                    if (!ConfigRunners[name].GetConfig().Equals(config))
+                        ConfigRunners = ConfigRunners.Remove(name).Add(name, new ConfigRunner((SkylineBatchConfig)config, _mainLogger, uiControl));
                 }
                 else
                 {
-                    ConfigRunners = ConfigRunners.Add(name, new ConfigRunner((SkylineBatchConfig)iconfig, _mainLogger, uiControl));
+                    ConfigRunners = ConfigRunners.Add(name, new ConfigRunner((SkylineBatchConfig)config, _mainLogger, uiControl));
                 }
             }
             foreach (var config in ConfigRunners.Keys)
@@ -936,26 +939,26 @@ namespace SkylineBatch
 
         #region Config Template Dependencies
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private SkylineBatchConfigManagerState UpdateTemplates()
         {
             Templates = ImmutableDictionary<string, string>.Empty;
-            foreach (var iconfig in BaseState.ConfigList)
+            foreach (SkylineBatchConfig config in BaseState.ConfigList)
             {
-                var config = (SkylineBatchConfig) iconfig;
                 if (config.RefineSettings.WillRefine())
                     Templates = Templates.Add(config.Name, config.RefineSettings.OutputFilePath);
             }
             return this;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private SkylineBatchConfigManagerState UpdateDependencies(IMainUiControl uiControl)
         {
             UpdateTemplates();
             var errorConfigs = new List<string>();
 
-            foreach (var iconfig in BaseState.ConfigList)
+            foreach (SkylineBatchConfig config in BaseState.ConfigList)
             {
-                var config = (SkylineBatchConfig)iconfig;
                 var dependentName = config.MainSettings.Template.DependentConfigName;
                 if (!string.IsNullOrEmpty(dependentName))
                 {
@@ -987,6 +990,7 @@ namespace SkylineBatch
             return this;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private SkylineBatchConfigManagerState DependencyRemove(string configName, IMainUiControl uiControl)
         {
             var index = BaseState.GetConfigIndex(configName);
@@ -1015,6 +1019,7 @@ namespace SkylineBatch
             return dependencies;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private SkylineBatchConfigManagerState DependencyReplace(string configName, string dependentName, string templateFile, IMainUiControl uiControl)
         {
             var index = BaseState.GetConfigIndex(configName);
@@ -1098,6 +1103,7 @@ namespace SkylineBatch
             return this;
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private SkylineBatchConfigManagerState UpdateConfigEnabled(SkylineBatchConfig config, bool enabled, IMainUiControl uiControl = null)
         {
             var index = BaseState.GetConfigIndex(config.Name);

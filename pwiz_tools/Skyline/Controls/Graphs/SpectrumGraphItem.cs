@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
        
-        private string GetLabel(LibraryRankedSpectrumInfo.RankedMI rmi)
+        public string GetLabel(LibraryRankedSpectrumInfo.RankedMI rmi)
         {
             // Show the m/z values in the labels, if multiple should be visible, and
             // they have different display values.
@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (sb.Length > 0)
                     sb.AppendLine();
 
-                sb.Append(GetLabel(mfi, sb.Length == 0 ? rmi.Rank : 0, showMzInLabel));
+                sb.Append(GetLabel(mfi, sb.Length == 0 ? rmi.Rank : 0, showMzInLabel, ShowRanks));
             }
             // If predicted m/z should be displayed, but hasn't been yet, then display now.
             if (ShowMz && !showMzInLabel)
@@ -343,15 +343,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (ShowMassError)
             {
-                var massError = rmi.MatchedIons.First().PredictedMz - rmi.ObservedMz;
-                massError = SequenceMassCalc.GetPpm(rmi.MatchedIons.First().PredictedMz, massError);
-                massError = Math.Round(massError, 1);
-                sb.AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError));
+                sb.AppendLine().Append(GetMassErrorString(rmi, rmi.MatchedIons.First()));
             }
             return sb.ToString();
         }
 
-        private string GetLabel(MatchedFragmentIon mfi, int rank, bool showMz)
+        public static string GetMassErrorString(LibraryRankedSpectrumInfo.RankedMI rmi, MatchedFragmentIon mfi)
+        {
+            var massError = mfi.PredictedMz - rmi.ObservedMz;
+            massError = SequenceMassCalc.GetPpm(mfi.PredictedMz, massError);
+            massError = Math.Round(massError, 1);
+            return string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError);
+        }
+
+        public static string GetLabel(MatchedFragmentIon mfi, int rank, bool showMz, bool showRank)
         {
             var label = new StringBuilder(string.IsNullOrEmpty(mfi.FragmentName) ? mfi.IonType.GetLocalizedString() : mfi.FragmentName);
             if (string.IsNullOrEmpty(mfi.FragmentName) && !Transition.IsPrecursor(mfi.IonType))
@@ -365,7 +370,7 @@ namespace pwiz.Skyline.Controls.Graphs
             label.Append(chargeIndicator);
             if (showMz)
                 label.Append(string.Format(@" = {0:F01}", mfi.PredictedMz));
-            if (rank > 0 && ShowRanks)
+            if (rank > 0 && showRank)
                 label.Append(TextUtil.SEPARATOR_SPACE).Append(string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rank)));
             return label.ToString();
         }

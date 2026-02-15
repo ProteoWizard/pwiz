@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Henry Estberg <henrye1 .at. outlook.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

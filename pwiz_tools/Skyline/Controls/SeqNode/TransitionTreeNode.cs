@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -30,14 +30,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 {
     public class TransitionTreeNode : SrmTreeNode
     {
-        public static string TITLE
-        {
-            get { return SeqNodeResources.TransitionTreeNode_Title; }
-        }
-        public static string TITLES
-        {
-            get { return SeqNodeResources.TransitionTreeNode_Titles; }
-        }
+        public static string TITLE => TransitionDocNode.TITLE;
+        public static string TITLES => TransitionDocNode.TITLES;
 
         public static TransitionTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
@@ -55,10 +49,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         public PeptideDocNode PepNode => ((PeptideTreeNode)Parent?.Parent)?.DocNode;
         public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent?.Parent?.Parent)?.DocNode;
 
-        public override string Heading
-        {
-            get { return SeqNodeResources.TransitionTreeNode_Title; }
-        }
+        public override string Heading => TransitionDocNode.TITLE;
 
         protected override void OnModelChanged()
         {
@@ -164,52 +155,12 @@ namespace pwiz.Skyline.Controls.SeqNode
             return string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, label, MathEx.RoundAboveZero(ratio.Value, 2, 4));
         }
 
+        /// <summary>
+        /// Wrapper for UI code that delegates to Model layer for label generation.
+        /// </summary>
         public static string GetLabel(TransitionDocNode nodeTran, string resultsText)
         {
-            Transition tran = nodeTran.Transition;
-            string labelPrefix;
-            const string labelPrefixSpacer = " - ";
-            if (nodeTran.ComplexFragmentIon.IsCrosslinked)
-            {
-                labelPrefix = nodeTran.ComplexFragmentIon.GetTargetsTreeLabel() + labelPrefixSpacer;
-            }
-            else if (tran.IsPrecursor())
-            {
-                labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + labelPrefixSpacer;
-            }
-            else if (tran.IsCustom())
-            {
-                if (!string.IsNullOrEmpty(tran.CustomIon.Name))
-                    labelPrefix = tran.CustomIon.Name + labelPrefixSpacer;
-                else if (tran.CustomIon.HasChemicalFormula)
-                    labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer; // Show formula (e.g. C12H5 or maybe C12H5[-1.2/1.21]
-                else
-                    labelPrefix = string.Empty; // Just show the mass
-            }
-            else
-            {
-                labelPrefix = string.Format(SeqNodeResources.TransitionTreeNode_GetLabel__0__1__, tran.AA, nodeTran.FragmentIonName) + labelPrefixSpacer;
-            }
-
-            if (!nodeTran.HasLibInfo && !nodeTran.HasDistInfo)
-            {
-                return string.Format(@"{0}{1}{2}{3}",
-                                     labelPrefix,
-                                     GetMzLabel(nodeTran),
-                                     Transition.GetChargeIndicator(tran.Adduct),
-                                     resultsText);
-            }
-            
-            string rank = nodeTran.HasDistInfo
-                              ? string.Format(SeqNodeResources.TransitionTreeNode_GetLabel_irank__0__, nodeTran.IsotopeDistInfo.Rank)
-                              : string.Format(Resources.TransitionTreeNode_GetLabel_rank__0__, nodeTran.LibInfo.Rank);
-
-            return string.Format(@"{0}{1}{2} ({3}){4}",
-                                 labelPrefix,
-                                 GetMzLabel(nodeTran),
-                                 Transition.GetChargeIndicator(tran.Adduct),
-                                 rank,
-                                 resultsText);
+            return TransitionDocNode.GetLabel(nodeTran, resultsText);
         }
 
         private static string GetMzLabel(TransitionDocNode nodeTran)

@@ -1,4 +1,4 @@
-﻿using pwiz.Skyline.Util;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -52,6 +52,8 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.toolStripFindUnknownModelScores = new System.Windows.Forms.ToolStrip();
+            this.findUnknownModelScoresButton = new System.Windows.Forms.ToolStripButton();
             this.zedGraphMProphet = new ZedGraph.ZedGraphControl();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.toolStripFind = new System.Windows.Forms.ToolStrip();
@@ -76,6 +78,7 @@ namespace pwiz.Skyline.SettingsUI
             ((System.ComponentModel.ISupportInitialize)(this.bindingPeakCalculators)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.toolStripFindUnknownModelScores.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.toolStripFind.SuspendLayout();
             this.tabPage4.SuspendLayout();
@@ -213,10 +216,27 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.toolStripFindUnknownModelScores);
             this.tabPage1.Controls.Add(this.zedGraphMProphet);
             resources.ApplyResources(this.tabPage1, "tabPage1");
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // toolStripFindUnknownModelScores
+            // 
+            resources.ApplyResources(this.toolStripFindUnknownModelScores, "toolStripFindUnknownModelScores");
+            this.toolStripFindUnknownModelScores.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStripFindUnknownModelScores.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.findUnknownModelScoresButton});
+            this.toolStripFindUnknownModelScores.Name = "toolStripFindUnknownModelScores";
+            // 
+            // findUnknownModelScoresButton
+            // 
+            this.findUnknownModelScoresButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.findUnknownModelScoresButton.Image = global::pwiz.Skyline.Properties.Resources.Find;
+            resources.ApplyResources(this.findUnknownModelScoresButton, "findUnknownModelScoresButton");
+            this.findUnknownModelScoresButton.Name = "findUnknownModelScoresButton";
+            this.findUnknownModelScoresButton.Click += new System.EventHandler(this.findUnknownModelScoresButton_Click);
             // 
             // zedGraphMProphet
             // 
@@ -279,7 +299,6 @@ namespace pwiz.Skyline.SettingsUI
             this.zedGraphSelectedCalculator.ScrollMinY = 0D;
             this.zedGraphSelectedCalculator.ScrollMinY2 = 0D;
             this.zedGraphSelectedCalculator.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraph_ContextMenuBuilder);
-            this.zedGraphSelectedCalculator.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphSelectedCalculator_MouseMoveEvent);
             // 
             // tabPage4
             // 
@@ -440,6 +459,9 @@ namespace pwiz.Skyline.SettingsUI
             ((System.ComponentModel.ISupportInitialize)(this.bindingPeakCalculators)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
+            this.tabPage1.PerformLayout();
+            this.toolStripFindUnknownModelScores.ResumeLayout(false);
+            this.toolStripFindUnknownModelScores.PerformLayout();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             this.toolStripFind.ResumeLayout(false);
@@ -488,5 +510,7 @@ namespace pwiz.Skyline.SettingsUI
         private ZedGraph.ZedGraphControl zedGraphQValues;
         private System.Windows.Forms.TabPage tabPage4;
         private ZedGraph.ZedGraphControl zedGraphPValues;
+        private System.Windows.Forms.ToolStrip toolStripFindUnknownModelScores;
+        private System.Windows.Forms.ToolStripButton findUnknownModelScoresButton;
     }
 }

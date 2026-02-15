@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. standard.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford
  *

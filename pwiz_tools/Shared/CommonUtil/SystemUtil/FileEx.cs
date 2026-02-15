@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,7 +19,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using pwiz.Common.Properties;
+using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.SystemUtil
@@ -107,33 +107,33 @@ namespace pwiz.Common.SystemUtil
             catch (ArgumentException e)
             {
                 if (path == null || string.IsNullOrEmpty(path.Trim()))
-                    throw new DeleteException(Resources.FileEx_SafeDelete_Path_is_empty, e);
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Path_contains_invalid_characters___0_, path), e);
+                    throw new DeleteException(MessageResources.FileEx_SafeDelete_Path_is_empty, e);
+                throw new DeleteException(string.Format(MessageResources.FileEx_SafeDelete_Path_contains_invalid_characters___0_, path), e);
             }
             catch (DirectoryNotFoundException e)
             {
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Directory_could_not_be_found___0_, path), e);
+                throw new DeleteException(string.Format(MessageResources.FileEx_SafeDelete_Directory_could_not_be_found___0_, path), e);
             }
             catch (NotSupportedException e)
             {
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_File_path_is_invalid___0_, path), e);
+                throw new DeleteException(string.Format(MessageResources.FileEx_SafeDelete_File_path_is_invalid___0_, path), e);
             }
             catch (PathTooLongException e)
             {
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_File_path_is_too_long___0_, path), e);
+                throw new DeleteException(string.Format(MessageResources.FileEx_SafeDelete_File_path_is_too_long___0_, path), e);
             }
             catch (IOException e)
             {
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_, path), e);
+                throw new DeleteException(string.Format(MessageResources.FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_, path), e);
             }
             catch (UnauthorizedAccessException e)
             {
                 var fileInfo = new FileInfo(path);
                 if (fileInfo.IsReadOnly)
-                    throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Unable_to_delete_read_only_file___0_, path), e);
+                    throw new DeleteException(string.Format(MessageResources.FileEx_SafeDelete_Unable_to_delete_read_only_file___0_, path), e);
                 if (Directory.Exists(path))
-                    throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Unable_to_delete_directory___0_, path), e);
-                throw new DeleteException(string.Format(Resources.FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_, path), e);
+                    throw new DeleteException(string.Format(MessageResources.FileEx_SafeDelete_Unable_to_delete_directory___0_, path), e);
+                throw new DeleteException(string.Format(MessageResources.FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_, path), e);
             }
         }
 

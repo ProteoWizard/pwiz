@@ -118,9 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="NodeTip_Timer_Tick_An_error_occurred_displaying_a_tooltip_" xml:space="preserve">
-    <value>ツールヒントの表示中にエラーが発生しました。</value>
-  </data>
   <data name="PeptideGroupTreeNode_ChildHeading__0__" xml:space="preserve">
     <value>{0}個のペプチド</value>
   </data>
@@ -171,12 +168,6 @@
   </data>
   <data name="PeptideTreeNode_ChildUndoHeading__0__" xml:space="preserve">
     <value>{0}個のプリカーサー</value>
-  </data>
-  <data name="PeptideTreeNode_Heading_Title" xml:space="preserve">
-    <value>ペプチド</value>
-  </data>
-  <data name="PeptideTreeNode_Heading_Title_Molecule" xml:space="preserve">
-    <value>分子</value>
   </data>
   <data name="PeptideTreeNode_RenderTip_First" xml:space="preserve">
     <value>最初へ</value>
@@ -238,16 +229,6 @@
   <data name="TransitionGroupTreeNode_SynchSiblingsLabel_Synchronize_isotope_label_types" xml:space="preserve">
     <value>同位体標識タイプを同期</value>
   </data>
-  <data name="TransitionGroupTreeNode_Title" xml:space="preserve">
-    <value>プリカーサー</value>
-  </data>
-  <data name="TransitionTreeNode_GetLabel__0__1__" xml:space="preserve">
-    <value>{0} [{1}]</value>
-  </data>
-  <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
-    <value>iランク{0}</value>
-    <comment>Isotope rank "irank" for transition node</comment>
-  </data>
   <data name="TransitionTreeNode_RenderTip_Decoy_Mass_Shift" xml:space="preserve">
     <value>デコイ質量シフト</value>
   </data>
@@ -271,11 +252,5 @@
   </data>
   <data name="TransitionTreeNode_RenderTip_Product_m_z" xml:space="preserve">
     <value>プロダクトm/z</value>
-  </data>
-  <data name="TransitionTreeNode_Title" xml:space="preserve">
-    <value>トランジション</value>
-  </data>
-  <data name="TransitionTreeNode_Titles" xml:space="preserve">
-    <value>トランジション</value>
   </data>
 </root>

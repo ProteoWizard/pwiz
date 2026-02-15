@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -233,9 +233,9 @@ namespace pwiz.CommonMsData
 
         public static LockMassParameters GetLockmassParameters(string url)
         {
-            if (url == null || string.IsNullOrEmpty(url))
+            if (string.IsNullOrEmpty(url))
                 return LockMassParameters.EMPTY;
-            return new LockMassParameters(ParseParameterDouble(TAG_LOCKMASS_POS, url), ParseParameterDouble(TAG_LOCKMASS_NEG, url), ParseParameterDouble(TAG_LOCKMASS_TOL, url));
+            return LockMassParameters.Create(ParseParameterDouble(TAG_LOCKMASS_POS, url), ParseParameterDouble(TAG_LOCKMASS_NEG, url), ParseParameterDouble(TAG_LOCKMASS_TOL, url));
         }
     }
 }

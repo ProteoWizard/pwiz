@@ -105,9 +105,18 @@ namespace pwiz.SkylineTest
             coverage.Add(adduct.AsFormula());
         }
 
-        private void TestException(string formula, string adductText)
+        private void TestInvalidDataException(string formula, string adductText)
         {
             AssertEx.ThrowsException<InvalidDataException>(() =>
+            {
+                var adduct = Adduct.FromStringAssumeProtonated(adductText);
+                IonInfo.ApplyAdductToFormula(formula, adduct);
+            });
+        }
+
+        private void TestInvalidChemicalModificationException(string formula, string adductText)
+        {
+            AssertEx.ThrowsException<InvalidChemicalModificationException>(() =>
             {
                 var adduct = Adduct.FromStringAssumeProtonated(adductText);
                 IonInfo.ApplyAdductToFormula(formula, adduct);
@@ -151,6 +160,10 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("1"), Adduct.SINGLY_PROTONATED);
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+H"), Adduct.SINGLY_PROTONATED);
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("M+H").AsFormula(), Adduct.SINGLY_PROTONATED.AsFormula()); // But the underlying chemistry is the same
+            Assert.AreEqual(Adduct.FromStringAssumeProtonated("-1"), Adduct.FromStringAssumeProtonated("[M-H]"));
+            Assert.AreEqual(Adduct.FromCharge(-1, Adduct.ADDUCT_TYPE.proteomic), Adduct.FromStringAssumeProtonated("[M-H]"));
+            Assert.AreEqual(Adduct.FromStringAssumeProtonatedNonProteomic("-9"), Adduct.FromStringAssumeProtonatedNonProteomic("[M-9H]"));
+            Assert.AreEqual(Adduct.FromCharge(-9, Adduct.ADDUCT_TYPE.non_proteomic), Adduct.FromStringAssumeProtonatedNonProteomic("[M-9H]"));
 
             var mPlusSPlus = Adduct.FromStringAssumeProtonated("[M+S]+");
             AssertEx.AreEqual(1, mPlusSPlus.AdductCharge);
@@ -188,6 +201,12 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(mCh3Cl, adductCH3.ToString()); // We kept the charge declaration since it's weird
 
             AssertEx.ThrowsException<InvalidDataException>(() => Adduct.FromStringAssumeProtonated("[M+2H]-")); // Try to declare wrong charge on common adduct
+
+            Assert.AreEqual(Adduct.EMPTY, Adduct.InferFromMassAndMz(100, new SignedMz(200)));
+            Assert.AreEqual(Adduct.M_PLUS_2H, Adduct.InferFromMassAndMz(1000, new SignedMz(500 + BioMassCalc.MassProton)));
+            Assert.AreEqual(Adduct.M_MINUS_2H, Adduct.InferFromMassAndMz(1000, new SignedMz(-(500 - BioMassCalc.MassProton))));
+            Assert.AreEqual(Adduct.M_PLUS_3, Adduct.InferFromMassAndMz(900, new SignedMz(300)));
+            Assert.AreEqual(Adduct.M_MINUS_3, Adduct.InferFromMassAndMz(900, new SignedMz(-300)));
 
             // Exercise the ability to work with masses and isotope labels
             Assert.IsTrue(ReferenceEquals(Adduct.SINGLY_PROTONATED, Adduct.SINGLY_PROTONATED.Unlabeled));
@@ -230,7 +249,16 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("M+"), Adduct.FromChargeNoMass(1))); // Both should return Adduct.M_PLUS
             Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("[M+]"), Adduct.FromChargeNoMass(1))); // Both should return Adduct.M_PLUS
             Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("M-H"), Adduct.M_MINUS_H));
-            Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("M+H"), Adduct.M_PLUS_H)); 
+            Assert.IsTrue(ReferenceEquals(Adduct.FromStringAssumeChargeOnly("M+H"), Adduct.M_PLUS_H));
+            Assert.AreEqual("[M-H]", Adduct.FromChargeProtonated(-1).AdductFormula);
+            Assert.AreEqual("[M-7H]", Adduct.FromChargeProtonated(-7).AdductFormula);
+            Assert.AreEqual("[M+17H]", Adduct.FromChargeProtonated(17).AdductFormula);
+            Assert.AreEqual("[M-H]", Adduct.FromCharge(-1, Adduct.ADDUCT_TYPE.non_proteomic).AdductFormula);
+            Assert.AreEqual("[M-7H]", Adduct.FromCharge(-7, Adduct.ADDUCT_TYPE.non_proteomic).AdductFormula);
+            Assert.AreEqual("[M+17H]", Adduct.FromCharge(17, Adduct.ADDUCT_TYPE.non_proteomic).AdductFormula);
+            Assert.AreEqual("[M-]", Adduct.FromCharge(-1, Adduct.ADDUCT_TYPE.charge_only).AdductFormula);
+            Assert.AreEqual("[M-7]", Adduct.FromCharge(-7, Adduct.ADDUCT_TYPE.charge_only).AdductFormula);
+            Assert.AreEqual("[M+17]", Adduct.FromCharge(17, Adduct.ADDUCT_TYPE.charge_only).AdductFormula);
 
             var a = Adduct.FromChargeProtonated(-1);
             var aa = Adduct.FromStringAssumeProtonated("M+CH3COO");
@@ -433,19 +461,19 @@ namespace pwiz.SkylineTest
             mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
 
-            TestException(PENTANE, "zM+2H"); // That "z" doesn't make any sense as a mass multiplier (must be a positive integer)
-            TestException(PENTANE, "-2M+2H"); // That "-2" doesn't make any sense as a mass multiplier (must be a positive integer)
-            TestException("", "+M"); // Meaningless, used to cause an exception in our parser
-            TestException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
-            TestException(Hectochlorin, "M-3Cl+H"); // Trying to remove more chlorines than exist in the molecule
-            TestException(PENTANE, "M+foo+H"); // Unknown adduct
-            TestException(PENTANE, "M2Cl37H+H"); // nonsense label ("2Cl37H2" would make sense, but regular H doesn't belong)
-            TestException(PENTANE, "M+2H+"); // Trailing sign - we now understand this as a charge state declaration, but this one doesn't match described charge
-            TestException(PENTANE, "[M-2H]3-"); // Declared charge doesn't match described charge
-            TestException(PENTANE, "[M-]3-"); // Declared charge doesn't match described charge
-            TestException(PENTANE, "[M+]-"); // Declared charge doesn't match described charge
-            TestException(PENTANE, "[M+2]-"); // Declared charge doesn't match described charge
-            TestException(PENTANE, "[M+2]+3"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "zM+2H"); // That "z" doesn't make any sense as a mass multiplier (must be a positive integer)
+            TestInvalidDataException(PENTANE, "-2M+2H"); // That "-2" doesn't make any sense as a mass multiplier (must be a positive integer)
+            TestInvalidDataException("", "+M"); // Meaningless, used to cause an exception in our parser
+            TestInvalidChemicalModificationException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
+            TestInvalidChemicalModificationException(Hectochlorin, "M-3Cl+H"); // Trying to remove more chlorines than exist in the molecule
+            TestInvalidDataException(PENTANE, "M+foo+H"); // Unknown adduct
+            TestInvalidDataException(PENTANE, "M2Cl37H+H"); // nonsense label ("2Cl37H2" would make sense, but regular H doesn't belong)
+            TestInvalidDataException(PENTANE, "M+2H+"); // Trailing sign - we now understand this as a charge state declaration, but this one doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M-2H]3-"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M-]3-"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M+]-"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M+2]-"); // Declared charge doesn't match described charge
+            TestInvalidDataException(PENTANE, "[M+2]+3"); // Declared charge doesn't match described charge
 
             // Test label stripping
             Assert.AreEqual("C5H9NO2S", (new IonInfo("C5H9H'3NO2S[M-3H]")).UnlabeledFormula.ToString());

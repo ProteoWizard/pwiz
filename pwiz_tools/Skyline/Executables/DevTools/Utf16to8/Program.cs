@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 if (args.Length < 2)
 {

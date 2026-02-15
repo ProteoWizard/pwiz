@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -17,10 +17,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using System.Linq;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -29,16 +32,16 @@ namespace pwiz.Skyline.Model.Find
     /// </summary>
     public class MissingScoresFinder : AbstractFinder
     {
-        private readonly string _calculatorName;
-        private readonly int _selectedCalculator;
+        private readonly FeatureCalculators _featureCalculators;
+        private readonly ImmutableList<int> _calculatorIndices;
         private bool _isLastNodeMatch;
         private readonly Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>> _featureDictionary;
 
-        public MissingScoresFinder(string calculatorName, int selectedCalculator, 
+        public MissingScoresFinder(FeatureCalculators featureCalculators, IEnumerable<int> calculatorIndices, 
                                    Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>> featureDictionary)
         {
-            _calculatorName = calculatorName;
-            _selectedCalculator = selectedCalculator;
+            _featureCalculators = featureCalculators;
+            _calculatorIndices = ImmutableList.ValueOf(calculatorIndices);
             _featureDictionary = featureDictionary;
         }
 
@@ -59,36 +62,68 @@ namespace pwiz.Skyline.Model.Find
                 return null;
             if (bookmarkEnumerator.ResultsIndex < 0 || bookmarkEnumerator.CurrentChromInfo == null)
             {
-                _isLastNodeMatch = IsMatch(nodePep);
+                var missingScoreIndices = GetMissingScoreIndices(nodePep);
+                _isLastNodeMatch = missingScoreIndices.Any();
                 if (_isLastNodeMatch)
-                    return new FindMatch(bookmarkEnumerator.Current, string.Format(FindResources.MissingScoresFinder_Match__0__missing_from_peptide, _calculatorName));
+                {
+                    var missingCalculators = GetCalculatorNameList(missingScoreIndices);
+                    return new FindMatch(bookmarkEnumerator.Current, string.Format(FindResources.MissingScoresFinder_Match__0__missing_from_peptide, missingCalculators));
+                }
             }
-            else if (IsMatch(bookmarkEnumerator.CurrentChromInfo, nodePep) && !_isLastNodeMatch)
+            else if (!_isLastNodeMatch)
             {
-                return new FindMatch(bookmarkEnumerator.Current, string.Format(FindResources.MissingScoresFinder_Match__0__missing_from_chromatogram_peak, _calculatorName));
+                var missingScoreIndices = GetMissingScoreIndices(bookmarkEnumerator.CurrentChromInfo, nodePep).ToList();
+                if (missingScoreIndices.Count != 0)
+                {
+                    var missingCalculators = GetCalculatorNameList(missingScoreIndices);
+                    if (!string.IsNullOrEmpty(missingCalculators))
+                    {
+                        return new FindMatch(bookmarkEnumerator.Current, string.Format(FindResources.MissingScoresFinder_Match__0__missing_from_chromatogram_peak, missingCalculators));
+                    }
+                }
             }
             return null;
         }
 
-        private bool IsMatch(PeptideDocNode nodePep)
+        private ICollection<int> GetMissingScoreIndices(PeptideDocNode nodePep)
         {
+            if (!nodePep.HasResults)
+            {
+                return Array.Empty<int>();
+            }
+
             // The peptide node matches if its results are missing for all files
-            return nodePep.HasResults &&
-                   nodePep.Results.All(chromInfoList => chromInfoList.All(chromInfo => IsMatch(chromInfo, nodePep)));
+            var missingSet = new HashSet<int>();
+            foreach (var chromInfo in nodePep.Results.SelectMany(chromInfoList => chromInfoList))
+            {
+                bool any = false;
+                foreach (var missing in GetMissingScoreIndices(chromInfo, nodePep))
+                {
+                    missingSet.Add(missing);
+                    any = true;
+                }
+
+                if (!any)
+                {
+                    return Array.Empty<int>();
+                }
+            }
+
+            return missingSet;
         }
 
-        private bool IsMatch(ChromInfo chromInfo, PeptideDocNode nodePep)
+        private string GetCalculatorNameList(IEnumerable<int> calculatorIndices)
+        {
+            return TextUtil.CommaSeparateListItems(calculatorIndices.Distinct().OrderBy(i => i)
+                .Select(i => _featureCalculators[i].Name));
+        }
+
+        private IEnumerable<int> GetMissingScoreIndices(ChromInfo chromInfo, PeptideDocNode nodePep)
         {
             var key = new PeakTransitionGroupIdKey(nodePep.Peptide, chromInfo.FileId);
-            if (!_featureDictionary.ContainsKey(key))
-                return false;
-            var listFeatures = _featureDictionary[key];
-            foreach (var features in listFeatures)
-            {
-                if (IsUnknownScore(features, _selectedCalculator))
-                    return true;
-            }
-            return false;
+            if (!_featureDictionary.TryGetValue(key, out var listFeatures))
+                return Array.Empty<int>();
+            return listFeatures.SelectMany(features => _calculatorIndices.Where(i => IsUnknownScore(features, i))).Distinct();
         }
 
         private static bool IsUnknownScore(PeakTransitionGroupFeatures features, int selectedCalculator)

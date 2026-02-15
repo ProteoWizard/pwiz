@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.IonMobility;
@@ -279,8 +280,9 @@ namespace pwiz.Skyline.Model
 
             // Release current document to ensure the streams are closed on it
             SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), Document);
-            foreach (var loader in BackgroundLoaders)
+            foreach (var loader in BackgroundLoaders.ToList())
             {
+                loader.Unregister(this);
                 loader.ClearCache();
             }
         }

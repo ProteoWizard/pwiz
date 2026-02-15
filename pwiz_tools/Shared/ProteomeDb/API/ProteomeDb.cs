@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -686,7 +686,7 @@ namespace pwiz.ProteomeDatabase.API
         /// <param name="status"></param>
         /// <param name="fastaImporter">object that accesses the web, or pretends to if in a test</param>
         /// <param name="parseOnly">if true, attempt to parse protein metadata from descriptions but do not proceed to web access</param>
-        /// <param name="done">will return true if there is nothung more to look up</param>
+        /// <param name="done">will return true if there is nothing more to look up</param>
         /// <returns>true on success</returns>
         public bool LookupProteinMetadata(IProgressMonitor progressMonitor, ref IProgressStatus status, WebEnabledFastaImporter fastaImporter, bool parseOnly, out bool done)
         {

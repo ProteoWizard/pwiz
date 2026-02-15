@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Forms; // for IWin32Window used by ILongWaitBroker
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.PanoramaClient;
@@ -1410,6 +1409,14 @@ namespace pwiz.Skyline
 
         public bool OpenSkyFile(string skylineFile)
         {
+            // Pre-validate: detect mass spec data files and other non-Skyline files before attempting XML parsing
+            if (File.Exists(skylineFile) && !SrmDocument.IsSkylineFile(skylineFile, out var explained))
+            {
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_, skylineFile);
+                _out.WriteLine(explained);
+                return false;
+            }
+
             try
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
@@ -2643,6 +2650,11 @@ namespace pwiz.Skyline
                         _out.WriteLine(SkylineResources.CommandLine_ReintegratePeaks_Error__Unknown_peak_scoring_model___0__);
                         return false;
                     }
+                    if (Equals(scoringModel, LegacyScoringModel.DEFAULT_UNTRAINED_MODEL))
+                    {
+                        scoringModel = LegacyScoringModel.DEFAULT_MODEL;
+                    }
+
                     modelAndFeatures = new ModelAndFeatures(scoringModel, null);
                 }
 
@@ -2705,7 +2717,7 @@ namespace pwiz.Skyline
                 // But then set to NaN the weights that have unknown values for this dataset
                 for (int i = 0; i < initialWeights.Length; ++i)
                 {
-                    if (!targetDecoyGenerator.EligibleScores[i])
+                    if (!targetDecoyGenerator.EligibleScores[i].EnabledByDefault)
                         initialWeights[i] = double.NaN;
                 }
                 var initialParams = new LinearModelParams(initialWeights);
@@ -3008,7 +3020,7 @@ namespace pwiz.Skyline
                         prediction.ChangeRetentionTime(retentionTimeRegression)));
                 }
                 string dbPath = calcIrt.DatabasePath;
-                IrtDb db = IrtDb.GetIrtDb(dbPath, null);
+                IrtDb db = IrtDb.GetIrtDb(dbPath);
                 if (checkPeptides)
                 {
                     var standards = docNew.Molecules.Where(m => db.IsStandard(m.ModifiedTarget)).ToArray();
@@ -4574,12 +4586,12 @@ namespace pwiz.Skyline
 
             private bool PublishDocToPanorama(PanoramaServer panoramaServer, string zipFilePath, string panoramaFolder)
             {
-                var waitBroker = new CommandProgressMonitor(_statusWriter,
-                    new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));
+                IProgressStatus progressStatus = new ProgressStatus(SkylineResources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama);
+                IProgressMonitor progressMonitor = new CommandProgressMonitor(_statusWriter, progressStatus);
                 IPanoramaClient publishClient = new WebPanoramaClient(panoramaServer.URI, panoramaServer.Username, panoramaServer.Password);
                 try
                 {
-                    publishClient.SendZipFile(panoramaFolder, zipFilePath, waitBroker);
+                    publishClient.SendZipFile(panoramaFolder, zipFilePath, progressMonitor, progressStatus);
                     return true;
                 }
                 catch (Exception x)
@@ -4981,11 +4993,6 @@ namespace pwiz.Skyline
         public bool IsDocumentChanged(SrmDocument docOrig)
         {
             return true;
-        }
-
-        public DialogResult ShowDialog(Func<IWin32Window, DialogResult> show)
-        {
-            return DialogResult.OK;
         }
 
         public void SetProgressCheckCancel(int step, int totalSteps)

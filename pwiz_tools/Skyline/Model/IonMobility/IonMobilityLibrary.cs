@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -32,8 +32,13 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.IonMobility
 {
+    /// <summary>
+    /// Identity class to allow identity equality on <see cref="IonMobilityLibrarySpec"/>.
+    /// </summary>
+    public sealed class IonMobilityLibrarySpecId : Identity { }
+
     [XmlRoot("ionmobility_library_spec")]
-    public class IonMobilityLibrarySpec : XmlNamedElement, IEquatable<IonMobilityLibrarySpec> 
+    public class IonMobilityLibrarySpec : XmlNamedElement, IEquatable<IonMobilityLibrarySpec>, IFile
     {
         public const string EXT = IonMobilityDb.EXT;
 
@@ -46,6 +51,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public IonMobilityLibrarySpec(string name, string path) : base(name)
         {
+            Id = new IonMobilityLibrarySpecId();
             FilePath = path;
         }
 
@@ -54,6 +60,7 @@ namespace pwiz.Skyline.Model.IonMobility
         /// </summary>
         protected IonMobilityLibrarySpec()
         {
+            Id = new IonMobilityLibrarySpecId();
         }
         
         public string Filter
@@ -97,6 +104,7 @@ namespace pwiz.Skyline.Model.IonMobility
             return !Equals(left, right);
         }
 
+        public Identity Id { get; }
     }
 
     [XmlRoot("ion_mobility_library")]

@@ -163,6 +163,12 @@
   <data name="EnzymeList_Title_Edit_Enzymes" xml:space="preserve">
     <value>编辑酶</value>
   </data>
+  <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
+    <value>群组比较</value>
+  </data>
+  <data name="GroupComparisonDefList_Title_Define_Group_Comparisons" xml:space="preserve">
+    <value>定义群组比较</value>
+  </data>
   <data name="HeavyModList_EditItem_Edit_Isotope_Modification" xml:space="preserve">
     <value>编辑同位素修饰</value>
   </data>
@@ -202,6 +208,12 @@
   <data name="IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments" xml:space="preserve">
     <value>编辑同位素标记富集</value>
   </data>
+  <data name="ListDefList_Label_Lists" xml:space="preserve">
+    <value>列表</value>
+  </data>
+  <data name="ListDefList_Title_Define_Lists" xml:space="preserve">
+    <value>定义列表</value>
+  </data>
   <data name="MeasuredIonList_Label_Special_ion" xml:space="preserve">
     <value>特殊离子(&amp;S)：</value>
   </data>
@@ -238,6 +250,12 @@
   <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
     <value>编辑远程账户</value>
   </data>
+  <data name="ReportSpecList_Label_Report" xml:space="preserve">
+    <value>报告(&amp;R)：</value>
+  </data>
+  <data name="ReportSpecList_Title_Edit_Reports" xml:space="preserve">
+    <value>编辑报告</value>
+  </data>
   <data name="RetentionTimeList_Label_Retention_Time_Regression" xml:space="preserve">
     <value>保留时间回归(&amp;R)：</value>
   </data>
@@ -255,6 +273,15 @@
   </data>
   <data name="RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators" xml:space="preserve">
     <value>编辑保留时间计算器</value>
+  </data>
+  <data name="SearchToolList_Label_Internal__Tools" xml:space="preserve">
+    <value>内部工具(&amp;T)</value>
+  </data>
+  <data name="SearchToolList_Label_Search__Tools" xml:space="preserve">
+    <value>搜索工具(&amp;T)</value>
+  </data>
+  <data name="SearchToolList_Title_Edit_Search_Tools" xml:space="preserve">
+    <value>编辑搜索工具</value>
   </data>
   <data name="ServerList_Label__Servers" xml:space="preserve">
     <value>服务器(&amp;S)</value>

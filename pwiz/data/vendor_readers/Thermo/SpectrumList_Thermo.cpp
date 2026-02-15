@@ -816,12 +816,20 @@ PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfMSOrder(MSOrder msOrder) cons
     return spectraByMSOrder[(size_t) msOrder+3];
 }
 
+PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfController(ControllerType controllerType) const
+{
+    return spectraByController[(size_t) controllerType];
+}
+
 PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
 {
     using namespace boost::spirit::karma;
 
     spectraByScanType.resize(ScanType_Count, 0);
     spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
+    spectraByController.resize(Controller_Count, 0);
+
+    auto raw = rawfile_->getRawByThread(0);
 
     // calculate total spectra count from all controllers
     for (int controllerType = Controller_MS;
@@ -837,7 +845,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
         long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
 
         if (controllerType == Controller_MS && numControllers > 1)
-            throw runtime_error("[SpectrumList_Thermo::createIndex] Unable to handle RAW files with multiple MS controllers, please contact ProteoWizard support!");
+            warn_once("[SpectrumList_Thermo::createIndex] RAW file has multiple MS controllers; only the first one will be read.");
 
         for (long n=1; n <= numControllers; ++n)
         {
@@ -856,6 +864,8 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
             {
                 case Controller_MS:
                 {
+                    if (n > 1) // only first MS controller is supported
+                        continue;
                     for (long scan=1; scan <= numSpectra; ++scan)
                     {
                         MSOrder msOrder = rawfile_->getMSOrder(scan);
@@ -867,6 +877,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         // the +3 offset is because MSOrder_NeutralLoss == -3
                         ++spectraByMSOrder[msOrder+3];
                         ++spectraByScanType[scanType];
+                        ++spectraByController[controllerType];
                         maxMsLevel_ = max(maxMsLevel_, msOrder+3);
 
                         switch (scanType)
@@ -877,9 +888,28 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                                     break;  // break out of switch (scanType)
                                 continue;
                             case ScanType_SRM:
+                            {
                                 if (config_.srmAsSpectra)
                                     break;  // break out of switch (scanType)
+
+                                // if any scan range is bigger than MAX_SRM_SCAN_RANGE, we can't skip the SRM scan
+                                const auto scanInfo = raw->getScanInfo(scan);
+                                bool hasExcessiveSrmScanRange = false;
+                                for (size_t i = 0, end = scanInfo->scanRangeCount(); i < end; ++i)
+                                {
+                                    const double scanRange = scanInfo->scanRange(i).second - scanInfo->scanRange(i).first;
+                                    if (scanRange > MAX_SRM_SCAN_RANGE)
+                                    {
+                                        hasExcessiveSrmScanRange = true;
+                                        break;
+                                    }
+
+                                }
+                                if (hasExcessiveSrmScanRange)
+                                    break;  // break out of switch (scanType)
+
                                 continue;
+                            }
                         }
 
                         index_.push_back(IndexEntry());
@@ -915,6 +945,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         ie.controllerNumber = n;
                         ie.scan = scan;
                         ie.index = index_.size()-1;
+                        ++spectraByController[controllerType];
 
                         std::back_insert_iterator<std::string> sink(ie.id);
                         generate(sink,

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  Alana Killeen <killea .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
@@ -482,7 +482,7 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
 
             var matcher = new LibKeyModificationMatcher();
-            matcher.CreateMatches(Document.Settings, _selectedLibrary.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            matcher.CreateMatches(Document.Settings, _selectedLibrary.Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList, _selectedLibrary.Name);
             if (string.IsNullOrEmpty(matcher.FoundMatches) && !matcher.UnmatchedSequences.Any())
             {
                 _matcher = matcher;
@@ -571,6 +571,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void UpdateListPeptide(int selectPeptideIndex)
         {
+            _matcher.LibraryName = _selectedLibName;
             var pepMatcher = new ViewLibraryPepMatching(Document,
                 _selectedLibrary, _selectedSpec, _matcher, _peptides);
             listPeptide.BeginUpdate();
@@ -920,6 +921,11 @@ namespace pwiz.Skyline.SettingsUI
             catch (UnauthorizedAccessException)
             {
                 SetGraphItem(new NoDataMSGraphItem(SettingsUIResources.ViewLibraryDlg_UpdateUI_Unauthorized_access_attempting_to_read_from_library_));
+                return;
+            }
+            catch (InvalidChemicalModificationException e)
+            {
+                SetGraphItem(new NoDataMSGraphItem(e.Message));
                 return;
             }
             catch (IOException)
@@ -2675,15 +2681,25 @@ namespace pwiz.Skyline.SettingsUI
                     _smallMoleculePartsToDraw = smallMolInfo.LocalizedKeyValuePairs;
                 }
 
+                _mzRangePartsToDraw = new List<TextColor>();
                 if (_pepInfo.Target != null)
                 {
                     // build mz range parts to draw
-                    _mz = _pepInfo.CalcMz(_settings, transitionGroup, mods);
-                    _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
+                    try
+                    {
+                        _mz = _pepInfo.CalcMz(_settings, transitionGroup, mods);
+                        _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
+                    }
+                    catch (InvalidChemicalModificationException e)
+                    {
+                        _mz = double.NaN;
+                        // Show the error at the top of the tip
+                        _seqPartsToDraw.Insert(0,new TextColor(e.Message, Brushes.Red));
+                        _seqPartsToDraw.Insert(1, new TextColor(Environment.NewLine));
+                    }
                 }
                 else
                 {
-                    _mzRangePartsToDraw = new List<TextColor>();
                     var precursorKey = _pepInfo.Key.LibraryKey as PrecursorLibraryKey;
                     if (precursorKey != null)
                     {
@@ -2926,13 +2942,25 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var size = new SizeF(startX, startY);
                 float height = 0;
+                float lineWidth = 0;
+                float width = 0;
+                float nLines = 1;
                 foreach (var part in parts)
                 {
-                    g.DrawString(part.Text, rt.FontNormal, part.Color, new PointF(size.Width, size.Height));
-                    size.Width += g.MeasureString(part.Text, rt.FontNormal).Width - 3;
-                    height = g.MeasureString(part.Text, rt.FontNormal).Height;
+                    var text = part.Text;
+                    if (text.StartsWith(Environment.NewLine))
+                    {
+                        text = text.Substring(Environment.NewLine.Length);
+                        lineWidth = 0;
+                        nLines++;
+                    }
+                    height = Math.Max(height, g.MeasureString(text, rt.FontNormal).Height);
+                    g.DrawString(text, rt.FontNormal, part.Color, new PointF(startX + lineWidth, startY + (nLines-1)*height));
+                    lineWidth += g.MeasureString(text, rt.FontNormal).Width - 3;
+                    width = Math.Max(lineWidth, width);
                 }
-                size.Height = height;
+                size.Height = nLines * height;
+                size.Width = width;
                 return size;
             }
 
@@ -2953,6 +2981,11 @@ namespace pwiz.Skyline.SettingsUI
 
                 public string Text { get; private set; }
                 public Brush Color { get; private set; }
+
+                public override string ToString()
+                {
+                    return $@"{Text} ({(Color as SolidBrush)?.Color.ToString() ?? @"?"})"; // For debug convenience
+                }
             }
         }
 
@@ -3017,11 +3050,14 @@ namespace pwiz.Skyline.SettingsUI
             if (!_comboBoxUpdated)
             {
                 comboRedundantSpectra.BeginUpdate();
-                foreach (ComboOption opt in _currentOptions)
+                if (_currentOptions != null)
                 {
-                    if (!opt.SpectrumInfoLibrary.IsBest)
+                    foreach (ComboOption opt in _currentOptions)
                     {
-                        comboRedundantSpectra.Items.Add(opt);
+                        if (!opt.SpectrumInfoLibrary.IsBest)
+                        {
+                            comboRedundantSpectra.Items.Add(opt);
+                        }
                     }
                 }
 

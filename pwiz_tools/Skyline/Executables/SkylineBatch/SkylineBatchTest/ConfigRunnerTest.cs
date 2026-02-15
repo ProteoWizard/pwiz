@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -17,7 +17,6 @@
  */
 
 
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,12 +27,12 @@ namespace SkylineBatchTest
 {
 
     [TestClass]
-    public class ConfigRunnerTest
+    public class ConfigRunnerTest : AbstractSkylineBatchUnitTest
     {
         [TestMethod]
         public async Task TestExecuteSkylineCmd()
         {
-           var logger = TestUtils.GetTestLogger();
+           var logger = GetTestLogger();
            var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
            var config = testRunner.Config;
            Assert.IsTrue(testRunner.IsStopped());
@@ -51,7 +50,7 @@ namespace SkylineBatchTest
         public async Task TestRunFromRScripts()
         {
             TestUtils.InitializeRInstallation();
-            var logger = TestUtils.GetTestLogger();
+            var logger = GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetTestConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
             await testRunner.Run(RunBatchOptions.R_SCRIPTS, new ServerFilesManager());
@@ -63,13 +62,14 @@ namespace SkylineBatchTest
         public void TestGenerateCommandFile()
         {
             TestUtils.InitializeRInstallation();
-            var logger = TestUtils.GetTestLogger();
+            var logger = GetTestLogger();
             var testRunner = new ConfigRunner(TestUtils.GetFullyPopulatedConfig(), logger);
             Assert.IsTrue(testRunner.IsStopped());
             var runnerDir = Path.GetDirectoryName(testRunner.Config.MainSettings.Template.FilePath);
 
             // Skyline versions after 21.0.9.118
-            var tempFile1 = TestUtils.CopyFileFindReplace("CommandFile_Skyline_21_0_9_118.txt", "REPLACE_TEXT", runnerDir);
+            var tempFile1 = Path.Combine(GetTestResultsPath(), "CommandFile_Skyline_21_0_9_118.txt");
+            TestUtils.CopyFileFindReplace("CommandFile_Skyline_21_0_9_118.txt", "REPLACE_TEXT", runnerDir, tempFile1);
             var expectedInvariantReportCommandFile = TestUtils.GetTestFilePath(tempFile1);
             var invariantReportWriter = new CommandWriter(logger, true, true);
             testRunner.WriteBatchCommandsToFile(invariantReportWriter, RunBatchOptions.ALL, true);
@@ -78,7 +78,8 @@ namespace SkylineBatchTest
             File.Delete(tempFile1);
 
             // Skyline versions after 20.2.1.454
-            var tempFile2 = TestUtils.CopyFileFindReplace("CommandFile_Skyline_20_2_1_454.txt", "REPLACE_TEXT", runnerDir);
+            var tempFile2 = Path.Combine(GetTestResultsPath(), "CommandFile_Skyline_20_2_1_454.txt");
+            TestUtils.CopyFileFindReplace("CommandFile_Skyline_20_2_1_454.txt", "REPLACE_TEXT", runnerDir, tempFile2);
             var expectedMultiLineCommandFile = TestUtils.GetTestFilePath(tempFile2);
             var multiLineWriter = new CommandWriter(logger, true, false);
             testRunner.WriteBatchCommandsToFile(multiLineWriter, RunBatchOptions.ALL, true);
@@ -87,7 +88,8 @@ namespace SkylineBatchTest
             File.Delete(tempFile2);
 
             // Skyline versions after 20.2.0.0
-            var tempFile3 = TestUtils.CopyFileFindReplace("CommandFile_Skyline_20_2_0_0.txt", "REPLACE_TEXT", runnerDir);
+            var tempFile3 = Path.Combine(GetTestResultsPath(), "CommandFile_Skyline_20_2_0_0.txt");
+            TestUtils.CopyFileFindReplace("CommandFile_Skyline_20_2_0_0.txt", "REPLACE_TEXT", runnerDir, tempFile3);
             var expectedOldVersionCommandFile = TestUtils.GetTestFilePath(tempFile3);
             var oldVersionWriter = new CommandWriter(logger, false, false);
             testRunner.WriteBatchCommandsToFile(oldVersionWriter, RunBatchOptions.ALL, false);

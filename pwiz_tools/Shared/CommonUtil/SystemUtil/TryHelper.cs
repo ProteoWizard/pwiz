@@ -72,7 +72,7 @@ namespace pwiz.Common.SystemUtil
         {
             DetailedTrace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
                 string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
-            DetailedTrace.WriteLine(x.Message);
+            DetailedTrace.WriteLine(x.ToString());
             if (RunningResharperAnalysis || IsParallelClient)
             {
                 DetailedTrace.WriteLine(IsParallelClient ?
@@ -85,7 +85,18 @@ namespace pwiz.Common.SystemUtil
             Thread.Sleep(milliseconds);
         }
 
+        /// <summary>
+        /// Detects the use of ReSharper code coverage (dotCover), memory profiling (dotMemory),
+        /// or performance profiling (dotTrace), which may affect timing in tests.
+        /// Per https://youtrack.jetbrains.com/issue/PROF-1093:
+        /// "Set JETBRAINS_DPA_AGENT_ENABLE=0 environment variable for user apps started from dotTrace,
+        /// and JETBRAINS_DPA_AGENT_ENABLE=1 in case of dotCover and dotMemory."
+        /// </summary>
         public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
+
+        /// <summary>
+        /// Detects if running as a parallel test client in SkylineTester.
+        /// </summary>
         public static bool IsParallelClient => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID"));
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -58,7 +58,7 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 if (!_entries.TryGetValue(key, out var entry))
                 {
-                    throw new InvalidOperationException(string.Format("Entry {0} not found", key));
+                    throw new InvalidOperationException(string.Format(@"Entry {0} not found", key));
                 }
 
                 return entry;
@@ -86,7 +86,7 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 if (!_entries.Remove(entry.Key))
                 {
-                    throw new ArgumentException("Entry not found");
+                    throw new ArgumentException(@"Entry not found");
                 }
             }
         }

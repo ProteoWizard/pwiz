@@ -143,7 +143,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the files should be found, and we should
             // just be able to move to the next page.
-            RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
             RunUI(() =>
             {
                 var importResultsControl = (ImportResultsControl) importPeptideSearchDlg.ImportResultsControl;

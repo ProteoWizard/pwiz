@@ -1,4 +1,4 @@
-﻿namespace QuaSAR
+namespace QuaSAR
 {
    
     partial class QuaSARUI

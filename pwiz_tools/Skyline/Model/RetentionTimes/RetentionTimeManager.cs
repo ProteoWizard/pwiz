@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.RetentionTimes
@@ -106,10 +107,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
                 else
                 {
-                    newDocumentRetentionTimes = UpdateResultFileAlignments(container, docCurrent);
+                    newDocumentRetentionTimes = UpdateResultFileAlignments(alignmentTarget, container, docCurrent);
                 }
 
                 if (newDocumentRetentionTimes == null)
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(newDocumentRetentionTimes, documentRetentionTimes))
                 {
                     return false;
                 }
@@ -130,8 +136,21 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     return false;
                 }
-                docNew = docCurrent.ChangeSettings(
-                    docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes));
+
+                try
+                {
+                    using var settingsChangeMonitor =
+                        new SrmSettingsChangeMonitor(new LoadMonitor(this, container, docCurrent),
+                            RetentionTimesResources
+                                .RetentionTimeManager_PerformNextAlignment_Updating_retention_time_alignment);
+                    docNew = docCurrent.ChangeSettings(
+                        docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes),
+                        settingsChangeMonitor);
+                }
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
             return true;
@@ -167,7 +186,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return documentRetentionTimes.ChangeLibraryAlignments(alignmentParam, alignment);
         }
 
-        private DocumentRetentionTimes UpdateResultFileAlignments(IDocumentContainer container, SrmDocument docCurrent)
+        private DocumentRetentionTimes UpdateResultFileAlignments(AlignmentTarget alignmentTarget, IDocumentContainer container, SrmDocument docCurrent)
         {
             var loadMonitor = new LoadMonitor(this, container, docCurrent);
             var documentRetentionTimes = docCurrent.Settings.DocumentRetentionTimes;
@@ -176,7 +195,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             try
             {
                 loadMonitor.UpdateProgress(progressStatus);
-                result = documentRetentionTimes.UpdateResultFileAlignments(loadMonitor, ref progressStatus, docCurrent);
+                result = documentRetentionTimes.UpdateResultFileAlignments(alignmentTarget, loadMonitor, ref progressStatus, docCurrent);
                 loadMonitor.UpdateProgress(progressStatus.Complete());
             }
             catch (Exception e)

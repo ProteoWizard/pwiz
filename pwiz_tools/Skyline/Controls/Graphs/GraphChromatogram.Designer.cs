@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -57,7 +57,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.graphControl.ScrollMinY = 0D;
             this.graphControl.ScrollMinY2 = 0D;
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
-            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
             this.graphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseDownEvent);
             this.graphControl.MouseUpEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseUpEvent);
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMoveEvent);

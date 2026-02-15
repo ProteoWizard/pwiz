@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,9 +23,9 @@ using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
@@ -38,6 +38,9 @@ namespace pwiz.Skyline.Model
 {
     public class TransitionDocNode : DocNode
     {
+        public static string TITLE => ModelResources.TransitionDocNode_Title;
+        public static string TITLES => ModelResources.TransitionDocNode_Titles;
+
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
                                  TypedMass massH,
@@ -229,6 +232,65 @@ namespace pwiz.Skyline.Model
                 return transition.MassIndex == 0;
             int i = isotopeDist.MassIndexToPeakIndex(transition.MassIndex);
             return 0 <= i && i < isotopeDist.CountPeaks;
+        }
+
+        /// <summary>
+        /// Gets a formatted label for a transition, including ion name, m/z, charge indicator, rank info, and optional results text.
+        /// </summary>
+        public static string GetLabel(TransitionDocNode nodeTran, string resultsText)
+        {
+            Transition tran = nodeTran.Transition;
+            string labelPrefix;
+            const string labelPrefixSpacer = " - ";
+            if (nodeTran.ComplexFragmentIon.IsCrosslinked)
+            {
+                labelPrefix = nodeTran.ComplexFragmentIon.GetTargetsTreeLabel() + labelPrefixSpacer;
+            }
+            else if (tran.IsPrecursor())
+            {
+                labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex) + labelPrefixSpacer;
+            }
+            else if (tran.IsCustom())
+            {
+                if (!string.IsNullOrEmpty(tran.CustomIon.Name))
+                    labelPrefix = tran.CustomIon.Name + labelPrefixSpacer;
+                else if (tran.CustomIon.HasChemicalFormula)
+                    labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer; // Show formula (e.g. C12H5 or maybe C12H5[-1.2/1.21]
+                else
+                    labelPrefix = string.Empty; // Just show the mass
+            }
+            else
+            {
+                labelPrefix = string.Format(ModelResources.TransitionDocNode_GetLabel__0__1__, tran.AA, nodeTran.FragmentIonName) + labelPrefixSpacer;
+            }
+
+            if (!nodeTran.HasLibInfo && !nodeTran.HasDistInfo)
+            {
+                return string.Format(@"{0}{1}{2}{3}",
+                                     labelPrefix,
+                                     GetMzLabel(nodeTran),
+                                     Transition.GetChargeIndicator(tran.Adduct),
+                                     resultsText);
+            }
+            
+            string rank = nodeTran.HasDistInfo
+                              ? string.Format(ModelResources.TransitionDocNode_GetLabel_irank__0__, nodeTran.IsotopeDistInfo.Rank)
+                              : string.Format(ModelResources.TransitionDocNode_GetLabel_rank__0__, nodeTran.LibInfo.Rank);
+
+            return string.Format(@"{0}{1}{2} ({3}){4}",
+                                 labelPrefix,
+                                 GetMzLabel(nodeTran),
+                                 Transition.GetChargeIndicator(tran.Adduct),
+                                 rank,
+                                 resultsText);
+        }
+
+        private static string GetMzLabel(TransitionDocNode nodeTran)
+        {
+            int? massShift = nodeTran.Transition.DecoyMassShift;
+            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
+            return string.Format(@"{0:F04}{1}", nodeTran.Mz - shift,
+                Transition.GetDecoyText(massShift));
         }
 
         public TransitionLibInfo LibInfo { get; private set; }
@@ -428,7 +490,33 @@ namespace pwiz.Skyline.Model
 
         public override string GetDisplayText(DisplaySettings settings)
         {
-            return TransitionTreeNode.DisplayText(settings, this);    
+            // Mirror legacy UI semantics without depending on Controls.SeqNode
+            return GetLabel(this, GetResultsText(settings, this));
+        }
+
+        private static string GetResultsText(DisplaySettings displaySettings, TransitionDocNode nodeTran)
+        {
+            int? rank = nodeTran.GetPeakRankByLevel(displaySettings.ResultsIndex);
+            string label = string.Empty;
+            if (rank.HasValue && rank > 0)
+            {
+                // Mark MS1 transition ranks with "i" for isotope
+                string rankText = (nodeTran.IsMs1 ? @"i " : string.Empty) + rank;
+                label = string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rankText);
+            }
+
+            float? ratio = null;
+            if (!Equals(displaySettings.NormalizationMethod, NormalizationMethod.NONE))
+            {
+                ratio = (float?)displaySettings.NormalizedValueCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
+                    displaySettings.NodePep, nodeTran,
+                    displaySettings.ResultsIndex,
+                    nodeTran.GetChromInfoEntry(displaySettings.ResultsIndex));
+            }
+            if (!ratio.HasValue)
+                return label;
+
+            return string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, label, MathEx.RoundAboveZero(ratio.Value, 2, 4));
         }
 
         public string PrimaryCustomIonEquivalenceKey
@@ -1148,7 +1236,7 @@ namespace pwiz.Skyline.Model
 
         public override string AuditLogText
         {
-            get { return TransitionTreeNode.GetLabel(this, string.Empty); }
+            get { return GetLabel(this, string.Empty); }
         }
 
         public TransitionDocNode ChangeTransitionGroup(TransitionGroup newTransitionGroup)

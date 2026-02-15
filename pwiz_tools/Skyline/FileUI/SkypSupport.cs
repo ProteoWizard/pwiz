@@ -1,6 +1,24 @@
-﻿using System;
+/*
+ * Original author: vsharma .at. uw.edu
+ *
+ * Copyright 2019 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Net; // HttpStatusCode
 using System.Windows.Forms;
 using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
@@ -10,20 +28,16 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.FileUI
 {
     public class SkypSupport
     {
-        private SkylineWindow _skyline;
-
-        public DownloadClientCreator DownloadClientCreator { private get; set; }
+        private readonly SkylineWindow _skyline;
 
         public SkypSupport(SkylineWindow skyline)
         {
             _skyline = skyline;
-            DownloadClientCreator = new DownloadClientCreator();
         }
 
         public bool Open(string skypPath, IEnumerable<Server> servers, FormEx parentWindow = null)
@@ -38,6 +52,9 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception e)
             {
+                if (ExceptionUtil.IsProgrammingDefect(e))
+                    throw;
+                
                 var message = TextUtil.LineSeparate(FileUIResources.SkypSupport_Open_Failure_opening_skyp_file_, e.Message);
                 MessageDlg.ShowWithException(parentWindow ?? _skyline, message, e);
                 return false;
@@ -51,53 +68,34 @@ namespace pwiz.Skyline.FileUI
                     var progressStaus = longWaitDlg.PerformWork(parentWindow ?? _skyline, 1000, progressMonitor => Download(skyp, progressMonitor));
                     if (longWaitDlg.IsCanceled)
                         return false;
-                    
-                    if (progressStaus.IsError)
-                    {
-                        var exception = progressStaus.ErrorException;
-                        var skypEx = exception as SkypDownloadException;
-                        if (skypEx == null)
-                        {
-                            ShowDownloadError(parentWindow, skyp, exception);
-                            return false;
-                        }
-                        
-                        if (skypEx.Unauthorized())
-                        {
-                            return skyp.ServerMatch == null
-                                ? AddServerAndOpen(skyp, skypEx.Message, parentWindow)  // Server not saved in Skyline. Offer to add the server.
-                                : EditServerAndOpen(skyp, skypEx.Message, parentWindow); // Server saved in Skyline but credentials are invalid. Offer to edit server credentials.
-                        }
-                        else if (skypEx.Forbidden() && skyp.UsernameMismatch())
-                        {
-                            // Server is saved in Skyline but the user in the saved credentials does not have enough permissions. 
-                            // The downloading user in the skyp file is different from saved user.  Offer to edit server credentials. 
-                            return EditServerAndOpen(skyp, skypEx.Message, parentWindow);
-                        }
-                        
-                        MessageDlg.ShowWithException(parentWindow ?? _skyline, skypEx.Message, skypEx);
-                        return false;
-                    }
                 }
                 
                 return _skyline.OpenSharedFile(skyp.DownloadPath);
             }
             catch (Exception e)
             {
-                ShowDownloadError(parentWindow, skyp, e);
+                if (ExceptionUtil.IsProgrammingDefect(e))
+                    throw;
+
+                var statusCode = NetworkRequestException.GetHttpStatusCode(e);
+                var message = GetMessage(skyp, e, statusCode);
+                
+                if (statusCode is HttpStatusCode.Unauthorized)
+                {
+                    return skyp.ServerMatch == null
+                        ? AddServerAndOpen(skyp, message, parentWindow)  // Server not saved in Skyline. Offer to add the server.
+                        : EditServerAndOpen(skyp, message, parentWindow); // Server saved in Skyline but credentials are invalid. Offer to edit server credentials.
+                }
+                else if (statusCode is HttpStatusCode.Forbidden && skyp.UsernameMismatch())
+                {
+                    // Server is saved in Skyline but the user in the saved credentials does not have enough permissions. 
+                    // The downloading user in the skyp file is different from saved user.  Offer to edit server credentials. 
+                    return EditServerAndOpen(skyp, message, parentWindow);
+                }
+
+                MessageDlg.ShowWithException(parentWindow ?? _skyline, message, e);
                 return false;
             }
-        }
-
-        private void ShowDownloadError(FormEx parentWindow, SkypFile skyp, Exception exception)
-        {
-            var message = TextUtil.LineSeparate(
-                string.Format(
-                    FileUIResources
-                        .SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__,
-                    skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()),
-                exception.Message);
-            MessageDlg.ShowWithException(parentWindow ?? _skyline, message, exception);
         }
 
         private bool AddServerAndOpen(SkypFile skyp, string message, FormEx parentWindow)
@@ -150,78 +148,9 @@ namespace pwiz.Skyline.FileUI
         }
 
 
-        private void Download(SkypFile skyp, IProgressMonitor progressMonitor)
-        {
-            var progressStatus =
-                new ProgressStatus(string.Format(FileUIResources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()));
-            progressMonitor.UpdateProgress(progressStatus);
+        #region Error Handling Helpers
 
-            var downloadClient = DownloadClientCreator.Create(progressMonitor, progressStatus);
-
-            downloadClient.Download(skyp);
-
-            if (progressMonitor.IsCanceled || downloadClient.IsError)
-            {
-                FileEx.SafeDelete(skyp.DownloadPath, true);
-            }
-        }
-    }
-
-    public class SkypDownloadException : Exception
-    {
-        public HttpStatusCode? StatusCode { get; }
-
-        public SkypDownloadException(string message, HttpStatusCode? statusCode, Exception e) : base(message, e)
-        {
-            StatusCode = statusCode;
-        }
-
-        public bool Unauthorized()
-        {
-            return Unauthorized(StatusCode);
-        }
-
-        public static bool Unauthorized(HttpStatusCode? statusCode)
-        {
-            return statusCode is HttpStatusCode.Unauthorized; // 401 -  No credentials provided or invalid credentials
-        }
-
-        public bool Forbidden()
-        {
-            return Forbidden(StatusCode);
-        }
-
-        public static bool Forbidden(HttpStatusCode? statusCode)
-        {
-            return statusCode is HttpStatusCode.Forbidden; // 403 - Valid credentials but not enough permissions
-        }
-
-        public static SkypDownloadException Create(SkypFile skyp, Exception e)
-        {
-            var statusCode = GetErrorStatusCode(e);
-            var message = GetMessage(skyp, e, statusCode);
-            return new SkypDownloadException(message, statusCode, e);
-        }
-
-        private static HttpStatusCode? GetErrorStatusCode(Exception e)
-        {
-            var webException = e as WebException;
-            if (webException != null)
-            {
-                if (webException.Status == WebExceptionStatus.ProtocolError)
-                {
-                    var response = webException.Response as HttpWebResponse;
-                    if (response != null)
-                    {
-                        return response.StatusCode;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public static string GetMessage(SkypFile skyp, Exception ex, HttpStatusCode? statusCode)
+        private static string GetMessage(SkypFile skyp, Exception ex, HttpStatusCode? statusCode)
         {
             var message =
                 string.Format(
@@ -233,10 +162,10 @@ namespace pwiz.Skyline.FileUI
                 var exceptionMsg = ex.Message;
                 message = TextUtil.LineSeparate(message, exceptionMsg);
             }
-           
+
             var serverName = skyp.GetServerName();
 
-            if (Unauthorized(statusCode)) // 401 -  No credentials provided or invalid credentials
+            if (statusCode is HttpStatusCode.Unauthorized) // 401 -  No credentials provided or invalid credentials
             {
                 if (skyp.ServerMatch == null)
                 {
@@ -261,7 +190,7 @@ namespace pwiz.Skyline.FileUI
                     message = BuildInvalidCredsMessage(message, serverName);
                 }
             }
-            else if (Forbidden(statusCode)) // 403 - Valid credentials but not enough permissions
+            else if (statusCode is HttpStatusCode.Forbidden) // 403 - Valid credentials but not enough permissions
             {
                 if (skyp.UsernameMismatch() && skyp.ServerMatch != null)
                 {
@@ -295,17 +224,11 @@ namespace pwiz.Skyline.FileUI
             return BuildMessage(true, mainMessage, otherMessages.ToArray());
         }
 
-        private static string BuildMessage(bool addUpdateCredentialsText, string mainMessage, params string[] otherLines)
+        private static string BuildMessage(bool withUpdatePrompt, string mainMessage, params string[] otherLines)
         {
             var allMessages = new List<string> { mainMessage };
-
-            if (otherLines.Length > 0)
-            {
-                allMessages.Add(string.Empty);
-                allMessages.AddRange(otherLines);
-            }
-
-            if (addUpdateCredentialsText)
+            allMessages.AddRange(otherLines);
+            if (withUpdatePrompt)
             {
                 allMessages.Add(string.Empty);
                 allMessages.Add(Resources.SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_);
@@ -313,105 +236,31 @@ namespace pwiz.Skyline.FileUI
 
             return TextUtil.LineSeparate(allMessages);
         }
-    }
 
-    public class WebDownloadClient : IDownloadClient
-    {
-        private IProgressMonitor ProgressMonitor { get; }
-        private IProgressStatus ProgressStatus { get; set; }
+        #endregion
 
-        public bool IsCancelled => ProgressMonitor != null && ProgressMonitor.IsCanceled;
-        public bool IsError => ProgressStatus != null && ProgressStatus.IsError;
-        public Exception Error => ProgressStatus?.ErrorException;
-
-        public WebDownloadClient(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
+        private void Download(SkypFile skyp, IProgressMonitor progressMonitor)
         {
-            ProgressMonitor = progressMonitor;
-            ProgressStatus = progressStatus;
-        }
+            var progressStatus = new ProgressStatus(string.Format(FileUIResources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()));
+            progressMonitor.UpdateProgress(progressStatus);
 
-        public void Download(SkypFile skyp)
-        {
-            using (var wc = new UTF8WebClient())
+            using var fileSaver = new FileSaver(skyp.DownloadPath);
+            skyp.DownloadTempPath = fileSaver.SafeName;
+            
+            using var httpClient = new HttpClientWithProgress(progressMonitor, progressStatus);
+            
+            // Add authorization header if credentials are available
+            if (skyp.HasCredentials())
             {
-                if (skyp.HasCredentials())
-                {
-                    wc.Headers.Add(HttpRequestHeader.Authorization, PanoramaServer.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
-                }
-
-                wc.DownloadProgressChanged += (s,e) =>
-                {
-                    // The Content-Length header is not set in the response from PanoramaWeb, so the ProgressPercentage remains 0
-                    // during the download. If the skyp includes the file size, use that to calculate progress percentage.
-                    var progressPercent = e.ProgressPercentage > 0 ? e.ProgressPercentage : -1;
-                    
-                    if (progressPercent == -1 && skyp.HasSize())
-                    {
-                        progressPercent = Math.Max(0, Math.Min(100, (int)(e.BytesReceived * 100 / skyp.Size)));
-                    }
-
-                    var downloaded = e.BytesReceived;
-                    var message = TextUtil.LineSeparate(
-                        string.Format(FileUIResources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()),
-                        string.Empty,
-                        GetDownloadedSize(downloaded, skyp.HasSize() ? (long)skyp.Size : 0));
-                    ProgressStatus = ProgressStatus.ChangeMessage(message);
-                    ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangePercentComplete(progressPercent));
-                };
-
-                var downloadComplete = false;
-                wc.DownloadFileCompleted += (s, e) =>
-                {
-                    if (e.Error != null && !ProgressMonitor.IsCanceled)
-                    {
-                        ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangeErrorException(SkypDownloadException.Create(skyp, e.Error)));
-                    }
-
-                    downloadComplete = true;
-                };
-
-                wc.DownloadFileAsync(skyp.SkylineDocUri, skyp.DownloadPath);
-
-                while (!downloadComplete)
-                {
-                   if (ProgressMonitor.IsCanceled)
-                    {
-                        wc.CancelAsync();
-                    }
-
-                    Thread.Sleep(100);
-                }
+                httpClient.AddAuthorizationHeader(
+                    PanoramaServer.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
             }
-        }
 
-        public static string GetDownloadedSize(long downloaded, long fileSize)
-        {
-            var formatProvider = new FileSizeFormatProvider();
-            if (fileSize > 0)
-            {
-                return string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded), string.Format(formatProvider, @"{0:fs1}", fileSize));
-            }
-            else
-            {
-                return string.Format(formatProvider, @"{0:fs1}", downloaded);
-            }
-        }
-    }
-
-    public interface IDownloadClient
-    {
-        void Download(SkypFile skyp);
-
-        bool IsCancelled { get; }
-        bool IsError { get; }
-        Exception Error { get; }
-    }
-
-    public class DownloadClientCreator
-    {
-        public virtual IDownloadClient Create(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
-        {
-            return new WebDownloadClient(progressMonitor, progressStatus);
+            // Use the known file size from .skyp file for accurate progress reporting
+            // If not available, HttpClientWithProgress will try Content-Length header
+            httpClient.DownloadFile(skyp.SkylineDocUri, skyp.SafePath, skyp.Size);
+            
+            fileSaver.Commit();
         }
     }
 }

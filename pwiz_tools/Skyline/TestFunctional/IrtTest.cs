@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestFunctional
              * Check that the database was created successfully
              * Check that it has the correct numbers of standard and library peptides
              */
-            IrtDb db = IrtDb.GetIrtDb(databasePath, null);
+            IrtDb db = IrtDb.GetIrtDb(databasePath);
 
             Assert.AreEqual(numStandardPeps, db.StandardPeptideCount);
             Assert.AreEqual(numLibraryPeps, db.LibraryPeptideCount);
@@ -709,6 +709,32 @@ namespace pwiz.SkylineTestFunctional
             // Used to cause a message box, but should work now, because iRT databases get loaded once
             RunUI(() => SkylineWindow.ChooseCalculator(irtCalc));
 
+            // Clear the IRT cache to simulate a restart with the missing .irtdb file.
+            // Re-choosing the calculator triggers regression recalculation with _calculator null.
+            // Before the fix, this caused NullReferenceException in InstanceData.Refine().
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
+            RunUI(() => SkylineWindow.SaveDocument());
+            RunUI(SkylineWindow.NewDocument);
+            RTScoreCalculatorList irtCalculatorList = null;
+            RunUI(() => irtCalculatorList = Settings.Default.RTScoreCalculatorList);
+            Settings.Default.RTScoreCalculatorList = null;  // Setting to null resets default
+            RunUI(SkylineWindow.IrtDbManager.ClearCache);
+            RunDlg<MissingFileDlg>(() => SkylineWindow.OpenFile(documentPath), dlg => dlg.OkDialog());
+
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
+            var regressionGraph = FindGraphSummaryByGraphType<RTLinearRegressionGraphPane>();
+            Assert.IsNotNull(regressionGraph);
+            Assert.IsTrue(regressionGraph.TryGetGraphPane<RTLinearRegressionGraphPane>(out var graphPane));
+            WaitForConditionUI(() => !graphPane.IsCalculating);
+            // All peptides should be outliers, since we cannot calculate iRTs without the database
+            // TODO(brendanx): Completely removing the named calculator should set the calculator used back to "Auto"
+            //                 and the case below should require setting the IRT-C18 calculator to uninitialized.
+            //                 and even that case should cause the graph to add a message that the calculator could
+            //                 not be loaded, presenting the path we tried to load it from. (See Issue #3939)
+            RunUI(() => Assert.AreEqual(SkylineWindow.Document.PeptideCount, graphPane.Outliers.Length));
+            RunUI(() => Settings.Default.RTScoreCalculatorList = irtCalculatorList);
+
             /*
              * Now clean up by deleting all these calculators. If we don't, then the next functional test
              * will fail because it will try to use a calculator from settings which will not have its
@@ -812,7 +838,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.NewDocument();
             });
             // The created irtdb should have document XML for the standard peptides
-            var irtDb = IrtDb.GetIrtDb(calcPath, null);
+            var irtDb = IrtDb.GetIrtDb(calcPath);
             Assert.IsFalse(string.IsNullOrEmpty(irtDb.DocumentXml));
             // Set RT regression to None
             RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(), dlg =>
@@ -1168,7 +1194,7 @@ namespace pwiz.SkylineTestFunctional
 
             void CheckIrtDbFile(bool expectDuplicates, out DbIrtPeptide[] arrStandards, out DbIrtPeptide[] arrLibrary, out Target[] arrOverlap)
             {
-                IrtDb.GetIrtDb(dbPath, null, out var dbPeptides);
+                IrtDb.GetIrtDb(dbPath, out var dbPeptides);
                 arrStandards = dbPeptides.Where(pep => pep.Standard).ToArray();
                 arrLibrary = dbPeptides.Where(pep => !pep.Standard).ToArray();
                 arrOverlap = arrStandards.Select(pep => pep.ModifiedTarget).Intersect(arrLibrary.Select(pep => pep.ModifiedTarget)).ToArray();
@@ -1394,7 +1420,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void CheckIrtDbFile()
         {
-            var db = IrtDb.GetIrtDb(_dbPath, null, out var dbPeptides);
+            var db = IrtDb.GetIrtDb(_dbPath, out var dbPeptides);
             Assert.AreEqual(_redundant, db.Redundant);
 
             var dbHistories = new Dictionary<long, List<double>>();

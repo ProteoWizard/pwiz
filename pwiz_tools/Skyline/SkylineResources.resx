@@ -970,6 +970,15 @@
   <data name="SkylineWindow_PublishToSavedUri_Upload_to_the_same_location_" xml:space="preserve">
     <value>Upload to the same location?</value>
   </data>
+  <data name="SkylineWindow_PublishToSavedUri_Validating_saved_folder" xml:space="preserve">
+    <value>Validating saved folder</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_The_server__0__is_not_in_your_list_of_Panorama_servers_" xml:space="preserve">
+    <value>The server {0} is not in your list of Panorama servers.</value>
+  </data>
+  <data name="SkylineWindow_PublishToSavedUri_Go_to_Tools___Options___Panorama_tab_to_add_the_server_to_your_settings_" xml:space="preserve">
+    <value>Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings.</value>
+  </data>
   <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
     <value>Reimporting chromatograms</value>
   </data>

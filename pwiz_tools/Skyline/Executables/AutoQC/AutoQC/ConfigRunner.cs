@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -33,7 +33,7 @@ using SharedBatch;
 
 namespace AutoQC
 {
-    public class ConfigRunner: IProcessControl, IConfigRunner
+    public class ConfigRunner: IProcessControl, IConfigRunner, IDisposable
     {
         private BackgroundWorker _worker;
 
@@ -1114,6 +1114,17 @@ namespace AutoQC
             return IsStopped() || IsError();
         }
 
+        public bool PanoramaUploadError
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _panoramaUploadError || _panoramaFatalError;
+                }
+            }
+        }
+
         public string ImportResultsFileArgs(ImportContext importContext)
         {
             // Get the current results time window
@@ -1236,6 +1247,12 @@ namespace AutoQC
             return false;
         }
 
+        public override int GetHashCode()
+        {
+            // Use RuntimeHelpers to get identity-based hash code matching reference-equality Equals
+            return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
+        }
+
         #region [Implementation of IProcessControl interface]
         public ProcStatus RunProcess(ProcessInfo processInfo)
         {
@@ -1249,6 +1266,14 @@ namespace AutoQC
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            _fileWatcher?.Dispose();
+            _fileWatcher = null;
+            _annotationsFileWatcher?.Dispose();
+            _annotationsFileWatcher = null;
+        }
     }
 
     public interface IProcessControl

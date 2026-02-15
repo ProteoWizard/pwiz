@@ -1,4 +1,4 @@
-﻿namespace TestArgCollector
+namespace TestArgCollector
 {
     partial class Form1
     {

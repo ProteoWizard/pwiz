@@ -1,4 +1,22 @@
-﻿using System;
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -23,17 +41,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
             Dictionary<MsDataFileUri, PiecewiseLinearMap> alignmentFunctions, ICollection<MsDataFileUri> filePaths)
         {
             _documentKey = new DocumentKey(document);
-            AlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
-            if (AlignmentTarget == null)
-            {
-                return;
-            }
             var measuredResults = document.MeasuredResults;
             if (measuredResults == null)
             {
                 return;
             }
-            _alignmentSources = GetAlignmentSources(document, filePaths);
+            _alignmentSources = GetAlignmentSources(document, null, filePaths);
 
             foreach (var chromatogramSet in measuredResults.Chromatograms)
             {
@@ -88,7 +101,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return alignmentFunction;
         }
 
-        public AlignmentTarget AlignmentTarget { get; private set; }
         public class AlignmentSource : Immutable
         {
             private int _targetsHashCode;
@@ -132,26 +144,32 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
         }
 
-        public static Dictionary<MsDataFileUri, AlignmentSource> GetAlignmentSources(SrmDocument document, ICollection<MsDataFileUri> dataFileUris)
+        public static Dictionary<MsDataFileUri, AlignmentSource> GetAlignmentSources(SrmDocument document, AlignmentTarget alignmentTarget, ICollection<MsDataFileUri> dataFileUris)
         {
             var result = new Dictionary<MsDataFileUri, AlignmentSource>();
+            bool useCurrentPeaks = alignmentTarget?.UseCurrentPeaks ?? false;
             
             var measuredResults = document.MeasuredResults;
             if (measuredResults == null)
             {
                 return result;
             }
-            Dictionary<Target, Tuple<PeptideDocNode, bool>> targets = new Dictionary<Target, Tuple<PeptideDocNode, bool>>();
+            Dictionary<Target, Tuple<PeptideDocNode, ImmutableList<Target>, bool>> targets = new Dictionary<Target, Tuple<PeptideDocNode, ImmutableList<Target>, bool>>();
             foreach (var molecule in document.Molecules)
             {
                 if (molecule.IsDecoy)
                 {
                     continue;
                 }
+
                 var target = molecule.ModifiedTarget;
                 if (molecule.HasResults && !targets.ContainsKey(target))
                 {
-                    targets.Add(target, Tuple.Create(molecule, molecule.AnyReintegratedPeaks()));
+                    var typedSequences = document.Settings.GetTargets(molecule).ToImmutable();
+                    if (alignmentTarget == null || alignmentTarget.ScoreTargets(typedSequences).HasValue)
+                    {
+                        targets.Add(target, Tuple.Create(molecule, typedSequences, molecule.AnyReintegratedPeaks()));
+                    }
                 }
             }
 
@@ -173,19 +191,29 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
                     var fileTargets = new List<ImmutableList<Target>>();
                     var retentionTimes = new List<float>();
-                    foreach (var (molecule, anyReintegrated) in orderedMolecules)
+                    foreach (var (molecule, typedSequences, anyReintegrated) in orderedMolecules)
                     {
                         foreach (var transitionGroup in molecule.TransitionGroups)
                         {
                             var transitionGroupChromInfo =
                                 transitionGroup.GetChromInfo(iReplicate, chromFileInfo.FileId);
-                            var scoredPeak = anyReintegrated
-                                ? transitionGroupChromInfo?.ReintegratedPeak
-                                : transitionGroupChromInfo?.OriginalPeak;
-                            if (null != scoredPeak)
+                            float? apexTime;
+                            if (useCurrentPeaks)
                             {
-                                fileTargets.Add(document.Settings.GetTargets(molecule).ToImmutable());
-                                retentionTimes.Add(scoredPeak.ApexTime);
+                                apexTime = transitionGroupChromInfo?.RetentionTime;
+                            }
+                            else if (anyReintegrated)
+                            {
+                                apexTime = transitionGroupChromInfo?.ReintegratedPeak?.ApexTime;
+                            }
+                            else
+                            {
+                                apexTime = transitionGroupChromInfo?.OriginalPeak?.ApexTime;
+                            }
+                            if (apexTime.HasValue)
+                            {
+                                fileTargets.Add(typedSequences);
+                                retentionTimes.Add(apexTime.Value);
                                 break;
                             }
                         }
@@ -214,35 +242,25 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             var result = ChangeProp(ImClone(this), im =>
             {
-                im.AlignmentTarget = target;
                 im._documentKey = new DocumentKey(newDocument);
             });
-            var newSources = target == null ? new Dictionary<MsDataFileUri, AlignmentSource>() : GetAlignmentSources(newDocument, dataFiles);
+            var newSources = GetAlignmentSources(newDocument, target, dataFiles);
             if (CollectionUtil.EqualsDeep(_alignmentSources, newSources))
             {
-                if (Equals(target, AlignmentTarget))
-                {
-                    return result;
-                }
+                return result;
             }
+
             var missingSources = new List<AlignmentSource>();
             var newAlignmentFunctions = new Dictionary<AlignmentSource, PiecewiseLinearMap>();
-            if (!Equals(target, AlignmentTarget))
+            foreach (var newSource in newSources.Values.Distinct())
             {
-                missingSources.AddRange(newSources.Values.Distinct());
-            }
-            else
-            {
-                foreach (var newSource in newSources.Values.Distinct())
+                if (_alignmentFunctions.TryGetValue(newSource, out var alignmentFunction))
                 {
-                    if (_alignmentFunctions.TryGetValue(newSource, out var alignmentFunction))
-                    {
-                        newAlignmentFunctions.Add(newSource, alignmentFunction);
-                    }
-                    else
-                    {
-                        missingSources.Add(newSource);
-                    }
+                    newAlignmentFunctions.Add(newSource, alignmentFunction);
+                }
+                else
+                {
+                    missingSources.Add(newSource);
                 }
             }
 
@@ -333,22 +351,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return Equals(EMPTY);
             }
-            var newAlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
-            if (!Equals(newAlignmentTarget, AlignmentTarget))
-            {
-                return false;
-            }
-
-            if (newAlignmentTarget == null)
-            {
-                return true;
-            }
             return Equals(new DocumentKey(document), _documentKey);
         }
 
         protected bool Equals(ResultFileAlignments other)
         {
-            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions) && Equals(AlignmentTarget, other.AlignmentTarget);
+            return CollectionUtil.EqualsDeep(_alignmentSources, other._alignmentSources) && CollectionUtil.EqualsDeep(_alignmentFunctions, other._alignmentFunctions);
         }
 
         public override bool Equals(object obj)
@@ -365,7 +373,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 var hashCode = _alignmentSources != null ? CollectionUtil.GetHashCodeDeep(_alignmentSources) : 0;
                 hashCode = (hashCode * 397) ^ (_alignmentFunctions != null ? CollectionUtil.GetHashCodeDeep(_alignmentFunctions) : 0);
-                hashCode = (hashCode * 397) ^ (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
                 return hashCode;
             }
         }

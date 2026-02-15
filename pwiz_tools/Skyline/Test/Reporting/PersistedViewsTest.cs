@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,11 +17,14 @@
  * limitations under the License.
  */
 
-using System.Linq;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using System.Linq;
+using System.Xml.Serialization;
 
 namespace pwiz.SkylineTest.Reporting
 {
@@ -50,6 +53,24 @@ namespace pwiz.SkylineTest.Reporting
                     
                     CollectionAssert.AreEquivalent(cleanViews, upgragedViews, 
                         "Upgraded from rev {0} in group {1}", oldRevision, group);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestPersistedViews()
+        {
+            var reportListsByVersion = PersistedViews.GetReportListsByVersion().ToList();
+            Assert.AreEqual(reportListsByVersion.Count, Settings.Default.PersistedViews.RevisionIndexCurrent, "Number of elements in PersistedViews.GetReportListsByVersion() must be equal to RevisionIndexCurrent");
+            var localizedNames = PersistedViews.GetLocalizedReportNames();
+            var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
+
+            foreach (var reportList in reportListsByVersion)
+            {
+                var viewSpecList = (ViewSpecList)xmlSerializer.Deserialize(new StringReader(reportList));
+                foreach (var viewSpec in viewSpecList.ViewSpecs)
+                {
+                    Assert.IsTrue(localizedNames.ContainsKey(viewSpec.Name), "{0} needs to have entry in PersistedViews.GetLocalizedReportNames", viewSpec.Name);
                 }
             }
         }

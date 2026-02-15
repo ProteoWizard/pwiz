@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.GUI;
+using pwiz.Common.SystemUtil;
 using SharedBatch;
 using SkylineBatch.Properties;
 using pwiz.PanoramaClient;
@@ -162,7 +163,10 @@ namespace SkylineBatch
                 
                 using (var dlg = new PanoramaDirectoryPicker(panoramaServers, state, false, decodedUrl))
                 {
-                    dlg.InitializeDialog(); // TODO: Should use a LongOperationRunner to show busy-wait UI
+                    // Load server data before showing dialog
+                    // TODO: Should use LongWaitDlg.PerformWork() to show busy-wait UI with progress monitor
+                    dlg.LoadServerData(new SilentProgressMonitor());
+                    
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
                         dlg.OkButtonText = "Select";

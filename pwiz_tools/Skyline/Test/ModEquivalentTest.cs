@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Shannon Joyner <sjoyner .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

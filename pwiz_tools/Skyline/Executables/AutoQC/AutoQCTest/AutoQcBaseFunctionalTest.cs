@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -122,6 +122,22 @@ namespace AutoQCTest
                 configRunner => configRunner.Waiting, out var timeout, out _))
             {
                 Assert.Fail(@"Timeout {0} seconds exceeded in WaitForConfigRunnerWaiting.", timeout);
+            }
+        }
+
+        protected void WaitForPanoramaUploadSuccess(MainForm mainForm, int configIndex)
+        {
+            // First wait for the config to be in a waiting state (indicating upload is complete)
+            WaitForConfigRunnerWaiting(mainForm, configIndex);
+
+            // Then verify there was no upload error
+            var configRunner = mainForm.GetConfigRunner(configIndex);
+            Assert.IsNotNull(configRunner);
+
+            if (configRunner.PanoramaUploadError)
+            {
+                var logFilePath = configRunner.GetLogger().LogFile;
+                Assert.Fail($"Panorama upload failed with an error. Check the log file for details: {logFilePath}");
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -35,6 +35,7 @@ namespace pwiz.Skyline.FileUI
             this.radioSingle = new System.Windows.Forms.RadioButton();
             this.radioProtein = new System.Windows.Forms.RadioButton();
             this.radioBuckets = new System.Windows.Forms.RadioButton();
+            this.wcDecideBuckets = new System.Windows.Forms.RadioButton();
             this.textMaxTransitions = new System.Windows.Forms.TextBox();
             this.labelMaxTransitions = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -132,6 +133,15 @@ namespace pwiz.Skyline.FileUI
             this.helpTip.SetToolTip(this.radioBuckets, resources.GetString("radioBuckets.ToolTip"));
             this.radioBuckets.UseVisualStyleBackColor = true;
             this.radioBuckets.CheckedChanged += new System.EventHandler(this.radioBuckets_CheckedChanged);
+            // 
+            // wcDecideBuckets
+            // 
+            resources.ApplyResources(this.wcDecideBuckets, "wcDecideBuckets");
+            this.wcDecideBuckets.Name = "wcDecideBuckets";
+            this.wcDecideBuckets.TabStop = true;
+            this.helpTip.SetToolTip(this.wcDecideBuckets, resources.GetString("wcDecideBuckets.ToolTip"));
+            this.wcDecideBuckets.UseVisualStyleBackColor = true;
+            this.wcDecideBuckets.CheckedChanged += new System.EventHandler(this.wcDecideBuckets_CheckedChanged);
             // 
             // textMaxTransitions
             // 
@@ -351,8 +361,7 @@ namespace pwiz.Skyline.FileUI
             this.cbExportSciexOSQuantMethod.Name = "cbExportSciexOSQuantMethod";
             this.helpTip.SetToolTip(this.cbExportSciexOSQuantMethod, resources.GetString("cbExportSciexOSQuantMethod.ToolTip"));
             this.cbExportSciexOSQuantMethod.UseVisualStyleBackColor = true;
-            this.cbExportSciexOSQuantMethod.CheckedChanged +=
-                new System.EventHandler(this.cbExportSciexOSQuantMethod_CheckedChanged);
+            this.cbExportSciexOSQuantMethod.CheckedChanged += new System.EventHandler(this.cbExportSciexOSQuantMethod_CheckedChanged);
             // 
             // textIntensityThreshold
             // 
@@ -563,6 +572,7 @@ namespace pwiz.Skyline.FileUI
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.textMaxTransitions);
             this.Controls.Add(this.radioBuckets);
+            this.Controls.Add(this.wcDecideBuckets);
             this.Controls.Add(this.radioProtein);
             this.Controls.Add(this.radioSingle);
             this.Controls.Add(this.panelAbSciexTOF);
@@ -605,6 +615,7 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.RadioButton radioSingle;
         private System.Windows.Forms.RadioButton radioProtein;
         private System.Windows.Forms.RadioButton radioBuckets;
+        private System.Windows.Forms.RadioButton wcDecideBuckets;
         private System.Windows.Forms.TextBox textMaxTransitions;
         private System.Windows.Forms.Label labelMaxTransitions;
         private System.Windows.Forms.Button btnCancel;

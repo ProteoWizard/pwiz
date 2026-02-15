@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -238,6 +238,7 @@ namespace ResourcesOrganizer
             if (languages.Count == 1)
             {
                 yield return new LanguageFilePath(languages[0], fullPath);
+                yield break;
             }
 
             foreach (var language in languages)

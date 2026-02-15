@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestUtil
             {
                 return null;
             }
-            return (WatersConnectAccount)WatersConnectAccount.DEFAULT.ChangeUsername("skyline")
+            return (WatersConnectAccount)WatersConnectAccount.DEV_DEFAULT.ChangeUsername("skyline")
                 .ChangePassword(password);
 
         }

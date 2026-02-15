@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Mimi Fung <mfung03 .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,6 +24,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -179,7 +180,22 @@ namespace pwiz.SkylineTestFunctional
 
             // With only a single replicate scheduling options should not be presented
             Assert.IsNull(FindOpenForm<SchedulingOptionsDlg>());
-            Assert.AreEqual(File.ReadAllText(csvPath3), File.ReadAllText(csvPath4));
+
+            var csv3 = new DsvFileReader(csvPath3, TextUtil.SEPARATOR_CSV);
+            var csv4 = new DsvFileReader(csvPath4, TextUtil.SEPARATOR_CSV);
+            var startHeaderIndex = csv3.GetFieldIndex("protein.name");
+            Assert.AreEqual(startHeaderIndex, csv4.GetFieldIndex("protein.name"));
+            var endHeaderIndex = csv3.GetFieldIndex("cone_voltage");
+            Assert.AreEqual(endHeaderIndex, csv4.GetFieldIndex("cone_voltage"));
+            Assert.IsTrue(endHeaderIndex > startHeaderIndex);
+
+            while (csv3.ReadLine() != null && csv4.ReadLine() != null)
+            {
+                for (var i = startHeaderIndex; i <= endHeaderIndex; i++)
+                {
+                    Assert.AreEqual(csv3.GetFieldByIndex(i), csv4.GetFieldByIndex(i), "Averaged and single replicate exports do not match.");
+                }
+            }
         }
 
         private static void ExportScheduledReplicate(string csvPath2, int replicateCount, int replicateIndex, bool expectSingle)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -24,6 +24,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 using TestRunnerLib.PInvoke;
 using Timer = System.Windows.Forms.Timer;
 
@@ -396,10 +397,12 @@ namespace SkylineTester
                 _process.ErrorDataReceived += HandleOutput;
                 _process.Exited += ProcessExit;
             }
+
+            _processName = Path.GetFileNameWithoutExtension(exe);
+            var process = _process;
             _process.Start();
-            _processName = _process.ProcessName;
-            _process.BeginOutputReadLine();
-            _process.BeginErrorReadLine();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
             ResetLastOutputTime();
         }
 
@@ -506,7 +509,6 @@ namespace SkylineTester
                 return;
 
             var exitCode = _process.ExitCode; // That's all the info you can get from a process that has exited - no name etc
-            var processName = _process.ToString();
             _process = null;
             bool processKilled = _processKilled;
             _processKilled = false;
@@ -531,7 +533,7 @@ namespace SkylineTester
                 try
                 {
                     if (!processKilled)
-                        Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + exitCode + Environment.NewLine);
+                        Log(Environment.NewLine + "# Process " + (_processName??string.Empty) + " had nonzero exit code " + Kernel32.FormatExitCode(exitCode) + Environment.NewLine);
                     RunUI(() => CommandsDone(_restartOnProcessFailure && !processKilled ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop));
                 }
 // ReSharper disable once EmptyGeneralCatchClause

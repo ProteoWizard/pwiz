@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Rita Chupalov <ritach .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -114,6 +114,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Only make visible on first draw
             EnsureVisible();
+
+            // Move progress bar to end of GraphObjList to render on top of labels
+            // (items with same ZOrder render in list order)
+            GraphPane.GraphObjList.Remove(_left);
+            GraphPane.GraphObjList.Remove(_right);
+            GraphPane.GraphObjList.Add(_left);
+            GraphPane.GraphObjList.Add(_right);
 
             var len1 = _barWidth * progress / 100;
 

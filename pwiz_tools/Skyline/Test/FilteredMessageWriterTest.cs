@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

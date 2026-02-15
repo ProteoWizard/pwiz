@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,7 +18,6 @@
  */
 using System.Drawing;
 using System.Globalization;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Controls.Graphs

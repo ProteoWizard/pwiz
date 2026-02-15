@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.SettingsUI
 {
     partial class EditCEDlg
     {
@@ -37,7 +37,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.gridRegression = new pwiz.Common.Controls.CommonDataGridView();
+            this.gridRegression = new pwiz.Skyline.Controls.DataGridViewEx();
             this.Charge = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Slope = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Intercept = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -221,7 +221,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
-        private pwiz.Common.Controls.CommonDataGridView gridRegression;
+        private pwiz.Skyline.Controls.DataGridViewEx gridRegression;
         private System.Windows.Forms.DataGridViewTextBoxColumn Charge;
         private System.Windows.Forms.DataGridViewTextBoxColumn Slope;
         private System.Windows.Forms.DataGridViewTextBoxColumn Intercept;

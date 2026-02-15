@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -79,5 +79,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public double? IsolationWindowWidth { get; private set; }
         
         public string DissociationMethod { get; private set; }
+        
+        [Format(Formats.Mz)]
+        public double? ConstantNeutralLoss { get; private set; } // Negative value means neutral gain
+
     }
 }

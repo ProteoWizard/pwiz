@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
@@ -166,7 +166,7 @@ namespace SkylineBatchTest
 
         public void OpenFromPanorama(string server, string user, string pass, JToken folderJson)
         {
-            using var dlg = new PanoramaDirectoryPicker(new Uri(server), user, pass, folderJson);
+            using var dlg = new PanoramaDirectoryPicker(new PanoramaServer(new Uri(server), user, pass), folderJson);
             dlg.ShowDialog();
         }
 
@@ -284,10 +284,13 @@ namespace SkylineBatchTest
 
         public void TestImportRemoteFileSource(MainForm mainForm)
         {
-            var brudererBcfgSeperateSources = Path.Combine(TestFolder, "Bruderer_SeperateFileSources.bcfg");
+            // Create temp copies with current R version to avoid R version validation errors
+            // Using declarations ensure FileSaver cleanup at end of method scope
+            var brudererBcfgSeperateSourcesOrig = Path.Combine(TestFolder, "Bruderer_SeperateFileSources.bcfg");
+            using var fileSaver1 = TestUtils.CreateBcfgWithCurrentRVersion(brudererBcfgSeperateSourcesOrig);
             RunUI(() =>
             {
-                mainForm.DoImport(brudererBcfgSeperateSources);
+                mainForm.DoImport(fileSaver1.SafeName);
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
                 mainForm.ClickConfig(0);
             });
@@ -304,10 +307,11 @@ namespace SkylineBatchTest
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             mainForm.ClearRemoteFileSources();
 
-            var brudererBcfgOneSource = Path.Combine(TestFolder, "Bruderer_OneFileSource.bcfg");
+            var brudererBcfgOneSourceOrig = Path.Combine(TestFolder, "Bruderer_OneFileSource.bcfg");
+            using var fileSaver2 = TestUtils.CreateBcfgWithCurrentRVersion(brudererBcfgOneSourceOrig);
             RunUI(() =>
             {
-                mainForm.DoImport(brudererBcfgOneSource);
+                mainForm.DoImport(fileSaver2.SafeName);
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
                 mainForm.ClickConfig(1);
             });
@@ -324,10 +328,13 @@ namespace SkylineBatchTest
 
         public void TestReplaceRemoteFileSources(MainForm mainForm)
         {
-            var brudererBcfgSeperateSources = Path.Combine(TestFolder, "Bruderer_SeperateFileSources.bcfg");
+            // Create temp copies with current R version to avoid R version validation errors
+            // Using declarations ensure FileSaver cleanup at end of method scope
+            var brudererBcfgSeperateSourcesOrig = Path.Combine(TestFolder, "Bruderer_SeperateFileSources.bcfg");
+            using var fileSaver1 = TestUtils.CreateBcfgWithCurrentRVersion(brudererBcfgSeperateSourcesOrig);
             RunUI(() =>
             {
-                mainForm.DoImport(brudererBcfgSeperateSources);
+                mainForm.DoImport(fileSaver1.SafeName);
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
                 mainForm.ClickConfig(0);
             });
@@ -378,10 +385,11 @@ namespace SkylineBatchTest
             RunUI(() => FunctionalTestUtil.ClearConfigs(mainForm));
             mainForm.ClearRemoteFileSources();
 
-            var brudererBcfgOneSource = Path.Combine(TestFolder, "Bruderer_OneFileSource.bcfg");
+            var brudererBcfgOneSourceOrig = Path.Combine(TestFolder, "Bruderer_OneFileSource.bcfg");
+            using var fileSaver2 = TestUtils.CreateBcfgWithCurrentRVersion(brudererBcfgOneSourceOrig);
             RunUI(() =>
             {
-                mainForm.DoImport(brudererBcfgOneSource);
+                mainForm.DoImport(fileSaver2.SafeName);
                 FunctionalTestUtil.CheckConfigs(2, 0, mainForm);
                 mainForm.ClickConfig(1);
             });
@@ -393,20 +401,20 @@ namespace SkylineBatchTest
             {
                 var remoteSourceForm = ShowDialog<RemoteSourceForm>(() =>
                 dataRemoteFileControl.comboRemoteFileSource.SelectedItem = "<Edit current...>");
-            ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK, closeForm: false);
-            RunDlg<CommonAlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
-                dlg =>
-                {
-                    var expectedMessage =
-                        Resources
-                            .SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ +
-                        Environment.NewLine + Environment.NewLine +
-                        "Bruderer" + Environment.NewLine + "Bruderer (MSstats)" + Environment.NewLine +
-                        Environment.NewLine +
-                        Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_;
-                    Assert.AreEqual(expectedMessage, dlg.Message);
-                    dlg.ClickOk();
-                });
+                ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, SELEVSEK_FOLDER_LINK, closeForm: false);
+                RunDlg<CommonAlertDlg>(() => remoteSourceForm.btnSave.PerformClick(),
+                    dlg =>
+                    {
+                        var expectedMessage =
+                            Resources
+                                .SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Changing_this_file_source_will_impact_the_following_configurations_ +
+                            Environment.NewLine + Environment.NewLine +
+                            "Bruderer" + Environment.NewLine + "Bruderer (MSstats)" + Environment.NewLine +
+                            Environment.NewLine +
+                            Resources.SkylineBatchConfigManagerState_ReplaceRemoteFileSource_Do_you_want_to_continue_;
+                        Assert.AreEqual(expectedMessage, dlg.Message);
+                        dlg.ClickOk();
+                    });
             }
             RunUI(() => dataRemoteFileControl.textRelativePath.Text = string.Empty);
             CloseFormsInOrder(true, dataRemoteFileForm);

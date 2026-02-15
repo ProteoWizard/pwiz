@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -92,12 +92,12 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             var scoreToRunGraphPane = GetScoreToRunGraphPane();
             Assert.IsNotNull(scoreToRunGraphPane);
-            WaitForCondition(() => !scoreToRunGraphPane.IsCalculating);
+            WaitForCondition(() => scoreToRunGraphPane.IsComplete);
             foreach (var rtOption in RtCalculatorOption.GetOptions(SkylineWindow.Document))
             {
                 RunUI(() => SkylineWindow.ChooseCalculator(rtOption));
                 WaitForGraphs();
-                WaitForCondition(() => !scoreToRunGraphPane.IsCalculating);
+                WaitForCondition(() => scoreToRunGraphPane.IsComplete);
             }
 
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>

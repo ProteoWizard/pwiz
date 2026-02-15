@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestFunctional
             _deployment.UpdateVersion = new Version(3, 7, 1, 10173);
             upgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
             Assert.IsTrue(upgradeDlg.UpdateFound);
-            Assert.AreEqual("3.7", upgradeDlg.VersionText);
+            Assert.AreEqual("3.7.1.10173", upgradeDlg.VersionText);
             OkDialog(upgradeDlg, upgradeDlg.AcceptButton.PerformClick);
             longWaitDlg = WaitForOpenForm<LongWaitDlg>();
             OkDialog(longWaitDlg, longWaitDlg.CancelDialog);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. protein.ms>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -116,8 +116,8 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
                 exportDialog.OptimizeType = ExportOptimize.NONE;
                 exportDialog.WriteCompensationVoltages = true;
             });
-            MultiButtonMsgDlg errDlg1 = null;
-            ShowAndDismissDlg<MultiButtonMsgDlg>(() => exportDialog.OkDialog(filePathActual),
+            MessageDlg errDlg1 = null;
+            ShowAndDismissDlg<MessageDlg>(() => exportDialog.OkDialog(filePathActual),
                 // Expect The_settings_for_this_document_do_not_match_the_instrument_type...
                 errDlg =>
                 {
@@ -125,7 +125,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
                     RunUI(errDlg.ClickNo);
                 });
             // Expect You_are_missing_compensation_voltages_for_the_following...
-            var errDlg2 = FindOpenForms<MultiButtonMsgDlg>().FirstOrDefault(f => f != errDlg1);
+            var errDlg2 = FindOpenForms<MultiButtonMsgDlg>().Single();
             // ReSharper disable once PossibleNullReferenceException
             RunUI(errDlg2.ClickOk); 
 

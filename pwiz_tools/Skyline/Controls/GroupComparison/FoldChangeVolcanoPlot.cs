@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -33,7 +33,6 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -64,7 +63,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         //
         private static readonly Dictionary<string, List<LabeledPoint.PointLayout>> _labelsLayouts = new Dictionary<string, List<LabeledPoint.PointLayout>>();
 
-        private FoldChangeBindingSource.FoldChangeRow _selectedRow;
+        private FoldChangeRow _selectedRow;
 
         private NodeTip _tip;
         private RowFilter.ColumnFilter _absLog2FoldChangeFilter;
@@ -360,7 +359,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 var row = colorRow;
                 var matchedPoints = otherPoints.Where(p =>
                 {
-                    var foldChangeRow = (FoldChangeBindingSource.FoldChangeRow) p.Tag;
+                    var foldChangeRow = (FoldChangeRow) p.Tag;
                     return row.MatchExpression.Matches(Document, foldChangeRow.Protein, foldChangeRow.Peptide,
                         foldChangeRow.FoldChangeResult, CutoffSettings);
                 }).ToArray();
@@ -457,7 +456,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 foreach (var point in points)
                 {
-                    var row = (FoldChangeBindingSource.FoldChangeRow)point.Tag;
+                    var row = (FoldChangeRow)point.Tag;
                     if (row == null)
                     {
                         continue;
@@ -522,7 +521,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (lineItem == null || index < 0 || index >= lineItem.Points.Count || lineItem[index].Tag == null)
                     return false;
 
-                _selectedRow = (FoldChangeBindingSource.FoldChangeRow) lineItem[index].Tag;
+                _selectedRow = (FoldChangeRow) lineItem[index].Tag;
                 isSelected = true;
             }
             else   // Moving over a label in an active layout
@@ -532,7 +531,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     if (!isOverBoundary)
                     {
-                        _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labPoint.Point.Tag;
+                        _selectedRow = (FoldChangeRow)labPoint.Point.Tag;
                         isSelected = true;
                     }
                 }
@@ -546,7 +545,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                             var labels = LabeledPoints.FindAll(lp => lp.Label.Equals(nearestText));
                             if (labels.Any())
                             {
-                                _selectedRow = (FoldChangeBindingSource.FoldChangeRow)labels.First().Point.Tag;
+                                _selectedRow = (FoldChangeRow)labels.First().Point.Tag;
                                 isSelected = true;
                             }
                         }
@@ -642,7 +641,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return e.Button.HasFlag(MouseButtons.Left) && ClickSelectedRow();
         }
 
-        public static SkylineDocNode GetSkylineDocNodeFromRow(FoldChangeBindingSource.FoldChangeRow row)
+        public static SkylineDocNode GetSkylineDocNodeFromRow(FoldChangeRow row)
         {
             if (row.Peptide != null)
                 return row.Peptide;
@@ -959,7 +958,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             _bindingListSource.SetViewContext(_bindingListSource.ViewContext,
                 new ViewInfo(_bindingListSource.ViewInfo.DataSchema,
-                    typeof(FoldChangeBindingSource.FoldChangeRow),
+                    typeof(FoldChangeRow),
                     _bindingListSource.ViewSpec.SetColumns(columns)));
         }
 
@@ -990,9 +989,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public bool UpdatePending { get { return _updatePending; } }
 
-        public FoldChangeBindingSource.FoldChangeRow GetSelectedRow()
+        public FoldChangeRow GetSelectedRow()
         {
-            return zedGraphControl.GraphPane.CurveList[0].Points[0].Tag as FoldChangeBindingSource.FoldChangeRow;
+            return zedGraphControl.GraphPane.CurveList[0].Points[0].Tag as FoldChangeRow;
         }
 
         public Point GraphToScreenCoordinates(double x, double y)
@@ -1019,7 +1018,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             for (var i = 0; i < otherPoints.Count; ++i)
             {
                 var pair = otherPoints[i];
-                var row = (FoldChangeBindingSource.FoldChangeRow) pair.Tag;
+                var row = (FoldChangeRow) pair.Tag;
                 var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
 
                 if ((!CutoffSettings.FoldChangeCutoffValid || row.FoldChangeResult.AbsLog2FoldChange > CutoffSettings.Log2FoldChangeCutoff) &&

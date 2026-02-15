@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
@@ -63,7 +62,7 @@ namespace pwiz.Skyline.Model
                 {
                     progressMonitor?.ProcessMolecule(peptide);
 
-                    if (_settings.PointsType == PointsTypePeakArea.decoys != peptide.IsDecoy)
+                    if (_settings.UseDecoyPoints != peptide.IsDecoy)
                         continue;
 
                     CalibrationCurveFitter calibrationCurveFitter = null;
@@ -277,7 +276,7 @@ namespace pwiz.Skyline.Model
 
             foreach (var transitionGroupDocNode in document.MoleculeTransitionGroups)
             {
-                if ((_settings.PointsType == PointsTypePeakArea.decoys) != transitionGroupDocNode.IsDecoy)
+                if (_settings.UseDecoyPoints != transitionGroupDocNode.IsDecoy)
                     continue;
 
                 var detections = 0;
@@ -306,7 +305,7 @@ namespace pwiz.Skyline.Model
 
         private bool ShouldUseQValues(SrmDocument document)
         {
-            return _settings.PointsType == PointsTypePeakArea.targets &&
+            return !_settings.UseDecoyPoints &&
                    document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
                    !double.IsNaN(_settings.QValueCutoff) && _settings.QValueCutoff < 1.0;
         }
@@ -417,7 +416,7 @@ namespace pwiz.Skyline.Model
         public NormalizeOption NormalizeOption { get; protected set; }
         public ReplicateValue Group { get; protected set; }
         public object Annotation { get; protected set; }
-        public PointsTypePeakArea PointsType { get; protected set; }
+        public bool UseDecoyPoints { get; protected set; }
         public double QValueCutoff { get; protected set; }
         public double CVCutoff { get; protected set; }
         public int MinimumDetections { get; protected set; }
@@ -427,7 +426,7 @@ namespace pwiz.Skyline.Model
             return MsLevel == other.MsLevel &&
                    Transitions == other.Transitions && CountTransitions == other.CountTransitions &&
                    NormalizeOption == other.NormalizeOption && Equals(Group, other.Group) &&
-                   Equals(Annotation, other.Annotation) && PointsType == other.PointsType &&
+                   Equals(Annotation, other.Annotation) && UseDecoyPoints == other.UseDecoyPoints &&
                    QValueCutoff.Equals(other.QValueCutoff) && CVCutoff.Equals(other.CVCutoff) &&
                    MinimumDetections == other.MinimumDetections;
         }
@@ -450,7 +449,7 @@ namespace pwiz.Skyline.Model
                 hashCode = (hashCode * 397) ^ NormalizeOption.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Group != null ? Group.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Annotation != null ? Annotation.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (int) PointsType;
+                hashCode = (hashCode * 397) ^ (UseDecoyPoints ? 1 :0);
                 hashCode = (hashCode * 397) ^ QValueCutoff.GetHashCode();
                 hashCode = (hashCode * 397) ^ CVCutoff.GetHashCode();
                 hashCode = (hashCode * 397) ^ MinimumDetections;

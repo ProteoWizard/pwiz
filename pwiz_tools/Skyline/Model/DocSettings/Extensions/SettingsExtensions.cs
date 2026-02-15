@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 
 namespace pwiz.Skyline.Model.DocSettings.Extensions
 {
@@ -57,6 +58,12 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
             ChangeFunc<PeptideModifications> change)
         {
             return settings.ChangePeptideSettings(setP => setP.ChangeModifications(change(setP.Modifications)));
+        }
+
+        public static SrmSettings ChangePeptideQuantification(this SrmSettings settings,
+            ChangeFunc<QuantificationSettings> change)
+        {
+            return settings.ChangePeptideSettings(setP => setP.ChangeAbsoluteQuantification(change(setP.Quantification)));
         }
 
         public static SrmSettings ChangePeptideIntegration(this SrmSettings settings,

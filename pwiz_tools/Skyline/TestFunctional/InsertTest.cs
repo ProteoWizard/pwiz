@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -152,6 +152,50 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(noErrDlg, noErrDlg.OkDialog);
                 OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
             }
+
+            // Test for issue #3814: IndexOutOfRangeException with malformed transition list rows
+            TestMalformedTransitionListWithAssociateProteins();
+        }
+
+        // Test for issue #3814: IndexOutOfRangeException with malformed transition list rows
+        // Formerly would crash with IndexOutOfRangeException when Associate Proteins is enabled
+        // because some rows have fewer columns than expected
+        private void TestMalformedTransitionListWithAssociateProteins()
+        {
+            // Create a transition list with some rows missing columns
+            // Row 1: Complete (peptide, precursor, product)
+            // Row 2: Missing product m/z (only peptide, precursor)
+            // Row 3: Complete (peptide, precursor, product)
+            // Row 4: Only peptide
+            var malformedText =
+                "TANDVLTIR	501.778	830.474\n" +
+                "VQSAVLGFPR	537.308\n" +
+                "YHIEEEGSR	560.2523	819.3851\n" +
+                "SIVPSGASTGVHEALEMR";
+            malformedText = malformedText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+
+            var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = malformedText);
+            WaitForConditionUI(() => columnSelectDlg.WindowShown);
+            
+            RunUI(() => columnSelectDlg.checkBoxAssociateProteins.Checked = true);
+            
+            // Wait for associate proteins preview to attempt processing
+            // This would formerly throw IndexOutOfRangeException on the malformed rows
+            WaitForConditionUI(() => columnSelectDlg.AssociateProteinsPreviewCompleted);
+
+            // Test for exception #73851: ArgumentOutOfRangeException in dataGrid_MouseMove
+            // when hovering over row 0 (combo-box placeholder) or the trailing "..." row
+            // while protein association is active
+            RunUI(() =>
+            {
+                // Row 0 is the combo-box placeholder - formerly caused _proteinList[-1] access
+                columnSelectDlg.TestMouseMoveToGridCell(0, 0);
+                // Also test the last row which may be a trailing "..." indicator
+                columnSelectDlg.TestMouseMoveToGridCell(0, columnSelectDlg.DataGridRowCount - 1);
+            });
+
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
         }
 
         private static void PastePeptides(PasteDlg pasteDlg, BackgroundProteome.DuplicateProteinsFilter duplicateProteinsFilter, 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -45,6 +45,8 @@ namespace pwiz.Skyline.Alerts
             };
             layout.RowCount = gridValues.Count + 2; // empty first and last row
             layout.ColumnCount = 2; // key and value
+            layout.ColumnStyles.Add(new ColumnStyle());
+            layout.ColumnStyles.Add(new ColumnStyle());
             foreach (ColumnStyle style in layout.ColumnStyles)
             {
                 style.Width = 50;

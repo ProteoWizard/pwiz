@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
     public class MedianNormalizationTest : AbstractFunctionalTest
     {
         private const string REPORTNAME_RESULTFILE_NORMALIZATION = "File Normalization Values";
-        private const string REPORTNAME_PROTEINABUNDANCES = "Protein Abundances";
+        private const string REPORTNAME_PROTEINABUNDANCES = "Protein Abundances Test";
         private const string ANNOTIONNAME_DIAGNOSIS = "Diagnosis";
         [TestMethod]
         public void TestMedianNormalization()
@@ -386,7 +386,7 @@ namespace pwiz.SkylineTestFunctional
             var dictionary = new Dictionary<IdentityPath, double>();
             foreach (RowItem rowItem in foldChangeGrid.DataboundGridControl.BindingListSource)
             {
-                var foldChangeRow = (FoldChangeBindingSource.FoldChangeRow) rowItem.Value;
+                var foldChangeRow = (FoldChangeRow) rowItem.Value;
                 if (foldChangeRow.MsLevel == 2)
                 {
                     var identityPath = foldChangeRow.Peptide?.IdentityPath ?? foldChangeRow.Protein.IdentityPath;

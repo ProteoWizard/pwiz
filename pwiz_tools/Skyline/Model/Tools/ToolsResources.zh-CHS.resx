@@ -244,4 +244,64 @@
   <data name="ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run" xml:space="preserve">
     <value>此工具需要运行有效的重复测定名称</value>
   </data>
+  <data name="NvidiaInstaller_Setup_Nvidia_Libraries" xml:space="preserve">
+    <value>正在设置 Nvidia GPU 库</value>
+  </data>
+  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+    <value>安装包</value>
+  </data>
+  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+    <value>安装 Pip</value>
+  </data>
+  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+    <value>安装 Python</value>
+  </data>
+  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+    <value>安装</value>
+  </data>
+  <data name="PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_" xml:space="preserve">
+    <value>Python 下载失败。请检查您的网络连接，或联系 Skyline 团队寻求帮助。</value>
+  </data>
+  <data name="PythonInstaller_Failed_to_execute_command____0__" xml:space="preserve">
+    <value>无法执行命令：[{0}]</value>
+  </data>
+  <data name="PythonInstaller__0__Running_command____1____2__" xml:space="preserve">
+    <value>{0}运行命令：[{1}] {2} </value>
+  </data>
+  <data name="PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__" xml:space="preserve">
+    <value>{0} 此过程有时可能需要 3-5 分钟。请保持耐心。 {1} </value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package" xml:space="preserve">
+    <value>正在下载 Python 可嵌入包。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package" xml:space="preserve">
+    <value>正在解压缩 Python 可嵌入包。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package" xml:space="preserve">
+    <value>正在 Python 可嵌入包中启用搜索路径。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script" xml:space="preserve">
+    <value>正在下载 get-pip.py 脚本。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Running_the_get_pip_py_script" xml:space="preserve">
+    <value>正在运行 get-pip.py 脚本。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Running_pip_install__0_" xml:space="preserve">
+    <value>正在运行 pip 安装 [{0}]。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Creating_virtual_environment__0_" xml:space="preserve">
+    <value>正在创建虚拟环境 [{0}]。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_" xml:space="preserve">
+    <value>正在虚拟环境 [{0}] 中安装 Python 包。首次安装可能需要 10-15 分钟，请耐心等候……</value>
+  </data>
+  <data name="PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected" xml:space="preserve">
+    <value>预期仅有一个扩展名为 _pth 的文件</value>
+  </data>
+  <data name="PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__" xml:space="preserve">
+    <value>无法解析条目 [{0}] 中的软件包名称和版本。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_" xml:space="preserve">
+    <value>正在虚拟环境 [{0}] 中启用 Python 包安装的 Windows 长路径支持。</value>
+  </data>
 </root>

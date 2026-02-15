@@ -1,4 +1,4 @@
-﻿namespace AutoQC
+namespace AutoQC
 {
     partial class PanoramaControl
     {

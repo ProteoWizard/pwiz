@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI.Irt
+namespace pwiz.Skyline.SettingsUI.Irt
 {
     partial class AddIrtPeptidesDlg
     {
@@ -31,7 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddIrtPeptidesDlg));
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.dataGridView = new pwiz.Common.Controls.CommonDataGridView();
+            this.dataGridView = new pwiz.Skyline.Controls.DataGridViewEx();
             this.panelKeep = new System.Windows.Forms.Panel();
             this.labelKeep = new System.Windows.Forms.Label();
             this.listKeep = new System.Windows.Forms.ListBox();
@@ -276,7 +276,7 @@
         private System.Windows.Forms.Panel panelKeep;
         private System.Windows.Forms.Label labelKeep;
         private System.Windows.Forms.ListBox listKeep;
-        private Common.Controls.CommonDataGridView dataGridView;
+        private pwiz.Skyline.Controls.DataGridViewEx dataGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn Points;
         private System.Windows.Forms.DataGridViewTextBoxColumn Equation;

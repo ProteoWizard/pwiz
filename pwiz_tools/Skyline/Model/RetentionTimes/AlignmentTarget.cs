@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -60,9 +60,23 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return (int)RegressionMethod;
         }
 
+        public double? ScoreTargets(IEnumerable<Target> candidateTargets)
+        {
+            return candidateTargets.Select(ScoreSequence).OfType<double>().FirstOrDefault();
+        }
         protected abstract double? ScoreSequence(Target target);
         public abstract string DisplayName { get; }
         public abstract double ChooseUnknownScore();
+
+        /// <summary>
+        /// Whether run-to-run retention time alignment should be performed using the current peaks that may have been adjusted by
+        /// the user, or the original peaks that Skyline chose.
+        /// When all peptides are used in the alignment, the original peaks are used for alignment, because otherwise any change to
+        /// peak boundaries will change the alignment.
+        /// However, when the alignment only uses iRT standards, the current peak boundaries should be used.
+        /// </summary>
+        public virtual bool UseCurrentPeaks { get { return false; } }
+
         public virtual RetentionScoreCalculatorSpec AsRetentionScoreCalculator()
         {
             return new RetentionScoreCalculatorImpl(this);
@@ -423,6 +437,18 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
                 return RegressionMethodRT.kde;
             }
+
+            public override bool UseCurrentPeaks
+            {
+                get
+                {
+                    if (Calculator is RCalcIrt rCalcIrt)
+                    {
+                        return rCalcIrt.GetStandardPeptides().Any();
+                    }
+                    return false;
+                }
+            }
         }
 
         public class LibraryTarget : AlignmentTarget
@@ -513,7 +539,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             public MedianDocumentRetentionTimes(SrmDocument document)
-                : this(ResultFileAlignments.GetAlignmentSources(document, null).Values)
+                : this(ResultFileAlignments.GetAlignmentSources(document, null, null).Values)
             {
             }
 
@@ -572,6 +598,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return IrtDb.ChooseUnknownScore(_dictionary.Values);
             }
+        }
+
+        public static LoessRegression CreateLoessRegression(IEnumerable<double> x, IEnumerable<double> y,
+            CancellationToken cancellationToken)
+        {
+            IList<WeightedPoint> weightedPoints = x.Zip(y, (a, b) => new WeightedPoint(a, b)).ToList();
+            weightedPoints = DownsamplePoints(weightedPoints, Settings.Default.RtRegressionBinCount);
+            return new LoessRegression(weightedPoints.Select(pt => pt.X).ToArray(),
+                weightedPoints.Select(pt => pt.Y).ToArray(), true, cancellationToken);
         }
     }
 }

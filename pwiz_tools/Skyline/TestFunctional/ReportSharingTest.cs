@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -132,6 +132,7 @@ namespace pwiz.SkylineTestFunctional
             List<ReportInfo> reportInfos = new List<ReportInfo>();
             foreach (string filename in new[]
             {
+                "InvalidReports.skyr",
                 "PeptidesSharedFrom25ResultsGrid.skyr",
                 "SharedFrom25DocumentGrid.skyr",
                 "Skyline21BuiltInReports.skyr",

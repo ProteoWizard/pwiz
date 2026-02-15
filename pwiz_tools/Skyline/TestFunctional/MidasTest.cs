@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. proteinms dot net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

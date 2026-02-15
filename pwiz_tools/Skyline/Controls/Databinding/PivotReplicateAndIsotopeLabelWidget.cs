@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Controls.Databinding
@@ -62,7 +63,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
 
-            cbxPivotReplicate.Checked = !ViewSpec.SublistId.StartsWith(SkylineViewContext.GetReplicateSublist(ViewInfo.ParentColumn.PropertyType));
+            cbxPivotReplicate.Checked = !ViewSpec.SublistId.StartsWith(SublistPaths.GetReplicateSublist(ViewInfo.ParentColumn.PropertyType));
         }
 
         private void cbxPivotReplicate_CheckedChanged(object sender, EventArgs e)
@@ -82,7 +83,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             else
             {
-                ViewSpec = ViewSpec.SetSublistId(SkylineViewContext.GetReplicateSublist(ViewInfo.ParentColumn.PropertyType));
+                ViewSpec = ViewSpec.SetSublistId(SublistPaths.GetReplicateSublist(ViewInfo.ParentColumn.PropertyType));
             }
         }
 

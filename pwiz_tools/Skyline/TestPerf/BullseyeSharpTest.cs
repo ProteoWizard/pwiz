@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net >
  *
  * Copyright 2023 University of Washington - Seattle, WA
@@ -37,7 +37,7 @@ namespace TestPerf
             return TestFilesDir.GetTestPath(path);
         }
 
-        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestBullseyeSharp()
         {
             if (!RunPerfTests)

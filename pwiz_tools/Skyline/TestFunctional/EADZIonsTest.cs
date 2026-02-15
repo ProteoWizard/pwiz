@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Rita Chupalov <rita .at. uw .edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

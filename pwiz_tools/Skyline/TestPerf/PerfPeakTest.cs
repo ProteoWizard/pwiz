@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -336,7 +336,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     editPeakScoringModelDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                     editPeakScoringModelDlg.UsesDecoys = false;
                     editPeakScoringModelDlg.UsesSecondBest = true;
-                    editPeakScoringModelDlg.TrainModel(true);
+                    editPeakScoringModelDlg.TrainModel();
                     editPeakScoringModelDlg.OkDialog();
                 });
                 RunEditPeakScoringDlg(null, true, editPeakScoringModelDlg =>
@@ -345,7 +345,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     editPeakScoringModelDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                     editPeakScoringModelDlg.UsesDecoys = false;
                     editPeakScoringModelDlg.UsesSecondBest = true;
-                    editPeakScoringModelDlg.TrainModel(true);
+                    editPeakScoringModelDlg.TrainModel();
                     editPeakScoringModelDlg.OkDialog();
                 });
                 RunEditPeakScoringDlg(null, true, editPeakScoringModelDlg =>
@@ -358,7 +358,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     editPeakScoringModelDlg.PeakCalculatorsGrid.Items[5].IsEnabled = false;
                     editPeakScoringModelDlg.PeakCalculatorsGrid.Items[4].IsEnabled = false;
                     editPeakScoringModelDlg.PeakCalculatorsGrid.Items[3].IsEnabled = false;
-                    editPeakScoringModelDlg.TrainModel(true);
+                    editPeakScoringModelDlg.TrainModel();
                     editPeakScoringModelDlg.OkDialog();
                 });
                 if (SkylineWindow.Document.Peptides.Any(pep => pep.IsDecoy))
@@ -369,7 +369,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         editPeakScoringModelDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                         editPeakScoringModelDlg.UsesDecoys = true;
                         editPeakScoringModelDlg.UsesSecondBest = false;
-                        editPeakScoringModelDlg.TrainModel(true);
+                        editPeakScoringModelDlg.TrainModel();
                         editPeakScoringModelDlg.OkDialog();
                     });
                 }
@@ -473,7 +473,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 RunEditPeakScoringDlg(modelName, true, editPeakScoringModelDlg =>
                 {
-                    editPeakScoringModelDlg.TrainModel(true);
+                    editPeakScoringModelDlg.TrainModel();
                     editPeakScoringModelDlg.OkDialog();
                 });
             }

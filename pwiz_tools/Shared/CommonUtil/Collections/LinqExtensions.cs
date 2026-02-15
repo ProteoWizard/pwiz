@@ -1,4 +1,4 @@
-﻿// $Id$
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -210,6 +210,142 @@ namespace pwiz.Common.Collections
                 }
             }
 
+            internal void DepthLimitedQuickSort(int left, int right, int depthLimit)
+            {
+                while (depthLimit != 0)
+                {
+                    int index1 = left;
+                    int index2 = right;
+                    int median = GetMedian(index1, index2);
+                    try
+                    {
+                        this.SwapIfGreaterWithItems(index1, median);
+                        this.SwapIfGreaterWithItems(index1, index2);
+                        this.SwapIfGreaterWithItems(median, index2);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(@"InvalidOperation_IComparerFailed", ex);
+                    }
+                    var key1 = this.keys[median];
+                    do
+                    {
+                        try
+                        {
+                            while (this.comparer.Compare(this.keys[index1], key1) < 0)
+                                ++index1;
+                            while (this.comparer.Compare(key1, this.keys[index2]) < 0)
+                                --index2;
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            throw new ArgumentException(@"Arg_BogusIComparer");
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new InvalidOperationException(@"InvalidOperation_IComparerFailed", ex);
+                        }
+                        if (index1 <= index2)
+                        {
+                            if (index1 < index2)
+                            {
+                                var key2 = this.keys[index1];
+                                this.keys[index1] = this.keys[index2];
+                                this.keys[index2] = key2;
+                                if (this.items != null)
+                                {
+                                    var obj = this.items[index1];
+                                    this.items[index1] = this.items[index2];
+                                    this.items[index2] = obj;
+                                }
+                            }
+                            ++index1;
+                            --index2;
+                        }
+                        else
+                            break;
+                    }
+                    while (index1 <= index2);
+                    --depthLimit;
+                    if (index2 - left <= right - index1)
+                    {
+                        if (left < index2)
+                            this.DepthLimitedQuickSort(left, index2, depthLimit);
+                        left = index1;
+                    }
+                    else
+                    {
+                        if (index1 < right)
+                            this.DepthLimitedQuickSort(index1, right, depthLimit);
+                        right = index2;
+                    }
+                    if (left >= right)
+                        return;
+                }
+                try
+                {
+                    this.Heapsort(left, right);
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    throw new ArgumentException(@"Arg_BogusIComparer");
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(@"InvalidOperation_IComparerFailed", ex);
+                }
+            }
+
+            private void Heapsort(int lo, int hi)
+            {
+                int n = hi - lo + 1;
+                for (int i = n / 2; i >= 1; --i)
+                    this.DownHeap(i, n, lo);
+                for (int index = n; index > 1; --index)
+                {
+                    this.Swap(lo, lo + index - 1);
+                    this.DownHeap(1, index - 1, lo);
+                }
+            }
+
+            private void Swap(int a, int b)
+            {
+                TKey temp = keys[a];
+                keys[a] = keys[b];
+                keys[b] = temp;
+                if (items != null)
+                {
+                    TValue item = items[a];
+                    items[a] = items[b];
+                    items[b] = item;
+                }
+            }
+
+            private void DownHeap(int i, int n, int lo)
+            {
+                var key = this.keys[lo + i - 1];
+                var obj = this.items != null ? this.items[lo + i - 1] : default;
+                int num;
+                for (; i <= n / 2; i = num)
+                {
+                    num = 2 * i;
+                    if (num < n && this.comparer.Compare(this.keys[lo + num - 1], this.keys[lo + num]) < 0)
+                        ++num;
+                    if (this.comparer.Compare(key, this.keys[lo + num - 1]) < 0)
+                    {
+                        this.keys[lo + i - 1] = this.keys[lo + num - 1];
+                        if (this.items != null)
+                            this.items[lo + i - 1] = this.items[lo + num - 1];
+                    }
+                    else
+                        break;
+                }
+                this.keys[lo + i - 1] = key;
+                if (this.items == null)
+                    return;
+                this.items[lo + i - 1] = obj;
+            }
+
             internal void QuickSort(int left, int right)
             {
                 // Can use the much faster jit helpers for array access.
@@ -274,7 +410,7 @@ namespace pwiz.Common.Collections
         {
             if (comparer == null) comparer = Comparer.Default;
             var sorter = new SorterObjectArray<TKey, TValue>(keys, values, comparer);
-            sorter.QuickSort(0, keys.Count - 1);
+            sorter.DepthLimitedQuickSort(0, keys.Count - 1, 32);
         }
 
         /// <summary>
@@ -286,8 +422,7 @@ namespace pwiz.Common.Collections
         public static void Sort<TKey>(this IList<TKey> keys, IComparer comparer = null)
         {
             if (comparer == null) comparer = Comparer.Default;
-            var sorter = new SorterObjectArray<TKey, TKey>(keys, null, comparer);
-            sorter.QuickSort(0, keys.Count - 1);
+            Sort<TKey, TKey>(keys, null, comparer);
         }
 
         /// <summary>

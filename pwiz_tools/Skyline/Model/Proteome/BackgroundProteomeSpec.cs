@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,24 +28,32 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.DocSettings;
+using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.Model.Proteome
 {
+    /// <summary>
+    /// Identity class to allow identity equality on <see cref="BackgroundProteomeSpec"/>.
+    /// </summary>
+    public sealed class BackgroundProteomeSpecId : Identity {}
+
     /// <summary>
     /// Class representing a background proteome database.  Background proteome databases have a name,
     /// as well as a path to the file on disk.
     /// </summary>
     [XmlRoot("background_proteome")]
-    public class BackgroundProteomeSpec : XmlNamedElement
+    public class BackgroundProteomeSpec : XmlNamedElement, IFile
     {
         public BackgroundProteomeSpec(string name, string databasePath)
             : base(name)
         {
+            Id = new BackgroundProteomeSpecId();
             DatabasePath = databasePath;
         }
 
         protected BackgroundProteomeSpec()
         {
+            Id = new BackgroundProteomeSpecId();
         }
 
         private enum Attr
@@ -60,6 +68,9 @@ namespace pwiz.Skyline.Model.Proteome
         }
         
         public string DatabasePath { get; private set; }
+
+        public Identity Id { get; private set; }
+        public string FilePath => DatabasePath;
 
         public bool IsNone
         {

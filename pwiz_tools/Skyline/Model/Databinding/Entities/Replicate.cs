@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -141,7 +141,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        [DataGridViewColumnType(typeof(SampleTypeDataGridViewColumn))]
         [Importable(Formatter = typeof(SampleType.PropertyFormatter))]
         public SampleType SampleType
         {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
@@ -100,51 +101,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasResults { get { return MeasuredResults != null; } }
 
-        public bool HasLibraries { get { return PeptideSettings.Libraries.HasLibraries; } }
+        public bool HasLibraries { get { return PeptideSettings.HasLibraries; } }
 
-        public bool HasDocumentLibrary { get { return PeptideSettings.Libraries.HasDocumentLibrary; } }
+        public bool HasDocumentLibrary { get { return PeptideSettings.HasDocumentLibrary; } }
 
-        public bool HasRTPrediction { get { return PeptideSettings.Prediction.RetentionTime != null; } }
+        public bool HasRTPrediction { get { return PeptideSettings.HasRTPrediction; } }
 
-        public bool HasRTCalcPersisted
-        {
-            get
-            {
-                return HasRTPrediction && PeptideSettings.Prediction.RetentionTime.Calculator.PersistencePath != null;
-            }
-        }
+        public bool HasRTCalcPersisted { get { return PeptideSettings.HasRTCalcPersisted; } }
 
-        public bool HasOptimizationLibrary
-        {
-            get
-            {
-                return TransitionSettings.Prediction.OptimizedLibrary != null &&
-                       !TransitionSettings.Prediction.OptimizedLibrary.IsNone;
-            }
-        }
+        public bool HasOptimizationLibrary { get { return TransitionSettings.HasOptimizationLibrary; } }
 
-        public bool HasOptimizationLibraryPersisted
-        {
-            get
-            {
-                return HasOptimizationLibrary && TransitionSettings.Prediction.OptimizedLibrary.PersistencePath != null;
-            }
-        }
+        public bool HasOptimizationLibraryPersisted { get { return TransitionSettings.HasOptimizationLibraryPersisted; } }
 
-        public bool HasDriftTimePrediction { get { return TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null; } }
+        public bool HasDriftTimePrediction { get { return TransitionSettings.HasDriftTimePrediction; } }
 
-        public bool HasIonMobilityLibraryPersisted
-        {
-            get
-            {
-                return HasDriftTimePrediction &&
-                       TransitionSettings.IonMobilityFiltering.IonMobilityLibrary != null &&
-                    !TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsNone &&
-                       TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath != null;
-            }
-        }
+        public bool HasIonMobilityLibraryPersisted { get { return TransitionSettings.HasIonMobilityLibraryPersisted; } }
 
-        public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
+        public bool HasBackgroundProteome { get { return PeptideSettings.HasBackgroundProteome; } }
 
         public RelativeRT GetRelativeRT(IsotopeLabelType labelType, Target seq, ExplicitMods mods)
         {
@@ -531,7 +504,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ChangeMeasuredResults(MeasuredResults prop)
         {
+            ValidateMeasuredResults(prop);
+
             return ChangeProp(ImClone(this), im => im.MeasuredResults = prop);
+        }
+
+        private void ValidateMeasuredResults(MeasuredResults measuredResults)
+        {
+            if (measuredResults != null && measuredResults.Chromatograms.Count == 0)
+                throw new ArgumentException(@"MeasuredResults must have at least one ChromatogramSet. Use null to remove all results.");
         }
 
         public SrmSettings ChangeIsResultsJoiningDisabled(bool prop)
@@ -1261,6 +1242,23 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (spectrumSourceFiles.Count == 0)
                         {
                             continue;
+                        }
+                    }
+
+                    // Exclude the current file - its own ID times shouldn't appear as "aligned"
+                    var currentFileIndex = libraryAlignment.Library.LibraryFiles.FindIndexOf(filePath);
+                    if (currentFileIndex >= 0)
+                    {
+                        var currentLibraryFilePath = libraryAlignment.Library.LibraryFiles.FilePaths[currentFileIndex];
+                        if (spectrumSourceFiles == null)
+                        {
+                            // Create a set of all files except the current one
+                            spectrumSourceFiles = libraryAlignment.Library.LibraryFiles.FilePaths
+                                .Where(f => f != currentLibraryFilePath).ToHashSet();
+                        }
+                        else
+                        {
+                            spectrumSourceFiles.Remove(currentLibraryFilePath);
                         }
                     }
 
@@ -2282,13 +2280,13 @@ namespace pwiz.Skyline.Model.DocSettings
             // We want Skyline to be able to read older documents where <measured_results> come before <data_settings>
             if (reader.IsStartElement(new XmlElementHelper<MeasuredResults>().ElementNames[0]))
             {
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>()?.NullIfEmpty();
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;   
             }
             else
             {
                 DataSettings = reader.DeserializeElement<DataSettings>() ?? DataSettings.DEFAULT;
-                MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+                MeasuredResults = reader.DeserializeElement<MeasuredResults>()?.NullIfEmpty();
             }
             DocumentRetentionTimes = reader.DeserializeElement<DocumentRetentionTimes>() ?? DocumentRetentionTimes.EMPTY;
             reader.ReadEndElement();
@@ -2306,6 +2304,73 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(MeasuredResults);
             if (DocumentRetentionTimes.AnyAlignments())
                 writer.WriteElement(DocumentRetentionTimes);
+        }
+
+        #endregion
+
+        #region Quantification comparison
+
+        /// <summary>
+        /// Compares settings that affect quantification/abundance calculations.
+        /// Used to determine if cached abundance values can be reused.
+        ///
+        /// Normalization method-specific behavior:
+        /// - NONE, RatioToLabel: Only check if quantification settings match
+        /// - GLOBAL_STANDARDS: Also check if global standard peptides changed and MeasuredResults
+        /// - TIC: Check if MeasuredResults changed
+        /// - EQUALIZE_MEDIANS: Settings check only - per-node invalidation handled by cache cleanup
+        ///   (see CleanCacheForIncrementalUpdates which invalidates when any node changes)
+        /// - RatioToSurrogate: Conservatively check if any standard peptides changed
+        ///
+        /// Future optimization: When invalidating entire cache due to DocNode changes (not ReferenceEquals
+        /// but matching Id), we could compare actual peak area values and only invalidate if they differ.
+        /// This would avoid cache invalidation for minor node changes (e.g., adding a note to a transition)
+        /// that don't affect abundance calculations.
+        /// </summary>
+        public bool HasEqualQuantificationSettings(SrmSettings other)
+        {
+            if (ReferenceEquals(this, other))
+                return true;
+            if (other == null)
+                return false;
+            // Compare quantification settings that affect abundance calculations
+            if (!Equals(PeptideSettings.Quantification, other.PeptideSettings.Quantification))
+            {
+                return false;
+            }
+
+            var normalizationMethod = PeptideSettings.Quantification.NormalizationMethod;
+            // Note: EQUALIZE_MEDIANS is not checked here. Settings can differ for reasons
+            // unrelated to abundance (annotations, replicate names, etc.). Per-node invalidation
+            // for median normalization is handled in CleanCacheForIncrementalUpdates.
+
+            if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod))
+            {
+                if (!CollectionUtil.EqualsDeep(_cachedPeptideStandards, other._cachedPeptideStandards))
+                {
+                    return false;
+                }
+            }
+
+            // For surrogate standard normalization, conservatively invalidate if any surrogate standard changed.
+            // Surrogate standards are typically used in smaller documents, so the performance impact is minimal.
+            if (normalizationMethod is NormalizationMethod.RatioToSurrogate)
+            {
+                if (!CollectionUtil.EqualsDeep(_cachedPeptideStandards, other._cachedPeptideStandards))
+                {
+                    return false;
+                }
+            }
+
+            if (NormalizationMethod.GLOBAL_STANDARDS.Equals(normalizationMethod) ||
+                NormalizationMethod.TIC.Equals(normalizationMethod))
+            {
+                if (!ReferenceEquals(MeasuredResults, other.MeasuredResults))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         #endregion
@@ -2874,7 +2939,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // If the integration strategy has changed, then force a full update of all results
             if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll
                 || !Equals(settingsNew.PeptideSettings.Imputation, settingsOld.PeptideSettings.Imputation)
-                || !Equals(settingsNew.DocumentRetentionTimes, settingsOld.DocumentRetentionTimes))
+                || !settingsNew.DocumentRetentionTimes.Equivalent(settingsOld.DocumentRetentionTimes))
             {
                 DiffResults = DiffResultsAll = true;
             }

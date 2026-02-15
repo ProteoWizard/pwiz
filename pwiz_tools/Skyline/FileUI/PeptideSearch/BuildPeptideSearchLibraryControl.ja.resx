@@ -521,10 +521,6 @@
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
     <value>保持時間の正規化に使用する既知のiRT標準ペプチドのセットを選択してください。</value>
-    <comment>Needs Review:English text changed
-Old English:Choose a set of know iRT standard peptides to use for retention time normalization.
-Current English:Choose a set of known iRT standard peptides to use for retention time normalization.
-Old Localized:保持時間の正規化に使用する既知のiRT標準ペプチドセットを選択します。</comment>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
@@ -747,6 +743,9 @@ Old Localized:保持時間の正規化に使用する既知のiRT標準ペプチ
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>381, 452</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 652</value>

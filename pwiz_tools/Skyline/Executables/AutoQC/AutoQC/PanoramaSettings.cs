@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -329,8 +329,8 @@ namespace AutoQC
 
         public void Init()
         {
-            _requestHelper = new PanoramaRequestHelper(new LabkeySessionWebClient(new PanoramaServer(_panoramaSettings.PanoramaServerUri,
-                _panoramaSettings.PanoramaUserEmail, _panoramaSettings.PanoramaPassword)));
+            _requestHelper = new HttpPanoramaRequestHelper(new PanoramaServer(_panoramaSettings.PanoramaServerUri,
+                _panoramaSettings.PanoramaUserEmail, _panoramaSettings.PanoramaPassword));
             _timer = new Timer(e => { PingPanoramaServer(); });
             _timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5)); // Ping Panorama every 5 minutes.
         }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: John Chilton <jchilton .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -68,12 +68,17 @@ namespace pwiz.Skyline.Model.Irt
 
         public override bool IsUsable => _database != null;
 
-        public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
+        public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor, ref IProgressStatus status)
+        {
+            return InitializeIrt(loadMonitor, ref status);
+        }
+
+        public RCalcIrt InitializeIrt(IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             if (_database != null)
                 return this;
 
-            var database = IrtDb.GetIrtDb(DatabasePath, loadMonitor);
+            var database = IrtDb.GetIrtDb(DatabasePath, progressMonitor, ref status);
             // Check for the case where an exception was handled by the progress monitor
             if (database == null)
                 return null;
@@ -457,7 +462,8 @@ namespace pwiz.Skyline.Model.Irt
 
             try
             {
-                calc = calc.Initialize(null) as RCalcIrt;
+                IProgressStatus status = new ProgressStatus();
+                calc = calc.InitializeIrt(null, ref status);
             }
             catch
             {
@@ -563,7 +569,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static string PersistAsSmallMolecules(string currentPersistencePath, string pathDestDir = null, IrtDb database = null)
         {
-            database ??= IrtDb.GetIrtDb(currentPersistencePath, null);
+            database ??= IrtDb.GetIrtDb(currentPersistencePath);
             pathDestDir ??= Path.GetDirectoryName(currentPersistencePath) ?? string.Empty;
 
             var persistPath = Path.Combine(pathDestDir, Path.GetFileName(currentPersistencePath) ?? string.Empty);  // ReSharper

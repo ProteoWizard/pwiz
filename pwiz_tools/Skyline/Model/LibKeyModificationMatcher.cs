@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -36,11 +36,13 @@ namespace pwiz.Skyline.Model
         public PeptideModifications MatcherPepMods { get; set; }
 
         public void CreateMatches(SrmSettings settings, IEnumerable<LibKey> libKeys,
-            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy)
+            MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy,
+            string libraryName)
         {
             _dictAAMassPairs = new Dictionary<AATermKey, List<string>>();
             _libKeys = libKeys.GetEnumerator();
-            InitMatcherSettings(settings, defSetStatic, defSetHeavy);
+            LibraryName = libraryName;
+            InitMatcherSettings(settings, defSetStatic, defSetHeavy, libraryName);
             MatcherPepMods = CreateMatcherPeptideSettings(settings);
         }
 

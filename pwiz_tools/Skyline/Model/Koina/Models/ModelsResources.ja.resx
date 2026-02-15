@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_library" xml:space="preserve">
     <value>KoinaスペクトルのBiblioSpecライブラリへのエクスポート</value>
   </data>
@@ -129,5 +128,17 @@
   </data>
   <data name="KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge" xml:space="preserve">
     <value>Koinaでは電荷{0}に対応していません。対応最大電荷は{1}です。</value>
+  </data>
+  <data name="BuildPrecursorTable_UnsupportedModification" xml:space="preserve">
+    <value>警告：ペプチド{0}には修飾{1}があります。この修飾にはUnimod IDがなく、{2}予測ツールには未知です。このペプチドはスキップされます！</value>
+  </data>
+  <data name="BuildPrecursorTable_Unimod_UnsupportedModification" xml:space="preserve">
+    <value>警告：ペプチド{0}には修飾{1}があります。この修飾のUnimod IDはUNIMOD:{2}ですが、{3}予測ツールではまだサポートされていません。このペプチドはスキップされます！</value>
+  </data>
+  <data name="BuildPrecursorTable_Unimod_limited_Modification" xml:space="preserve">
+    <value>警告：ペプチド{0}には修飾{1}があります。この修飾のUnimod IDはUNIMOD:{2}ですが、{3}予測ツールのデフォルトモデルでは完全にサポートされていません。予測または予測されたスペクトルでは微調整したモデルを使用することを検討してください。このペプチドの保持時間または衝突断面積は正確ではない場合があります！</value>
+  </data>
+  <data name="BuildPrecursorTable_ModificationType" xml:space="preserve">
+    <value>アクセッション：{0}、名前：{1}、コメント：{2}</value>
   </data>
 </root>

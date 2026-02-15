@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_library" xml:space="preserve">
     <value>将 Koina 谱图导出到 BiblioSpec 库</value>
   </data>
@@ -129,5 +128,17 @@
   </data>
   <data name="KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge" xml:space="preserve">
     <value>Koina 不支持电荷 {0}。支持的最大电荷为 {1}。</value>
+  </data>
+  <data name="BuildPrecursorTable_UnsupportedModification" xml:space="preserve">
+    <value>警告：肽段 {0} 包含修饰 {1}，该修饰缺少 Unimod ID 且无法被 {2} 预测工具识别。此肽段将被跳过！</value>
+  </data>
+  <data name="BuildPrecursorTable_Unimod_UnsupportedModification" xml:space="preserve">
+    <value>警告：肽段 {0} 包含修饰 {1}，该修饰的 Unimod ID 为 UNIMOD:{2} 且尚未获得 {3} 预测工具的支持。此肽段将被跳过！</value>
+  </data>
+  <data name="BuildPrecursorTable_Unimod_limited_Modification" xml:space="preserve">
+    <value>警告：肽段 {0} 包含修改 {1}，该修改的 Unimod ID 为 UNIMOD:{2} 且 {3} 预测工具中的默认模型对其支持有限。请考虑使用微调模型进行预测，否则此肽段的预测谱图、保留时间或碰撞截面可能不可信！</value>
+  </data>
+  <data name="BuildPrecursorTable_ModificationType" xml:space="preserve">
+    <value>序号：{0}，名称：{1}，备注：{2}</value>
   </data>
 </root>

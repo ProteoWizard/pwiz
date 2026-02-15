@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null,
             new AreaCVGraphSettings((GraphTypeSummary) ~0, NormalizeOption.NONE, null,
-                string.Empty, (PointsTypePeakArea) ~0, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
+                string.Empty, false, double.NaN, double.NaN, -1, double.NaN, (AreaCVMsLevel) ~0,
                 (AreaCVTransitions) ~0, -1));
 
         
@@ -139,21 +139,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 NormalizeOption = AreaGraphController.AreaCVNormalizeOption;
                 Group = ReplicateValue.FromPersistedString(srmSettings, AreaGraphController.GroupByGroup);
                 Annotation = AreaGraphController.GroupByAnnotation;
-                PointsType = AreaGraphController.PointsType;
+                UseDecoyPoints = AreaGraphController.PointsType == PointsTypePeakArea.decoys;
                 QValueCutoff = Settings.Default.AreaCVQValueCutoff;
                 CVCutoff = Settings.Default.AreaCVCVCutoff * factor;
                 MinimumDetections = AreaGraphController.MinimumDetections;
                 BinWidth = Settings.Default.AreaCVHistogramBinWidth * factor;
             }
 
-            public AreaCVGraphSettings(GraphTypeSummary graphType, NormalizeOption normalizeOption, ReplicateValue group, object annotation, PointsTypePeakArea pointsType, double qValueCutoff,
+            public AreaCVGraphSettings(GraphTypeSummary graphType, NormalizeOption normalizeOption, ReplicateValue group, object annotation, bool useDecoyPoints, double qValueCutoff,
                 double cvCutoff, int minimumDetections, double binwidth, AreaCVMsLevel msLevel, AreaCVTransitions transitions, int countTransitions)
             {
                 GraphType = graphType;
                 NormalizeOption = normalizeOption;
                 Group = group;
                 Annotation = annotation;
-                PointsType = pointsType;
+                UseDecoyPoints = useDecoyPoints;
                 QValueCutoff = qValueCutoff;
                 CVCutoff = cvCutoff;
                 MinimumDetections = minimumDetections;

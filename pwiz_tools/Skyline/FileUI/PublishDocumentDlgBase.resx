@@ -129,9 +129,6 @@
     <value>18, 83</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="lblServerFolders.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
   <data name="lblServerFolders.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 13</value>
   </data>
@@ -157,13 +154,10 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="treeViewFolders.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 108</value>
-  </data>
-  <data name="treeViewFolders.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>15, 70</value>
   </data>
   <data name="treeViewFolders.Size" type="System.Drawing.Size, System.Drawing">
-    <value>668, 336</value>
+    <value>447, 220</value>
   </data>
   <data name="treeViewFolders.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -184,13 +178,10 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>580, 455</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>387, 296</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -214,13 +205,10 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>459, 455</value>
-  </data>
-  <data name="btnOK.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>306, 296</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -244,10 +232,7 @@
     <value>True</value>
   </data>
   <data name="lblFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 14</value>
-  </data>
-  <data name="lblFile.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>12, 9</value>
   </data>
   <data name="lblFile.Size" type="System.Drawing.Size, System.Drawing">
     <value>26, 13</value>
@@ -274,13 +259,10 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="tbFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 38</value>
-  </data>
-  <data name="tbFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>15, 25</value>
   </data>
   <data name="tbFilePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>547, 20</value>
+    <value>366, 20</value>
   </data>
   <data name="tbFilePath.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -301,13 +283,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>580, 30</value>
-  </data>
-  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>387, 23</value>
   </data>
   <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -337,10 +316,7 @@
     <value>True</value>
   </data>
   <data name="cbAnonymousServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 465</value>
-  </data>
-  <data name="cbAnonymousServers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>15, 296</value>
   </data>
   <data name="cbAnonymousServers.Size" type="System.Drawing.Size, System.Drawing">
     <value>147, 17</value>
@@ -376,10 +352,10 @@
     <value>Bottom, Left</value>
   </data>
   <data name="createRemoteFolder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 455</value>
+    <value>15, 296</value>
   </data>
   <data name="createRemoteFolder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>129, 36</value>
+    <value>75, 23</value>
   </data>
   <data name="createRemoteFolder.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -414,9 +390,6 @@
   <data name="lblAvailableStorage.Location" type="System.Drawing.Point, System.Drawing">
     <value>600, 83</value>
   </data>
-  <data name="lblAvailableStorage.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
-  </data>
   <data name="lblAvailableStorage.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 13</value>
   </data>
@@ -445,10 +418,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>711, 502</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>474, 326</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

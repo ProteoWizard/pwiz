@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .@. gmail.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -129,7 +129,7 @@ namespace pwiz.CommonMsData.RemoteApi.Ardia
             response.EnsureSuccessStatusCode();
             var responseString = response.Content.ReadAsStringAsync().Result;
             var presignedUrlJson = JObject.Parse(responseString);
-            return presignedUrlJson[@"presignedUrl"].ToString();
+            return presignedUrlJson[@"presignedUrl"]!.ToString();
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <srm_settings format_version="3.6">
   <peptide_list label_name="Biognosys standards" websearch_status="X" auto_manage_children="false">
     <peptide auto_manage_children="false" standard_type="iRT" sequence="LGGNEQVTR" modified_sequence="LGGNEQVTR" calc_neutral_pep_mass="972.498858" num_missed_cleavages="0" rt_calculator_score="-28.308">

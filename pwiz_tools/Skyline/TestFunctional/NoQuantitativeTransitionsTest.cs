@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,6 +25,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -159,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
                                         }
                                     }
 
-                                    var zoomState = graphChrom.ZoomState;
+                                    var zoomState = new ZoomState(graphChrom.GraphPane, ZoomState.StateType.Zoom);
                                     if (transitionChromInfos.Any())
                                     {
                                         var peakStartTime = transitionChromInfos.Min(t => t.StartRetentionTime);

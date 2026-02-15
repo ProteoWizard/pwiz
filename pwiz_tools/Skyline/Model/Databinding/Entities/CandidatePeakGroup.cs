@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -239,6 +239,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var resultFile = _precursorResult.GetResultFile();
             return document.ChangePeak(identityPath, resultFile.Replicate.Name,
                 resultFile.ChromFileInfo.FilePath, null, retentionTime, UserSet.TRUE);
+        }
+
+        public PrecursorResult GetPrecursorResult()
+        {
+            return _precursorResult;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace pwiz.PanoramaClient
+namespace pwiz.PanoramaClient
 {
     partial class PanoramaDirectoryPicker
     {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt@proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

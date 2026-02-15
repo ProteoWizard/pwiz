@@ -1,4 +1,4 @@
-﻿namespace MSStatArgsCollector
+namespace MSStatArgsCollector
 {
     partial class CommonOptionsControl
     {

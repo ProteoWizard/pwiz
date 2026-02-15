@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -632,6 +632,24 @@ namespace SkylineTester
         }
 
         public const int MINIMUM_VISUAL_STUDIO = 2017;
+
+        // Map internal VS version numbers to marketing years
+        private static int GetVsYear(int version)
+        {
+            // Year-based folders (2017+) are already the year
+            if (version >= MINIMUM_VISUAL_STUDIO)
+                return version;
+            // Internal version mapping: 15=2017, 16=2019, 17=2022, 18=2026, ...
+            switch (version)
+            {
+                case 15: return 2017;
+                case 16: return 2019;
+                case 17: return 2022;
+                case 18: return 2026;
+                default: return 2026 + (version - 18) * 2; // Estimate future versions
+            }
+        }
+
         public static string GetExistingVsIdeFilePath(string relativePath)
         {
             var programFiles = new[]
@@ -639,13 +657,25 @@ namespace SkylineTester
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
             };
-            string[] pathTrials = 
+            string[] pathTrials =
             {
-                @"Microsoft Visual Studio\{0}\Enterprise\Common7\IDE",  
+                @"Microsoft Visual Studio\{0}\Enterprise\Common7\IDE",
                 @"Microsoft Visual Studio\{0}\Professional\Common7\IDE",
-                @"Microsoft Visual Studio\{0}\Community\Common7\IDE",   
+                @"Microsoft Visual Studio\{0}\Community\Common7\IDE",
             };
-            for (var version = 2040; version >= MINIMUM_VISUAL_STUDIO; version--) // 2040 is completely arbitrary
+            // Check both marketing years (2017-2040) and internal version numbers (15-30)
+            // VS 2017-2022 use year-based folders (2017, 2019, 2022)
+            // VS 2026+ may use internal version numbers (18 for VS 2026)
+            // Find all matches and return the most recent VS version
+            var candidates = new List<Tuple<int, string>>(); // (year, path)
+
+            var versionsToCheck = new List<int>();
+            for (var year = 2040; year >= MINIMUM_VISUAL_STUDIO; year--)
+                versionsToCheck.Add(year);
+            for (var version = 30; version >= 15; version--)
+                versionsToCheck.Add(version);
+
+            foreach (var version in versionsToCheck)
             {
                 foreach (var pathTrial in pathTrials)
                 {
@@ -653,12 +683,13 @@ namespace SkylineTester
                     {
                         var path = Path.Combine(Path.Combine(programFilesDir, string.Format(pathTrial, version)), relativePath);
                         if (File.Exists(path))
-                            return path;
+                            candidates.Add(Tuple.Create(GetVsYear(version), path));
                     }
                 }
             }
 
-            return null;
+            // Return the path from the most recent VS version
+            return candidates.OrderByDescending(c => c.Item1).FirstOrDefault()?.Item2;
         }
 
         public void RunUI(Action action, int delayMsec = 0)

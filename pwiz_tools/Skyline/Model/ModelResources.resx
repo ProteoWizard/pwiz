@@ -301,6 +301,9 @@
   <data name="ExportSchedulingAlgorithmExtension_LOCALIZED_VALUES_Trends" xml:space="preserve">
     <value>Trends</value>
   </data>
+  <data name="ExportStrategyExtension_LOCALIZED_VALUES_WcDecide" xml:space="preserve">
+    <value>WcDecide</value>
+  </data>
   <data name="ExportStrategyExtension_LOCALIZED_VALUES_Buckets" xml:space="preserve">
     <value>Buckets</value>
   </data>
@@ -661,6 +664,12 @@
   <data name="SrmDocument_GetSmallMoleculeGroupId_molecules" xml:space="preserve">
     <value>molecules</value>
   </data>
+  <data name="SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file" xml:space="preserve">
+    <value>The file "{0}" appears to be a {1} mass spectrometry data file, rather than a Skyline document (.sky or .sky.zip file).
+If you are trying to search the file for peptides or molecules in the raw data, please use File &gt; Search.
+Otherwise, to work with mass spec data in Skyline, first set up targets (see Help &gt; Tutorials), then use File &gt; Import &gt; Results to extract chromatograms for your targets from your mass spec data.
+If you want to inspect the raw data, use a viewer like SeeMS (download from proteowizard.org).</value>
+  </data>
   <data name="SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications" xml:space="preserve">
     <value>The peptide {0} was found multiple times with user modifications.</value>
   </data>
@@ -785,6 +794,9 @@
   <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
     <value>Failed to find a valid MassLynx installation.</value>
   </data>
+  <data name="WatersMethodExporter_Wrong_Session_Type" xml:space="preserve">
+    <value>Expected WatersConnectSessionAcquisitionMethod, got {0}.</value>
+  </data>
   <data name="WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found" xml:space="preserve">
     <value>MassLynx may not be installed correctly. The library {0} could not be found.</value>
   </data>
@@ -842,6 +854,18 @@
   <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
     <value>Unknown Thermo instrument type '{0}' installed.</value>
   </data>
+  <data name="WatersConnectMethodExporter_ExportMethod_Folder_ID_is_missing" xml:space="preserve">
+    <value>Folder ID is missing. Cannot upload the method. Folder info: {0}</value>
+  </data>
+  <data name="WatersConnectMethodExporter_ParseMethod_Exported_from_Skyline" xml:space="preserve">
+    <value>Exported from Skyline</value>
+  </data>
+  <data name="ExportProperties_ExportWatersConnectMethod_Cannot_use_a_template_method_from_another_server_" xml:space="preserve">
+    <value>Cannot use a template method from another server.</value>
+  </data>
+  <data name="ExportProperties_ExportWatersConnectMethod_No_matching_Waters_Connect_account_is_found_for_this_URL_" xml:space="preserve">
+    <value>No matching Waters Connect account is found for this URL.</value>
+  </data>
   <data name="Alphapeptdeep_Warn_unknown_modification" xml:space="preserve">
     <value>Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
 
@@ -849,7 +873,6 @@
 
 Would you like to continue building this predicted library?</value>
   </data>
-
   <data name="Alphapeptdeep_Warn_limited_modification" xml:space="preserve">
     <value>Warning: The predicted library might be of poor quality, due to the following modifications detected with limited support in the default predictive model: 
 
@@ -860,7 +883,7 @@ Please consider using the fine-tuning method provided by Carafe for building thi
 Would you like to continue building this predicted library?</value>
   </data>
   <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
-    <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+    <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don't have the necessary permissions and ask them to run the following script:
 
 {0}
 
@@ -868,36 +891,82 @@ Would you like to continue?
     </value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
-      <value>Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command.</value>
+    <value>Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
-      <value>Failed to build library by running the AlphaPeptDeep cmd-flow command.</value>
+    <value>Failed to build library by running the AlphaPeptDeep cmd-flow command.</value>
   </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
-      <value>Preparing prediction input file</value>
+    <value>Preparing prediction input file</value>
   </data>
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
-      <value>Preparing training input file</value>
+    <value>Preparing training input file</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
-      <value>Preparing settings file</value>
+    <value>Preparing settings file</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
-      <value>Running AlphaPeptDeep</value>
+    <value>Running AlphaPeptDeep</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
-      <value>Importing spectral library</value>
+    <value>Importing spectral library</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_" xml:space="preserve">
-      <value>BlibBuild completed successfully.</value>
+    <value>BlibBuild completed successfully.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_" xml:space="preserve">
-      <value>BlibBuild failed to complete.</value>
+    <value>BlibBuild failed to complete.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
-      <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
+    <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
   </data>
-  <data name="PersistedViews_GetDefaults_Detailed_Info" xml:space="preserve">
-    <value>Detailed Info</value>
+  <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
+    <value>Detailed Log</value>
+  </data>
+  <data name="WatersConnectMethodExporter_ExportMethod_Creating_MRM_method___0___from_Skyline_document___1__" xml:space="preserve">
+    <value>Creating MRM method '{0}' from Skyline document '{1}'</value>
+  </data>
+  <data name="WatersConnectMethodExporter_ExportMethod_Method_creation_from_Skyline_transition_list" xml:space="preserve">
+    <value>Method creation from Skyline transition list</value>
+  </data>
+  <data name="Compound_ParseObject_Compound_from_Skyline_document__0_____1_" xml:space="preserve">
+    <value>Compound from Skyline document {0} - {1}</value>
+  </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In___0_____1_" xml:space="preserve">
+    <value>In "{0}": {1}</value>
+  </data>
+  <data name="AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_" xml:space="preserve">
+    <value>In entry "{0}" of "{1}": {2}</value>
+  </data>
+  <data name="TransitionDocNode_GetLabel__0__1__" xml:space="preserve">
+    <value>{0} [{1}]</value>
+  </data>
+  <data name="TransitionDocNode_GetLabel_irank__0__" xml:space="preserve">
+    <value>irank {0}</value>
+    <comment>Isotope rank "irank" for transition node</comment>
+  </data>
+  <data name="TransitionDocNode_GetLabel_rank__0__" xml:space="preserve">
+    <value>rank {0}</value>
+  </data>
+  <data name="PeptideDocNode_Title" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="PeptideDocNode_Title_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="TransitionGroupDocNode_Title" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="TransitionDocNode_Title" xml:space="preserve">
+    <value>Transition</value>
+  </data>
+  <data name="TransitionDocNode_Titles" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
+  <data name="PersistedViews_GetLocalizedReportNames_Protein_Abundances" xml:space="preserve">
+	  <value>Protein Abundances</value>
+  </data>
+  <data name="PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas" xml:space="preserve">
+	  <value>Peptide Normalized Areas</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: Util.cs 107 2012-11-10 01:07:43Z chambm $
 //
 // The contents of this file are subject to the Mozilla Public License

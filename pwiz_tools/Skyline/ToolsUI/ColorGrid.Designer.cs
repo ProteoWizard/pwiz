@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.ToolsUI
+namespace pwiz.Skyline.ToolsUI
 {
     partial class ColorGrid<T>
     {
@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.comboColorType = new System.Windows.Forms.ComboBox();
-            this.dataGridViewColors = new pwiz.Common.Controls.CommonDataGridView();
+            this.dataGridViewColors = new pwiz.Skyline.Controls.DataGridViewEx();
             this.colorPickerDlg = new System.Windows.Forms.ColorDialog();
             this.rgbCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.hexCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -139,7 +139,7 @@
 
         private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.ComboBox comboColorType;
-        private Common.Controls.CommonDataGridView dataGridViewColors;
+        private pwiz.Skyline.Controls.DataGridViewEx dataGridViewColors;
         private System.Windows.Forms.ColorDialog colorPickerDlg;
         private System.Windows.Forms.DataGridViewTextBoxColumn rgbCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn hexCol;

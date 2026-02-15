@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Alex MacLean <alex.maclean2000 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -310,6 +310,44 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(129, pane.GetPoints());
                 Assert.AreEqual(12.45, pane.GetMax(), 0.1);
                 Assert.AreEqual(-0.05, pane.GetMin(), 0.1);
+            });
+
+            // Test degenerate case: single precursor in single replicate (issue #3909).
+            // All product ions share the same retention time, so _maxX == _minX.
+            // Before the fix, this caused division by zero in the binning calculation.
+            RunUI(() =>
+            {
+                SkylineWindow.ShowPointsTypeMassError(PointsTypeMassError.targets);
+                SkylineWindow.UpdateXAxis(Histogram2DXAxis.retention_time);
+                SkylineWindow.ChangeMassErrorDisplayType(DisplayTypeMassError.products);
+            });
+            // Strip document to a single precursor - only iRT peptide list
+            while (SkylineWindow.Document.MoleculeGroupCount > 1)
+            {
+                RunUI(() =>
+                {
+                    SkylineWindow.SequenceTree.SelectedPath =
+                        SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.MoleculeGroups,
+                            SkylineWindow.Document.MoleculeGroupCount - 1);
+                    SkylineWindow.EditDelete();
+                });
+            }
+            // Only first peptide in iRTs
+            while (SkylineWindow.Document.MoleculeCount > 1)
+            {
+                RunUI(() =>
+                {
+                    SkylineWindow.SequenceTree.SelectedPath =
+                        SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules,
+                            SkylineWindow.Document.MoleculeCount - 1);
+                    SkylineWindow.EditDelete();
+                });
+            }
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                var pane = GetHistogram2DGraphPane();
+                Assert.IsTrue(pane.GetPoints() > 0);
             });
             #endregion
         }

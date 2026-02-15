@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Daniel Broudy <daniel.broudy .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -384,13 +384,13 @@ namespace pwiz.Skyline.Model.Tools
     /// <summary>
     /// An exception to be thrown when a WebTool fails to open.
     /// </summary>
-    public class WebToolException : Exception
+    public class WebToolException : UserMessageException
     {
         /// <summary>
         /// Returns an instance of WebToolException.
         /// An exception to be thrown when a WebTool fails to open.
         /// </summary>
-        public WebToolException (string errorMessage, string link)
+        public WebToolException (string errorMessage, string link) : base(errorMessage)
         {
             _link = link;
             _errorMessage = errorMessage;
@@ -410,14 +410,14 @@ namespace pwiz.Skyline.Model.Tools
         }
     }
 
-    public class ToolExecutionException : Exception
+    public class ToolExecutionException : UserMessageException
     {
         public ToolExecutionException(string message) : base(message){}
 
         public ToolExecutionException(string message, Exception innerException) : base(message, innerException){}
     }
 
-    public class ToolDeprecatedException : Exception
+    public class ToolDeprecatedException : UserMessageException
     {
         public ToolDeprecatedException(string message) : base(message) { }
 
@@ -478,10 +478,15 @@ namespace pwiz.Skyline.Model.Tools
         public static string GetToolsDirectory()
         {
             var skylineDirPath = GetSkylineInstallationPath();
-
             // Use a unique tools path when running tests to allow tests to run in parallel
             // ReSharper disable once AssignNullToNotNullAttribute
-            return Path.Combine(skylineDirPath, Program.UnitTest ? $@"Tools_{LimitDirectoryNameLength()}" : @"Tools");
+            var tools = GetToolsDirectoryBasis(); // Helps catch Unicode path issues on Windows
+            return Path.Combine(skylineDirPath, Program.UnitTest ? $@"{tools}_{LimitDirectoryNameLength()}" : $@"{tools}");
+        }
+
+        public static string GetToolsDirectoryBasis()
+        {
+            return (Program.UnitTest && !Program.DoNotTestUnicodeHandling) ? @"Tööls" : @"Tools"; // Helps catch Unicode path issues on Windows
         }
 
         /// <summary>

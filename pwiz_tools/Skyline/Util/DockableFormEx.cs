@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -19,14 +19,29 @@
 
 using System;
 using System.ComponentModel;
+using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {
-    public class DockableFormEx : DockableForm, IFormView, 
+    public class DockableFormEx : DockableForm, IFormView, IClosingAware,
         Helpers.IModeUIAwareForm  // Can translate "peptide"=>"molecule" etc if desired
     {
+        /// <summary>
+        /// Flag indicating the form is closing or disposing. Set early (in OnFormClosing)
+        /// to give background threads maximum warning before the handle is destroyed.
+        /// Used by SafeBeginInvoke to avoid deadlock when BeginInvoke tries to recreate
+        /// a handle on a closing form.
+        /// </summary>
+        private volatile bool _isClosingOrDisposing;
+
+        /// <summary>
+        /// Returns true if this form is in the process of closing or disposing.
+        /// Background threads should check this before calling BeginInvoke.
+        /// </summary>
+        public bool IsClosingOrDisposing => _isClosingOrDisposing;
+
         /// <summary>
         /// Sealed to keep ReSharper happy, because we set it in constructors
         /// </summary>
@@ -85,6 +100,28 @@ namespace pwiz.Skyline.Util
 
             if (Program.SkylineOffscreen && Parent == null)
                 FormEx.SetOffscreen(this);
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            // Set the flag after base call in case a handler cancelled the close.
+            // This gives background threads early warning before handle destruction,
+            // helping SafeBeginInvoke avoid deadlock.
+            if (!e.Cancel)
+                _isClosingOrDisposing = true;
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            _isClosingOrDisposing = true;
+            base.OnHandleDestroyed(e);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _isClosingOrDisposing = true;
+            base.Dispose(disposing);
         }
 
         protected override bool ShowWithoutActivation

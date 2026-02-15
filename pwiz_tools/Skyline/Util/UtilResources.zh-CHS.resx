@@ -181,12 +181,6 @@
   <data name="DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_" xml:space="preserve">
     <value>将“{0}”转化为所需类型出错：{1}</value>
   </data>
-  <data name="DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
-    <value>尝试从文件{0}中读取样品信息出现错误。</value>
-  </data>
-  <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
-    <value>文件可能已损坏或丢失，或者正确的库可能未安装。</value>
-  </data>
   <data name="DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" xml:space="preserve">
     <value>源目录不存在或无法找到：</value>
   </data>
@@ -316,5 +310,17 @@
   </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
     <value>Panorama 服务器 {0} 上发生导入错误。</value>
+  </data>
+  <data name="DsvStreamReader_this_Header__0__not_found_in_DSV_file_" xml:space="preserve">
+    <value>DSV 文件中未找到标题 {0}。</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_" xml:space="preserve">
+    <value>数据流为空或未定义。</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Empty_stream_" xml:space="preserve">
+    <value>空白数据流。</value>
+  </data>
+  <data name="ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_" xml:space="preserve">
+    <value>无法访问剪贴板。</value>
   </data>
 </root>

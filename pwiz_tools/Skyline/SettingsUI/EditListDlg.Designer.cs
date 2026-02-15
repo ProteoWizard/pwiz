@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.SettingsUI
 {
     sealed partial class EditListDlg<TList, TItem>
     {

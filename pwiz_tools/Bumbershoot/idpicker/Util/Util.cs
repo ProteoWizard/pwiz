@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: ExtensionMethods.cs 393 2012-02-17 23:02:13Z chambm $
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 

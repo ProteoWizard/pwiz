@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original authors: Clark Brace <clarkbrace@gmail.com>,
  *                   Brendan MacLean <brendanx@proteinms.net
  *                   MacCoss Lab, Department of Genome Sciences, UW

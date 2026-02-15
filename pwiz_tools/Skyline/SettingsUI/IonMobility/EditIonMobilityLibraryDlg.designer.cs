@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI.IonMobility
+namespace pwiz.Skyline.SettingsUI.IonMobility
 {
     partial class EditIonMobilityLibraryDlg
     {

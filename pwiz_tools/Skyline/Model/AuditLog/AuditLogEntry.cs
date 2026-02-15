@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -98,6 +98,17 @@ namespace pwiz.Skyline.Model.AuditLog
         public const string DOCUMENT_ROOT = "audit_log_root";
 
         public static bool IgnoreTestChecks { get; set; }
+
+        /// <summary>
+        /// Use inside a using clause to set <see cref="IgnoreTestChecks"/> to
+        /// true for a limited scope and be assured that it gets set back to false
+        /// even if the test fails.
+        /// </summary>
+        public class IgnoreTestChecksScope : IDisposable
+        {
+            public IgnoreTestChecksScope() { IgnoreTestChecks = true; }
+            public void Dispose() { IgnoreTestChecks = false; }
+        }
 
         public AuditLogList(AuditLogEntry entries)
         {
@@ -256,7 +267,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             using (var fileSaver = new FileSaver(fileName))
             {
-                using (var writer = new XmlTextWriter(fileSaver.SafeName, Encoding.UTF8))
+                using (var writer = new XmlTextWriter(fileSaver.SafeName, new UTF8Encoding(false))) // UTF-8 without BOM
                 {
                     writer.Formatting = Formatting.Indented;
                     WriteToXmlWriter(writer, documentHash);
@@ -561,6 +572,16 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return TimeProvider?.Now ?? DateTime.UtcNow; }
         }
 
+        public interface IVersionProvider
+        {
+            string Version { get; }
+        }
+
+        /// <summary>
+        /// For consistent screenshots involving AuditLogEntries version display
+        /// </summary>
+        public static IVersionProvider VersionProvider { get; set; }
+
         public const string XML_ROOT = "audit_log_entry";
 
         private ImmutableList<DetailLogMessage> _allInfo;
@@ -569,11 +590,16 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static string _user = WindowsIdentity.GetCurrent().Name; // This won't change during app's run, so cache it
 
-        public static string _skylineVersion = // This won't change during app's run, so cache it
+        private static string _defaultSkylineVersion = // This won't change during app's run, so cache it
             (string.IsNullOrEmpty(Install.Version)
                ? string.Format(@"Developer build, document format {0}",DocumentFormat.CURRENT) // CONSIDER: can we be more informative?
                : Install.Version)
                + (Install.Is64Bit ? @" (64-Bit)" : string.Empty);
+
+        public static string _skylineVersion
+        {
+            get { return VersionProvider?.Version ?? _defaultSkylineVersion; }
+        }
 
         public static AuditLogEntry ROOT = new AuditLogEntry { Count = 0, LogIndex = int.MaxValue };
 

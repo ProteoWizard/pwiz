@@ -151,9 +151,6 @@
   <data name="WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded" xml:space="preserve">
     <value>Select the folder where the file will be downloaded</value>
   </data>
-  <data name="Icojam-Blueberry-Basic-Arrow-right" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__" xml:space="preserve">
     <value>There was an error authenticating user credentials on the server {0}.</value>
   </data>
@@ -163,23 +160,8 @@
   <data name="WebPanoramaClient_DownloadFile_Downloading__0_" xml:space="preserve">
     <value>Downloading {0}</value>
   </data>
-  <data name="Icojam-Blueberry-Basic-Arrow-up" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="Icojam_Blueberry_Basic_Arrow_up" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Icojam_Blueberry_Basic_Arrow_left" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="up_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\up-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Edit_Undo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Edit_Undo.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Icojam_Blueberry_Basic_Arrow_right" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-right.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Icojam-Blueberry-Basic-Arrow-left" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-left.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
     <value>User {0} does not have permissions to upload to the Panorama folder {1}</value>
@@ -193,8 +175,14 @@
   <data name="PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password" xml:space="preserve">
     <value>Go to Tools - Options - Panorama tab to update the username and password</value>
   </data>
-  <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers" xml:space="preserve">
-    <value>Failed attempting to retrieve information from the following servers</value>
+  <data name="PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers_" xml:space="preserve">
+    <value>Failed attempting to retrieve information from the following servers:</value>
+  </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders" xml:space="preserve">
+    <value>Requesting remote server folders</value>
+  </data>
+  <data name="PanoramaFolderBrowser_InitializeServers_Retrieving_folder_information" xml:space="preserve">
+    <value>Retrieving folder information</value>
   </data>
   <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
     <value>Open</value>
@@ -220,14 +208,26 @@
   <data name="AbstractPanoramaClient_SendZipFile_Deleting_temporary_file_on_server" xml:space="preserve">
     <value>Deleting temporary file on server</value>
   </data>
+  <data name="AbstractPanoramaClient_SendZipFile_Renaming_temporary_file_on_server" xml:space="preserve">
+    <value>Renaming temporary file on server</value>
+  </data>
   <data name="AbstractPanoramaClient_SendZipFile_Waiting_for_data_import_completion___" xml:space="preserve">
     <value>Waiting for data import completion...</value>
   </data>
   <data name="AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__" xml:space="preserve">
     <value>Error validating folder '{0}'</value>
   </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_all_folders" xml:space="preserve">
+    <value>all folders</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for__0__" xml:space="preserve">
+    <value>Error getting information for {0}</value>
+  </data>
   <data name="AbstractPanoramaClient_GetInfoForFolders_Error_getting_information_for_folder___0__" xml:space="preserve">
     <value>Error getting information for folder '{0}'</value>
+  </data>
+  <data name="AbstractPanoramaClient_GetInfoForFolders_folder___0__" xml:space="preserve">
+    <value>folder '{0}'</value>
   </data>
   <data name="AbstractPanoramaClient_GetWebDavPath_There_was_an_error_getting_the_WebDAV_url_for_folder___0__" xml:space="preserve">
     <value>There was an error getting the WebDAV url for folder '{0}'</value>
@@ -246,6 +246,9 @@
   </data>
   <data name="WebPanoramaClient_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
     <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
+  </data>
+  <data name="WebPanoramaClient_ValidateUri_Server_did_not_return_a_valid_LabKey_Server_response___0__is_not_a_LabKey_server_" xml:space="preserve">
+    <value>Server did not return a valid LabKey Server response. {0} is not a LabKey server.</value>
   </data>
   <data name="AbstractPanoramaClient_WaitForDocumentImportCompleted_There_was_an_error_getting_the_status_of_the_document_import_pipeline_job_" xml:space="preserve">
     <value>There was an error getting the status of the document import pipeline job.</value>
@@ -280,7 +283,7 @@
   <data name="AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_" xml:space="preserve">
     <value>Error parsing response as JSON.</value>
   </data>
-  <data name="PanoramaRequestHelper_Post_There_was_an_error_getting_a_CSRF_token_from_the_server_" xml:space="preserve">
+  <data name="HttpPanoramaRequestHelper_GetCsrfTokenFromServer_There_was_an_error_getting_a_CSRF_token_from_the_server_" xml:space="preserve">
     <value>There was an error getting a CSRF token from the server.</value>
   </data>
   <data name="ErrorMessageBuilder_Build_Error__" xml:space="preserve">

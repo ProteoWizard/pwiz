@@ -1,4 +1,4 @@
-﻿namespace pwiz.Common.DataBinding.Controls
+namespace pwiz.Common.DataBinding.Controls
 {
     partial class ColumnListEditor
     {

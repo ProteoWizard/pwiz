@@ -81,6 +81,7 @@ public:
         string filter;
         double q1, q3;
         double q3Offset;
+        double filterQ3, filterOffset; // SRM Q3 and its range must match scan filter, even if we use mass table to get actual Q3
         CVID polarityType;
     };
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -250,7 +250,6 @@ namespace pwiz.Skyline.Model.Lib
             IProgressStatus status = new ProgressStatus(
                 string.Format(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Reading_precursors_from__0_,
                     Name));
-            DateTime start = DateTime.UtcNow;
             try
             {
                 loader.UpdateProgress(status);
@@ -342,11 +341,10 @@ namespace pwiz.Skyline.Model.Lib
                 var spectrumInfos = libKeySourceFileDatas
                     .Where(entry => quantPeptides.Contains(entry.Key))
                     .Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
-                SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
+                SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos, Path.GetFileName(FilePath)));
                 _sourceFiles = new LibraryFiles(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
-                Console.Out.WriteLine("Loaded {0} in {1}", FilePath, DateTime.UtcNow - start);
                 return true;
             }
             catch (Exception e)
@@ -972,7 +970,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public override IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles, ICollection<Target> targets)
         {
-            var fileIndexes = spectrumSourceFiles.Select(file => LibraryFiles.IndexOfFilePath(file)).ToList();
+            var fileIndexes = spectrumSourceFiles?.Select(file => LibraryFiles.IndexOfFilePath(file)).ToList()
+                              ?? Enumerable.Range(0, LibraryFiles.Count).ToList();
             var lists = new IList<double>[LibraryFiles.Count];
             foreach (var fileIndex in fileIndexes)
             {

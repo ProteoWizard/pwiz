@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -476,6 +476,22 @@ namespace pwiz.Skyline.Model.Lists
             }
 
             return result;
+        }
+
+        public ListItem GetListItem(object pk)
+        {
+            if (pk == null)
+            {
+                return null;
+            }
+
+            var listItemType = ListItemTypes.INSTANCE.GetListItemType(ListName);
+            int index = RowIndexOfPrimaryKey(pk);
+            if (index < 0)
+            {
+                return ListItem.OrphanRecord(listItemType, pk, !string.IsNullOrEmpty(ListDef.DisplayProperty));
+            }
+            return ListItem.ExistingRecord(listItemType, this, index);
         }
     }
 }

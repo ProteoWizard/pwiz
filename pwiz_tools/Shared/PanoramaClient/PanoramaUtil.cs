@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -21,10 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net; // HttpStatusCode
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -39,10 +38,11 @@ namespace pwiz.PanoramaClient
         public const string LABKEY_CTX = "/labkey/";
         public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view";
         public const string WEBDAV = @"_webdav";
-        public const string WEBDAV_W_SLASH = WEBDAV + @"/";
+        public const string WEBDAV_W_SLASH = WEBDAV + SLASH;
         public const string FILES = @"@files";
-        public const string FILES_W_SLASH = @"/" + FILES;
+        public const string FILES_W_SLASH = SLASH + FILES;
         public const string PERMS_JSON_PROP = @"effectivePermissions";
+        private const string SLASH = @"/";
 
         public static Uri ServerNameToUri(string serverName)
         {
@@ -70,37 +70,6 @@ namespace pwiz.PanoramaClient
             }
 
             return serverName;
-        }
-
-        public static bool TryGetJsonResponse(WebResponse response, ref JObject jsonResponse)
-        {
-            var responseText = GetResponseString(response);
-            if (responseText != null)
-            {
-                try
-                {
-                    jsonResponse = JObject.Parse(responseText);
-                    return true;
-                }
-                catch (JsonReaderException) { }
-            }
-            return false;
-        }
-
-        public static string GetResponseString(WebResponse response)
-        {
-            using (var stream = response?.GetResponseStream())
-            {
-                if (stream != null)
-                {
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
-                    {
-                        return reader.ReadToEnd();
-                    }
-                }
-            }
-
-            return null;
         }
 
         public static bool IsValidEnsureLoginResponse(JObject jsonResponse, string expectedEmail)
@@ -179,7 +148,7 @@ namespace pwiz.PanoramaClient
         public static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query,
             bool isApi = false)
         {
-            const string separator = @"/";
+            const string separator = SLASH;
             // Trim leading and trailing '/' from the folderPath so that we don't end up with double '//' in the Uri
             folderPath = string.IsNullOrEmpty(folderPath) ? string.Empty : folderPath.Trim().Trim(separator.ToCharArray());
             if (!(string.IsNullOrEmpty(folderPath) || folderPath.EndsWith(separator))) folderPath += separator;
@@ -204,11 +173,66 @@ namespace pwiz.PanoramaClient
             return new Uri(serverUri, path);
         }
 
-        public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders)
+        public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders, PanoramaServer server = null, string serverFolderPath = null)
         {
             var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS",
                 includeSubfolders ? @"true" : @"false");
-            return Call(serverUri, @"project", folder, @"getContainers", queryString);
+            
+            // Combine server folder path with the folder parameter (if provided)
+            // Prefer server.GetFullPath() if server is provided, otherwise use serverFolderPath parameter
+            string effectiveFolder = null;
+            if (server != null)
+            {
+                // Use GetFullPath() to combine server.FolderPath with folder parameter
+                // folder parameter is relative (no leading "/"), so prepend "/" for GetFullPath
+                // GetFullPath returns paths with leading "/", but URLs need paths without leading "/"
+                string folderPathForGetFullPath = string.IsNullOrEmpty(folder) ? folder : SLASH + folder.TrimStart('/');
+                string fullPath = server.GetFullPath(folderPathForGetFullPath);
+                effectiveFolder = string.IsNullOrEmpty(fullPath) || fullPath == SLASH 
+                    ? null 
+                    : fullPath.TrimStart('/');
+            }
+            else if (!string.IsNullOrEmpty(serverFolderPath))
+            {
+                // Legacy path: combine serverFolderPath with folder parameter
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    // Combine paths: serverFolderPath + folder
+                    // e.g., "SkylineTest" + "ForPanoramaClientTest" -> "SkylineTest/ForPanoramaClientTest"
+                    effectiveFolder = serverFolderPath + SLASH + folder.Trim('/');
+                }
+                else
+                {
+                    // Use server folder path only
+                    effectiveFolder = serverFolderPath;
+                }
+            }
+            else if (!string.IsNullOrEmpty(folder))
+            {
+                // Use folder parameter only
+                effectiveFolder = folder;
+            }
+            
+            // Always use new-style URL format: {folder}/project-getContainers.view (preferred by LabKey Server)
+            // This format is required when serverFolderPath is set (e.g., "SkylineTest")
+            // Old format (project/folder/getContainers.view) would incorrectly place the module between server and folder
+            // If effectiveFolder is null/empty, returns project-getContainers.view (gets all folders)
+            // If effectiveFolder is "SkylineTest", returns SkylineTest/project-getContainers.view (gets only that folder)
+            if (string.IsNullOrEmpty(effectiveFolder))
+            {
+                // For empty folder, construct URL directly without leading slash
+                // Using CallNewInterface with empty folder would add a leading slash, so construct manually
+                string apiString = @"view";
+                string queryParam = string.IsNullOrEmpty(queryString) ? string.Empty : @"?" + queryString;
+                string path = $@"project-getContainers.{apiString}{queryParam}";
+                return new Uri(serverUri, path);
+            }
+            else
+            {
+                // Use new-style format: {folder}/project-getContainers.view
+                // e.g., SkylineTest/project-getContainers.view
+                return CallNewInterface(serverUri, @"project", effectiveFolder, @"getContainers", queryString);
+            }
         }
 
         public static Uri GetPipelineContainerUrl(Uri serverUri, string folderPath)
@@ -227,15 +251,12 @@ namespace pwiz.PanoramaClient
                 @"query.queryName=job&schemaName=pipeline&query.rowId~eq=" + pipelineJobRowId);
         }
 
-        public static LabKeyError GetErrorFromWebException(WebException e)
+        public static LabKeyError GetErrorFromNetworkRequestException(NetworkRequestException e)
         {
-            if (e == null || e.Response == null) return null;
+            if (e == null || string.IsNullOrEmpty(e.ResponseBody)) return null;
             
-            // A WebException is usually thrown if the response status code is something other than 200
-            // We could still have a LabKey error in the JSON response. For example, when we get a 404
-            // response when trying to upload to a folder that does not exist. The response contains a 
-            // LabKey error like "No such folder or workbook..."
-            return GetIfErrorInResponse(e.Response);
+            // NetworkRequestException may contain a JSON response body with LabKey-specific error details
+            return GetIfErrorInResponse(e.ResponseBody);
         }
 
         public static LabKeyError GetIfErrorInResponse(JObject jsonResponse)
@@ -245,13 +266,6 @@ namespace pwiz.PanoramaClient
                 return new LabKeyError(jsonResponse[@"exception"].ToString(), jsonResponse[@"status"]?.ToObject<int>());
             }
             return null;
-        }
-
-        public static LabKeyError GetIfErrorInResponse(WebResponse response)
-        {
-            JObject jsonResponse = null;
-            TryGetJsonResponse(response, ref jsonResponse);
-            return jsonResponse != null ? GetIfErrorInResponse(jsonResponse) : null;
         }
 
         public static LabKeyError GetIfErrorInResponse(string responseString)
@@ -436,7 +450,18 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class PanoramaServerException : Exception
+    /// <summary>
+    /// Base class for all Panorama-specific exceptions.
+    /// Inherits from IOException so that these exceptions are recognized as user-actionable
+    /// rather than programming defects by ExceptionUtil.IsProgrammingDefect().
+    /// </summary>
+    public class PanoramaException : IOException
+    {
+        public PanoramaException(string message) : base(message) { }
+        public PanoramaException(string message, Exception innerException) : base(message, innerException) { }
+    }
+
+    public class PanoramaServerException : PanoramaException
     {
         public HttpStatusCode? HttpStatus { get; }
 
@@ -444,48 +469,35 @@ namespace pwiz.PanoramaClient
         {
         }
 
-        private PanoramaServerException(string message, Exception e) : base(message, e)
+        public PanoramaServerException(string message, Exception e) : base(message, e)
         {
-            HttpStatus = ((e as WebException)?.Response as HttpWebResponse)?.StatusCode;
+            HttpStatus = (e as NetworkRequestException)?.StatusCode;
         }
 
-        public static PanoramaServerException Create(string message, Uri uri, string response, Exception e)
+        public static PanoramaServerException CreateWithLabKeyError(string message, Uri uri, Func<NetworkRequestException, LabKeyError> getLabKeyError, NetworkRequestException e)
         {
-            if (e is WebException webException)
+            var labKeyError = getLabKeyError?.Invoke(e);
+            var errorMessageBuilder = new ErrorMessageBuilder(message)
+                .Uri(uri);
+
+            // Add LabKey error if available (most specific server-side error)
+            if (labKeyError != null)
             {
-                return CreateWithResponseDisposal(message, uri, response, webException);
+                errorMessageBuilder.LabKeyError(labKeyError);
+
+                // Don't include the NetworkRequestException message when we have a LabKey error
+                // The LabKey error is the server's specific error message and is what users need
+                // The exception message would be technical details (e.g., "Response status code does not indicate success: 500...")
+                // which are redundant when we already show the LabKey error and status code
+            }
+            else
+            {
+                // No LabKey error - use the full NetworkRequestException message which includes helpful context
+                // (e.g., "The request to https://... timed out. Please try again.")
+                errorMessageBuilder.ExceptionMessage(e.Message);
             }
 
-            var errorMessage = new ErrorMessageBuilder (Resources.AbstractRequestHelper_ParseJsonResponse_Error_parsing_response_as_JSON_)
-                    .ExceptionMessage(e.Message).Uri(uri).Response(response).ToString();
-            return new PanoramaServerException(errorMessage, e);
-        }
-
-        public static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, Func<WebException, LabKeyError> getLabKeyError, WebException e)
-        {
-            var errorMessageBuilder = new ErrorMessageBuilder(message)
-                .Uri(uri)
-                .ExceptionMessage(e.Message)
-                .LabKeyError(getLabKeyError(e)); // Will read the WebException's Response property.
-
-            return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
-        }
-
-        private static PanoramaServerException CreateWithResponseDisposal(string message, Uri uri, string response, WebException e)
-        {
-            var errorMessageBuilder = new ErrorMessageBuilder(message)
-                .Uri(uri)
-                .ExceptionMessage(e.Message)
-                .Response(response);
-
-            return CreateWithResponseDisposal(errorMessageBuilder.ToString(), e);
-        }
-
-        private static PanoramaServerException CreateWithResponseDisposal(string errorMessage, WebException e)
-        {
-            var exception = new PanoramaServerException(errorMessage, e); // Will read WebException's Response.StatusCode
-            e.Response?.Dispose();
-            return exception;
+            return new PanoramaServerException(errorMessageBuilder.ToString(), e);
         }
     }
 
@@ -576,9 +588,10 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class PanoramaImportErrorException : Exception
+    public class PanoramaImportErrorException : PanoramaException
     {
         public PanoramaImportErrorException(Uri serverUrl, Uri jobUrl, string error, bool jobCancelled = false)
+            : base(error)
         {
             ServerUrl = serverUrl;
             JobUrl = jobUrl;
@@ -634,145 +647,24 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class UTF8WebClient : WebClient
-    {
-        public UTF8WebClient()
-        {
-            Encoding = Encoding.UTF8;
-        }
-    }
 
-    public class LabkeySessionWebClient : UTF8WebClient
-    {
-        private CookieContainer _cookies = new CookieContainer();
-        private string _csrfToken;
-        private readonly Uri _serverUri;
-    
-        private const string LABKEY_CSRF = @"X-LABKEY-CSRF";
-    
-        public LabkeySessionWebClient(PanoramaServer server)
-        {
-            if (server == null)
-            {
-                throw new ArgumentNullException(nameof(server));
-            }
-            // Add the Authorization header only if a username and password is provided. Otherwise, the request will fail.
-            // Prior to LK 24.11 a call that failed authentication would proceed as an unauthenticated user
-            if (server.HasUserAccount())
-            {
-                Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
-            }
 
-            _serverUri = server.URI;
-        }
-
-        protected override WebRequest GetWebRequest(Uri address)
-        {
-            var request = base.GetWebRequest(address);
-
-            if (request is HttpWebRequest httpWebRequest)
-            {
-                httpWebRequest.CookieContainer = _cookies;
-    
-                if (request.Method == PanoramaUtil.FORM_POST && !string.IsNullOrEmpty(_csrfToken))
-                {
-                    // All POST requests to LabKey Server will be checked for a CSRF token
-                    request.Headers.Add(LABKEY_CSRF, _csrfToken);
-
-                }
-            }
-            return request;
-        }
-    
-        protected override WebResponse GetWebResponse(WebRequest request)
-        {
-            var response = base.GetWebResponse(request);
-            if (response is HttpWebResponse httpResponse)
-            {
-                GetCsrfToken(httpResponse, request.RequestUri);
-            }
-            return response;
-        }
-    
-        private void GetCsrfToken(HttpWebResponse response, Uri requestUri)
-        {
-            if (!string.IsNullOrEmpty(_csrfToken))
-            {
-                return;
-            }
-
-            var csrf = GetCsrfCookieFromResponse(response);
-            if (csrf == null)
-            {
-                // If we did not find it in the Response cookies look in the Request cookies.
-                // org.labkey.api.util.CSRFUtil.getExpectedToken() will not add the CSRF cookie to the response if the cookie
-                // is already there in the request cookies.
-                // An example of where this can happen is WebPanoramaClient.SendZipFile(). This uses one instance of the web client
-                // to do multiple requests. Normally the first request (getPipelineContainer) retrieves the CSRF token from the response
-                // cookies and saves it for any future requests. But this request may get redirected(302) because the Panorama folder was 
-                // renamed, and if that happens the response cookies get copied to the request's cookie container, and CSRFUtil.getExpectedToken
-                // does not add a response cookie because it sees the CSRF cookie in the request cookies. So when we look for the CSRF cookie
-                // in the response after the redirected request returns we don't find it. But we can find it in the request cookies.
-                csrf = GetCsrfCookieFromRequest(requestUri);
-            }
-            if (csrf != null)
-            {
-                // The server set a cookie called X-LABKEY-CSRF, get its value
-                _csrfToken = csrf.Value;
-            }
-        }
-
-        private Cookie GetCsrfCookieFromResponse(HttpWebResponse response)
-        {
-            return response.Cookies[LABKEY_CSRF];
-        }
-
-        private Cookie GetCsrfCookieFromRequest(Uri requestUri)
-        {
-            return _cookies.GetCookies(requestUri)[LABKEY_CSRF];
-        }
-
-        public void GetCsrfTokenFromServer()
-        {
-            if (string.IsNullOrEmpty(_csrfToken))
-            {
-                // After making this request the client should have the X-LABKEY-CSRF token 
-                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
-            }
-        }
-
-        public void ClearCsrfToken()
-        {
-            _csrfToken = null;
-        }
-    }
-
-    public class NonStreamBufferingWebClient : LabkeySessionWebClient
-    {
-        public NonStreamBufferingWebClient(PanoramaServer server)
-            : base(server)
-        {
-        }
-
-        protected override WebRequest GetWebRequest(Uri address)
-        {
-            var request = base.GetWebRequest(address);
-
-            var httpWebRequest = request as HttpWebRequest;
-            if (httpWebRequest != null)
-            {
-                httpWebRequest.Timeout = Timeout.Infinite;
-                httpWebRequest.AllowWriteStreamBuffering = false;
-            }
-            return request;
-        }
-    }
 
     public class PanoramaServer : Immutable
     {
+        private const string SLASH = "/";
+        private const char SLASH_C = '/';
+
         public Uri URI { get; protected set; }
         public string Username { get; protected set; }
         public string Password { get; protected set; }
+
+        /// <summary>
+        /// Optional folder path (e.g., "SkylineTest") that can be combined with URI for folder-specific operations.
+        /// This allows users to specify a project-specific server URL for faster responses.
+        /// The base URI (without folder path) is used for operations like ensureLogin.
+        /// </summary>
+        public string FolderPath { get; protected set; }
 
         protected PanoramaServer()
         {
@@ -787,26 +679,72 @@ namespace pwiz.PanoramaClient
             Username = username;
             Password = password;
 
-            var path = serverUri.AbsolutePath;
+            (URI, FolderPath) = ParseUri(serverUri);
+        }
 
-            if (path.Length > 1)
+        private (Uri uri, string folderPath) ParseUri(Uri serverUri)
+        {
+            var fullPath = serverUri.AbsolutePath;
+            string contextPath = null;
+            string folderPath = null;
+
+            // Parse the path to separate context path (e.g., /labkey) from folder path (e.g., /SkylineTest)
+            // Context path is typically the first segment after root (e.g., /labkey)
+            // Folder path is any additional segments (e.g., /SkylineTest)
+            if (fullPath.Length > 1)
             {
-                // Get the context path (e.g. /labkey) from the path
-                var idx = path.IndexOf(@"/", 1, StringComparison.Ordinal);
-                if (idx != -1 && path.Length > idx + 1)
+                var segments = fullPath.Trim(SLASH_C).Split(SLASH_C);
+                if (segments.Length > 0)
                 {
-                    path = path.Substring(0, idx + 1);
+                    // First segment is typically the context path (e.g., "labkey")
+                    // But if it looks like a project folder name (no "labkey" pattern), treat it as folder path
+                    // For now, assume context path is empty for panoramaweb.org (most common case)
+                    // and any path segments are folder paths
+                    if (segments[0].Equals(@"labkey", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Context path found
+                        contextPath = SLASH + segments[0];
+                        if (segments.Length > 1)
+                        {
+                            // Remaining segments are folder path
+                            folderPath = string.Join(SLASH, segments.Skip(1));
+                        }
+                    }
+                    else
+                    {
+                        // No context path, all segments are folder path
+                        folderPath = string.Join(SLASH, segments);
+                    }
                 }
             }
 
+            // Construct base URI with context path only (no folder path)
+            var basePath = contextPath ?? SLASH;
             // Need trailing '/' for correct URIs with new Uri(baseUri, relativeUri) method
             // With no trailing '/', new Uri("https://panoramaweb.org/labkey", "project/getContainers.view") will
             // return https://panoramaweb.org/project/getContainers.view (no labkey)
             // ReSharper disable LocalizableElement
-            path += path.EndsWith("/") ? "" : "/";
+            if (!basePath.EndsWith(SLASH))
+                basePath += SLASH;
             // ReSharper restore LocalizableElement
 
-            URI = new UriBuilder(serverUri) { Path = path, Query = string.Empty, Fragment = string.Empty }.Uri;
+            var uri = new UriBuilder(serverUri) { Path = basePath, Query = string.Empty, Fragment = string.Empty }.Uri;
+            // Normalize FolderPath: remove leading/trailing slashes so it's stored consistently
+            // This allows us to avoid trimming in GetFullPath() and other methods
+            folderPath = NormalizePath(folderPath);
+            return (uri, folderPath);
+        }
+
+        /// <summary>
+        /// Normalizes a folder path by trimming leading/trailing slashes.
+        /// Returns null for null/empty strings, or the trimmed path (which may be empty string if input was just slashes).
+        /// </summary>
+        private static string NormalizePath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return null;
+            var trimmed = path.Trim(SLASH_C);
+            return string.IsNullOrEmpty(trimmed) ? null : trimmed;
         }
 
         public string AuthHeader => GetBasicAuthHeader(Username, Password);
@@ -823,14 +761,14 @@ namespace pwiz.PanoramaClient
 
         public bool HasContextPath()
         {
-            return !URI.AbsolutePath.Equals(@"/");
+            return !URI.AbsolutePath.Equals(SLASH);
         }
 
         public PanoramaServer RemoveContextPath()
         {
             if (HasContextPath())
             {
-                var newUri = new UriBuilder(URI) { Path = @"/" }.Uri;
+                var newUri = new UriBuilder(URI) { Path = SLASH }.Uri;
                 return new PanoramaServer(newUri, Username, Password);
             }
 
@@ -846,6 +784,94 @@ namespace pwiz.PanoramaClient
             }
 
             return this;
+        }
+
+        /// <summary>
+        /// Constructs a full URI by combining the server's base URI with a folder path.
+        /// Handles trailing slashes in the base URI and leading slashes in the folder path to avoid double slashes.
+        /// Note: This method does NOT incorporate PanoramaServer.FolderPath. If you need FolderPath included,
+        /// use GetFullUri() instead, or call GetFullPath() first and pass the result to this method.
+        /// </summary>
+        /// <param name="folderPath">A folder path (maybe null, empty, or have leading slashes, will be normalized)</param>
+        /// <param name="webdav">If true, includes the "_webdav/" prefix in the path</param>
+        /// <returns>The full URI combining Server.URI with the folder path</returns>
+        public string GetUri(string folderPath, bool webdav = false)
+        {
+            var serverUri = URI.ToString();
+            var normalizedFolderPath = folderPath ?? string.Empty;
+            
+            if (webdav)
+            {
+                normalizedFolderPath = AppendPath(PanoramaUtil.WEBDAV, normalizedFolderPath);
+            }
+            
+            return AppendPath(serverUri, normalizedFolderPath);
+        }
+
+        protected static string AppendPath(string root, string append)
+        {
+            if (string.IsNullOrEmpty(append))
+                return root;
+            if (root.EndsWith(SLASH))
+                root = root.Substring(0, root.Length - 1);
+            if (append.StartsWith(SLASH))
+                append = append.Substring(1);
+            return root + SLASH + append;
+        }
+
+        /// <summary>
+        /// Constructs a full URI by combining the server's base URI with a folder path,
+        /// incorporating PanoramaServer.FolderPath if it is set.
+        /// This is equivalent to calling GetFullPath() followed by GetUri().
+        /// </summary>
+        /// <param name="folderPath">A folder path (maybe absolute or relative, will be combined with FolderPath if set)</param>
+        /// <param name="webdav">If true, includes the "_webdav/" prefix in the path</param>
+        /// <returns>The full URI combining Server.URI with FolderPath (if set) and the folder path</returns>
+        public string GetFullUri(string folderPath = null, bool webdav = false)
+        {
+            return GetUri(GetFullPath(folderPath), webdav);
+        }
+
+        /// <summary>
+        /// Combines the server's FolderPath with a relative or absolute folder path.
+        /// Returns the full path accounting for the server's base folder.
+        /// Both FolderPath and the input folderPath are normalized (no leading/trailing slashes)
+        /// to ensure consistent behavior.
+        /// </summary>
+        /// <param name="folderPath">A folder path (maybe absolute like "/SkylineTest/ForPanoramaClientTest" or relative like "/ForPanoramaClientTest" or "ForPanoramaClientTest")</param>
+        /// <returns>The full path combining FolderPath with folderPath, with a leading slash and no trailing slash</returns>
+        public string GetFullPath(string folderPath)
+        {
+            return SLASH + GetNormalizedFullPath(folderPath);
+        }
+
+        private string GetNormalizedFullPath(string folderPath)
+        {
+            // Normalize input folderPath (returns null for null/empty/just-slashes)
+            string normalizedInput = NormalizePath(folderPath);
+
+            // If FolderPath is not set, return normalized input with leading slash (or "/" if null)
+            if (FolderPath == null)
+            {
+                return normalizedInput ?? string.Empty;
+            }
+
+            // If normalized input is null, return just FolderPath
+            if (normalizedInput == null)
+            {
+                return FolderPath;
+            }
+
+            // Check if normalizedInput already starts with or is FolderPath
+            if (normalizedInput.StartsWith(FolderPath + SLASH, StringComparison.Ordinal) ||
+                normalizedInput == FolderPath)
+            {
+                // Input already includes FolderPath, return with leading slash
+                return normalizedInput;
+            }
+
+            // Otherwise, combine FolderPath with normalizedInput
+            return AppendPath(FolderPath, normalizedInput);
         }
 
         public PanoramaServer Redirect(string redirectUri, string panoramaActionPath)
@@ -869,7 +895,7 @@ namespace pwiz.PanoramaClient
             return this;
         }
 
-        public static string getFolderPath(PanoramaServer server, Uri serverPlusPath)
+        public static string GetFolderPath(PanoramaServer server, Uri serverPlusPath)
         {
             var path = serverPlusPath.AbsolutePath;
             var contextPath = server.URI.AbsolutePath;
@@ -883,5 +909,4 @@ namespace pwiz.PanoramaClient
             return authHeader;
         }
     }
-
 }

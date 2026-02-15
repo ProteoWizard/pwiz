@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford
  *
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.FileUI
                         textOpenDatabase.Focus();
                         return;
                     }
-                    var db = IrtDb.GetIrtDb(textOpenDatabase.Text, null);
+                    var db = IrtDb.GetIrtDb(textOpenDatabase.Text);
                     if (db == null)
                     {
                         throw new DatabaseOpeningException(string.Format(FileUIResources.CreateIrtCalculatorDlg_OkDialog_Cannot_read_the_database_file__0_, textOpenDatabase.Text));

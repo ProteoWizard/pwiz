@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -382,6 +382,7 @@ namespace pwiz.Skyline.Model
         {
             return exception is InvalidOperationException
                    || exception is InvalidDataException
+                   || exception is InvalidChemicalModificationException
                    || exception is ArgumentException;
         }
 

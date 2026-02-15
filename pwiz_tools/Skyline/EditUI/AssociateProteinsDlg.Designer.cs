@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.EditUI
+namespace pwiz.Skyline.EditUI
 {
     partial class AssociateProteinsDlg
     {
@@ -59,7 +59,7 @@
             this.comboBackgroundProteome = new System.Windows.Forms.ComboBox();
             this.tbxFastaTargets = new System.Windows.Forms.TextBox();
             this.browseFastaTargetsBtn = new System.Windows.Forms.Button();
-            this.dgvAssociateResults = new pwiz.Common.Controls.CommonDataGridView();
+            this.dgvAssociateResults = new pwiz.Skyline.Controls.DataGridViewEx();
             this.headerColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.mappedColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.unmappedColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -492,7 +492,7 @@
         private System.Windows.Forms.ComboBox comboBackgroundProteome;
         private System.Windows.Forms.TextBox tbxFastaTargets;
         private System.Windows.Forms.Button browseFastaTargetsBtn;
-        private pwiz.Common.Controls.CommonDataGridView dgvAssociateResults;
+        private pwiz.Skyline.Controls.DataGridViewEx dgvAssociateResults;
         private System.Windows.Forms.Label lblResults;
         private System.Windows.Forms.DataGridViewTextBoxColumn headerColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn mappedColumn;

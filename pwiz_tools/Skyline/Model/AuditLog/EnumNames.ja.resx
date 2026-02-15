@@ -144,6 +144,9 @@
   <data name="eIonMobilityUnits_waters_sonar" xml:space="preserve">
     <value>Waters SONAR</value>
   </data>
+  <data name="FullScanAcquisitionMethod_EI" xml:space="preserve">
+    <value>EI</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
     <value>DDA</value>
   </data>
@@ -438,6 +441,9 @@
   <data name="ListSortDirection_Descending" xml:space="preserve">
     <value>降順</value>
   </data>
+  <data name="CountDistinctImpl_CountDistinct" xml:space="preserve">
+    <value>ユニーク数</value>
+  </data>
   <data name="CountImpl_Count" xml:space="preserve">
     <value>数</value>
   </data>
@@ -452,6 +458,9 @@
   </data>
   <data name="NumericAggregate_Sum" xml:space="preserve">
     <value>合計</value>
+  </data>
+  <data name="NumericAggregate_Median" xml:space="preserve">
+    <value>中央値</value>
   </data>
   <data name="SelectOne_Max" xml:space="preserve">
     <value>最大</value>
@@ -599,10 +608,6 @@
   </data>
   <data name="InputFile_dia_raw" xml:space="preserve">
     <value>DIA生データ(検索してライブラリを構築)</value>
-    <comment>Needs Review:English text changed
-Old English:DIA raw (deconvolute, search, and build library)
-Current English:DIA raw (search and build library)
-Old Localized:DIA生データ (ライブラリのデコンボリューション、検索、構築)</comment>
   </data>
   <data name="InputFile_search_result" xml:space="preserve">
     <value>検索結果 (ライブラリを直接構築)</value>
@@ -744,5 +749,8 @@ Old Localized:DIA生データ (ライブラリのデコンボリューション�
   </data>
   <data name="SearchEngine_Comet" xml:space="preserve">
     <value>Comet</value>
+  </data>
+  <data name="SearchEngine_Tide" xml:space="preserve">
+    <value>Tide-Search</value>
   </data>
 </root>

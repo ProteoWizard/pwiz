@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -251,7 +251,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void dataGridViewColors_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
+            if (ClipboardHelper.IsPaste(e.KeyData))
             {
                 DoPaste();
                 e.Handled = true;

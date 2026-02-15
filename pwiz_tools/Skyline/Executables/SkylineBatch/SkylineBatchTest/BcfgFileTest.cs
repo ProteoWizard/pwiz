@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -21,7 +21,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -32,10 +31,9 @@ using static SkylineBatch.RefineInputObject;
 namespace SkylineBatchTest
 {
     [TestClass]
-    public class BcfgFileTest
+    public class BcfgFileTest : AbstractSkylineBatchUnitTest
     {
-
-        private string AppendToFileName(string filePath, string appendText) => Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath) + appendText + Path.GetExtension(filePath));
+        private string AppendToFileName(string filePath, string appendText) => Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, Path.GetFileNameWithoutExtension(filePath) + appendText + Path.GetExtension(filePath));
 
         private string ImportFilePath(string version, string type) => Path.Combine(TestUtils.GetTestFilePath("BcfgTestFiles"), $"{version}_{type}{TextUtil.EXT_BCFG}");
         private string ExpectedFilePath(string version, string type) => AppendToFileName(ImportFilePath(version, type), "_expected");// Path.Combine(TestUtils.GetTestFilePath("BcfgTestFiles"), $"{version}_{type}_expected{TextUtil.EXT_BCFG}");
@@ -56,21 +54,30 @@ namespace SkylineBatchTest
             var testFolderPath = TestUtils.GetTestFilePath(string.Empty);
             var rawImportFile = ImportFilePath(version, type);
             var currentFolderName = Path.GetFileName(testFolderPath);
+            Assert.IsNotNull(currentFolderName);
             var pwizToolsDirectory = Path.GetDirectoryName(testFolderPath);
-            while (!currentFolderName.Equals("pwiz_tools"))
+            while (!currentFolderName!.Equals("pwiz_tools"))
             {
                 currentFolderName = Path.GetFileName(pwizToolsDirectory);
                 pwizToolsDirectory = Path.GetDirectoryName(pwizToolsDirectory);
             }
-            var updatedImportFile = TestUtils.CopyFileFindReplace(rawImportFile, "REPLACE_TEXT", pwizToolsDirectory, AppendToFileName(rawImportFile, "_replaced"));
+
+            // Compose transformations: path replacement + R version replacement
+            string TransformBcfgFile(string line)
+            {
+                var pathReplaced = line.Replace("REPLACE_TEXT", pwizToolsDirectory);
+                return TestUtils.ReplaceRVersionWithCurrent(pathReplaced);
+            }
+            
+            var updatedImportFile = TestUtils.CopyFileWithLineTransform(rawImportFile, TransformBcfgFile, AppendToFileName(rawImportFile, "_replaced"));
             var rawExpectedFile = ExpectedFilePath(version, type);
-            var updatedExpectedFile = TestUtils.CopyFileFindReplace(rawExpectedFile, "REPLACE_TEXT", pwizToolsDirectory, AppendToFileName(rawExpectedFile, "_replaced"));
+            var updatedExpectedFile = TestUtils.CopyFileWithLineTransform(rawExpectedFile, TransformBcfgFile, AppendToFileName(rawExpectedFile, "_replaced"));
             
             // run tests
             CompareImports(updatedImportFile, updatedExpectedFile);
             ImportExportCompare(updatedImportFile, updatedExpectedFile);
 
-            // delete uniqie bcfg files
+            // delete processed bcfg files
             File.Delete(updatedImportFile);
             File.Delete(updatedExpectedFile);
 
@@ -82,7 +89,7 @@ namespace SkylineBatchTest
             Assert.IsTrue(File.Exists(currentVersionFile), currentVersionFile + " does not exist.");
 
 
-            var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var configManager = new SkylineBatchConfigManager(GetTestLogger());
             configManager.Import(oldVersionFile, null);
             IConfig[] oldVersionConfigs = new IConfig[configManager.State.BaseState.ConfigList.Count];
             configManager.State.BaseState.ConfigList.CopyTo(oldVersionConfigs);
@@ -106,15 +113,20 @@ namespace SkylineBatchTest
                 Assert.Fail(filePathImport + " does not exist. Must import from an existing file.");
             
             var filePathActualExport = filePathExpectedExport.Replace("expected", "actual");
-            var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
+            var configManager = new SkylineBatchConfigManager(GetTestLogger());
             configManager.Import(filePathImport, null);
             int[] indiciesToSave = new int[configManager.State.BaseState.ConfigList.Count];
             for (int index = 0; index < indiciesToSave.Length; index++)
                 indiciesToSave[index] = index;
             
-            var configModifiedLinePattern = new Regex(@"^(  <skylinebatch_config name=.*modified=).*>$");//@"^  <skylinebatch_config name=(.*)[.enabled=(.*)]*modified=.*>$"
+            // Skip comparison of lines that change between test runs (timestamps) or between R installations (versions)
+            var skipPatterns = new List<Regex>
+            {
+                new Regex(@"^(  <skylinebatch_config name=.*modified=).*>$"),  // Config modified timestamp
+                new Regex(@"^(.*<r_script.*version="")[^""]+("".*)$")          // R script version number
+            };
             configManager.State.BaseState.ExportConfigs(filePathActualExport, SkylineBatch.Properties.Settings.Default.XmlVersion, indiciesToSave);
-            TestUtils.CompareFiles(filePathExpectedExport, filePathActualExport, new List<Regex> { configModifiedLinePattern });
+            TestUtils.CompareFiles(filePathExpectedExport, filePathActualExport, skipPatterns);
             File.Delete(filePathActualExport);
         }
 
@@ -124,8 +136,9 @@ namespace SkylineBatchTest
         {
             // test version of expected bcfg files to make sure they import correctly
             var filePath = ExpectedFilePath("21_1_0_312", "complex_test");
-            var configManager = new SkylineBatchConfigManager(TestUtils.GetTestLogger());
-            configManager.Import(filePath, null);
+            using var fileSaver = TestUtils.CreateBcfgWithCurrentRVersion(filePath);
+            var configManager = new SkylineBatchConfigManager(GetTestLogger());
+            configManager.Import(fileSaver.SafeName, null);
             var actualConfig = configManager.GetConfig(0);
 
             var expectedTemplate = new SkylineTemplate(null, @"Bruderer.sky.zip",
@@ -187,15 +200,16 @@ namespace SkylineBatchTest
                     string.Empty, TestUtils.GetTestFilePath(string.Empty), "MSstats_Bruderer.R") }};
 
 
+            var rVersion = RInstallations.GetMostRecentInstalledRVersion();
             var expectedReportOne = new ReportInfo("MSstats Input-plus", false, null, new List<Tuple<string, string>>(){
-                new Tuple<string, string>(TestUtils.GetTestFilePath("MSstats_Bruderer.R"), "4.0.3") },
+                new Tuple<string, string>(TestUtils.GetTestFilePath("MSstats_Bruderer.R"), rVersion) },
                 new Dictionary<string, PanoramaFile>() {{ TestUtils.GetTestFilePath("MSstats_Bruderer.R"), new PanoramaFile(
                     new RemoteFileSource("panoramaweb.org MSstats_Bruderer.R", "https://panoramaweb.org/_webdav/Panorama%20Public/2021/MacCoss%20-%202015-Bruderer/%40files/reports/MSstats_Bruderer.R", "alimarsh@mit.edu", "test", false),
                     string.Empty, TestUtils.GetTestFilePath(string.Empty), "MSstats_Bruderer.R") }}, false);
 
             var expectedReportTwo = new ReportInfo("Unique Report", false, TestUtils.GetTestFilePath("UniqueReport.skyr"),
                 new List<Tuple<string, string>>(){
-                new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), "4.0.3") }, new Dictionary<string, PanoramaFile>(), true);
+                new Tuple<string, string>(TestUtils.GetTestFilePath("testScript.R"), rVersion) }, new Dictionary<string, PanoramaFile>(), true);
 
             var expectedReportSettings = new ReportSettings(new List<ReportInfo>() { expectedReportOne, expectedReportTwo });
 

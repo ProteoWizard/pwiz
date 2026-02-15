@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -471,7 +471,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                DisplayError(ex.Message);
+                DisplayErrorWithException(ex.Message, ex);
             }
 
             _scrolling = true;

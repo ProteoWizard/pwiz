@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Menus
+namespace pwiz.Skyline.Menus
 {
     partial class ViewMenu
     {
@@ -46,6 +46,8 @@
             this.proteomicsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.moleculeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mixedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.viewFilesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator41 = new System.Windows.Forms.ToolStripSeparator();
             this.liveReportsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -153,6 +155,8 @@
             this.viewModificationsMenuItem,
             this.textZoomToolStripMenuItem,
             this.userInterfaceToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.viewFilesMenuItem,
             this.toolStripSeparator41,
             this.liveReportsMenuItem,
             this.librariesMenuItem,
@@ -292,6 +296,18 @@
             this.modeUIHandler.SetUIMode(this.mixedToolStripMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
             this.mixedToolStripMenuItem.Click += new System.EventHandler(this.mixedToolStripMenuItem_Click);
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // viewFilesMenuItem
+            // 
+            this.viewFilesMenuItem.CheckOnClick = true;
+            this.viewFilesMenuItem.Name = "viewFilesMenuItem";
+            resources.ApplyResources(this.viewFilesMenuItem, "viewFilesMenuItem");
+            this.viewFilesMenuItem.Click += new System.EventHandler(this.viewFilesMenuItem_Click);
+            // 
             // toolStripSeparator41
             // 
             this.toolStripSeparator41.Name = "toolStripSeparator41";
@@ -319,6 +335,7 @@
             // 
             // auditLogMenuItem
             // 
+            this.auditLogMenuItem.Image = global::pwiz.Skyline.Properties.Resources.AuditLog;
             this.auditLogMenuItem.Name = "auditLogMenuItem";
             resources.ApplyResources(this.auditLogMenuItem, "auditLogMenuItem");
             this.auditLogMenuItem.Click += new System.EventHandler(this.auditLogMenuItem_Click);
@@ -1027,5 +1044,7 @@
         private System.Windows.Forms.ToolStripMenuItem viewTargetsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem spectrumGridMenuItem;
         private System.Windows.Forms.ToolStripMenuItem librariesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewFilesMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }

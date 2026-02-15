@@ -1,4 +1,4 @@
-﻿ /*
+ /*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2020 University of Washington - Seattle, WA
@@ -353,7 +353,7 @@ using SharedBatch.Properties;
                     using (var fileStream = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.Read))
                     {
                         using (var streamWriter =
-                            new StreamWriter(fileStream, Encoding.UTF8, StreamDefaultBufferSize, true))
+                            new StreamWriter(fileStream, new UTF8Encoding(false), StreamDefaultBufferSize, true)) // UTF-8 without BOM
                         {
                             if (_logBuffer != null && _logBuffer.Length > 0)
                             {
@@ -402,6 +402,12 @@ using SharedBatch.Properties;
 
         private void WriteToBuffer(string message)
         {
+            // Protect against null _logBuffer (can happen if logger not initialized or already disposed)
+            if (_logBuffer == null)
+            {
+                return;
+            }
+
             if (_logBuffer.Length > LogBufferSize)
             {
                 return;

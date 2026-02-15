@@ -1,4 +1,4 @@
-﻿using MathNet.Numerics.LinearRegression;
+using MathNet.Numerics.LinearRegression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
 using System;

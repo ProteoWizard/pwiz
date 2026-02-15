@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 

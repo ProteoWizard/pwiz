@@ -1,4 +1,4 @@
-﻿namespace BumberDash.Forms
+namespace BumberDash.Forms
 {
     partial class ConfigWizard
     {

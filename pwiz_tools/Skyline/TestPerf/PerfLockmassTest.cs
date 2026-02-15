@@ -85,7 +85,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 loadStopwatch.Start();
                 ImportResults(GetTestPath(TestFilesPersistent[0]),
                     (testloop == 0)
-                        ? new LockMassParameters(0, lockmassNegative, lockmassToler) // ESI- data
+                        ? LockMassParameters.Create(0, lockmassNegative, lockmassToler) // ESI- data
                         : LockMassParameters.EMPTY);
 
                 var document = WaitForDocumentLoaded(400000);
@@ -94,7 +94,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
                 if (testloop < 2)
                     DebugLog.Info("lockmass {0} load time = {1}", (testloop == 0) ? "corrected" : "uncorrected", loadStopwatch.ElapsedMilliseconds);
-                document = ResultsUtil.ClearFileImportTimes(document);
+                document = ResultsUtil.ClearFileImportTimes(document); // Ignore import time differences for comparisons
+                document = ResultsUtil.ClearFileWriteTimes(document); // Ignore write time differences for comparisons
                 if (testloop == 0)
                 {
                     corrected = document;
@@ -111,7 +112,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     RunUI(() => SkylineWindow.NewDocument(true));
             }
             Assert.AreNotEqual(corrected, uncorrected2);  // Corrected pass should differ
-            Assert.AreEqual(uncorrected2, uncorrected1);  // Both uncorrected passes should agree
+            var comparison = DocumentComparer.CompareDocuments(uncorrected2, uncorrected1); // Returns null if identical
+            Assert.IsNull(comparison, comparison);  // Both uncorrected passes should agree
             Assert.IsNotNull(corrected);
             Assert.IsNotNull(uncorrected2);
             ComparePeaks(corrected, uncorrected2);

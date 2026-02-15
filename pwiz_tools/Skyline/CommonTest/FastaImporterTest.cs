@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,11 +22,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml;
+using Newtonsoft.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
@@ -108,13 +108,67 @@ namespace CommonTest
     /// tests our ability to import various wildtype FASTA header lines, including some that need web services for full extraction
     /// </summary>
     [TestClass]
-    public class FastaImporterTest : AbstractUnitTest
+    public class FastaImporterTest : AbstractUnitTestEx
     {
+        private const string FASTA_EXPECTED_JSON_RELATIVE_PATH = @"CommonTest\FastaImporterTestExpected.json";
+
+        private FastaImporterExpectedData _cachedExpectedData;
+
         private const string NEGTEST_NAME = @"Q9090909090"; // For use in negative test
         private const string NEGTEST_DESCRIPTION = @"this is meant to fail"; // For use in negative test
         private const string novalue = null;
 
+        private static List<FastaHeaderParserTest> MergeExpectedRecords(List<FastaHeaderParserTest> tests,
+            IReadOnlyDictionary<string, FastaImporterExpectedRecord> expectedRecords)
+        {
+            if (expectedRecords == null || expectedRecords.Count == 0)
+                return tests;
 
+            var merged = new List<FastaHeaderParserTest>(tests.Count);
+            foreach (var test in tests)
+            {
+                if (!ShouldUseRecordedExpectations(test.Header) ||
+                    !expectedRecords.TryGetValue(test.Header, out var record) ||
+                    record?.Results == null ||
+                    record.Results.Count == 0)
+                {
+                    merged.Add(test);
+                    continue;
+                }
+
+                var expectedResults = record.Results
+                    .Select(ConvertExpectedResult)
+                    .ToArray();
+                merged.Add(new FastaHeaderParserTest(test.Header, expectedResults));
+            }
+
+            return merged;
+        }
+
+        private static bool ShouldUseRecordedExpectations(string header)
+        {
+            if (string.IsNullOrEmpty(header))
+                return true;
+            if (header.Contains(NEGTEST_NAME))
+                return false;
+            return true;
+        }
+
+        private static FastaHeaderReaderResult ConvertExpectedResult(FastaImporterExpectedResult result)
+        {
+            return new FastaHeaderReaderResult(
+                accession: result.Accession ?? string.Empty,
+                preferredname: result.PreferredName ?? string.Empty,
+                name: result.Name ?? string.Empty,
+                description: result.Description ?? string.Empty,
+                species: result.Species ?? string.Empty,
+                gene: result.Gene ?? string.Empty,
+                seqlen: Math.Max(result.SequenceLength, 0),
+                websearchcode: WebEnabledFastaImporter.UNIPROTKB_TAG,
+                wellformed: result.WellFormed);
+        }
+ 
+ 
         public class FastaHeaderParserTest
         {
             public FastaHeaderParserTest(string header, FastaHeaderReaderResult[] expectedResults)
@@ -486,219 +540,417 @@ namespace CommonTest
             return list.Where(t => t.ExpectedResults[0].SeqLen > minSequenceLength).ToList();
         }
 
-        /// <summary>
-        /// for testing without requiring web access - returns the expected web responses for the tests herein.
-        /// </summary>
-        public class PlaybackProvider : WebEnabledFastaImporter.WebSearchProvider
+        private static List<ExpectedMetadataItem> GetExpectedMetadata(FastaHeaderParserTest test,
+            IReadOnlyDictionary<string, FastaImporterExpectedRecord> expectedRecords)
         {
-            private readonly List<FastaHeaderParserTest> _tests; // We mine this for mimicry of web response
-
-            public override bool IsPolite
+            if (!ShouldUseRecordedExpectations(test.Header))
+                expectedRecords = null;
+            if (expectedRecords != null &&
+                expectedRecords.TryGetValue(test.Header, out var record) &&
+                record?.Results != null &&
+                record.Results.Count > 0)
             {
-                get { return false; }
+                return record.Results
+                    .Select(ToExpectedMetadata)
+                    .ToList();
             }
 
-            public PlaybackProvider(List<FastaHeaderParserTest> tests)
-            {
-                _tests = tests;
-            }
-
-            public PlaybackProvider()
-            {
-                _tests = GetTests(0); // The default set of fasta header tests
-            }
-
-            public override XmlTextReader GetXmlTextReader(string url)
-            {
-                // should look something like "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=15834432,15834432&tool=%22skyline%22&email=%22johnqdeveloper@proteinms.net%22&retmode=xml"
-                var searches = url.Split('=')[2].Split('&')[0].Split(',');
-                var sb = new StringBuilder();
-                if (url.Contains(".gov")) // watch for deliberately malformed url in tests Not L10N
-                {
-                    if (url.Contains("rettype=docsum"))
-                    {
-                        sb.Append("<?xml version=\"1.0\"?>\n<eSummaryResult>\n"); // Not L10N
-                        foreach (var search in searches)
-                        {
-                            var test = FindTest(search);
-                            if ((null != test) && !String.IsNullOrEmpty(test.Protein.Accession))
-                            {
-                                var intermediateSearchTerm = test.GetIntermediateSearchterm(search);
-                                sb.AppendFormat("<Id>{0}</Id>",search);
-                                sb.AppendFormat("<DocSum> ");
-                                sb.AppendFormat("<Item Name=\"Caption\" Type=\"String\">{0}</Item>",
-                                    intermediateSearchTerm);
-                                sb.AppendFormat("<Item Name=\"ReplacedBy\" Type=\"String\">{0}</Item>",
-                                    intermediateSearchTerm);
-                                sb.AppendFormat("<Item Name=\"Length\" Type=\"Integer\">{0}</Item>",
-                                    test.SeqLen);
-                                sb.AppendFormat("</DocSum>\n"); // Not L10N
-                            }
-                        }
-                        sb.AppendFormat("</eSummaryResult>\n"); // Not L10N
-                    }
-                    else
-                    {
-                        sb.Append("<?xml version=\"1.0\"?>\n<GBSet>\n"); // Not L10N
-                        foreach (var search in searches)
-                        {
-                            var test = FindTest(search);
-                            if ((null != test) && !String.IsNullOrEmpty(test.Protein.Accession))
-                            {
-                                sb.AppendFormat("<GBSeq> ");
-                                sb.AppendFormat("<GBSeq_length>{0}</GBSeq_length> ",
-                                    test.SeqLen);
-                                if (test.Protein.PreferredName != null)
-                                    sb.AppendFormat("<GBSeq_locus>{0}</GBSeq_locus>", test.Protein.PreferredName);
-                                        // Not L10N
-                                if (test.Protein.Description != null)
-                                    sb.AppendFormat(" <GBSeq_definition>{0}</GBSeq_definition> ",
-                                        test.Protein.Description); // Not L10N
-                                if (test.Protein.Accession != null)
-                                    sb.AppendFormat("<GBSeq_primary-accession>{0}</GBSeq_primary-accession>",
-                                        test.Protein.Accession); // Not L10N 
-                                if (test.Protein.Species != null)
-                                    sb.AppendFormat("<GBSeq_organism>{0}</GBSeq_organism> ", test.Protein.Species);
-                                        // Not L10N
-                                if (test.Protein.Gene != null)
-                                    sb.AppendFormat(
-                                        "<GBQualifier> <GBQualifier_name>gene</GBQualifier_name> <GBQualifier_value>{0}</GBQualifier_value> </GBQualifier> ",
-                                        test.Protein.Gene); // Not L10N
-                                sb.AppendFormat("</GBSeq>\n"); // Not L10N
-                            }
-                        }
-                        sb.Append("</GBSet>"); // Not L10N
-                    }
-                    return new XmlTextReader(MakeStream(sb));
-                }
-                else
-                {
-                    throw new WebException("error 404"); // mimic bad url behavior Not L10N
-                }
-            }
-
-            public override Stream GetWebResponseStream(string url, int timeout)
-            {
-                // should look something like "https://www.uniprot.xyzpdq/uniprot/?query=(P04638+OR+SGD_S000005768+OR+CAB02319.1)&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed"
-                var searches = url.Split('(')[1].Split(')')[0].Split('+').Where(s => !Equals(s, "OR")).ToArray();
-                var sb = new StringBuilder();
-                if (url.Contains(".org")) // watch for deliberately malformed url in tests Not L10N
-                {
-                    sb.Append("Entry\tEntry name\tProtein names\tGene names\tOrganism\tLength\tStatus\n");
-                    foreach (var search in searches)
-                    {
-                        var test = FindTest(search);
-                        if ((null != test) && !String.IsNullOrEmpty(test.Protein.Accession))
-                        {
-                            sb.AppendFormat(
-                                "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n", // Not L10N
-                                test.Protein.Accession , test.Protein.PreferredName ?? String.Empty,
-                                test.Protein.Description ?? String.Empty, test.Protein.Gene ?? String.Empty, test.Protein.Species ?? String.Empty,
-                                test.SeqLen, "reviewed");
-                        }
-                    }
-                    return MakeStream(sb);
-                }
-                else
-                {
-                    throw new WebException("error 404"); //  mimic bad url behavior Not L10N
-                }
-            }
-
-            private Stream MakeStream(StringBuilder sb)
-            {
-                MemoryStream stream = new MemoryStream();
-                StreamWriter writer = new StreamWriter(stream);
-                writer.Write(sb.ToString());
-                writer.Flush();
-                stream.Position = 0;
-                return stream;
-            }
-
-            private FastaHeaderReaderResult FindTest(string keyword)
-            {
-                if (!string.IsNullOrEmpty(keyword))
-                {
-                    foreach (var test in _tests)
-                    {
-                        foreach (var expectedResult in test.ExpectedResults)
-                        {
-                            if ((!String.IsNullOrEmpty(expectedResult.Protein.Accession) &&
-                                    (expectedResult.Protein.Accession.ToUpperInvariant().StartsWith(keyword.ToUpperInvariant()) ||
-                                    keyword.ToUpperInvariant().StartsWith(expectedResult.Protein.Accession.ToUpperInvariant()))) ||
-                                (!String.IsNullOrEmpty(expectedResult.Protein.Name) &&
-                                (expectedResult.Protein.Name.ToUpperInvariant().Contains(keyword.ToUpperInvariant()))))
-                            {
-                                return expectedResult;
-                            }
-                        }
-                    }
-                    // no joy yet - see if its buried in name or description, as in our GI->Uniprot scenario
-                    keyword = keyword.Split('.')[0]; // drop .n from xp_mmmmmmm.n
-                    foreach (var test in _tests)
-                    {
-                        foreach (var expectedResult in test.ExpectedResults)
-                        {
-                            if (Equals(keyword,FastaHeaderReaderResult.FindTerm(expectedResult.Protein, @"ref\|")) ||
-                                Equals(keyword,FastaHeaderReaderResult.FindTerm(expectedResult.Protein, @"gi\|")))
-                            {
-                                return expectedResult;
-                            }
-                        }
-                    }
-                    // Possibly SGDID
-                    if (keyword.StartsWith(WebEnabledFastaImporter.UNIPROTKB_PREFIX_SGD))
-                    {
-                        foreach (var test in _tests)
-                        {
-                            foreach (var expectedResult in test.ExpectedResults)
-                            {
-                                if (expectedResult.Protein.Description.Contains(keyword.Replace(WebEnabledFastaImporter.UNIPROTKB_PREFIX_SGD, "SGD:S")) ||
-                                    expectedResult.Protein.Description.Contains(keyword.Replace(WebEnabledFastaImporter.UNIPROTKB_PREFIX_SGD, "SGDID:S")))
-                                {
-                                    return expectedResult;
-                                }
-                            }
-                        }
-                    }
-                }
-                return null;
-            }
+            return test.ExpectedResults
+                .Select(ToExpectedMetadata)
+                .ToList();
         }
 
-        /// <summary>
-        /// like the actual  WebEnabledFastaImporter.WebSearchProvider,
-        /// but intentionally generates bad URLs to test error handling
-        /// </summary>
-        public class DoomedWebSearchProvider : WebEnabledFastaImporter.WebSearchProvider
+        private static ExpectedMetadataItem ToExpectedMetadata(FastaImporterExpectedResult result)
         {
-            public override bool IsPolite
+            var metadata = new ProteinMetadata(result.Name, result.Description, result.PreferredName,
+                result.Accession, result.Gene, result.Species, result.WebSearchInfo);
+            return new ExpectedMetadataItem(metadata, result.WellFormed, result.SequenceLength);
+        }
+
+        private static ExpectedMetadataItem ToExpectedMetadata(FastaHeaderReaderResult result)
+        {
+            var metadata = new ProteinMetadata(result.Protein.Name, result.Protein.Description,
+                result.Protein.PreferredName, result.Protein.Accession, result.Protein.Gene,
+                result.Protein.Species, result.Protein.WebSearchInfo.ToString());
+            return new ExpectedMetadataItem(metadata, result.Wellformed, result.SeqLen);
+        }
+
+        private class ExpectedMetadataItem
+        {
+            public ExpectedMetadataItem(ProteinMetadata metadata, bool wellFormed, int sequenceLength)
             {
-                get { return false; }
+                Metadata = metadata;
+                WellFormed = wellFormed;
+                SequenceLength = sequenceLength;
             }
 
-            public override int GetTimeoutMsec(int searchTermCount)
+            public ProteinMetadata Metadata { get; }
+            public bool WellFormed { get; }
+            public int SequenceLength { get; }
+        }
+
+        private void RecordExpectedData(List<DbProtein> dbProteins, List<FastaHeaderParserTest> tests)
+        {
+            var jsonPath = TestContext.GetProjectDirectory(FASTA_EXPECTED_JSON_RELATIVE_PATH);
+            Assert.IsNotNull(jsonPath, @"Unable to locate project-relative path for FASTA importer expectations.");
+
+            var metadataByTest = new Dictionary<int, List<ProteinMetadata>>();
+            var webSearchInfoByTest = new Dictionary<int, List<string>>();
+            var sequenceLengths = new Dictionary<int, int>();
+
+            foreach (var dbProtein in dbProteins)
             {
-                return 10 * (10 + (searchTermCount / 5));
+                var testnum = DecodeTestNumberFromSequence(dbProtein.Sequence);
+                if (testnum < 0)
+                    continue;
+
+                if (!metadataByTest.TryGetValue(testnum, out var metadataList))
+                {
+                    metadataList = new List<ProteinMetadata>();
+                    metadataByTest[testnum] = metadataList;
+                }
+
+                if (!webSearchInfoByTest.TryGetValue(testnum, out var webSearchList))
+                {
+                    webSearchList = new List<string>();
+                    webSearchInfoByTest[testnum] = webSearchList;
+                }
+
+                sequenceLengths[testnum] = dbProtein.Sequence?.Length ?? 0;
+
+                foreach (var name in dbProtein.Names)
+                {
+                    var metadata = name.GetProteinMetadata();
+                    webSearchList.Add(metadata?.WebSearchInfo.ToString());
+                    metadataList.Add(metadata?.ClearWebSearchInfo() ?? ProteinMetadata.EMPTY);
+                }
             }
 
-            public override int WebRetryCount()
+            var records = new List<FastaImporterExpectedRecord>();
+            for (int i = 0; i < tests.Count; i++)
             {
-                return 1; // once is plenty
+                metadataByTest.TryGetValue(i, out var metadataList);
+                metadataList ??= new List<ProteinMetadata>();
+                webSearchInfoByTest.TryGetValue(i, out var webSearchList);
+                webSearchList ??= new List<string>();
+                var expectedResults = tests[i].ExpectedResults ?? Array.Empty<FastaHeaderReaderResult>();
+
+                var record = new FastaImporterExpectedRecord
+                {
+                    Header = tests[i].Header,
+                    Results = new List<FastaImporterExpectedResult>()
+                };
+
+                for (int j = 0; j < metadataList.Count; j++)
+                {
+                    var metadata = metadataList[j] ?? ProteinMetadata.EMPTY;
+                    var expected = j < expectedResults.Length ? expectedResults[j] : null;
+                    var sequenceLength = sequenceLengths.TryGetValue(i, out var length)
+                        ? length
+                        : expected?.SeqLen ?? 0;
+
+                    record.Results.Add(new FastaImporterExpectedResult
+                    {
+                        Name = metadata.Name,
+                        Description = metadata.Description,
+                        PreferredName = metadata.PreferredName,
+                        Accession = metadata.Accession,
+                        Gene = metadata.Gene,
+                        Species = metadata.Species,
+                        SequenceLength = sequenceLength,
+                        WellFormed = expected?.Wellformed ?? false,
+                        WebSearchInfo = j < webSearchList.Count ? webSearchList[j] : null
+                    });
+                }
+
+                if (metadataList.Count < expectedResults.Length)
+                {
+                    for (int j = metadataList.Count; j < expectedResults.Length; j++)
+                    {
+                        var expected = expectedResults[j];
+                        if (expected == null)
+                            continue;
+
+                        record.Results.Add(new FastaImporterExpectedResult
+                        {
+                            Name = expected.Protein.Name,
+                            Description = expected.Protein.Description,
+                            PreferredName = expected.Protein.PreferredName,
+                            Accession = expected.Protein.Accession,
+                            Gene = expected.Protein.Gene,
+                            Species = expected.Protein.Species,
+                            SequenceLength = expected.SeqLen,
+                            WellFormed = expected.Wellformed,
+                            WebSearchInfo = expected.Protein.WebSearchInfo.ToString()
+                        });
+                    }
+                }
+
+                records.Add(record);
             }
 
-            public override string ConstructEntrezURL(IEnumerable<string> searches, bool summary)
+            var data = new FastaImporterExpectedData
             {
-                var result = base.ConstructEntrezURL(searches, summary).Replace("nlm.nih.gov", "nlm.nih.gummint"); // provoke a failure for test purposes Not L10N
-                return result;
+                Records = records
+            };
+            data.RecordMap = data.Records.ToDictionary(r => r.Header, StringComparer.Ordinal);
+
+            var json = JsonConvert.SerializeObject(data, Formatting.Indented);
+            File.WriteAllText(jsonPath, json, new UTF8Encoding(false));
+
+            _cachedExpectedData = data;
+
+            Console.Out.WriteLine(@"Recorded FASTA importer expectations to: " + jsonPath);
+        }
+
+        private FastaImporterExpectedData LoadExpectedData()
+        {
+            if (_cachedExpectedData != null)
+                return _cachedExpectedData;
+
+            var jsonPath = TestContext.GetProjectDirectory(FASTA_EXPECTED_JSON_RELATIVE_PATH);
+            if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
+            {
+                _cachedExpectedData = new FastaImporterExpectedData();
+                return _cachedExpectedData;
             }
 
-            public override string ConstructUniprotURL(IEnumerable<string> searches)
+            var json = File.ReadAllText(jsonPath, Encoding.UTF8);
+            var data = JsonConvert.DeserializeObject<FastaImporterExpectedData>(json) ?? new FastaImporterExpectedData();
+            data.Records ??= new List<FastaImporterExpectedRecord>();
+            data.RecordMap = data.Records.ToDictionary(r => r.Header, StringComparer.Ordinal);
+
+            _cachedExpectedData = data;
+            return _cachedExpectedData;
+        }
+
+        private static Stream CreateResponseStream(string text)
+        {
+            var bytes = Encoding.UTF8.GetBytes(text);
+            return new MemoryStream(bytes);
+        }
+
+        private static HttpClientTestHelper BeginLegacyPlayback(IList<FastaHeaderParserTest> tests)
+        {
+            if (tests == null)
+                throw new ArgumentNullException(nameof(tests));
+
+            var testsCopy = tests.ToList();
+            var playbackBehavior = new HttpClientTestBehavior
             {
-                var result = base.ConstructUniprotURL(searches).Replace("uniprot.org", "uniprot.xyzpdq"); // provoke a failure for test purposes Not L10N
-                return result;
+                ResponseFactory = uri =>
+                {
+                    var url = uri.ToString();
+                    if (TryBuildPlaybackResponse(url, testsCopy, out var text))
+                        return CreateResponseStream(text);
+                    throw new InvalidOperationException($"Unexpected URL during playback: {url}");
+                }
+            };
+
+            return new HttpClientTestHelper(playbackBehavior);
+        }
+
+        public static IDisposable BeginPlaybackForFunctionalTests()
+        {
+            var tests = GetTests(1);
+
+            // Load HTTP interactions from the standardized file (FastaImportTestWebData.json)
+            var httpInteractions = LoadHttpInteractionsForType(typeof(FastaImporterTest), ExtensionTestContext.GetProjectDirectory);
+            if (httpInteractions != null && httpInteractions.Count > 0)
+            {
+                return HttpClientTestHelper.PlaybackFromInteractions(httpInteractions);
             }
 
+            return BeginLegacyPlayback(tests);
+        }
+
+        private static bool TryBuildPlaybackResponse(string url, IList<FastaHeaderParserTest> tests, out string response)
+        {
+            if (url.Contains(".gov"))
+            {
+                response = url.Contains("rettype=docsum")
+                    ? BuildEntrezSummaryResponse(url, tests)
+                    : BuildEntrezDetailResponse(url, tests);
+                return true;
+            }
+
+            if (url.Contains(".org"))
+            {
+                response = BuildUniprotResponse(url, tests);
+                return true;
+            }
+
+            response = null;
+            return false;
+        }
+
+        private static string BuildEntrezSummaryResponse(string url, IList<FastaHeaderParserTest> tests)
+        {
+            var searches = ParseEntrezSearchTerms(url);
+            var sb = new StringBuilder();
+            sb.Append("<?xml version=\"1.0\"?>\n<eSummaryResult>\n"); // Not L10N
+
+            foreach (var search in searches)
+            {
+                var result = FindTest(tests, search);
+                if (result == null || string.IsNullOrEmpty(result.Protein.Accession))
+                    continue;
+
+                var intermediateSearchTerm = result.GetIntermediateSearchterm(search);
+                sb.AppendFormat("<Id>{0}</Id>", search);
+                sb.Append("<DocSum> ");
+                sb.AppendFormat("<Item Name=\"Caption\" Type=\"String\">{0}</Item>", intermediateSearchTerm);
+                sb.AppendFormat("<Item Name=\"ReplacedBy\" Type=\"String\">{0}</Item>", intermediateSearchTerm);
+                sb.AppendFormat("<Item Name=\"Length\" Type=\"Integer\">{0}</Item>", result.SeqLen);
+                sb.Append("</DocSum>\n"); // Not L10N
+            }
+
+            sb.Append("</eSummaryResult>\n"); // Not L10N
+            return sb.ToString();
+        }
+
+        private static string BuildEntrezDetailResponse(string url, IList<FastaHeaderParserTest> tests)
+        {
+            var searches = ParseEntrezSearchTerms(url);
+            var sb = new StringBuilder();
+            sb.Append("<?xml version=\"1.0\"?>\n<GBSet>\n"); // Not L10N
+
+            foreach (var search in searches)
+            {
+                var result = FindTest(tests, search);
+                if (result == null || string.IsNullOrEmpty(result.Protein.Accession))
+                    continue;
+
+                sb.Append("<GBSeq> ");
+                sb.AppendFormat("<GBSeq_length>{0}</GBSeq_length> ", result.SeqLen);
+                if (result.Protein.PreferredName != null)
+                    sb.AppendFormat("<GBSeq_locus>{0}</GBSeq_locus>", result.Protein.PreferredName); // Not L10N
+                if (result.Protein.Description != null)
+                    sb.AppendFormat(" <GBSeq_definition>{0}</GBSeq_definition> ", result.Protein.Description); // Not L10N
+               if (result.Protein.Accession != null)
+                    sb.AppendFormat("<GBSeq_primary-accession>{0}</GBSeq_primary-accession>", result.Protein.Accession); // Not L10N
+                if (result.Protein.Species != null)
+                    sb.AppendFormat("<GBSeq_organism>{0}</GBSeq_organism> ", result.Protein.Species); // Not L10N
+                if (result.Protein.Gene != null)
+                    sb.AppendFormat("<GBQualifier> <GBQualifier_name>gene</GBQualifier_name> <GBQualifier_value>{0}</GBQualifier_value> </GBQualifier> ", result.Protein.Gene); // Not L10N
+                sb.Append("</GBSeq>\n"); // Not L10N
+            }
+
+            sb.Append("</GBSet>");
+            return sb.ToString();
+        }
+
+        private static string BuildUniprotResponse(string url, IList<FastaHeaderParserTest> tests)
+        {
+            var searches = ParseUniprotSearchTerms(url);
+            var sb = new StringBuilder();
+            sb.Append("Entry\tEntry name\tProtein names\tGene names\tOrganism\tLength\tStatus\n"); // Not L10N
+
+            foreach (var search in searches)
+            {
+                var result = FindTest(tests, search);
+                if (result == null || string.IsNullOrEmpty(result.Protein.Accession))
+                    continue;
+
+                sb.AppendFormat("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n", // Not L10N
+                    result.Protein.Accession,
+                    result.Protein.PreferredName ?? string.Empty,
+                    result.Protein.Description ?? string.Empty,
+                    result.Protein.Gene ?? string.Empty,
+                    result.Protein.Species ?? string.Empty,
+                    result.SeqLen,
+                    "reviewed");
+            }
+
+            return sb.ToString();
+        }
+
+        private static string[] ParseEntrezSearchTerms(string url)
+        {
+            var parts = url.Split('=');
+            if (parts.Length < 3)
+                return Array.Empty<string>();
+            var queryPart = parts[2].Split('&')[0];
+            return queryPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private static IEnumerable<string> ParseUniprotSearchTerms(string url)
+        {
+            var start = url.IndexOf("query=(", StringComparison.Ordinal);
+            if (start < 0)
+                return Array.Empty<string>();
+            start += "query=(".Length;
+            var end = url.IndexOf(')', start);
+            if (end < 0)
+                return Array.Empty<string>();
+            var query = url.Substring(start, end - start);
+            return query.Split(new[] { "+OR+" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        private static FastaHeaderReaderResult FindTest(IEnumerable<FastaHeaderParserTest> tests, string keyword)
+        {
+            if (string.IsNullOrEmpty(keyword))
+                return null;
+
+            var upperKeyword = keyword.ToUpperInvariant();
+            foreach (var test in tests)
+            {
+                var header = test.Header?.ToUpperInvariant();
+                foreach (var expected in test.ExpectedResults ?? Array.Empty<FastaHeaderReaderResult>())
+                {
+                    var expectedProtein = expected.Protein;
+                    if (expectedProtein == null)
+                        continue;
+
+                    var accession = expectedProtein.Accession?.ToUpperInvariant();
+                    if (!string.IsNullOrEmpty(accession) &&
+                        (accession.StartsWith(upperKeyword, StringComparison.Ordinal) ||
+                         upperKeyword.StartsWith(accession, StringComparison.Ordinal)))
+                    {
+                        return expected;
+                    }
+
+                    var name = expectedProtein.Name?.ToUpperInvariant();
+                    if (!string.IsNullOrEmpty(name) && name.Contains(upperKeyword))
+                        return expected;
+                }
+
+                if (!string.IsNullOrEmpty(header) && header.Contains(upperKeyword))
+                {
+                    var firstResult = test.ExpectedResults?.FirstOrDefault();
+                    if (firstResult != null)
+                        return firstResult;
+                }
+            }
+
+            return null;
+        }
+
+        private class FastaImporterExpectedData
+        {
+            public List<FastaImporterExpectedRecord> Records { get; set; } = new List<FastaImporterExpectedRecord>();
+
+            [JsonIgnore]
+            public Dictionary<string, FastaImporterExpectedRecord> RecordMap { get; set; } = new Dictionary<string, FastaImporterExpectedRecord>(StringComparer.Ordinal);
+        }
+
+        private class FastaImporterExpectedRecord
+        {
+            public string Header { get; set; }
+            public List<FastaImporterExpectedResult> Results { get; set; }
+        }
+
+        private class FastaImporterExpectedResult
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string PreferredName { get; set; }
+            public string Accession { get; set; }
+            public string Gene { get; set; }
+            public string Species { get; set; }
+            public int SequenceLength { get; set; }
+            public bool WellFormed { get; set; }
+            public string WebSearchInfo { get; set; }
         }
 
         /// <summary>
@@ -708,11 +960,15 @@ namespace CommonTest
         public void TestBasicFastaImport()
         {
             List<FastaHeaderParserTest> tests = GetTests(0);
+            var expectedData = LoadExpectedData();
+            var recorded = expectedData?.RecordMap;
+            if (!IsRecordMode && recorded?.Count > 0)
+                tests = MergeExpectedRecords(tests, recorded);
             var dbProteins = new List<DbProtein>();
             // ReSharper disable once CollectionNeverQueried.Local
             // ReSharper disable once UnusedVariable
             var dbProteinNames = new List<DbProteinName>(); // Convenient for debugging
-            WebEnabledFastaImporter fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
+            var fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.FakeWebSearchProvider());
             int fakeID = 0;
             foreach (var dbProtein in fastaImporter.Import(new StringReader(GetFastaTestText())))
             {
@@ -851,26 +1107,54 @@ namespace CommonTest
                 ProteinSearchInfo.Intersection(new List<ProteinSearchInfo> { new ProteinSearchInfo(a, 0), new ProteinSearchInfo(b, 0), new ProteinSearchInfo(bb, 0), new ProteinSearchInfo(bbb, 0) }).GetProteinMetadata());
         }
 
+        [Flags]
+        private enum DiagnosticMode
+        {
+            none = 0,
+            results = 1,
+            requests = 2
+        }
+
+        private DiagnosticMode CurrentDiagnosticMode => DiagnosticMode.none;
+
+        private bool CaptureResults => (CurrentDiagnosticMode & DiagnosticMode.results) != 0;
+        private bool CaptureRequests => (CurrentDiagnosticMode & DiagnosticMode.requests) != 0;
+
+        protected override bool IsRecordMode => false;
 
         [TestMethod]
         public void TestFastaImport()
         {
+            if (CaptureResults)
+                TestContext.EnsureTestResultsDir();
+
             TestProteinSearchInfoIntersection();
+
             DoTestFastaImport(false, false);  // Run with simulated web access
             DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
         }
 
         [TestMethod]
-        public void WebTestFastaImport()
+        public void TestFastaImportWeb()
         {
-            if (AllowInternetAccess) // Only run this if SkylineTester has enabled web access
+            if (CaptureResults)
+                TestContext.EnsureTestResultsDir();
+
+            // Only run this if SkylineTester has enabled web access or web responses are being recorded
+            if (AllowInternetAccess || IsRecordMode || CurrentDiagnosticMode != DiagnosticMode.none)
             {
                 TestProteinSearchInfoIntersection();
                 DoTestFastaImport(true, false); // run with actual web access
                 DoTestFastaImport(true, true); // run with actual web access, using negative tests
             }
-        }
 
+            CheckTestFlags();
+        }
+        private void CheckTestFlags()
+        {
+            CheckRecordMode();
+            Assert.AreEqual(DiagnosticMode.none, CurrentDiagnosticMode, "Set DiagnosticMode to none before commit");
+        }
 
         public void DoTestFastaImport(bool useActualWebAccess, bool doNegTests) // call with useActualWebAccess==true from perf test
         {
@@ -878,13 +1162,17 @@ namespace CommonTest
             var fastaLines = new StringBuilder();
             int testnum = 0;
             var tests = doNegTests ? GetNegativeTests() : GetTests(1); // Avoid test sets intended for checking peptide group handling
+            var expectedData = LoadExpectedData();
+            if (!IsRecordMode && expectedData?.RecordMap?.Count > 0)
+                tests = MergeExpectedRecords(tests, expectedData.RecordMap);
             foreach (var t in tests)
             {
                 GetFakeFastaSequenceEncodingForTestNumber(fastaLines, t, testnum++);
             }
 
             var dbProteins = new List<DbProtein>();
-            var proteinsToSearch = new List<ProteinSearchInfo>();
+            var originalMetadata = new Dictionary<DbProteinName, ProteinMetadata>();
+            var originalSequenceLengths = new Dictionary<DbProteinName, int>();
             WebEnabledFastaImporter fastaImporter = new WebEnabledFastaImporter(new WebEnabledFastaImporter.DelayedWebSearchProvider());
             int fakeID = 0;
             foreach (var dbProtein in fastaImporter.Import(new StringReader(fastaLines.ToString())))
@@ -893,78 +1181,453 @@ namespace CommonTest
                 foreach (var name in dbProtein.Names)
                 {
                     name.Id = fakeID++;
-                    proteinsToSearch.Add(new ProteinSearchInfo(name, dbProtein.Sequence.Length));
+                    originalMetadata[name] = name.GetProteinMetadata();
+                    originalSequenceLengths[name] = dbProtein.Sequence.Length;
                 }
                 dbProteins.Add(dbProtein);
             }
 
-            
-
-            for (int test = 2; test-- > 0;)
+            IList<ProteinSearchInfo> CreateProteinSearchInfos()
             {
-                if (test == 1) // first, test poor internet access
-                    fastaImporter = new WebEnabledFastaImporter(new DoomedWebSearchProvider()); // intentionally messes up the URLs
-                else  // then test web search code - either live in a perf test, or using playback object
-                    fastaImporter = new WebEnabledFastaImporter(useActualWebAccess? new WebEnabledFastaImporter.WebSearchProvider() : new PlaybackProvider(tests));
-                var results = fastaImporter.DoWebserviceLookup(proteinsToSearch, null, false).ToList(); // No progress monitor, and don't be polite get it all at once
-                foreach (var result in results)
+                var proteins = new List<ProteinSearchInfo>();
+                foreach (var dbProtein in dbProteins)
                 {
-                    if (result != null)
+                    foreach (var name in dbProtein.Names)
                     {
-                        bool searchCompleted =
-                            String.IsNullOrEmpty(result.GetProteinMetadata().GetPendingSearchTerm());
-                        bool searchDelayed = (test==1); // first go round we simulate bad web access
-                        if (!result.ProteinDbInfo.WebSearchInfo.ToString().StartsWith(WebEnabledFastaImporter.SEARCHDONE_TAG.ToString(CultureInfo.InvariantCulture))) // the 'no search possible' case
-                            Assert.IsTrue(searchCompleted == !searchDelayed);
+                        if (originalMetadata.TryGetValue(name, out var metadata))
+                            name.ChangeProteinMetadata(metadata);
+                        proteins.Add(new ProteinSearchInfo(name, originalSequenceLengths[name]));
                     }
                 }
+                return proteins;
             }
+
+            if (!useActualWebAccess && !doNegTests)
+            {
+                var failureModes = new[]
+                {
+                    LookupTestMode.http404,
+                    LookupTestMode.no_network,
+                    LookupTestMode.cancellation
+                };
+
+                foreach (var mode in failureModes)
+                {
+                    var proteinsToSearch = CreateProteinSearchInfos();
+                    ExecuteLookupScenario(false, tests, proteinsToSearch, mode, expectedData);
+                }
+            }
+
+            DoActualWebAccess = useActualWebAccess;
+            using var scope = new ConditionalHttpRecordingScope(this, !doNegTests);
+            var finalProteinsToSearch = CreateProteinSearchInfos();
+            ExecuteLookupScenario(useActualWebAccess, tests, finalProteinsToSearch, LookupTestMode.normal,
+                expectedData, skipExtraValidation: doNegTests, allowRecordedPlayback: !doNegTests, scope);
+
+            if (IsRecordMode && useActualWebAccess && !doNegTests)
+            {
+                RecordExpectedData(dbProteins, tests);
+                return;
+            }
+
             Assert.AreEqual(tests.Count, dbProteins.Count);
 
-
-            var errStringE = String.Empty;
-            var errStringA = String.Empty;
+            var errStringE = new StringBuilder();
+            var errStringA = new StringBuilder();
+            var expectedRecords = expectedData?.RecordMap;
             foreach (var dbProtein in dbProteins)
             {
                 // note that fastaImporter doesn't always present proteins in file order, due to 
                 // batching webserver lookups - but we can discern the test number by the
                 // goofy sequence we created
                 testnum = DecodeTestNumberFromSequence(dbProtein.Sequence);
-                Assert.AreEqual(dbProtein.Names.Count, tests[testnum].ExpectedResults.Length);
+                var expectedItems = GetExpectedMetadata(tests[testnum], expectedRecords);
+                Assert.AreEqual(dbProtein.Names.Count, expectedItems.Count);
+
                 int n = 0;
                 var errors = new List<Tuple<String, String>>();
                 foreach (var name in dbProtein.Names)
                 {
+                    var expectedItem = expectedItems[n++];
                     var actual = new DbProteinName(null, name.GetProteinMetadata());
-                    var expected = new DbProteinName(null, tests[testnum].ExpectedResults[n++].Protein);
+
+                    if (expectedItem.WellFormed)
+                        Assert.AreEqual(WebEnabledFastaImporter.SEARCHDONE_TAG.ToString(), actual.WebSearchInfo.ToString());
+
+                    if (expectedItem.SequenceLength > 0)
+                        Assert.AreEqual(expectedItem.SequenceLength, dbProtein.Sequence.Length);
 
                     actual.ClearWebSearchInfo();
+
+                    var expected = new DbProteinName(null, expectedItem.Metadata);
                     expected.ClearWebSearchInfo(); // this is not a comparison we care about
 
                     if (tests[testnum].Header.Contains(NEGTEST_NAME))
                     {
                         if (Equals(expected.GetProteinMetadata(), actual.GetProteinMetadata()))
-                            // If we are working properly, this protein metadata should not be populated due to previous streak of failures.
-                            errors.Add(new Tuple<string, string>(@"anything but "+expected.GetProteinMetadata(),
+                        {
+                            errors.Add(new Tuple<string, string>(@"anything but " + expected.GetProteinMetadata(),
                                 actual.GetProteinMetadata().ToString()));
+                        }
                     }
                     else
                     {
                         if (!Equals(expected.GetProteinMetadata(), actual.GetProteinMetadata()))
+                        {
                             errors.Add(new Tuple<string, string>(expected.GetProteinMetadata().ToString(),
                                 actual.GetProteinMetadata().ToString()));
+                        }
                     }
                 }
+
                 foreach (var e in errors)
                 {
                     if (!e.Item1.Equals(e.Item2))
                     {
-                        errStringE += "\n" + e.Item1;
-                        errStringA += "\n" + e.Item2;
+                        errStringE.AppendLine(e.Item1);
+                        errStringA.AppendLine(e.Item2);
                     }
                 }
             }
-            Assert.AreEqual(errStringE + "\n", errStringA + "\n");
+            Assert.AreEqual(errStringE.ToString(), errStringA.ToString());
+        }
+
+
+        private enum LookupTestMode
+        {
+            normal,
+            http404,
+            no_network,
+            cancellation
+        }
+
+        private void ExecuteLookupScenario(bool useNetAccess, List<FastaHeaderParserTest> testList,
+            IList<ProteinSearchInfo> proteins, LookupTestMode mode, FastaImporterExpectedData expectedData,
+            bool skipExtraValidation = false, bool allowRecordedPlayback = true, ConditionalHttpRecordingScope scope = null)
+        {
+            var captureInteractions = CaptureRequests && mode == LookupTestMode.normal && !skipExtraValidation;
+            HttpInteractionRecorder diagnosticsRecorder = null;
+            List<HttpInteraction> playbackDiagnostics = null;
+            if (captureInteractions)
+            {
+                if (useNetAccess)
+                {
+                    diagnosticsRecorder = scope?.Helper == null ? new HttpInteractionRecorder() : null;
+                }
+                else
+                {
+                    playbackDiagnostics = new List<HttpInteraction>();
+                }
+            }
+
+            using var helper = mode switch
+            {
+                LookupTestMode.http404 => HttpClientTestHelper.SimulateHttp404(),
+                LookupTestMode.no_network => HttpClientTestHelper.SimulateNoNetworkInterface(),
+                LookupTestMode.cancellation => HttpClientTestHelper.SimulateCancellation(),
+                _ => CreateNormalHelper()
+            };
+
+            HttpClientTestHelper CreateNormalHelper()
+            {
+                // Use HttpRecordingScope if provided (always provided for normal tests)
+                if (scope != null)
+                {
+                    return scope.Helper; // May be null for real network access when DoActualWebAccess=true and IsRecordMode=false
+                }
+
+                // Fallback for negative tests or other cases where scope is not provided
+                if (useNetAccess)
+                {
+                    var activeRecorder = diagnosticsRecorder;
+                    if (activeRecorder != null)
+                        return HttpClientTestHelper.BeginRecording(activeRecorder);
+                    return null; // use real network access when no recorder is supplied
+                }
+                
+                // Load HTTP interactions from the standardized file for playback
+                if (allowRecordedPlayback)
+                {
+                    var httpInteractions = LoadHttpInteractions();
+                    if (httpInteractions != null && httpInteractions.Count > 0)
+                    {
+                        return HttpClientTestHelper.PlaybackFromInteractions(httpInteractions, playbackDiagnostics);
+                    }
+                }
+
+                return BeginLegacyPlayback(testList);
+            }
+
+
+            var initialSnapshot = CaptureResults
+                ? proteins.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: false)).ToList()
+                : null;
+
+            // Use FastWebSearchProvider for playback to skip politeness delays
+            // Check if we're using playback (scope.Helper is not null and not recording)
+            bool useFastProvider = !useNetAccess && allowRecordedPlayback && scope?.Helper != null;
+            IList<ProteinSearchInfo> results = RunLookup(proteins, mode, useFastProvider);
+
+            if (!skipExtraValidation)
+            {
+                ValidateLookupResult(mode, proteins, results, helper, initialSnapshot);
+            }
+
+            if (captureInteractions)
+            {
+                IReadOnlyCollection<HttpInteraction> interactions =
+                    diagnosticsRecorder?.Interactions ??
+                    playbackDiagnostics;
+                if (interactions != null && interactions.Count > 0)
+                    WriteInteractionDiagnostics(mode, interactions);
+            }
+        }
+
+        private void WriteInteractionDiagnostics(LookupTestMode mode, IEnumerable<HttpInteraction> interactions)
+        {
+            var path = TestContext.GetTestResultsPath($@"Interactions_{mode}.json");
+            var indexedInteractions = interactions?
+                .Select((interaction, index) => new
+                {
+                    Index = index,
+                    interaction.Url,
+                    interaction.Method,
+                    interaction.StatusCode,
+                    interaction.ContentType,
+                    interaction.ResponseBody,
+                    interaction.ExceptionType,
+                    interaction.ExceptionMessage,
+                    interaction.FailureType
+                }).ToList();
+            var json = JsonConvert.SerializeObject(indexedInteractions, Formatting.Indented);
+            File.WriteAllText(path, json, new UTF8Encoding(false));
+        }
+
+        private void ValidateLookupResult(LookupTestMode mode,
+            IList<ProteinSearchInfo> proteins, IList<ProteinSearchInfo> results,
+            HttpClientTestHelper helper, IList<object> initialSnapshot)
+        {
+            const int noSearchNeededCount = 7;  // Seven proteins will return successfully without any web access
+            const int failOnSearch = 8; // 3 failures expected, and 5 just can't be resolved live on web
+            int searchCount = proteins.Count - noSearchNeededCount;
+
+            Assert.AreNotEqual(0, results.Count);
+
+            if (CaptureResults)
+            {
+                WriteDiagnostics(mode, initialSnapshot, proteins, results, helper);
+            }
+
+            var failureException = proteins.FirstOrDefault(p => p.FailureException != null)?.FailureException;
+            if (mode == LookupTestMode.normal)
+            {
+                Assert.IsNull(failureException, $"Unexpected exception thrown: {failureException}");
+                // We should have results for everything
+                Assert.AreEqual(proteins.Count, results.Count);
+                // There should still be the same number of proteins that were resolved without a web search
+                Assert.AreEqual(noSearchNeededCount, proteins.Count(p =>
+                    p.Status == ProteinSearchInfo.SearchStatus.unsearched && p.GetProteinMetadata().NeedsSearch() == false));
+                var failureProteins = proteins.Where(p => p.Status == ProteinSearchInfo.SearchStatus.failure).ToList();
+                Assert.AreEqual(failOnSearch, failureProteins.Count);
+                Assert.AreEqual(failOnSearch - 1,
+                    failureProteins.Count(p => p.FailureReason == WebSearchFailureReason.no_response));
+                Assert.AreEqual(1,
+                    failureProteins.Count(p => p.FailureReason == WebSearchFailureReason.sequence_mismatch));
+                Assert.AreEqual(searchCount - failOnSearch, results.Count(p =>
+                    p.Status == ProteinSearchInfo.SearchStatus.success));
+                return;
+            }
+
+            Assert.IsNotNull(failureException);
+            if (mode == LookupTestMode.http404)
+            {
+                // We should have results for everything
+                Assert.AreEqual(proteins.Count, results.Count);
+                // There should still be the same number of proteins that were resolved without a web search
+                Assert.AreEqual(noSearchNeededCount, proteins.Count(p =>
+                    p.Status == ProteinSearchInfo.SearchStatus.unsearched && p.GetProteinMetadata().NeedsSearch() == false));
+
+                // All searched proteins should have failed
+                var failedProteins = proteins.Where(p => p.Status == ProteinSearchInfo.SearchStatus.failure).ToList();
+                Assert.AreEqual(searchCount, failedProteins.Count);
+
+                // The failure reason should always be a NetworkRequestException with HttpStatusCode.NotFound
+                Assert.IsTrue(failedProteins.All(p => p.FailureReason == WebSearchFailureReason.http_not_found));
+                Assert.IsTrue(failedProteins.All(p => p.FailureException is NetworkRequestException));
+
+                // Check that the failing searches exception message matches by prefix, because it will contain the URI requested
+                var expectedPrefix = GetExpectedMessagePrefix(helper);
+                var expectedSuffix = GetExpectedMessageSuffix(helper);
+                Assert.IsTrue(expectedPrefix.Length != 0 || expectedSuffix.Length != 0);
+                foreach (var failedProtein in failedProteins)
+                {
+                    if (failedProtein.FailureDetail != null)
+                    {
+                        StringAssert.StartsWith(failedProtein.FailureDetail, expectedPrefix);
+                        StringAssert.EndsWith(failedProtein.FailureDetail, expectedSuffix);
+                    }
+                }
+            }
+            else
+            {
+                // Only the proteins that do not need a search should have completed
+                Assert.AreEqual(noSearchNeededCount, results.Count);
+                // Everything else should still be waiting to be searched
+                Assert.AreEqual(searchCount, proteins.Count(p => p.GetProteinMetadata().NeedsSearch() &&
+                                                                 p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+                // Only one protein should have a failure reason recorded
+                Assert.AreEqual(1, proteins.Count(p => p.FailureReason != WebSearchFailureReason.none));
+                // No network and cancellation are URI-free messages. So, exact match is expected
+                Assert.AreEqual(helper.GetExpectedMessage(), failureException.Message);
+            }
+        }
+
+        private static string GetExpectedMessagePrefix(HttpClientTestHelper helper)
+        {
+            const string urlText = "https://test.com/";
+            string expectedMessage = helper.GetExpectedMessage(new Uri(urlText));
+            int iMatch = expectedMessage.IndexOf(urlText, StringComparison.Ordinal);
+            if (iMatch == -1)
+                return expectedMessage;
+            return expectedMessage.Substring(0, iMatch);
+        }
+
+        private static string GetExpectedMessageSuffix(HttpClientTestHelper helper)
+        {
+            const string urlText = "https://test.com/";
+            string expectedMessage = helper.GetExpectedMessage(new Uri(urlText));
+            int iMatch = expectedMessage.LastIndexOf(urlText, StringComparison.Ordinal);
+            if (iMatch == -1)
+                return expectedMessage;
+            return expectedMessage.Substring(iMatch + urlText.Length);
+        }
+
+        private void WriteDiagnostics(LookupTestMode mode, IList<ProteinSearchInfo> proteins,
+            IList<ProteinSearchInfo> results, HttpClientTestHelper helper)
+        {
+            WriteDiagnostics(mode, null, proteins, results, helper);
+        }
+
+        private void WriteDiagnostics(LookupTestMode mode, IList<object> initialSnapshot,
+            IList<ProteinSearchInfo> proteins, IList<ProteinSearchInfo> results, HttpClientTestHelper helper)
+        {
+            var diagnosticsPath = TestContext.GetTestResultsPath($@"Validate_{mode}.json");
+            var diagnostics = new
+            {
+                Mode = mode.ToString(),
+                TimestampUtc = DateTime.UtcNow,
+                HelperExpectedMessage = helper?.GetExpectedMessage(),
+                InitialProteins = initialSnapshot,
+                Proteins = proteins.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: true)).ToList(),
+                Results = results.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: true)).ToList()
+            };
+            var json = JsonConvert.SerializeObject(diagnostics, Formatting.Indented);
+            File.WriteAllText(diagnosticsPath, json, new UTF8Encoding(false));
+        }
+
+        private static object CreateDiagnosticEntry(ProteinSearchInfo info, int index, bool includeHistory)
+        {
+            var metadata = info.GetProteinMetadata();
+            var webSearchInfo = metadata?.WebSearchInfo;
+            return new
+            {
+                Index = index,
+                Status = info.Status.ToString(),
+                FailureReason = info.FailureReason.ToString(),
+                info.FailureDetail,
+                FailureException = info.FailureException?.GetType().FullName,
+                SearchState = DetermineSearchState(info, metadata),
+                metadata?.Name,
+                metadata?.Description,
+                metadata?.PreferredName,
+                metadata?.Accession,
+                metadata?.Gene,
+                metadata?.Species,
+                NeedsSearch = metadata?.NeedsSearch() ?? false,
+                WebSearchInfo = webSearchInfo?.ToString(),
+                SearchUrlHistory = includeHistory ? info.SearchUrlHistory : Array.Empty<string>()
+            };
+        }
+
+        private static string DetermineSearchState(ProteinSearchInfo info, ProteinMetadata metadata)
+        {
+            if (info.Status == ProteinSearchInfo.SearchStatus.failure)
+                return $"failure:{info.FailureReason}";
+
+            if (metadata != null && !metadata.NeedsSearch())
+            {
+                if (info.Status == ProteinSearchInfo.SearchStatus.success)
+                    return "success";
+                if (info.Status == ProteinSearchInfo.SearchStatus.unsearched)
+                    return "completed_without_web";
+                return $"completed:{info.Status}";
+            }
+
+            return metadata != null && metadata.NeedsSearch()
+                ? "pending"
+                : info.Status.ToString();
+        }
+
+        private class QuickFailWebSearchProvider : WebEnabledFastaImporter.WebSearchProvider
+        {
+            public override int WebRetryCount()
+            {
+                return 1; // try only once
+            }
+        }
+
+        /// <summary>
+        /// WebSearchProvider optimized for playback scenarios (no politeness delays)
+        /// Use this when using HttpClientTestHelper.PlaybackFromInteractions to speed up tests
+        /// </summary>
+        private class FastWebSearchProvider : WebEnabledFastaImporter.WebSearchProvider
+        {
+            public override bool IsPolite
+            {
+                get { return false; } // Skip Thread.Sleep delays for in-memory playback
+            }
+        }
+
+        private IList<ProteinSearchInfo> RunLookup(IList<ProteinSearchInfo> proteins, LookupTestMode mode, bool useFastProvider = false)
+        {
+            WebEnabledFastaImporter.WebSearchProvider provider = null;
+            if (mode != LookupTestMode.normal)
+            {
+                provider = new QuickFailWebSearchProvider();
+            }
+            else if (useFastProvider)
+            {
+                provider = new FastWebSearchProvider(); // Skip politeness delays during playback
+            }
+            // CONSIDER(brendanx): Test progress monitor cancellation by linking a CancellationToken to HttpClientTestBehavior with a ResponseFactory function that triggers cancellation.
+            var progressMonitor = new SilentProgressMonitor();
+            var importer = new WebEnabledFastaImporter(provider);
+            var results = importer.DoWebserviceLookup(proteins, progressMonitor, false).ToList();
+            return results;
+        }
+
+        /// <summary>
+        /// Wrapper around HttpRecordingScope that conditionally creates the scope based on test requirements.
+        /// For negative tests, the scope is not created (no-op). For normal tests, it always creates the scope.
+        /// </summary>
+        private class ConditionalHttpRecordingScope : IDisposable
+        {
+            private readonly HttpRecordingScope _scope;
+
+            public HttpClientTestHelper Helper => _scope?.Helper;
+
+            public ConditionalHttpRecordingScope(FastaImporterTest test, bool createScope)
+            {
+                if (createScope)
+                {
+                    _scope = test.GetHttpRecordingScope();
+                }
+            }
+
+            public void Dispose()
+            {
+                _scope?.Dispose();
+            }
         }
     }
 }

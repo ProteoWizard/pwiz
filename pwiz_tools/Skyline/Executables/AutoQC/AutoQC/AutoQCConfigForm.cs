@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * Copyright 2015 University of Washington - Seattle, WA
@@ -417,6 +417,16 @@ namespace AutoQC
         public void SelectPanoramaTab()
         {
             tabPanoramaSettings.Select();
+        }
+
+        public void SelectSkylineTab()
+        {
+            tabSkylineSettings.Select();
+        }
+
+        public void SetSkylineInstallationDir(string skylineBinDirPath)
+        {
+            _skylineTypeControl.SetInput(skylineBinDirPath);
         }
 
         public void CheckUploadToPanorama()

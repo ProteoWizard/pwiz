@@ -319,8 +319,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Searching for a peptide sequence should work as well
             FilterListAndVerifyCount(filterTextBox, pepList, "CY", 2);
-            FilterListAndVerifyCount(filterTextBox, pepList, "*CY", 31); // Wildcard
-            FilterListAndVerifyCount(filterTextBox, pepList, "*Y", 80); // Wildcard
+            FilterListAndVerifyCount(filterTextBox, pepList, "*CY", 34); // Wildcard
+            FilterListAndVerifyCount(filterTextBox, pepList, "*Y", 84); // Wildcard
 
             // Now test filtering by precursor m/z
             RunUI(() =>
@@ -331,7 +331,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Precursor searching should work here as well
             FilterListAndVerifyCount(filterTextBox, pepList, "6", 13);
-            FilterListAndVerifyCount(filterTextBox, pepList, "*" + (6.4).ToString("G", CultureInfo.CurrentCulture), 3);
+            FilterListAndVerifyCount(filterTextBox, pepList, "*" + (6.4).ToString("G", CultureInfo.CurrentCulture), 4);
 
             // Switch to library with both molecules and peptides
             ShowDialog<AddModificationsDlg>(
@@ -406,7 +406,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(previousPeptide);
             Assert.AreEqual(0, peptideIndex);
-            Assert.AreEqual(3, previousPeptide.Adduct.AdductCharge, "Expected charge 3 on " + previousPeptide.AnnotatedDisplayText);
+            Assert.AreEqual(5, previousPeptide.Adduct.AdductCharge, "Expected charge 5 on " + previousPeptide.AnnotatedDisplayText);
 
             // Now try to select a different peptide and check to see if the
             // selection changes
@@ -426,7 +426,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(selPeptide);
             if (Equals(previousPeptide, selPeptide))
                 Assert.AreNotEqual(previousPeptide.AnnotatedDisplayText, selPeptide.AnnotatedDisplayText);
-            Assert.AreEqual(2, selPeptide.Adduct.AdductCharge, "Expected charge 2 on " + selPeptide.AnnotatedDisplayText);
+            Assert.AreEqual(3, selPeptide.Adduct.AdductCharge, "Expected charge 3 on " + selPeptide.AnnotatedDisplayText);
 
             // Click the "Next" link
             RunUI(() =>
@@ -542,18 +542,18 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.EditDelete);
 
             // Test unmatched peptides are correct.
-            // One unmatched because its precursor m/z is outside the instrument measurement range
-            AddAllPeptides(1, 4, 3);
+            // Two unmatched because precursor m/z is outside the instrument measurement range
+            AddAllPeptides(2, 4, 8);
 
             // Verify that everything matches, given a wide enough mass range
             RunUI(() => SkylineWindow.ModifyDocument("Change m/z range",
                     doc => doc.ChangeSettings(doc.Settings.ChangeTransitionInstrument(inst =>
                         inst.ChangeMaxMz(TransitionInstrument.MAX_MEASURABLE_MZ)))));
-            WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
+            WaitForConditionUI(() => _viewLibUI.UnmatchedPeptidesCount == 1); // n-terminal mod [+42] not in document
             RunUI(() => SkylineWindow.ModifyDocument("Change m/z range",
                     doc => doc.ChangeSettings(doc.Settings.ChangeTransitionInstrument(inst =>
                         inst.ChangeMaxMz(1500)))));
-            WaitForConditionUI(() => _viewLibUI.HasUnmatchedPeptides);
+            WaitForConditionUI(() => _viewLibUI.UnmatchedPeptidesCount > 1); // Also, many mz out of instrument range
 
             // Test library peptides are merged without duplicates.
             TestForDuplicatePeptides();
@@ -643,7 +643,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Change static modifications", 
                 doc => doc.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(new List<StaticMod>())))));
-            AddAllPeptides(1, 8, 3);
+            AddAllPeptides(1, 8, 9);
 
             // Along with Heavy 15N added earlier in the test, adding this modification means that all library peptides
             // will match to the document settings.

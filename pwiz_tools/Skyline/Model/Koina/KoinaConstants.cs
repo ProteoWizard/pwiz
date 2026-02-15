@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -28,6 +28,7 @@ namespace pwiz.Skyline.Model.Koina
         public static readonly int PEPTIDE_SEQ_LEN = 30;
         public static readonly int IONS_PER_RESIDUE = 6;
         public static readonly int PRECURSOR_CHARGES = 6;
+        public static readonly float INTENSITY_CUTOFF = 1.0e-6f; // Koina produces many peaks with intensity < 1e-6 that the older Prosit does not
         public static readonly int BATCH_SIZE = 1000;
         public static readonly int MIN_NCE = 18;
         public static readonly int MAX_NCE = 39;

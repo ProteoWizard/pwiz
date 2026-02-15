@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Dario Amodei <damodei .at. stanford.edu>,
  *                  Mallick Lab, Department of Radiology, Stanford University
  *
@@ -325,6 +325,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             RestoreViewOnScreen(27);
+            WaitForDocumentLoaded();    // Retention time alignment before screenshot
             PauseForScreenShot("Skyline window");
 
             RunUI(() =>

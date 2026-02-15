@@ -1,4 +1,4 @@
-﻿using pwiz.Common.PeakFinding;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Lib;

@@ -136,4 +136,7 @@
   <data name="ListExceptionDetail_NullValue_Column___0___cannot_be_blank_" xml:space="preserve">
     <value>列“{0}”不能为空。</value>
   </data>
+  <data name="ListDesigner_OkDialog_Name_cannot_be_blank" xml:space="preserve">
+    <value>名称不能为空</value>
+  </data>
 </root>

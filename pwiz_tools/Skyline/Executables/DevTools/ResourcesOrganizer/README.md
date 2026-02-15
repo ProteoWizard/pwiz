@@ -5,27 +5,69 @@ pwiz_tools\Skyline\Executables\DevTools\ResourcesOrganizer\ResourcesOrganizer.sl
 
 The project requires .Net 8 to build.
 
->The project has been published to the folder:
->
-> `pwiz_tools\Skyline\Executables\DevTools\ResourcesOrganizer\ResourcesOrganizer\scripts\exe`
+## Jamfile Targets (Recommended)
 
-### The "scripts" folder contains the following scripts which are intended to be run from the root of the project:
+The simplest way to use ResourcesOrganizer is via Jamfile targets. Run from the project root:
+
+### Generate Localization CSV Files
+
+```cmd
+b.bat pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//GenerateLocalizationCsvFiles
+```
+
+Creates `localization.ja.csv` and `localization.zh-CHS.csv` in `pwiz_tools\Skyline\Translation\Scratch\` containing strings needing translation. The CSV includes columns for:
+- **Name**: Resource key (empty for consolidated entries)
+- **English**: Text to translate
+- **Translation**: Empty column for translators
+- **Issue**: Localization issues (e.g., "English text changed")
+- **FileCount/File**: Source .resx file(s) for context
+
+### Import Localization CSV Files
+
+```cmd
+b.bat pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//ImportLocalizationCsvFiles
+```
+
+Place translated CSV files in `pwiz_tools\Skyline\Translation\Scratch\` (keeping filenames `localization.ja.csv` and `localization.zh-CHS.csv`), then run this target to:
+1. Import translations into the database
+2. Export updated .resx files
+3. Extract them to the project
+
+Verify success by checking build output shows "changed X/Y matching records" and ends with "SUCCESS".
+
+### Finalize Resx Files (Pre-Release)
+
+```cmd
+b.bat pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//FinalizeResxFiles
+```
+
+Run before creating a release branch to update .ja and .zh-CHS .resx files with comments for strings added since the last release.
+
+## Manual Scripts
+
+The "scripts" folder contains batch files for manual operation:
 
 >`pwiz_tools\Skyline\Executables\DevTools\ResourcesOrganizer\scripts\readResxFiles.bat`
 >
->creates a file called "resources.db" which contains information from all of the .resx files
+>Creates "resources.db" containing information from all .resx files
 
-> `pwiz_tools\Skyline\Executables\DevTools\ResourcesOrganizer\scripts\generateLocalizationCsvFiles.bat`
+>`pwiz_tools\Skyline\Executables\DevTools\ResourcesOrganizer\scripts\GenerateLocalizationCsvFiles.bat`
 >
-> *creates files "localization.ja.csv" and "localization.zh-CHS.csv" containing strings that have "NeedsReview:" comments in them*
+>Creates localization CSV files for translation
 
-### Additionally, the following commands will be useful after getting updated copies of these .csv files back from the localizers:
-
->  `pwiz_tools\Skyline\Executables\DevTools\ResourcesOrganizer\scripts\exe\ResourcesOrganizer.exe importLocalizationCsv`
+>`pwiz_tools\Skyline\Executables\DevTools\ResourcesOrganizer\scripts\ImportLocalizationCsvFiles.bat`
 >
-> *Imports the contents of "localization.ja.csv" and "localization.zh-CHS.csv" back into resources.db*
+>Imports translated CSV files and updates .resx files
 
-> `pwiz_tools\Skyline\Executables\DevTools\ResourcesOrganizer\scripts\exe\ResourcesOrganizer.exe exportResx resxFiles.zip`
+## Command-Line Tool
+
+The ResourcesOrganizer executable supports additional commands:
+
+>`ResourcesOrganizer.exe importLocalizationCsv --db <database> --input <csv> --language <lang>`
 >
-> *Outputs the contents of `resources.db` into zipfiles in "resxFiles.zip". You can then extract the contents of that zip file to the root of the project and normalize the resx files, making sure that the contents of the resx files are in the same order across the languages.*
+>Imports a single CSV file into the database
+
+>`ResourcesOrganizer.exe exportResx --db <database> <output.zip>`
+>
+>Exports database contents to a zip of .resx files
 

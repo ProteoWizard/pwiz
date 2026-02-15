@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Kaipo Tamura <kaipot .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *

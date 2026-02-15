@@ -1,4 +1,4 @@
-﻿namespace pwiz.Common.DataBinding.Controls.Editor
+namespace pwiz.Common.DataBinding.Controls.Editor
 {
     partial class DocumentationViewer
     {
@@ -29,19 +29,21 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DocumentationViewer));
-            this.webBrowser1 = new System.Windows.Forms.WebBrowser();
+            this.webView2 = new Microsoft.Web.WebView2.WinForms.WebView2();
             this.SuspendLayout();
             // 
-            // webBrowser1
+            // webView2
             // 
-            resources.ApplyResources(this.webBrowser1, "webBrowser1");
-            this.webBrowser1.Name = "webBrowser1";
+            resources.ApplyResources(this.webView2, "webView2");
+            this.webView2.Name = "webView2";
+            this.webView2.CreationProperties = null;
+            this.webView2.DefaultBackgroundColor = System.Drawing.Color.White;
             // 
             // DocumentationViewer
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.webBrowser1);
+            this.Controls.Add(this.webView2);
             this.Name = "DocumentationViewer";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
@@ -51,6 +53,6 @@
 
         #endregion
 
-        private System.Windows.Forms.WebBrowser webBrowser1;
+        private Microsoft.Web.WebView2.WinForms.WebView2 webView2;
     }
 }

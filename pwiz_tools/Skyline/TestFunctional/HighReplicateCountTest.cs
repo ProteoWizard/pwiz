@@ -44,21 +44,12 @@ namespace pwiz.SkylineTestFunctional
         public void TestHighReplicateCount()
         {
             TestFilesZip = ZIP_FILE;
-            int maxGraphChromOld = Skyline.SkylineWindow.MAX_GRAPH_CHROM;
-            try
-            {
-                // Actually need about 2000 to make Skyline hit the 10,000 window handle limit if it tries to open all chromatogram views at once, and creates a progress bar for each in the loading window
-                Skyline.SkylineWindow.MAX_GRAPH_CHROM = 3; // Normally 100, reduce for quicker test
-                RunFunctionalTest();
-            }
-            finally
-            {
-                Skyline.SkylineWindow.MAX_GRAPH_CHROM = maxGraphChromOld;
-            }
+            RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            Settings.Default.MaxChromatogramGraphs = 3; // Normally 100, reduce for quicker test
             var testFilesDir = TestFilesDir;
 
             var skyFile = "test_b.sky";

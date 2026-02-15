@@ -1,17 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using AutoQC;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharedBatch;
+using SharedBatchTest;
 
 namespace AutoQCTest
 {
     [TestClass]
-    public class AutoQcFileSystemWatcherTest
+    public class AutoQcFileSystemWatcherTest : AbstractUnitTest
     {
         
         [TestMethod]
@@ -78,8 +79,9 @@ namespace AutoQCTest
             var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
                 TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
             var logger = TestUtils.GetTestLogger(config);
-            var watcher = new AutoQCFileSystemWatcher(logger, new ConfigRunner(config, logger));
 
+            using var configRunner = new ConfigRunner(config, logger);
+            using var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
             watcher.Init(config);
             var files = watcher.GetExistingFiles();
             Assert.AreEqual(expectedFiles.Length, files.Count);
@@ -154,10 +156,9 @@ namespace AutoQCTest
             TestGetNewFilesForInstrument(testDir, MainSettings.BRUKER);
             TestGetNewFilesForInstrument(testDir, MainSettings.SHIMADZU);
         }
-        
-        private static async void TestGetNewFilesForInstrument(string testDir, string instrument)
+
+        private static void TestGetNewFilesForInstrument(string testDir, string instrument)
         {
-            
             // folder to watch
             var folderToWatch = CreateDirectory(testDir, instrument);
             // Create a .sky files
@@ -170,35 +171,24 @@ namespace AutoQCTest
             var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
                 TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
             var logger = TestUtils.GetTestLogger(config);
-            var configRunner = new ConfigRunner(config, logger);
-            configRunner.ChangeStatus(RunnerStatus.Running);
-            
 
-            // 1. Look for files in folderToWatchOnly
-            var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
-            mainSettings.ValidateSettings();
-            watcher.Init(config);
-            watcher.StartWatching(); // Start watching
-            await AssertCorrectFileCount(watcher, 0);
-
-            // Create new files in the folder
-            List<string> dataFiles;
-            SetupTestFolder(folderToWatch, instrument, out dataFiles);
-
-            // Only one file should have been added to the queue since we are not monitoring sub-folders
-            Assert.AreEqual(1, watcher.GetExistingFiles().Count);
-            var files = new List<string>();
-            string f;
-            while ((f = watcher.GetFile()) != null)
+            using (var configRunner = new ConfigRunner(config, logger))
             {
-                files.Add(f);
-            }
-            Assert.AreEqual(1, files.Count);
-            Assert.IsTrue(files.Contains(dataFiles[0]));  
-            Assert.IsNull(watcher.GetFile()); // Nothing in the queue
+                configRunner.ChangeStatus(RunnerStatus.Running);
 
-            watcher.Stop();
-            
+                // 1. Look for files in folderToWatchOnly
+                using var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
+                mainSettings.ValidateSettings();
+                watcher.Init(config);
+                StartWatching(watcher);
+
+                // Create new files in the folder
+                SetupTestFolder(folderToWatch, instrument, out var dataFiles);
+
+                // Only one file should have been added to the queue since we are not monitoring sub-folders
+                ValidateWatcherFiles(watcher, 1, dataFiles);
+            }
+
             // 2. Look for files in subfolders
             // folder to watch
             folderToWatch = CreateDirectory(testDir, instrument + "_2");
@@ -212,33 +202,21 @@ namespace AutoQCTest
                 TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
             logger = TestUtils.GetTestLogger(config);
-            configRunner = new ConfigRunner(config, logger);
-            configRunner.ChangeStatus(RunnerStatus.Running);
-            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
-            
-            mainSettings.ValidateSettings();
-            watcher.Init(config);
-
-            watcher.StartWatching(); // Start watching
-            await AssertCorrectFileCount(watcher, 0); // No existing files
-
-            dataFiles.Clear();
-            SetupTestFolder(folderToWatch, instrument, out dataFiles); // Create new files in the folder
-
-            files = new List<string>();
-            while ((f = watcher.GetFile()) != null)
+            using (var configRunner = new ConfigRunner(config, logger))
             {
-                files.Add(f);
-            }
-            Assert.AreEqual(5, files.Count);
-            Assert.IsTrue(files.Contains(dataFiles[0]));
-            Assert.IsTrue(files.Contains(dataFiles[1]));
-            Assert.IsTrue(files.Contains(dataFiles[2]));
-            Assert.IsTrue(files.Contains(dataFiles[3]));
-            Assert.IsTrue(files.Contains(dataFiles[4]));
+                configRunner.ChangeStatus(RunnerStatus.Running);
+                using var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
 
-            watcher.Stop();
-            
+                mainSettings.ValidateSettings();
+                watcher.Init(config);
+
+                StartWatching(watcher);
+
+                SetupTestFolder(folderToWatch, instrument, out var dataFiles); // Create new files in the folder
+
+                ValidateWatcherFiles(watcher, 5, dataFiles);
+            }
+
             //  3. Look for files in subfolders matching a pattern
             // folder to watch
             folderToWatch = CreateDirectory(testDir, instrument + "_3");
@@ -253,30 +231,23 @@ namespace AutoQCTest
                 TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
             logger = TestUtils.GetTestLogger(config);
-            configRunner = new ConfigRunner(config, logger);
-            configRunner.ChangeStatus(RunnerStatus.Running);
-            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
-
-            
-            mainSettings.ValidateSettings();
-            watcher.Init(config);
-
-            watcher.StartWatching(); // Start watching
-            await AssertCorrectFileCount(watcher, 0);
-
-            dataFiles.Clear();
-            SetupTestFolder(folderToWatch, instrument, out dataFiles); // Create new files in the folder
-
-            files = new List<string>();
-            while ((f = watcher.GetFile()) != null)
+            using (var configRunner = new ConfigRunner(config, logger))
             {
-                files.Add(f);
-            }
-            Assert.AreEqual(2, files.Count);
-            Assert.IsTrue(files.Contains(dataFiles[0]));
-            Assert.IsTrue(files.Contains(dataFiles[2]));
+                configRunner.ChangeStatus(RunnerStatus.Running);
+                using var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
 
-            watcher.Stop();
+
+                mainSettings.ValidateSettings();
+                watcher.Init(config);
+
+                StartWatching(watcher);
+
+                SetupTestFolder(folderToWatch, instrument, out var dataFiles); // Create new files in the folder
+
+                var files = ValidateWatcherFiles(watcher, 2, Array.Empty<string>());
+                Assert.IsTrue(files.Contains(dataFiles[0]));
+                Assert.IsTrue(files.Contains(dataFiles[2]));
+            }
 
             // 4. Add new files in directory by first creating a temp file/directory and renaming it.
             // This should trigger a "Renamed" event for the FileSystemWatcher
@@ -292,57 +263,55 @@ namespace AutoQCTest
                 TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
             logger = TestUtils.GetTestLogger(config);
-            configRunner = new ConfigRunner(config, logger);
-            configRunner.ChangeStatus(RunnerStatus.Running);
-            watcher = new AutoQCFileSystemWatcher(logger, configRunner);
-
-
-
-
-            //config.MainSettings = mainSettings;
-            mainSettings.ValidateSettings();
-            watcher.Init(config);
-
-            watcher.StartWatching(); // Start watching
-            Assert.AreEqual(0, watcher.GetExistingFiles().Count); // No existing files
-
-            dataFiles.Clear();
-            SetupTestFolder(folderToWatch, instrument, out dataFiles, 
-                true); // Create temp file first and rename it
-
-            watcher.CheckDrive(); // Otherwise UNC tests might fail on //net-lab3
-
-            files = new List<string>();
-            while ((f = watcher.GetFile()) != null)
+            using (var configRunner = new ConfigRunner(config, logger))
             {
-                files.Add(f);
-            }
-            Assert.AreEqual(1, files.Count);
-            Assert.IsTrue(files.Contains(dataFiles[0]));
+                configRunner.ChangeStatus(RunnerStatus.Running);
+                using var watcher = new AutoQCFileSystemWatcher(logger, configRunner);
 
-            watcher.Stop();
+                //config.MainSettings = mainSettings;
+                mainSettings.ValidateSettings();
+                watcher.Init(config);
+
+                watcher.StartWatching(); // Start watching
+                Assert.AreEqual(0, watcher.GetExistingFiles().Count); // No existing files
+
+                SetupTestFolder(folderToWatch, instrument, out var dataFiles,
+                    true); // Create temp file first and rename it
+
+                watcher.CheckDrive(); // Otherwise UNC tests might fail on //net-lab3
+
+                var files = GetWatcherFiles(watcher).ToList();
+                Assert.AreEqual(1, files.Count);
+                Assert.IsTrue(files.Contains(dataFiles[0]));
+            }
         }
 
-
-        private static async Task AssertCorrectFileCount(AutoQCFileSystemWatcher watcher, int expectedFileCount)
+        private static IList<string> ValidateWatcherFiles(AutoQCFileSystemWatcher watcher, int expectedFileCount, IList<string> dataFiles)
         {
-            var timeout = 20;
-            var timestep = 10;
-            var startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-            var files = new List<string>();
-            var x = startTime;
-            while (x < startTime + timeout)
+            WaitForCondition(() => watcher.GetQueueCount() == expectedFileCount);
+            var files = GetWatcherFiles(watcher).ToList();
+            Assert.AreEqual(expectedFileCount, files.Count);
+            for (int i = 0; i < Math.Min(expectedFileCount, dataFiles.Count); i++)
             {
-                files = watcher.GetExistingFiles();
-                if (files.Count > expectedFileCount)
-                    break;
-                if (files.Count == expectedFileCount)
-                    return;
-                await Task.Delay(timestep);
-                x = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                Assert.IsTrue(files.Contains(dataFiles[i]));
             }
-            Assert.Fail($"Expected <{expectedFileCount}> files but Actual <{files.Count}>.");
+            Assert.IsNull(watcher.GetFile()); // Nothing left in the queue
+            return files;
         }
+
+        private static IEnumerable<string> GetWatcherFiles(AutoQCFileSystemWatcher watcher)
+        {
+            while (watcher.GetFile() is { } f)
+                yield return f;
+        }
+
+        private static void StartWatching(AutoQCFileSystemWatcher watcher)
+        {
+            watcher.StartWatching();
+            WaitForCondition(() => watcher.GetExistingFiles().Count == 0,
+                errorMessage: "Failed waiting for <0> files");
+        }
+
         /*
         [TestMethod]
         public void TestMappedDrive()

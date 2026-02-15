@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -237,7 +237,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if(HasToolbar)
                 Toolbar.OnDocumentChanged(e.DocumentPrevious, DocumentUIContainer.DocumentUI);
 
-            UpdateUI();
+            // Note: Do NOT call UpdateUI() here directly. Graph updates are managed by
+            // SkylineWindow.UpdateGraphPanes via timer to allow UI responsiveness during
+            // rapid selection changes (e.g., holding down-arrow key). Direct UpdateUI()
+            // calls bypass the debouncing mechanism and cause duplicate updates.
         }
 
         private void GraphSummary_VisibleChanged(object sender, EventArgs e)

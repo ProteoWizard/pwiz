@@ -117,36 +117,39 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="lblPanoramaFolders.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblServerFolders.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="lblPanoramaFolders.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 54</value>
-  </data>
-  <data name="lblPanoramaFolders.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 13</value>
-  </data>
-  <data name="lblPanoramaFolders.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="lblPanoramaFolders.Text" xml:space="preserve">
-    <value>Panoramaフォルダ：</value>
-  </data>
-  <data name="&gt;&gt;lblPanoramaFolders.Name" xml:space="preserve">
-    <value>lblPanoramaFolders</value>
-  </data>
-  <data name="&gt;&gt;lblPanoramaFolders.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblPanoramaFolders.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblPanoramaFolders.ZOrder" xml:space="preserve">
-    <value>7</value>
+  <data name="lblServerFolders.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 83</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="lblServerFolders.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 13</value>
+  </data>
+  <data name="lblServerFolders.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblServerFolders.Text" xml:space="preserve">
+    <value>フォルダ：</value>
+  </data>
+  <data name="&gt;&gt;lblServerFolders.Name" xml:space="preserve">
+    <value>lblServerFolders</value>
+  </data>
+  <data name="&gt;&gt;lblServerFolders.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblServerFolders.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblServerFolders.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
   <data name="treeViewFolders.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -169,7 +172,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;treeViewFolders.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -196,7 +199,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -223,7 +226,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblFile.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -250,7 +253,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblFile.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="tbFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -274,7 +277,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbFilePath.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -301,8 +304,11 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
+  <metadata name="toolTipShowAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>176, 17</value>
+  </metadata>
   <data name="cbAnonymousServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -321,11 +327,11 @@
   <data name="cbAnonymousServers.Text" xml:space="preserve">
     <value>匿名サーバーを表示</value>
   </data>
-  <metadata name="toolTipShowAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="cbAnonymousServers.ToolTip" xml:space="preserve">
     <value>匿名サーバーはユーザーアカウントには関連付けられません。サーバーにドキュメントをアップロードするには、ユーザーアカウントが必要です。</value>
+  </data>
+  <data name="cbAnonymousServers.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="&gt;&gt;cbAnonymousServers.Name" xml:space="preserve">
     <value>cbAnonymousServers</value>
@@ -337,6 +343,72 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbAnonymousServers.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="toolTipShowAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>176, 17</value>
+  </metadata>
+  <data name="createRemoteFolder.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="createRemoteFolder.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 296</value>
+  </data>
+  <data name="createRemoteFolder.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="createRemoteFolder.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="createRemoteFolder.Text" xml:space="preserve">
+    <value>フォルダを作成</value>
+  </data>
+  <data name="createRemoteFolder.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;createRemoteFolder.Name" xml:space="preserve">
+    <value>createRemoteFolder</value>
+  </data>
+  <data name="&gt;&gt;createRemoteFolder.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;createRemoteFolder.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;createRemoteFolder.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="lblAvailableStorage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="lblAvailableStorage.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblAvailableStorage.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblAvailableStorage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>600, 83</value>
+  </data>
+  <data name="lblAvailableStorage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 13</value>
+  </data>
+  <data name="lblAvailableStorage.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="lblAvailableStorage.Text" xml:space="preserve">
+    <value>利用可能なストレージ：</value>
+  </data>
+  <data name="&gt;&gt;lblAvailableStorage.Name" xml:space="preserve">
+    <value>lblAvailableStorage</value>
+  </data>
+  <data name="&gt;&gt;lblAvailableStorage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblAvailableStorage.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblAvailableStorage.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -354,6 +426,12 @@
   <data name="$this.Text" xml:space="preserve">
     <value>ドキュメントをアップロード</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.182, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;toolTipShowAnonymous.Name" xml:space="preserve">
     <value>toolTipShowAnonymous</value>
   </data>
@@ -364,6 +442,6 @@
     <value>PublishDocumentDlgBase</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=25.1.1.182, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

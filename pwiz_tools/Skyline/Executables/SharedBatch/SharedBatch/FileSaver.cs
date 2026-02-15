@@ -1,4 +1,4 @@
-﻿using SharedBatch.Properties;
+using SharedBatch.Properties;
 using System;
 using System.Diagnostics;
 using System.IO;

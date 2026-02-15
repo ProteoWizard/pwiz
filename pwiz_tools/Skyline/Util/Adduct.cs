@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -66,6 +66,17 @@ namespace pwiz.Skyline.Util
         public IEnumerable<Adduct> Keys { get { return _dict.Keys; } }
     }
 
+    /// <summary>
+    /// Thrown when a loss would remove more atoms than are found in a molecular formula e.g. water loss from C2S5H12 (no oxygen),
+    /// or label would change more atoms than are in the formula e.g. 3C' on C2S5H12
+    /// </summary>
+    public class InvalidChemicalModificationException : IOException
+    {
+        public InvalidChemicalModificationException(string message) : base(message)
+        {
+        }
+    }
+
     public class Adduct : Immutable, IComparable, IEquatable<Adduct>, IAuditLogObject
     {
         private Molecule Composition { get; set; } // The chemical makeup of the adduct - the "2H" part in 4M3Cl37+2H
@@ -79,7 +90,7 @@ namespace pwiz.Skyline.Util
         private int _hashCode; // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts
 
         // We tend to see the same strings again and again, save some parsing time by maintaining a threadsafe lookup for each ADDUCT_TYPE
-        private static ConcurrentDictionary<string, Adduct>[] _knownAdducts = new ConcurrentDictionary<string, Adduct>[]
+        private static ConcurrentDictionary<string, Adduct>[] _knownAdducts = new[]
         {
             new ConcurrentDictionary<string, Adduct>(),
             new ConcurrentDictionary<string, Adduct>(),
@@ -1042,10 +1053,8 @@ namespace pwiz.Skyline.Util
 
         public static Adduct FromCharge(int charge, ADDUCT_TYPE type)
         {
-            var assumeProteomic = false;
             if (type == ADDUCT_TYPE.proteomic)
             {
-                assumeProteomic = true;
                 switch (charge)
                 {
                     case 0:
@@ -1061,6 +1070,14 @@ namespace pwiz.Skyline.Util
                     case 5:
                         return QUINTUPLY_PROTONATED;
                 }
+                var str = (charge==-1) ? @"[M-H]" : $@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}H]"; // So we don't get "[M-1H]"
+                if (_knownAdducts[(int)ADDUCT_TYPE.proteomic].TryGetValue(str, out var adduct))
+                {
+                    return adduct;
+                }
+                adduct = new Adduct(charge, true);
+                _knownAdducts[(int)ADDUCT_TYPE.proteomic][str] = adduct;
+                return adduct;
             }
             else if (type == ADDUCT_TYPE.non_proteomic)
             {
@@ -1081,6 +1098,7 @@ namespace pwiz.Skyline.Util
                     case -3:
                         return M_MINUS_3H;
                 }
+                return Adduct.FromStringAssumeProtonatedNonProteomic($@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}H]");
             }
             else
             {
@@ -1101,8 +1119,8 @@ namespace pwiz.Skyline.Util
                     case -3:
                         return M_MINUS_3;
                 }
+                return Adduct.FromStringAssumeChargeOnly($@"[M{charge:+#;-#;0,CultureInfo.InvariantCulture}]");
             }
-            return new Adduct(charge, assumeProteomic);
         }
 
         public static Adduct[] ProtonatedFromCharges(params int[] list)
@@ -1441,7 +1459,7 @@ namespace pwiz.Skyline.Util
                 if (!molecule.IsMassOnly &&
                     count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
                 {
-                    throw new InvalidDataException(
+                    throw new InvalidChemicalModificationException(
                         string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
                             this, pair.Key, molecule.ToString()));
                 }
@@ -1501,7 +1519,7 @@ namespace pwiz.Skyline.Util
                     }
                     else // Can't remove that which is not there
                     {
-                        throw new InvalidDataException(
+                        throw new InvalidChemicalModificationException(
                             string.Format(
                                 UtilResources
                                     .Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
@@ -1566,6 +1584,27 @@ namespace pwiz.Skyline.Util
                 return mass;
             }
             return (mass.IsMonoIsotopic() ? IsotopesIncrementalMonoMass : IsotopesIncrementalAverageMass) + mass; 
+        }
+
+        /// <summary>
+        /// Tries to infer adduct based on given mass and m/z, limited to simple protonated or charge-only adducts
+        /// See also Skyline.Model.TransitionCalc.CalcCharge() which "Calculates the matching charge within a tolerance for a mass, assuming (de)protonation."
+        /// </summary>
+        public static Adduct InferFromMassAndMz(double mass, SignedMz mz)
+        {
+            var roughChargeH = (int)Math.Round(mass / (mz.RawValue - (mz.IsNegative ? -BioMassCalc.MassProton : BioMassCalc.MassProton)));
+            var adductH = Adduct.FromCharge(roughChargeH, ADDUCT_TYPE.non_proteomic);
+            var typedMass = new TypedMass(mass, MassType.Monoisotopic);
+            var errH = Math.Abs(adductH.MzFromNeutralMass(typedMass) - mz.Value);
+            var roughChargeM = (int)Math.Round(mass / mz.RawValue);
+            var adductM = Adduct.FromChargeNoMass(roughChargeM);
+            var errM = Math.Abs(adductM.MzFromNeutralMass(typedMass) - mz.Value);
+            var toler = 0.01 * BioMassCalc.MassProton;
+            if (errM < errH && errM < toler)
+                return adductM;
+            else if (errH < errM && errH < toler)
+                return adductH;
+            return Adduct.EMPTY;
         }
 
         /// <summary>

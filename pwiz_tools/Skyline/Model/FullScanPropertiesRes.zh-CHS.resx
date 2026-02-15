@@ -283,6 +283,12 @@
   <data name="Description_IsCentroided" xml:space="preserve">
     <value>这是棒状图形式还是高分辨率谱图?</value>
   </data>
+  <data name="WindowGroup" xml:space="preserve">
+    <value>窗口组</value>
+  </data>
+  <data name="Description_WindowGroup" xml:space="preserve">
+    <value>PASEF MS2 窗口组</value>
+  </data>
   <data name="HighEnergyOffset" xml:space="preserve">
     <value>高能偏置</value>
   </data>
@@ -306,5 +312,17 @@
   </data>
   <data name="Description_rdotp" xml:space="preserve">
     <value>标记谱图和非标记谱图之间相似性的测量值。</value>
+  </data>
+  <data name="Description_DissociationMethod" xml:space="preserve">
+    <value>分段技术（如 CID、HCD、ETD）</value>
+  </data>
+  <data name="DissociationMethod" xml:space="preserve">
+    <value>分离法</value>
+  </data>
+  <data name="ConstantNeutralLoss" xml:space="preserve">
+    <value>恒定中性损耗</value>
+  </data>
+  <data name="Description_ConstantNeutralLoss" xml:space="preserve">
+    <value>分析仪偏移值用于恒定中性损耗谱图（中性增益使用负值）</value>
   </data>
 </root>

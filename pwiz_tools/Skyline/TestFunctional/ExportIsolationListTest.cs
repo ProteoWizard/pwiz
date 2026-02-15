@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -581,7 +581,7 @@ namespace pwiz.SkylineTestFunctional
                 exportMethodDlg.InstrumentType = ExportInstrumentType.AGILENT_MASSHUNTER_12;
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
             });
-            RunDlg<MultiButtonMsgDlg>(
+            RunDlg<MessageDlg>(
                 () => exportMethodDlg.OkDialog(csvPath),
                 messageDlg =>
                 {

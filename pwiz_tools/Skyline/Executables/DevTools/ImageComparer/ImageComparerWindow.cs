@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>
  *                   MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -115,7 +115,54 @@ namespace ImageComparer
 
         private void RefreshAll()
         {
+            var previousSelection = toolStripFileList.SelectedItem as ScreenshotFile;
+
             OpenFolder(Settings.Default.LastOpenFolder);
+
+            int restoredIndex = FindBestSelectionIndex(previousSelection);
+            if (toolStripFileList.SelectedIndex != restoredIndex)
+                toolStripFileList.SelectedIndex = restoredIndex;
+        }
+
+        /// <summary>
+        /// Finds the best index to select after a refresh, using hierarchical matching:
+        /// 1. Exact match, 2. Closest number in same tutorial/locale, 3. Start of same tutorial, 4. Beginning
+        /// </summary>
+        private int FindBestSelectionIndex(ScreenshotFile previous)
+        {
+            if (previous == null || toolStripFileList.Items.Count == 0)
+                return 0;
+
+            int? closestInTutorialLocale = null;
+            int closestNumberDiff = int.MaxValue;
+            int? tutorialStart = null;
+
+            for (int i = 0; i < toolStripFileList.Items.Count; i++)
+            {
+                if (!(toolStripFileList.Items[i] is ScreenshotFile sf))
+                    continue;
+
+                // 1. Exact match - return immediately
+                if (sf.RelativePath == previous.RelativePath)
+                    return i;
+
+                // 2. Closest number within same tutorial/locale
+                if (sf.Name == previous.Name && sf.Locale == previous.Locale)
+                {
+                    int diff = Math.Abs(sf.Number - previous.Number);
+                    if (diff < closestNumberDiff)
+                    {
+                        closestNumberDiff = diff;
+                        closestInTutorialLocale = i;
+                    }
+                }
+
+                // 3. Start of same tutorial (any locale)
+                if (sf.Name == previous.Name && tutorialStart == null)
+                    tutorialStart = i;
+            }
+
+            return closestInTutorialLocale ?? tutorialStart ?? 0;
         }
 
         private void FormStateChangedBackground()
@@ -244,6 +291,14 @@ namespace ImageComparer
             toolStripNext.Enabled = toolStripFileList.SelectedIndex < toolStripFileList.Items.Count - 1;
             toolStripRevert.Enabled = _diff?.IsDiff ?? false;
             toolStripGotoWeb.Enabled = _fileToShow != null;
+            UpdateChangeCount();
+        }
+
+        private void UpdateChangeCount()
+        {
+            int total = toolStripFileList.Items.Count;
+            int current = toolStripFileList.SelectedIndex + 1;
+            labelChangeCount.Text = total > 0 ? $@"{current}/{total} changes" : string.Empty;
         }
 
         private void UpdateScreenshotsAsync(ImageSource oldImageSource, Color highlightColor)
@@ -340,9 +395,16 @@ namespace ImageComparer
                     case ImageSource.web:
                     default:
                         {
-                            using var webClient = new WebClient();
+                            using var httpClient = new HttpClient();
                             using var fileSaverTemp = new FileSaver(file.Path);  // Temporary. Never saved
-                            webClient.DownloadFile(file.UrlToDownload, fileSaverTemp.SafeName);
+                            var response = httpClient.GetAsync(file.UrlToDownload).Result;
+                            response.EnsureSuccessStatusCode();
+                            using (var contentStream = response.Content.ReadAsStreamAsync().Result)
+                            using (var fileStream = new FileStream(fileSaverTemp.SafeName, FileMode.Create,
+                                       FileAccess.Write, FileShare.None))
+                            {
+                                contentStream.CopyTo(fileStream);
+                            }
                             imageBytes = File.ReadAllBytes(fileSaverTemp.SafeName);
                         }
                         break;
@@ -362,7 +424,7 @@ namespace ImageComparer
 
         private void SetPreviewImage(PictureBox previewBox, ScreenshotInfo screenshot, ScreenshotDiff diff = null)
         {
-            var baseImage = diff?.HighlightedImage ?? screenshot.Image;
+            var baseImage = GetDisplayImage(diff, screenshot);
             var newImage = baseImage;
             if (baseImage != null && !screenshot.IsPlaceholder)
             {
@@ -377,6 +439,53 @@ namespace ImageComparer
             }
 
             previewBox.Image = newImage;
+        }
+
+        /// <summary>
+        /// Gets the appropriate image to display based on diff-only and amplification settings.
+        /// </summary>
+        private Bitmap GetDisplayImage(ScreenshotDiff diff, ScreenshotInfo screenshot)
+        {
+            if (diff == null)
+                return screenshot.Image;
+
+            int amplifyRadius = GetAmplifyRadius();
+            bool diffOnly = toolStripDiffOnly.Checked;
+
+            if (amplifyRadius > 0)
+            {
+                // Amplified view - fall back to normal view if no diff pixels
+                var amplifiedImage = diffOnly
+                    ? diff.CreateAmplifiedDiffOnlyImage(amplifyRadius)
+                    : diff.CreateAmplifiedImage(amplifyRadius);
+                if (amplifiedImage != null)
+                    return amplifiedImage;
+                // Fall through to non-amplified handling when no diff pixels
+            }
+
+            if (diffOnly)
+            {
+                // Diff-only view - show white rectangle if no diff pixels
+                return diff.DiffOnlyImage ?? CreateWhiteImage(screenshot.ImageSize);
+            }
+
+            // Normal highlighted view
+            return diff.HighlightedImage ?? screenshot.Image;
+        }
+
+        private static Bitmap CreateWhiteImage(Size size)
+        {
+            var result = new Bitmap(size.Width, size.Height);
+            using (var g = Graphics.FromImage(result))
+            {
+                g.Clear(Color.White);
+            }
+            return result;
+        }
+
+        private int GetAmplifyRadius()
+        {
+            return toolStripAmplify.Checked ? 5 : 0;
         }
 
         private Size CalcBitmapSize(ScreenshotInfo screenshot, Size containerSize)
@@ -617,6 +726,88 @@ namespace ImageComparer
             }
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // Handle all keyboard shortcuts at the form level to prevent them from
+            // being processed by child controls (e.g., combo box jumping to 'S' on Ctrl+S)
+            switch (keyData)
+            {
+                // Navigation
+                case Keys.Control | Keys.Tab:
+                    NextOldImageSource();
+                    return true;
+                case Keys.Control | Keys.Down:
+                case Keys.Control | Keys.Right:
+                case Keys.PageDown:
+                case Keys.F11:
+                    Next();
+                    return true;
+                case Keys.Control | Keys.Up:
+                case Keys.Control | Keys.Left:
+                case Keys.PageUp:
+                case Keys.Shift | Keys.F11:
+                    Previous();
+                    return true;
+
+                // Actions
+                case Keys.Control | Keys.Z:
+                case Keys.F12:
+                    Revert();
+                    return true;
+                case Keys.Control | Keys.R:
+                    RefreshScreenshots();
+                    return true;
+                case Keys.F5:
+                    RefreshAll();
+                    return true;
+                case Keys.Control | Keys.G:
+                    GotoLink();
+                    return true;
+
+                // Clipboard
+                case Keys.Control | Keys.C:
+                    lock (_lock)
+                    {
+                        CopyBitmap(_newScreenshot.Image);
+                    }
+                    return true;
+                case Keys.Control | Keys.Shift | Keys.C:
+                    lock (_lock)
+                    {
+                        CopyBitmap(_oldScreenshot.Image);
+                    }
+                    return true;
+                case Keys.Control | Keys.Alt | Keys.C:
+                    lock (_lock)
+                    {
+                        var diffImage = _diff?.HighlightedImage;
+                        if (diffImage == null)
+                        {
+                            ShowMessage("No diff image available.");
+                            return true;
+                        }
+                        CopyBitmap(diffImage);
+                    }
+                    return true;
+                case Keys.Control | Keys.S:
+                    SaveDiffImage();
+                    return true;
+                case Keys.Control | Keys.V:
+                    Paste();
+                    return true;
+
+                // Diff view toggles
+                case Keys.D:
+                    toolStripDiffOnly.Checked = !toolStripDiffOnly.Checked;
+                    return true;
+                case Keys.A:
+                    toolStripAmplify.Checked = !toolStripAmplify.Checked;
+                    return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         private void StoreFormBoundsState()
         {
             // Only store sizing information when not automatically resizing the form
@@ -664,15 +855,7 @@ namespace ImageComparer
         private void NextOldImageSource()
         {
             OldImageSource = OLD_IMAGE_SOURCES[(Settings.Default.OldImageSource + 1) % OLD_IMAGE_SOURCES.Length];
-
-            UpdateImageSourceButtons();
-
-            lock (_lock)
-            {
-                _oldScreenshot = new OldScreenshot(_oldScreenshot, null, OldImageSource);
-            }
-
-            FormStateChanged();
+            SetOldImageSource(OldImageSource);
         }
 
         private void UpdateImageSourceButtons()
@@ -739,7 +922,38 @@ namespace ImageComparer
 
         private void buttonImageSource_Click(object sender, EventArgs e)
         {
-            NextOldImageSource();
+            // Update menu check marks
+            menuItemGit.Checked = OldImageSource == ImageSource.git;
+            menuItemWeb.Checked = OldImageSource == ImageSource.web;
+
+            // Show context menu below the button
+            contextMenuImageSource.Show(buttonImageSource, new Point(0, buttonImageSource.Height));
+        }
+
+        private void menuItemGit_Click(object sender, EventArgs e)
+        {
+            SetOldImageSource(ImageSource.git);
+        }
+
+        private void menuItemWeb_Click(object sender, EventArgs e)
+        {
+            SetOldImageSource(ImageSource.web);
+        }
+
+        private void SetOldImageSource(ImageSource source)
+        {
+            if (OldImageSource == source)
+                return;
+
+            OldImageSource = source;
+            UpdateImageSourceButtons();
+
+            lock (_lock)
+            {
+                _oldScreenshot = new OldScreenshot(_oldScreenshot, null, OldImageSource);
+            }
+
+            FormStateChanged();
         }
 
         private void toolStripPickColorButton_ColorChanged(object sender, EventArgs e)
@@ -749,101 +963,14 @@ namespace ImageComparer
                 UpdateScreenshotsAsync(OldImageSource, HighlightColor); // On foreground thread because the screenshots are already loaded - just updating the diff
         }
 
-        private void ScreenshotPreviewForm_KeyDown(object sender, KeyEventArgs e)
+        private void toolStripDiffOnly_CheckedChanged(object sender, EventArgs e)
         {
-            switch (e.KeyCode)
-            {
-                case Keys.Tab:
-                    if (e.Control)
-                    {
-                        NextOldImageSource();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.F11:
-                    if (e.Shift)
-                    {
-                        Previous();
-                    }
-                    else
-                    {
-                        Next();
-                    }
-                    e.Handled = true;
-                    break;
-                case Keys.Down:
-                case Keys.Right:
-                    if (e.Control)
-                    {
-                        Next();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.Up:
-                case Keys.Left:
-                    if (e.Control)
-                    {
-                        Previous();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.PageDown:
-                    Next();
-                    e.Handled = true;
-                    break;
-                case Keys.PageUp:
-                    Previous();
-                    e.Handled = true;
-                    break;
-                case Keys.Z:
-                    if (e.Control)
-                    {
-                        Revert();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.F12:
-                    Revert();
-                    e.Handled = true;
-                    break;
-                case Keys.F5:
-                    RefreshAll();
-                    e.Handled = true;
-                    return;
-                case Keys.R:
-                    if (e.Control)
-                    {
-                        RefreshScreenshots();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.G:
-                    if (e.Control)
-                    {
-                        GotoLink();
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.C:
-                    if (e.Control)
-                    {
-                        Bitmap imageToCopy;
-                        lock (_lock)
-                        {
-                            imageToCopy = e.Shift ? _oldScreenshot.Image : _newScreenshot.Image;
-                        }
-                        CopyBitmap(imageToCopy);
-                        e.Handled = true;
-                    }
-                    break;
-                case Keys.V:
-                    if (e.Control)
-                    {
-                        Paste();
-                        e.Handled = true;
-                    }
-                    break;
-            }
+            UpdatePreviewImages();
+        }
+
+        private void toolStripAmplify_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdatePreviewImages();
         }
 
         private void Paste()
@@ -880,6 +1007,59 @@ namespace ImageComparer
             catch (Exception e)
             {
                 ShowMessageWithException("Failed clipboard operation.", e);
+            }
+        }
+
+        private void SaveDiffImage()
+        {
+            try
+            {
+                ScreenshotFile file;
+                ScreenshotDiff diff;
+                lock (_lock)
+                {
+                    file = _fileToShow;
+                    diff = _diff;
+                }
+
+                if (file == null)
+                {
+                    ShowMessage("No screenshot selected.");
+                    return;
+                }
+
+                if (diff?.HighlightedImage == null)
+                {
+                    ShowMessage("No diff image available to save.");
+                    return;
+                }
+
+                var aiTmpFolder = file.GetAiTmpFolder();
+                if (aiTmpFolder == null)
+                {
+                    ShowMessage("Could not locate ai\\.tmp folder.");
+                    return;
+                }
+
+                // Ensure the folder exists
+                if (!Directory.Exists(aiTmpFolder))
+                {
+                    Directory.CreateDirectory(aiTmpFolder);
+                }
+
+                var fileName = file.GetDiffFileName(diff.PixelCount);
+                var fullPath = Path.Combine(aiTmpFolder, fileName);
+
+                lock (diff.HighlightedImage)
+                {
+                    diff.HighlightedImage.Save(fullPath, ImageFormat.Png);
+                }
+
+                ShowMessage($"Diff image saved to:\n{fullPath}");
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException("Failed to save diff image.", e);
             }
         }
 

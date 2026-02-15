@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -53,10 +53,37 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         [Track]
         public string ControlAnnotation { get; private set; }
+        public ReplicateValue GetControlReplicateValue(SrmSettings settings)
+        {
+            var annotationDef = settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == ControlAnnotation);
+            if (annotationDef != null)
+            {
+                return new ReplicateValue.Annotation(annotationDef);
+            }
+            return ReplicateValue.FromPersistedString(settings, ControlAnnotation);
+        }
 
+        public GroupIdentifier GetControlGroupIdentifier(ReplicateValue controlReplicateValue)
+        {
+            return controlReplicateValue?.Parse(ControlValue) ?? GroupIdentifier.EMPTY;
+        }
+
+        public GroupIdentifier? GetCaseGroupIdentifier(ReplicateValue controlReplicateValue)
+        {
+            if (string.IsNullOrEmpty(CaseValue))
+            {
+                return null;
+            }
+            return controlReplicateValue?.Parse(CaseValue);
+        }
+        
         public GroupComparisonDef ChangeControlAnnotation(string value)
         {
             return ChangeProp(ImClone(this), im => im.ControlAnnotation = value);
+        }
+        public GroupComparisonDef ChangeControlReplicateValue(ReplicateValue replicateValue)
+        {
+            return ChangeControlAnnotation(GetReplicateValueName(replicateValue));
         }
 
         [Track]
@@ -64,7 +91,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public GroupComparisonDef ChangeControlValue(string value)
         {
-            return ChangeProp(ImClone(this), im => im.ControlValue = value);
+            return ChangeProp(ImClone(this), im => im.ControlValue = string.IsNullOrEmpty(value) ? null : value);
         }
 
         [Track]
@@ -72,17 +99,23 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public GroupComparisonDef ChangeCaseValue(string value)
         {
-            return ChangeProp(ImClone(this), im => im.CaseValue = value);
+            return ChangeProp(ImClone(this), im => im.CaseValue = string.IsNullOrEmpty(value) ? null : value);
         }
 
         [Track]
         public string IdentityAnnotation { get; private set; }
-
+        public ReplicateValue GetIdentityReplicateValue(SrmSettings settings)
+        {
+            return ReplicateValueFromName(settings, IdentityAnnotation);
+        }
         public GroupComparisonDef ChangeIdentityAnnotation(string value)
         {
             return ChangeProp(ImClone(this), im => im.IdentityAnnotation = value);
         }
-
+        public GroupComparisonDef ChangeIdentityReplicateValue(ReplicateValue replicateValue)
+        {
+            return ChangeIdentityAnnotation(GetReplicateValueName(replicateValue));
+        }
         public bool AverageTechnicalReplicates { get; private set; }
 
         public GroupComparisonDef ChangeAverageTechnicalReplicates(bool value)
@@ -167,28 +200,18 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public GroupIdentifier GetGroupIdentifier(AnnotationCalculator annotationCalculator, ChromatogramSet chromatogramSet)
         {
-            AnnotationDef annotationDef =
-                annotationCalculator.SrmDocument.Settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == ControlAnnotation);
-            if (annotationDef == null)
-            {
-                return default(GroupIdentifier);
-            }
-            return GroupIdentifier.MakeGroupIdentifier(annotationCalculator.GetReplicateAnnotation(annotationDef, chromatogramSet));
+            var replicateValue = GetControlReplicateValue(annotationCalculator.SrmDocument.Settings);
+            return new GroupIdentifier(replicateValue?.GetValue(annotationCalculator, chromatogramSet));
         }
 
         public GroupIdentifier GetControlGroupIdentifier(SrmSettings settings)
         {
             if (string.IsNullOrEmpty(ControlAnnotation))
             {
-                return default(GroupIdentifier);
+                return default;
             }
-            AnnotationDef annotationDef =
-                settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == ControlAnnotation);
-            if (annotationDef == null)
-            {
-                return default(GroupIdentifier);
-            }
-            return GroupIdentifier.MakeGroupIdentifier(annotationDef.ParsePersistedString(ControlValue));
+
+            return GetControlReplicateValue(settings)?.Parse(ControlValue) ?? default;
         }
 
         [TrackChildren]
@@ -354,6 +377,30 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
             return normalizeOption;
+        }
+
+
+        public static ReplicateValue ReplicateValueFromName(SrmSettings settings, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+            var annotationDef = settings.DataSettings.AnnotationDefs.FirstOrDefault(a => a.Name == name);
+            if (annotationDef != null)
+            {
+                return new ReplicateValue.Annotation(annotationDef);
+            }
+            return ReplicateValue.FromPersistedString(settings, name);
+        }
+
+        public static string GetReplicateValueName(ReplicateValue replicateValue)
+        {
+            if (replicateValue is ReplicateValue.Annotation annotation)
+            {
+                return annotation.AnnotationDef.Name;
+            }
+            return replicateValue?.ToPersistedString();
         }
     }
 }

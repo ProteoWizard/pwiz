@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.Controls.Graphs.Calibration
+namespace pwiz.Skyline.Controls.Graphs.Calibration
 {
     partial class CalibrationForm
     {

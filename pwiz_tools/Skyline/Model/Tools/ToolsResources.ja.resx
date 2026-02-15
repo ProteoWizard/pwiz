@@ -244,4 +244,64 @@
   <data name="ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run" xml:space="preserve">
     <value>このツールを実行するにはアクティブな繰り返し測定名が必要です</value>
   </data>
+  <data name="NvidiaInstaller_Setup_Nvidia_Libraries" xml:space="preserve">
+    <value>Nvidia GPUライブラリを設定中</value>
+  </data>
+  <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
+    <value>パッケージのインストール</value>
+  </data>
+  <data name="PythonInstaller_GetPip_Installing_Pip" xml:space="preserve">
+    <value>Pipのインストール中</value>
+  </data>
+  <data name="PythonInstaller_GetPython_Installing_Python" xml:space="preserve">
+    <value>Pythonのインストール</value>
+  </data>
+  <data name="PythonInstaller_InstallPackages_Install" xml:space="preserve">
+    <value>インストール</value>
+  </data>
+  <data name="PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_" xml:space="preserve">
+    <value>Pythonのダウンロードに失敗しました。ネットワーク接続を確認するかSkylineチームに連絡してください。</value>
+  </data>
+  <data name="PythonInstaller_Failed_to_execute_command____0__" xml:space="preserve">
+    <value>コマンドを実行できませんでした： [{0}]</value>
+  </data>
+  <data name="PythonInstaller__0__Running_command____1____2__" xml:space="preserve">
+    <value>{0} コマンドを実行中： [{1}] {2} </value>
+  </data>
+  <data name="PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__" xml:space="preserve">
+    <value>{0} この処理には3～5分かかる場合があります。しばらくお待ちください。 {1} </value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package" xml:space="preserve">
+    <value>Python埋め込みパッケージをダウンロード中です。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package" xml:space="preserve">
+    <value>Python埋め込みパッケージを解凍中です。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package" xml:space="preserve">
+    <value>Python埋め込みパッケージの検索パスを有効にしています。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script" xml:space="preserve">
+    <value>get-pip.pyスクリプトをダウンロード中です。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Running_the_get_pip_py_script" xml:space="preserve">
+    <value>get-pip.pyスクリプトを実行中です。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Running_pip_install__0_" xml:space="preserve">
+    <value>pip install [{0}]を実行中です。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Creating_virtual_environment__0_" xml:space="preserve">
+    <value>仮想環境[{0}]を作成中です。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_" xml:space="preserve">
+    <value>仮想環境[{0}]にPythonパッケージをインストール中です。最初のインストールには10～15分かかります。しばらくお待ちください…</value>
+  </data>
+  <data name="PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected" xml:space="preserve">
+    <value>拡張子が_pthのファイルが1つだけ存在することを想定しています。</value>
+  </data>
+  <data name="PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__" xml:space="preserve">
+    <value>エントリ[{0}]からのパッケージ名とバージョンを解析できませんでした。</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_" xml:space="preserve">
+    <value>仮想環境[{0}]でPythonパッケージをインストールするためにWindowsのロングパスを有効にしています。</value>
+  </data>
 </root>

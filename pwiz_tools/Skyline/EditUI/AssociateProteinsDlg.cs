@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Yuval Boss <yuval .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -61,6 +60,11 @@ namespace pwiz.Skyline.EditUI
         private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
         private SkylineWindow _skylineWindow;
 
+        // Store original label text values from the designer for restoration when not grouping proteins
+        private readonly string _originalMinimalProteinListText;
+        private readonly string _originalRemoveSubsetProteinsText;
+        private readonly string _originalMinPeptidesText;
+
         public string FastaFileName
         {
             get { return tbxFastaTargets.Text; }
@@ -83,6 +87,12 @@ namespace pwiz.Skyline.EditUI
         private AssociateProteinsDlg(SrmDocument document, bool reuseLastFasta = true)
         {
             InitializeComponent();
+            
+            // Save original label text values from the designer for restoration when not grouping proteins
+            _originalMinimalProteinListText = lblMinimalProteinList.Text;
+            _originalRemoveSubsetProteinsText = lblRemoveSubsetProteins.Text;
+            _originalMinPeptidesText = lblMinPeptides.Text;
+            
             _document = document;
             if (reuseLastFasta && !string.IsNullOrEmpty(Settings.Default.LastProteinAssociationFastaFilepath))
             {
@@ -441,10 +451,10 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                var resources = new ComponentResourceManager(typeof(AssociateProteinsDlg));
-                lblMinimalProteinList.Text = resources.GetString("lblMinimalProteinList.Text");
-                lblRemoveSubsetProteins.Text = resources.GetString("lblRemoveSubsetProteins.Text");
-                lblMinPeptides.Text = resources.GetString("lblMinPeptides.Text");
+                // Restore original label text from the designer (saved in constructor)
+                lblMinimalProteinList.Text = _originalMinimalProteinListText;
+                lblRemoveSubsetProteins.Text = _originalRemoveSubsetProteinsText;
+                lblMinPeptides.Text = _originalMinPeptidesText;
             }
 
             UpdateParsimonyResults();
@@ -850,7 +860,10 @@ namespace pwiz.Skyline.EditUI
 
         public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int unmappedOrRemoved)
         {
+            Assume.IsTrue(IsComplete, @"NewTargetsFinalSync: IsComplete");
             var doc = DocumentFinal;
+            Assume.IsNotNull(doc, @"NewTargetsFinalSync: DocumentFinal");
+            Assume.IsNotNull(_proteinAssociation, @"NewTargetsFinalSync: _proteinAssociation");
             var unmappedPeptideGroup = doc.PeptideGroups.FirstOrDefault(pg => pg.Name == Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides);
             unmappedOrRemoved = _proteinAssociation.PeptidesRemovedByFiltersCount + (unmappedPeptideGroup?.PeptideCount ?? 0);
             proteins = doc.PeptideGroupCount;

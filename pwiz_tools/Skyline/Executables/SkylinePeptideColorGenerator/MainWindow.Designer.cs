@@ -1,4 +1,4 @@
-﻿namespace ColorGenerator
+namespace ColorGenerator
 {
     partial class MainWindow
     {

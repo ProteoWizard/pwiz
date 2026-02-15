@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: BreadCrumbControl.cs 55 2011-04-28 15:57:33Z chambm $
 //
 //

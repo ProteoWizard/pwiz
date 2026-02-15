@@ -1,4 +1,4 @@
-﻿namespace MultiLoad
+namespace MultiLoad
 {
     partial class MultiLoad
     {

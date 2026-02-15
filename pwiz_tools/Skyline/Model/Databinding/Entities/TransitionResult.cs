@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -17,9 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.ComponentModel;
-using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
@@ -27,6 +24,9 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.ComponentModel;
+using System.Linq;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -217,7 +217,61 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Transition.Precursor.Peptide.DocNode, Transition.Precursor.DocNode, Transition.DocNode, GetResultFile().Replicate.ReplicateIndex, ChromInfo);
         }
 
-        private class CachedValues : CachedValues<TransitionResult, TransitionChromInfo, Chromatogram>
+        [Expensive]
+        [Format(Formats.PEAK_AREA)]
+        public TransitionIonMetrics TransitionIonMetrics
+        {
+            get { return _cachedValues.GetValue2(this); }
+        }
+
+
+        private TransitionIonMetrics CalculateTransitionIonMetrics()
+        {
+            if (IsEmpty())
+            {
+                return null;
+            }
+
+            var precursorResult = PrecursorResult;
+            var resultFileMetadata =
+                SrmDocument.MeasuredResults?.GetResultFileMetaData(GetResultFile().ChromFileInfo.FilePath);
+            if (resultFileMetadata == null)
+            {
+                return null;
+            }
+            var chromatogramGroup = new ChromatogramGroup(precursorResult);
+            var timeIntensitiesGroup = chromatogramGroup.ReadTimeIntensitiesGroup();
+            if (timeIntensitiesGroup == null)
+            {
+                return null;
+            }
+            float tolerance = (float)SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var transitionChromInfo = GetResultFile().FindChromInfo(Transition.DocNode.Results);
+            if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
+            {
+                return null;
+            }
+            var chromatogramInfo = chromatogramGroup.ChromatogramGroupInfo.GetTransitionInfo(
+                Transition.DocNode, tolerance, TransformChrom.raw);
+            if (chromatogramInfo == null)
+            {
+                return null;
+            }
+
+            var timeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[chromatogramInfo.TransitionIndex];
+            var peakIonMetrics = PrecursorResult.GetPeakIonMetrics(resultFileMetadata,
+                transitionChromInfo.StartRetentionTime, transitionChromInfo.EndRetentionTime,
+                new[] { timeIntensities });
+            if (peakIonMetrics == null)
+            {
+                return null;
+            }
+
+            return new TransitionIonMetrics().ChangeApexTransitionIonCount(peakIonMetrics.ApexAnalyteIonCount)
+                .ChangeLcPeakTransitionIonCount(peakIonMetrics.LcPeakAnalyteIonCount);
+        }
+
+        private class CachedValues : CachedValues<TransitionResult, TransitionChromInfo, Chromatogram, TransitionIonMetrics>
         {
             protected override SrmDocument GetDocument(TransitionResult owner)
             {
@@ -232,6 +286,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             protected override Chromatogram CalculateValue1(TransitionResult owner)
             {
                 return new Chromatogram(new ChromatogramGroup(owner.PrecursorResult), owner.Transition);
+            }
+
+            protected override TransitionIonMetrics CalculateValue2(TransitionResult owner)
+            {
+                return owner.CalculateTransitionIonMetrics();
             }
         }
     }

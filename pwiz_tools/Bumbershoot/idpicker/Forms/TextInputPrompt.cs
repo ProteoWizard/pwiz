@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: LayoutNameBox.cs 239 2010-11-15 17:20:21Z holmanjd $
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 

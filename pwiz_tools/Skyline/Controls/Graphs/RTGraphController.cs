@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,8 +31,6 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Controls.Graphs
 {
     public enum PlotTypeRT { correlation, residuals }
-
-    public enum PointsTypeRT { targets, targets_fdr, standards, decoys }
 
     interface IUpdateGraphPaneController
     {

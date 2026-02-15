@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -474,7 +474,14 @@ namespace pwiz.Skyline.Util
             {
                 if (!IsModified)
                     return @"Unmodified";
-                return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
+                try
+                {
+                    return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
+                }
+                catch (Exception exception)
+                {
+                    return string.Format(@"Unable to read file time: {0}", exception.Message);
+                }
             }
         }
 

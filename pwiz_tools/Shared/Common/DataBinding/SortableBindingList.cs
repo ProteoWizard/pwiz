@@ -1,4 +1,4 @@
-﻿/*
+/*
  * From MSDN Forum:
  * http://social.msdn.microsoft.com/forums/en-US/winformsdatacontrols/thread/12eb59d3-e687-4e36-93ab-bf6741954d39/
  */

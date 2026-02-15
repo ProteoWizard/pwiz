@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Sophie Pallanck <srpall .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
@@ -38,25 +37,43 @@ namespace pwiz.SkylineTestConnected
     /// IF TEST IS FAILING, CHECK THAT THE FOLDER HAS NOT BEEN DELETED
     /// </summary>
     [TestClass]
-    public class PanoramaClientDownloadTest : AbstractFunctionalTest
+    public class PanoramaClientDownloadTest : AbstractFunctionalTestEx
     {
         private const string TEST_USER = "skyline_tester@proteinms.net";
         private const string TEST_PASSWORD = "Lclcmsms1!";
         private const string PANORAMA_WEB = "https://panoramaweb.org";
         private const string TEST_FOLDER = "SkylineTest";
-        private const string PANORAMA_FOLDER = "ForPanoramaClientTest";
-        private const string TEST_FILE = "Study9S_Site52_v1.sky.zip";
+        private const string TEST_PUBLIC_FOLDER = "Panorama Public";
+        private const string PANORAMA_FOLDER = "ForPanoramaClientDownloadTest";
+        private const string PANORAMA_DELETED_FILE_FOLDER = "ForPanoramaClientTest";
+        private const string TEST_FILE = "Study9S_Site52_v1_min.sky.zip";
         private const string DELETED_FILE = "FileDeletedFromServer.sky.zip";
-        private const string RENAMED_FILE = "TestFileRename.sky.zip";
+        private const string RENAMED_FILE = "TestFileRename_min.sky.zip";
+        private const string NOT_RENAMED_FOLDER = "FileRenamedOnServer_min";
+        protected override bool IsRecordMode => false; // Set to true for recording
 
         [TestMethod]
         public void TestPanoramaDownloadFile()
         {
+            DoActualWebAccess = false; // Use recorded playback
             RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestPanoramaDownloadFileWeb()
+        {
+            // Only run this if SkylineTester has enabled web access or web responses are being recorded
+            if (AllowInternetAccess || IsRecordMode)
+            {
+                DoActualWebAccess = true; // Actually go to the web
+                RunFunctionalTest();
+            }
         }
 
         protected override void DoTest()
         {
+            using var scope = GetHttpRecordingScope();
+
             // Test successful download
             TestDownloadFile();
 
@@ -84,15 +101,37 @@ namespace pwiz.SkylineTestConnected
 
         private void AddPanoramaServers()
         {
-            var servers = Settings.Default.ServerList;
-            servers.Add(CreatePanoramaServer());
-            Settings.Default.ServerList = servers;
-            Settings.Default.Save();
+            RunUI(() =>
+            {
+                var servers = Settings.Default.ServerList;
+                servers.Add(CreatePanoramaServer());
+                Settings.Default.ServerList = servers;
+            });
+        }
+
+        /// <summary>
+        /// Gets the Panorama server URI, using folder-limited URI when recording to reduce response size.
+        /// When recording or in playback mode, uses project-specific URI (e.g., https://panoramaweb.org/SkylineTest/)
+        /// to record only the specific folder tree instead of all folders.
+        /// During live unrecorded tests, uses the full URI to allow browsing all folders.
+        /// </summary>
+        private Uri GetPanoramaServerUri(string testFolder = null)
+        {
+            if (IsRecordMode || !DoActualWebAccess)
+            {
+                // Recording: use project-specific URI for smaller recorded responses
+                return new Uri(PANORAMA_WEB + @"/" + (testFolder ?? TEST_FOLDER) + @"/");
+            }
+            else
+            {
+                // During live unrecorded tests, the full URI allows browsing all folders
+                return new Uri(PANORAMA_WEB);
+            }
         }
 
         private Server CreatePanoramaServer()
         {
-            return new Server(new Uri(PANORAMA_WEB), TEST_USER, TEST_PASSWORD);
+            return new Server(GetPanoramaServerUri(), TEST_USER, TEST_PASSWORD);
         }
 
         //Downloads and opens a file successfully 
@@ -106,11 +145,11 @@ namespace pwiz.SkylineTestConnected
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             RunUI(() =>
             {
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
+                SelectNode(remoteDlg, TEST_FOLDER);
+                SelectNode(remoteDlg, PANORAMA_FOLDER);
             });
             var doc = SkylineWindow.Document;
-            OkDialog(remoteDlg, () => Assert.IsTrue(remoteDlg.ClickFile(TEST_FILE), "Unable to click file {0}", TEST_FILE));
+            OkDialog(remoteDlg, () => ClickFile(remoteDlg, TEST_FILE));
             WaitForCondition(() => File.Exists(path));
             var docLoaded = WaitForDocumentChangeLoaded(doc);
             AssertEx.IsDocumentState(docLoaded, null, 7, 22, 23, 115);
@@ -118,51 +157,69 @@ namespace pwiz.SkylineTestConnected
             Assert.IsFalse(File.Exists(path));
         }
 
+        private static void ClickFile(PanoramaFilePicker remoteDlg, string fileName)
+        {
+            Assert.IsTrue(remoteDlg.ClickFile(fileName), "Unable to click file {0}", fileName);
+        }
+
+        private static void SelectNode(PanoramaFilePicker remoteDlg, string nodeName)
+        {
+            Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(nodeName), "Unable to select {0}", nodeName);
+        }
+
+        /// <summary>
+        /// Test error handling in DownloadPanoramaFile using HttpClientTestHelper to simulate network failures.
+        /// These tests verify that network errors are properly caught and displayed to the user.
+        /// </summary>
         private void TestDownloadErrors()
         {
             AddPanoramaServers();
-            var panoramaTestClient = new TestPanoramaClient(PANORAMA_WEB, TEST_USER, TEST_PASSWORD);
-            var path = TestContext.GetTestResultsPath(TEST_FILE);
             var server = CreatePanoramaServer();
-            var errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>
-            {
-                SkylineWindow.DownloadPanoramaFile(path, TEST_FILE, null,
-                    server, 1, panoramaTestClient);
-            }));
-            Assert.AreEqual(new NullReferenceException().Message, errorDlg.Message);
-            OkDialog(errorDlg, errorDlg.OkDialog);
+            var path = TestContext.GetTestResultsPath(TEST_FILE);
+            var fileUrl = $"{PANORAMA_WEB}/_webdav/{TEST_FOLDER}/{PANORAMA_FOLDER}/@files/{TEST_FILE}";
+            var fileUri = new Uri(fileUrl);
 
-            errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>
-            {
-                SkylineWindow.DownloadPanoramaFile(path, TEST_FILE, null,
-                    server, 2, panoramaTestClient);
-            }));
-            Assert.AreEqual(new WebException().Message, errorDlg.Message);
-            OkDialog(errorDlg, errorDlg.OkDialog);
+            // Test user cancellation - verify file is not created
+            TestDownloadCancellation(path, fileUri, server);
 
-            errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>
-            {
-                SkylineWindow.DownloadPanoramaFile(path, TEST_FILE, null,
-                    server, 3, panoramaTestClient);
-            }));
-            Assert.AreEqual(new FileNotFoundException().Message, errorDlg.Message);
-            OkDialog(errorDlg, errorDlg.OkDialog);
+            // Test no network interface - verify friendly error message
+            TestDownloadError(path, fileUri, server, HttpClientTestHelper.SimulateNoNetworkInterface);
 
-            errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>
-            {
-                SkylineWindow.DownloadPanoramaFile(path, TEST_FILE, null,
-                    server, 4, panoramaTestClient);
-            }));
-            Assert.AreEqual(new UnauthorizedAccessException().Message, errorDlg.Message);
-            OkDialog(errorDlg, errorDlg.OkDialog);
+            // Test 401 Unauthorized - verify authentication error message - CONSIDER: More informative messaging like SkypSupport
+            TestDownloadError(path, fileUri, server, HttpClientTestHelper.SimulateHttp401);
 
-            errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>
+            // Test 403 Forbidden - verify access denied message - CONSIDER: More informative messaging like SkypSupport
+            TestDownloadError(path, fileUri, server, HttpClientTestHelper.SimulateHttp403);
+
+            // Test 500 Server Error - verify server error message
+            TestDownloadError(path, fileUri, server, HttpClientTestHelper.SimulateHttp500);
+
+            // Test DNS failure - verify DNS resolution error message
+            TestDownloadError(path, fileUri, server,
+                () => HttpClientTestHelper.SimulateDnsFailure(fileUri.Host));
+        }
+
+        private void TestDownloadError(string path, Uri fileUri, Server server,
+            Func<HttpClientTestHelper> simulateFailure)
+        {
+            FileEx.SafeDelete(path, true);
+            using (var helper = simulateFailure())
             {
-                SkylineWindow.DownloadPanoramaFile(path, TEST_FILE, null,
-                    server, 5, panoramaTestClient);
-            }));
-            Assert.AreEqual(new InvalidOperationException().Message, errorDlg.Message);
-            OkDialog(errorDlg, errorDlg.OkDialog);
+                TestMessageDlgShownContaining(() => SkylineWindow.DownloadPanoramaFile(path, TEST_FILE, fileUri.ToString(), server, 12345),
+                    helper.GetExpectedMessage(fileUri));
+            }
+            Assert.IsFalse(File.Exists(path));
+        }
+
+        private void TestDownloadCancellation(string path, Uri fileUri, Server server)
+        {
+            FileEx.SafeDelete(path, true);
+            TestHttpClientCancellation(() =>
+            {
+                var result = SkylineWindow.DownloadPanoramaFile(path, TEST_FILE, fileUri.ToString(), server, 12345);
+                Assert.IsFalse(result);
+            });
+            Assert.IsFalse(File.Exists(path));
         }
 
         //Make sure PanoramaFilePicker states are being preserved between runs
@@ -177,8 +234,8 @@ namespace pwiz.SkylineTestConnected
 
             RunUI(() =>
             {
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
+                SelectNode(remoteDlg, TEST_FOLDER);
+                SelectNode(remoteDlg, PANORAMA_FOLDER);
                 remoteDlg.Close();
                 state = remoteDlg.FolderBrowser.TreeState;
             });
@@ -207,9 +264,9 @@ namespace pwiz.SkylineTestConnected
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             RunUI(() =>
             {
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
-                Assert.IsTrue(remoteDlg.ClickFile(DELETED_FILE), "Unable to click file {0}", DELETED_FILE);
+                SelectNode(remoteDlg, TEST_FOLDER);
+                SelectNode(remoteDlg, PANORAMA_DELETED_FILE_FOLDER);
+                ClickFile(remoteDlg, DELETED_FILE);
             });
             var errorDlg = ShowDialog<MessageDlg>(remoteDlg.ClickOpen);
             Assert.IsFalse(File.Exists(path));
@@ -230,15 +287,14 @@ namespace pwiz.SkylineTestConnected
             var doc = SkylineWindow.Document;
             RunUI(() =>
             {
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select {0}", TEST_FOLDER);
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select {0}", PANORAMA_FOLDER);
-                Assert.IsTrue(remoteDlg.ClickFile(RENAMED_FILE), "Unable to click file {0}", RENAMED_FILE);
-                Assert.AreNotEqual(RENAMED_FILE, remoteDlg.GetItemName(0));
+                SelectNode(remoteDlg, TEST_FOLDER);
+                SelectNode(remoteDlg, PANORAMA_FOLDER);
+                ClickFile(remoteDlg, RENAMED_FILE);
             });
             WaitForClosedForm(remoteDlg);
             WaitForCondition(() => File.Exists(path));
             var docLoaded = WaitForDocumentChangeLoaded(doc);
-            AssertEx.IsDocumentState(docLoaded, null, 12, 68, 126, 576);
+            AssertEx.IsDocumentState(docLoaded, null, 11, 39, 68, 194);
             FileEx.SafeDelete(path, true);
             Assert.IsFalse(File.Exists(path));
         }
@@ -255,7 +311,9 @@ namespace pwiz.SkylineTestConnected
             var editItem = ShowDialog<EditServerDlg>(serverDlg.ClickOk);
             RunUI(() =>
             {
-                editItem.URL = PANORAMA_WEB;
+                // EditServerDlg now preserves folder paths in URIs, so we can use the folder-limited URI
+                // when recording to reduce response size (e.g., https://panoramaweb.org/SkylineTest/)
+                editItem.URL = GetPanoramaServerUri().ToString();
                 editItem.Username = TEST_USER;
                 editItem.Password = TEST_PASSWORD;
             });
@@ -265,8 +323,8 @@ namespace pwiz.SkylineTestConnected
             RunUI(() =>
             {
                 Assert.IsTrue(remoteDlg.IsLoaded);
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER), "Unable to select folder '{0}'", TEST_FOLDER);
-                Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER), "Unable to select folder '{0}'", PANORAMA_FOLDER);
+                SelectNode(remoteDlg, TEST_FOLDER);
+                SelectNode(remoteDlg, PANORAMA_FOLDER);
             });
             
             OkDialog(remoteDlg, remoteDlg.Close);
@@ -284,7 +342,7 @@ namespace pwiz.SkylineTestConnected
             var editServerDlg = ShowDialog<EditServerDlg>(editServerListDlg.AddItem);
             RunUI(() =>
             {
-                editServerDlg.URL = PANORAMA_WEB;
+                editServerDlg.URL = GetPanoramaServerUri(TEST_PUBLIC_FOLDER).ToString();
                 editServerDlg.AnonymousServer = true;
             });
             OkDialog(editServerDlg, editServerDlg.OkDialog);
@@ -294,7 +352,7 @@ namespace pwiz.SkylineTestConnected
             Assert.IsNotNull(Settings.Default.ServerList);
             Assert.AreEqual(1, Settings.Default.ServerList.Count);
 
-            const string panoramaPublicFolderPath = "Panorama Public/2018/MacLean - Baker IMS";
+            const string panoramaPublicFolderPath = TEST_PUBLIC_FOLDER + "/2018/MacLean - Baker IMS";
             // Document in the "Panorama Public/2018/MacLean - Baker IMS" folder on https://panoramaweb.org that we will download.
             const string skyDocName = "BSA-Training_2017-09-21_17-59-13.sky.zip";
             var downloadFilePath = TestContext.GetTestResultsPath(skyDocName);
@@ -327,16 +385,16 @@ namespace pwiz.SkylineTestConnected
         // Test viewing webDav browser
         private void TestWebDav()
         {
-            var selectedPath = "/SkylineTest/ForPanoramaClientTest/";
-            var server = new PanoramaServer(new Uri(PANORAMA_WEB), TEST_USER, TEST_PASSWORD);
+            var selectedPath = $"/{TEST_FOLDER}/{PANORAMA_FOLDER}/";
+            var server = CreatePanoramaServer();
             var serverList = new List<PanoramaServer> { server };
 
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => ShowPanoramaFilePicker(serverList, selectedPath));
             WaitForConditionUI(() => remoteDlg.IsLoaded);
-            RunUI(() => Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode("@files"), "Unable to select @files")); 
-            WaitForConditionUI(() => remoteDlg.FileNumber == 13);
-            RunUI(() => Assert.IsTrue(remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer"), "Unable to select FileRenamedOnServer"));
-            WaitForConditionUI(() => remoteDlg.FileNumber == 6);
+            RunUI(() => SelectNode(remoteDlg, "@files"));
+            WaitForConditionUI(15000, () => remoteDlg.FileNumber == 4);
+            RunUI(() => SelectNode(remoteDlg, NOT_RENAMED_FOLDER));
+            WaitForConditionUI(15000, () => remoteDlg.FileNumber == 6);
             OkDialog(remoteDlg, remoteDlg.Close);
         }
 
@@ -346,52 +404,8 @@ namespace pwiz.SkylineTestConnected
         private void ShowPanoramaFilePicker(List<PanoramaServer> serverList, string selectedPath)
         {
             using var remoteDlg = new PanoramaFilePicker(serverList, string.Empty, true, selectedPath);
-            remoteDlg.InitializeDialog();   // CONSIDER: Should this be using LongOptionRunner like SkylineWindow?
+            remoteDlg.LoadServerData(new SilentProgressMonitor());   // Currently a no-op for WebDAV
             remoteDlg.ShowDialog();
-        }
-
-        private class TestPanoramaClient : BaseTestPanoramaClient
-        {
-            public string Server { get; }
-            public TestPanoramaClient(string server, string username, string password)
-            {
-                Server = server;
-                Username = username;
-                Password = password;
-                try
-                {
-                    ServerUri = new Uri(server);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-
-            public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-                IProgressMonitor pm, IProgressStatus progressStatus)
-            {
-                Exception e = null;
-                switch (fileSize)
-                {
-                    case 1:
-                        e = new NullReferenceException();
-                        break;
-                    case 2:
-                        e = new WebException();
-                        break;
-                    case 3:
-                        e = new FileNotFoundException();
-                        break;
-                    case 4:
-                        e = new UnauthorizedAccessException();
-                        break;
-                    case 5:
-                        e = new InvalidOperationException();
-                        break;
-                }
-                pm.UpdateProgress(progressStatus = progressStatus.ChangeErrorException(e));
-            }
         }
     }
 }

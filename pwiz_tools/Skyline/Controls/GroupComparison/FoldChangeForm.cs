@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -283,12 +283,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             Program.MainWindow.ShowGroupComparisonWindow(_groupComparisonName);
         }
 
-        protected IEnumerable<FoldChangeBindingSource.FoldChangeRow> GetFoldChangeRows(
+        protected IEnumerable<FoldChangeRow> GetFoldChangeRows(
             BindingListSource bindingListSource)
         {
             return bindingListSource.OfType<RowItem>()
                 .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.AbstractFoldChangeRow>()
+                .OfType<AbstractFoldChangeRow>()
                 .SelectMany(row => row.GetFoldChangeRows());
         }
 

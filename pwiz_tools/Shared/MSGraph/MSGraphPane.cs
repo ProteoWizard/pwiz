@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id: MSGraphPane.cs 1599 2009-12-04 01:35:39Z brendanx $
 //
 //

@@ -1,4 +1,4 @@
-﻿namespace Forms
+namespace Forms
 {
     partial class ProteinValidationPane
     {

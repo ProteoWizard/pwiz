@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -47,18 +47,9 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestChangeDocumentGuid()
         {
-            try
-            {
-                // DataSettings.AuditLogging always returns "true" unless "IgnoreTestChecks" is turned on
-                AuditLogList.IgnoreTestChecks = true;
-                
-                TestFilesZip = @"TestFunctional\ChangeDocumentGuidTest.zip";
+            TestFilesZip = @"TestFunctional\ChangeDocumentGuidTest.zip";
+            using (new AuditLogList.IgnoreTestChecksScope())
                 RunFunctionalTest();
-            }
-            finally
-            {
-                AuditLogList.IgnoreTestChecks = false;
-            }
         }
 
         protected override void DoTest()

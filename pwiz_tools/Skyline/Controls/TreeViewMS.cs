@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls
         protected abstract int EnsureChildren(TreeNode node);
 
         public bool RestoredFromPersistentString { get; set; }
-        private TreeViewMSStateRestorer TreeStateRestorer { get; set; }
+        internal TreeViewMSStateRestorer TreeStateRestorer { get; private set; }
 
         public string GetPersistentString()
         {
@@ -338,8 +338,11 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        protected void InvalidateNode(TreeNodeMS node)
+        public void InvalidateNode(TreeNodeMS node)
         {
+            if (node == null || IsInUpdate)
+                return;
+
             Invalidate(new Rectangle(0, node.BoundsMS.Top, ClientRectangle.Width, node.BoundsMS.Height));
         }
 
@@ -479,7 +482,7 @@ namespace pwiz.Skyline.Controls
 
         public bool IsInSelection { get; protected internal set; }
 
-        public Color ForeColorMS
+        public virtual Color ForeColorMS
         {
             get
             {
@@ -489,7 +492,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        public Color BackColorMS
+        public virtual Color BackColorMS
         {
             get
             {
@@ -509,7 +512,7 @@ namespace pwiz.Skyline.Controls
             return hsbColor.ToRGB();
         }
 
-        public Brush SelectionBrush
+        public virtual Brush SelectionBrush
         {
             get
             {
@@ -581,11 +584,15 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        protected virtual void DebugBorders(Graphics g, int rightEdge) {}
+
         public virtual void DrawNodeCustom(Graphics g, int rightEdge)
         {
             EnsureWidthCustom(g);
 
             Rectangle bounds = BoundsMS;
+
+            DebugBorders(g, rightEdge);
 
             // Draw dashed lines
             var treeView = TreeViewMS;
@@ -674,7 +681,7 @@ namespace pwiz.Skyline.Controls
                 g.FillRectangle(SelectionBrush, BoundsMS);
         }
 
-        protected void DrawFocus(Graphics g)
+        protected virtual void DrawFocus(Graphics g)
         {
             if (IsSelected && TreeView.Focused)
                 ControlPaint.DrawFocusRectangle(g, BoundsMS, ForeColorMS, BackColorMS);

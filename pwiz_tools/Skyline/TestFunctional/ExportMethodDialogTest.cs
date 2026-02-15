@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -468,8 +468,8 @@ namespace pwiz.SkylineTestFunctional
                         exportMethodDlg.PrimaryCount = 2;
                     });
 
-                RunDlg<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(agilentActual),
-                    dlg => dlg.Btn0Click());
+                RunDlg<MessageDlg>(() => exportMethodDlg.OkDialog(agilentActual),
+                    dlg => dlg.ClickYes());
                 WaitForClosedForm(exportMethodDlg);
             }
 
@@ -489,8 +489,8 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
                     exportMethodDlg.PrimaryCount = 2;
                 });
-                RunDlg<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(abSciexActual),
-                                          dlg => dlg.Btn0Click());
+                RunDlg<MessageDlg>(() => exportMethodDlg.OkDialog(abSciexActual),
+                                          dlg => dlg.ClickYes());
                 WaitForClosedForm(exportMethodDlg);
             }
             AssertEx.NoDiff(File.ReadAllText(abSciexExpected), File.ReadAllText(abSciexActual));
@@ -546,8 +546,8 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
                     });
 
-                RunDlg<MultiButtonMsgDlg>(() => exportMethodDlg.OkDialog(agilentActualMeth),
-                                          dlg => dlg.Btn0Click());
+                RunDlg<MessageDlg>(() => exportMethodDlg.OkDialog(agilentActualMeth),
+                                          dlg => dlg.ClickYes());
                 WaitForClosedForm(exportMethodDlg);
             }
             Assert.IsTrue(Directory.Exists(agilentActualMeth));

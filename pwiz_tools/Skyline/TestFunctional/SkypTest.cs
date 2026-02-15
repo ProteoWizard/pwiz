@@ -1,23 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
+/*
+ * Original author: vsharma .at. uw.edu
+ *
+ * Copyright 2019 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.IO;
-using System.Net;
+using System.Net; // HttpStatusCode
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.PanoramaClient;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class SkypTest : AbstractFunctionalTest
+    public class SkypTest : AbstractFunctionalTestEx
     {
         private const string _serverUrlInSkyp = "http://fakepanoramalabkeyserver.org/";
         private const string _userInSkyp = "no-name@no-name.org";
@@ -60,21 +75,61 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestSkypOpen()
         {
+            // Test network failures that go through HttpClientWithProgress
+            TestSkypOpenCancellation();
+            TestSkypOpenNoNetwork();
+
+            // Test successful download
+            TestSkypOpenSuccess();
+        }
+
+        private void TestSkypOpenCancellation()
+        {
+            // Test user cancellation during download - user clicks Cancel on the LongWaitDlg
+            // This is a common scenario when downloads are taking too long
+            var skypPath = TestFilesDir.GetTestPath("test.skyp");
+
+            TestHttpClientCancellation(() => SkylineWindow.OpenSkypFile(skypPath));
+
+            // Verify no document was loaded after cancellation
+            Assert.IsNull(SkylineWindow.DocumentFilePath);
+            AssertEx.FileNotExists(SkypFile.Create(skypPath).DownloadPath);
+        }
+
+        private void TestSkypOpenNoNetwork()
+        {
+            // Test the scenario where the user has no network interface (e.g., WiFi disconnected)
+            // This simulates the common case where a user tries to open a .skyp file while offline
+            var skypPath = TestFilesDir.GetTestPath("test.skyp");
+
+            using var helper = HttpClientTestHelper.SimulateNoNetworkInterface();
+            RunDlg<MessageDlg>(() => SkylineWindow.OpenSkypFile(skypPath), errDlg =>
+            {
+                AssertEx.Contains(errDlg.Message, helper.GetExpectedMessage());
+                errDlg.OkDialog();
+            });
+
+            // Verify no document was loaded after error
+            Assert.IsNull(SkylineWindow.DocumentFilePath);
+            AssertEx.FileNotExists(SkypFile.Create(skypPath).DownloadPath);
+        }
+
+        private void TestSkypOpenSuccess()
+        {
             var skyZipPath = TestContext.GetProjectDirectory(@"TestFunctional\LibraryShareTest.zip"); // Reusing ShareDocumentTest test file
             var skypPath = TestFilesDir.GetTestPath("test.skyp");
-            var skyp = SkypFile.Create(skypPath, new List<Server>());
+            var skyp = SkypFile.Create(skypPath);
             var skyZipName = Path.GetFileName(skyZipPath);
             Assert.AreEqual(TestFilesDir.GetTestPath(skyZipName), skyp.DownloadPath);
-            var skypSupport = new SkypSupport(SkylineWindow)
-            {
-                DownloadClientCreator =
-                    new TestDownloadClientCreator(skyZipPath, skyp, false, false)
-            };
-            RunUI(() => skypSupport.Open(skypPath, null));
+
+            // Mock the download using HttpClientTestHelper - simulates successful download from local file
+            using var helper = HttpClientTestHelper.WithMockResponseFile(skyp.SkylineDocUri, skyZipPath);
+            RunUI(() => SkylineWindow.OpenSkypFile(skypPath));
             WaitForDocumentLoaded();
             var skyZipNoExt = Path.GetFileNameWithoutExtension(skyZipPath);
             var explodedDir = TestFilesDir.GetTestPath(skyZipNoExt);
             Assert.AreEqual(Path.Combine(explodedDir, skyZipNoExt + SrmDocument.EXT), SkylineWindow.DocumentFilePath);
+            AssertEx.FileExists(skyp.DownloadPath); // Exploded but also still on disk
         }
 
         private void TestOpenErrorsExtendedSkyp()
@@ -84,7 +139,7 @@ namespace pwiz.SkylineTestFunctional
             // FileSize: 100
             // DownloadingUser: no-name@no-name.org
             var skypPath2 = TestFilesDir.GetTestPath("test-extended.skyp");
-            var skyp = SkypFile.Create(skypPath2, new List<Server>());
+            var skyp = SkypFile.Create(skypPath2);
             Assert.IsNull(skyp.ServerMatch);
             Assert.AreEqual(_userInSkyp, skyp.DownloadingUser);
             Assert.IsNotNull(skyp.Size);
@@ -100,9 +155,9 @@ namespace pwiz.SkylineTestFunctional
                 null, // No match in existing servers
                 false, // No username mismatch since there is no match in existing servers
                 skyp.DownloadingUser, // Expect username from the skyp file in EditServerDlg
-                _serverUrlInSkyp, 
-                TestDownloadClient.ERROR401,
-                true // Expect to see EditServerDlg 
+                _serverUrlInSkyp,
+                HttpStatusCode.Unauthorized,
+                true // Expect to see EditServerDlg
             );
         
         
@@ -113,20 +168,20 @@ namespace pwiz.SkylineTestFunctional
                 false, // username in skyp matches the username in saved credentials for the server
                 _userInSkyp,
                 _serverUrlInSkyp,
-                TestDownloadClient.ERROR401,
-                true // Expect to see EditServerDlg 
+                HttpStatusCode.Unauthorized,
+                true // Expect to see EditServerDlg
             );
 
 
             // 3. Server in the skyp file matches a saved Panorama server. If we get a 403 (Forbidden) error it means that the saved
-            //    credentials are invalid. The username in the skyp file is the same as the saved username for the server. 
+            //    credentials are invalid. The username in the skyp file is the same as the saved username for the server.
             //    EditServerDlg should not be shown in this case
             TestSkypOpenWithError(skypPath2, new[] { _matchingServer, _anotherServer },
                 _matchingServer, // Has match in existing servers
                 false, // username in skyp matches the username in saved credentials for the server
                 _userInSkyp,
                 null, // Don't expect to see EditServerDlg
-                TestDownloadClient.ERROR403,
+                HttpStatusCode.Forbidden,
                 false // Do not expect to see the EditServerDlg
             );
 
@@ -141,7 +196,7 @@ namespace pwiz.SkylineTestFunctional
                 true, // username in skyp does not match the username in saved credentials for the server
                 skyp.DownloadingUser, // username from the skyp file
                 _serverUrlInSkyp,
-                TestDownloadClient.ERROR403,
+                HttpStatusCode.Forbidden,
                 true // Expect to see EditServerDlg 
             );
 
@@ -154,7 +209,7 @@ namespace pwiz.SkylineTestFunctional
                 true, // username in skyp does not match the username in saved credentials for the server
                 skyp.DownloadingUser, // username from the skyp file
                 _serverUrlInSkyp,
-                TestDownloadClient.ERROR401,
+                HttpStatusCode.Unauthorized,
                 true // Expect to see EditServerDlg 
             );
         }
@@ -165,7 +220,7 @@ namespace pwiz.SkylineTestFunctional
             // http://fakepanoramalabkeyserver.org/LibraryShareTest.zip
             var skypPath = TestFilesDir.GetTestPath("test.skyp");
 
-            var skyp = SkypFile.Create(skypPath, new List<Server>());
+            var skyp = SkypFile.Create(skypPath);
             Assert.IsNull(skyp.ServerMatch);
             Assert.IsNull(skyp.DownloadingUser);
             Assert.AreEqual(new Uri("http://fakepanoramalabkeyserver.org/LibraryShareTest.zip"), skyp.SkylineDocUri);
@@ -180,7 +235,7 @@ namespace pwiz.SkylineTestFunctional
                 false, // no username mismatch since skyp does not have a DownloadingUser
                 string.Empty, // No username; we are adding a new server
                 _serverUrlInSkyp,
-                TestDownloadClient.ERROR401,
+                HttpStatusCode.Unauthorized,
                 true // Expect to see EditServerDlg 
             ); 
             
@@ -192,7 +247,7 @@ namespace pwiz.SkylineTestFunctional
                 false, // no username mismatch since skyp does not have a DownloadingUser
                 _userInSkyp,
                 _serverUrlInSkyp,
-                TestDownloadClient.ERROR401,
+                HttpStatusCode.Unauthorized,
                 true // Expect to see EditServerDlg 
             );
             
@@ -204,15 +259,15 @@ namespace pwiz.SkylineTestFunctional
                 false, // no username mismatch since skyp does not have a DownloadingUser
                 _userInSkyp,
                 null, // Don't expect to see EditServerDlg
-                TestDownloadClient.ERROR403,
+                HttpStatusCode.Forbidden,
                 false // Don't expect to see EditServerDlg
             );
 
 
-            testFailOnAddSameServer();
+            TestFailOnAddSameServer();
         }
 
-        private void testFailOnAddSameServer()
+        private void TestFailOnAddSameServer()
         {
             var skypPath = TestFilesDir.GetTestPath("test.skyp");
             var existingServers = new[] { _anotherServer };
@@ -222,21 +277,20 @@ namespace pwiz.SkylineTestFunctional
 
             var skyp = SkypFile.Create(skypPath, existingServers);
             Assert.IsNull(skyp.ServerMatch); // No match found in existing servers
+
+            AlertDlg errDlg;
             
-            var skypSupport = new SkypSupport(SkylineWindow)
+            using (var helper = HttpClientTestHelper.SimulateHttp401())
             {
-                DownloadClientCreator =
-                    new TestDownloadClientCreator(null, skyp, true, false) // 401 error; server not saved in Skyline
-            };
-            var errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(skypPath, existingServers));
-            string expectedErr =
-                string.Format(
-                    Resources
-                        .SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_,
-                    skyp.GetServerName());
-            
-            Assert.IsTrue(errDlg.Message.Contains(expectedErr));
-            Assert.IsTrue(errDlg.Message.Contains(TestDownloadClient.ERROR401));
+                errDlg = ShowDialog<AlertDlg>(() => SkylineWindow.OpenSkypFile(skypPath));
+                string expectedErr =
+                    string.Format(
+                        Resources
+                            .SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_,
+                        skyp.GetServerName());
+                
+                AssertEx.Contains(errDlg.Message, expectedErr, helper.GetExpectedMessage());
+            }
 
             // Create a client that will return a server with the same URI as a server that is already saved in settings
             IPanoramaClient testClient = new AllValidPanoramaClient(_anotherServerUrl);
@@ -268,7 +322,7 @@ namespace pwiz.SkylineTestFunctional
             Server matchingServer,
             bool usernameMismatch, string expectedUserNameInEditServerDlg,
             string expectedUriInEditServerDlg,
-            string errorCode,
+            HttpStatusCode errorCode,
             bool expectEditServerDlg)
         {
             Settings.Default.ServerList.Clear();
@@ -280,18 +334,22 @@ namespace pwiz.SkylineTestFunctional
             else Assert.IsNull(skyp.ServerMatch); // No match found in existing servers
             Assert.AreEqual(usernameMismatch, skyp.UsernameMismatch());
 
-
-            bool err401 = TestDownloadClient.ERROR401.Equals(errorCode);
-            bool err403 = TestDownloadClient.ERROR403.Equals(errorCode);
-
-            var skypSupport = new SkypSupport(SkylineWindow)
+            bool err401 = errorCode == HttpStatusCode.Unauthorized;
+            if (!err401)
             {
-                DownloadClientCreator =
-                    new TestDownloadClientCreator(null, skyp, err401, err403)
-            };
+                // Only 401 and 403 are supported in these tests
+                Assert.AreEqual(HttpStatusCode.Forbidden, errorCode);
+            }
+
+            using var helper = err401 ? HttpClientTestHelper.SimulateHttp401() : HttpClientTestHelper.SimulateHttp403();
+            var skypSupport = new SkypSupport(SkylineWindow); // Use default (real) HttpClientDownloadClient
             var errDlg = ShowDialog<AlertDlg>(() => skypSupport.Open(skypPath, existingServers));
+
+            // Verify error message contains expected HTTP error from HttpClientTestHelper
+            var expectedError = helper.GetExpectedMessage(skyp.SkylineDocUri);
+            AssertEx.Contains(errDlg.Message, expectedError);
+
             var fullErrMsg = errDlg.Message;
-            Assert.IsTrue(fullErrMsg.Contains(errorCode));
 
             if (err401)
             {
@@ -323,7 +381,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
-            else if (err403)
+            else
             {
                 if (skyp.UsernameMismatch())
                 {
@@ -367,9 +425,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void AssertErrorContains(string expected, string FullError)
         {
-            Assert.IsTrue(FullError.Contains(expected),
-                TextUtil.LineSeparate(string.Format("Expected error contains: {0}", expected),
-                    string.Format("Error message was: {0}.", FullError)));
+            AssertEx.Contains(FullError, expected);
         }
 
         private void TestSkypGetNonExistentPath()
@@ -423,7 +479,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(skyp1.Size);
             Assert.IsNull(skyp1.DownloadingUser);
 
-
             var skyp2 = SkypFile.CreateForTest(STR_VALID_SKYP_EXTENDED);
             Assert.AreEqual(new Uri(STR_VALID_SKYP_LOCALHOST), skyp2.SkylineDocUri);
             Assert.AreEqual(LOCALHOST, skyp2.GetServerName());
@@ -434,7 +489,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(new Uri(STR_VALID_SKYP_LOCALHOST), skyp3.SkylineDocUri);
             Assert.IsFalse(skyp3.Size.HasValue);
             Assert.AreEqual(skyp3.DownloadingUser, "no-name@no-name.edu");
-
         }
 
         private const string STR_EMPTY_SKYP = "";
@@ -449,92 +503,6 @@ namespace pwiz.SkylineTestFunctional
 
         private const string STR_INVALID_SIZE_SKYP3 =
             STR_VALID_SKYP_LOCALHOST + "\n\rFileSize:invalid\n\rDownloadingUser:no-name@no-name.edu";
-    }
-
-    public class TestDownloadClient : IDownloadClient
-    {
-        private readonly string _srcPath;
-        protected readonly SkypFile _skyp;
-        private IProgressMonitor ProgressMonitor { get; }
-        private IProgressStatus ProgressStatus { get; set; }
-
-        public const string ERROR401 = "(401) Unauthorized";
-        public const string ERROR403 = "(403) Forbidden";
-
-        public TestDownloadClient(string srcFile, SkypFile skyp, IProgressMonitor progressMonitor, IProgressStatus progressStatus)
-        {
-            _srcPath = srcFile;
-            _skyp = skyp;
-            IsCancelled = false;
-            ProgressMonitor = progressMonitor;
-            ProgressStatus = progressStatus;
-        }
-    
-        public void Download(SkypFile skyp)
-        {
-            if (Error != null)
-            {
-                ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangeErrorException(Error));
-                return;
-            }
-            Assert.AreEqual(_skyp.DownloadPath, skyp.DownloadPath);
-            File.Copy(_srcPath, skyp.DownloadPath);
-        }
-
-        public bool IsCancelled { get; }
-        public bool IsError => Error != null;
-        public Exception Error { get; set; }
-    }
-
-    public class TestDownloadClientError401 : TestDownloadClient
-    {
-        public TestDownloadClientError401(SkypFile skyp, IProgressMonitor progressMonitor, IProgressStatus progressStatus) : 
-            base(null, skyp, progressMonitor, progressStatus)
-        {
-            Error = new SkypDownloadException(SkypDownloadException.GetMessage(_skyp, new Exception(ERROR401), HttpStatusCode.Unauthorized), HttpStatusCode.Unauthorized, null);
-        }
-    }
-
-    public class TestDownloadClientError403 : TestDownloadClient
-    {
-        public TestDownloadClientError403(SkypFile skyp, IProgressMonitor progressMonitor, IProgressStatus progressStatus) :
-            base(null, skyp, progressMonitor, progressStatus)
-        {
-            Error = new SkypDownloadException(SkypDownloadException.GetMessage(_skyp, new Exception(ERROR403), HttpStatusCode.Forbidden), HttpStatusCode.Forbidden, null);
-        }
-    }
-
-    internal class TestDownloadClientCreator : DownloadClientCreator
-    {
-        private string _skyZipPath;
-        private SkypFile _skyp;
-        private bool _401Error;
-        private bool _403Error;
-
-        public TestDownloadClientCreator(string skyZipPath, SkypFile skyp, bool error401, bool error403)
-        {
-            _skyZipPath = skyZipPath;
-            _skyp = skyp;
-            _401Error = error401;
-            _403Error = error403;
-        }
-
-        public override IDownloadClient Create(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
-        {
-            if (_401Error)
-            {
-                return new TestDownloadClientError401(_skyp, progressMonitor, progressStatus);
-            }
-
-            else if (_403Error)
-            {
-                return new TestDownloadClientError403(_skyp, progressMonitor, progressStatus);
-            }
-            else
-            {
-                return new TestDownloadClient(_skyZipPath, _skyp, progressMonitor, progressStatus);
-            }
-        }
     }
 
     public class AllValidPanoramaClient : BaseTestPanoramaClient

@@ -1,4 +1,4 @@
-﻿
+
 namespace pwiz.Common.Controls
 {
     partial class MultiProgressControl

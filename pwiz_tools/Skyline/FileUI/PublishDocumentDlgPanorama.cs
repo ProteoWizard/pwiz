@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -22,7 +22,6 @@ using pwiz.PanoramaClient;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using System.Collections.Generic;
-using System.Net;
 using System;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -70,6 +69,59 @@ namespace pwiz.Skyline.FileUI
             cbAnonymousServers.Visible = _anonymousServers.Count > 0;
         }
 
+        /// <summary>
+        /// Creates and initializes a PublishDocumentDlgPanorama by loading server folder data.
+        /// Returns null if the user cancels or if an error occurs during loading.
+        /// </summary>
+        /// <param name="docContainer">Document container</param>
+        /// <param name="servers">List of Panorama servers</param>
+        /// <param name="fileName">Document file name</param>
+        /// <param name="fileFormatOnDisk">Document format</param>
+        /// <param name="parent">Parent control for progress dialog</param>
+        /// <param name="publishClient">Optional test client for dependency injection (null uses default clients)</param>
+        /// <returns>Initialized dialog, or null if canceled/failed</returns>
+        public static PublishDocumentDlgPanorama Create(
+            IDocumentUIContainer docContainer,
+            SettingsList<Server> servers,
+            string fileName,
+            DocumentFormat? fileFormatOnDisk,
+            Control parent,
+            IPanoramaPublishClient publishClient = null)
+        {
+            var dialog = new PublishDocumentDlgPanorama(docContainer, servers, fileName, fileFormatOnDisk);
+
+            // Set test client BEFORE loading data (critical for testing seam)
+            dialog.PanoramaPublishClient = publishClient;
+
+            var listServerFolders = new List<ServerFolders>();
+
+            try
+            {
+                using var waitDlg = new LongWaitDlg();
+                waitDlg.Text = FileUIResources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers;
+                var status = waitDlg.PerformWork(parent, 800, progressMonitor =>
+                {
+                    // Set initial message with indeterminate progress (marquee/busy-wait)
+                    progressMonitor.UpdateProgress(new ProgressStatus(PanoramaClient.Properties.Resources.PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders).ChangePercentComplete(-1));
+                    dialog.PublishDocumentDlgLoad(listServerFolders, progressMonitor);
+                });
+
+                if (status.IsCanceled)
+                    return null; // User canceled - don't show dialog
+            }
+            catch (Exception x)
+            {
+                // Use ExceptionUtil for proper defect vs user error handling
+                ExceptionUtil.DisplayOrReportException(parent, x);
+                return null; // Error occurred - don't show dialog
+            }
+
+            // Populate the dialog with loaded data
+            dialog.PopulateServerTree(listServerFolders);
+
+            return dialog;
+        }
+
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public ShareType ShareType { get; private set; }
         public bool ShowAnonymousServers { get { return cbAnonymousServers.Checked; } set { cbAnonymousServers.Checked = value; } }
@@ -86,23 +138,14 @@ namespace pwiz.Skyline.FileUI
 
         internal override void HandleDialogLoad()
         {
+            // Only UI setup now - data already loaded via Create() factory method
             cbAnonymousServers.CheckedChanged += cbAnonymousServers_CheckedChanged;
+            lblServerFolders.Text = FileUIResources.PublishDocumentDlg_Panorama_ServerFolders;
+            lblAvailableStorage.Visible = false;
+        }
 
-            var listServerFolders = new List<ServerFolders>();
-
-            try
-            {
-                using (var waitDlg = new LongWaitDlg())
-                {
-                    waitDlg.Text = FileUIResources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers;
-                    waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
-                }
-            }
-            catch (Exception x)
-            {
-                MessageDlg.ShowException(this, x);
-            }
-
+        private void PopulateServerTree(List<ServerFolders> listServerFolders)
+        {
             foreach (var serverFolder in listServerFolders)
             {
                 var server = serverFolder.Server;
@@ -111,9 +154,6 @@ namespace pwiz.Skyline.FileUI
                 if (serverFolder.FoldersJson != null)
                     AddSubFolders(server, treeNode, serverFolder.FoldersJson);
             }
-
-            lblServerFolders.Text = FileUIResources.PublishDocumentDlg_Panorama_ServerFolders;
-            lblAvailableStorage.Visible = false;
         }
 
         internal override void HandleDialogOk()
@@ -164,16 +204,26 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void PublishDocumentDlgLoad(List<ServerFolders> listServerFolders)
+        private void PublishDocumentDlgLoad(List<ServerFolders> listServerFolders, IProgressMonitor progressMonitor)
         {
             var listErrorServers = new List<ServerError>();
-            foreach (var server in _panoramaServers)
+            var serversWithAccounts = _panoramaServers.Where(s => s.HasUserAccount()).ToList();
+            IProgressStatus progressStatus = new ProgressStatus(PanoramaClient.Properties.Resources.PanoramaFolderBrowser_InitializeServers_Requesting_remote_server_folders);
+            
+            for (int i = 0; i < serversWithAccounts.Count; i++)
             {
-                if (!server.HasUserAccount())
+                var server = serversWithAccounts[i];
+                
+                // Update progress as we iterate through servers after the first server
+                if (i > 0)
                 {
-                    // User has to be logged in to be able to upload a document to the server.
-                    continue;
+                    progressStatus = progressStatus.ChangePercentComplete(i * 100 / serversWithAccounts.Count);
+                    progressMonitor.UpdateProgress(progressStatus);
                 }
+                
+                // Check for cancellation
+                if (progressMonitor.IsCanceled)
+                    throw new OperationCanceledException();
 
                 JToken folders = null;
                 try
@@ -182,11 +232,22 @@ namespace pwiz.Skyline.FileUI
                     var panoramaClient = PanoramaPublishClient != null
                         ? PanoramaPublishClient.PanoramaClient
                         : GetDefaultPublishClient(server).PanoramaClient;
-                    folders = panoramaClient.GetInfoForFolders(null);
+
+                    // Request folders from server, using its FolderPath which may be null for the entire server
+                    folders = panoramaClient.GetInfoForFolders(server.FolderPath, progressMonitor, progressStatus);
+
+                    // If FolderPath is set, wrap the response to include the folder path as the root node
+                    // This ensures the TreeView displays the folder (e.g., "MacCoss") even though
+                    // the server only returned its children
+                    if (!string.IsNullOrEmpty(server.FolderPath) && folders != null)
+                    {
+                        folders = LKContainerBrowser.WrapFolderResponse(folders, server.FolderPath, server.URI);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    if (ex is WebException || ex is PanoramaServerException)
+                    // PanoramaClient uses HttpClientWithProgress, which throws NetworkRequestException
+                    if (ex is NetworkRequestException || ex is PanoramaServerException)
                     {
                         var error = ex.Message;
                         if (error != null && error.Contains(PanoramaClient.Properties.Resources
@@ -205,20 +266,21 @@ namespace pwiz.Skyline.FileUI
                     }
                 }
                 listServerFolders.Add(new ServerFolders(server, folders));
-
             }
+            
             if (listErrorServers.Count > 0)
             {
-                throw new Exception(TextUtil.LineSeparate(FileUIResources.PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_,
-                                                          string.Empty,
-                                                          ServersToString(listErrorServers)));
+                throw new PanoramaServerException(TextUtil.LineSeparate(
+                    FileUIResources.PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_,
+                    string.Empty,
+                    ServersToString(listErrorServers)));
             }
         }
+
         private static string ServersToString(IEnumerable<ServerError> serverErrors)
         {
             return TextUtil.LineSeparate(serverErrors.Select(t => t.ToString()));
         }
-
 
         private void AddSubFolders(Server server, TreeNode node, JToken folder)
         {
@@ -269,10 +331,10 @@ namespace pwiz.Skyline.FileUI
                         folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
                     else
                     {
-                        string effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+                        string effectiveValue = (string)moduleProperties[0]![@"effectiveValue"];
                         folderNode.ImageIndex =
                             folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
+                            (effectiveValue!.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
                                 ? (int)ImageId.chrom_lib
                                 : (int)ImageId.labkey;
                     }

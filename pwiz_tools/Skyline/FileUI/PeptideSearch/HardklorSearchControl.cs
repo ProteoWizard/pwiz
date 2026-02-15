@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brian Pratt <bspratt .at. proteinms dot net >
  *
  * Copyright 2024 University of Washington - Seattle, WA
