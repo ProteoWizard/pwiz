@@ -741,13 +741,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (FileSystemUtil.IsAlternateDataStream(filePath))
                 return true;
 
-            var fileName = Path.GetFileName(filePath);
-
-            // FileSaver creates temp files like "~SKxxxx.tmp" during document save operations.
-            // These generate FSW events the Files View doesn't need to process.
-            if (fileName != null && fileName.StartsWith(FileSaver.TEMP_PREFIX))
-                return true;
-
             var extension = Path.GetExtension(filePath);
 
             return FILE_EXTENSION_IGNORE_LIST.Contains(extension);
