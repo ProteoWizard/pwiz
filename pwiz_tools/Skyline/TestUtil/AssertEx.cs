@@ -1003,7 +1003,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
-            ColumnTolerances columnTolerances, out string failureMessage) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            ColumnTolerances columnTolerances, out string failureMessage) // Optional per-column numerical tolerances with default and per-column overrides
         {
             failureMessage = string.Empty;  // For all the return true cases
 
@@ -1046,8 +1046,8 @@ namespace pwiz.SkylineTestUtil
 
         public class ColumnTolerances
         {
-            private ColumnToleranceValue _defaultTolerance { get; }
-            private Dictionary<int, ColumnToleranceValue> _explicitTolerances = new Dictionary<int, ColumnToleranceValue>();
+            private readonly ColumnToleranceValue _defaultTolerance;
+            private readonly Dictionary<int, ColumnToleranceValue> _explicitTolerances = new Dictionary<int, ColumnToleranceValue>();
 
             public ColumnTolerances()
             {
@@ -1088,7 +1088,7 @@ namespace pwiz.SkylineTestUtil
                 if (Equals(textExpected, textActual))
                     return true;
 
-                // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
+                // See if there's a tolerance for this column, or a default tolerance
                 if (!_explicitTolerances.TryGetValue(i, out var toleranceValue))
                 {
                     toleranceValue = _defaultTolerance;
