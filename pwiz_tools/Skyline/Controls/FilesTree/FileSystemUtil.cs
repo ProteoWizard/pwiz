@@ -45,12 +45,19 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         /// <summary>
-        /// Returns true if the path contains an NTFS Alternate Data Stream suffix (e.g., "file.zip:Zone.Identifier").
-        /// ADS paths have a colon after position 1 (the drive letter colon).
+        /// Returns true if the path refers to an NTFS Alternate Data Stream (ADS),
+        /// such as "file.zip:Zone.Identifier". Detected by a colon in the final path
+        /// segment — the drive letter colon always has a separator after it, ADS colons don't.
         /// </summary>
         public static bool IsAlternateDataStream(string path)
         {
-            return path != null && path.IndexOf(':', 2) >= 2;
+            if (string.IsNullOrEmpty(path))
+                return false;
+
+            int lastColon = path.LastIndexOf(':');
+            // Drive letter colons always have a separator after them; ADS stream colons don't.
+            return lastColon >= 0 && lastColon < path.Length - 1
+                && path.IndexOfAny(new[] { '\\', '/' }, lastColon + 1) < 0;
         }
 
         public static string Normalize(string path)
@@ -62,8 +69,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 return Path.GetFullPath(path);
             }
-            catch (NotSupportedException) { return null; }
-            catch (ArgumentException) { return null; }
+            catch (NotSupportedException) { return path; }
+            catch (ArgumentException) { return path; }
         }
 
         /// <summary>
