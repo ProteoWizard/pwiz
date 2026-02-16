@@ -18,7 +18,6 @@
  */
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
@@ -33,7 +32,7 @@ namespace pwiz.Common.SystemUtil.Caching
         private bool _progressNotificationPending;
         private WorkOrder _workOrder;
         private readonly IProductionListener _listener;
-        private TaskScheduler _taskScheduler;
+        private SynchronizationContext _synchronizationContext;
         public Receiver(ProductionFacility cache, Control ownerControl, Producer factory)
         {
             Cache = cache;
@@ -44,7 +43,7 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 throw new InvalidOperationException(@"Must be constructed on event thread");
             }
-            _taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            _synchronizationContext = SynchronizationContext.Current;
             _listener = new Listener(this);
         }
 
@@ -75,7 +74,11 @@ namespace pwiz.Common.SystemUtil.Caching
 
         private void BeginInvoke(Action action)
         {
-            Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
+            _synchronizationContext?.Post(_ =>
+            {
+                if (OwnerControl != null)
+                    action();
+            }, null);
         }
 
         private void OnProductStatusChanged()
@@ -158,6 +161,7 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 Cache.Unlisten(_workOrder, _listener);
                 _workOrder = null;
+                _synchronizationContext = null;
                 if (OwnerControl != null)
                 {
                     OwnerControl.HandleDestroyed -= OwnerControlHandleDestroyed;
