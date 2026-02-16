@@ -114,6 +114,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.txt"));
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.raw"));
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.RAW"));
+
+            // NTFS Alternate Data Stream paths should be ignored
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\Downloads\file.zip:Zone.Identifier"));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.txt:SmallData"));
+
+            // FileSaver temp files (~SK prefix) should be ignored
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\~SK1234.tmp"));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\~SKdocument.sky"));
         }
 
         protected void TestFileSystemHelpers()
@@ -142,6 +150,17 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
 
             Assert.IsTrue(FileSystemUtil.PathEquals(@"C:\Users\Foobar\directory\foo.mzML", @"c:\users\foobar\directory\foo.mzml"));
+
+            // ADS paths should be detected
+            Assert.IsTrue(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.zip:Zone.Identifier"));
+            Assert.IsTrue(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.txt:SmallData"));
+            Assert.IsFalse(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(FileSystemUtil.IsAlternateDataStream(null));
+
+            // ADS paths should not crash path methods - they should degrade gracefully
+            Assert.IsFalse(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar", @"c:\Users\foobar\file.zip:Zone.Identifier"));
+            Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar", @"c:\Users\foobar\sub:Stream"));
+            Assert.IsNull(FileSystemUtil.Normalize(@"c:\Users\foobar\file.zip:Zone.Identifier"));
         }
 
         protected void TestEmptyDocument()
