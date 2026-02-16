@@ -434,9 +434,18 @@ namespace pwiz.Skyline.Model
 
                 var groupPath = new IdentityPath(peptideGroup, peptideDocNode.Peptide, nodeTranGroup.Id);
 
-                doc = _retentionTime.HasValue
-                    ? doc.ChangePeak(groupPath, nameSet, filePath, null, _retentionTime.Value, UserSet.TRUE)
-                    : doc.ChangePeak(groupPath, nameSet, filePath, null, StartTime, EndTime, UserSet.TRUE, null, false);
+                try
+                {
+                    doc = _retentionTime.HasValue
+                        ? doc.ChangePeak(groupPath, nameSet, filePath, null, _retentionTime.Value, UserSet.TRUE)
+                        : doc.ChangePeak(groupPath, nameSet, filePath, null, StartTime, EndTime, UserSet.TRUE, null, false);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // Skip replicates without chromatogram data at the target RT.
+                    // This is normal when Apply Peak to All iterates across all replicates.
+                    return doc;
+                }
 
                 var activeTransitionGroup = (TransitionGroupDocNode) doc.FindNode(groupPath);
                 if (activeTransitionGroup.RelativeRT != RelativeRT.Matching)
