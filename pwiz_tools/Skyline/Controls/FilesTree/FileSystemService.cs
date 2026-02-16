@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls.FilesTree
     /// </summary>
     public class LocalFileSystemService : IFileSystemService
     {
-        private static readonly HashSet<string> FILE_EXTENSION_IGNORE_LIST = new HashSet<string> { @".tmp", @".bak" };
+        private static readonly HashSet<string> FILE_EXTENSION_IGNORE_LIST = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { @".tmp", @".bak" };
 
         private readonly object _fswLock = new object();
         private bool _isStopped;
