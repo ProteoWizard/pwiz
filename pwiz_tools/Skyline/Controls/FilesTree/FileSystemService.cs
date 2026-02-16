@@ -735,6 +735,19 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (string.IsNullOrWhiteSpace(filePath))
                 return true;
 
+            // NTFS Alternate Data Streams (e.g., "file.zip:Zone.Identifier") contain a colon
+            // after the drive letter colon at position 1. These are normal OS activity and should
+            // never be processed by the Files View.
+            if (FileSystemUtil.IsAlternateDataStream(filePath))
+                return true;
+
+            var fileName = Path.GetFileName(filePath);
+
+            // FileSaver creates temp files like "~SKxxxx.tmp" during document save operations.
+            // These generate FSW events the Files View doesn't need to process.
+            if (fileName != null && fileName.StartsWith(FileSaver.TEMP_PREFIX))
+                return true;
+
             var extension = Path.GetExtension(filePath);
 
             return FILE_EXTENSION_IGNORE_LIST.Contains(extension);
