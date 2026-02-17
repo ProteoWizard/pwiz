@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls.FilesTree
     /// </summary>
     public class LocalFileSystemService : IFileSystemService
     {
-        private static readonly HashSet<string> FILE_EXTENSION_IGNORE_LIST = new HashSet<string> { @".tmp", @".bak" };
+        private static readonly HashSet<string> FILE_EXTENSION_IGNORE_LIST = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { @".tmp", @".bak" };
 
         private readonly object _fswLock = new object();
         private bool _isStopped;
@@ -733,6 +733,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         public static bool ShouldIgnoreFile(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
+                return true;
+
+            // NTFS Alternate Data Streams (e.g., "file.zip:Zone.Identifier") contain a colon
+            // after the drive letter colon at position 1. These are normal OS activity and should
+            // never be processed by the Files View.
+            if (FileSystemUtil.IsAlternateDataStream(filePath))
                 return true;
 
             var extension = Path.GetExtension(filePath);
