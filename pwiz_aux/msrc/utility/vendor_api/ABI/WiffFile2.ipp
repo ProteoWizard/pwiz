@@ -49,12 +49,12 @@ class WiffFile2Impl : public WiffFile
     ~WiffFile2Impl()
     {
         auto dataReader = DataReader();
-	    if (dataReader != nullptr)
-	    {
-	        System::GC::Collect();
-	        dataReader->CloseFile(((IList<ISample^>^) allSamples)[0]->Sources[0]);
-	    }
-	    System::GC::Collect();
+        if (dataReader != nullptr)
+        {
+            System::GC::Collect();
+            dataReader->CloseFile(((IList<ISample^>^) allSamples)[0]->Sources[0]);
+        }
+        System::GC::Collect();
     }
 
     ISampleDataApi^ DataReader() const
