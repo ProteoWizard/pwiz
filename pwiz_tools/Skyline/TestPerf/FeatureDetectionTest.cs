@@ -139,6 +139,12 @@ namespace TestPerf
         private const int SMALL_MOL_ONLY_PASS = 1;
         protected override void DoTest()
         {
+            // Converted mzML files are created in the persistent directory and intentionally
+            // left for reuse on subsequent runs. Note these so the change detection code doesn't
+            // get confused by them appearing after the first pass.
+            TestFilesDirs[0].PotentialAdditionalPersistentFileSet = new HashSet<string>(
+                _testFiles.Select(f => Path.Combine("converted", Path.ChangeExtension(f, ".mzML"))));
+
             // First some low level tests
             AssertEx.AreEqual(1.0, ImportPeptideSearch.HardklorSettings.NormalizedContrastAngleFromCosineAngle(1.0));
             AssertEx.AreEqual(1.0,  ImportPeptideSearch.HardklorSettings.CosineAngleFromNormalizedContrastAngle(1.0));
