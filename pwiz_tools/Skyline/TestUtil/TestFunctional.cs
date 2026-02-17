@@ -1753,6 +1753,30 @@ namespace pwiz.SkylineTestUtil
                 .FirstOrDefault(graphSummary => graphSummary.TryGetGraphPane(out TGraphPane _));
         }
 
+        /// <summary>
+        /// When set, the next PauseForScreenShot call captures a screenshot to this
+        /// path regardless of screenshot mode. Consumed (set to null) after use.
+        /// </summary>
+        public string NextScreenShotOverridePath { get; set; }
+
+        /// <summary>
+        /// Captures a screenshot of the Skyline main window to the specified path.
+        /// </summary>
+        public void TakeScreenShot(string pathToFile)
+        {
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot();
+        }
+
+        /// <summary>
+        /// Captures a screenshot of a specific form/control to the specified path.
+        /// </summary>
+        public void TakeScreenShot(string pathToFile, Control screenshotForm)
+        {
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot(screenshotForm);
+        }
+
         public void PauseForScreenShot(string description = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             PauseForScreenShotInternal(description, null, null, timeout, processShot);
@@ -1953,6 +1977,9 @@ namespace pwiz.SkylineTestUtil
                 var form = !fullScreen ? TryWaitForOpenForm(formType) : SkylineWindow;
                 Assert.IsNotNull(form);
             }
+            if (TakeOverrideScreenShot(formType, screenshotForm, fullScreen, processShot))
+                return;
+
             if (Program.SkylineOffscreen)
                 return;
 
@@ -1963,27 +1990,15 @@ namespace pwiz.SkylineTestUtil
             else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingScreenshot, Program.PauseStartingScreenshot) <= ScreenshotCounter)
             {
                 WaitForGraphs();    // Screenshots always need graphs to be fully updated
-
-                if (screenshotForm == null)
-                {
-                    if (!fullScreen && formType != null)
-                    {
-                        screenshotForm = TryWaitForOpenForm(formType);
-                    }
-                    screenshotForm ??= SkylineWindow;
-
-                    RunUI(() => screenshotForm.Update());
-                }
+                screenshotForm = ResolveScreenShotForm(screenshotForm, formType, fullScreen);
 
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(1500); // Wait for UI to settle down - or screenshots can end up blurry
-                    _shotManager.ActivateScreenshotForm(screenshotForm);
-                    var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
-                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
+                    CaptureScreenShot(screenshotForm, fullScreen,
+                        _shotManager.ScreenshotDestFile(ScreenshotCounter), processShot);
                 }
                 else
                 {
@@ -1997,6 +2012,56 @@ namespace pwiz.SkylineTestUtil
             }
 
             ScreenshotCounter++;
+        }
+
+        /// <summary>
+        /// Handles a one-shot screenshot override. If <see cref="NextScreenShotOverridePath"/>
+        /// is set, captures the screenshot and returns true. Handles the offscreen case
+        /// by logging a warning and consuming the override.
+        /// </summary>
+        private bool TakeOverrideScreenShot(Type formType, Control screenshotForm,
+            bool fullScreen, Func<Bitmap, Bitmap> processShot)
+        {
+            if (NextScreenShotOverridePath == null)
+                return false;
+
+            var overridePath = NextScreenShotOverridePath;
+            NextScreenShotOverridePath = null; // Consume before taking shot
+
+            if (Program.SkylineOffscreen)
+            {
+                Console.Error.WriteLine(
+                    @"[SCREENSHOT] SKIPPED (offscreen, use -ShowUI): " + overridePath);
+                return false;
+            }
+
+            _shotManager ??= new ScreenshotManager(SkylineWindow, null);
+            WaitForGraphs();
+            screenshotForm = ResolveScreenShotForm(screenshotForm, formType, fullScreen);
+            CaptureScreenShot(screenshotForm, fullScreen, overridePath, processShot);
+            Console.WriteLine(@"[SCREENSHOT] " + overridePath);
+            ScreenshotCounter++;
+            return true;
+        }
+
+        private Control ResolveScreenShotForm(Control screenshotForm, Type formType, bool fullScreen)
+        {
+            if (screenshotForm != null)
+                return screenshotForm;
+
+            if (!fullScreen && formType != null)
+                screenshotForm = TryWaitForOpenForm(formType);
+            screenshotForm ??= SkylineWindow;
+            RunUI(() => screenshotForm.Update());
+            return screenshotForm;
+        }
+
+        private void CaptureScreenShot(Control screenshotForm, bool fullScreen,
+            string filePath, Func<Bitmap, Bitmap> processShot)
+        {
+            Thread.Sleep(1500); // Wait for UI to settle down
+            _shotManager.ActivateScreenshotForm(screenshotForm);
+            _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot);
         }
 
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
