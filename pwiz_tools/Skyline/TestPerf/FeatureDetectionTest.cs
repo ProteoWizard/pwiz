@@ -143,7 +143,7 @@ namespace TestPerf
             // left for reuse on subsequent runs. Note these so the change detection code doesn't
             // get confused by them appearing after the first pass.
             TestFilesDirs[0].PotentialAdditionalPersistentFileSet = new HashSet<string>(
-                _testFiles.Select(f => Path.Combine("converted", Path.ChangeExtension(f, ".mzML"))));
+                _testFiles.Select(f => Path.Combine(MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, Path.ChangeExtension(f, ".mzML"))));
 
             // First some low level tests
             AssertEx.AreEqual(1.0, ImportPeptideSearch.HardklorSettings.NormalizedContrastAngleFromCosineAngle(1.0));

@@ -148,7 +148,7 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// Relative paths (from <see cref="PersistentFilesDir"/>) of files the test
-        /// is may create in the persistent directory on its initial run (e.g., converted
+        /// may create in the persistent directory on its initial run (e.g., converted
         /// mzML files created for feature detection tests). These are excluded from the
         /// modification check when they appear as new files after the first run of a test.
         /// On subsequent test runs such files are expected to be unchanged.
@@ -352,7 +352,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     // Adjust current size to exclude expected new files for the size comparison
                     currentSize = revisedSize;
-                    // Exclude expected new files from the new and deleted file lists since they are not unexpected changes
+                    // Exclude expected new files from newFiles since they are not unexpected changes
                     newFiles.ExceptWith(expectedNewFiles);
                 }
             }
