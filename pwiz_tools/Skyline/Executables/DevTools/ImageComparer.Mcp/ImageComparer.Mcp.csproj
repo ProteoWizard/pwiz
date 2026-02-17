@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- No stable release available yet; update when one ships -->
     <PackageReference Include="ModelContextProtocol" Version="0.8.0-preview.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.10" />

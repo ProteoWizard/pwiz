@@ -125,6 +125,8 @@ namespace ImageComparer.Mcp.Tools
                     try
                     {
                         var hex = highlightColor.TrimStart('#');
+                        if (hex.Length != 6)
+                            return $"Error: Invalid color '{highlightColor}'. Use 6 hex digits like 'FF0000'.";
                         var r = Convert.ToInt32(hex.Substring(0, 2), 16);
                         var g = Convert.ToInt32(hex.Substring(2, 2), 16);
                         var b = Convert.ToInt32(hex.Substring(4, 2), 16);
@@ -310,7 +312,6 @@ namespace ImageComparer.Mcp.Tools
                     return diff.CreateAmplifiedImage(amplifyRadius);
                 case "amplified_diff_only":
                     return diff.CreateAmplifiedDiffOnlyImage(amplifyRadius);
-                // case "highlighted": // ReSharper warning
                 default:
                     return diff.HighlightedImage;
             }

@@ -128,12 +128,7 @@ namespace ImageComparer.Core
 
             // Pre-compute the diff-only color by blending highlight with white background
             // (avoids semi-transparent pixels that cause checkerboard artifacts in saved PNGs)
-            var diffOnlyColor = Color.FromArgb(
-                255,
-                highlightColor.R * alpha / 255 + 255 * (255 - alpha) / 255,
-                highlightColor.G * alpha / 255 + 255 * (255 - alpha) / 255,
-                highlightColor.B * alpha / 255 + 255 * (255 - alpha) / 255
-            );
+            var diffOnlyColor = BlendWithWhite(highlightColor);
 
             _diffPixels.Clear();
             PixelCount = 0;
@@ -259,19 +254,28 @@ namespace ImageComparer.Core
             }
 
             // Apply highlight color with alpha blending to white background for each unique pixel once
-            var alpha2 = _highlightColor.A;
-            var blendedColor2 = Color.FromArgb(
-                255,
-                _highlightColor.R * alpha2 / 255 + 255 * (255 - alpha2) / 255,
-                _highlightColor.G * alpha2 / 255 + 255 * (255 - alpha2) / 255,
-                _highlightColor.B * alpha2 / 255 + 255 * (255 - alpha2) / 255
-            );
+            var amplifiedColor = BlendWithWhite(_highlightColor);
             foreach (var point in amplifiedPixels)
             {
-                result.SetPixel(point.X, point.Y, blendedColor2);
+                result.SetPixel(point.X, point.Y, amplifiedColor);
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Blend a semi-transparent color with a white background, producing a fully opaque color.
+        /// Avoids checkerboard artifacts when saving diff-only images as PNG.
+        /// </summary>
+        private static Color BlendWithWhite(Color color)
+        {
+            var alpha = color.A;
+            return Color.FromArgb(
+                255,
+                color.R * alpha / 255 + 255 * (255 - alpha) / 255,
+                color.G * alpha / 255 + 255 * (255 - alpha) / 255,
+                color.B * alpha / 255 + 255 * (255 - alpha) / 255
+            );
         }
     }
 }
