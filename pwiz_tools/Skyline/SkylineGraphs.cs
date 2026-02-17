@@ -2234,6 +2234,9 @@ namespace pwiz.Skyline
 
         private void graphChromatogram_ChangedPeakBounds(object sender, ChangedMultiPeakBoundsEventArgs eMulti)
         {
+            if (!EnsureLibrariesLoadedForPeakIntegration())
+                return;
+
             var graphChrom = sender as GraphChromatogram;
             if (graphChrom != null)
                 graphChrom.LockZoom();
