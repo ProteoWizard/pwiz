@@ -1899,12 +1899,14 @@ namespace pwiz.SkylineTestData
                 AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX).Message);
 
 
-            //This test uses a broken Skyline file to test the InvalidDataException catch
+            //This test uses a broken Skyline file to test the "not a Skyline document" pre-validation
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
 
             output = RunCommand("--in=" + brokenFile);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_, brokenFile));
-            AssertEx.Contains(output, string.Format(Resources.XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__, 2, 7));
+            AssertEx.Contains(output, string.Format(
+                ModelResources.SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filename_extension_and_are_in_XML_format_,
+                brokenFile, SrmDocument.EXT, SrmDocumentSharing.EXT_SKY_ZIP));
 
 
             //This test uses a broken Skyline file to test the InvalidDataException catch

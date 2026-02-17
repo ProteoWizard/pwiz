@@ -5923,9 +5923,16 @@ namespace pwiz.Skyline
         private void PlacePane(int row, int col, int count,
             DockPaneAlignment alignment, IList<List<List<DockableForm>>> listTiles)
         {
+            if (row >= listTiles.Count || col >= listTiles[row].Count)
+                return;
+            int previousIndex = alignment == DockPaneAlignment.Bottom ? row - 1 : col - 1;
+            if (previousIndex < 0)
+                return;
+            if (alignment == DockPaneAlignment.Bottom && col >= listTiles[previousIndex].Count)
+                return;
             DockableForm previousForm = alignment == DockPaneAlignment.Bottom
-                                            ? listTiles[row - 1][col][0]
-                                            : listTiles[row][col - 1][0];
+                                            ? listTiles[previousIndex][col][0]
+                                            : listTiles[row][previousIndex][0];
             DockPane previousPane = FindPane(previousForm);
             var groupForms = listTiles[row][col];
             var dockableForm = groupForms[0];
