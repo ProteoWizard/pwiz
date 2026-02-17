@@ -1211,7 +1211,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
-            else
+            else if (_requestedRange != null)
             {
                 xScale.Min = _requestedRange.Min;
                 xScale.Max = _requestedRange.Max;

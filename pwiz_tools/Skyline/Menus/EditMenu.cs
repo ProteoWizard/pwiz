@@ -848,8 +848,12 @@ namespace pwiz.Skyline.Menus
                     var peptidePath = peptidePaths[iPeptide];
                     progressStatus = progressStatus.ChangeSegments(iPeptide, peptidePaths.Count);
                     progressMonitor.UpdateProgress(progressStatus);
-                    var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(peptidePath.GetIdentity(0));
-                    var peptideDocNode = (PeptideDocNode) peptideGroupDocNode.FindNode(peptidePath.GetIdentity(1));
+                    var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(peptidePath.GetIdentity((int)SrmDocument.Level.MoleculeGroups));
+                    if (peptideGroupDocNode == null)
+                    {
+                        continue;
+                    }
+                    var peptideDocNode = (PeptideDocNode) peptideGroupDocNode.FindNode(peptidePath.GetIdentity((int)SrmDocument.Level.Molecules));
                     if (peptideDocNode == null)
                     {
                         continue;
@@ -880,6 +884,10 @@ namespace pwiz.Skyline.Menus
                     }
 
                     var chromInfo = SkylineWindow.FindChromInfo(document, transitionGroupDocNode, chromSet.Name, filePath);
+                    if (chromInfo == null)
+                    {
+                        continue;
+                    }
                     if (document.GetSynchronizeIntegrationChromatogramSets().Any())
                     {
                         // Apply peak with synchronized integration

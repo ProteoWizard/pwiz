@@ -965,7 +965,7 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
-        private static string GetTextForForm(Control form)
+        public static string GetTextForForm(Control form)
         {
             var result = form.Text;
             var threadExceptionDialog = form as ThreadExceptionDialog;
@@ -1184,15 +1184,19 @@ namespace pwiz.SkylineTestUtil
         public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
+            TimeSpan maxInvokeDuration = TimeSpan.FromMilliseconds(Math.Max(waitCycles * SLEEP_INTERVAL, 60_000));
+
+            using var hangDetection = new HangDetection();
             for (int i = 0; i < waitCycles; i++)
             {
                 if (throwOnProgramException)
                     Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
                 bool isCondition = false;
-                HangDetection.InterruptAfter(() => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
-                    TimeSpan.FromMilliseconds(SLEEP_INTERVAL), waitCycles);
-                
+                hangDetection.InterruptAfter(
+                    () => Program.MainWindow.Invoke(new Action(() => isCondition = func())),
+                    maxInvokeDuration);
+
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
