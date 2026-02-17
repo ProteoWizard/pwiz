@@ -252,7 +252,7 @@ struct Spectrum2Impl : public Spectrum
             spectrumRequest->Range->Start = scanTime;
             spectrumRequest->Range->End = scanTime;
             spectrumRequest->ConvertToCentroid = doCentroid;
-        	spectrumRequest->CentroidOption = CentroidOptions::IntensitySumAbove50Percent;
+            spectrumRequest->CentroidOption = CentroidOptions::IntensitySumAbove50Percent;
             spectrumRequest->AddFramingZeros = addZeros;
 
             auto spectraReader = experiment->wiffFile_->DataReader()->GetSpectra(spectrumRequest);
