@@ -1143,6 +1143,10 @@ namespace pwiz.Skyline
                     MessageDlg.Show(this, SkylineResources.SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved);
                 }
 
+                foreach (var graph in _listGraphPeakArea)
+                {
+                    graph.GraphPanes.OfType<SummaryRelativeAbundanceGraphPane>().FirstOrDefault()?.OnClose(EventArgs.Empty);
+                }
                 // System.Xml swallows too many exceptions, so we can't catch them in the usual way.
                 // Instead we save exceptions thrown at a lower level, then rethrow them here.  These
                 // will generate reportable errors so we can see what might be going wrong in the field.

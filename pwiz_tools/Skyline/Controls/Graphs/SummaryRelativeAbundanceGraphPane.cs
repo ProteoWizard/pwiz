@@ -77,6 +77,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChangeEvent += this_AxisChangeEvent;
             LayoutRequested += this_LayoutRequested;
             graphSummary.GraphControl.ZoomAllOutEvent += GraphControl_ZoomAllOutEvent;
+            graphSummary.GraphControl.Resize += GraphControl_Resize;
             Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
             graphSummary.GraphControl.LabelDragEvent += zedGraphControl_LabelDragComplete;
             graphSummary.GraphControl.EditModifierKeys = Keys.Alt;  // enable label drag with Alt key
@@ -255,6 +256,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChangeEvent -= this_AxisChangeEvent;
             LayoutRequested -= this_LayoutRequested;
             GraphSummary.GraphControl.ZoomAllOutEvent -= GraphControl_ZoomAllOutEvent;
+            GraphSummary.GraphControl.Resize -= GraphControl_Resize;
             Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
             GraphSummary.GraphControl.LabelDragEvent -= zedGraphControl_LabelDragComplete;
             _labelLayoutRunner.Cancel(Program.MainWindow);
@@ -660,6 +662,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void GraphControl_ZoomAllOutEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        {
+            this_AxisChangeEvent(this);
+        }
+
+        private void GraphControl_Resize(object sender, EventArgs e)
         {
             this_AxisChangeEvent(this);
         }

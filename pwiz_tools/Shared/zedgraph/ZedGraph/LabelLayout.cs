@@ -59,13 +59,10 @@ namespace ZedGraph
         private const float TARGET_OVERLAP_PENALTY = 3000f;
         private const float CONNECTOR_LABEL_OVERLAP_PENALTY = 1500f;
         private const float DISTANCE_SCALE = 10000f;
-        private LayoutSignature? _lastSignature;
-
         public Dictionary<TextObj, LabeledPoint> LabeledPoints => _labeledPoints;
 
         public class LayoutResult
         {
-            internal LayoutSignature Signature;
             public Dictionary<LabeledPoint, PointF> Placements;
         }
 
@@ -86,10 +83,11 @@ namespace ZedGraph
             FillDensityGrid();
         }
 
-        private class GridCell
+        public class GridCell
         {
             public RectangleF _bounds;
             public float _density;
+            public int _pointCount;
             // public PointF _gradient;
             public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
         }
@@ -276,17 +274,17 @@ namespace ZedGraph
         /// Density grid accessor
         /// </summary>
         /// <param name="pt"></param>
-        private GridCell CellFromPoint(Point pt)
+        public GridCell CellFromPoint(Point pt)
         {
             return _densityGrid[pt.Y][pt.X];
         }
 
-        private Point CellIndexesFromXY(PointF pt)
+        public Point CellIndexesFromXY(PointF pt)
         {
             return new Point((int)((pt.X - _chartOffset.X) / _cellSize), (int)((pt.Y - _chartOffset.Y) / _cellSize));
         }
 
-        private bool IndexesWithinGrid(Point pt)
+        public bool IndexesWithinGrid(Point pt)
         {
             return pt.X >= 0 && pt.X < _densityGridSize.Width && pt.Y >= 0 && pt.Y < _densityGridSize.Height;
         }
@@ -434,28 +432,15 @@ namespace ZedGraph
         /// <summary>
         /// Places all labels using a simulated annealing search. Saved layout entries are treated as fixed.
         /// </summary>
-        public void PlaceLabelsSimulatedAnnealing(List<LabeledPoint> points, Graphics g, List<LabeledPoint.PointLayout> savedLayout = null)
-        {
-            var result = ComputePlacementsSimulatedAnnealing(points, g, savedLayout, CancellationToken.None, null);
-            if (result == null)
-                return;
-            ApplyPlacements(result, g);
-        }
-
         public LayoutResult ComputePlacementsSimulatedAnnealing(List<LabeledPoint> points, Graphics g,
             List<LabeledPoint.PointLayout> savedLayout, CancellationToken cancellationToken, IProgress<int> progress)
         {
             if (!points.Any())
                 return null;
-            // This logic avoids recomputing the layout if the points have not changed since last time
-            // ZedGraph code has a tendency to call AxisChange multiple times for each zoom.
-            var signature = ComputeSignature(points);
-            if (_lastSignature.HasValue && _lastSignature.Value.Equals(signature))
-                return null;
-
             var labelSizes = points.ToDictionary(p => p, p => _graph.GetRectScreen(p.Label, g).Size);
             if (labelSizes.Values.Any(sz => sz.Height <= 0 || sz.Width <= 0))
                 return null;
+            labelSizes.ToList().ForEach(kv => kv.Key.LabelArea = kv.Value.Height * kv.Value.Width); // calculate label area for later use in the sampling function
 
             var targetPoints = points.ToDictionary(p => p, p => _graph.TransformCoord(p.Point.X, p.Point.Y, CoordType.AxisXYScale));
             var targetMarkers = new Dictionary<LabeledPoint, RectangleF>();
@@ -620,7 +605,6 @@ namespace ZedGraph
             placements = bestPlacement;
             return new LayoutResult
             {
-                Signature = signature,
                 Placements = placements
             };
         }
@@ -643,7 +627,6 @@ namespace ZedGraph
                 AddLabel(point, labelLocation);
             }
 
-            _lastSignature = result.Signature;
             return true;
         }
 
@@ -796,68 +779,6 @@ namespace ZedGraph
                    seg.DoIntersect(new VectorF(bl, tl));
         }
 
-        internal struct LayoutSignature
-        {
-            public int PointCount;
-            public double Checksum;
-            public RectangleF ChartRect;
-            public double XMin;
-            public double XMax;
-            public double YMin;
-            public double YMax;
-
-            public override bool Equals(object obj)
-            {
-                if (!(obj is LayoutSignature other))
-                    return false;
-
-                return PointCount == other.PointCount &&
-                       Math.Abs(Checksum - other.Checksum) < 0.001 &&
-                       ChartRect.Equals(other.ChartRect) &&
-                       Math.Abs(XMin - other.XMin) < 0.0001 &&
-                       Math.Abs(XMax - other.XMax) < 0.0001 &&
-                       Math.Abs(YMin - other.YMin) < 0.0001 &&
-                       Math.Abs(YMax - other.YMax) < 0.0001;
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    var hash = PointCount;
-                    hash = (hash * 397) ^ Checksum.GetHashCode();
-                    hash = (hash * 397) ^ ChartRect.GetHashCode();
-                    hash = (hash * 397) ^ XMin.GetHashCode();
-                    hash = (hash * 397) ^ XMax.GetHashCode();
-                    hash = (hash * 397) ^ YMin.GetHashCode();
-                    hash = (hash * 397) ^ YMax.GetHashCode();
-                    return hash;
-                }
-            }
-        }
-
-        private LayoutSignature ComputeSignature(IEnumerable<LabeledPoint> points)
-        {
-            double checksum = 0;
-            int count = 0;
-            foreach (var p in points)
-            {
-                checksum += p.Point.X * 31.0 + p.Point.Y;
-                count++;
-            }
-
-            var chartRect = _graph.Chart.Rect;
-            return new LayoutSignature
-            {
-                PointCount = count,
-                Checksum = checksum,
-                ChartRect = chartRect,
-                XMin = _graph.XAxis.Scale.Min,
-                XMax = _graph.XAxis.Scale.Max,
-                YMin = _graph.YAxis.Scale.Min,
-                YMax = _graph.YAxis.Scale.Max
-            };
-        }
     }
 
     public class LabeledPoint
@@ -896,6 +817,7 @@ namespace ZedGraph
 
         public VectorF LabelVector { get; set; }
         public CurveItem Curve { get; set; }
+        public double LabelArea { get; set; }
 
         public Location ConnectorLoc { get; private set; }
         public PointF LabelPosition { get; private set; }

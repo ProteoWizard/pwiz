@@ -178,6 +178,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             GraphPane_AxisChangeEvent(zedGraphControl.GraphPane);
         }
 
+        private void zedGraphControl_Resize(object sender, EventArgs e)
+        {
+            GraphPane_AxisChangeEvent(zedGraphControl.GraphPane);
+        }
+
         private void GraphPane_LayoutRequested(object sender, EventArgs e)
         {
             if (sender is GraphPane pane)
@@ -228,6 +233,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 zedGraphControl.GraphPane.LayoutRequested += GraphPane_LayoutRequested;
                 zedGraphControl.ZoomEvent += zedGraphControl_ZoomEvent;
                 zedGraphControl.ZoomAllOutEvent += zedGraphControl_ZoomAllOutEvent;
+                zedGraphControl.Resize += zedGraphControl_Resize;
 
                 if (_skylineWindow == null)
                 {
@@ -262,6 +268,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.LayoutRequested -= GraphPane_LayoutRequested;
             zedGraphControl.ZoomEvent -= zedGraphControl_ZoomEvent;
             zedGraphControl.ZoomAllOutEvent -= zedGraphControl_ZoomAllOutEvent;
+            zedGraphControl.Resize -= zedGraphControl_Resize;
             Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
 
             if (_bindingListSource != null)
