@@ -579,7 +579,8 @@ namespace TestPerf
             {
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
                 WaitForConditionUI(WAIT_TIME * 4, () => importPeptideSearchDlg.SearchControl.PercentComplete > 17);
-                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA search progress page");
+                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA search progress page", null,
+                    bmp => bmp.CleanupBorder().FillProgressBar(importPeptideSearchDlg.SearchControl.ProgressBar));
 
                 WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
                 RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
