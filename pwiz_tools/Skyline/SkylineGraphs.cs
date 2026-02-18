@@ -2114,12 +2114,14 @@ namespace pwiz.Skyline
 
         private void graphChromatogram_PickedPeak(object sender, PickedPeakEventArgs e)
         {
+            if (!EnsureLibrariesLoadedForPeakIntegration())
+                return;
             var graphChrom = sender as GraphChromatogram;
             if (graphChrom != null)
                 graphChrom.LockZoom();
             try
             {
-                ModifyDocument(string.Format(SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime), 
+                ModifyDocument(string.Format(SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime),
                     doc => PickPeak(doc, e), docPair =>
                     {
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
@@ -2232,6 +2234,9 @@ namespace pwiz.Skyline
 
         private void graphChromatogram_ChangedPeakBounds(object sender, ChangedMultiPeakBoundsEventArgs eMulti)
         {
+            if (!EnsureLibrariesLoadedForPeakIntegration())
+                return;
+
             var graphChrom = sender as GraphChromatogram;
             if (graphChrom != null)
                 graphChrom.LockZoom();
@@ -2355,6 +2360,22 @@ namespace pwiz.Skyline
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Checks that document libraries are loaded, which is required for peak integration
+        /// changes that need to look up peptide ID times. Shows a message to the user if not.
+        /// </summary>
+        /// <returns>True if libraries are loaded and peak integration can proceed</returns>
+        public bool EnsureLibrariesLoadedForPeakIntegration()
+        {
+            if (!DocumentUI.Settings.PeptideSettings.Libraries.IsLoaded)
+            {
+                MessageDlg.Show(this,
+                    SkylineResources.SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded);
+                return false;
+            }
+            return true;
         }
 
         /// <summary>

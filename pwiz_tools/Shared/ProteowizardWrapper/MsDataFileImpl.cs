@@ -756,21 +756,23 @@ namespace pwiz.ProteowizardWrapper
             {
                 if (_spectrumList == null)
                 {
-                    var centroidLevel = new List<int>();
+                    string centroidLevels = null;
                     _spectrumList = _msDataFile.run.spectrumList;
                     bool hasSrmSpectra = HasSrmSpectraInList();
                     if (!hasSrmSpectra)
                     {
-                        if (_requireVendorCentroidedMS1)
-                            centroidLevel.Add(1);
-                        if (_requireVendorCentroidedMS2)
-                            centroidLevel.Add(2);
+                        if (_requireVendorCentroidedMS1 && _requireVendorCentroidedMS2)
+                            centroidLevels = @"1-";
+                        else if (_requireVendorCentroidedMS1)
+                            centroidLevels = @"1";
+                        else if (_requireVendorCentroidedMS2)
+                            centroidLevels = @"2-";
                     }
-                    if (centroidLevel.Any() && _spectrumList != null)
+                    if (centroidLevels != null && _spectrumList != null)
                     {
                         _spectrumList = new SpectrumList_PeakPicker(_spectrumList,
                             new VendorOnlyPeakDetector(), // Throws an exception when no vendor centroiding available
-                            true, centroidLevel.ToArray());
+                            true, centroidLevels);
                     }
 
                     _lockmassFunction = null;
