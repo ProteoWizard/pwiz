@@ -26,6 +26,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Collections;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
@@ -666,6 +667,24 @@ namespace ZedGraph
 		/// <returns>true if a <see cref="GraphPane"/> was found, false otherwise.</returns>
 		/// <seealso cref="GraphPane.FindNearestObject"/>
 		public bool FindNearestPaneObject( PointF mousePt, Graphics g, out GraphPane pane,
+			out object nearestObj, out int index )
+		{
+			try
+			{
+				return FindNearestPaneObjectInternal( mousePt, g, out pane, out nearestObj, out index );
+			}
+			catch (ExternalException)
+			{
+				// GDI+ can throw ExternalException during hit-testing (e.g. GraphicsPath.IsOutlineVisible).
+				// Treat as "nothing found" — callers already handle this case gracefully.
+				pane = null;
+				nearestObj = null;
+				index = -1;
+				return false;
+			}
+		}
+
+		private bool FindNearestPaneObjectInternal( PointF mousePt, Graphics g, out GraphPane pane,
 			out object nearestObj, out int index )
 		{
 			pane = null;
