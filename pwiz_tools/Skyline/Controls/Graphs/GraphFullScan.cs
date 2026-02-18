@@ -73,11 +73,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool _showIonSeriesAnnotations;
 
-        // Tooltip-like label to show m/z and intensity when hovering over points, and timer to hide it after a delay
-        private const int CURSOR_COORDINATES_TOOLTIP_HIDE_DELAY_MS = 3000; // This would be AutoPopDelay in a standard ToolTip
-        private readonly System.Windows.Forms.Label _cursorCoordinatesToolTipLabel;
-        private readonly Timer _cursorCoordinatesTooltipTimer;
-
         private MSGraphControl graphControl => graphControlExtension.Graph;
 
         public GraphFullScan(IDocumentUIContainer documentUIContainer)
@@ -133,22 +128,6 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxPeakType.SelectedItem = _msDataFileScanHelper.GetPeakTypeLocalizedName(peakType);
             this.comboBoxPeakType.SelectedIndexChanged += this.comboBoxPeakType_SelectedIndexChanged;
             graphControlExtension.RestorePropertiesSheet();
-
-            _cursorCoordinatesToolTipLabel = new System.Windows.Forms.Label
-            {
-                AutoSize = true,
-                BackColor = SystemColors.Info,
-                ForeColor = SystemColors.InfoText,
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(2),
-                Visible = false
-            };
-            graphControl.Controls.Add(_cursorCoordinatesToolTipLabel);
-            _cursorCoordinatesTooltipTimer = new Timer { Interval = CURSOR_COORDINATES_TOOLTIP_HIDE_DELAY_MS };
-            _cursorCoordinatesTooltipTimer.Tick += (s, ev) => { _cursorCoordinatesTooltipTimer.Stop(); _cursorCoordinatesToolTipLabel.Visible = false; };
-            graphControl.MouseLeave += graphControl_MouseLeave;
-            graphControl.MouseDown += graphControl_MouseDown;
-            graphControl.MouseMove += graphControl_MouseMoveDrag;
         }
 
         public ZedGraphControl ZedGraphControl
@@ -1402,9 +1381,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void OnClosed(EventArgs e)
         {
-            _cursorCoordinatesTooltipTimer.Stop();
-            _cursorCoordinatesTooltipTimer.Dispose();
-            _cursorCoordinatesToolTipLabel.Dispose();
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
             _msDataFileScanHelper.Dispose();
         }
@@ -1609,13 +1585,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool graphControl_MouseMove(ZedGraphControl sender, MouseEventArgs e)
         {
             var pt = new PointF(e.X, e.Y);
-
-            // Hide tooltip during mouse drag (panning/zooming)
-            if (e.Button == MouseButtons.None)
-                ShowCursorCoordinatesTooltip(pt);
-            else
-                _cursorCoordinatesToolTipLabel.Visible = false;
-
             var nearestLabel = GetNearestLabel(pt);
             if (nearestLabel == null || nearestLabel.Tag == null)
                 return false;
@@ -1627,128 +1596,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
             graphControl.Cursor = Cursors.Hand;
             return true;
-        }
-
-        private void ShowCursorCoordinatesTooltip(PointF pt)
-        {
-            if (_msDataFileScanHelper.MsDataSpectra == null)
-                return;
-
-            var text = GetTooltipText(pt);
-            if (text == null)
-            {
-                _cursorCoordinatesToolTipLabel.Text = null;
-                _cursorCoordinatesToolTipLabel.Visible = false;
-                return;
-            }
-
-            _cursorCoordinatesToolTipLabel.Location = new Point((int)pt.X + 15, (int)pt.Y + 15);
-            if (text == _cursorCoordinatesToolTipLabel.Text)
-            {
-                return; // Don't restart timer if tooltip text haven't changed
-            }
-            _cursorCoordinatesToolTipLabel.Text = text;
-            _cursorCoordinatesToolTipLabel.Visible = true;
-            _cursorCoordinatesToolTipLabel.BringToFront();
-            _cursorCoordinatesTooltipTimer.Stop();
-            _cursorCoordinatesTooltipTimer.Start();
-        }
-
-        private string GetTooltipText(PointF pt)
-        {
-            bool isHeatMap = spectrumBtn.Visible && !spectrumBtn.Checked;
-            return isHeatMap ? GetHeatMapTooltipText(pt) : GetSpectrumTooltipText(pt);
-        }
-
-        private string GetHeatMapTooltipText(PointF pt)
-        {
-            if (_heatMapData == null)
-                return null;
-
-            double x, y;
-            GraphPane.ReverseTransform(pt, out x, out y);
-
-            // Search radius in data coordinates: use a small pixel neighborhood
-            const float searchPixels = 10f;
-            double xLo, xHi, yLo, yHi;
-            GraphPane.ReverseTransform(new PointF(pt.X - searchPixels, pt.Y - searchPixels), out xLo, out yHi);
-            GraphPane.ReverseTransform(new PointF(pt.X + searchPixels, pt.Y + searchPixels), out xHi, out yLo);
-
-            double searchRadiusX = Math.Abs(xHi - xLo) / 2;
-            double searchRadiusY = Math.Abs(yHi - yLo) / 2;
-
-            // Use a small cell size to get individual points from the quad-tree
-            var candidates = _heatMapData.GetPoints(
-                x - searchRadiusX, x + searchRadiusX,
-                y - searchRadiusY, y + searchRadiusY,
-                searchRadiusX / 2, searchRadiusY / 2);
-
-            var nearest = FindNearestHeatMapPoint(candidates, x, y, searchRadiusX, searchRadiusY);
-            if (nearest == null)
-                return null;
-
-            string yAxisLabel = GraphPane.YAxis.Title.Text ?? string.Empty;
-            return string.Format(GraphsResources.GraphFullScan_ToolTip_HeatMap,
-                nearest.Point.X.ToString(Formats.Mz),
-                yAxisLabel,
-                nearest.Point.Y.ToString(Formats.IonMobility),
-                nearest.Point.Z.ToString(@"F0"));
-        }
-
-        private string GetSpectrumTooltipText(PointF pt)
-        {
-            int nearestIndex;
-            CurveItem nearestCurve;
-
-            if (!GraphPane.FindNearestPoint(pt, out nearestCurve, out nearestIndex))
-                return null;
-
-            var nearestPoint = nearestCurve[nearestIndex];
-            return string.Format(GraphsResources.GraphFullScan_ToolTip_Spectrum,
-                nearestPoint.X.ToString(Formats.Mz),
-                nearestPoint.Y.ToString(@"F0"));
-        }
-
-        private static HeatMapData.TaggedPoint3D FindNearestHeatMapPoint(
-            List<HeatMapData.TaggedPoint3D> candidates,
-            double x, double y, double searchRadiusX, double searchRadiusY)
-        {
-            if (candidates == null || candidates.Count == 0)
-                return null;
-
-            HeatMapData.TaggedPoint3D nearest = null;
-            double minDist = double.MaxValue;
-            foreach (var candidate in candidates)
-            {
-                // Normalize by search radius so m/z and ion mobility scales are comparable
-                double dx = (candidate.Point.X - x) / searchRadiusX;
-                double dy = (candidate.Point.Y - y) / searchRadiusY;
-                double dist = dx * dx + dy * dy;
-                if (dist < minDist)
-                {
-                    minDist = dist;
-                    nearest = candidate;
-                }
-            }
-
-            return nearest;
-        }
-
-        private void graphControl_MouseDown(object sender, MouseEventArgs e)
-        {
-            _cursorCoordinatesToolTipLabel.Visible = false;
-        }
-
-        private void graphControl_MouseMoveDrag(object sender, MouseEventArgs e)
-        {
-            // Standard WinForms MouseMove fires even during ZedGraph drag operations
-            if (e.Button != MouseButtons.None)
-                _cursorCoordinatesToolTipLabel.Visible = false;
-        }
-
-        private void graphControl_MouseLeave(object sender, EventArgs e)
-        {
-            _cursorCoordinatesToolTipLabel.Visible = false;
         }
 
         private TextObj GetNearestLabel(PointF mousePoint)
