@@ -1100,7 +1100,12 @@ class ScanInfoImpl : public ScanInfo
 
     virtual MassAnalyzerType massAnalyzerType() const {return massAnalyzerType_;}
     virtual IonizationType ionizationType() const {return ionizationType_;}
-    virtual ActivationType precursorActivationType(long index) const {return precursorActivationTypes_[index];}
+    virtual ActivationType precursorActivationType(long index) const
+    {
+        if (index < 0 || static_cast<size_t>(index) >= precursorActivationTypes_.size())
+            return ActivationType_Unknown;
+        return precursorActivationTypes_[index];
+    }
     virtual long msLevel() const {return msLevel_;}
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
