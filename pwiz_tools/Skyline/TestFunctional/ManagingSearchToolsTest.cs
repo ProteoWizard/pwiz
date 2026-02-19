@@ -41,10 +41,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ManagingSearchToolsTest : AbstractFunctionalTest
     {
-        // Unique per test+culture and in the same folder as the new Tools directory
-        string oldEncyclopediaDir = Path.Combine(
-            ToolDescriptionHelpers.GetToolsDirectory() + "_managingTest",
-            "EncyclopeDIA");
+        private string _oldEncyclopediaDir;
         
         /// <summary>
         /// Functional test for editing search tools
@@ -55,9 +52,12 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\ManagingSearchToolsTest.data";
             
             // make sure tools directory does not exist so Skyline will try to copy over "old" tools
-            DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
-            DirectoryEx.SafeDelete(oldEncyclopediaDir);
-            using var tempDir = new TemporaryDirectory(oldEncyclopediaDir);
+            var toolsDir = ToolDescriptionHelpers.GetToolsDirectory();
+            DirectoryEx.SafeDelete(toolsDir);
+            // Initialize old dir to be unique per test+culture and in the same folder as the new Tools directory
+            _oldEncyclopediaDir = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory() + "_managingTest", "EncyclopeDIA");
+            DirectoryEx.SafeDelete(_oldEncyclopediaDir);
+            using var tempDir = new TemporaryDirectory(_oldEncyclopediaDir);
             
             RunFunctionalTest();
         }
@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
             base.InitializeSkylineSettings();
 
             // add an auto-installed tool to an "old" version (a location other than the current version's tools directory)
-            string oldEncyclopediaFilepath = Path.Combine(oldEncyclopediaDir, "encyclopedia.bat");
+            string oldEncyclopediaFilepath = Path.Combine(_oldEncyclopediaDir, "encyclopedia.bat");
             File.Copy(GetTestPath("encyclopedia.bat"), oldEncyclopediaFilepath);
             Settings.Default.SearchToolList.Add(new SearchTool(SearchToolType.EncyclopeDIA, oldEncyclopediaFilepath, "", Path.GetDirectoryName(oldEncyclopediaFilepath), true));
         }
