@@ -41,7 +41,10 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ManagingSearchToolsTest : AbstractFunctionalTest
     {
-        string oldEncyclopediaDir => Path.GetFullPath("Tools_managingTest\\EncyclopeDIA"); // relative to working dir 
+        // Unique per test+culture and in the same folder as the new Tools directory
+        string oldEncyclopediaDir = Path.Combine(
+            ToolDescriptionHelpers.GetToolsDirectory() + "_managingTest",
+            "EncyclopeDIA");
         
         /// <summary>
         /// Functional test for editing search tools
