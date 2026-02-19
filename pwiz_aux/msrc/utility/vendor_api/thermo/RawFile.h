@@ -251,7 +251,7 @@ class PWIZ_API_DECL ScanInfo
     virtual std::string filter() const = 0;
     virtual MassAnalyzerType massAnalyzerType() const = 0;
     virtual IonizationType ionizationType() const = 0;
-    virtual ActivationType activationType() const = 0;
+    virtual ActivationType precursorActivationType(long index) const = 0;
     virtual long msLevel() const = 0;
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;
@@ -396,7 +396,7 @@ struct PWIZ_API_DECL InstrumentData
     // Device suggested label of X axis
     std::string AxisLabelX;
 
-    // Device suggested label of Y axis (name for units of data, such as "°C")
+    // Device suggested label of Y axis (name for units of data, such as "ï¿½C")
     std::string AxisLabelY;
 };
 
