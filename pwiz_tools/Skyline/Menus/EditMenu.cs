@@ -810,6 +810,8 @@ namespace pwiz.Skyline.Menus
 
         private void ApplyPeakWithLongWait(bool subsequent, bool group)
         {
+            if (!SkylineWindow.EnsureLibrariesLoadedForPeakIntegration())
+                return;
             var resultsIndex = SelectedResultsIndex;
             var document = SkylineWindow.Document;
             var chromSet = DocumentUI.MeasuredResults.Chromatograms[resultsIndex];

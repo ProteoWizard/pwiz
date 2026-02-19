@@ -179,6 +179,7 @@
     <Compile Include="FilesTreeFileSystemTest.cs" />
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
     <Compile Include="OriginalPeakScoreTest.cs" />
+    <Compile Include="RemovePeakFromAllTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
@@ -490,6 +491,7 @@
     <Compile Include="ReintegrateDlgTest.cs" />
     <Compile Include="AssayLibraryImportTest.cs" />
     <Compile Include="PeakBoundaryCompareTest.cs" />
+    <Compile Include="PeakIntegrationLibraryGuardTest.cs" />
     <Compile Include="SwathIsolationListsTest.cs" />
     <Compile Include="TriggeredAcquisitionTest.cs" />
     <Compile Include="UIModeTest.cs" />
