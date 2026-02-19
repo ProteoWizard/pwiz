@@ -336,6 +336,12 @@ namespace pwiz.Common.DataBinding
 
             public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
             {
+                if (operandValue is PrecisionNumber precisionNumber)
+                {
+                    var converted = ConvertValue(dataSchema, columnType, columnValue);
+                    if (converted is double dVal)
+                        return precisionNumber.EqualsWithinPrecision(dVal);
+                }
                 return Equals(
                     ConvertValue(dataSchema, columnType, columnValue),
                     operandValue);
@@ -357,6 +363,12 @@ namespace pwiz.Common.DataBinding
 
             public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
             {
+                if (operandValue is PrecisionNumber precisionNumber)
+                {
+                    var converted = ConvertValue(dataSchema, columnType, columnValue);
+                    if (converted is double dVal)
+                        return !precisionNumber.EqualsWithinPrecision(dVal);
+                }
                 return !Equals(ConvertValue(dataSchema, columnType, columnValue), operandValue);
             }
         }
@@ -401,7 +413,7 @@ namespace pwiz.Common.DataBinding
         {
             public OpIsGreaterThan() : base(@">")
             {
-                
+
             }
 
             public override string DisplayName
@@ -413,13 +425,18 @@ namespace pwiz.Common.DataBinding
             {
                 return comparisonResult > 0;
             }
+
+            protected override bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            {
+                return value >= operand.Value + operand.Tolerance;
+            }
         }
 
         class OpIsGreaterThanOrEqual : ComparisonFilterOperation
         {
             public OpIsGreaterThanOrEqual() : base(@">=")
             {
-                
+
             }
 
             public override string DisplayName
@@ -431,13 +448,18 @@ namespace pwiz.Common.DataBinding
             {
                 return comparisonResult >= 0;
             }
+
+            protected override bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            {
+                return value >= operand.Value - operand.Tolerance;
+            }
         }
 
         class OpIsLessThan : ComparisonFilterOperation
         {
             public OpIsLessThan() : base(@"<")
             {
-                
+
             }
 
             public override string DisplayName
@@ -448,6 +470,11 @@ namespace pwiz.Common.DataBinding
             protected override bool ComparisonMatches(int comparisonResult)
             {
                 return comparisonResult < 0;
+            }
+
+            protected override bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            {
+                return value < operand.Value - operand.Tolerance;
             }
         }
 
@@ -465,6 +492,11 @@ namespace pwiz.Common.DataBinding
             protected override bool ComparisonMatches(int comparisonResult)
             {
                 return comparisonResult <= 0;
+            }
+
+            protected override bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            {
+                return value < operand.Value + operand.Tolerance;
             }
         }
 
@@ -497,8 +529,19 @@ namespace pwiz.Common.DataBinding
                 {
                     return false;
                 }
+                if (operandValue is PrecisionNumber precisionNumber)
+                {
+                    var converted = Convert.ChangeType(columnValue, GetTypeToConvertOperandTo(dataSchema, columnType));
+                    if (converted is double dVal)
+                        return PrecisionComparisonMatches(dVal, precisionNumber);
+                }
                 columnValue = Convert.ChangeType(columnValue, GetTypeToConvertOperandTo(dataSchema, columnType));
                 return ComparisonMatches(dataSchema.Compare(columnValue, operandValue));
+            }
+
+            protected virtual bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            {
+                return ComparisonMatches(value.CompareTo(operand.Value));
             }
 
             protected abstract bool ComparisonMatches(int comparisonResult);

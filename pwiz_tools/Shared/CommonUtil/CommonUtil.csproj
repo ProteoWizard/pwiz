@@ -251,6 +251,7 @@
     <Compile Include="SystemUtil\TaskbarProgress.cs" />
     <Compile Include="SystemUtil\TypeSafeEnum.cs" />
     <Compile Include="SystemUtil\DistinctList.cs" />
+    <Compile Include="SystemUtil\PrecisionNumber.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
