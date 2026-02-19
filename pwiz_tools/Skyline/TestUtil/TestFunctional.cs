@@ -709,15 +709,28 @@ namespace pwiz.SkylineTestUtil
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
+            TDlg result = null;
             foreach (var form in OpenForms)
             {
                 var tForm = form as TDlg;
                 if (tForm != null && tForm.Created)
                 {
-                    return tForm;
+                    if (result != null)
+                    {
+                        Assert.Fail("Multiple {0} forms open simultaneously: [{1}] and [{2}]",
+                            typeof(TDlg).Name, FormatFormForError(result), FormatFormForError(tForm));
+                    }
+                    result = tForm;
                 }
             }
-            return null;
+            return result;
+        }
+
+        private static string FormatFormForError(Form form)
+        {
+            return form is CommonAlertDlg alertDlg
+                ? string.Format("{0}: {1}", form.GetType().Name, alertDlg.Message)
+                : form.GetType().Name;
         }
 
         public static IEnumerable<TDlg> FindOpenForms<TDlg>() where TDlg : Form
