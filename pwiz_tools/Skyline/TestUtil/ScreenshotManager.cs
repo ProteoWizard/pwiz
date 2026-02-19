@@ -352,10 +352,25 @@ namespace pwiz.SkylineTestUtil
         public static Screen GetScreenshotScreen()
         {
             var screenIndex = RunTests.ScreenshotScreenIndex;
+            if (screenIndex == -1)
+                return GetLargestScreen();
             if (screenIndex < 1 || screenIndex > Screen.AllScreens.Length)
                 throw new ArgumentOutOfRangeException(nameof(RunTests.ScreenshotScreenIndex),
-                    $@"ScreenshotScreenIndex {screenIndex} is out of range. Valid range: 1-{Screen.AllScreens.Length}");
+                    $@"ScreenshotScreenIndex {screenIndex} is out of range. Valid range: -1 or 1-{Screen.AllScreens.Length}");
             return Screen.AllScreens[screenIndex - 1];
+        }
+
+        /// <summary>
+        /// Returns the largest screen by pixel area. Ties are broken by preferring
+        /// the primary display, then by lowest index.
+        /// </summary>
+        private static Screen GetLargestScreen()
+        {
+            return Screen.AllScreens
+                .OrderByDescending(s => s.Bounds.Width * s.Bounds.Height)
+                .ThenByDescending(s => s.Primary)
+                .ThenBy(s => Array.IndexOf(Screen.AllScreens, s))
+                .First();
         }
 
         /// <summary>

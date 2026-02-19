@@ -246,7 +246,7 @@ namespace TestRunner
         static readonly string commandLineOptions =
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
-            "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;screen=1;multi=1;wait=off;internet=off;originalurls=off;" +
+            "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;screen=-1;multi=1;wait=off;internet=off;originalurls=off;" +
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
@@ -2309,9 +2309,11 @@ Here is a list of recognized arguments:
                                     from flashing on the desktop during a test run.
 
     screen=[n]                      Specifies which screen (1-based) to use for screenshot
-                                    capture. Default is 1 (primary screen). Use screen=2
-                                    to capture screenshots on a secondary monitor while
-                                    working on the primary monitor.
+                                    capture. Default is -1, which automatically picks the
+                                    largest screen (using the lowest index to break ties,
+                                    unless one of the ties is the primary display). Use
+                                    screen=2 to capture screenshots on a secondary monitor
+                                    while working on the primary monitor.
 
     language=[language1,language2,...]  Choose a random language from this list before executing
                                     each test.  Default value is ""en-US,fr-FR"".  You can

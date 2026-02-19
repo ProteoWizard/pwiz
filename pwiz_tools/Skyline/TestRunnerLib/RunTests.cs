@@ -167,8 +167,9 @@ namespace TestRunnerLib
 
         /// <summary>
         /// 1-based index of the screen to use for screenshot capture.
+        /// -1 means automatically pick the largest screen.
         /// </summary>
-        public static int ScreenshotScreenIndex { get; set; } = 1;
+        public static int ScreenshotScreenIndex { get; set; } = -1;
 
         public RunTests(
             bool demoMode,
