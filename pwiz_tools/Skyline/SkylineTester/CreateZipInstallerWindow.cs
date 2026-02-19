@@ -110,7 +110,6 @@ namespace SkylineTester
                         "SkylineNightly.exe.config",
                         "SkylineNightly.pdb",
                         "Microsoft.Diagnostics.Runtime.dll",
-                        "Microsoft.Diagnostics.Runtime.xml",
                         "Microsoft.Win32.TaskScheduler.dll",
                         "DotNetZip.dll"
                     };

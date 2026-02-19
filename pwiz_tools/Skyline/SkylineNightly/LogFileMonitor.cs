@@ -296,7 +296,7 @@ namespace SkylineNightly
                     }
                     catch (Exception ex)
                     {
-                        message.AppendFormat("Failed to capture stacks for PID {0}: {1}", process.Id, ex.Message);
+                        message.AppendFormat("Failed to capture stacks for PID {0}: {1}", process.Id, ex);
                         message.AppendLine();
                     }
                 }
