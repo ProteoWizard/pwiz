@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        // Reserved TLD per RFC 2606 — this address is never contacted (all HTTP goes through HttpClientTestHelper)
+        // Reserved TLD per RFC 2606 - this address is never contacted (all HTTP goes through HttpClientTestHelper)
         public const string PANORAMA_SERVER = "https://panorama.test.invalid:8080/";
         public const string PANORAMA_FOLDER = "TestUpload";
         private const string USER_NAME = "user@user.edu";
