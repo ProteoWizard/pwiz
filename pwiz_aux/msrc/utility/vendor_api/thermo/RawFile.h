@@ -252,7 +252,7 @@ class PWIZ_API_DECL ScanInfo
     virtual MassAnalyzerType massAnalyzerType() const = 0;
     virtual IonizationType ionizationType() const = 0;
     virtual ActivationType precursorActivationType(long index) const = 0;
-    ActivationType activationType() const { return precursorCount() > 0 ? precursorActivationType(0) : ActivationType_Unknown; }
+    ActivationType activationType() const;
     virtual long msLevel() const = 0;
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;

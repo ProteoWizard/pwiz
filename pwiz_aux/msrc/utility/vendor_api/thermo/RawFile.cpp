@@ -1075,6 +1075,12 @@ std::vector<string> RawFileImpl::getFilters() const
 
 
 
+ActivationType ScanInfo::activationType() const
+{
+    return precursorCount() > 0 ? precursorActivationType(0) : ActivationType_Unknown;
+}
+
+
 class ScanInfoImpl : public ScanInfo
 {
     public:
