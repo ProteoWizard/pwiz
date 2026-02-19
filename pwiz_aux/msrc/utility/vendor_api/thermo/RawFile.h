@@ -397,7 +397,7 @@ struct PWIZ_API_DECL InstrumentData
     // Device suggested label of X axis
     std::string AxisLabelX;
 
-    // Device suggested label of Y axis (name for units of data, such as "�C")
+    // Device suggested label of Y axis (name for units of data, such as "°C")
     std::string AxisLabelY;
 };
 
