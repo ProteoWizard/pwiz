@@ -1411,6 +1411,12 @@ namespace TestRunner
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
             bool coverage = commandLineArgs.ArgAsBool("coverage");
 
+            // Screenshot modes (pause < 0) need windows on-screen for correct layout and capture
+            if (pauseSeconds < 0)
+            {
+                offscreen = false;
+            }
+
             // If pausing for screenshots, make sure this process is allowed to fully activate its forms
             if (pauseSeconds != 0)
             {

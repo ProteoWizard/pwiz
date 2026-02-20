@@ -2309,6 +2309,11 @@ namespace pwiz.SkylineTestUtil
             if (IsDemoMode)
                 Settings.Default.MainWindowMaximized = true;
             Settings.Default.TutorialMode = true;
+            // Set the initial window location to the target screenshot screen so Skyline
+            // initializes there (correct DPI, working area) rather than on the primary screen.
+            var targetScreen = ScreenshotManager.GetScreenshotScreen();
+            var wa = targetScreen.WorkingArea;
+            Settings.Default.MainWindowLocation = new Point(wa.X + 100, wa.Y + 100);
         }
 
         private void BeginAuditLogging()
@@ -2609,10 +2614,7 @@ namespace pwiz.SkylineTestUtil
 
                 // Move Skyline to the chosen screenshot screen at the start of the test
                 // This works for any mode, not just screenshot recording/comparison
-                if (RunTests.ScreenshotScreenIndex > 1)
-                {
-                    RunUI(() => ScreenshotManager.MoveToScreenshotScreen(SkylineWindow));
-                }
+                RunUI(() => ScreenshotManager.MoveToScreenshotScreen(SkylineWindow));
 
                 if (IsRecordingScreenShots)
                 {

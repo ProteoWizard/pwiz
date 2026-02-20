@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -166,12 +167,12 @@ namespace pwiz.SkylineTestTutorial
 
             if (IsPauseForScreenShots)
             {
-                RunArgsCollector(1, "GroupComparisonUi", "p. 9 - Group Comparison Ui"); // Not L10
-                RunArgsCollector(2, "SampleSizeUi", "p. 10 - Sample Size Ui"); // Not L10
+                RunArgsCollector(MSSTATS_GC, 1, "GroupComparisonUi", "p. 9 - Group Comparison Ui"); // Not L10
+                RunArgsCollector(MSSTATS_DSS, 2, "SampleSizeUi", "p. 10 - Sample Size Ui"); // Not L10
             }
         }
 
-        private void RunArgsCollector(int index, string formName, string screenshotDescription)
+        private void RunArgsCollector(ToolDescription tool, int index, string formName, string screenshotDescription)
         {
             int formCount = Application.OpenForms.Count;
             RunUI(() => SkylineWindow.RunTool(index));
@@ -183,6 +184,10 @@ namespace pwiz.SkylineTestTutorial
             Action actCancel = () => argsCollector.CancelButton.PerformClick();
             argsCollector.BeginInvoke(actCancel);
             WaitForClosedForm(argsCollector);
+
+            // RunTool creates a temp CSV via GetReportTempPath — clean it up
+            var tempCsvPath = ToolMacros.GetReportTempPath(tool.ReportTitle, tool.Title);
+            FileEx.SafeDelete(tempCsvPath);
         }
 
         private static void AssertToolEquality(ToolDescription expected, ToolDescription actual)
