@@ -272,28 +272,6 @@ namespace pwiz.Skyline.Controls.Databinding
             ClipboardHelper.SetClipboardText(owner, text);
         }
 
-        public bool GetExportFilename(Control owner, ViewName viewName, out string fileName, out char separator)
-        {
-            fileName = null;
-            separator = TextUtil.CsvSeparator;
-            using var saveFileDialog = new SaveFileDialog();
-            saveFileDialog.InitialDirectory = GetExportDirectory();
-            saveFileDialog.OverwritePrompt = true;
-            saveFileDialog.DefaultExt = TextUtil.EXT_CSV;
-            saveFileDialog.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV);
-            saveFileDialog.FileName = viewName.Name;
-            // TODO: If document has been saved, initial directory should be document directory
-            if (saveFileDialog.ShowDialog(FormUtil.FindTopLevelOwner(owner)) == DialogResult.Cancel)
-            {
-                return false;
-            }
-            separator = saveFileDialog.FilterIndex == 2
-                ? TextUtil.SEPARATOR_TSV
-                : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
-            fileName = saveFileDialog.FileName;
-            return true;
-        }
-
         public bool IsInvariantLanguage()
         {
             return ReferenceEquals(DataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT);

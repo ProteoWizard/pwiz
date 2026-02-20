@@ -394,18 +394,6 @@ namespace pwiz.Common.DataBinding.Internal
             }
         }
 
-        private void SetItems(BigList<RowItem> rowItems)
-        {
-            var list = (List<RowItem>)Items;
-            list.Clear();
-            int count = (int)Math.Min(ViewInfo.DataSchema.MaxGridRowCount, rowItems.Count);
-            if (count > list.Capacity)
-            {
-                list.Capacity = count;
-            }
-            list.AddRange(rowItems.Take(count));
-        }
-
         public string Filter
         {
             get

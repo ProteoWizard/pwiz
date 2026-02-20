@@ -131,7 +131,6 @@ namespace pwiz.Skyline.Model.Databinding
 
         public void RegisterAllFactories()
         {
-            var document = DataSchema.Document;
             RegisterFactory(ListProteins);
             RegisterFactory(ListPeptides);
             RegisterFactory(ListPrecursors);

@@ -155,6 +155,7 @@ namespace pwiz.Skyline.Controls.Databinding
             longWaitDlg.Text = DatabindingResources.ExportReportDlg_ExportReport_Generating_Report;
             IProgressStatus status = new ProgressStatus(DatabindingResources.ExportReportDlg_ExportReport_Building_report);
             var dataSchema = GetSkylineDataSchema(true);
+            // ReSharper disable once RedundantLambdaParameterType
             longWaitDlg.PerformWork(this, 1500, (IProgressMonitor progressMonitor) =>
             {
                 progressMonitor.UpdateProgress(status);
