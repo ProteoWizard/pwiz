@@ -323,7 +323,7 @@ namespace seems
             var bounds = heatmapPointsTuple.Item2;
 
             var g = msGraphControl.CreateGraphics();
-            var heatmapData = new HeatMapData(heatmapPointsTuple.Item1);
+            var heatmapData = new HeatMapData(heatmapPointsTuple.Item1, "intensity");
             heatmapGraphPane.GraphObjList.Clear(); // remove "Loading..."
             heatmapGraphPane.SetPoints(heatmapData, bounds.MinY, bounds.MaxY);
 

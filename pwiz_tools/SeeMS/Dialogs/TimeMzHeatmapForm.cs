@@ -184,7 +184,7 @@ namespace seems
             foreach (int msLevel in msLevels)
             {
                 var bounds = heatmapBoundsByMsLevel[msLevel];
-                var heatmapData = new HeatMapData(heatmapPointsByMsLevel[msLevel]);
+                var heatmapData = new HeatMapData(heatmapPointsByMsLevel[msLevel], "intensity");
                 var heatmapGraphPane = heatmapGraphPaneByMsLevel[msLevel];
                 heatmapGraphPane.GraphObjList.Clear(); // remove "Loading..."
                 heatmapGraphPane.SetPoints(heatmapData, bounds.MinY, bounds.MaxY);
