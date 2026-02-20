@@ -709,6 +709,15 @@ namespace pwiz.SkylineTestUtil
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
+            return (TDlg) FindOpenForm(typeof(TDlg));
+        }
+
+        /// <summary>
+        /// Returns the first open form of type T without asserting uniqueness.
+        /// Use only when multiple forms of the same type are expected.
+        /// </summary>
+        public static TDlg FindAnyOpenForm<TDlg>() where TDlg : Form
+        {
             return FindOpenForms<TDlg>().FirstOrDefault();
         }
 
@@ -732,7 +741,11 @@ namespace pwiz.SkylineTestUtil
 
         public static Form FindOpenForm(Type formType)
         {
-            return FindOpenForms(formType).FirstOrDefault();
+            var forms = FindOpenForms(formType).ToArray();
+            Assert.IsTrue(forms.Length <= 1,
+                "Multiple {0} forms open simultaneously: [{1}]",
+                formType.Name, string.Join("] and [", forms.Select(FormatFormForError)));
+            return forms.FirstOrDefault();
         }
 
         public static IEnumerable<Form> FindOpenForms(Type formType)
@@ -799,14 +812,9 @@ namespace pwiz.SkylineTestUtil
             {
                 Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
-                var openForms = FindOpenForms(formType).ToArray();
-                if (openForms.Length > 0)
+                Form tForm = FindOpenForm(formType);
+                if (tForm != null)
                 {
-                    Assert.AreEqual(1, openForms.Length,
-                        "Multiple {0} forms open while waiting: [{1}]",
-                        formType.Name, string.Join("] and [", openForms.Select(FormatFormForError)));
-
-                    Form tForm = openForms[0];
                     string formTypeName = tForm.GetType().Name;
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
