@@ -716,15 +716,23 @@ namespace pwiz.SkylineTestUtil
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
-            foreach (var form in OpenForms)
-            {
-                var tForm = form as TDlg;
-                if (tForm != null && tForm.Created)
-                {
-                    return tForm;
-                }
-            }
-            return null;
+            return (TDlg) FindOpenForm(typeof(TDlg));
+        }
+
+        /// <summary>
+        /// Returns the first open form of type T without asserting uniqueness.
+        /// Use only when multiple forms of the same type are expected.
+        /// </summary>
+        public static TDlg FindAnyOpenForm<TDlg>() where TDlg : Form
+        {
+            return FindOpenForms<TDlg>().FirstOrDefault();
+        }
+
+        private static string FormatFormForError(Form form)
+        {
+            return form is CommonAlertDlg alertDlg
+                ? string.Format("{0}: {1}", form.GetType().Name, alertDlg.Message)
+                : form.GetType().Name;
         }
 
         public static IEnumerable<TDlg> FindOpenForms<TDlg>() where TDlg : Form
@@ -738,16 +746,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static Form FindOpenForm(Type formType) 
+        public static Form FindOpenForm(Type formType)
+        {
+            var forms = FindOpenForms(formType).ToArray();
+            Assert.IsTrue(forms.Length <= 1,
+                "Multiple {0} forms open simultaneously: [{1}]",
+                formType.Name, string.Join("] and [", forms.Select(FormatFormForError)));
+            return forms.FirstOrDefault();
+        }
+
+        public static IEnumerable<Form> FindOpenForms(Type formType)
         {
             foreach (var form in OpenForms)
             {
-                if (((formType.IsInstanceOfType(form) || formType.DeclaringType != null && formType.DeclaringType.IsInstanceOfType(form))) && form.Created)
+                if ((formType.IsInstanceOfType(form) || formType.DeclaringType != null && formType.DeclaringType.IsInstanceOfType(form)) && form.Created)
                 {
-                    return form;
+                    yield return form;
                 }
             }
-            return null;
         }
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
