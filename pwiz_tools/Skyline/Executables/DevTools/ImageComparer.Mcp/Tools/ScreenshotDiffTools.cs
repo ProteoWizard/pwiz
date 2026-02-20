@@ -105,7 +105,10 @@ namespace ImageComparer.Mcp.Tools
             [Description("Diff visualization mode: 'highlighted' (diff pixels blended on original), 'diff_only' (diff pixels on white), 'amplified' (expanded diff regions on original), 'amplified_diff_only' (expanded diff on white). Default: highlighted")] string mode = "highlighted",
             [Description("Amplification radius (1-10) for amplified modes. Default: 5")] int amplifyRadius = DEFAULT_AMPLIFY_RADIUS,
             [Description("Highlight color as hex RGB (e.g., 'FF0000' for red, '00FF00' for green). Default: FF0000")] string highlightColor = null,
-            [Description("Highlight opacity 0-255 (0=transparent, 255=opaque). Default: 128")] int highlightAlpha = 128)
+            [Description("Highlight opacity 0-255 (0=transparent, 255=opaque). Default: 128")] int highlightAlpha = 128,
+            [Description("Per-channel color tolerance (0-255). Pixels differing by at most this per channel are treated as matching. Default: 0")] int colorTolerance = 0,
+            [Description("When true, known Win10/Win11 system color mappings are treated as matching. Default: false")] bool useColorMappings = false,
+            [Description("When true, pixels in rounded corner zones (8px radius) are excluded from the diff. Default: false")] bool excludeCorners = false)
         {
             screenshotPath = NormalizePath(screenshotPath);
 
@@ -153,23 +156,42 @@ namespace ImageComparer.Mcp.Tools
                 var oldMs = new MemoryStream(oldBytes);
                 var oldInfo = new ScreenshotInfo(oldMs);
 
-                var diff = new ScreenshotDiff(oldInfo, newInfo, color);
+                // Build diff options from parameters
+                var options = new DiffOptions
+                {
+                    ColorTolerance = colorTolerance,
+                    UseColorMappings = useColorMappings,
+                    ExcludeCorners = excludeCorners
+                };
+
+                // If sizes differ, pad both to max dimensions so the MCP diff image
+                // shows both pixel diffs in the overlap AND the size-change region.
+                // (The ImageComparer UI handles size differences with its own side-by-side view.)
+                ScreenshotInfo diffOldInfo = oldInfo, diffNewInfo = newInfo;
+                bool sizesDiffer = !Equals(oldInfo.ImageSize, newInfo.ImageSize);
+                if (sizesDiffer)
+                {
+                    int maxW = Math.Max(oldInfo.ImageSize.Width, newInfo.ImageSize.Width);
+                    int maxH = Math.Max(oldInfo.ImageSize.Height, newInfo.ImageSize.Height);
+                    diffOldInfo = PadScreenshot(oldInfo, maxW, maxH);
+                    diffNewInfo = PadScreenshot(newInfo, maxW, maxH);
+                }
+
+                var diff = new ScreenshotDiff(diffOldInfo, diffNewInfo, color, options);
 
                 if (!diff.IsDiff)
                     return "No differences detected between current file and git HEAD.";
-
-                if (diff.SizesDiffer)
-                    return $"Size changed: {diff.SizeOld.Width}x{diff.SizeOld.Height} -> {diff.SizeNew.Width}x{diff.SizeNew.Height}. Cannot generate pixel diff for different-sized images.";
 
                 // Get the appropriate diff image
                 Bitmap diffImage = GetDiffImage(diff, mode, amplifyRadius);
                 if (diffImage == null)
                     return $"Error: Could not generate diff image in mode '{mode}'.";
 
-                // Save to ai/.tmp/
+                // Save to ai/.tmp/diffs/
                 var aiTmpFolder = file.GetAiTmpFolder();
                 if (aiTmpFolder == null)
                     return "Error: Could not locate ai/.tmp folder from screenshot path.";
+                aiTmpFolder = Path.Combine(aiTmpFolder, "diffs");
 
                 Directory.CreateDirectory(aiTmpFolder);
 
@@ -181,7 +203,30 @@ namespace ImageComparer.Mcp.Tools
 
                 diffImage.Save(fullPath, ImageFormat.Png);
 
-                return $"Diff image saved: {fullPath}\nPixels changed: {diff.PixelCount}\nMode: {mode}";
+                // Build enriched result
+                var resultSb = new StringBuilder();
+                resultSb.AppendLine($"Diff image saved: {fullPath}");
+                if (sizesDiffer)
+                    resultSb.AppendLine($"Size changed: {oldInfo.ImageSize.Width}x{oldInfo.ImageSize.Height} -> {newInfo.ImageSize.Width}x{newInfo.ImageSize.Height}");
+                resultSb.AppendLine($"Pixels changed: {diff.PixelCount}");
+                if (diff.RawPixelCount != diff.PixelCount)
+                {
+                    resultSb.AppendLine($"Raw pixel differences: {diff.RawPixelCount}");
+                    if (diff.ColorMatchedCount > 0)
+                        resultSb.AppendLine($"  Filtered by color tolerance/mappings: {diff.ColorMatchedCount}");
+                    if (diff.CornerExcludedCount > 0)
+                        resultSb.AppendLine($"  Filtered by corner exclusion: {diff.CornerExcludedCount}");
+                }
+                if (diff.DominantColorPairs.Count > 0)
+                {
+                    resultSb.AppendLine("Dominant color pairs:");
+                    foreach (var pair in diff.DominantColorPairs.OrderByDescending(p => p.Key))
+                    {
+                        resultSb.AppendLine($"  ({pair.Value.Key.R},{pair.Value.Key.G},{pair.Value.Key.B}) -> ({pair.Value.Value.R},{pair.Value.Value.G},{pair.Value.Value.B}): {pair.Key:F1}%");
+                    }
+                }
+                resultSb.Append($"Mode: {mode}");
+                return resultSb.ToString();
             }
             catch (Exception ex)
             {
@@ -195,7 +240,10 @@ namespace ImageComparer.Mcp.Tools
             [Description("Full path to the Tutorials directory")] string tutorialsPath,
             [Description("Diff visualization mode: highlighted, diff_only, amplified, amplified_diff_only")] string mode = "highlighted",
             [Description("Minimum pixel difference to include (default 0)")] int minPixelDiff = 0,
-            [Description("Amplification radius for amplified modes (default 5)")] int amplifyRadius = DEFAULT_AMPLIFY_RADIUS)
+            [Description("Amplification radius for amplified modes (default 5)")] int amplifyRadius = DEFAULT_AMPLIFY_RADIUS,
+            [Description("Per-channel color tolerance (0-255). Default: 0")] int colorTolerance = 0,
+            [Description("When true, known Win10/Win11 system color mappings are treated as matching. Default: false")] bool useColorMappings = false,
+            [Description("When true, pixels in rounded corner zones (8px radius) are excluded. Default: false")] bool excludeCorners = false)
         {
             tutorialsPath = NormalizePath(tutorialsPath);
 
@@ -216,7 +264,10 @@ namespace ImageComparer.Mcp.Tools
 
             var sb = new StringBuilder();
             sb.AppendLine($"# Screenshot Diff Report");
-            sb.AppendLine($"Mode: {mode} | Min pixels: {minPixelDiff}");
+            sb.Append($"Mode: {mode} | Min pixels: {minPixelDiff}");
+            if (colorTolerance > 0 || useColorMappings || excludeCorners)
+                sb.Append($" | Filtering: tolerance={colorTolerance}, colorMappings={useColorMappings}, excludeCorners={excludeCorners}");
+            sb.AppendLine();
             sb.AppendLine();
 
             int processed = 0, skipped = 0, errors = 0;
@@ -233,7 +284,8 @@ namespace ImageComparer.Mcp.Tools
 
                 try
                 {
-                    var result = GenerateDiffImage(file.Path, mode, amplifyRadius);
+                    var result = GenerateDiffImage(file.Path, mode, amplifyRadius, null, 128,
+                        colorTolerance, useColorMappings, excludeCorners);
 
                     if (result.StartsWith("No differences"))
                     {
@@ -247,6 +299,14 @@ namespace ImageComparer.Mcp.Tools
                         sb.AppendLine($"- **{label}** ({file.Locale}): {result}");
                         errors++;
                         continue;
+                    }
+
+                    if (result.Contains("Size changed"))
+                    {
+                        var sizeLine = result.Split('\n').FirstOrDefault(l => l.StartsWith("Size changed"));
+                        var label = file.IsCover ? "cover" : $"s-{file.Number:D2}";
+                        sb.AppendLine($"- **{label}** ({file.Locale}): **SIZE CHANGED** - {sizeLine}");
+                        // Continue to pixel count parsing — padded diff image was generated
                     }
 
                     // Parse pixel count from result
@@ -300,6 +360,25 @@ namespace ImageComparer.Mcp.Tools
             {
                 return $"Error reverting: {ex.Message}";
             }
+        }
+
+        /// <summary>
+        /// Create a new ScreenshotInfo with the image padded to the target dimensions.
+        /// Extra space is filled with white. Used by the MCP tool to generate diff images
+        /// for screenshots that changed size.
+        /// </summary>
+        private static ScreenshotInfo PadScreenshot(ScreenshotInfo info, int targetWidth, int targetHeight)
+        {
+            var padded = new Bitmap(targetWidth, targetHeight);
+            using (var g = Graphics.FromImage(padded))
+            {
+                g.Clear(Color.White);
+                lock (info.Image)
+                {
+                    g.DrawImage(info.Image, 0, 0);
+                }
+            }
+            return new ScreenshotInfo(padded);
         }
 
         private static Bitmap GetDiffImage(ScreenshotDiff diff, string mode, int amplifyRadius)
