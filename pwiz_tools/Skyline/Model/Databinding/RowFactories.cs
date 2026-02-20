@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Databinding
     public class RowFactories
     {
         private Dictionary<string, Factory> _factoriesByName = new Dictionary<string, Factory>();
-        public RowFactories(CancellationToken cancellationToken, SkylineDataSchema dataSchema)
+        private RowFactories(CancellationToken cancellationToken, SkylineDataSchema dataSchema)
         {
             CancellationToken = cancellationToken;
             DataSchema = dataSchema;

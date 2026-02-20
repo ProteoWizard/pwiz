@@ -28,6 +28,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 {
     public abstract class NodeList<TNode> : SkylineObjectList<TNode> where TNode : SkylineDocNode
     {
+        // ReSharper disable once StaticMemberInGenericType
         protected static readonly ImmutableList<IdentityPath> ROOT_IDENTITY_PATH = ImmutableList.Singleton(IdentityPath.ROOT);
         private IList<IdentityPath> _ancestorIdentityPaths = ImmutableList.Empty<IdentityPath>();
 

@@ -155,7 +155,7 @@ namespace pwiz.Common.DataBinding.Controls
 
                             if (queryResults.ResultRows.Count != BindingListSource.Count)
                             {
-                                filterMessages.Add(string.Format("(Truncated from {0})", queryResults.ResultRows.Count));
+                                filterMessages.Add(string.Format(Resources.NavBar_RefreshUi__Truncated_from__0__, queryResults.ResultRows.Count));
                             }
 
                             if (filterMessages.Count > 0)

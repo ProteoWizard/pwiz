@@ -31,10 +31,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net.Mime;
 using System.Text;
 using System.Threading;
-using System.Web;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding

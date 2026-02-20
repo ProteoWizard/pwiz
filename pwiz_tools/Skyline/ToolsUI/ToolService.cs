@@ -102,7 +102,7 @@ namespace pwiz.Skyline.ToolsUI
             container.SetDocument(document, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
             using var stream = new MemoryStream();
-            var rowFactories = new RowFactories(CancellationToken.None, dataSchema);
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
             IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
             rowFactories.ExportReport(stream, viewSpec.ViewSpec, viewSpec.DefaultViewLayout, ReportExporters.ForSeparator(DataSchemaLocalizer.INVARIANT, TextUtil.SEPARATOR_CSV), progressMonitor, ref status);

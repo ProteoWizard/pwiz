@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var fileName = saveFileDialog.FileName;
             var localizer = GetDataSchemaLocalizer();
             var rowExporter = ReportExporters.ForFilenameExtension(localizer, Path.GetExtension(fileName),
-                extensions.ElementAtOrDefault(saveFileDialog.FilterIndex), TextUtil.EXT_TSV);
+                extensions.ElementAtOrDefault(saveFileDialog.FilterIndex - 1), TextUtil.EXT_TSV);
             if (!ExportReport(fileName, rowExporter))
                 return;
 

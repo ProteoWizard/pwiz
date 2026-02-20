@@ -17,14 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.SystemUtil;
-using pwiz.Common.SystemUtil.Caching;
 
 namespace pwiz.Common.DataBinding
 {

@@ -10,7 +10,6 @@ namespace pwiz.Common.DataBinding.Internal
     {
         private readonly Type _propertyType;
         private readonly PivotedColumnId _pivotedColumnId;
-        private readonly DataSchema _dataSchema;
         public IndexedPropertyDescriptor(DataSchema dataSchema, int index, PropertyDescriptor originalPropertyDescriptor, IColumnCaption displayName)
             : this(dataSchema, index, originalPropertyDescriptor.PropertyType, displayName, null, GetAttributes(originalPropertyDescriptor))
         {
@@ -19,7 +18,6 @@ namespace pwiz.Common.DataBinding.Internal
         public IndexedPropertyDescriptor(DataSchema dataSchema, int index, Type propertyType, IColumnCaption displayName, PivotedColumnId pivotedColumnId, Attribute[] attributes)
             : base(@"property" + index, displayName, dataSchema, MergeAttributes(dataSchema, displayName, attributes))
         {
-            _dataSchema = dataSchema;
             PropertyIndex = index;
             _propertyType = propertyType;
             _pivotedColumnId = pivotedColumnId;

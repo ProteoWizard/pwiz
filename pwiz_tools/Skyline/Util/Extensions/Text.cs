@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Util.Extensions
 
         public static string FILTER_PARQUET
         {
-            get { return FileDialogFilter("Parquet", EXT_PARQUET); }
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_PARQUET_Parquet, EXT_PARQUET); }
         }
 
         public const char SEPARATOR_CSV = ',';

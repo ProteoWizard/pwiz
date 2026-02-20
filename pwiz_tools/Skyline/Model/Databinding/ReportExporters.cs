@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Databinding
                 if (TextUtil.EXT_CSV.Equals(extension, StringComparison.OrdinalIgnoreCase))
                 {
                     var separator = TextUtil.GetCsvSeparator(dataSchemaLocalizer.FormatProvider);
-                    return new DsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, separator));
+                    return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, separator));
                 }
 
                 if (TextUtil.EXT_PARQUET.Equals(extension, StringComparison.OrdinalIgnoreCase))
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }
 
-            return new DsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
+            return new ReplicatePivotDsvReportExporter(CreateDsvWriter(dataSchemaLocalizer, TextUtil.SEPARATOR_TSV));
         }
 
         public static IReportExporter ForSeparator(DataSchemaLocalizer dataSchemaLocalizer, char separator)

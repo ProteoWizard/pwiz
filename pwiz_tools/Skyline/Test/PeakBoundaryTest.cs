@@ -18,7 +18,6 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NHibernate.Impl;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
@@ -37,7 +36,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 
 namespace pwiz.SkylineTest
 {
