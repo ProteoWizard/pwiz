@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
             var toolsDir = ToolDescriptionHelpers.GetToolsDirectory();
             DirectoryEx.SafeDelete(toolsDir);
             // Initialize old dir to be unique per test+culture and in the same folder as the new Tools directory
-            _oldEncyclopediaDir = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory() + "_managingTest", "EncyclopeDIA");
+            _oldEncyclopediaDir = Path.Combine(toolsDir + "_managingTest", "EncyclopeDIA");
             DirectoryEx.SafeDelete(_oldEncyclopediaDir);
             using var tempDir = new TemporaryDirectory(_oldEncyclopediaDir);
             
