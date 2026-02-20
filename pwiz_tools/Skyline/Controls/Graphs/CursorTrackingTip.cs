@@ -20,7 +20,6 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
