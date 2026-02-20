@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class MassErrorHistogram2DGraphPane : SummaryGraphPane
+    public class MassErrorHistogram2DGraphPane : SummaryGraphPane, IHeatMapDataProvider
     {
         public static ReplicateDisplay ShowReplicate
         {
@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _maxCount = Math.Max(_maxCount, count);
                     }
                 }
-                _heatMapData = new HeatMapData(points);
+                _heatMapData = new HeatMapData(points, GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count);
             }
 
             private void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int replicateIndex,
@@ -295,6 +295,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     _heatMapData, MAX_DOT_RADIUS, MIN_DOT_RADIUS, (float)_minMass, (float)_maxMass,
                     Settings.Default.MassErrorHistogram2DLogScale, 5);
             }
+        }
+
+        public Tuple<string, string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard()
+        {
+            return Data?._heatMapData?.GetClipboardData(this);
         }
 
         public int GetPoints()

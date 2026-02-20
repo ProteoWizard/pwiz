@@ -477,7 +477,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         points.Add(new Point3D(scan.Mzs[j],  mobilityValue, scan.Intensities[j]));
                     }
                 }
-                _heatMapData = new HeatMapData(points);
+                _heatMapData = new HeatMapData(points, GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity);
             }
 
             double minDrift;

@@ -19,15 +19,23 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using ZedGraph;
 
 namespace pwiz.MSGraph
 {
     /// <summary>
+    /// Interface for graph panes that can provide raw heatmap data for clipboard copy.
+    /// Implementors return 3-column data (x, y, z) instead of the default curve-based extraction.
+    /// </summary>
+    public interface IHeatMapDataProvider
+    {
+        Tuple<string, string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard();
+    }
+
+    /// <summary>
     /// A graph pane optimized for showing large heat maps using dynamically filtered data.
     /// </summary>
-    public class HeatMapGraphPane : MSGraphPane
+    public class HeatMapGraphPane : MSGraphPane, IHeatMapDataProvider
     {
         public bool ShowHeatMap { get; set; }
         public int MinDotRadius { get; set; }
@@ -114,30 +122,9 @@ namespace pwiz.MSGraph
             _yMax = (float) Math.Min(yMax, float.MaxValue);
         }
 
-        /// <summary>
-        /// Provides clean 3-column data (m/z, ion mobility, intensity) for clipboard copy.
-        /// This bypasses the default curve-based extraction which would output data for each
-        /// of the 100 intensity-colored curves separately.
-        /// </summary>
-        /// <returns>Tuple of (xAxisTitle, yAxisTitle, points) or null if no data available</returns>
-        public Tuple<string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard()
+        public Tuple<string, string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard()
         {
-            if (_heatMapData == null || !ShowHeatMap)
-            {
-                return null;
-            }
-
-            var points = _heatMapData.GetAllPoints().Select(p => p.Point).ToList();
-            if (points.Count == 0)
-            {
-                return null;
-            }
-
-            // Get axis titles for column headers
-            var xAxisTitle = XAxis?.Title?.Text ?? @"m/z";
-            var yAxisTitle = YAxis?.Title?.Text ?? @"Ion Mobility";
-
-            return Tuple.Create(xAxisTitle, yAxisTitle, (IEnumerable<Point3D>)points);
+            return _heatMapData != null && ShowHeatMap ? _heatMapData.GetClipboardData(this) : null;
         }
 
         /// <summary>
