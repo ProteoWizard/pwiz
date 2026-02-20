@@ -21,7 +21,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
@@ -71,7 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnSynchronizedZoom()
         {
-            ZoomTo(_zoomSynchronizer.SynchronizedDisplayState, _zoomSynchronizer.SynchronizedZoomState);
+            ZoomTo(_zoomSynchronizer.SynchronizedZoomState);
         }
 
         private void GraphControlOnZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
@@ -82,11 +81,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnZoom()
         {
             _zoomSynchronizer?.OnZoom(this);
-        }
-
-        public DisplayState GetDisplayState()
-        {
-            return _displayState;
         }
 
         private void GraphControlOnHandleDestroyed(object sender, EventArgs e)
@@ -143,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     pane.CurveList.Clear();
                     pane.GraphObjList.Clear();
                 }
-                _displayState = _displayState.ChangeZoomStateValid(true);
+                _displayState.ZoomStateValid = true;
                 return;
             }
             while (GraphControl.MasterPane.PaneList.Count > 1)
@@ -157,7 +151,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             GraphControl.GraphPane.CurveList.Clear();
             GraphControl.GraphPane.GraphObjList.Clear();
-            newDisplayState = newDisplayState.ChangeZoomStateValid(newDisplayState.CanUseZoomStateFrom(_displayState));
+            newDisplayState.ZoomStateValid = newDisplayState.CanUseZoomStateFrom(_displayState);
             newDisplayState.ApplySettingsToGraphPane(GraphControl.GraphPane);
             _displayState = newDisplayState;
         }
@@ -438,7 +432,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ZoomXAxis(bestStartTime, bestEndTime);
         }
 
-        public abstract class DisplayState : Immutable
+        public abstract class DisplayState
         {
             protected DisplayState(IEnumerable<TransitionGroup> transitionGroups)
             {
@@ -447,12 +441,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             protected TransitionGroup[] TransitionGroups { get; private set; }
             public abstract bool CanUseZoomStateFrom(DisplayState displayStatePrev);
-            public bool ZoomStateValid { get; private set; }
-
-            public DisplayState ChangeZoomStateValid(bool value)
-            {
-                return ChangeProp(ImClone(this), im => im.ZoomStateValid = value);
-            }
+            public bool ZoomStateValid { get; set; }
             public List<PaneKey> GraphPaneKeys { get; private set; }
             public bool AllowSplitPanes { get; protected set; }
             public bool ShowLegend { get; protected set; }
@@ -731,13 +720,13 @@ namespace pwiz.Skyline.Controls.Graphs
             return dict;
         }
 
-        public void ZoomTo(DisplayState displayState, Dictionary<PaneKey, ZoomStateStack> zoomStacks)
+        public void ZoomTo(Dictionary<PaneKey, ZoomStateStack> zoomStacks)
         {
             if (zoomStacks == null)
             {
                 return;
             }
-            _displayState = displayState;
+            _displayState.ZoomStateValid = true;
             int count = 0;
             foreach (var pane in GraphPanes)
             {
