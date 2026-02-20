@@ -211,9 +211,6 @@ namespace pwiz.Skyline.Model
         private static PeakMatch GetPeakMatch(SrmDocument doc, ChromatogramSet chromSet, IPathContainer fileInfo, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup,
             PeakMatchData referenceTarget, IEnumerable<PeakMatchData> referenceMatchData)
         {
-            if (referenceTarget == null)
-                return new PeakMatch(0, 0);
-
             var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
 
             ChromatogramGroupInfo[] loadInfos;
@@ -225,6 +222,9 @@ namespace pwiz.Skyline.Model
                 return null;
             if (!GetTransitionChromatogramInfos(nodeTranGroup, chromGroupInfo, mzMatchTolerance).Any())
                 return null;
+
+            if (referenceTarget == null)
+                return new PeakMatch(0, 0);
 
             var matchData = new List<PeakMatchData>();
             double totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
