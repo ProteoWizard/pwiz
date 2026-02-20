@@ -198,6 +198,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 using var bindingListSource = new BindingListSource(cancellationToken);
                 bindingListSource.SetView(viewInfo, rowSource);
+                cancellationToken.ThrowIfCancellationRequested();
                 rowItemEnumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
                 {
                     ItemProperties = bindingListSource.ItemProperties
