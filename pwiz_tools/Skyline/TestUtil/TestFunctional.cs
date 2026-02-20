@@ -716,21 +716,7 @@ namespace pwiz.SkylineTestUtil
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
-            TDlg result = null;
-            foreach (var form in OpenForms)
-            {
-                var tForm = form as TDlg;
-                if (tForm != null && tForm.Created)
-                {
-                    if (result != null)
-                    {
-                        Assert.Fail("Multiple {0} forms open simultaneously: [{1}] and [{2}]",
-                            typeof(TDlg).Name, FormatFormForError(result), FormatFormForError(tForm));
-                    }
-                    result = tForm;
-                }
-            }
-            return result;
+            return FindOpenForms<TDlg>().FirstOrDefault();
         }
 
         private static string FormatFormForError(Form form)
@@ -751,16 +737,20 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static Form FindOpenForm(Type formType) 
+        public static Form FindOpenForm(Type formType)
+        {
+            return FindOpenForms(formType).FirstOrDefault();
+        }
+
+        public static IEnumerable<Form> FindOpenForms(Type formType)
         {
             foreach (var form in OpenForms)
             {
-                if (((formType.IsInstanceOfType(form) || formType.DeclaringType != null && formType.DeclaringType.IsInstanceOfType(form))) && form.Created)
+                if ((formType.IsInstanceOfType(form) || formType.DeclaringType != null && formType.DeclaringType.IsInstanceOfType(form)) && form.Created)
                 {
-                    return form;
+                    yield return form;
                 }
             }
-            return null;
         }
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
@@ -816,9 +806,14 @@ namespace pwiz.SkylineTestUtil
             {
                 Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
 
-                Form tForm = FindOpenForm(formType);
-                if (tForm != null)
+                var openForms = FindOpenForms(formType).ToArray();
+                if (openForms.Length > 0)
                 {
+                    Assert.AreEqual(1, openForms.Length,
+                        "Multiple {0} forms open while waiting: [{1}]",
+                        formType.Name, string.Join("] and [", openForms.Select(FormatFormForError)));
+
+                    Form tForm = openForms[0];
                     string formTypeName = tForm.GetType().Name;
                     var multipleViewProvider = tForm as IMultipleViewProvider;
                     if (multipleViewProvider != null)
