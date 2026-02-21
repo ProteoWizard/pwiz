@@ -466,6 +466,8 @@ namespace pwiz.Skyline
 
             UpdateGraphPanes(listUpdateGraphs);
             FoldChangeForm.CloseInapplicableForms(this);
+            DataboundGraph.CloseInapplicableForms(this);
+            ListGridForm.CloseInapplicableForms(this);
         }
 
         public void UpdateGraphSpectrumEnabled()
@@ -520,6 +522,8 @@ namespace pwiz.Skyline
             DetectionsGraphController.GraphType = type;
 
             FormUtil.OpenForms.OfType<FoldChangeForm>().ForEach(f => f.Close());
+            FormUtil.OpenForms.OfType<DataboundGraph>().ForEach(f => f.Close());
+            FormUtil.OpenForms.OfType<ListGridForm>().ForEach(f => f.Close());
 
             DestroyResultsGrid();
             DestroyDocumentGrid();

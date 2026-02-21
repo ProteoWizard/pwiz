@@ -22,6 +22,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Util;
@@ -312,6 +313,27 @@ namespace pwiz.Skyline.Controls.Clustering
 
             OwnerGridForm = ownerForm;
             DataChanged();
+        }
+
+        /// <summary>
+        /// Closes DataboundGraph forms whose data source no longer exists in the document,
+        /// analogous to <see cref="pwiz.Skyline.Controls.GroupComparison.FoldChangeForm.CloseInapplicableForms"/>.
+        /// </summary>
+        public static void CloseInapplicableForms(SkylineWindow skylineWindow)
+        {
+            var dataSettings = skylineWindow.Document.Settings.DataSettings;
+            foreach (var form in FormUtil.OpenForms.OfType<DataboundGraph>().ToList())
+            {
+                if (!ReferenceEquals(skylineWindow, form._skylineWindow))
+                    continue;
+                if (form._dataGridId == null)
+                    continue;
+                if (form._dataGridId.DataGridType == DataGridType.LIST &&
+                    dataSettings.FindList(form._dataGridId.Name) == null)
+                {
+                    form.Close();
+                }
+            }
         }
 
         public static DataboundGraph RestoreDataboundGraph(SkylineWindow skylineWindow, string persistentString)
