@@ -288,6 +288,9 @@
   <data name="cbxPreservePrecursorMass.TabIndex" type="System.Int32, mscorlib">
     <value>18</value>
   </data>
+  <data name="cbxPreservePrecursorMass.Text" xml:space="preserve">
+    <value>保留母离子质量</value>
+  </data>
   <data name="&gt;&gt;cbxPreservePrecursorMass.Name" xml:space="preserve">
     <value>cbxPreservePrecursorMass</value>
   </data>

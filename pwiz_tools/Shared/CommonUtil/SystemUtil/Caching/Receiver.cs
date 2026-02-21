@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
@@ -31,12 +32,18 @@ namespace pwiz.Common.SystemUtil.Caching
         private bool _progressNotificationPending;
         private WorkOrder _workOrder;
         private readonly IProductionListener _listener;
+        private SynchronizationContext _synchronizationContext;
         public Receiver(ProductionFacility cache, Control ownerControl, Producer factory)
         {
             Cache = cache;
             OwnerControl = ownerControl;
             Producer = factory;
             OwnerControl.HandleDestroyed += OwnerControlHandleDestroyed;
+            if (OwnerControl.InvokeRequired)
+            {
+                throw new InvalidOperationException(@"Must be constructed on event thread");
+            }
+            _synchronizationContext = SynchronizationContext.Current;
             _listener = new Listener(this);
         }
 
@@ -57,13 +64,21 @@ namespace pwiz.Common.SystemUtil.Caching
                 if (!_notificationPending)
                 {
                     _notificationPending = true;
-                    CommonActionUtil.SafeBeginInvoke(OwnerControl, () =>
-                    {
+                    BeginInvoke(()=> {
                         _notificationPending = false;
                         productAvailable();
                     });
                 }
             }
+        }
+
+        private void BeginInvoke(Action action)
+        {
+            _synchronizationContext?.Post(_ =>
+            {
+                if (OwnerControl != null)
+                    action();
+            }, null);
         }
 
         private void OnProductStatusChanged()
@@ -80,7 +95,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 _progressNotificationPending = true;
             }
 
-            CommonActionUtil.SafeBeginInvoke(OwnerControl, () =>
+            BeginInvoke(() =>
             {
                 lock (this)
                 {
@@ -146,6 +161,7 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 Cache.Unlisten(_workOrder, _listener);
                 _workOrder = null;
+                _synchronizationContext = null;
                 if (OwnerControl != null)
                 {
                     OwnerControl.HandleDestroyed -= OwnerControlHandleDestroyed;

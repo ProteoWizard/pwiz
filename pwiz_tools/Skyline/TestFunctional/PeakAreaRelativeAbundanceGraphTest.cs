@@ -32,6 +32,11 @@ using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 
+// Alias for the specific generic type used in this test
+using GraphDataCachingReceiver = pwiz.Skyline.Controls.Graphs.ReplicateCachingReceiver<
+    pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphDataParameters,
+    pwiz.Skyline.Controls.Graphs.SummaryRelativeAbundanceGraphPane.GraphData>;
+
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
@@ -355,8 +360,15 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // === Test 4: Undo - verify the restored peptides are recalculated ===
-            RunUI(SkylineWindow.Undo);
-            WaitForConditionUI(() => pane.IsComplete);
+            // Track cached results to investigate whether multiple DocumentChanged events
+            // cause parallel calculations during undo (same pattern as Test 6/PR #3830)
+            using (new ScopedAction(
+                       () => GraphDataCachingReceiver.TrackCaching = true,
+                       () => GraphDataCachingReceiver.TrackCaching = false))
+            {
+                RunUI(SkylineWindow.Undo);
+                WaitForConditionUI(() => pane.IsComplete);
+            }
 
             RunUI(() =>
             {
@@ -364,11 +376,26 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(originalPeptideCount, afterUndoCount,
                     "Undo should restore peptide count");
 
-                // Verify incremental update: existing peptides cached, restored peptides recalculated
-                Assert.AreEqual(originalPeptideCount - peptidesToDelete, pane.CachedNodeCount,
-                    "After undo, existing peptides should be cached");
-                Assert.AreEqual(peptidesToDelete, pane.RecalculatedNodeCount,
-                    $"After undo, only the {peptidesToDelete} restored peptides should be recalculated");
+                var cachedResults = GraphDataCachingReceiver.CachedSinceTracked.ToList();
+                Assert.IsTrue(cachedResults.Count > 0,
+                    "Should have cached at least one result during undo");
+
+                // Expect a single calculation. If multiple DocumentChanged events fired,
+                // there will be multiple results -- fail with diagnostic info to investigate.
+                var diagnosticInfo = string.Join("\n", cachedResults.Select((r, i) =>
+                    $"  [{i}]: {r.GetDiagnosticInfo()}"));
+                Assert.AreEqual(1, cachedResults.Count,
+                    $"Expected a single calculation during undo, but got {cachedResults.Count}. " +
+                    $"Multiple DocumentChanged events may be causing parallel calculations:\n{diagnosticInfo}");
+
+                // Single calculation -- verify incremental update
+                var result = cachedResults.First();
+                Assert.AreEqual(originalPeptideCount - peptidesToDelete, result.CachedNodeCount,
+                    $"After undo, existing peptides should be cached. " +
+                    $"Result: {result.GetDiagnosticInfo()}");
+                Assert.AreEqual(peptidesToDelete, result.RecalculatedNodeCount,
+                    $"After undo, only the {peptidesToDelete} restored peptides should be recalculated. " +
+                    $"Result: {result.GetDiagnosticInfo()}");
             });
 
             // === Test 5: Change quantification settings - verify full recalculation ===
@@ -449,28 +476,70 @@ namespace pwiz.SkylineTestFunctional
             // === Test 6: Reopen document - verify document ID change triggers full recalculation ===
             // This tests the "document identity changed" branch in CleanCacheForIncrementalUpdates
             // Capture the current document ID before reopening
-            Identity priorDocId = null;
-            RunUI(() => priorDocId = SkylineWindow.Document.Id);
+            var priorDoc = SkylineWindow.Document;
 
-            // Reopen the same file - this creates a new document with a new ID
-            RunUI(() => SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
-            WaitForDocumentLoaded();
+            // Track cached results during document reopen to capture the first (full) calculation
+            // Opening a file causes multiple DocumentChanged events (OpenFile, ChromatogramManager, LibraryManager),
+            // which can result in multiple cached calculations. The first should be full, subsequent incremental.
+            using (new ScopedAction(
+                       () => GraphDataCachingReceiver.TrackCaching = true,
+                       () => GraphDataCachingReceiver.TrackCaching = false))
+            {
+                // Reopen the same file - this creates a new document with a new ID
+                RunUI(() => SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath));
+                WaitForDocumentChangeLoaded(priorDoc);
 
-            // Get the new graph pane (old one was disposed when document closed)
-            pane = FindGraphPane();
-            WaitForConditionUI(() => pane.IsComplete);
+                // Get the new graph pane (old one was disposed when document closed)
+                pane = FindGraphPane();
+                WaitForConditionUI(() => pane.IsComplete);
+            }
 
             RunUI(() =>
             {
                 // Verify document ID actually changed
-                Assert.AreNotSame(priorDocId, SkylineWindow.Document.Id,
+                Assert.AreNotSame(priorDoc.Id, SkylineWindow.Document.Id,
                     "Reopening document should create a new document ID");
 
-                // Document ID change should trigger full recalculation (no cached data valid)
-                Assert.AreEqual(0, pane.CachedNodeCount,
-                    "Reopening document should trigger full calculation with no cached nodes");
-                Assert.AreEqual(originalPeptideCount, pane.RecalculatedNodeCount,
-                    "Reopening document should recalculate all nodes");
+                // Get all cached results during document reopen
+                var cachedResults = GraphDataCachingReceiver.CachedSinceTracked.ToList();
+                Assert.IsTrue(cachedResults.Count > 0, "Should have cached at least one result during document reopen");
+
+                // The first calculation after document reopen should be full (no cached nodes)
+                var firstResult = cachedResults.First();
+                Assert.IsTrue(firstResult.WasFullCalculation,
+                    $"First calculation after reopen should be full, but was incremental. " +
+                    $"First result: {firstResult.GetDiagnosticInfo()}");
+                Assert.AreEqual(0, firstResult.CachedNodeCount,
+                    $"First calculation after reopen should have no cached nodes. " +
+                    $"First result: {firstResult.GetDiagnosticInfo()}");
+                Assert.AreEqual(originalPeptideCount, firstResult.RecalculatedNodeCount,
+                    $"First calculation should recalculate all {originalPeptideCount} nodes. " +
+                    $"First result: {firstResult.GetDiagnosticInfo()}");
+
+                // Subsequent calculations (if any) may be either:
+                // - Full (125 recalculated): parallel calculation that started before any result was cached
+                // - Incremental (0 recalculated): found a cached result and reused it
+                // Once we see an incremental result, all subsequent must also be incremental
+                bool sawIncremental = false;
+                foreach (var result in cachedResults.Skip(1))
+                {
+                    if (result.RecalculatedNodeCount == 0)
+                        sawIncremental = true;
+
+                    if (sawIncremental)
+                    {
+                        Assert.AreEqual(0, result.RecalculatedNodeCount,
+                            $"After seeing an incremental update, all subsequent must be incremental. " +
+                            $"Result: {result.GetDiagnosticInfo()}");
+                    }
+                    else
+                    {
+                        // Full calculation is also valid - parallel execution before cache was populated
+                        Assert.IsTrue(result.RecalculatedNodeCount == 0 || result.RecalculatedNodeCount == originalPeptideCount,
+                            $"Result should be either full ({originalPeptideCount} recalculated) or incremental (0). " +
+                            $"Result: {result.GetDiagnosticInfo()}");
+                    }
+                }
             });
         }
 

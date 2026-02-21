@@ -159,8 +159,8 @@ Double Blank（ダブルブランク）</td><td class="ColumnType">試料タイ�
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
 <tr><td class="ColumnCaption">繰り返し測定</td><td class="ColumnDescription">繰り返し測定</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Replicate">繰り返し測定</a></td></tr>
-<tr><td class="ColumnCaption">分子リスト存在量</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue">AbundanceValue</a></td></tr>
+<tr><td class="ColumnCaption">分子リスト存在量</td><td class="ColumnDescription">分子リストの存在量を示す数字。
+通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue">AbundanceValue</a></td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.Databinding.Collections.ResultKey"><span class="RowType">ResultKey</span>
@@ -198,7 +198,7 @@ Usually the sum of the transition peak areas, but may be different depending on 
 <div id="pwiz.Skyline.Model.Databinding.Entities.Precursor"><span class="RowType">プリカーサー</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">分子</td><td class="ColumnDescription">Molecules belong to Molecule Lists and contain Precursors.</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">分子</a></td></tr>
+<tr><td class="ColumnCaption">分子</td><td class="ColumnDescription">分子は分子リストに属し、プリカーサーを含みます。</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Peptide">分子</a></td></tr>
 <tr><td class="ColumnCaption">トランジション</td><td class="ColumnDescription">トランジション</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.Transition">トランジション</a>のリスト</td></tr>
 <tr><td class="ColumnCaption">プリカーサー結果</td><td class="ColumnDescription">プリカーサー結果</td><td class="ColumnType">ResultKeyから<a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">プリカーサー結果</a>のマップ</td></tr>
 <tr><td class="ColumnCaption">プリカーサー結果概要</td><td class="ColumnDescription">プリカーサー結果概要</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResultSummary">PrecursorResultSummary</a></td></tr>
@@ -252,16 +252,16 @@ Usually the sum of the transition peak areas, but may be different depending on 
 <tr><td class="ColumnCaption">デコイMzシフト</td><td class="ColumnDescription">デコイm/zを作成するためにプリカーサーに加えるm/zのシフト値です。</td><td class="ColumnType">Int32</td></tr>
 <tr><td class="ColumnCaption">トランジションを自動選択</td><td class="ColumnDescription">真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどによってプリカーサーから自動的にトランジションを追加または削除します。</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">ターゲット定性イオン比</td><td class="ColumnDescription">校正から除外されていない外部標準繰り返し測定全体での定性イオン比の平均値です。</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary Peak</td><td class="ColumnDescription">Best-scoring peak either from one of the Replicates in the document or one of the explicit peak boundaries from a library</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
+<tr><td class="ColumnCaption">例示的ピーク</td><td class="ColumnDescription">ドキュメントの繰り返し測定のうちの1つ、またはライブラリの指定されたピーク境界のうち1つ、いずれかの最良スコアのピーク</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.SourcedPeakValue">SourcedPeakValue</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Exemplary Retention Time</td><td class="ColumnDescription">Normalized retention time of the apex of the best-scoring peak</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary Start Time</td><td class="ColumnDescription">Normalized start retention time of the peak from the best-scoring replicate or library file</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary End Time</td><td class="ColumnDescription">Normalized end retention time of the peak from the best-scoring replicate or library file</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary Score</td><td class="ColumnDescription">Score of the highest scoring peak in either a replicate or a library</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Exemplary Replicate Name</td><td class="ColumnDescription">Name of the replicate with the best-scoring peak</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Exemplary Library Name</td><td class="ColumnDescription">Name of the library with the best-scoring peak</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Exemplary File Path</td><td class="ColumnDescription">File path of the result file with the best-scoring peak</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">例示的保持時間</td><td class="ColumnDescription">最良スコアのピークの頂点の正規化された保持時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的開始時間</td><td class="ColumnDescription">最良スコアの繰り返し測定またはライブラリファイルのピークの正規化された保持開始時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的終了時間</td><td class="ColumnDescription">最良スコアの繰り返し測定またはライブラリファイルのピークの正規化された保持終了時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的スコア</td><td class="ColumnDescription">繰り返し測定またはライブラリいずれかの最高スコアのピークのスコア</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">例示的繰り返し測定名</td><td class="ColumnDescription">最良スコアのピークの繰り返し測定の名前</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">例示的ライブラリ名</td><td class="ColumnDescription">最良スコアのピークを含むライブラリの名前</td><td class="ColumnType">String</td></tr>
+<tr><td class="ColumnCaption">例示的ファイルパス</td><td class="ColumnDescription">最良スコアのピークを含む結果ファイルのファイルパス</td><td class="ColumnType">String</td></tr>
 </table>
 
 </td></tr>
@@ -387,12 +387,12 @@ Usually the sum of the transition peak areas, but may be different depending on 
 <div id="pwiz.Skyline.Model.Databinding.Entities.Protein+AbundanceValue"><span class="RowType">AbundanceValue</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Molecule List Abundance Raw</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Available even when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">分子リスト存在量（厳密なデータ）</td><td class="ColumnDescription">A number representing the abundance of the molecule list.
-Usually the sum of the transition peak areas, but may be different depending on the normalization method specified in the Molecule Quantification settings.
-Unavailable when missing data impacts comparisons between replicates.</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子リスト存在量生データ</td><td class="ColumnDescription">分子リストの存在量を示す数字。
+通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。
+繰り返し測定間の比較に欠損データの影響がある場合でも利用可能です。</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">分子リスト存在量（厳密なデータ）</td><td class="ColumnDescription">分子リストの存在量を示す数字。
+通常はトランジションピーク面積の合計ですが、[分子定量化]設定で指定された正規化メソッドに応じて異なる場合があります。
+繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</td><td class="ColumnType">Double</td></tr>
 <tr><td class="ColumnCaption">分子リスト存在量（メッセージ）</td><td class="ColumnDescription">繰り返し測定間の「分子リスト存在量」の比較に欠損データが影響する場合に警告を表示</td><td class="ColumnType">String</td></tr>
 </table>
 
@@ -556,33 +556,33 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 </table>
 
 </td></tr>
-<tr><td class="ColumnCaption">元のピーク</td><td class="ColumnDescription">Peak boundaries chosen by Skyline during chromatogram extraction</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td class="ColumnCaption">元のピーク</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより選択されたピーク境界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Original Retention Time</td><td class="ColumnDescription">Retention time of the apex of the peak chosen by Skyline during the initial chromatogram extraction</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Original Start Time</td><td class="ColumnDescription">Start retention time of the peak chosen by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Original End Time</td><td class="ColumnDescription">End retention time of the peak chosen by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Original Score</td><td class="ColumnDescription">Peak score assigned by Skyline during chromatogram extraction</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">元の保持時間</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより選択されたピークの頂点の保持時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">元の開始時間</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより選択されたピークの保持開始時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">元の終了時間</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより選択されたピークの保持終了時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">元のスコア</td><td class="ColumnDescription">クロマトグラム抽出中にSkylineにより割り当てられたピークスコア</td><td class="ColumnType">Double</td></tr>
 </table>
 
 </td></tr>
-<tr><td class="ColumnCaption">Reintegrated Peak</td><td class="ColumnDescription">Peak boundaries of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
+<tr><td class="ColumnCaption">再積分されたピーク</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークのピーク境界</td><td class="ColumnType"><a href="#pwiz.Skyline.Util.ScoredPeakValue">ScoredPeakValue</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Reintegrated Retention Time</td><td class="ColumnDescription">Retention time of the apex of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Reintegrated Start Time</td><td class="ColumnDescription">Start retention time of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Reintegrated End Time</td><td class="ColumnDescription">End retention time of the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Reintegrated Score</td><td class="ColumnDescription">Score assigned to the peak chosen when reintegrating with a trained peak scoring model</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">再積分された保持時間</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークの頂点の保持時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">再積分された開始時間</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークの保持開始時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">再積分された終了時間</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークの保持終了時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">再積分されたスコア</td><td class="ColumnDescription">トレーニングされたピークスコアリングモデルを用いた再積分時に選ばれたピークに割り当てられたスコア</td><td class="ColumnType">Double</td></tr>
 </table>
 
 </td></tr>
 <tr><td class="ColumnCaption">プリカーサー繰り返し測定メモ</td><td class="ColumnDescription">結果グリッドを使用すると表示される、プリカーサーの結果セットに関連付けられているフリーテキストのメモ。</td><td class="ColumnType">String</td></tr>
 <tr><td class="ColumnCaption">分子結果</td><td class="ColumnDescription">分子結果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PeptideResult">分子結果</a></td></tr>
-<tr><td class="ColumnCaption">Imputed Peak</td><td class="ColumnDescription">Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
+<tr><td class="ColumnCaption">補間されたピーク</td><td class="ColumnDescription">この繰り返し測定に対する保持時間アライメントを使用してマッピングされた最良スコアの繰り返し測定のピーク境界</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult+ImputedPeakBounds">ImputedPeakBounds</a></td></tr>
 <tr><td>&nbsp;</td><td colspan="2">
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">Imputed Start Time</td><td class="ColumnDescription">Start time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Imputed End Time</td><td class="ColumnDescription">End time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">補間された開始時間</td><td class="ColumnDescription">この繰り返し測定に対する保持時間アライメントを使用してマッピングされた最良スコアの繰り返し測定のピーク開始時間</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">補間された終了時間</td><td class="ColumnDescription">この繰り返し測定に対する保持時間アライメントを使用してマッピングされた最良スコアの繰り返し測定のピーク終了時間</td><td class="ColumnType">Double</td></tr>
 </table>
 
 </td></tr>
@@ -654,7 +654,7 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 <tr><td class="ColumnCaption">トランジション結果はMS1</td><td class="ColumnDescription">この結果がMS1スキャンから取得されたかどうかです。</td><td class="ColumnType">Boolean</td></tr>
 <tr><td class="ColumnCaption">プリカーサー結果</td><td class="ColumnDescription">プリカーサー結果</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Databinding.Entities.PrecursorResult">プリカーサー結果</a></td></tr>
 <tr><td class="ColumnCaption">トランジション結果ロケーター</td><td class="ColumnDescription">ドキュメント内のトランジション結果の一意の識別子です。これは「TransitionResult:」で始まり、通常繰り返し測定の名前で終わりますが、最適化ステップと結果ファイルのための追加属性が含まれる場合があります。</td><td class="ColumnType">String</td></tr>
-<tr><td class="ColumnCaption">Transition Ion Metrics</td><td class="ColumnDescription">Values related to the number of ions in the mass spectrometer</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">Transition Ion Metrics</a></td></tr>
+<tr><td class="ColumnCaption">トランジションイオンメトリック</td><td class="ColumnDescription">質量分析装置内のイオン数に関係する値</td><td class="ColumnType"><a href="#pwiz.Skyline.Model.Results.TransitionIonMetrics">トランジションイオンメトリック</a></td></tr>
 </table>
 
 <div id="pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.PrecursorQuantificationResult"><span class="RowType">PrecursorQuantificationResult</span>
@@ -727,11 +727,11 @@ Unavailable when missing data impacts comparisons between replicates.</td><td cl
 </td></tr>
 </table>
 
-<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">Transition Ion Metrics</span>
+<div id="pwiz.Skyline.Model.Results.TransitionIonMetrics"><span class="RowType">トランジションイオンメトリック</span>
 </div>
 <table><tr><th>Name</th><th>Description</th><th>Type</th>
-<tr><td class="ColumnCaption">LC Peak Transition Ion Count</td><td class="ColumnDescription">Sum of the products of the intensities and the injection times of the MS2 spectra between the peak integration boundaries</td><td class="ColumnType">Double</td></tr>
-<tr><td class="ColumnCaption">Apex Transition Ion Count</td><td class="ColumnDescription">Product of the intensity and the injection time of the spectrum with the highest extracted ion intensity for the transition</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">LCピークトランジションイオン数</td><td class="ColumnDescription">ピーク積分境界間のMS2スペクトルの強度と注入時間の積の合計</td><td class="ColumnType">Double</td></tr>
+<tr><td class="ColumnCaption">頂点トランジションイオン数</td><td class="ColumnDescription">トランジション抽出イオン強度が最高のスペクトルの強度と注入時間の積</td><td class="ColumnType">Double</td></tr>
 </table>
 
 

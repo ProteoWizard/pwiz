@@ -64,6 +64,7 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "GroupedStudies";
 
+            ForceMzmlInScreenShots = true;   // Mzml is faster for this test, and the screenshots should show mzML files.
             ForceMzml = true;   // Mzml is faster for this test.
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/GroupedStudies-21_2.pdf";
@@ -604,6 +605,12 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.ActivatePropertyPath(
                     PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CountTruncated"));
                 viewEditor.TabControl.SelectTab(1);
+                // Make sure Precursor Results is at the top of the tree
+                var selectedNode = viewEditor.FilterTab.AvailableFieldsTree.SelectedNode;
+                viewEditor.FilterTab.AvailableFieldsTree.SelectColumn(PropertyPath.Parse("Proteins!*.Peptides!*.Precursors!*.Results!*"));
+                viewEditor.FilterTab.AvailableFieldsTree.TopNode =
+                    viewEditor.FilterTab.AvailableFieldsTree.SelectedNode;
+                viewEditor.FilterTab.AvailableFieldsTree.SelectedNode = selectedNode;
                 int iFilter = viewEditor.ViewInfo.Filters.Count;
                 viewEditor.FilterTab.AddSelectedColumn();
                 viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_GREATER_THAN);

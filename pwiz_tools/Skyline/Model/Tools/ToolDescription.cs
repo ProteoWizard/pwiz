@@ -486,7 +486,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public static string GetToolsDirectoryBasis()
         {
-            return (Program.UnitTest && ProcessEx.CanConvertUnicodePaths.Value) ? @"Tööls" : @"Tools"; // Helps catch Unicode path issues on Windows
+            return (Program.UnitTest && !Program.DoNotTestUnicodeHandling) ? @"Tööls" : @"Tools"; // Helps catch Unicode path issues on Windows
         }
 
         /// <summary>

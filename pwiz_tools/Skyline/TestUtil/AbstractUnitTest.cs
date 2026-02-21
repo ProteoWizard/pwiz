@@ -19,6 +19,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -420,6 +421,7 @@ namespace pwiz.SkylineTestUtil
         {
             Program.UnitTest = true;
             Program.TestName = TestContext.TestName;
+            Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
@@ -455,6 +457,10 @@ namespace pwiz.SkylineTestUtil
             STOPWATCH.Stop();
 
             Settings.Release();
+
+            // Release cached NHibernate SessionFactories to prevent managed memory growth.
+            // Normally only called in Skyline.OnClosed(), but unit tests have no main window.
+            DatabaseResources.ReleaseAll();
 
             // Save profile snapshot if we are profiling.
             DotTraceProfile.Save();

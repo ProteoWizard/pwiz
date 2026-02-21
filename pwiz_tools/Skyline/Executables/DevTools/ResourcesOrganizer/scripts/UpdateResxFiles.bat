@@ -29,7 +29,7 @@ pushd %WORKDIR%
 if %ERRORLEVEL% neq 0 (
     goto error
 )
-%RESORGANIZER% exportResx --db MergedResources.db MergedResxFiles.zip
+%RESORGANIZER% exportResx %EXPORTARGS% --db MergedResources.db MergedResxFiles.zip
 if %ERRORLEVEL% neq 0 (
     goto error
 )

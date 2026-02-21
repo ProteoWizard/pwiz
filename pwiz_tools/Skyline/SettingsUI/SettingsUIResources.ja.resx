@@ -1187,4 +1187,11 @@ Skylineで保持時間フィルタリングを適用する必要は通常あり�
   <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
     <value>このフィーチャーを使用するには、[フルスキャン]タブのMS1またはMS/MSフィルタリングを有効にする必要があります。</value>
   </data>
+  <data name="BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_" xml:space="preserve">
+    <value>ペプチドプリカーサーをドキュメントに追加して、AlphaPeptDeep予測からライブラリを構築します。</value>
+  </data>
+  <data name="PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip" xml:space="preserve">
+    <value>ライブラリからドキュメント
+の結果ファイルへ、およびドキュメントの結果ファイル間で、MS/MS IDの保持時間をマッピングするための保持時間アライメント戦略を選択します。</value>
+  </data>
 </root>

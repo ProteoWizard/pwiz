@@ -311,4 +311,16 @@
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
     <value>Panorama 服务器 {0} 上发生导入错误。</value>
   </data>
+  <data name="DsvStreamReader_this_Header__0__not_found_in_DSV_file_" xml:space="preserve">
+    <value>DSV 文件中未找到标题 {0}。</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_" xml:space="preserve">
+    <value>数据流为空或未定义。</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Empty_stream_" xml:space="preserve">
+    <value>空白数据流。</value>
+  </data>
+  <data name="ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_" xml:space="preserve">
+    <value>无法访问剪贴板。</value>
+  </data>
 </root>

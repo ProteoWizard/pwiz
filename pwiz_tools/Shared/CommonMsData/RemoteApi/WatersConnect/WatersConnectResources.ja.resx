@@ -121,4 +121,16 @@
   <data name="WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
     <value>ユーザー名が{0}でサーバーが{1}というアカウントが見つかりません。</value>
   </data>
+  <data name="WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__" xml:space="preserve">
+    <value>waters_connectサーバーはエラーコード：{0}を返しました。</value>
+  </data>
+  <data name="WatersConnectAccount_Authenticate_Failed_to_authenticate_waters_connect_account__0__with_error___1_" xml:space="preserve">
+    <value>waters_connectアカウント{0}を認証できませんでした。エラー：{1}</value>
+  </data>
+  <data name="WatersConnectAcquisitionMethodUrl_Init_Invalid_method_version_Id__0_" xml:space="preserve">
+    <value>無効なメソッドバージョンID {0}</value>
+  </data>
+  <data name="WatersConnectSessionAcquisitionMethod_UploadMethod_Uploading_method__0__to__1_" xml:space="preserve">
+    <value>メソッド{0}を{1}にアップロード中</value>
+  </data>
 </root>
