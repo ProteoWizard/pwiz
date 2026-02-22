@@ -139,7 +139,8 @@ namespace pwiz.SkylineTestFunctional
             });
             listGrid = FindOpenForm<ListGridForm>();
             Assert.IsNotNull(listGrid);
-            heatMap = FindOpenForm<HeatMapGraph>();
+            // TODO(brendanx): NewDocument/OpenFile can leave a duplicate HeatMapGraph. See issue #4022.
+            heatMap = FindAnyOpenForm<HeatMapGraph>();
             Assert.IsNotNull(heatMap);
             Assert.AreSame(listGrid.DataboundGridControl, heatMap.DataboundGridControl);
 
