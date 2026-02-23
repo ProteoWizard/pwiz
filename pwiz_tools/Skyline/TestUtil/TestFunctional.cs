@@ -2656,7 +2656,7 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
-            // ConnectionPool.TrackHistory = true;
+            ConnectionPool.TrackHistory = true;
             FileStreamManager.Default.ConnectionPool.ClearHistory();
 
             if (null != SkylineWindow)

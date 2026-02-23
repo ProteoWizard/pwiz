@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Util
     {
         /// <summary>
         /// When true, connect/disconnect events are recorded for diagnostic
-        /// reporting. Default false - zero overhead in production.
+        /// reporting. Default false - negligible overhead when disabled.
         /// </summary>
         public static bool TrackHistory { get; set; }
 
@@ -296,7 +296,7 @@ namespace pwiz.Skyline.Util
             return string.Format(@"{0}. {1}", id.GlobalIndex, id); // Not L10N - debug only
         }
 
-        public static string FormatEventLine(PoolEvent poolEvent)
+        internal static string FormatEventLine(PoolEvent poolEvent)
         {
             return string.IsNullOrEmpty(poolEvent.StackTrace)
                 ? $@"    {poolEvent}" // Not L10N - debug only
@@ -356,14 +356,14 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public enum PoolEventType
+    internal enum PoolEventType
     {
         Connect,        // Not L10N
         Disconnect,     // Not L10N
         DisconnectWhile // Not L10N
     }
 
-    public struct PoolEvent
+    internal struct PoolEvent
     {
         public PoolEventType EventType { get; }
         public DateTime Timestamp { get; }

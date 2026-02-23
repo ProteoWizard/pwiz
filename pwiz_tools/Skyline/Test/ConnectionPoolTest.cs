@@ -43,6 +43,11 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestConnectionPoolReportAndTracking()
         {
+            // Save and restore TrackHistory to avoid order-dependent test behavior
+            using var restoreTracking = new ScopedAction(
+                () => ConnectionPool.TrackHistory = false,
+                () => ConnectionPool.TrackHistory = false);
+
             var pool = new ConnectionPool();
 
             // Verify empty pool reports nothing
@@ -50,11 +55,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(string.Empty, pool.ReportPooledConnections());
 
             // Create fake connections
-            var id1 = new TestConnectionId(pool, @"C:\TestResults\data.skyd");
-            var id2 = new TestConnectionId(pool, @"C:\TestResults\lib.blib");
-
-            // Connect both - without tracking
-            ConnectionPool.TrackHistory = false;
+            var id1 = new TestConnectionId(@"C:\TestResults\data.skyd");
+            var id2 = new TestConnectionId(@"C:\TestResults\lib.blib");
             pool.GetConnection(id1, () => new MemoryStream());
             pool.GetConnection(id2, () => new MemoryStream());
             Assert.IsTrue(pool.HasPooledConnections);
@@ -74,60 +76,56 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(pool.HasPooledConnections);
 
             // Now enable tracking and repeat
-            using (new ScopedAction(
-                       () => ConnectionPool.TrackHistory = true,
-                       () => ConnectionPool.TrackHistory = false))
-            {
-                pool.ClearHistory();
+            ConnectionPool.TrackHistory = true;
+            pool.ClearHistory();
 
-                pool.GetConnection(id1, () => new MemoryStream());
-                pool.GetConnection(id2, () => new MemoryStream());
+            pool.GetConnection(id1, () => new MemoryStream());
+            pool.GetConnection(id2, () => new MemoryStream());
 
-                // Disconnect one connection
-                pool.Disconnect(id2);
+            // Disconnect one connection
+            pool.Disconnect(id2);
 
-                // Only id1 should remain
-                Assert.IsTrue(pool.IsInPool(id1));
-                Assert.IsFalse(pool.IsInPool(id2));
+            // Only id1 should remain
+            Assert.IsTrue(pool.IsInPool(id1));
+            Assert.IsFalse(pool.IsInPool(id2));
 
-                // Report should show tracking history for the still-open connection
-                report = pool.ReportPooledConnections();
-                Log(@"--- Report with tracking (id1 open, id2 disconnected) ---");
-                Log(report);
+            // Report should show tracking history for the still-open connection
+            report = pool.ReportPooledConnections();
+            Log(@"--- Report with tracking (id1 open, id2 disconnected) ---");
+            Log(report);
 
-                // id1 should have its connection entry and a Connect event
-                AssertEx.Contains(report, ConnectionPool.FormatConnectionLine(id1));
-                AssertEx.Contains(report, connectEvent.EventType.ToString());
+            // id1 should have its connection entry and a Connect event
+            AssertEx.Contains(report, ConnectionPool.FormatConnectionLine(id1));
+            AssertEx.Contains(report, connectEvent.EventType.ToString());
 
-                // id2 should NOT appear (it was disconnected)
-                Assert.IsFalse(report.Contains(ConnectionPool.FormatConnectionLine(id2)),
-                    "Disconnected connection should not appear in report");
+            // id2 should NOT appear (it was disconnected)
+            Assert.IsFalse(report.Contains(ConnectionPool.FormatConnectionLine(id2)),
+                "Disconnected connection should not appear in report");
 
-                // Reconnect id2 to test multiple events on one connection
-                pool.GetConnection(id2, () => new MemoryStream());
-                report = pool.ReportPooledConnections();
-                Log(@"--- Report after reconnecting id2 ---");
-                Log(report);
+            // Reconnect id2 to test multiple events on one connection
+            pool.GetConnection(id2, () => new MemoryStream());
+            report = pool.ReportPooledConnections();
+            Log(@"--- Report after reconnecting id2 ---");
+            Log(report);
 
-                // id2's history should show Connect, Disconnect, Connect
-                AssertEx.Contains(report, ConnectionPool.FormatConnectionLine(id2));
-                var id2Section = GetConnectionSection(report, ConnectionPool.FormatConnectionLine(id2));
-                Assert.IsNotNull(id2Section, "Should find section for id2");
-                Log(@"--- id2 section ---");
-                Log(id2Section);
-                // Count event lines by matching the timestamp-prefixed format from PoolEvent.ToString()
-                string connectMarker = PoolEventType.Connect.ToString();
-                string disconnectMarker = PoolEventType.Disconnect.ToString();
-                int connectCount = CountEventLines(id2Section, connectMarker);
-                int disconnectCount = CountEventLines(id2Section, disconnectMarker);
-                Assert.AreEqual(2, connectCount, "id2 should have 2 Connect events");
-                Assert.AreEqual(1, disconnectCount, "id2 should have 1 Disconnect event");
+            // id2's history should show Connect, Disconnect, Connect
+            AssertEx.Contains(report, ConnectionPool.FormatConnectionLine(id2));
+            var id2Section = GetConnectionSection(report, ConnectionPool.FormatConnectionLine(id2));
+            Assert.IsNotNull(id2Section, "Should find section for id2");
+            Log(@"--- id2 section ---");
+            Log(id2Section);
+            // Count event lines by matching the timestamp-prefixed format from PoolEvent.ToString()
+            string connectMarker = PoolEventType.Connect.ToString();
+            string disconnectMarker = PoolEventType.Disconnect.ToString();
+            int connectCount = CountEventLines(id2Section, connectMarker);
+            int disconnectCount = CountEventLines(id2Section, disconnectMarker);
+            Assert.AreEqual(2, connectCount, "id2 should have 2 Connect events");
+            Assert.AreEqual(1, disconnectCount, "id2 should have 1 Disconnect event");
 
-                // Verify stack traces are included and contain this test method name
-                AssertEx.Contains(report, nameof(TestConnectionPoolReportAndTracking));
+            // Verify stack traces are included and contain this test method name
+            AssertEx.Contains(report, nameof(TestConnectionPoolReportAndTracking));
 
-                pool.DisposeAll();
-            }
+            pool.DisposeAll();
         }
 
         /// <summary>
@@ -180,7 +178,7 @@ namespace pwiz.SkylineTest
         /// </summary>
         private class TestConnectionId : Identity
         {
-            public TestConnectionId(ConnectionPool pool, string filePath)
+            public TestConnectionId(string filePath)
             {
                 FilePath = filePath;
             }
