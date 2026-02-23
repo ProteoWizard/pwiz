@@ -1793,6 +1793,35 @@ namespace pwiz.SkylineTestUtil
             PauseForScreenShot(screenshotForm);
         }
 
+        /// <summary>
+        /// Captures a screenshot of an arbitrary screen rectangle to the specified path.
+        /// Use <see cref="ScreenshotManager.GetWindowRectangle"/> and
+        /// <see cref="Rectangle.Union"/> to compute a bounding rectangle around multiple forms.
+        /// </summary>
+        public void TakeScreenShot(string pathToFile, Rectangle screenRect)
+        {
+            if (Program.SkylineOffscreen)
+            {
+                Console.Error.WriteLine(
+                    @"[SCREENSHOT] SKIPPED (offscreen, use -ShowUI): " + pathToFile);
+                return;
+            }
+
+            _shotManager ??= new ScreenshotManager(SkylineWindow, null);
+            Thread.Sleep(1500);
+            _shotManager.TakeShot(screenRect, pathToFile);
+            Console.WriteLine(@"[SCREENSHOT] " + pathToFile);
+        }
+
+        /// <summary>
+        /// Captures a screenshot of the entire screen containing the Skyline window.
+        /// </summary>
+        public void TakeScreenShotFullScreen(string pathToFile)
+        {
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot<ScreenForm>(null);
+        }
+
         public void PauseForScreenShot(string description = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             PauseForScreenShotInternal(description, null, null, timeout, processShot);
