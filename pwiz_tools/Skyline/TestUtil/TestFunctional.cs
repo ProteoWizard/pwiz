@@ -2617,7 +2617,8 @@ namespace pwiz.SkylineTestUtil
 
                 // Move Skyline to the chosen screenshot screen at the start of the test
                 // This works for any mode, not just screenshot recording/comparison
-                RunUI(() => ScreenshotManager.MoveToScreenshotScreen(SkylineWindow));
+                if (SkylineWindow != null)
+                    RunUI(() => ScreenshotManager.MoveToScreenshotScreen(SkylineWindow));
 
                 if (IsRecordingScreenShots)
                 {
