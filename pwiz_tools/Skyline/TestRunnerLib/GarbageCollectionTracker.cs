@@ -69,7 +69,6 @@ namespace TestRunnerLib
                 if (_trackedObjects.Count == 0)
                     return null;
 
-                // Group survivors by type for a concise report
                 var survivorCounts = _trackedObjects
                     .Where(t => t.IsAlive)
                     .GroupBy(t => t.TypeName)
@@ -94,6 +93,31 @@ namespace TestRunnerLib
         {
             lock (_lock)
             {
+                _pinnedSurvivors.Clear();
+                _trackedObjects.Clear();
+            }
+        }
+
+        // Strong references to survivors, kept alive for dotMemory inspection
+        // ReSharper disable once CollectionNeverQueried.Local
+        private static readonly List<object> _pinnedSurvivors = new List<object>();
+
+        /// <summary>
+        /// Promotes surviving (not yet GC'd) objects from weak to strong references
+        /// so they appear in dotMemory snapshots for retention path analysis.
+        /// Use instead of Clear() when memory profiling is active.
+        /// </summary>
+        public static void PinSurvivors()
+        {
+            lock (_lock)
+            {
+                _pinnedSurvivors.Clear();
+                foreach (var t in _trackedObjects)
+                {
+                    var target = t.Reference.Target;
+                    if (target != null)
+                        _pinnedSurvivors.Add(target);
+                }
                 _trackedObjects.Clear();
             }
         }

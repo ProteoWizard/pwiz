@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using pwiz.Common.SystemUtil;
 
@@ -26,7 +27,7 @@ namespace pwiz.Skyline.Model.Find
     /// </summary>
     public class DuplicatedPeptideFinder : AbstractDocNodeFinder
     {
-        private SrmDocument _lastSearchedDocument;
+        private WeakReference<SrmDocument> _lastSearchedDocument;
         private HashSet<PeptideSequenceModKey> _allPeptideKeys;
         private HashSet<PeptideSequenceModKey> _duplicatePeptideKeys;
 
@@ -44,9 +45,11 @@ namespace pwiz.Skyline.Model.Find
 
         private void InitializeIndex(SrmDocument document)
         {
-            if (ReferenceEquals(_lastSearchedDocument, document))
+            if (_lastSearchedDocument != null &&
+                _lastSearchedDocument.TryGetTarget(out var lastDoc) &&
+                ReferenceEquals(lastDoc, document))
                 return;
-            _lastSearchedDocument = document;
+            _lastSearchedDocument = new WeakReference<SrmDocument>(document);
             _allPeptideKeys = new HashSet<PeptideSequenceModKey>();
             _duplicatePeptideKeys = new HashSet<PeptideSequenceModKey>();
             foreach (var peptide in document.Peptides)

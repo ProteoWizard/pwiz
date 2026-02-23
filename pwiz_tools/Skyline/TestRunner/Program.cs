@@ -1484,8 +1484,8 @@ namespace TestRunner
                 pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier,
                 results, log, verbose, clientMode, reportHeaps, reportHandles, sortHandlesByCount);
 
-            // Configure dotMemory snapshot settings if wait runs specified
-            if (dotMemoryWaitRuns > 0)
+            // Configure dotMemory snapshot settings if warmup runs specified
+            if (dotMemoryWarmup > 0)
             {
                 runTests.DotMemoryWarmupRuns = dotMemoryWarmup;
                 runTests.DotMemoryWaitRuns = dotMemoryWaitRuns;

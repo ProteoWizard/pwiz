@@ -2547,6 +2547,13 @@ namespace pwiz.SkylineTestUtil
             var recordedFile = GetLogFilePath(AuditLogDir);
             if (File.Exists(recordedFile))
                 TryHelper.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
+            // Release audit log entries that may hold undo action closures
+            // capturing SkylineWindow, preventing GC after test cleanup
+            lock (_setSeenEntries)
+            {
+                _setSeenEntries.Clear();
+            }
+            _lastLoggedEntries.Clear();
         }
 
         private string GetLogFilePath(string folderPath)
