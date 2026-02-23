@@ -449,8 +449,7 @@ namespace pwiz.Skyline.Model.Tools
             var rowItemExporter =
                 ReportExporters.ForSeparator(DataSchemaLocalizer.INVARIANT, TextUtil.SEPARATOR_CSV);
             rowFactories.ExportReport(memoryStream, PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle), rowItemExporter, progressMonitor, ref status);
-            memoryStream.Position = 0;
-            using var reader = new StreamReader(memoryStream);
+            using var reader = new StreamReader(new MemoryStream(memoryStream.ToArray()));
             writer.Write(reader.ReadToEnd());
         }
 
