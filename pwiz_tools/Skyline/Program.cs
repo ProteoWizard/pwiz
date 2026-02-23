@@ -34,7 +34,6 @@ using pwiz.Common;
 using pwiz.Common.Collections;
 using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
-using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
