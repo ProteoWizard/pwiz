@@ -34,6 +34,7 @@ using pwiz.Common;
 using pwiz.Common.Collections;
 using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
@@ -172,6 +173,7 @@ namespace pwiz.Skyline
 
             CommonApplicationSettings.ProgramName = Name;
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
+            SkylineRemoteAccountServices.Initialize();
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface
