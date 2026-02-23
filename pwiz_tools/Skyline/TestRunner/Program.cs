@@ -384,7 +384,7 @@ namespace TestRunner
 
                     TeamCityStartTestSuite(commandLineArgs);
 
-                    bool autoScreenshots = commandLineArgs.ArgAsLong("pause") == 3;
+                    bool autoScreenshots = commandLineArgs.ArgAsLong("pause") <= -3;
                     // Prevent system sleep.
                     using (new Kernel32Test.SystemSleep(autoScreenshots))
                     {

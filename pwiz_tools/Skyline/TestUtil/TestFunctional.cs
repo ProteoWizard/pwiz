@@ -2309,8 +2309,11 @@ namespace pwiz.SkylineTestUtil
             if (IsDemoMode)
                 Settings.Default.MainWindowMaximized = true;
             Settings.Default.TutorialMode = true;
+
             // Set the initial window location to the target screenshot screen so Skyline
-            // initializes there (correct DPI, working area) rather than on the primary screen.
+            // initializes there rather than simply defaulting to the primary screen.
+            // This is useful if the primary screen is too small for screenshots,
+            // so automatic size calculations happen on the larger screen.
             var targetScreen = ScreenshotManager.GetScreenshotScreen();
             var wa = targetScreen.WorkingArea;
             Settings.Default.MainWindowLocation = new Point(wa.X + 100, wa.Y + 100);

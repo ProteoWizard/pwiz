@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestTutorial
             argsCollector.BeginInvoke(actCancel);
             WaitForClosedForm(argsCollector);
 
-            // RunTool creates a temp CSV via GetReportTempPath — clean it up
+            // RunTool creates a temp CSV via GetReportTempPath - clean it up
             var tempCsvPath = ToolMacros.GetReportTempPath(tool.ReportTitle, tool.Title);
             FileEx.SafeDelete(tempCsvPath);
         }
