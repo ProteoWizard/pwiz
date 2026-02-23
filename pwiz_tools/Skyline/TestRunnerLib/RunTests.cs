@@ -497,6 +497,23 @@ namespace TestRunnerLib
 
             // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
+
+            // Check for GC leaks - objects registered by test code that should
+            // have been collected after FlushMemory's full GC cycle
+            if (exception != null)
+            {
+                GarbageCollectionTracker.Clear();
+            }
+            else
+            {
+                var leakMessage = GarbageCollectionTracker.CheckForLeaks();
+                if (leakMessage != null)
+                {
+                    Log("!!! {0} GC-LEAK {1}\r\n", test.TestMethod.Name, leakMessage);
+                    exception = new Exception(leakMessage);
+                }
+            }
+
             _process.Refresh();
 
             // Take dotMemory snapshots at configured iteration counts

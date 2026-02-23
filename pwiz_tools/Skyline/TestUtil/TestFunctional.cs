@@ -2300,6 +2300,7 @@ namespace pwiz.SkylineTestUtil
             Program.FunctionalTest = true;
             Program.DefaultUiMode = defaultUiMode;
             Program.TestExceptions = new List<Exception>();
+            Program.GcTracker = new GcTrackerAdapter();
             LocalizationHelper.InitThread();
 
             UnzipTestFiles();
@@ -3532,5 +3533,17 @@ namespace pwiz.SkylineTestUtil
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Bridges <see cref="IGarbageCollectionTracker"/> (Skyline) to
+    /// <see cref="GarbageCollectionTracker"/> (TestRunnerLib).
+    /// </summary>
+    internal class GcTrackerAdapter : IGarbageCollectionTracker
+    {
+        public void Register(Type type, object target)
+        {
+            GarbageCollectionTracker.Register(type, target);
+        }
     }
 }

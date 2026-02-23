@@ -197,6 +197,8 @@ namespace pwiz.Skyline
             _immediateWindowWarningListener = new ImmediateWindowWarningListener(this);
             RemoteSession.RemoteAccountUserInteraction = this;
 
+            Program.GcTracker?.Register(typeof(SkylineWindow), this);
+
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
 
@@ -742,6 +744,8 @@ namespace pwiz.Skyline
 
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;
+
+            Program.GcTracker?.Register(typeof(SrmDocument), docNew);
 
             if (DocumentChangedEvent != null)
                 DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
