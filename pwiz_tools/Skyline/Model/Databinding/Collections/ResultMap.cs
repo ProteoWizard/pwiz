@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                 {
                     throw new ArgumentException(@"Must be sorted by replicate index");
                 }
-                while (replicateIndex > counts.Count)
+                while (replicateIndex >= counts.Count)
                 {
                     counts.Add(0);
                 }

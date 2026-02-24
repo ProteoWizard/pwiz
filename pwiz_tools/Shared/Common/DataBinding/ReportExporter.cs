@@ -19,19 +19,22 @@ namespace pwiz.Common.DataBinding
         public void Export(Stream stream, RowItemEnumerator rowItemEnumerator)
         {
             using var writer = new StreamWriter(stream);
-            DsvWriter.ColumnFormats = rowItemEnumerator.ColumnFormats;
-            Write(writer, rowItemEnumerator);
+            ExportToTextWriter(writer, rowItemEnumerator);
         }
 
-        public virtual void Write(TextWriter writer, RowItemEnumerator rowItemEnumerator)
+        public void ExportToTextWriter(TextWriter writer, RowItemEnumerator rowItemEnumerator)
+        {
+            DsvWriter.ColumnFormats = rowItemEnumerator.ColumnFormats;
+            WriteRows(writer, rowItemEnumerator);
+        }
+
+        protected virtual void WriteRows(TextWriter writer, RowItemEnumerator rowItemEnumerator)
         {
             DsvWriter.WriteHeaderRow(writer, rowItemEnumerator.ItemProperties);
             while (rowItemEnumerator.MoveNext())
             {
                 DsvWriter.WriteDataRow(writer, rowItemEnumerator.Current, rowItemEnumerator.ItemProperties);
             }
-
         }
-
     }
 }

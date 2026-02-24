@@ -192,13 +192,15 @@ namespace pwiz.Common.DataBinding
         {
             var rowItemEnumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
             {
-                ItemProperties = bindingListSource.ItemProperties
+                ItemProperties = bindingListSource.ItemProperties,
+                ColumnFormats = bindingListSource.ColumnFormats
             };
+
             if (progressMonitor != null)
             {
                 rowItemEnumerator.SetProgressMonitor(progressMonitor, new ProgressStatus());
             }
-            CreateDsvReportExporter(separator).Write(writer, rowItemEnumerator);
+            CreateDsvReportExporter(separator).ExportToTextWriter(writer, rowItemEnumerator);
         }
 
         protected virtual DsvReportExporter CreateDsvReportExporter(char separator)

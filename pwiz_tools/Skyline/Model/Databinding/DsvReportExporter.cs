@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Databinding
     {
         public ReplicatePivotDsvReportExporter(DsvWriter dsvWriter) : base(dsvWriter) { }
 
-        public override void Write(TextWriter writer, RowItemEnumerator rowItemEnumerator)
+        protected override void WriteRows(TextWriter writer, RowItemEnumerator rowItemEnumerator)
         {
             ReplicatePivotColumns replicatePivotColumns = null;
             var rowItemList = rowItemEnumerator as RowItemList;
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             if (true != replicatePivotColumns?.HasConstantAndVariableColumns())
             {
-                base.Write(writer, rowItemEnumerator);
+                base.WriteRows(writer, rowItemEnumerator);
                 return;
             }
 
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Databinding
                 ItemProperties = new ItemProperties(filteredColumnDescriptors),
                 ColumnFormats = rowItemEnumerator.ColumnFormats
             };
-            base.Write(writer, newRowItemEnumerator);
+            base.WriteRows(writer, newRowItemEnumerator);
         }
     }
 }
