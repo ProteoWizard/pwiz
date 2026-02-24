@@ -2633,6 +2633,11 @@ namespace pwiz.SkylineTestUtil
 
         private void WaitForSkyline()
         {
+            FileStreamManager.Default.ConnectionPool.ClearHistory();
+            using var restoreTracking = new ScopedAction(
+                () => ConnectionPool.TrackHistory = true,
+                () => ConnectionPool.TrackHistory = false);
+
             try
             {
                 int waitCycles = GetWaitCycles();
@@ -2693,11 +2698,6 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
-            FileStreamManager.Default.ConnectionPool.ClearHistory();
-            using var restoreTracking = new ScopedAction(
-                () => ConnectionPool.TrackHistory = true,
-                () => ConnectionPool.TrackHistory = false);
-
             if (null != SkylineWindow)
             {
                 // Clean-up before running the test
