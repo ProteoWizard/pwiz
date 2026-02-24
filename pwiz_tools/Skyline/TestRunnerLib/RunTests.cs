@@ -154,10 +154,10 @@ namespace TestRunnerLib
         public bool IsParallelClient { get; private set; }
         public string ParallelClientId { get; private set; }
 
-        // dotMemory snapshot configuration - set both > 0 to enable automatic snapshots
+        // dotMemory snapshot configuration - set DotMemoryWarmupRuns > 0 to enable
         // When running under dotMemory profiler, snapshots will be taken:
-        //   1. After DotMemoryWarmupRuns iterations (baseline)
-        //   2. After DotMemoryWarmupRuns + DotMemoryWaitRuns iterations (analysis)
+        //   1. After DotMemoryWarmupRuns iterations (always)
+        //   2. After DotMemoryWarmupRuns + DotMemoryWaitRuns iterations (only if WaitRuns > 0)
         public int DotMemoryWarmupRuns { get; set; }
         public int DotMemoryWaitRuns { get; set; }
         public bool DotMemoryCollectAllocations { get; set; } // Collect allocation stack traces
@@ -497,6 +497,28 @@ namespace TestRunnerLib
 
             // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
+
+            // Check for GC leaks - objects registered by test code that should
+            // have been collected after FlushMemory's full GC cycle.
+            // Skip when memory profiling - pin survivors for dotMemory inspection.
+            if (DotMemoryWarmupRuns > 0)
+            {
+                GarbageCollectionTracker.PinSurvivors();
+            }
+            else if (exception != null)
+            {
+                GarbageCollectionTracker.Clear();
+            }
+            else
+            {
+                var leakMessage = GarbageCollectionTracker.CheckForLeaks();
+                if (leakMessage != null)
+                {
+                    Log("!!! {0} GC-LEAK {1}\r\n", test.TestMethod.Name, leakMessage);
+                    exception = new Exception(leakMessage);
+                }
+            }
+
             _process.Refresh();
 
             // Take dotMemory snapshots at configured iteration counts
@@ -1161,13 +1183,15 @@ namespace TestRunnerLib
 
         /// <summary>
         /// Takes dotMemory snapshots at configured iteration counts when running under dotMemory profiler.
-        /// Set DotMemoryWarmupRuns and DotMemoryWaitRuns to enable automatic snapshots.
+        /// Set DotMemoryWarmupRuns > 0 to enable. DotMemoryWaitRuns controls the second snapshot:
+        ///   0 = single snapshot after warmup only
+        ///   N = second snapshot after warmup + N additional runs
         /// </summary>
         private void TakeDotMemorySnapshotIfNeeded(string testName)
         {
             // Early exit if not configured - MemoryProfiler is never called,
             // so JetBrains.Profiler.Api assembly is never loaded
-            if (DotMemoryWarmupRuns <= 0 || DotMemoryWaitRuns <= 0)
+            if (DotMemoryWarmupRuns <= 0)
                 return;
 
             // Pass through setting (applied on first Snapshot call)
@@ -1179,7 +1203,7 @@ namespace TestRunnerLib
                 Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
                 MemoryProfiler.Snapshot(snapshotName);
             }
-            else if (_dotMemoryIterationCount == DotMemoryWarmupRuns + DotMemoryWaitRuns)
+            else if (DotMemoryWaitRuns > 0 && _dotMemoryIterationCount == DotMemoryWarmupRuns + DotMemoryWaitRuns)
             {
                 var snapshotName = $"{testName}_Analysis_After{DotMemoryWarmupRuns + DotMemoryWaitRuns}";
                 Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);

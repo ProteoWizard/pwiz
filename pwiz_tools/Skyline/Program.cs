@@ -138,6 +138,7 @@ namespace pwiz.Skyline
         public static string ExtraRawFileSearchFolder { get; set; } // Perf test support for avoiding extra copying of large raw files
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
         public static Action<string> Log { get; set; }              // Function to allow Skyline to write to the test log. Needs to be thread-safe
+        public static IGarbageCollectionTracker GcTracker { get; set; } // WeakReference tracker for verifying primary objects are GC'd after tests
 
         // Command-line results import support
         public static bool DisableJoining { get; set; }
@@ -890,5 +891,15 @@ namespace pwiz.Skyline
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Interface for tracking objects via WeakReferences to verify they become
+    /// eligible for garbage collection after test cleanup. Set on
+    /// <see cref="Program.GcTracker"/> during tests; null in production.
+    /// </summary>
+    public interface IGarbageCollectionTracker
+    {
+        void Register<T>(T target);
     }
 }
