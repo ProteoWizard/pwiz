@@ -525,7 +525,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var errors = new List<string>();
                 if (poolReport != null)
-                    errors.AddRange(new []{"Streams left open:", string.Empty, poolReport});
+                    errors.AddRange(new[] {"Streams left open:", string.Empty, poolReport});
                 if (cleanupException != null)
                     errors.AddRange(new[] {"CleanupFiles failed:", string.Empty, cleanupException.Message});
                 Assert.Fail(TextUtil.LineSeparate(errors));
