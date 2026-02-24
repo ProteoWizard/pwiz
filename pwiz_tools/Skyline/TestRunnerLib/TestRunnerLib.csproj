@@ -87,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FindLanguages.cs" />
+    <Compile Include="GarbageCollectionTracker.cs" />
     <Compile Include="FormLookup.cs" />
     <Compile Include="FormSeen.cs" />
     <Compile Include="InvokeSkyline.cs" />
