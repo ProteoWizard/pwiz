@@ -1589,7 +1589,7 @@ file, or the file name again for other file types.</value>
     <value>Standardized molecular identifier</value>
   </data>
   <data name="SourceOffsetVoltage">
-    <value>DV voltage applied at the ion source</value>
+    <value>The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation</value>
   </data>
   <data name="SpectrumFilter">
     <value>Extra criteria that spectra must pass to be included in the extracted ion chromatogram</value>
