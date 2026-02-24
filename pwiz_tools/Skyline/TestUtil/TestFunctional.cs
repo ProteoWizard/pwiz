@@ -2685,6 +2685,9 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
+            ConnectionPool.TrackHistory = true;
+            FileStreamManager.Default.ConnectionPool.ClearHistory();
+
             if (null != SkylineWindow)
             {
                 // Clean-up before running the test
@@ -2769,18 +2772,19 @@ namespace pwiz.SkylineTestUtil
                 // Try twice, because this operation can fail due to active background processing
                 RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
+                WaitForGraphs(false);
+                // Wait for background loaders first - CloseRemovedStreams runs inside
+                // BackgroundLoaders, so the pool cannot drain until they finish
+                WaitForBackgroundLoaders();
+
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)
                 {
-                    // Just write to console to provide more information. This should cause a failure
-                    // trying to remove the test directory, which will provide a path to the problem file
-                    Console.WriteLine(TextUtil.LineSeparate("Streams left open:", string.Empty,
-                        FileStreamManager.Default.ReportPooledStreams()));
+                    var report = FileStreamManager.Default.ReportPooledStreams();
+                    var message = TextUtil.LineSeparate("Streams left open:", string.Empty, report);
+                    Console.WriteLine(message);
+                    Program.AddTestException(new IOException(message));
                 }
-
-                WaitForGraphs(false);
-                // Wait for any background loaders to notice the change and stop what they're doing
-                WaitForBackgroundLoaders();
                 // Wait for FileSystemWatchers to be completely shut down before test cleanup
                 // This prevents race conditions where watchers might access directories during cleanup
                 // Note: FilesTree may be null if already destroyed, in which case watching is already complete
