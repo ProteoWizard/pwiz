@@ -149,7 +149,7 @@ InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(cons
 
 inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)
 {
-    if (scanInfo.activationType() & ActivationType_HCD)
+    if (scanInfo.precursorActivationType(0) & ActivationType_HCD)
     {
         try
         {
@@ -172,7 +172,7 @@ inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& s
             return scanInfo.precursorActivationEnergy(0);
         }
     }
-    else if (scanInfo.activationType() & ActivationType_CID)
+    else if (scanInfo.precursorActivationType(0) & ActivationType_CID)
         return scanInfo.precursorActivationEnergy(0);
     else
         return boost::optional<double>();
@@ -464,6 +464,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             {
                 precursor.clear();
                 precursor.isolationWindow.clear();
+                precursor.activation.clear();
                 selectedIon.clear();
 
                 double isolationMz = precursorInfo.isolationMZ;
@@ -483,7 +484,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
                 precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
 
-                ActivationType activationType = scanInfo->activationType();
+                ActivationType activationType = precursorInfo.activationType;
                 if (activationType == ActivationType_Unknown)
                     activationType = ActivationType_CID; // assume CID
 
@@ -653,7 +654,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                             result->userParams.emplace_back("master scan number", pwiz::util::toString(nonPrecursorMasterScanNumber), "xsd:positiveInteger");
                     }
 
-                    ActivationType activationType = scanInfo->activationType();
+                    ActivationType activationType = scanInfo->precursorActivationType(i);
                     if (activationType == ActivationType_Unknown)
                         activationType = ActivationType_CID; // assume CID
                     setActivationType(activationType, scanInfo->supplementalActivationType(), precursor.activation);

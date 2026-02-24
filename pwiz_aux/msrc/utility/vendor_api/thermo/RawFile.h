@@ -251,7 +251,8 @@ class PWIZ_API_DECL ScanInfo
     virtual std::string filter() const = 0;
     virtual MassAnalyzerType massAnalyzerType() const = 0;
     virtual IonizationType ionizationType() const = 0;
-    virtual ActivationType activationType() const = 0;
+    virtual ActivationType precursorActivationType(long index) const = 0;
+    ActivationType activationType() const;
     virtual long msLevel() const = 0;
     virtual ScanType scanType() const = 0;
     virtual PolarityType polarityType() const = 0;

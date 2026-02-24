@@ -220,6 +220,26 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private class RectangleShot : SkylineScreenshot
+        {
+            private readonly Rectangle _screenRect;
+
+            public RectangleShot(Rectangle screenRect)
+            {
+                _screenRect = screenRect;
+            }
+
+            [NotNull]
+            public override Bitmap Take()
+            {
+                var scaledRect = _screenRect * GetScalingFactor();
+                var bmpCapture = new Bitmap(scaledRect.Width, scaledRect.Height, PixelFormat.Format32bppArgb);
+                using var g = Graphics.FromImage(bmpCapture);
+                g.CopyFromScreen(scaledRect.Location, Point.Empty, scaledRect.Size);
+                return bmpCapture;
+            }
+        }
+
         private class ZedGraphShot : SkylineScreenshot
         {
             private readonly ZedGraphControl _zedGraphControl;
@@ -490,6 +510,17 @@ namespace pwiz.SkylineTestUtil
 
             // CopyBitmapToClipboard(shotPic);
 
+            return shotPic;
+        }
+
+        /// <summary>
+        /// Captures a screenshot of an arbitrary screen rectangle.
+        /// </summary>
+        public Bitmap TakeShot(Rectangle screenRect, string pathToSave = null)
+        {
+            var shotPic = new RectangleShot(screenRect).Take();
+            if (pathToSave != null)
+                SaveToFile(pathToSave, shotPic);
             return shotPic;
         }
 

@@ -188,6 +188,27 @@ namespace pwiz.SkylineTestUtil
             return @"https://" + PanoramaDomainAndPath + @"/perftests/" + filename;
         }
 
+        /// <summary>
+        /// Finds the ai/.tmp directory by walking up from the Skyline project directory
+        /// looking for a sibling "ai" folder that contains a ".tmp" subfolder.
+        /// Returns null if not found (e.g. on build servers without the ai repo).
+        /// </summary>
+        public static string FindAiTmpPath(string relativePath = null)
+        {
+            var projectDir = ExtensionTestContext.GetProjectDirectory();
+            if (projectDir == null)
+                return null;
+            for (var dir = Path.GetDirectoryName(projectDir);
+                 dir != null && dir.Length > 3;
+                 dir = Path.GetDirectoryName(dir))
+            {
+                var aiTmp = Path.Combine(dir, "ai", ".tmp");
+                if (Directory.Exists(aiTmp))
+                    return relativePath != null ? Path.Combine(aiTmp, relativePath) : aiTmp;
+            }
+            return null;
+        }
+
         private string[] _testFilesZips;
         public string TestFilesZip
         {

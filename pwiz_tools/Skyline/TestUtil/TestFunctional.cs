@@ -716,15 +716,23 @@ namespace pwiz.SkylineTestUtil
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
-            foreach (var form in OpenForms)
-            {
-                var tForm = form as TDlg;
-                if (tForm != null && tForm.Created)
-                {
-                    return tForm;
-                }
-            }
-            return null;
+            return (TDlg) FindOpenForm(typeof(TDlg));
+        }
+
+        /// <summary>
+        /// Returns the first open form of type T without asserting uniqueness.
+        /// Use only when multiple forms of the same type are expected.
+        /// </summary>
+        public static TDlg FindAnyOpenForm<TDlg>() where TDlg : Form
+        {
+            return FindOpenForms<TDlg>().FirstOrDefault();
+        }
+
+        private static string FormatFormForError(Form form)
+        {
+            return form is CommonAlertDlg alertDlg
+                ? string.Format("{0}: {1}", form.GetType().Name, alertDlg.Message)
+                : form.GetType().Name;
         }
 
         public static IEnumerable<TDlg> FindOpenForms<TDlg>() where TDlg : Form
@@ -738,16 +746,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static Form FindOpenForm(Type formType) 
+        public static Form FindOpenForm(Type formType)
+        {
+            var forms = FindOpenForms(formType).ToArray();
+            Assert.IsTrue(forms.Length <= 1,
+                "Multiple {0} forms open simultaneously: [{1}]",
+                formType.Name, string.Join("] and [", forms.Select(FormatFormForError)));
+            return forms.FirstOrDefault();
+        }
+
+        public static IEnumerable<Form> FindOpenForms(Type formType)
         {
             foreach (var form in OpenForms)
             {
-                if (((formType.IsInstanceOfType(form) || formType.DeclaringType != null && formType.DeclaringType.IsInstanceOfType(form))) && form.Created)
+                if ((formType.IsInstanceOfType(form) || formType.DeclaringType != null && formType.DeclaringType.IsInstanceOfType(form)) && form.Created)
                 {
-                    return form;
+                    yield return form;
                 }
             }
-            return null;
         }
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
@@ -1777,6 +1793,35 @@ namespace pwiz.SkylineTestUtil
             PauseForScreenShot(screenshotForm);
         }
 
+        /// <summary>
+        /// Captures a screenshot of an arbitrary screen rectangle to the specified path.
+        /// Use <see cref="ScreenshotManager.GetWindowRectangle"/> and
+        /// <see cref="Rectangle.Union"/> to compute a bounding rectangle around multiple forms.
+        /// </summary>
+        public void TakeScreenShot(string pathToFile, Rectangle screenRect)
+        {
+            if (Program.SkylineOffscreen)
+            {
+                Console.Error.WriteLine(
+                    @"[SCREENSHOT] SKIPPED (offscreen, use -ShowUI): " + pathToFile);
+                return;
+            }
+
+            _shotManager ??= new ScreenshotManager(SkylineWindow, null);
+            Thread.Sleep(1500);
+            _shotManager.TakeShot(screenRect, pathToFile);
+            Console.WriteLine(@"[SCREENSHOT] " + pathToFile);
+        }
+
+        /// <summary>
+        /// Captures a screenshot of the entire screen containing the Skyline window.
+        /// </summary>
+        public void TakeScreenShotFullScreen(string pathToFile)
+        {
+            NextScreenShotOverridePath = pathToFile;
+            PauseForScreenShot<ScreenForm>(null);
+        }
+
         public void PauseForScreenShot(string description = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             PauseForScreenShotInternal(description, null, null, timeout, processShot);
@@ -2640,6 +2685,9 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
+            ConnectionPool.TrackHistory = true;
+            FileStreamManager.Default.ConnectionPool.ClearHistory();
+
             if (null != SkylineWindow)
             {
                 // Clean-up before running the test
@@ -2724,18 +2772,19 @@ namespace pwiz.SkylineTestUtil
                 // Try twice, because this operation can fail due to active background processing
                 RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
+                WaitForGraphs(false);
+                // Wait for background loaders first - CloseRemovedStreams runs inside
+                // BackgroundLoaders, so the pool cannot drain until they finish
+                WaitForBackgroundLoaders();
+
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)
                 {
-                    // Just write to console to provide more information. This should cause a failure
-                    // trying to remove the test directory, which will provide a path to the problem file
-                    Console.WriteLine(TextUtil.LineSeparate("Streams left open:", string.Empty,
-                        FileStreamManager.Default.ReportPooledStreams()));
+                    var report = FileStreamManager.Default.ReportPooledStreams();
+                    var message = TextUtil.LineSeparate("Streams left open:", string.Empty, report);
+                    Console.WriteLine(message);
+                    Program.AddTestException(new IOException(message));
                 }
-
-                WaitForGraphs(false);
-                // Wait for any background loaders to notice the change and stop what they're doing
-                WaitForBackgroundLoaders();
                 // Wait for FileSystemWatchers to be completely shut down before test cleanup
                 // This prevents race conditions where watchers might access directories during cleanup
                 // Note: FilesTree may be null if already destroyed, in which case watching is already complete
