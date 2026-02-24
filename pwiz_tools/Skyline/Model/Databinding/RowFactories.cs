@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public bool HasFactory(string rowSourceName)
         {
-            return _factoriesByName.ContainsKey(rowSourceName);
+            return rowSourceName != null && _factoriesByName.ContainsKey(rowSourceName);
         }
 
         private class Factory : IRowSource
