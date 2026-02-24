@@ -449,10 +449,10 @@ namespace TestPerf
             // See if Hardklor output is stable
             var expectedHardklorFiles = @"expected_hardklor_files";
             var expectedFilesPath = GetTestPath(expectedHardklorFiles);
+            var columnTolerances = new AssertEx.ColumnTolerances(0.00015); // Allow a little rounding wiggle in the numeric values
             foreach (var hkExpectedFilePath in Directory.EnumerateFiles(expectedFilesPath))
             {
                 var hkActualFilePath = hkExpectedFilePath.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @".."));
-                var columnTolerances = new Dictionary<int, double>() { { -1, .00015 } }; // Allow a little rounding wiggle in the decimal values
                 AssertEx.FileEquals(hkExpectedFilePath, hkActualFilePath, columnTolerances, true);
             }
 

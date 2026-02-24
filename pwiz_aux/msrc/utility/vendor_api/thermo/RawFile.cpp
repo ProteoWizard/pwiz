@@ -1075,6 +1075,12 @@ std::vector<string> RawFileImpl::getFilters() const
 
 
 
+ActivationType ScanInfo::activationType() const
+{
+    return precursorCount() > 0 ? precursorActivationType(0) : ActivationType_Unknown;
+}
+
+
 class ScanInfoImpl : public ScanInfo
 {
     public:
@@ -1100,7 +1106,12 @@ class ScanInfoImpl : public ScanInfo
 
     virtual MassAnalyzerType massAnalyzerType() const {return massAnalyzerType_;}
     virtual IonizationType ionizationType() const {return ionizationType_;}
-    virtual ActivationType activationType() const {return activationType_;}
+    virtual ActivationType precursorActivationType(long index) const
+    {
+        if (index < 0 || static_cast<size_t>(index) >= precursorActivationTypes_.size())
+            return ActivationType_Unknown;
+        return precursorActivationTypes_[index];
+    }
     virtual long msLevel() const {return msLevel_;}
     virtual ScanType scanType() const {return scanType_;}
     virtual PolarityType polarityType() const {return polarityType_;}
@@ -1184,7 +1195,8 @@ class ScanInfoImpl : public ScanInfo
 #endif
     MassAnalyzerType massAnalyzerType_;
     IonizationType ionizationType_;
-    ActivationType activationType_, saType_;
+    vector<ActivationType> precursorActivationTypes_;
+    ActivationType saType_;
     long msLevel_;
     ScanType scanType_;
     PolarityType polarityType_;
@@ -1288,7 +1300,6 @@ void ScanInfoImpl::initialize()
         scanEvent_ = 0;
         massAnalyzerType_ = (MassAnalyzerType_Unknown);
         ionizationType_ = (IonizationType_Unknown);
-        activationType_ = (ActivationType_Unknown);
         saType_ = (ActivationType_Unknown);
         msLevel_ = (1);
         scanType_ = (ScanType_Unknown);
@@ -1333,6 +1344,7 @@ void ScanInfoImpl::initialize()
         scanRanges_.clear();
         precursorMZs_.clear();
         precursorActivationEnergies_.clear();
+        precursorActivationTypes_.clear();
         precursorInfo_.clear();
         trailerExtraMap_.clear();
         spsMasses_.clear();
@@ -1404,7 +1416,8 @@ void ScanInfoImpl::initialize()
                     spsMasses_.push_back(lexical_cast<double>(tokens[i]));
                     precursorMZs_.push_back(spsMasses_.back());
                     precursorActivationEnergies_.push_back(precursorActivationEnergies_.back());
-                    precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, spsMasses_.back(), spsMasses_.back(), isolationWidth, precursorActivationEnergies_.back(), activationType_, 0, 0 });
+                    precursorActivationTypes_.push_back(precursorActivationTypes_.back());
+                    precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, spsMasses_.back(), spsMasses_.back(), isolationWidth, precursorActivationEnergies_.back(), precursorActivationTypes_.back(), 0, 0 });
                 }
                 hasMultiplePrecursors_ = true;
                 isSPS_ = true;
@@ -1568,7 +1581,6 @@ void ScanInfoImpl::parseFilterString()
     ionizationType_ = filterParser.ionizationType_;
     polarityType_ = filterParser.polarityType_;
     scanType_ = filterParser.scanType_;
-    activationType_ = filterParser.activationType_;
     isEnhanced_ = filterParser.enhancedOn_ == TriBool_True;
     isDependent_ = filterParser.dependentActive_ == TriBool_True;
     hasMultiplePrecursors_ = filterParser.multiplePrecursorMode_;
@@ -1583,8 +1595,9 @@ void ScanInfoImpl::parseFilterString()
     accurateMassType_ = filterParser.accurateMassType_;
     precursorMZs_.insert(precursorMZs_.end(), filterParser.precursorMZs_.begin(), filterParser.precursorMZs_.end());
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.precursorEnergies_.begin(), filterParser.precursorEnergies_.end());
+    precursorActivationTypes_.resize(precursorMZs_.size(), filterParser.activationType_);
 
-    supplementalActivation_ = filterParser.supplementalCIDOn_ == TriBool_True && activationType_ & ActivationType_ETD && !filterParser.saTypes_.empty();
+    supplementalActivation_ = filterParser.supplementalCIDOn_ == TriBool_True && filterParser.activationType_ & ActivationType_ETD && !filterParser.saTypes_.empty();
     if (supplementalActivation_)
     {
         saType_ = filterParser.saTypes_[0];
@@ -1619,7 +1632,6 @@ void ScanInfoImpl::parseFilterString()
         ionizationType_ = (IonizationType)filter_->IonizationMode;
         polarityType_ = (PolarityType)filter_->Polarity;
         scanType_ = (ScanType)filter_->ScanMode;
-        activationType_ = msLevel_ > 1 ? convertRawFileReaderActivationType(filter_->GetActivation(0)) : ActivationType_Unknown;
         isEnhanced_ = filter_->Enhanced == ThermoEnum::TriState::On;
         isDependent_ = filter_->Dependent == ThermoEnum::TriState::On;
         hasMultiplePrecursors_ = filter_->Multiplex == ThermoEnum::TriState::On;
@@ -1641,20 +1653,22 @@ void ScanInfoImpl::parseFilterString()
             scanType_ = ScanType_Full;
         }
 
-        // CONSIDER: does detector set always mean CID is really HCD?
-        if (filter_->Detector == ThermoEnum::DetectorType::Valid &&
-            massAnalyzerType_ == MassAnalyzerType_FTICR &&
-            activationType_ == ActivationType_CID)
-            activationType_ = ActivationType_HCD;
-
         if ((msLevel_ > 1 && !constantNeutralLoss_) || msLevel_ == -1) // workaround bug(?) where MS1 have MassRange and Reaction
             for (int i = 0; i < filter_->MassCount && (i < msLevel_-1 || hasMultiplePrecursors_ || msLevel_ == -1); ++i)
             {
                 precursorMZs_.push_back(filter_->GetMass(i));
                 precursorActivationEnergies_.push_back(filter_->GetEnergy(i));
+                precursorActivationTypes_.push_back(msLevel_ > 1 ? convertRawFileReaderActivationType(filter_->GetActivation(i)) : ActivationType_Unknown);
             }
 
-        supplementalActivation_ = filter_->SupplementalActivation == ThermoEnum::TriState::On && activationType_ & ActivationType_ETD;
+        // CONSIDER: does detector set always mean CID is really HCD?
+        if (filter_->Detector == ThermoEnum::DetectorType::Valid &&
+            massAnalyzerType_ == MassAnalyzerType_FTICR)
+            for (auto& at : precursorActivationTypes_)
+                if (at == ActivationType_CID)
+                    at = ActivationType_HCD;
+
+        supplementalActivation_ = filter_->SupplementalActivation == ThermoEnum::TriState::On && !precursorActivationTypes_.empty() && (precursorActivationTypes_[0] & ActivationType_ETD);
         if (supplementalActivation_)
         {
             if (filter_->MassCount > 1)
@@ -1674,7 +1688,7 @@ void ScanInfoImpl::parseFilterString()
                 saEnergy_ = 0; // every precursor must have an energy and it defaults to 0 if not present
             }
 
-            activationType_ = static_cast<ActivationType>(activationType_ | saType_);
+            precursorActivationTypes_[0] = static_cast<ActivationType>(precursorActivationTypes_[0] | saType_);
         }
 
         isProfileScan_ = filter_->ScanData == ThermoEnum::ScanDataType::Profile;
@@ -1694,12 +1708,12 @@ void ScanInfoImpl::parseFilterString()
 
     auto isolationWidths = getIsolationWidths();
     for (size_t i = 0; i < msLevel_ - 1; ++i)
-        precursorInfo_.push_back(PrecursorInfo{ int(i+1), precursorMZs_[i], precursorMZs_[i], isolationWidths[i], precursorActivationEnergies_[i], activationType_, 0, 0 });
+        precursorInfo_.push_back(PrecursorInfo{ int(i+1), precursorMZs_[i], precursorMZs_[i], isolationWidths[i], precursorActivationEnergies_[i], precursorActivationTypes_[i], 0, 0 });
 
     if (hasMultiplePrecursors_ && spsMasses_.empty()) // MSX mode means there can be more than 1 filter line m/z for the current ms level
     {
         for (size_t i = msLevel_ - 1; i < precursorMZs_.size(); ++i)
-            precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, precursorMZs_[i], precursorMZs_[i], isolationWidths.back(), precursorActivationEnergies_[i], activationType_, 0, 0 });
+            precursorInfo_.push_back(PrecursorInfo{ msLevel_ - 1, precursorMZs_[i], precursorMZs_[i], isolationWidths.back(), precursorActivationEnergies_[i], precursorActivationTypes_[i], 0, 0 });
     }
 }
 
