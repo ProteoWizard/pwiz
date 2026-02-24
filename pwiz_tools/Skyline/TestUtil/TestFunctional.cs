@@ -2693,8 +2693,10 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
-            ConnectionPool.TrackHistory = true;
             FileStreamManager.Default.ConnectionPool.ClearHistory();
+            using var restoreTracking = new ScopedAction(
+                () => ConnectionPool.TrackHistory = true,
+                () => ConnectionPool.TrackHistory = false);
 
             if (null != SkylineWindow)
             {

@@ -17,18 +17,19 @@
  * limitations under the License.
  */
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
-using pwiz.ProteomeDatabase.Util;
-using pwiz.Skyline;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.Util;
+using pwiz.Skyline;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
 
 // Once-per-application setup information to perform logging with log4net.
@@ -462,6 +463,8 @@ namespace pwiz.SkylineTestUtil
                 if (isTeamCity)
                     DesiredCleanupLevel = DesiredCleanupLevel.all;
             }
+            ConnectionPool.TrackHistory = true;
+            FileStreamManager.Default.ConnectionPool.ClearHistory();
             STOPWATCH.Restart();
             Initialize();
         }
@@ -501,6 +504,35 @@ namespace pwiz.SkylineTestUtil
         public bool IsParallelClient => TestContext.Properties.Contains("ParallelClientId");
 
         private void CleanupFiles()
+        {
+            // Report any pooled streams left open and clean up
+            string poolReport = null;
+            if (FileStreamManager.Default.HasPooledStreams)
+                poolReport = FileStreamManager.Default.ReportPooledStreams();
+            FileStreamManager.Default.CloseAllStreams();
+
+            Exception cleanupException = null;
+            try
+            {
+                CleanupSystemFiles();
+            }
+            catch (Exception ex)
+            {
+                cleanupException = ex;
+            }
+
+            if (poolReport != null || cleanupException != null)
+            {
+                var errors = new List<string>();
+                if (poolReport != null)
+                    errors.AddRange(new []{"Streams left open:", string.Empty, poolReport});
+                if (cleanupException != null)
+                    errors.AddRange(new[] {"CleanupFiles failed:", string.Empty, cleanupException.Message});
+                Assert.Fail(TextUtil.LineSeparate(errors));
+            }
+        }
+
+        private void CleanupSystemFiles()
         {
             using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
 

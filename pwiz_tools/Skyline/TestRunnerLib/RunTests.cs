@@ -161,6 +161,7 @@ namespace TestRunnerLib
         public int DotMemoryWarmupRuns { get; set; }
         public int DotMemoryWaitRuns { get; set; }
         public bool DotMemoryCollectAllocations { get; set; } // Collect allocation stack traces
+        public HashSet<int> DotMemoryAtTests { get; set; } // Take snapshots after these test numbers
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
@@ -521,8 +522,9 @@ namespace TestRunnerLib
 
             _process.Refresh();
 
-            // Take dotMemory snapshots at configured iteration counts
+            // Take dotMemory snapshots at configured iteration counts or test numbers
             TakeDotMemorySnapshotIfNeeded(test.TestMethod.Name);
+            TakeDotMemorySnapshotAtTest(test.TestMethod.Name, pass, testNumber);
 
             var heapCounts = ReportSystemHeaps
                 ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
@@ -1209,6 +1211,22 @@ namespace TestRunnerLib
                 Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
                 MemoryProfiler.Snapshot(snapshotName);
             }
+        }
+
+        /// <summary>
+        /// Takes a dotMemory snapshot after specific test numbers within a pass.
+        /// Configure by setting DotMemoryAtTests to a set of test ordinals.
+        /// </summary>
+        private void TakeDotMemorySnapshotAtTest(string testName, int pass, int testNumber)
+        {
+            if (DotMemoryAtTests == null || !DotMemoryAtTests.Contains(testNumber))
+                return;
+
+            MemoryProfiler.CollectAllocations = DotMemoryCollectAllocations;
+
+            var snapshotName = $"Pass{pass}_Test{testNumber}_{testName}";
+            Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
+            MemoryProfiler.Snapshot(snapshotName);
         }
 
         public string TeamCityPassName(int pass)

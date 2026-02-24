@@ -67,7 +67,7 @@ namespace pwiz.SkylineTest
             Log(report);
             AssertEx.Contains(report, ConnectionPool.FormatConnectionLine(id1));
             AssertEx.Contains(report, ConnectionPool.FormatConnectionLine(id2));
-            var connectEvent = new PoolEvent(PoolEventType.Connect, DateTime.Now, string.Empty);
+            var connectEvent = new PoolEvent(PoolEventType.Connect, DateTime.Now, null);
             Assert.IsFalse(report.Contains(ConnectionPool.FormatEventLine(connectEvent)),
                 "Should not contain tracking events when TrackHistory is false");
 

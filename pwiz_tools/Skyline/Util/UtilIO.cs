@@ -298,7 +298,7 @@ namespace pwiz.Skyline.Util
 
         internal static string FormatEventLine(PoolEvent poolEvent)
         {
-            return string.IsNullOrEmpty(poolEvent.StackTrace)
+            return poolEvent.StackTrace == null
                 ? $@"    {poolEvent}" // Not L10N - debug only
                 : $@"    {poolEvent.ToDetailString()}"; // Not L10N - debug only
         }
@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Util
                 events = new List<PoolEvent>();
                 _history[globalIndex] = events;
             }
-            events.Add(new PoolEvent(eventType, DateTime.Now, Environment.StackTrace));
+            events.Add(new PoolEvent(eventType, DateTime.Now, new StackTrace(true)));
         }
     }
 
@@ -367,9 +367,9 @@ namespace pwiz.Skyline.Util
     {
         public PoolEventType EventType { get; }
         public DateTime Timestamp { get; }
-        public string StackTrace { get; }
+        public StackTrace StackTrace { get; }
 
-        public PoolEvent(PoolEventType eventType, DateTime timestamp, string stackTrace)
+        public PoolEvent(PoolEventType eventType, DateTime timestamp, StackTrace stackTrace)
         {
             EventType = eventType;
             Timestamp = timestamp;
