@@ -3548,9 +3548,9 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     internal class GcTrackerAdapter : IGarbageCollectionTracker
     {
-        public void Register(Type type, object target)
+        public void Register<T>(T target)
         {
-            GarbageCollectionTracker.Register(type, target);
+            GarbageCollectionTracker.Register(typeof(T), target);
         }
     }
 }

@@ -900,6 +900,6 @@ namespace pwiz.Skyline
     /// </summary>
     public interface IGarbageCollectionTracker
     {
-        void Register(Type type, object target);
+        void Register<T>(T target);
     }
 }
