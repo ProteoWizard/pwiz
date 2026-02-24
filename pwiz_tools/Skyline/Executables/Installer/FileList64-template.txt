@@ -84,6 +84,7 @@ CRHAKEI2.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TE
 Dapper.dll
 de\ZedGraph.resources.dll
 DigitalRune.Windows.Docking.dll
+DigitalRune.Windows.Docking.pdb
 DotNetZip.dll
 DualProbeInterfaceParametersCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 enzymes.xml

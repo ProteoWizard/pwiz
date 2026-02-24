@@ -44,9 +44,33 @@ namespace pwiz.Skyline.Controls.FilesTree
             return string.Equals(path1, path2, StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Returns true if the path refers to an NTFS Alternate Data Stream (ADS),
+        /// such as "file.zip:Zone.Identifier". Detected by a colon in the final path
+        /// segment — the drive letter colon always has a separator after it, ADS colons don't.
+        /// </summary>
+        public static bool IsAlternateDataStream(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return false;
+
+            int lastColon = path.LastIndexOf(':');
+            // Drive letter colons always have a separator after them; ADS stream colons don't.
+            return lastColon >= 0 && lastColon < path.Length - 1
+                && path.IndexOfAny(new[] { '\\', '/' }, lastColon + 1) < 0;
+        }
+
         public static string Normalize(string path)
         {
-            return path != null ? Path.GetFullPath(path) : null;
+            if (path == null)
+                return null;
+
+            try
+            {
+                return Path.GetFullPath(path);
+            }
+            catch (NotSupportedException) { return path; }
+            catch (ArgumentException) { return path; }
         }
 
         /// <summary>
@@ -59,13 +83,20 @@ namespace pwiz.Skyline.Controls.FilesTree
         public static bool IsFileInDirectory(string directoryPath, string filePath)
         {
             var normalizedDirectoryPath = Normalize(directoryPath);
-            if(!normalizedDirectoryPath.EndsWith(Path.DirectorySeparatorChar.ToString()) && 
+            if (normalizedDirectoryPath == null)
+                return false;
+
+            if(!normalizedDirectoryPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
                !normalizedDirectoryPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
             {
                 normalizedDirectoryPath += Path.DirectorySeparatorChar;
             }
 
-            var normalizedFileDirectoryPath = Path.GetDirectoryName(Normalize(filePath));
+            var normalizedFilePath = Normalize(filePath);
+            if (normalizedFilePath == null)
+                return false;
+
+            var normalizedFileDirectoryPath = Path.GetDirectoryName(normalizedFilePath);
             if (normalizedFileDirectoryPath == null)
                 return false;
 
@@ -88,8 +119,14 @@ namespace pwiz.Skyline.Controls.FilesTree
         public static bool IsInOrSubdirectoryOf(string baseDirectory, string possibleSubdirectory)
         {
             // Normalize paths to ensure consistent comparison (e.g., handle relative paths, different separators)
-            var normalizedPotentialSubdirectory = Normalize(possibleSubdirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            var normalizedBaseDirectory = Normalize(baseDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var normalizedPotentialSubdirectory = Normalize(possibleSubdirectory);
+            var normalizedBaseDirectory = Normalize(baseDirectory);
+
+            if (normalizedPotentialSubdirectory == null || normalizedBaseDirectory == null)
+                return false;
+
+            normalizedPotentialSubdirectory = normalizedPotentialSubdirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            normalizedBaseDirectory = normalizedBaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
             // Add a directory separator to the base directory for accurate 'Contains' check
             // This prevents false positives where a directory name is a prefix of another (e.g., C:\Dir and C:\Directory)

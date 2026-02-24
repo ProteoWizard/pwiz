@@ -149,7 +149,7 @@ InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(cons
 
 inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)
 {
-    if (scanInfo.activationType() & ActivationType_HCD)
+    if (scanInfo.precursorActivationType(0) & ActivationType_HCD)
     {
         try
         {
@@ -172,7 +172,7 @@ inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& s
             return scanInfo.precursorActivationEnergy(0);
         }
     }
-    else if (scanInfo.activationType() & ActivationType_CID)
+    else if (scanInfo.precursorActivationType(0) & ActivationType_CID)
         return scanInfo.precursorActivationEnergy(0);
     else
         return boost::optional<double>();
@@ -461,6 +461,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             {
                 precursor.clear();
                 precursor.isolationWindow.clear();
+                precursor.activation.clear();
                 selectedIon.clear();
 
                 double isolationMz = precursorInfo.isolationMZ;
@@ -480,7 +481,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
                 precursor.isolationWindow.userParams.emplace_back("ms level", lexical_cast<string>(precursorInfo.msLevel));
 
-                ActivationType activationType = scanInfo->activationType();
+                ActivationType activationType = precursorInfo.activationType;
                 if (activationType == ActivationType_Unknown)
                     activationType = ActivationType_CID; // assume CID
 
@@ -650,7 +651,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                             result->userParams.emplace_back("master scan number", pwiz::util::toString(nonPrecursorMasterScanNumber), "xsd:positiveInteger");
                     }
 
-                    ActivationType activationType = scanInfo->activationType();
+                    ActivationType activationType = scanInfo->precursorActivationType(i);
                     if (activationType == ActivationType_Unknown)
                         activationType = ActivationType_CID; // assume CID
                     setActivationType(activationType, scanInfo->supplementalActivationType(), precursor.activation);
@@ -845,7 +846,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
         long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
 
         if (controllerType == Controller_MS && numControllers > 1)
-            throw runtime_error("[SpectrumList_Thermo::createIndex] Unable to handle RAW files with multiple MS controllers, please contact ProteoWizard support!");
+            warn_once("[SpectrumList_Thermo::createIndex] RAW file has multiple MS controllers; only the first one will be read.");
 
         for (long n=1; n <= numControllers; ++n)
         {
@@ -864,6 +865,8 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
             {
                 case Controller_MS:
                 {
+                    if (n > 1) // only first MS controller is supported
+                        continue;
                     for (long scan=1; scan <= numSpectra; ++scan)
                     {
                         MSOrder msOrder = rawfile_->getMSOrder(scan);

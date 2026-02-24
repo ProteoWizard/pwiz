@@ -20,7 +20,7 @@
 using JetBrains.Profiler.Api;
 
 // ReSharper disable LocalizableElement
-namespace TestRunner
+namespace TestRunnerLib
 {
     /// <summary>
     /// MemoryProfiler creates memory snapshots if the JetBrains DotMemory is running.
@@ -28,14 +28,25 @@ namespace TestRunner
     public static class MemoryProfiler
     {
         /// <summary>
+        /// When true, starts collecting allocation stack traces on first Snapshot call.
+        /// This enables seeing where leaked objects were allocated in dotMemory analysis.
+        /// </summary>
+        public static bool CollectAllocations { get; set; }
+
+        private static bool _collectAllocationsApplied;
+
+        /// <summary>
         /// Take a memory snapshot.
         /// </summary>
         public static void Snapshot(string name)
         {
             if (0 != (JetBrains.Profiler.Api.MemoryProfiler.GetFeatures() & MemoryFeatures.Ready))
             {
-                // Uncomment to start collecting the stack traces of all allocations.
-                //JetBrains.Profiler.Api.MemoryProfiler.CollectAllocations(true);
+                if (CollectAllocations && !_collectAllocationsApplied)
+                {
+                    JetBrains.Profiler.Api.MemoryProfiler.CollectAllocations(true);
+                    _collectAllocationsApplied = true;
+                }
 
                 JetBrains.Profiler.Api.MemoryProfiler.GetSnapshot(name);
             }
