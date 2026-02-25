@@ -601,7 +601,7 @@ namespace pwiz.Skyline.ToolsUI
                     var newDocument = reorderer.SetNewOrder(orderedElements);
                     if (!ReferenceEquals(newDocument, originalDocument))
                     {
-                        _skylineWindow.ModifyDocument("Change element ordering in document from external tool", doc =>
+                        _skylineWindow.ModifyDocument(ToolsUIResources.ToolService_ReorderElements_Order_of_elements_changed_by_external_tool, doc =>
                         {
                             if (!ReferenceEquals(doc, originalDocument))
                             {
