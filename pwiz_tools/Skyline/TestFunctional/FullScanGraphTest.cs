@@ -22,7 +22,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Graph;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;

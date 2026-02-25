@@ -18,7 +18,6 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Graph;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
