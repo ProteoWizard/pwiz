@@ -216,6 +216,8 @@ namespace pwiz.SkylineTestUtil
 
         public int GlobalIndex { get; private set; }
 
+        public string FilePath { get { return @"<memory>"; } }
+
         public Stream Stream { get; private set; }
 
         public bool IsModified

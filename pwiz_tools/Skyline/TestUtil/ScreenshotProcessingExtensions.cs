@@ -145,6 +145,12 @@ namespace pwiz.SkylineTestUtil
             return bmp;
         }
 
+        // CONSIDER: The Windows API function Gdi32.CreateRoundRectRgn() exists and
+        // creates a native rounded rectangle region that should match the exact pixel boundary
+        // Windows uses for rounded window corners.
+        // This was tested as a replacement for the GraphicsPath approach below but found no
+        // meaningful visual difference at normal scale. Left the original implementation, but
+        // this API may be useful if future OS changes require revisiting corner rendering.
         private static Bitmap CleanupBorder11(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
             Rectangle? excludeRect)
         {
@@ -529,6 +535,18 @@ namespace pwiz.SkylineTestUtil
             rect.X -= rectBitmap.X;
             rect.Y -= rectBitmap.Y;
             return rect;
+        }
+
+        /// <summary>
+        /// Draws the state of multiple ProgressBars to cover up
+        /// any animation that Windows may have drawn on the completed progress
+        /// </summary>
+        public static Bitmap FillProgressBars(this Bitmap bmp, IEnumerable<ProgressBar> progressBars)
+        {
+            var result = bmp;
+            foreach (var progressBar in progressBars)
+                result = result.FillProgressBar(progressBar);
+            return result;
         }
 
         /// <summary>

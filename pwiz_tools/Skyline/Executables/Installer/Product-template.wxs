@@ -175,6 +175,9 @@
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="DigitalRune.Windows.Docking.pdb">
+        <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.pdb" KeyPath="yes"/>
+      </Component>
       <Component Id="DotNetZip.dll">
         <File Source="$(var.Skyline.TargetDir)/DotNetZip.dll" KeyPath="yes"/>
       </Component>

@@ -223,6 +223,8 @@ namespace pwiz.SkylineTestUtil
         private readonly byte[] _memoryOld;
         private readonly Size _sizeNew;
         private readonly byte[] _memoryNew;
+        private readonly List<Point> _diffPixels = new List<Point>();
+        private readonly Color _highlightColor;
 
         public ScreenshotDiff(ScreenshotInfo oldScreenshot, ScreenshotInfo newScreenshot, Color highlightColor, int colorTolerance = DEFAULT_COLOR_TOLERANCE)
         {
@@ -230,6 +232,7 @@ namespace pwiz.SkylineTestUtil
             _memoryOld = oldScreenshot.Memory?.ToArray();
             _sizeNew = newScreenshot.ImageSize;
             _memoryNew = newScreenshot.Memory?.ToArray();
+            _highlightColor = highlightColor;
 
             if (!SizesDiffer)
             {
@@ -250,6 +253,7 @@ namespace pwiz.SkylineTestUtil
         public bool PixelsDiffer => PixelCount != 0;
         public bool BytesDiffer => _memoryOld.Length != _memoryNew.Length || !_memoryOld.SequenceEqual(_memoryNew);
         public Bitmap HighlightedImage { get; private set; }
+        public Bitmap DiffOnlyImage { get; private set; }
         public int PixelCount { get; private set; }
 
         /// <summary>
@@ -326,9 +330,17 @@ namespace pwiz.SkylineTestUtil
         private void CalcHighlightImage(Bitmap bmpOld, Bitmap bmpNew, Color highlightColor, int colorTolerance)
         {
             var result = new Bitmap(bmpOld.Width, bmpOld.Height);
+            var diffOnly = new Bitmap(bmpOld.Width, bmpOld.Height);
             var alpha = highlightColor.A;
             var colorPairCounts = new Dictionary<long, int>();
 
+            // Fill diff-only image with white background
+            using (var g = Graphics.FromImage(diffOnly))
+            {
+                g.Clear(Color.White);
+            }
+
+            _diffPixels.Clear();
             PixelCount = 0;
             for (int y = 0; y < bmpOld.Height; y++)
             {
@@ -346,6 +358,8 @@ namespace pwiz.SkylineTestUtil
                             highlightColor.B * alpha / 255 + pixel1.B * (255 - alpha) / 255
                         );
                         result.SetPixel(x, y, blendedColor);
+                        diffOnly.SetPixel(x, y, highlightColor);
+                        _diffPixels.Add(new Point(x, y));
                         PixelCount++;
 
                         // Track color pair frequency: pack both RGB values into a single long key
@@ -364,6 +378,7 @@ namespace pwiz.SkylineTestUtil
             }
 
             HighlightedImage = PixelCount > 0 ? result : bmpOld;
+            DiffOnlyImage = PixelCount > 0 ? diffOnly : null;
 
             // Find color pairs that account for >50% of differing pixels
             if (PixelCount > 0)
@@ -394,6 +409,112 @@ namespace pwiz.SkylineTestUtil
             return Math.Abs(c1.R - c2.R) <= tolerance &&
                    Math.Abs(c1.G - c2.G) <= tolerance &&
                    Math.Abs(c1.B - c2.B) <= tolerance;
+        }
+
+        /// <summary>
+        /// Creates an amplified diff image where each diff pixel is expanded to a filled square.
+        /// </summary>
+        /// <param name="radius">The radius of the square (total size will be 2*radius+1)</param>
+        /// <returns>Amplified diff image, or null if no diff pixels</returns>
+        public Bitmap CreateAmplifiedImage(int radius)
+        {
+            if (_diffPixels.Count == 0 || HighlightedImage == null)
+                return null;
+
+            var result = new Bitmap(HighlightedImage.Width, HighlightedImage.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            // Start with the highlighted image as base
+            using (var g = Graphics.FromImage(result))
+            {
+                lock (HighlightedImage)
+                {
+                    g.DrawImage(HighlightedImage, 0, 0);
+                }
+            }
+
+            // Collect all unique pixels to highlight (avoids overlapping alpha)
+            var amplifiedPixels = new HashSet<Point>();
+            foreach (var point in _diffPixels)
+            {
+                int left = Math.Max(0, point.X - radius);
+                int top = Math.Max(0, point.Y - radius);
+                int right = Math.Min(result.Width - 1, point.X + radius);
+                int bottom = Math.Min(result.Height - 1, point.Y + radius);
+                for (int y = top; y <= bottom; y++)
+                {
+                    for (int x = left; x <= right; x++)
+                    {
+                        amplifiedPixels.Add(new Point(x, y));
+                    }
+                }
+            }
+
+            // Apply highlight color with alpha blending to each unique pixel once
+            foreach (var point in amplifiedPixels)
+            {
+                var baseColor = result.GetPixel(point.X, point.Y);
+                var alpha = _highlightColor.A;
+                var blendedColor = Color.FromArgb(
+                    255,
+                    _highlightColor.R * alpha / 255 + baseColor.R * (255 - alpha) / 255,
+                    _highlightColor.G * alpha / 255 + baseColor.G * (255 - alpha) / 255,
+                    _highlightColor.B * alpha / 255 + baseColor.B * (255 - alpha) / 255
+                );
+                result.SetPixel(point.X, point.Y, blendedColor);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Creates an amplified diff-only image where each diff pixel is expanded to a filled square on white background.
+        /// </summary>
+        /// <param name="radius">The radius of the square (total size will be 2*radius+1)</param>
+        /// <returns>Amplified diff-only image, or null if no diff pixels</returns>
+        public Bitmap CreateAmplifiedDiffOnlyImage(int radius)
+        {
+            if (_diffPixels.Count == 0 || DiffOnlyImage == null)
+                return null;
+
+            var result = new Bitmap(DiffOnlyImage.Width, DiffOnlyImage.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            using (var g = Graphics.FromImage(result))
+            {
+                // Start with white background
+                g.Clear(Color.White);
+            }
+
+            // Collect all unique pixels to highlight (avoids overlapping alpha)
+            var amplifiedPixels = new HashSet<Point>();
+            foreach (var point in _diffPixels)
+            {
+                int left = Math.Max(0, point.X - radius);
+                int top = Math.Max(0, point.Y - radius);
+                int right = Math.Min(result.Width - 1, point.X + radius);
+                int bottom = Math.Min(result.Height - 1, point.Y + radius);
+                for (int y = top; y <= bottom; y++)
+                {
+                    for (int x = left; x <= right; x++)
+                    {
+                        amplifiedPixels.Add(new Point(x, y));
+                    }
+                }
+            }
+
+            // Apply highlight color with alpha blending to white background for each unique pixel once
+            var alpha = _highlightColor.A;
+            var blendedColor = Color.FromArgb(
+                255,
+                _highlightColor.R * alpha / 255 + 255 * (255 - alpha) / 255,
+                _highlightColor.G * alpha / 255 + 255 * (255 - alpha) / 255,
+                _highlightColor.B * alpha / 255 + 255 * (255 - alpha) / 255
+            );
+            foreach (var point in amplifiedPixels)
+            {
+                result.SetPixel(point.X, point.Y, blendedColor);
+            }
+
+            return result;
         }
 
         public void ShowBinaryDiff(RichTextBox richTextBox)

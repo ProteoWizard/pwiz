@@ -2053,6 +2053,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peak integration cannot be changed until library loading is complete. Please wait for the libraries to finish loading..
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_PickedPeak_Libraries_must_be_loaded", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Pick peak {0:F01}.
         /// </summary>
         public static string SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_ {
