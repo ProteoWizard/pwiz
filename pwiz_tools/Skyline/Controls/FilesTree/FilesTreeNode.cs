@@ -96,13 +96,16 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public virtual void OnModelChanged()
         {
-            Name = Model.Name;
-            Text = Model.DisplayText;
+            if (!Equals(Name, Model.Name))
+                Name = Model.Name;
+            if (!Equals(Text, Model.DisplayText))
+                Text = Model.DisplayText;
 
             // Special handling for .sky file - do not change icon if child files are missing
+            int imageIndexNew;
             if (Model is SkylineFile)
             {
-                ImageIndex = FileState == FileState.missing ? (int)ImageMissing : (int)ImageAvailable;
+                imageIndexNew = FileState == FileState.missing ? (int)ImageMissing : (int)ImageAvailable;
             }
             else
             {
@@ -112,14 +115,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                     Nodes.Cast<FilesTreeNode>().Any(node => node.ImageIndex == (int)ImageId.file_missing || node.ImageIndex == (int)ImageId.folder_missing || node.ImageIndex == (int)ImageId.replicate_missing);
 
                 if (anyChildMissingFile || FileState == FileState.missing)
-                    ImageIndex = (int)ImageMissing;
+                    imageIndexNew = (int)ImageMissing;
                 // CONSIDER: use a different icon for in-memory files, maybe grey out the available icon? 
                 //           for now, use the available icon.
                 else if (FileState == FileState.in_memory)
-                    ImageIndex = (int)ImageAvailable;
+                    imageIndexNew = (int)ImageAvailable;
                 else
-                    ImageIndex = (int)ImageAvailable;
+                    imageIndexNew = (int)ImageAvailable;
             }
+            if (ImageIndex != imageIndexNew)
+                ImageIndex = imageIndexNew;
         }
 
         /// <summary>

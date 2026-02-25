@@ -458,6 +458,7 @@
       <DependentUpon>MatchExpressionListDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\PaneProgressBar.cs" />
+    <Compile Include="Controls\Graphs\ReplicateCachingReceiver.cs" />
     <Compile Include="Controls\Graphs\ReplicateGroupOp.cs" />
     <Compile Include="Controls\Graphs\SummaryRelativeAbundanceGraphPane.cs" />
     <Compile Include="Controls\ImageListBox.cs">
@@ -991,6 +992,7 @@
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
+    <Compile Include="Util\SkylineRemoteAccountServices.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1579,6 +1581,7 @@
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\ColorGenerator.cs" />
+    <Compile Include="Model\CachingContracts.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
     <Compile Include="Controls\PopupPickList.cs">
@@ -7124,6 +7127,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="DigitalRune.Windows.Docking.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="enzymes.xml">
       <Visible>False</Visible>

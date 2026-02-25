@@ -18,6 +18,7 @@
  */
 
 
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -247,15 +248,18 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
                 OkDialog(importResultsNameDlg, importResultsNameDlg.OkDialog);
                 var allChromatograms = WaitForOpenForm<AllChromatogramsGraph>();
-                allChromatograms.SetFreezeProgressPercent(40, "00:00:35");
                 RunUI(() =>
                 {
                     allChromatograms.Top = SkylineWindow.Top;
                     allChromatograms.Left = SkylineWindow.Right + 20;
                 });
-                WaitForConditionUI(() => allChromatograms.IsProgressFrozen());
-                PauseForScreenShot<AllChromatogramsGraph>("Importing results form");
-                allChromatograms.SetFreezeProgressPercent(null, null);
+                if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form", 33, "00:00:35", 22f, 2.5e6f,
+                    new Dictionary<string, int>
+                    {
+                        { Path.GetFileNameWithoutExtension(Flies_F), 44 },
+                        { Path.GetFileNameWithoutExtension(Flies_M), 40 }
+                    }))
+                    return;
             }
 
             WaitForGraphs();
@@ -291,7 +295,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             RestoreViewOnScreen(13);
             WaitForGraphs();
             var libraryMatchView = WaitForOpenForm<GraphSpectrum>();
-            RunUI(() => libraryMatchView.ZoomXAxis(100, 400));
+            RunUI(() => ZoomXAxis(libraryMatchView.ZedGraphControl, 100, 400));
             PauseForScreenShot<GraphSpectrum>("Library Match");
 
             //Since there are only 38 precursors in this document, you may want to review all 38 to get an overall feel for how the XIC look prior to IMS filtering.Before starting this review, do the following:

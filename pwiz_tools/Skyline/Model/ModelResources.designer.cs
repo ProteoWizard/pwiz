@@ -1718,6 +1718,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide Normalized Areas.
+        /// </summary>
+        public static string PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas {
+            get {
+                return ResourceManager.GetString("PersistedViews_GetLocalizedReportNames_Peptide_Normalized_Areas", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Abundances.
+        /// </summary>
+        public static string PersistedViews_GetLocalizedReportNames_Protein_Abundances {
+            get {
+                return ResourceManager.GetString("PersistedViews_GetLocalizedReportNames_Protein_Abundances", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Main.
         /// </summary>
         public static string PersistedViews_MainGroup_Main {
@@ -2057,6 +2075,19 @@ namespace pwiz.Skyline.Model {
         public static string SrmDocument_GetSmallMoleculeGroupId_molecules {
             get {
                 return ResourceManager.GetString("SrmDocument_GetSmallMoleculeGroupId_molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file &quot;{0}&quot; appears to be a {1} mass spectrometry data file, rather than a Skyline document (.sky or .sky.zip file).
+        ///If you are trying to search the file for peptides or molecules in the raw data, please use File &gt; Search.
+        ///Otherwise, to work with mass spec data in Skyline, first set up targets (see Help &gt; Tutorials), then use File &gt; Import &gt; Results to extract chromatograms for your targets from your mass spec data.
+        ///If you want to inspect the raw data, use a viewer like SeeMS (download from proteowiza [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_data_file {
+            get {
+                return ResourceManager.GetString("SrmDocument_IsSkylineFile_The_file___0___appears_to_be_a__1__mass_spectrometry_da" +
+                        "ta_file", resourceCulture);
             }
         }
         

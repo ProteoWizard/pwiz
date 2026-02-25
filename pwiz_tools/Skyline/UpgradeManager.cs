@@ -220,7 +220,15 @@ namespace pwiz.Skyline
 
         private static string GetVersionDiff(Version versionCurrent, Version versionAvailable)
         {
-            if (versionCurrent.Major != versionAvailable.Major || versionCurrent.Minor != versionAvailable.Minor)
+            // For Skyline versioning: Major.Minor.Build.Revision = YY.N.B.DDD
+            // B=0 is release, B=1 is daily, B=9 is feature complete
+            // Only show abbreviated version (YY.N) for actual releases (Build=0)
+            // when the release number (YY.N) has changed
+            bool majorUpgrade = versionCurrent.Major != versionAvailable.Major ||
+                                versionCurrent.Minor != versionAvailable.Minor;
+            bool isRelease = versionAvailable.Build == 0;
+
+            if (majorUpgrade && isRelease)
                 return string.Format(@"{0}.{1}", versionAvailable.Major, versionAvailable.Minor);
             return versionAvailable.ToString();
         }

@@ -102,6 +102,7 @@ findstr /c:"Could not resolve reference" %QUICKBUILDLOG%
 findstr /b /c:"Unable to load" %QUICKBUILDLOG%
 findstr /b /c:"error:" %QUICKBUILDLOG%
 findstr /c:"test(s) Passed" %QUICKBUILDLOG%
+findstr /c:"Elapsed time:" %QUICKBUILDLOG%
 
 :BUILD_DONE
 echo.

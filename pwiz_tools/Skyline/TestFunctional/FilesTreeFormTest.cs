@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -37,15 +44,9 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.SettingsUI.Irt;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using System.Xml.Serialization;
 using static pwiz.Skyline.Model.Files.FileModel;
 using BackgroundProteome = pwiz.Skyline.Model.Files.BackgroundProteome;
 using IonMobilityLibrary = pwiz.Skyline.Model.Files.IonMobilityLibrary;
@@ -114,6 +115,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.txt"));
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.raw"));
             Assert.IsFalse(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.RAW"));
+
+            // Extension ignore list should be case-insensitive
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.TMP"));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.BAK"));
+
+            // FileSaver temporary files should be ignored, because they use the .tmp extension, but this should always be true
+            using (var fileSaver = new FileSaver(GetTestPath("test.sky")))
+                Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(fileSaver.SafeName));
+
+            // NTFS Alternate Data Stream paths should be ignored
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\Downloads\file.zip:Zone.Identifier"));
+            Assert.IsTrue(LocalFileSystemService.ShouldIgnoreFile(@"c:\Users\foobar\file.txt:SmallData"));
         }
 
         protected void TestFileSystemHelpers()
@@ -142,6 +155,19 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar\directory", @"c:\users\foobar\dir"));
 
             Assert.IsTrue(FileSystemUtil.PathEquals(@"C:\Users\Foobar\directory\foo.mzML", @"c:\users\foobar\directory\foo.mzml"));
+
+            // ADS paths should be detected
+            Assert.IsTrue(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.zip:Zone.Identifier"));
+            Assert.IsTrue(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.txt:SmallData"));
+            Assert.IsFalse(FileSystemUtil.IsAlternateDataStream(@"c:\Users\foobar\file.txt"));
+            Assert.IsFalse(FileSystemUtil.IsAlternateDataStream(@"\\?\C:\Users\foobar\file.txt"));
+            Assert.IsFalse(FileSystemUtil.IsAlternateDataStream(null));
+
+            // ADS paths should not crash path methods - they degrade gracefully.
+            // ShouldIgnoreFile filters ADS paths before they reach these methods in FSW handlers.
+            // IsFileInDirectory returns true because the base file IS in the directory.
+            Assert.IsTrue(FileSystemUtil.IsFileInDirectory(@"c:\Users\foobar", @"c:\Users\foobar\file.zip:Zone.Identifier"));
+            Assert.IsFalse(FileSystemUtil.IsInOrSubdirectoryOf(@"c:\Users\foobar", @"c:\Users\foobar\sub:Stream"));
         }
 
         protected void TestEmptyDocument()
@@ -688,6 +714,10 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(libListDlg, libListDlg.OkDialog);
                 RunUI(() => peptideSettingsUI.PickedLibraries = peptideSettingsUI.PickedLibraries.Append(name).ToArray());
+
+                // TODO(nicksh): If GraphSpectrum updates while the OK button is being pressed it might leak a PooledSqliteConnection
+                WaitForConditionUI(() => !SkylineWindow.GraphSpectrum.IsGraphUpdatePending);
+
                 OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             }
 
@@ -1113,11 +1143,11 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-            doc = WaitForDocumentChange(doc);
+            doc = WaitForDocumentChangeAndFilesTree(doc);
             Assert.IsNull(SkylineWindow.FilesTree.RootChild<ReplicatesFolder>());
 
             RunUI(() => SkylineWindow.Undo());
-            WaitForDocumentChange(doc);
+            WaitForDocumentChangeAndFilesTree(doc);
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
         }
 
@@ -1135,8 +1165,8 @@ namespace pwiz.SkylineTestFunctional
             var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
             OkDialog(confirmDlg, confirmDlg.ClickYes);
 
+            doc = WaitForDocumentChangeAndFilesTree(doc);
             replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
-            doc = WaitForDocumentChange(doc);
 
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT - 3);
 
@@ -1146,8 +1176,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[2].Name));
 
             RunUI(() => SkylineWindow.Undo());
-            WaitForDocumentChange(doc);
+            WaitForDocumentChangeAndFilesTree(doc);
 
+            replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
             AssertTreeFolderMatchesDocumentAndModel<ReplicatesFolder>(RAT_PLASMA_REPLICATE_COUNT);
             Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[0].Name));
             Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[1].Name));
@@ -1259,11 +1290,11 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-                doc = WaitForDocumentChange(doc);
+                doc = WaitForDocumentChangeAndFilesTree(doc);
                 Assert.IsNull(SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>());
 
                 RunUI(() => SkylineWindow.Undo());
-                WaitForDocumentChange(doc);
+                WaitForDocumentChangeAndFilesTree(doc);
                 AssertTreeFolderMatchesDocumentAndModel<SpectralLibrariesFolder>(2);
             }
 
@@ -1279,14 +1310,14 @@ namespace pwiz.SkylineTestFunctional
                 var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
                 OkDialog(confirmDlg, confirmDlg.ClickYes);
 
-                doc = WaitForDocumentChange(doc);
+                doc = WaitForDocumentChangeAndFilesTree(doc);
                 Assert.IsNull(SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>());
                 var libraryFile = SkylineWindow.FilesTree.RootChild<SpectralLibrary>();
                 Assert.IsNotNull(libraryFile);
                 Assert.AreEqual(libName0, libraryFile.Name);
 
                 RunUI(() => SkylineWindow.Undo());
-                WaitForDocumentChange(doc);
+                WaitForDocumentChangeAndFilesTree(doc);
 
                 AssertTreeFolderMatchesDocumentAndModel<SpectralLibrariesFolder>(2);
 
@@ -1339,7 +1370,7 @@ namespace pwiz.SkylineTestFunctional
                 // Undo rename
                 var doc = SkylineWindow.Document;
                 RunUI(() => SkylineWindow.Undo());
-                WaitForDocumentChange(doc);
+                WaitForDocumentChangeAndFilesTree(doc);
                 Assert.AreEqual(originalName, SkylineWindow.FilesTree.RootChild<SpectralLibrariesFolder>().Nodes[0].Name);
                 Assert.AreEqual(originalName, SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             }
@@ -1703,7 +1734,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             Assert.IsFalse(simulator.IsDragging);
-            WaitForDocumentChange(oldDoc);
+            WaitForDocumentChangeAndFilesTree(oldDoc);
 
             // Test 8: Drop on remove target
             replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
@@ -1733,7 +1764,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(confirmDlg, confirmDlg.ClickYes);
 
             Assert.IsFalse(simulator.IsDragging);
-            WaitForDocumentChange(oldDoc);
+            WaitForDocumentChangeAndFilesTree(oldDoc);
 
             // Verify the node was removed
             replicatesFolder = SkylineWindow.FilesTree.RootChild<ReplicatesFolder>();
@@ -1772,6 +1803,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.FilesTreeForm.DropNodes(dragNodes, selectedNode, dropNode, moveType, DragDropEffects.Move);
             });
             var newDoc = WaitForDocumentChangeLoaded(oldDoc);
+            WaitForFilesTree();
 
             folder = SkylineWindow.FilesTree.RootChild<T>();
 
@@ -1992,6 +2024,17 @@ namespace pwiz.SkylineTestFunctional
         private static void WaitForFilesTree()
         {
             WaitForConditionUI(() => SkylineWindow.FilesTree.IsComplete());
+        }
+
+        /// <summary>
+        /// Wait for a document change and then wait for FilesTree to process the change.
+        /// Use this when a document change is triggered by something outside FilesTree (e.g., Undo/Redo).
+        /// </summary>
+        private static SrmDocument WaitForDocumentChangeAndFilesTree(SrmDocument docCurrent)
+        {
+            var doc = WaitForDocumentChange(docCurrent);
+            WaitForFilesTree();
+            return doc;
         }
 
         /// <summary>

@@ -107,10 +107,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
                 else
                 {
-                    newDocumentRetentionTimes = UpdateResultFileAlignments(container, docCurrent);
+                    newDocumentRetentionTimes = UpdateResultFileAlignments(alignmentTarget, container, docCurrent);
                 }
 
                 if (newDocumentRetentionTimes == null)
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(newDocumentRetentionTimes, documentRetentionTimes))
                 {
                     return false;
                 }
@@ -181,7 +186,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return documentRetentionTimes.ChangeLibraryAlignments(alignmentParam, alignment);
         }
 
-        private DocumentRetentionTimes UpdateResultFileAlignments(IDocumentContainer container, SrmDocument docCurrent)
+        private DocumentRetentionTimes UpdateResultFileAlignments(AlignmentTarget alignmentTarget, IDocumentContainer container, SrmDocument docCurrent)
         {
             var loadMonitor = new LoadMonitor(this, container, docCurrent);
             var documentRetentionTimes = docCurrent.Settings.DocumentRetentionTimes;
@@ -190,7 +195,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             try
             {
                 loadMonitor.UpdateProgress(progressStatus);
-                result = documentRetentionTimes.UpdateResultFileAlignments(loadMonitor, ref progressStatus, docCurrent);
+                result = documentRetentionTimes.UpdateResultFileAlignments(alignmentTarget, loadMonitor, ref progressStatus, docCurrent);
                 loadMonitor.UpdateProgress(progressStatus.Complete());
             }
             catch (Exception e)

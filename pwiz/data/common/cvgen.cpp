@@ -22,12 +22,14 @@
 
 
 #include "obo.hpp"
+#include "cvgen_common.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include "boost/xpressive/xpressive_dynamic.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::data;
+using namespace pwiz::cv;
 namespace bfs = boost::filesystem;
 namespace bxp = boost::xpressive;
 
@@ -91,16 +93,10 @@ void namespaceEnd(ostream& os, const string& name)
 }
 
 
-inline char toAllowableChar(char a)
-{
-    return isalnum(a) ? a : '_';
-}
-
-
 string enumName(const string& prefix, const string& name, bool isObsolete)
 {
-    string result = name;
-    transform(result.begin(), result.end(), result.begin(), toAllowableChar);
+    // Always use escaped characters for better handling of special chars
+    string result = toEscapedCharacters(name);
     result = prefix + "_" + result + (isObsolete ? "_OBSOLETE" : "");
     return result;
 }
@@ -185,9 +181,12 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
         {
             for(const string& synonym : term.exactSynonyms)
             {
+                auto synonym_enum_name = enumName(term.prefix, synonym, term.isObsolete);
+                if (eName == synonym_enum_name) // Should not happen, but just in case
+                    cerr << "Warning: synonym enum name collision for term id " << term.id << ": " << synonym << ": " << eName << endl;
                 os << ",\n\n"
                    << "    /// " << synonym << " (" << term.name << "): " << term.def << "\n"
-                   << "    " << enumName(term.prefix, synonym, term.isObsolete) << " = " << eName;
+                   << "    " << synonym_enum_name << " = " << eName;
             }
         }
     }
@@ -366,8 +365,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
         if (!relatedTerm)
         {
-            if ("PATO" != jt->second.first) // we don't follow the UO -> PATO relationships because we don't download pato.obo
-                cerr << "[writeCpp] Warning: unable to find object of term relationship for term \"" << term.name << "\"." << endl;
+            if (!isIgnoredRelationship(jt->second.first)) // we don't follow some relationships, e.g. the UO -> PATO relationships because we don't download pato.obo
+                cerr << "[writeCpp] Warning: unable to find object of term relationship for term \"" << term.prefix << ":" << term.name << "\". (UO->" << jt->second.first << ")" << endl;
         }
         else
             os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", "
@@ -404,8 +403,6 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "};\n\n\n";
 
 
-    typedef pair<string, string> NameValuePair;
-
     os << "PropertyValuePair propertyValue_[] =\n"
           "{\n"
           "    {CVID_Unknown, \"Unknown\", \"Unknown\"},\n";
@@ -415,7 +412,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
             continue;
 
         for(const Term& term : obo->terms)
-        for(const NameValuePair& nameValuePair : term.propertyValues)
+        for(auto nameValuePair : term.propertyValues)
         {
             if (!(bal::ends_with(nameValuePair.first, "_classification") ||
                   bal::ends_with(nameValuePair.first, "_position") ||
@@ -471,7 +468,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "        cvMap_[\"MS\"].URI = \"https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo\";\n"
           "\n"
           "        cvMap_[\"UO\"].fullName = \"Unit Ontology\";\n"
-          "        cvMap_[\"UO\"].URI = \"https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo\";\n"
+          "        cvMap_[\"UO\"].URI = \"https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/uo.obo\";\n"
           "\n"
           "        cvMap_[\"UNIMOD\"].fullName = \"UNIMOD\";\n"
           "        cvMap_[\"UNIMOD\"].URI = \"http://www.unimod.org/obo/unimod.obo\";\n"
@@ -506,7 +503,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
             bxp::sregex e = bxp::sregex::compile("(\\d+-\\d+-\\d+).*");
             bxp::smatch what;
             for(const Term& term : obo->terms)
-            for(const NameValuePair& nameValuePair : term.propertyValues)
+            for(auto nameValuePair : term.propertyValues)
                 if (nameValuePair.first == "date_time_modified" &&
                     regex_match(nameValuePair.second, what, e))
                 {
@@ -583,6 +580,7 @@ void generateFiles(const vector<OBO>& obos, const string& basename, const bfs::p
 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
+        cout << "[generateFiles] Processing OBO file: " << obo->filename << endl;
         multiset<string> enumNames;
         for(const Term& term : obo->terms)
             enumNames.insert(enumName(term));

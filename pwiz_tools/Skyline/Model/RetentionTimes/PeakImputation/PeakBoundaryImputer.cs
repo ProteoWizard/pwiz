@@ -371,7 +371,8 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private ImputedPeak GetMedianPeak(IEnumerable<ImputedPeak> imputedPeaks)
         {
-            var orderedPeaks = imputedPeaks.OrderBy(peak => peak.PeakBounds.StartTime + peak.PeakBounds.EndTime).ToList();
+            var orderedPeaks = imputedPeaks.Where(peak => null != peak)
+                .OrderBy(peak => peak.PeakBounds.StartTime + peak.PeakBounds.EndTime).ToList();
             if (orderedPeaks.Count == 0)
             {
                 return null;

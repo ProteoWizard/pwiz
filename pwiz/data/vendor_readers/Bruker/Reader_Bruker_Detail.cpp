@@ -282,6 +282,7 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
     return configurations;
 }
 
+
 PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(CompassDataPtr rawfile)
 {
     switch (rawfile->getInstrumentFamily())
@@ -342,6 +343,147 @@ PWIZ_API_DECL cv::CVID translateAsAcquisitionSoftware(CompassDataPtr rawfile)
     if (bal::icontains(name, "Flex")) return MS_FlexControl;
 
     return MS_Compass; // default to Compass
+}
+
+
+// Implementations for trace type/unit -> CVID and scaling helpers
+PWIZ_API_DECL pwiz::cv::CVID traceTypeToCVID(TraceType type, TraceUnit unit, const std::string& description)
+{
+    switch (type)
+    {
+        case TraceType::NoneTrace:
+            return CVID_Unknown;
+        case TraceType::ChromMS:
+            if (description.find("BPC") == 0)
+                return MS_basepeak_chromatogram;
+            return MS_TIC_chromatogram;
+        case TraceType::ChromUV:
+            return MS_absorption_chromatogram;
+        case TraceType::ChromPressure:
+            return MS_pressure_chromatogram;
+        case TraceType::ChromSolventMix:
+            return MS_chromatogram; // Does not appear to be a suitably differentiated CVID for this
+        case TraceType::ChromFlow:
+            return MS_flow_rate_chromatogram;
+        case TraceType::ChromTemperature:
+            return MS_temperature_chromatogram;
+        case TraceType::ChromUserDefined:
+            if (unit == TraceUnit::Temperature_C ||
+                unit == TraceUnit::Temperature_F)
+            {
+                return MS_temperature_chromatogram;
+            }
+            return MS_chromatogram;
+    }
+    return CVID_Unknown;
+}
+
+PWIZ_API_DECL pwiz::cv::CVID traceUnitToCVID(TraceUnit unit, double& value)
+{
+    switch (unit)
+    {
+        case TraceUnit::NoneUnit:
+            return CVID_Unknown;
+        case TraceUnit::Length_nm:
+            return UO_nanometer;
+        case TraceUnit::Flow_mul_min:
+            return UO_microliters_per_minute;
+        case TraceUnit::Pressure_bar:
+            return UO_bar;
+        case TraceUnit::Percent:
+            return UO_percent;
+        case TraceUnit::Temperature_C:
+            return UO_degree_Celsius;
+        case TraceUnit::Intensity:
+            return MS_number_of_detector_counts;
+        case TraceUnit::UnknownUnit:
+            return CVID_Unknown;
+        case TraceUnit::Absorbance_AU:
+            return UO_absorbance_unit;
+        case TraceUnit::Absorbance_mAU:
+            value /= 1000.0; // convert mAU to AU
+            return UO_absorbance_unit;
+        case TraceUnit::Counts:
+            return MS_number_of_detector_counts;
+        case TraceUnit::Current_A:
+            return UO_ampere;
+        case TraceUnit::Current_mA:
+            return UO_milliampere;
+        case TraceUnit::Current_muA:
+            return UO_microampere;
+        case TraceUnit::Flow_ml_min:
+            value *= 1000.0; // convert mL/min to µL/min
+            return UO_microliters_per_minute;
+        case TraceUnit::Flow_nl_min:
+            value /= 1000.0; // convert nL/min to µL/min
+            return UO_microliters_per_minute;
+        case TraceUnit::Length_cm:
+            return UO_centimeter;
+        case TraceUnit::Length_mm:
+            return UO_millimeter;
+        case TraceUnit::Length_mum:
+            return UO_micrometer;
+        case TraceUnit::Luminescence:
+            return CVID_Unknown;
+        case TraceUnit::Molarity_mM:
+            return UO_millimolar;
+        case TraceUnit::Power_W:
+            return UO_watt;
+        case TraceUnit::Power_mW:
+            value /= 1000.0; // convert mW to W
+            return UO_watt;
+        case TraceUnit::Pressure_mbar:
+            value /= 1000.0; // convert mbar to bar (1 bar = 1000 mbar)
+            return UO_bar;
+        case TraceUnit::Pressure_kPa:
+            value *= 1000.0; // convert kPa to Pa
+            return UO_pascal;
+        case TraceUnit::Pressure_MPa:
+            value *= 1000000.0; // convert MPa to Pa
+            return UO_pascal;
+        case TraceUnit::Pressure_psi:
+            return UO_pounds_per_square_inch;
+        case TraceUnit::RefractiveIndex:
+            return CVID_Unknown;
+        case TraceUnit::Temperature_F:
+            return UO_degree_Fahrenheit;
+        case TraceUnit::Time_h:
+            return UO_hour;
+        case TraceUnit::Time_min:
+            return UO_minute;
+        case TraceUnit::Time_s:
+            return UO_second;
+        case TraceUnit::Time_ms:
+            return UO_millisecond;
+        case TraceUnit::Time_mus:
+            return UO_microsecond;
+        case TraceUnit::Viscosity_cP:
+            value /= 100.0; // convert cP to P (1 P = 100 cP)
+            return UO_poise;
+        case TraceUnit::Voltage_kV:
+            return UO_kilovolt;
+        case TraceUnit::Voltage_V:
+            return UO_volt;
+        case TraceUnit::Voltage_mV:
+            return UO_millivolt;
+        case TraceUnit::Volume_l:
+            return UO_liter;
+        case TraceUnit::Volume_ml:
+            return UO_milliliter;
+        case TraceUnit::Volume_mul:
+            return UO_microliter;
+        case TraceUnit::Energy_J:
+            return UO_joule;
+        case TraceUnit::Energy_mJ:
+            value /= 1000.0; // convert mJ to J
+            return UO_joule;
+        case TraceUnit::Energy_muJ:
+            value /= 1000000.0; // convert µJ to J
+            return UO_joule;
+        case TraceUnit::Length_Angstrom:
+            return UO_angstrom;
+    }
+    return CVID_Unknown;
 }
 
 #else

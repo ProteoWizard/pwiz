@@ -1409,6 +1409,14 @@ namespace pwiz.Skyline
 
         public bool OpenSkyFile(string skylineFile)
         {
+            // Pre-validate: detect mass spec data files and other non-Skyline files before attempting XML parsing
+            if (File.Exists(skylineFile) && !SrmDocument.IsSkylineFile(skylineFile, out var explained))
+            {
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_, skylineFile);
+                _out.WriteLine(explained);
+                return false;
+            }
+
             try
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
@@ -3012,7 +3020,7 @@ namespace pwiz.Skyline
                         prediction.ChangeRetentionTime(retentionTimeRegression)));
                 }
                 string dbPath = calcIrt.DatabasePath;
-                IrtDb db = IrtDb.GetIrtDb(dbPath, null);
+                IrtDb db = IrtDb.GetIrtDb(dbPath);
                 if (checkPeptides)
                 {
                     var standards = docNew.Molecules.Where(m => db.IsStandard(m.ModifiedTarget)).ToArray();

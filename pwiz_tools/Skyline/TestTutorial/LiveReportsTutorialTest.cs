@@ -69,6 +69,7 @@ namespace pwiz.SkylineTestTutorial
                 @"TestTutorial\LiveReportsViews.zip"
             };
 
+            using (new TestTimeProvider(new DateTime(2025, 1, 1, 10, 10, 0, DateTimeKind.Local)))
             using (new AuditLogList.IgnoreTestChecksScope())
                 RunFunctionalTest();
         }
@@ -102,6 +103,7 @@ namespace pwiz.SkylineTestTutorial
             HideReportsDropdown();
             RunUI(()=>
             {
+                documentGrid.Parent.Parent.Height = 405; // Use 25.1 height which had a smaller menu
                 documentGrid.DataboundGridControl.ChooseView(
                     ViewGroup.BUILT_IN.Id.ViewName(Resources
                         .SkylineViewContext_GetDocumentGridRowSources_Proteins));

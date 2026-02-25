@@ -308,4 +308,16 @@
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
     <value>Panoramaサーバー{0}でインポートエラーが発生しました。</value>
   </data>
+  <data name="DsvStreamReader_this_Header__0__not_found_in_DSV_file_" xml:space="preserve">
+    <value>DSVファイルにヘッダー{0}がありません。</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Stream_is_null_or_empty_" xml:space="preserve">
+    <value>ストリームがヌルまたは空です。</value>
+  </data>
+  <data name="DsvStreamReader_DsvStreamReader_Empty_stream_" xml:space="preserve">
+    <value>空のストリーム。</value>
+  </data>
+  <data name="ClipboardHelper_GetGenericClipboardErrorMessage_Failed_accessing_the_clipboard_" xml:space="preserve">
+    <value>クリップボードにアクセスできませんでした。</value>
+  </data>
 </root>

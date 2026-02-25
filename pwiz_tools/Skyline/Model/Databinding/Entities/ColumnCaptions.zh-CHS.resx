@@ -171,6 +171,9 @@
   <data name="ApexTotalIonCountMS1">
     <value>Apex 总离子计数 MS1</value>
   </data>
+  <data name="ApexTransitionIonCount">
+    <value>顶点转移离子计数</value>
+  </data>
   <data name="Area">
     <value>面积</value>
   </data>
@@ -321,6 +324,9 @@
   <data name="ConfidenceLevel">
     <value>置信水平</value>
   </data>
+  <data name="ConstantNeutralLoss">
+    <value>恒定中性损耗</value>
+  </data>
   <data name="CountTruncated">
     <value>截尾计数</value>
   </data>
@@ -384,6 +390,9 @@
   <data name="DetectionZScore">
     <value>检测 Z 得分</value>
   </data>
+  <data name="DissociationMethod">
+    <value>分离法</value>
+  </data>
   <data name="DriftTimeFragment">
     <value>漂移时间片段</value>
   </data>
@@ -407,6 +416,30 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>从校准中排除</value>
+  </data>
+  <data name="ExemplaryEndTime">
+    <value>范例结束时间</value>
+  </data>
+  <data name="ExemplaryFilePath">
+    <value>范例文件路径</value>
+  </data>
+  <data name="ExemplaryLibraryName">
+    <value>范例库名称</value>
+  </data>
+  <data name="ExemplaryPeak">
+    <value>范例峰</value>
+  </data>
+  <data name="ExemplaryReplicateName">
+    <value>范例重复测定名称</value>
+  </data>
+  <data name="ExemplaryRetentionTime">
+    <value>范例保留时间</value>
+  </data>
+  <data name="ExemplaryScore">
+    <value>范例得分</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>范例起始时间</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
     <value>明确分析物浓度</value>
@@ -512,6 +545,15 @@
   </data>
   <data name="Identified">
     <value>已确认的</value>
+  </data>
+  <data name="ImputedEndTime">
+    <value>插补结束时间</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>插补峰</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>插补起始时间</value>
   </data>
   <data name="InChI">
     <value>InChI（国际化合物标识）</value>
@@ -638,6 +680,9 @@
   </data>
   <data name="LcPeakTotalIonCurrentAreaMS1">
     <value>液相色谱峰总离子流面积 MS1</value>
+  </data>
+  <data name="LcPeakTransitionIonCount">
+    <value>LC 峰转移离子计数</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>库碰撞横截面</value>
@@ -846,6 +891,9 @@
   <data name="MoleculeListAbundanceMessage">
     <value>分子列表丰度消息</value>
   </data>
+  <data name="MoleculeListAbundanceRaw">
+    <value>分子列表丰度原始值</value>
+  </data>
   <data name="MoleculeListAbundanceStrict">
     <value>分子列表丰度精确值</value>
   </data>
@@ -948,8 +996,20 @@
   <data name="OptStep">
     <value>最优步骤</value>
   </data>
+  <data name="OriginalEndTime">
+    <value>原始结束时间</value>
+  </data>
   <data name="OriginalPeak">
     <value>初始峰</value>
+  </data>
+  <data name="OriginalRetentionTime">
+    <value>原始保留时间</value>
+  </data>
+  <data name="OriginalScore">
+    <value>原始得分</value>
+  </data>
+  <data name="OriginalStartTime">
+    <value>原始起始时间</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>峰组结束时间</value>
@@ -1173,6 +1233,9 @@
   <data name="ProteinAbundanceMessage">
     <value>蛋白质丰度消息</value>
   </data>
+  <data name="ProteinAbundanceRaw">
+    <value>蛋白质丰度原始值</value>
+  </data>
   <data name="ProteinAbundanceStrict">
     <value>蛋白质丰度精确值</value>
   </data>
@@ -1277,6 +1340,21 @@
   </data>
   <data name="Reason">
     <value>原因</value>
+  </data>
+  <data name="ReintegratedEndTime">
+    <value>重新合并结束时间</value>
+  </data>
+  <data name="ReintegratedPeak">
+    <value>重新合并峰</value>
+  </data>
+  <data name="ReintegratedRetentionTime">
+    <value>重新合并保留时间</value>
+  </data>
+  <data name="ReintegratedScore">
+    <value>重新合并得分</value>
+  </data>
+  <data name="ReintegratedStartTime">
+    <value>重新合并起始时间</value>
   </data>
   <data name="Replicate">
     <value>重复测定</value>
@@ -1493,6 +1571,9 @@
   </data>
   <data name="TransitionCount">
     <value>离子对计数</value>
+  </data>
+  <data name="TransitionIonMetrics">
+    <value>转移离子指标</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>离子对是诱饵</value>

@@ -601,6 +601,7 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\WatersConnectData.ipp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Detail.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Bruker\ChromatographyDataSqliteReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />

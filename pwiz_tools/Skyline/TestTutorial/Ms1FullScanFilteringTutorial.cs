@@ -318,15 +318,18 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
-            allChromGraph.SetFreezeProgressPercent(24, "00:00:02");
             RunUI(() =>
             {
                 allChromGraph.Left = SkylineWindow.Right + 20;
                 allChromGraph.Activate();
             });
-            WaitForConditionUI(() => allChromGraph.IsProgressFrozen());
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window");
-            allChromGraph.SetFreezeProgressPercent(null, null);
+            if (!PauseForAllChromatogramsGraphScreenShot("Importing Results form", 90, "00:00:02", 70f, 6.05e3f,
+                new Dictionary<string, int>
+                {
+                    { "100803_0001_MCF7_TiB_L", 85 },
+                    { "100803_0005b_MCF7_TiTip3", 95 }
+                }))
+                return;
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(documentBaseName));
@@ -735,15 +738,16 @@ namespace pwiz.SkylineTestTutorial
             {
                 // TODO: Figure out why the minimize fails to unlock the .skyd file, if not minimized to current file
                 RunUI(() => SkylineWindow.SaveDocument(minimizedFile));
+                WaitForDocumentLoaded(); // Save As triggers reload of libraries and .skyd from new paths
 
                 var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                 var minimizeResultsDlg = ShowDialog<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults);
-                RunUI(() =>
-                {
-                    minimizeResultsDlg.LimitNoiseTime = true;
-                    minimizeResultsDlg.NoiseTimeRange = 2; // Not L10N
-                });
+                RunUI(() => minimizeResultsDlg.SetNoiseLimit(true, 2));
                 WaitForConditionUI(() => minimizeResultsDlg.IsComplete);
+                // Compression ratio differs: .wiff files extend to 118.8 min while mzML is truncated
+                // at 50 min (see PreferWiff), so noise trimming removes different proportions
+                int expectedCompression = PreferWiff ? 55 : 36;
+                RunUI(() => Assert.AreEqual(expectedCompression, minimizeResultsDlg.PercentOfTotalCompression, 1));
                 PauseForScreenShot<MinimizeResultsDlg>("Minimize Results form");   // old p. 23
 
                 OkDialog(minimizeResultsDlg, () => minimizeResultsDlg.MinimizeToFile(minimizedFile));

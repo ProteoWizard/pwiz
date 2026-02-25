@@ -572,6 +572,16 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return TimeProvider?.Now ?? DateTime.UtcNow; }
         }
 
+        public interface IVersionProvider
+        {
+            string Version { get; }
+        }
+
+        /// <summary>
+        /// For consistent screenshots involving AuditLogEntries version display
+        /// </summary>
+        public static IVersionProvider VersionProvider { get; set; }
+
         public const string XML_ROOT = "audit_log_entry";
 
         private ImmutableList<DetailLogMessage> _allInfo;
@@ -580,11 +590,16 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static string _user = WindowsIdentity.GetCurrent().Name; // This won't change during app's run, so cache it
 
-        public static string _skylineVersion = // This won't change during app's run, so cache it
+        private static string _defaultSkylineVersion = // This won't change during app's run, so cache it
             (string.IsNullOrEmpty(Install.Version)
                ? string.Format(@"Developer build, document format {0}",DocumentFormat.CURRENT) // CONSIDER: can we be more informative?
                : Install.Version)
                + (Install.Is64Bit ? @" (64-Bit)" : string.Empty);
+
+        public static string _skylineVersion
+        {
+            get { return VersionProvider?.Version ?? _defaultSkylineVersion; }
+        }
 
         public static AuditLogEntry ROOT = new AuditLogEntry { Count = 0, LogIndex = int.MaxValue };
 

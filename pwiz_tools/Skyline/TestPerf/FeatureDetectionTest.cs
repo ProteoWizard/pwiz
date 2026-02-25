@@ -192,6 +192,17 @@ namespace TestPerf
                 {
                     SkylineWindow.NewDocument(true);
                 });
+
+                // There was an issue with TransitionSettings.Libraries.MinIonCount being applied
+                // to detected features, which (uniquely) use spectral libraries without any fragments.
+                // N.B. that change should be revisited if we ever enable the Hardklor/Bullseye
+                // association of fragments with features.
+                var transitionSettings = SkylineWindow.Document.Settings.TransitionSettings;
+                var transitionLibraries = transitionSettings.Libraries.ChangeMinIonCount(3);
+                var docIonCount = SkylineWindow.Document.ChangeSettings(
+                    SkylineWindow.Document.Settings.ChangeTransitionSettings(
+                        transitionSettings.ChangeLibraries(transitionLibraries)));
+                RunUI(() => SkylineWindow.SetDocument(docIonCount, SkylineWindow.Document));
             }
 
             RunUI(() =>
@@ -438,10 +449,10 @@ namespace TestPerf
             // See if Hardklor output is stable
             var expectedHardklorFiles = @"expected_hardklor_files";
             var expectedFilesPath = GetTestPath(expectedHardklorFiles);
+            var columnTolerances = new AssertEx.ColumnTolerances(0.00015); // Allow a little rounding wiggle in the numeric values
             foreach (var hkExpectedFilePath in Directory.EnumerateFiles(expectedFilesPath))
             {
                 var hkActualFilePath = hkExpectedFilePath.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles, @".."));
-                var columnTolerances = new Dictionary<int, double>() { { -1, .00015 } }; // Allow a little rounding wiggle in the decimal values
                 AssertEx.FileEquals(hkExpectedFilePath, hkActualFilePath, columnTolerances, true);
             }
 

@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -195,7 +196,8 @@ namespace pwiz.Skyline
             _autoTrainManager.Register(this);
             _immediateWindowWarningListener = new ImmediateWindowWarningListener(this);
             RemoteSession.RemoteAccountUserInteraction = this;
-            RemoteUrl.RemoteAccountStorage = this;
+
+            Program.GcTracker?.Register(this);
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
@@ -389,7 +391,7 @@ namespace pwiz.Skyline
             base.OnHandleCreated(e);
         }
 
-        public void Listen(EventHandler<DocumentChangedEventArgs> listener)
+        void IDocumentContainer.Listen(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentChangedEvent += listener;
         }
@@ -742,6 +744,8 @@ namespace pwiz.Skyline
 
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;
+
+            Program.GcTracker?.Register(docNew);
 
             if (DocumentChangedEvent != null)
                 DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
@@ -1190,9 +1194,20 @@ namespace pwiz.Skyline
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 
-            foreach (var loader in BackgroundLoaders)
+            foreach (var loader in BackgroundLoaders.ToList())
             {
+                loader.Unregister(this);
                 loader.ClearCache();
+            }
+
+            if (RemoteUrl.RemoteAccountStorage == this)
+            {
+                RemoteUrl.RemoteAccountStorage = null;
+            }
+
+            if (RemoteSession.RemoteAccountUserInteraction == this)
+            {
+                RemoteSession.RemoteAccountUserInteraction = null;
             }
 
             if (!Program.FunctionalTest)
@@ -4252,7 +4267,6 @@ namespace pwiz.Skyline
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
                     if (!ImportingResultsWindow.HasErrors &&
-                        !ImportingResultsWindow.IsProgressFrozen() &&
                         Settings.Default.ImportResultsAutoCloseWindow)
                     {
                         DestroyAllChromatogramsGraph();
@@ -4725,6 +4739,7 @@ namespace pwiz.Skyline
             MarkQuantitative(true);
         }
 
+        [MethodImpl(MethodImplOptions.NoOptimization)]
         public void MarkQuantitative(bool quantitative)
         {
             lock (GetDocumentChangeLock())
