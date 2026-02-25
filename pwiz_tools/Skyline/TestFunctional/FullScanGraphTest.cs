@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -199,7 +200,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test Copy Data output for heatmap - should have 3 columns (m/z, ion mobility, intensity)
             // not 100+ columns from separate intensity curves (issue #3953)
-            var graphData = GraphData.GetGraphData(SkylineWindow.GraphFullScan.ZedGraphControl.MasterPane);
+            var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(SkylineWindow.GraphFullScan.ZedGraphControl.MasterPane);
             AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
             AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
             var dataFrame = graphData.Panes[0].DataFrames[0];

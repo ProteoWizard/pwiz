@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ZedGraph;
 
 namespace pwiz.MSGraph
 {
@@ -33,7 +32,6 @@ namespace pwiz.MSGraph
     public class HeatMapData
     {
         private readonly Cell _cell;
-        public readonly string ZAxisName; // We get X and Y axis names from the graph pane
 
         public class TaggedPoint3D
         {
@@ -55,15 +53,13 @@ namespace pwiz.MSGraph
         /// <summary>
         /// Construct the quad-tree from a given list of 3D data points.
         /// </summary>
-        public HeatMapData(List<Point3D> points, string zAxisName)
+        public HeatMapData(List<Point3D> points)
         {
-            ZAxisName = zAxisName;
             _cell = new Cell(points);
         }
 
-        public HeatMapData(List<TaggedPoint3D> points, string zAxisName)
+        public HeatMapData(List<TaggedPoint3D> points)
         {
-            ZAxisName = zAxisName;
             _cell = new Cell(points);
         }
 
@@ -92,23 +88,6 @@ namespace pwiz.MSGraph
         public IEnumerable<TaggedPoint3D> GetAllPoints()
         {
             return _cell.GetAllPoints();
-        }
-
-        /// <summary>
-        /// Build the clipboard tuple for any heatmap pane. Extracts axis titles from the
-        /// graph pane and combines them with all raw points from this HeatMapData.
-        /// </summary>
-        public Tuple<string, string, string, IEnumerable<Point3D>> GetClipboardData(GraphPane graphPane)
-        {
-            var points = GetAllPoints().Select(p => p.Point).ToList();
-            if (points.Count == 0)
-                return null;
-
-            var xAxisTitle = graphPane.XAxis?.Title?.Text ?? @"X";
-            var yAxisTitle = graphPane.YAxis?.Title?.Text ?? @"Y";
-            var zAxisTitle = ZAxisName ?? @"Z";
-
-            return Tuple.Create(xAxisTitle, yAxisTitle, zAxisTitle, (IEnumerable<Point3D>)points);
         }
 
         /// <summary>

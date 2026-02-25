@@ -24,24 +24,15 @@ using ZedGraph;
 namespace pwiz.MSGraph
 {
     /// <summary>
-    /// Interface for graph panes that can provide raw heatmap data for clipboard copy.
-    /// Implementors return 3-column data (x, y, z) instead of the default curve-based extraction.
-    /// </summary>
-    public interface IHeatMapDataProvider
-    {
-        Tuple<string, string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard();
-    }
-
-    /// <summary>
     /// A graph pane optimized for showing large heat maps using dynamically filtered data.
     /// </summary>
-    public class HeatMapGraphPane : MSGraphPane, IHeatMapDataProvider
+    public class HeatMapGraphPane : MSGraphPane
     {
         public bool ShowHeatMap { get; set; }
         public int MinDotRadius { get; set; }
         public int MaxDotRadius { get; set; }
 
-        private HeatMapData _heatMapData;
+        protected HeatMapData _heatMapData;
         private float _yMin;
         private float _yMax;
 
@@ -120,11 +111,6 @@ namespace pwiz.MSGraph
             _heatMapData = heatMapData;
             _yMin = (float) yMin;
             _yMax = (float) Math.Min(yMax, float.MaxValue);
-        }
-
-        public Tuple<string, string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard()
-        {
-            return _heatMapData != null && ShowHeatMap ? _heatMapData.GetClipboardData(this) : null;
         }
 
         /// <summary>

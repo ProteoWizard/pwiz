@@ -25,6 +25,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -212,7 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _maxCount = Math.Max(_maxCount, count);
                     }
                 }
-                _heatMapData = new HeatMapData(points, GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count);
+                _heatMapData = new HeatMapData(points);
             }
 
             private void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, int replicateIndex,
@@ -297,10 +298,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public Tuple<string, string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard()
-        {
-            return Data?._heatMapData?.GetClipboardData(this);
-        }
+        public HeatMapData HeatMapData => Data?._heatMapData;
+        public string HeatMapZAxisName => GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count;
 
         public int GetPoints()
         {

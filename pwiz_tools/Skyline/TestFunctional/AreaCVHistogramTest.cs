@@ -212,7 +212,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 RunUI(() =>
                 {
-                    var graphData = GraphData.GetGraphData(graph.GraphControl.MasterPane);
+                    var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(graph.GraphControl.MasterPane);
                     AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
                     AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
                     var dataFrame = graphData.Panes[0].DataFrames[0];

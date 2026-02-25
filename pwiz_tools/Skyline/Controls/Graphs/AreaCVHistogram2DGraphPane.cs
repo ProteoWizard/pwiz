@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.MSGraph;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -170,7 +171,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 .Select(d => new HeatMapData.TaggedPoint3D(new Point3D(d.MeanArea, d.CV * factor, d.Frequency), d))
                 .ToList();
             Items = points.Count; // Because heatmaps can't be trusted to have a consistent number of points on all monitors
-            _heatMapData = new HeatMapData(points, GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Frequency);
+            _heatMapData = new HeatMapData(points);
             HeatMapGraphPane.GraphHeatMap(this, _heatMapData, 17, 2, (float)(_areaCVGraphData.MinCV * factor), (float)(_areaCVGraphData.MaxCV * factor), Settings.Default.AreaCVLogScale, 0);
 
             var unit = _percentage ? @"%" : string.Empty;
@@ -198,10 +199,8 @@ namespace pwiz.Skyline.Controls.Graphs
             { Line = { Style = DashStyle.Dash } };
         }
 
-        public Tuple<string, string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard()
-        {
-            return _heatMapData?.GetClipboardData(this);
-        }
+        public HeatMapData HeatMapData => _heatMapData;
+        public string HeatMapZAxisName => GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
 
         #region Functional Test Support
 

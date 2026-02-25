@@ -269,7 +269,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify Copy Data output for 2D histogram produces clean 3-column format
             RunUI(() =>
             {
-                var graphData = GraphData.GetGraphData(SkylineWindow.GraphMassError.GraphControl.MasterPane);
+                var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(SkylineWindow.GraphMassError.GraphControl.MasterPane);
                 AssertEx.AreEqual(1, graphData.Panes.Count, "Expected 1 pane in heatmap");
                 AssertEx.AreEqual(1, graphData.Panes[0].DataFrames.Count, "Expected 1 DataFrame in heatmap");
                 var dataFrame = graphData.Panes[0].DataFrames[0];
