@@ -1726,6 +1726,13 @@ namespace pwiz.Skyline.Controls.Graphs
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
         }
 
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            _updateManager.Dispose();
+            _documentContainer.UnlistenUI(OnDocumentUIChanged);
+            base.OnHandleDestroyed(e);
+        }
+
         private void GraphSpectrum_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
