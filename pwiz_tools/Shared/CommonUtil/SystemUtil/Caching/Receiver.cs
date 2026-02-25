@@ -19,6 +19,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Forms.Design;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
@@ -43,7 +44,9 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 throw new InvalidOperationException(@"Must be constructed on event thread");
             }
-            _synchronizationContext = SynchronizationContext.Current;
+            _synchronizationContext = SynchronizationContext.Current as WindowsFormsSynchronizationContext;
+            Assume.IsNotNull(_synchronizationContext);
+            //as WindowsFormsSynchronizationContext ?? new WindowsFormsSynchronizationContext();
             _listener = new Listener(this);
         }
 
