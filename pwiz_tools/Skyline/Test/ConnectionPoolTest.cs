@@ -43,11 +43,6 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestConnectionPoolReportAndTracking()
         {
-            // Save and restore TrackHistory to avoid order-dependent test behavior
-            using var restoreTracking = new ScopedAction(
-                () => ConnectionPool.TrackHistory = false,
-                () => ConnectionPool.TrackHistory = false);
-
             var pool = new ConnectionPool();
 
             // Verify empty pool reports nothing
@@ -69,15 +64,16 @@ namespace pwiz.SkylineTest
             AssertEx.Contains(report, ConnectionPool.FormatConnectionLine(id2));
             var connectEvent = new PoolEvent(PoolEventType.Connect, DateTime.Now, null);
             Assert.IsFalse(report.Contains(ConnectionPool.FormatEventLine(connectEvent)),
-                "Should not contain tracking events when TrackHistory is false");
+                "Should not contain tracking events when tracking is not active");
 
             // Disconnect both and start fresh
             pool.DisposeAll();
             Assert.IsFalse(pool.HasPooledConnections);
 
-            // Now enable tracking and repeat
-            ConnectionPool.TrackHistory = true;
-            pool.ClearHistory();
+            // Enable tracking, and ensure it gets turned off when the test ends
+            using var restoreTracking = new ScopedAction(
+                pool.StartTrackingHistory,
+                pool.EndTrackingHistory);
 
             pool.GetConnection(id1, () => new MemoryStream());
             pool.GetConnection(id2, () => new MemoryStream());

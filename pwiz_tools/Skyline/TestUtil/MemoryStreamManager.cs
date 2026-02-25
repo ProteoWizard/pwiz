@@ -82,17 +82,6 @@ namespace pwiz.SkylineTestUtil
             return new MemoryPooledStream(CreateStream(path, FileMode.Open, buffer));
         }
 
-        public bool HasPooledStreams { get { return _cachedFiles.Count > 0; } }
-        public string ReportPooledStreams()
-        {
-            var sb = new StringBuilder();
-            foreach (var cachedFile in _cachedFiles)
-            {
-                sb.AppendLine(string.Format(@"{0}. {1}", cachedFile.Key, cachedFile.Value));
-            }
-            return sb.ToString();
-        }
-
         // CONSIDER: No stream connections are stored in this pool, as is the case
         //           with all opened streams in the running applicaton.
         private readonly ConnectionPool _connectionPool = new ConnectionPool();

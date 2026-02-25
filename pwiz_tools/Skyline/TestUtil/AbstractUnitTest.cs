@@ -463,8 +463,7 @@ namespace pwiz.SkylineTestUtil
                 if (isTeamCity)
                     DesiredCleanupLevel = DesiredCleanupLevel.all;
             }
-            ConnectionPool.TrackHistory = true;
-            FileStreamManager.Default.ConnectionPool.ClearHistory();
+            FileStreamManager.Default.StartTrackingHistory();
             STOPWATCH.Restart();
             Initialize();
         }
@@ -505,10 +504,9 @@ namespace pwiz.SkylineTestUtil
 
         private void CleanupFiles()
         {
-            // Report any pooled streams left open and clean up
-            string poolReport = null;
-            if (FileStreamManager.Default.HasPooledStreams)
-                poolReport = FileStreamManager.Default.ReportPooledStreams();
+            // Report any pooled streams left open, then stop tracking and clean up
+            string poolReport = FileStreamManager.Default.ReportPooledStreams();
+            FileStreamManager.Default.EndTrackingHistory();
             FileStreamManager.Default.CloseAllStreams();
 
             Exception cleanupException = null;
