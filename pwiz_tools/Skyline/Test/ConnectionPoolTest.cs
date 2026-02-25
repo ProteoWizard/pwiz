@@ -47,7 +47,7 @@ namespace pwiz.SkylineTest
 
             // Verify empty pool reports nothing
             Assert.IsFalse(pool.HasPooledConnections);
-            Assert.AreEqual(string.Empty, pool.ReportPooledConnections());
+            Assert.IsNull(pool.ReportPooledConnections());
 
             // Create fake connections
             var id1 = new TestConnectionId(@"C:\TestResults\data.skyd");
