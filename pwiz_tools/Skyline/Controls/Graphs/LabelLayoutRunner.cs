@@ -1,5 +1,7 @@
 /*
- * Original author: OpenAI Codex
+ * Original author: Rita Chupalov <ritach .at. uw.edu>,
+   *                  MacCoss Lab, Department of Genome Sciences, UW
+ * Co-authored: OpenAI Codex
  *
  * Copyright 2026 University of Washington - Seattle, WA
  * 
@@ -22,6 +24,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using ZedGraph;
 
@@ -133,8 +136,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private static string GetSampleKey(LabeledPoint point)
         {
             var text = point.Label?.Text ?? string.Empty;
-            if (point.UniqueID != null)
-                return text + @"|" + point.UniqueID;
             return text;
         }
 
@@ -302,10 +303,11 @@ namespace pwiz.Skyline.Controls.Graphs
             List<LabeledPoint> visiblePoints;
             using (var g = Graphics.FromHwnd(IntPtr.Zero))
             {
-                var heights = candidates.Select(p => pane.GetRectScreen(p.Label, g).Height).ToList();
-                if (!heights.Any(h => h > 0))
+                var rects = candidates.ToDictionary(lp => lp, p => pane.GetRectScreen(p.Label, g));
+                rects.ForEach(kv => kv.Key.LabelArea = kv.Value.Height * kv.Value.Width);   // Make sure the areas are calculated for the sampling algorithm to work correctly.
+                if (!rects.Values.Any(h => h.Height > 0))
                     return;
-                var minLabelHeight = heights.FindAll(h => h > 0).Min();
+                var minLabelHeight = rects.Values.Select(r => r.Height).ToList().FindAll(h => h > 0).Min();
                 // If there are a lot of labels, do a quick sampling to improve performance of the full layout.
                 samplingLayout = new LabelLayout(pane, (int)Math.Ceiling(minLabelHeight));
                 visiblePoints = SamplePointsByDensityGrid(samplingLayout, pane, candidates);
