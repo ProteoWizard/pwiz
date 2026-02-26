@@ -122,6 +122,84 @@ namespace TestRunnerLib
             }
         }
 
+        /// <summary>
+        /// Post-test GC leak check with automatic dotMemory snapshot on leak detection.
+        /// Call after FlushMemory. Returns an error message if a leak was found, null otherwise.
+        ///
+        /// Behavior depends on context:
+        /// - DotMemoryWarmupRuns > 0: PinSurvivors mode (for explicit profiling sessions)
+        /// - Prior test exception: Clear tracked objects (leak check would be misleading)
+        /// - dotMemory attached: Check for leaks, pin survivors and snapshot if found
+        /// - Normal: Check for leaks, report if found
+        /// </summary>
+        public static string CheckAfterTest(string testName, int dotMemoryWarmupRuns,
+            Exception exception, Action<string, object[]> log)
+        {
+            if (dotMemoryWarmupRuns > 0)
+            {
+                PinSurvivors();
+                return null;
+            }
+
+            if (exception != null)
+            {
+                Clear();
+                return null;
+            }
+
+            // Use CheckAndPinLeaks which checks + pins in one pass, keeping
+            // survivors accessible for dotMemory. The pin is harmless when
+            // dotMemory is not attached (just extra strong refs until next Clear).
+            var leakMessage = CheckAndPinLeaks();
+            if (leakMessage != null && MemoryProfiler.IsReady)
+            {
+                // dotMemory is attached - take a snapshot with pinned survivors
+                var snapshotName = testName + @"_GC_LEAK";
+                log("\n# GC leak detected - taking dotMemory snapshot: {0}\n", new object[] { snapshotName });
+                MemoryProfiler.Snapshot(snapshotName);
+            }
+            return leakMessage;
+        }
+
+        /// <summary>
+        /// Checks for leaks and pins survivors atomically. Returns an error message
+        /// listing survivors if any are found, null otherwise.  Pinning keeps the
+        /// leaked objects alive so dotMemory can show retention paths.
+        /// </summary>
+        private static string CheckAndPinLeaks()
+        {
+            lock (_lock)
+            {
+                if (_trackedObjects.Count == 0)
+                    return null;
+
+                _pinnedSurvivors.Clear();
+                var survivorCounts = new List<string>();
+
+                foreach (var group in _trackedObjects.Where(t => t.IsAlive).GroupBy(t => t.TypeName))
+                {
+                    // Pin survivors so dotMemory can inspect retention paths
+                    foreach (var t in group)
+                    {
+                        var target = t.Reference.Target;
+                        if (target != null)
+                            _pinnedSurvivors.Add(target);
+                    }
+                    survivorCounts.Add(group.Count() == 1
+                        ? group.Key
+                        : string.Format(@"{0} x{1}", group.Key, group.Count()));
+                }
+
+                _trackedObjects.Clear();
+
+                if (survivorCounts.Count == 0)
+                    return null;
+
+                return string.Format(@"Objects not garbage collected after test: {0}",
+                    string.Join(@", ", survivorCounts));
+            }
+        }
+
         private class TrackedObject
         {
             public string TypeName { get; }
