@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Util;
