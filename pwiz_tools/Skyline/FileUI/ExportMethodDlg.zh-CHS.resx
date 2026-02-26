@@ -1867,7 +1867,7 @@ Old Localized:现有方法文件包含将用在导出方法中的设置。
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=25.1.1.346, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1879,6 +1879,6 @@ Old Localized:现有方法文件包含将用在导出方法中的设置。
     <value>ExportMethodDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline-daily, Version=25.1.1.346, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
