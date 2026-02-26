@@ -33,6 +33,7 @@ namespace pwiz.Common.Spectra
             HasTotalIonCurrent = 4,
             HasInjectionTime = 8,
             HasConstantNeutralLoss = 16,
+            HasSourceOffsetVoltage = 32,
         }
         private ImmutableList<ImmutableList<SpectrumPrecursor>> _precursorsByMsLevel =
             ImmutableList<ImmutableList<SpectrumPrecursor>>.EMPTY;
@@ -207,6 +208,28 @@ namespace pwiz.Common.Spectra
         {
             return ChangeProp(ImClone(this), im => im.InjectionTime = value);
         }
+
+        private double _sourceOffsetVoltage;
+
+        public double? SourceOffsetVoltage
+        {
+            get
+            {
+                return GetFlag(Flags.HasSourceOffsetVoltage) ? _sourceOffsetVoltage : (double?) null;
+            }
+            set
+            {
+                SetFlag(Flags.HasSourceOffsetVoltage, value.HasValue);
+                _sourceOffsetVoltage = value.GetValueOrDefault();
+            }
+        }
+
+        public SpectrumMetadata ChangeSourceOffsetVoltage(double? value)
+        {
+            return ChangeProp(ImClone(this), im => im.SourceOffsetVoltage = value);
+        }
+
+        
 
         protected bool Equals(SpectrumMetadata other)
         {

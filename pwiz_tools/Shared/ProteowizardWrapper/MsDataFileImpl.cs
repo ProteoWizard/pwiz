@@ -1528,6 +1528,7 @@ namespace pwiz.ProteowizardWrapper
 
             metadata = metadata.ChangeTotalIonCurrent(GetTotalIonCurrent(spectrum));
             metadata = metadata.ChangeInjectionTime(GetInjectionTime(spectrum));
+            metadata = metadata.ChangeSourceOffsetVoltage(GetSourceOffsetVoltage(spectrum));
             metadata = metadata.ChangeConstantNeutralLoss(GetConstantNeutralLoss(spectrum));
             return metadata;
         }
@@ -1789,6 +1790,20 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
             return count == 0 ? (double?) null : total;
+        }
+
+        private double? GetSourceOffsetVoltage(Spectrum spectrum)
+        {
+            foreach (var scan in spectrum.scanList.scans)
+            {
+                var param = scan.cvParam(CVID.MS_offset_voltage);
+                if (!param.empty())
+                {
+                    return param.value;
+                }
+            }
+
+            return null;
         }
 
         private double? GetConstantNeutralLoss(Spectrum spectrum) // If return value < 0, it's actually a neutral gain
