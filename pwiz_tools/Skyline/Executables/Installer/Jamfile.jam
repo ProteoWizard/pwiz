@@ -68,6 +68,7 @@ rule setup_templates ( targets + : sources * : properties * )
 
 rule msbuild_deploy ( targets + : sources * : properties * )
 {
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
     setup_templates $(targets) : $(sources) : $(properties) ;
     
     local .artifact-name = [ on $(targets) return $(ARTIFACT_NAME) ] ;
