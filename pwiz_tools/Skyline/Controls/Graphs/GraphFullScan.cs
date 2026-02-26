@@ -37,6 +37,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -79,7 +80,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
-            graphControl.GraphPane = new HeatMapGraphPane
+            graphControl.GraphPane = new FullScanHeatMapGraphPane
             {
                 MinDotRadius = MIN_DOT_RADIUS,
                 MaxDotRadius = MAX_DOT_RADIUS,
@@ -1211,7 +1212,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
-            else
+            else if (_requestedRange != null)
             {
                 xScale.Min = _requestedRange.Min;
                 xScale.Max = _requestedRange.Max;
@@ -1477,6 +1478,16 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private HeatMapGraphPane HeatMapGraphPane { get { return (HeatMapGraphPane) GraphPane; } }
+
+        /// <summary>
+        /// Extends <see cref="HeatMapGraphPane"/> with <see cref="IHeatMapDataProvider"/> so that
+        /// Copy Data produces clean 3-column output instead of per-curve data.
+        /// </summary>
+        private class FullScanHeatMapGraphPane : HeatMapGraphPane, IHeatMapDataProvider
+        {
+            public HeatMapData HeatMapData => ShowHeatMap ? _heatMapData : null;
+            public string HeatMapZAxisName => GraphsResources.AbstractMSGraphItem_CustomizeYAxis_Intensity;
+        }
 
         private void filterBtn_CheckedChanged(object sender, EventArgs e)
         {

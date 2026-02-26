@@ -52,7 +52,7 @@ namespace TestRunnerLib
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
         public bool DoNotLeakTest; // If true, test is too lengthy to run multiple iterations for leak checks (we invert this in perftest runs)
-        public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
+        public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with Unicode (3rd party tool, mz5, etc), or the system does not support it
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
@@ -64,10 +64,9 @@ namespace TestRunnerLib
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
 
-            // Explicitly disable unicode path conversion for tests marked with NoUnicodeTestingAttribute
-            ProcessEx.CanConvertUnicodePaths = (RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute") != null) ? false : (bool?)null;
-            DoNotUseUnicode = !ProcessEx.CanConvertUnicodePaths.Value; // If true, don't add unicode to TMP environment variable etc
-            
+            // If true, don't add Unicode characters to TMP environment variable etc
+            DoNotUseUnicode = !ProcessEx.CanConvertUnicodePaths || 
+                              (RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute") != null); 
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
 
@@ -154,6 +153,18 @@ namespace TestRunnerLib
         public bool SortHandlesByCount { get; set; }  // Sort handle types by count (descending) instead of alphabetically
         public bool IsParallelClient { get; private set; }
         public string ParallelClientId { get; private set; }
+
+        // dotMemory snapshot configuration - set DotMemoryWarmupRuns > 0 to enable
+        // When running under dotMemory profiler, snapshots will be taken:
+        //   1. After DotMemoryWarmupRuns iterations (always)
+        //   2. After DotMemoryWarmupRuns + DotMemoryWaitRuns iterations (only if WaitRuns > 0)
+        public int DotMemoryWarmupRuns { get; set; }
+        public int DotMemoryWaitRuns { get; set; }
+        public bool DotMemoryCollectAllocations { get; set; } // Collect allocation stack traces
+        public List<int> DotMemoryAtTests { get; set; } // Snapshot tickets consumed as tests match; -1 = keep running
+        public bool ProfilingComplete { get; private set; } // Set when all configured snapshots are done
+        private int _dotMemoryIterationCount;
+        private string _dotMemoryTestName;
 
         public bool ReportSystemHeaps
         {
@@ -294,6 +305,15 @@ namespace TestRunnerLib
         public bool Run(TestInfo test, int pass, int testNumber, string dmpDir, bool heapOutput)
         {
             TeamCityStartTest(test, pass);
+
+            // Track iterations for dotMemory snapshots
+            var currentTestName = test.TestMethod.Name;
+            if (_dotMemoryTestName != currentTestName)
+            {
+                _dotMemoryTestName = currentTestName;
+                _dotMemoryIterationCount = 0;
+            }
+            _dotMemoryIterationCount++;
 
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);
@@ -479,7 +499,10 @@ namespace TestRunnerLib
 
             // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
-            _process.Refresh();
+
+            // GC leak checking and dotMemory snapshot handling
+            exception = HandlePostTestProfiling(test.TestMethod.Name, pass, testNumber, exception);
+
             var heapCounts = ReportSystemHeaps
                 ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
                 : new MemoryManagement.HeapAllocationSizes[1];
@@ -1126,7 +1149,7 @@ namespace TestRunnerLib
         [StringFormatMethod("info")]
 
         // N.B. not thread safe, use the non-static version (which calls this) from any RunTests object
-        public static void Log(StreamWriter log, string info, params object[] args) 
+        public static void Log(StreamWriter log, string info, params object[] args)
         {
             Console.Write(info, args);
             Console.Out.Flush(); // Get this info to TeamCity or SkylineTester ASAP
@@ -1135,6 +1158,90 @@ namespace TestRunnerLib
                 log.Write(info, args);
                 log.Flush();
             }
+        }
+
+        /// <summary>
+        /// Handles all post-test profiling: GC leak checks, dotMemory snapshots,
+        /// and ProfilingComplete signaling. Returns the exception to propagate
+        /// (may be the original or a new GC-LEAK exception).
+        /// </summary>
+        private Exception HandlePostTestProfiling(string testName, int pass, int testNumber, Exception exception)
+        {
+            // Check for GC leaks - objects registered by test code that should
+            // have been collected after FlushMemory's full GC cycle.
+            var gcLeakMessage = GarbageCollectionTracker.CheckAfterTest(
+                testName, DotMemoryWarmupRuns, exception, Log);
+            if (gcLeakMessage != null)
+            {
+                Log("!!! {0} GC-LEAK {1}\n", testName, gcLeakMessage);
+                exception = new Exception(gcLeakMessage);
+            }
+
+            _process.Refresh();
+
+            // Take dotMemory snapshots at configured iteration counts or test numbers
+            TakeDotMemorySnapshotIfNeeded(testName);
+            TakeDotMemorySnapshotAtTest(testName, pass, testNumber);
+
+            return exception;
+        }
+
+        /// <summary>
+        /// Takes dotMemory snapshots at configured iteration counts when running under dotMemory profiler.
+        /// Set DotMemoryWarmupRuns > 0 to enable. DotMemoryWaitRuns controls the second snapshot:
+        ///   0 = single snapshot after warmup only
+        ///   N = second snapshot after warmup + N additional runs
+        /// Sets ProfilingComplete after the final configured snapshot.
+        /// </summary>
+        private void TakeDotMemorySnapshotIfNeeded(string testName)
+        {
+            // Early exit if not configured - MemoryProfiler is never called,
+            // so JetBrains.Profiler.Api assembly is never loaded
+            if (DotMemoryWarmupRuns <= 0)
+                return;
+
+            // Pass through setting (applied on first Snapshot call)
+            MemoryProfiler.CollectAllocations = DotMemoryCollectAllocations;
+
+            if (_dotMemoryIterationCount == DotMemoryWarmupRuns)
+            {
+                var snapshotName = $"{testName}_Warmup_After{DotMemoryWarmupRuns}";
+                Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
+                MemoryProfiler.Snapshot(snapshotName);
+
+                // Single-snapshot mode: done after warmup
+                if (DotMemoryWaitRuns <= 0)
+                    ProfilingComplete = true;
+            }
+            else if (DotMemoryWaitRuns > 0 && _dotMemoryIterationCount == DotMemoryWarmupRuns + DotMemoryWaitRuns)
+            {
+                var snapshotName = $"{testName}_Analysis_After{DotMemoryWarmupRuns + DotMemoryWaitRuns}";
+                Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
+                MemoryProfiler.Snapshot(snapshotName);
+                ProfilingComplete = true;
+            }
+        }
+
+        /// <summary>
+        /// Takes a dotMemory snapshot after specific test numbers within a pass.
+        /// Each matching test number is a "snapshot ticket" consumed on use.
+        /// Duplicates (e.g. "5,6,5,5") allow snapshots at the same test across passes.
+        /// Use -1 as a sentinel to keep running indefinitely (never matches a test).
+        /// Sets ProfilingComplete when no tickets remain.
+        /// </summary>
+        private void TakeDotMemorySnapshotAtTest(string testName, int pass, int testNumber)
+        {
+            if (DotMemoryAtTests == null || !DotMemoryAtTests.Remove(testNumber))
+                return;
+
+            MemoryProfiler.CollectAllocations = DotMemoryCollectAllocations;
+
+            var snapshotName = $"Pass{pass}_Test{testNumber}_{testName}";
+            Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
+            MemoryProfiler.Snapshot(snapshotName);
+
+            if (DotMemoryAtTests.Count == 0)
+                ProfilingComplete = true;
         }
 
         public string TeamCityPassName(int pass)

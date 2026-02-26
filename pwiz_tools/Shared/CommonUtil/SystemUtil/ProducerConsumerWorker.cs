@@ -244,7 +244,7 @@ namespace pwiz.Common.SystemUtil
             else
             {
                 Interlocked.Increment(ref _itemsWaiting);
-                _queue.Add(item);
+                _queue?.Add(item);
             }
         }
 

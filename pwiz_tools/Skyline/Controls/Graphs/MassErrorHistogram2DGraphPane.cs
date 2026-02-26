@@ -25,12 +25,13 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class MassErrorHistogram2DGraphPane : SummaryGraphPane
+    public class MassErrorHistogram2DGraphPane : SummaryGraphPane, IHeatMapDataProvider
     {
         public static ReplicateDisplay ShowReplicate
         {
@@ -247,9 +248,14 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         else
                         {
-                            int x = (int) Math.Floor((xVal - _minX)/((_maxX - _minX)/xAxisBins));
-                            int y = (int) Math.Floor((massError.Value - _minMass)/_binSizePpm);
-                            counts2D[Math.Min(x, counts2D.GetLength(0)-1), Math.Min(y, counts2D.GetLength(1)-1)]++;
+                            double xRange = _maxX - _minX;
+                            int x = xRange > 0
+                                ? (int) Math.Floor((xVal - _minX) / (xRange / xAxisBins))
+                                : 0;
+                            int y = (int) Math.Floor((massError.Value - _minMass) / _binSizePpm);
+                            x = Math.Max(0, Math.Min(x, counts2D.GetLength(0) - 1));
+                            y = Math.Max(0, Math.Min(y, counts2D.GetLength(1) - 1));
+                            counts2D[x, y]++;
                         }
                     }
                 }
@@ -280,16 +286,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphPane.CurveList.Clear();
                     return;
                 }
-                graphPane.YAxis.Scale.Min = _minMass;
-                graphPane.YAxis.Scale.Max = _maxMass;
-                graphPane.XAxis.Scale.Min = _minX;
-                graphPane.XAxis.Scale.Max = _maxX;
+                // Pad axes when range is zero (degenerate single-point data)
+                graphPane.XAxis.Scale.Min = _minX == _maxX ? _minX - 1 : _minX;
+                graphPane.XAxis.Scale.Max = _minX == _maxX ? _maxX + 1 : _maxX;
+                graphPane.YAxis.Scale.Min = _minMass == _maxMass ? _minMass - _binSizePpm : _minMass;
+                graphPane.YAxis.Scale.Max = _minMass == _maxMass ? _maxMass + _binSizePpm : _maxMass;
                 graphPane.AxisChange();
                 HeatMapGraphPane.GraphHeatMap(graphPane,
                     _heatMapData, MAX_DOT_RADIUS, MIN_DOT_RADIUS, (float)_minMass, (float)_maxMass,
                     Settings.Default.MassErrorHistogram2DLogScale, 5);
             }
         }
+
+        public HeatMapData HeatMapData => Data?._heatMapData;
+        public string HeatMapZAxisName => GraphsResources.MassErrorHistogramGraphPane_UpdateGraph_Count;
 
         public int GetPoints()
         {

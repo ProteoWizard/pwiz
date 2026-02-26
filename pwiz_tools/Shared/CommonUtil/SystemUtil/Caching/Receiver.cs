@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.Caching
@@ -31,12 +32,25 @@ namespace pwiz.Common.SystemUtil.Caching
         private bool _progressNotificationPending;
         private WorkOrder _workOrder;
         private readonly IProductionListener _listener;
+        private WindowsFormsSynchronizationContext _synchronizationContext;
         public Receiver(ProductionFacility cache, Control ownerControl, Producer factory)
         {
             Cache = cache;
             OwnerControl = ownerControl;
             Producer = factory;
             OwnerControl.HandleDestroyed += OwnerControlHandleDestroyed;
+            if (OwnerControl.InvokeRequired)
+            {
+                throw new InvalidOperationException(@"Must be constructed on event thread");
+            }
+            _synchronizationContext = SynchronizationContext.Current as WindowsFormsSynchronizationContext;
+            if (_synchronizationContext == null)
+            {
+                // If called during main window construction, then SynchronizationContext.Current might not be the WindowsFormsSynchronizationContext yet.
+                // In that case, we create a new one. When the real WindowsFormsSynchronizationContext gets created, it will use the same marshalling control
+                // so we do not need to dispose the one we created here.
+                _synchronizationContext = new WindowsFormsSynchronizationContext();
+            }
             _listener = new Listener(this);
         }
 
@@ -57,13 +71,30 @@ namespace pwiz.Common.SystemUtil.Caching
                 if (!_notificationPending)
                 {
                     _notificationPending = true;
-                    CommonActionUtil.SafeBeginInvoke(OwnerControl, () =>
-                    {
+                    BeginInvoke(()=> {
                         _notificationPending = false;
                         productAvailable();
                     });
                 }
             }
+        }
+
+        private void BeginInvoke(Action action)
+        {
+            _synchronizationContext?.Post(_ =>
+            {
+                try
+                {
+                    if (OwnerControl != null)
+                    {
+                        action();
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Messages.WriteAsyncDebugMessage(@"Receiver.BeginInvoke unhandled exception {0}", exception);
+                }
+            }, null);
         }
 
         private void OnProductStatusChanged()
@@ -80,7 +111,7 @@ namespace pwiz.Common.SystemUtil.Caching
                 _progressNotificationPending = true;
             }
 
-            CommonActionUtil.SafeBeginInvoke(OwnerControl, () =>
+            BeginInvoke(() =>
             {
                 lock (this)
                 {
@@ -146,6 +177,7 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 Cache.Unlisten(_workOrder, _listener);
                 _workOrder = null;
+                _synchronizationContext = null;
                 if (OwnerControl != null)
                 {
                     OwnerControl.HandleDestroyed -= OwnerControlHandleDestroyed;

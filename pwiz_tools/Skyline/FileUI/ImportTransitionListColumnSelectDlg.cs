@@ -314,7 +314,7 @@ namespace pwiz.Skyline.FileUI
                     }
 
                     // Get a dictionary of peptides under consideration and the proteins they're associated with
-                    peptides.AddRange(_originalLines.Skip(hasHeaders ? 1 : 0).Take(count).Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields[_originalPeptideIndex]));
+                    peptides.AddRange(_originalLines.Skip(hasHeaders ? 1 : 0).Take(count).Select(line => line.ParseDsvFields(Importer.Separator)).Select(fields => fields.Length > _originalPeptideIndex ? fields[_originalPeptideIndex] : string.Empty));
                     foreach (var pep in peptides)
                     {
                         if (!stripped.ContainsKey(pep))
@@ -346,8 +346,9 @@ namespace pwiz.Skyline.FileUI
             {
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
+                var peptideSequence = fields.Length > _originalPeptideIndex ? fields[_originalPeptideIndex] : string.Empty;
                 var action = associateHelper.DetermineAssociateAction(null,
-                    fields[_originalPeptideIndex], seenPepSeq, false, dictSequenceProteins);
+                    peptideSequence, seenPepSeq, false, dictSequenceProteins);
 
                 if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurrences)
                 {
@@ -458,7 +459,7 @@ namespace pwiz.Skyline.FileUI
         private void DisplayData()
         {
             // The pasted data will be stored as a data table
-            var table = new DataTable("TransitionList");
+            var table = new DataTable(@"TransitionList");
 
             // Create the first row of columns
             var numColumns = GetColumnCount(false);
@@ -489,6 +490,7 @@ namespace pwiz.Skyline.FileUI
 
             for (var i = 0; i < numColumns; i++)
             {
+                dataGrid.Columns[i].SortMode = DataGridViewColumnSortMode.NotSortable;
                 if (headers != null && i < headers.Length)
                 {
                     dataGrid.Columns[i].HeaderText = headers[i];
@@ -603,6 +605,17 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.PrecursorNoteColumn, Resources.PasteDlg_UpdateMoleculeType_PrecursorNote);
             SetComboBoxText(columns.MoleculeNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeNote);
             SetComboBoxText(columns.MoleculeListNoteColumn, Resources.PasteDlg_UpdateMoleculeType_MoleculeListNote);
+
+            // Set combo boxes for additional fragment-oriented column assignments beyond the first.
+            // When multiple columns are mapped to the same product type (e.g. three columns all
+            // assigned to "Product m/z"), the first is handled above; the rest are set here.
+            SetComboBoxTextExtra(columns.ProductMzColumns, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            SetComboBoxTextExtra(columns.ProductFormulaColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
+            SetComboBoxTextExtra(columns.ProductNameColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
+            SetComboBoxTextExtra(columns.ProductChargeColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            SetComboBoxTextExtra(columns.ProductAdductColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
+            SetComboBoxTextExtra(columns.ProductNeutralLossColumns, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
+
             var headers = Importer.RowReader.Indices.Headers;
             // Checks if the headers of the current list are the same as the headers of the previous list,
             // because if they are then we want to prioritize user headers
@@ -870,6 +883,12 @@ namespace pwiz.Skyline.FileUI
             SetColumnColor(ComboBoxes[comboBoxIndex]);
         }
 
+        private void SetComboBoxTextExtra(List<int> columns, string text)
+        {
+            foreach (var extraCol in columns.Skip(1))
+                SetComboBoxText(extraCol, text);
+        }
+
         // Ensures two combo boxes do not have the same value. Usually newSelectedIndex will be zero, because that is IgnoreColumn.
         private void CheckForComboBoxOverlap(int indexOfPreviousComboBox, int newSelectedIndex, int indexOfNewComboBox)
         {
@@ -934,7 +953,7 @@ namespace pwiz.Skyline.FileUI
 
             var propertiesChecked = new HashSet<string>();
 
-            bool SetColumn(string headerName, string propertyName)
+            bool SetColumn(string headerName, string propertyName, List<int> columnList = null)
             {
                 headerName = AssayLibraryVsTransitionListHeaderName(headerName);
 
@@ -946,10 +965,34 @@ namespace pwiz.Skyline.FileUI
                     {
                         return false;
                     }
-                    var val = (int) property.GetValue(columns, null);
-                    CheckForComboBoxOverlap(val, 0, comboBoxIndex);
-                    columns.ResetDuplicateColumns(comboBoxIndex);
-                    property.SetValue(columns, comboBoxIndex);
+
+                    if (columnList == null || radioPeptide.Checked)
+                    {
+                        var val = (int) property.GetValue(columns, null);
+                        CheckForComboBoxOverlap(val, 0, comboBoxIndex);
+                        columns.ResetDuplicateColumns(comboBoxIndex);
+                        property.SetValue(columns, comboBoxIndex);
+                    }
+                    else
+                    {
+                        // Fragment-oriented column types are a special case: in molecule mode, the same
+                        // product type (e.g. "Product m/z") can be assigned to multiple columns, creating
+                        // one transition per assignment. This skips the overlap check that normally prevents
+                        // duplicate column type assignments.
+                        columns.ResetDuplicateColumns(comboBoxIndex);
+                        if (!columnList.Contains(comboBoxIndex))
+                        {
+                            // Insert in sorted order so columnList[0] is always the leftmost column
+                            // and the list order matches left-to-right input column order
+                            var insertIndex = columnList.FindIndex(idx => idx > comboBoxIndex);
+                            if (insertIndex < 0)
+                                columnList.Add(comboBoxIndex);
+                            else
+                                columnList.Insert(insertIndex, comboBoxIndex);
+                        }
+                        // Primary property keeps the first assignment (leftmost column)
+                        property.SetValue(columns, columnList[0]);
+                    }
                     return true;
                 }
 
@@ -1001,7 +1044,7 @@ namespace pwiz.Skyline.FileUI
             else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity, nameof(columns.LibraryColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name, nameof(columns.MoleculeNameColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z, nameof(columns.PrecursorColumn))) {}
-            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z, nameof(columns.ProductColumn))) {}
+            else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z, nameof(columns.ProductColumn), columns.ProductMzColumns)) {}
             else if (HandleProteinColumn(out var cancelled)) { if (cancelled) return;}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name, nameof(columns.FragmentNameColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, nameof(columns.ExplicitRetentionTimeColumn))) {}
@@ -1019,11 +1062,11 @@ namespace pwiz.Skyline.FileUI
             else if (SetColumn(FileUIResources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description, nameof(columns.ProteinDescriptionColumn))) {}
             else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct, nameof(columns.PrecursorAdductColumn))) {}
             else if (SetColumn(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge, nameof(columns.PrecursorChargeColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Name, nameof(columns.ProductNameColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Formula, nameof(columns.ProductFormulaColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss, nameof(columns.ProductNeutralLossColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct, nameof(columns.ProductAdductColumn))) {}
-            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Charge, nameof(columns.ProductChargeColumn))) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Name, nameof(columns.ProductNameColumn), columns.ProductNameColumns)) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Formula, nameof(columns.ProductFormulaColumn), columns.ProductFormulaColumns)) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss, nameof(columns.ProductNeutralLossColumn), columns.ProductNeutralLossColumns)) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct, nameof(columns.ProductAdductColumn), columns.ProductAdductColumns)) {}
+            else if (SetColumn(Resources.PasteDlg_UpdateMoleculeType_Product_Charge, nameof(columns.ProductChargeColumn), columns.ProductChargeColumns)) {}
             else if (SetColumn(@"InChiKey", nameof(columns.InChiKeyColumn))) {}
             else if (SetColumn(@"CAS", nameof(columns.CASColumn))) {}
             else if (SetColumn(@"HMDB", nameof(columns.HMDBColumn))) {}
@@ -1470,10 +1513,11 @@ namespace pwiz.Skyline.FileUI
         {
 
             // If the mouse is inside a protein name cell, display information about that protein
-            if (e.RowIndex >= 0 && e.ColumnIndex == 0 && isAssociated)
+            var proteinIndex = e.RowIndex - 1; // Row 0 is the column type selector
+            if (isAssociated && proteinIndex >= 0 && proteinIndex < _proteinList.Count && e.ColumnIndex == 0)
             {
                 // The row index is one off from the row in the transition list because the first row of the datagrid is covered by combo boxes
-                var protein = _proteinList[e.RowIndex - 1];
+                var protein = _proteinList[proteinIndex];
                 if (protein != null)
                 {
                     var tipProvider = new ProteinTipProvider(protein);
@@ -1689,6 +1733,14 @@ namespace pwiz.Skyline.FileUI
         {
             dataGrid.Columns[columnIndex].Width = width;
         }
+
+        public void TestMouseMoveToGridCell(int columnIndex, int rowIndex)
+        {
+            dataGrid_MouseMove(dataGrid, new DataGridViewCellMouseEventArgs(
+                columnIndex, rowIndex, 0, 0, new MouseEventArgs(MouseButtons.None, 0, 0, 0, 0)));
+        }
+
+        public int DataGridRowCount => dataGrid.RowCount;
 
         #endregion
 

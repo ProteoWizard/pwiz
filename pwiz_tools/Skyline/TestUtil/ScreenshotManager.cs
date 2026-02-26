@@ -220,6 +220,26 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private class RectangleShot : SkylineScreenshot
+        {
+            private readonly Rectangle _screenRect;
+
+            public RectangleShot(Rectangle screenRect)
+            {
+                _screenRect = screenRect;
+            }
+
+            [NotNull]
+            public override Bitmap Take()
+            {
+                var scaledRect = _screenRect * GetScalingFactor();
+                var bmpCapture = new Bitmap(scaledRect.Width, scaledRect.Height, PixelFormat.Format32bppArgb);
+                using var g = Graphics.FromImage(bmpCapture);
+                g.CopyFromScreen(scaledRect.Location, Point.Empty, scaledRect.Size);
+                return bmpCapture;
+            }
+        }
+
         private class ZedGraphShot : SkylineScreenshot
         {
             private readonly ZedGraphControl _zedGraphControl;
@@ -399,6 +419,12 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         private void HideSensitiveFocusDisplay(Control screenshotControl)
         {
+            // Hide focus rectangles and mnemonic underscores by sending WM_CHANGEUISTATE
+            // to the top-level form. Windows tracks keyboard vs mouse mode and shows these
+            // UI cues when in keyboard mode. This can happen even when tests are started
+            // with a mouse click if any key is pressed on the machine.
+            HideKeyboardCues(screenshotControl);
+
             var focusControl = screenshotControl.GetFocus();
             if (focusControl is TextBox focusText)
             {
@@ -413,6 +439,30 @@ namespace pwiz.SkylineTestUtil
             else if (focusControl is TabControl focusTabControl)
             {
                 focusTabControl.SelectedTab.Focus();
+            }
+        }
+
+        /// <summary>
+        /// Hides keyboard-triggered UI cues (focus rectangles and mnemonic underscores)
+        /// by sending WM_CHANGEUISTATE to the form and all descendant controls.
+        /// Some controls (like TabControl/WizardPages) don't properly propagate
+        /// WM_CHANGEUISTATE to their children, so we send it recursively.
+        /// </summary>
+        private static void HideKeyboardCues(Control control)
+        {
+            var form = control.FindForm();
+            if (form != null)
+            {
+                HideKeyboardCuesRecursive(form);
+            }
+        }
+
+        private static void HideKeyboardCuesRecursive(Control control)
+        {
+            User32.SendMessage(control.Handle, User32.WinMessageType.WM_CHANGEUISTATE, User32.UISF_HIDEALL, IntPtr.Zero);
+            foreach (Control child in control.Controls)
+            {
+                HideKeyboardCuesRecursive(child);
             }
         }
 
@@ -460,6 +510,17 @@ namespace pwiz.SkylineTestUtil
 
             // CopyBitmapToClipboard(shotPic);
 
+            return shotPic;
+        }
+
+        /// <summary>
+        /// Captures a screenshot of an arbitrary screen rectangle.
+        /// </summary>
+        public Bitmap TakeShot(Rectangle screenRect, string pathToSave = null)
+        {
+            var shotPic = new RectangleShot(screenRect).Take();
+            if (pathToSave != null)
+                SaveToFile(pathToSave, shotPic);
             return shotPic;
         }
 
