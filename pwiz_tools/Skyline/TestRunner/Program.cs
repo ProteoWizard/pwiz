@@ -1497,7 +1497,7 @@ namespace TestRunner
             var dotMemoryAtTests = commandLineArgs.ArgAsString("dotmemoryattests");
             if (!string.IsNullOrEmpty(dotMemoryAtTests))
             {
-                runTests.DotMemoryAtTests = new HashSet<int>(
+                runTests.DotMemoryAtTests = new List<int>(
                     dotMemoryAtTests.Split(',').Select(s => int.Parse(s.Trim())));
                 runTests.DotMemoryCollectAllocations = dotMemoryCollectAllocations;
             }
@@ -1836,6 +1836,13 @@ namespace TestRunner
                                     removeList.Add(test);
                                     i = languages.Length - 1;   // Don't run other languages.
                                     break;
+                                }
+                                if (runTests.ProfilingComplete) // All configured snapshots taken
+                                {
+                                    runTests.Log("# Profiling complete - stopping test run.\r\n");
+                                    pass = passEnd; // Break out of pass loop
+                                    i = languages.Length - 1; // Break out of language loop
+                                    break; // Break out of repeat loop
                                 }
                                 if (maxSecondsPerTest > 0)
                                 {

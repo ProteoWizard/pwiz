@@ -147,20 +147,18 @@ namespace TestRunnerLib
                 return null;
             }
 
-            if (MemoryProfiler.IsReady)
+            // Use CheckAndPinLeaks which checks + pins in one pass, keeping
+            // survivors accessible for dotMemory. The pin is harmless when
+            // dotMemory is not attached (just extra strong refs until next Clear).
+            var leakMessage = CheckAndPinLeaks();
+            if (leakMessage != null && MemoryProfiler.IsReady)
             {
-                // Snapshot-on-leak: check and pin survivors so dotMemory can analyze retention paths
-                var leakMessage = CheckAndPinLeaks();
-                if (leakMessage != null)
-                {
-                    var snapshotName = testName + @"_GC_LEAK";
-                    log("\n# GC leak detected - taking dotMemory snapshot: {0}\n", new object[] { snapshotName });
-                    MemoryProfiler.Snapshot(snapshotName);
-                }
-                return leakMessage;
+                // dotMemory is attached - take a snapshot with pinned survivors
+                var snapshotName = testName + @"_GC_LEAK";
+                log("\n# GC leak detected - taking dotMemory snapshot: {0}\n", new object[] { snapshotName });
+                MemoryProfiler.Snapshot(snapshotName);
             }
-
-            return CheckForLeaks();
+            return leakMessage;
         }
 
         /// <summary>
