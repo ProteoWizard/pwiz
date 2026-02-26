@@ -1467,6 +1467,9 @@
   <data name="SMILES">
     <value>SMILES</value>
   </data>
+  <data name="SourceOffsetVoltage">
+    <value>Source Offset Voltage</value>
+  </data>
   <data name="SpectrumFilter">
     <value>Spectrum Filter</value>
   </data>
