@@ -191,18 +191,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void StartLabelLayoutAsync(List<LabeledPoint> labeledPoints, List<LabeledPoint.PointLayout> savedLayout = null)
         {
-            if (zedGraphControl == null || zedGraphControl.IsDisposed)
-                return;
-
             _labelLayoutRunner.Start(
-                zedGraphControl.GraphPane,
+                zedGraphControl,
                 labeledPoints,
                 savedLayout,
-                layout => _labelsLayouts[GroupComparisonName] = layout ?? new List<LabeledPoint.PointLayout>(),
-                zedGraphControl.Invalidate,
-                () => zedGraphControl.IsDisposed,
-                Program.MainWindow,
-                GraphsResources.LabelLayoutRunner_Start_Label_layout);
+                layout => _labelsLayouts[GroupComparisonName] = layout ?? new List<LabeledPoint.PointLayout>());
         }
 
         private void zedGraphControl_KeyDown(object sender, KeyEventArgs e)

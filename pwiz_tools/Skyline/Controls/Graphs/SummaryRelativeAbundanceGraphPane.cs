@@ -103,19 +103,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void StartLabelLayoutAsync(List<LabeledPoint> labeledPoints, List<LabeledPoint.PointLayout> savedLayout = null)
         {
-            var graphControl = GraphSummary?.GraphControl;
-            if (graphControl == null || graphControl.IsDisposed)
-                return;
-
             _labelLayoutRunner.Start(
-                graphControl.GraphPane,
+                GraphSummary?.GraphControl,
                 labeledPoints,
                 savedLayout,
-                layout => _labelsLayout = layout ?? new List<LabeledPoint.PointLayout>(),
-                graphControl.Invalidate,
-                () => graphControl.IsDisposed,
-                Program.MainWindow,
-                GraphsResources.LabelLayoutRunner_Start_Label_layout);
+                layout => _labelsLayout = layout ?? new List<LabeledPoint.PointLayout>());
         }
 
         /// <summary>

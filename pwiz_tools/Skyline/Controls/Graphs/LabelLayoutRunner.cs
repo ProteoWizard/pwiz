@@ -20,12 +20,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private const int MAX_LABELS_PER_CELL = 2;
         private const double MAX_LABEL_AREA_RATIO = 0.3;
 
-        private BackgroundWorker _labelLayoutWorker;
+        private Thread _labelLayoutWorkerThread;
         private CancellationTokenSource _labelLayoutCts;
         private IProgressStatus _labelLayoutStatus;
         private int _labelLayoutRequestId;
@@ -76,28 +76,28 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private sealed class WorkerProgress : IProgress<int>
         {
-            private readonly BackgroundWorker _worker;
+            private readonly Action<int, int> _reportProgress;
             private readonly int _requestId;
             private readonly CancellationTokenSource _cancellation;
 
-            public WorkerProgress(BackgroundWorker worker, int requestId, CancellationTokenSource cancellation)
+            public WorkerProgress(Action<int, int> reportProgress, int requestId, CancellationTokenSource cancellation)
             {
-                _worker = worker;
+                _reportProgress = reportProgress;
                 _requestId = requestId;
                 _cancellation = cancellation;
             }
 
             public void Report(int value)
             {
-                if (_worker.CancellationPending || _cancellation.IsCancellationRequested)
+                if (_cancellation.IsCancellationRequested)
                     return;
                 try
                 {
-                    _worker.ReportProgress(value, _requestId);
+                    _reportProgress?.Invoke(value, _requestId);
                 }
-                catch (InvalidOperationException)
+                catch (ObjectDisposedException)
                 {
-                    // Ignore race if worker has already completed.
+                    // Ignore race if cancellation source has already been disposed.
                 }
             }
         }
@@ -231,6 +231,23 @@ namespace pwiz.Skyline.Controls.Graphs
             _labelLayoutDebounceTimer.Start();
         }
 
+        public void Start(ZedGraphControl graphControl, IList<LabeledPoint> labeledPoints,
+            IList<LabeledPoint.PointLayout> savedLayout, Action<List<LabeledPoint.PointLayout>> saveLayout)
+        {
+            if (graphControl == null || graphControl.IsDisposed)
+                return;
+
+            Start(
+                graphControl.GraphPane,
+                labeledPoints,
+                savedLayout,
+                saveLayout,
+                graphControl.Invalidate,
+                () => graphControl.IsDisposed,
+                Program.MainWindow,
+                GraphsResources.LabelLayoutRunner_Start_Label_layout);
+        }
+
         private void EnsureDebounceTimer()
         {
             if (_labelLayoutDebounceTimer != null)
@@ -245,7 +262,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (request == null)
                     return;
 
-                if (_labelLayoutWorker != null && _labelLayoutWorker.IsBusy)
+                if (_labelLayoutWorkerThread != null && _labelLayoutWorkerThread.IsAlive)
                 {
                     _pendingRequest = request;
                     _labelLayoutDebounceTimer.Start();
@@ -346,101 +363,19 @@ namespace pwiz.Skyline.Controls.Graphs
             var saveLayout = request.SaveLayout;
             var invalidate = request.Invalidate;
             var isDisposed = request.IsDisposed;
-
-            var worker = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
-            _labelLayoutWorker = worker;
-
-            worker.DoWork += (s, e) =>
+            var graphControl = (pane as SummaryGraphPane)?.GraphSummary?.GraphControl;
+            Action<Action> runOnUiThread = uiAction =>
             {
-                var workItem = (LabelLayoutWorkItem)e.Argument;
-                var bw = (BackgroundWorker)s;
-                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                if (uiAction == null)
+                    return;
+                if (!CommonActionUtil.SafeBeginInvoke(graphControl, uiAction))
                 {
-                    var heights = workItem.VisiblePoints.Select(p => workItem.Pane.GetRectScreen(p.Label, g).Height).ToList();
-                    if (!heights.Any(h => h > 0))
-                    {
-                        e.Result = new LabelLayoutWorkResult();
-                        return;
-                    }
-                    var minLabelHeight = heights.FindAll(h => h > 0).Min();
-                    var labelLayout = workItem.LabelLayout ?? new LabelLayout(workItem.Pane, (int)Math.Ceiling(minLabelHeight));
-                    var progress = new WorkerProgress(bw, workItem.RequestId, workItem.Cancellation);
-
-                    var result = labelLayout.ComputePlacementsSimulatedAnnealing(workItem.VisiblePoints, g, workItem.SavedLayout,
-                        workItem.Cancellation.Token, progress);
-                    if (bw.CancellationPending || workItem.Cancellation.IsCancellationRequested)
-                    {
-                        e.Cancel = true;
-                        return;
-                    }
-
-                    e.Result = new LabelLayoutWorkResult
-                    {
-                        LabelLayout = labelLayout,
-                        Result = result
-                    };
+                    // If the graph has already been disposed there is nowhere safe to marshal callbacks.
+                    // The worker completion path will still dispose its CTS.
                 }
             };
 
-            worker.ProgressChanged += (s, e) =>
-            {
-                if (!(e.UserState is int id) || id != _labelLayoutRequestId)
-                    return;
-                var now = Environment.TickCount;
-                if (e.ProgressPercentage < 100 &&
-                    _labelLayoutLastProgressMs != 0 &&
-                    unchecked(now - _labelLayoutLastProgressMs) < LABEL_LAYOUT_PROGRESS_INTERVAL_MS)
-                    return;
-                _labelLayoutLastProgressMs = now;
-                status = status.ChangePercentComplete(e.ProgressPercentage);
-                _labelLayoutStatus = status;
-                progressMonitor?.UpdateProgress(status);
-            };
-
-            worker.RunWorkerCompleted += (s, e) =>
-            {
-                if (requestId != _labelLayoutRequestId)
-                {
-                    workerCancellation.Dispose();
-                    return;
-                }
-                if (isDisposed != null && isDisposed())
-                {
-                    workerCancellation.Dispose();
-                    return;
-                }
-
-                if (e.Cancelled || workerCancellation.IsCancellationRequested)
-                {
-                    status = status.Cancel();
-                }
-                else if (e.Error != null)
-                {
-                    status = status.ChangeErrorException(e.Error);
-                }
-                else
-                {
-                    var result = e.Result as LabelLayoutWorkResult;
-                    if (result?.Result != null)
-                    {
-                        using (var g = Graphics.FromHwnd(IntPtr.Zero))
-                        {
-                            if (pane.ApplyLabelLayout(result.LabelLayout, result.Result, g))
-                            {
-                                saveLayout?.Invoke(pane.Layout?.PointsLayout);
-                                invalidate?.Invoke();
-                            }
-                        }
-                    }
-                    status = status.ChangePercentComplete(100);
-                }
-
-                _labelLayoutStatus = status;
-                progressMonitor?.UpdateProgress(status);
-                workerCancellation.Dispose();
-            };
-
-            worker.RunWorkerAsync(new LabelLayoutWorkItem
+            var workItem = new LabelLayoutWorkItem
             {
                 RequestId = requestId,
                 Pane = pane,
@@ -448,13 +383,137 @@ namespace pwiz.Skyline.Controls.Graphs
                 VisiblePoints = visiblePoints,
                 SavedLayout = request.SavedLayout != null ? new List<LabeledPoint.PointLayout>(request.SavedLayout) : new List<LabeledPoint.PointLayout>(),
                 Cancellation = workerCancellation
-            });
+            };
+
+            Thread workerThread = null;
+            workerThread = _labelLayoutWorkerThread = ActionUtil.RunAsync(() =>
+            {
+                LabelLayoutWorkResult workerResult = null;
+                Exception workerError = null;
+                var cancelled = false;
+                try
+                {
+                    using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                    {
+                        var heights = workItem.VisiblePoints.Select(p => workItem.Pane.GetRectScreen(p.Label, g).Height).ToList();
+                        if (!heights.Any(h => h > 0))
+                        {
+                            workerResult = new LabelLayoutWorkResult();
+                        }
+                        else
+                        {
+                            var minLabelHeight = heights.FindAll(h => h > 0).Min();
+                            var labelLayout = workItem.LabelLayout ?? new LabelLayout(workItem.Pane, (int)Math.Ceiling(minLabelHeight));
+                            var progress = new WorkerProgress((progressPercent, id) =>
+                            {
+                                runOnUiThread(() =>
+                                {
+                                    if (id != _labelLayoutRequestId)
+                                        return;
+                                    var now = Environment.TickCount;
+                                    if (progressPercent < 100 &&
+                                        _labelLayoutLastProgressMs != 0 &&
+                                        unchecked(now - _labelLayoutLastProgressMs) < LABEL_LAYOUT_PROGRESS_INTERVAL_MS)
+                                        return;
+                                    _labelLayoutLastProgressMs = now;
+                                    status = status.ChangePercentComplete(progressPercent);
+                                    _labelLayoutStatus = status;
+                                    progressMonitor?.UpdateProgress(status);
+                                });
+                            }, workItem.RequestId, workItem.Cancellation);
+
+                            var result = labelLayout.ComputePlacementsSimulatedAnnealing(workItem.VisiblePoints, g, workItem.SavedLayout,
+                                workItem.Cancellation.Token, progress);
+                            if (workItem.Cancellation.IsCancellationRequested)
+                            {
+                                cancelled = true;
+                            }
+                            else
+                            {
+                                workerResult = new LabelLayoutWorkResult
+                                {
+                                    LabelLayout = labelLayout,
+                                    Result = result
+                                };
+                            }
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    cancelled = true;
+                }
+                catch (ObjectDisposedException)
+                {
+                    cancelled = true;
+                }
+                catch (Exception ex)
+                {
+                    workerError = ex;
+                    Program.ReportException(ex);
+                }
+
+                var completionPosted = CommonActionUtil.SafeBeginInvoke(graphControl, (() =>
+                {
+                    try
+                    {
+                        if (requestId != _labelLayoutRequestId)
+                            return;
+                        if (isDisposed != null && isDisposed())
+                            return;
+
+                        if (cancelled || workerCancellation.IsCancellationRequested)
+                        {
+                            status = status.Cancel();
+                        }
+                        else if (workerError != null)
+                        {
+                            status = status.ChangeErrorException(workerError);
+                        }
+                        else
+                        {
+                            if (workerResult?.Result != null)
+                            {
+                                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                                {
+                                    if (pane.ApplyLabelLayout(workerResult.LabelLayout, workerResult.Result, g))
+                                    {
+                                        saveLayout?.Invoke(pane.Layout?.PointsLayout);
+                                        invalidate?.Invoke();
+                                    }
+                                }
+                            }
+                            status = status.ChangePercentComplete(100);
+                        }
+
+                        _labelLayoutStatus = status;
+                        progressMonitor?.UpdateProgress(status);
+                    }
+                    finally
+                    {
+                        if (ReferenceEquals(_labelLayoutCts, workerCancellation))
+                            _labelLayoutCts = null;
+                        // ReSharper disable once AccessToModifiedClosure
+                        if (ReferenceEquals(_labelLayoutWorkerThread, workerThread))
+                            _labelLayoutWorkerThread = null;
+                        workerCancellation.Dispose();
+                    }
+                }));
+
+                if (!completionPosted)
+                {
+                    if (ReferenceEquals(_labelLayoutCts, workerCancellation))
+                        _labelLayoutCts = null;
+                    // ReSharper disable once AccessToModifiedClosure
+                    if (ReferenceEquals(_labelLayoutWorkerThread, workerThread))
+                        _labelLayoutWorkerThread = null;
+                    workerCancellation.Dispose();
+                }
+            }, @"Label Layout");
         }
 
         private void CancelInFlight(IProgressMonitor progressMonitor = null)
         {
-            if (_labelLayoutWorker != null && _labelLayoutWorker.IsBusy)
-                _labelLayoutWorker.CancelAsync();
             if (_labelLayoutCts != null)
             {
                 try
@@ -470,11 +529,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _labelLayoutStatus = _labelLayoutStatus.Cancel();
                 progressMonitor?.UpdateProgress(_labelLayoutStatus);
-            }
-            if (_labelLayoutWorker == null || !_labelLayoutWorker.IsBusy)
-            {
-                _labelLayoutCts?.Dispose();
-                _labelLayoutCts = null;
             }
         }
 
