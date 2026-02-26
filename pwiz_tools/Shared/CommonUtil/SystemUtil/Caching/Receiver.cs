@@ -46,7 +46,6 @@ namespace pwiz.Common.SystemUtil.Caching
             _synchronizationContext = SynchronizationContext.Current as WindowsFormsSynchronizationContext;
             if (_synchronizationContext == null)
             {
-                Assume.Fail();
                 // If called during main window construction, then SynchronizationContext.Current might not be the WindowsFormsSynchronizationContext yet.
                 // In that case, we create a new one. When the real WindowsFormsSynchronizationContext gets created, it will use the same marshalling control
                 // so we do not need to dispose the one we created here.
