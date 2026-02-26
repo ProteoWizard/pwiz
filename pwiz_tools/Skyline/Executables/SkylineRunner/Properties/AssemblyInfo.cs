@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("SkylineDailyRunner")]
-[assembly: AssemblyDescription("Command-line interface to Skyline-daily")]
+[assembly: AssemblyDescription("Command-line interface to Skyline")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
-[assembly: AssemblyProduct("Skyline-daily")]
-[assembly: AssemblyCopyright("Copyright © University of Washington 2011-2022")]
+[assembly: AssemblyProduct("Skyline")]
+[assembly: AssemblyCopyright("Copyright © University of Washington 2011-2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
