@@ -17,11 +17,8 @@
  * limitations under the License.
  */
 
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.SkylineTestUtil;
 

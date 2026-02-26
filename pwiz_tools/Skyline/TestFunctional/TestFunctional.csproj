@@ -180,7 +180,6 @@
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
     <Compile Include="OpenPeakAreasFromStartPageTest.cs" />
     <Compile Include="OriginalPeakScoreTest.cs" />
-    <Compile Include="OtherOpenFromStartPageTest.cs" />
     <Compile Include="RemovePeakFromAllTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />
