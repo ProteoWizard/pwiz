@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.MSGraph;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -32,10 +33,11 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IAreaCVHistogramInfo
+    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IAreaCVHistogramInfo, IHeatMapDataProvider
     {
         private readonly Receiver<AreaCVGraphData.Parameters, AreaCVGraphData> _receiver;
         private AreaCVGraphData _areaCVGraphData;
+        private HeatMapData _heatMapData;
         private SrmDocument _document;
 
         private readonly LineItem[] _lineItems;
@@ -169,8 +171,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 .Select(d => new HeatMapData.TaggedPoint3D(new Point3D(d.MeanArea, d.CV * factor, d.Frequency), d))
                 .ToList();
             Items = points.Count; // Because heatmaps can't be trusted to have a consistent number of points on all monitors
-            var heatMapData = new HeatMapData(points);
-            HeatMapGraphPane.GraphHeatMap(this, heatMapData, 17, 2, (float)(_areaCVGraphData.MinCV * factor), (float)(_areaCVGraphData.MaxCV * factor), Settings.Default.AreaCVLogScale, 0);
+            _heatMapData = new HeatMapData(points);
+            HeatMapGraphPane.GraphHeatMap(this, _heatMapData, 17, 2, (float)(_areaCVGraphData.MinCV * factor), (float)(_areaCVGraphData.MaxCV * factor), Settings.Default.AreaCVLogScale, 0);
 
             var unit = _percentage ? @"%" : string.Empty;
 
@@ -196,6 +198,9 @@ namespace pwiz.Skyline.Controls.Graphs
             return new LineItem(text, new[] { fromX, toX }, new[] { fromY, toY }, color, SymbolType.None, 2.0f)
             { Line = { Style = DashStyle.Dash } };
         }
+
+        public HeatMapData HeatMapData => _heatMapData;
+        public string HeatMapZAxisName => GraphsResources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
 
         #region Functional Test Support
 
