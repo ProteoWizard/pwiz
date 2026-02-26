@@ -501,23 +501,13 @@ namespace TestRunnerLib
 
             // Check for GC leaks - objects registered by test code that should
             // have been collected after FlushMemory's full GC cycle.
-            // Skip when memory profiling - pin survivors for dotMemory inspection.
-            if (DotMemoryWarmupRuns > 0)
+            // Handles dotMemory pin-survivors, snapshot-on-leak, and normal leak checks.
+            var gcLeakMessage = GarbageCollectionTracker.CheckAfterTest(
+                test.TestMethod.Name, DotMemoryWarmupRuns, exception, Log);
+            if (gcLeakMessage != null)
             {
-                GarbageCollectionTracker.PinSurvivors();
-            }
-            else if (exception != null)
-            {
-                GarbageCollectionTracker.Clear();
-            }
-            else
-            {
-                var leakMessage = GarbageCollectionTracker.CheckForLeaks();
-                if (leakMessage != null)
-                {
-                    Log("!!! {0} GC-LEAK {1}\r\n", test.TestMethod.Name, leakMessage);
-                    exception = new Exception(leakMessage);
-                }
+                Log("!!! {0} GC-LEAK {1}\r\n", test.TestMethod.Name, gcLeakMessage);
+                exception = new Exception(gcLeakMessage);
             }
 
             _process.Refresh();

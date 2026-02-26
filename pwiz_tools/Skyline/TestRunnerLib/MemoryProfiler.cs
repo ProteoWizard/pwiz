@@ -28,6 +28,12 @@ namespace TestRunnerLib
     public static class MemoryProfiler
     {
         /// <summary>
+        /// True when dotMemory is attached and ready for API-controlled snapshots.
+        /// </summary>
+        public static bool IsReady =>
+            0 != (JetBrains.Profiler.Api.MemoryProfiler.GetFeatures() & MemoryFeatures.Ready);
+
+        /// <summary>
         /// When true, starts collecting allocation stack traces on first Snapshot call.
         /// This enables seeing where leaked objects were allocated in dotMemory analysis.
         /// </summary>

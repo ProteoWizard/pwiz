@@ -1192,6 +1192,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly GraphSpectrum _parent;
             private readonly Timer _timer;
+            private bool _disposed;
 
             public ImmutableList<Precursor> Precursors { get; private set; }
             private TreeNodeMS _treeNode;
@@ -1209,6 +1210,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void QueueUpdate(bool isUserAction)
             {
+                if (_disposed)
+                    return;
+
                 // Restart the timer at 100ms, giving the UI time to interrupt.
                 _timer.Stop();
                 _timer.Interval = 100;
@@ -1271,6 +1275,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public void Dispose()
             {
+                _disposed = true;
+                _timer.Stop();
+                _timer.Tick -= DoUpdate;
                 _timer.Dispose();
             }
         }
