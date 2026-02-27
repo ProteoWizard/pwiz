@@ -349,29 +349,10 @@ namespace TestRunnerLib
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             var saveTmp = Environment.GetEnvironmentVariable(@"TMP");
 
-            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
+            if (string.IsNullOrEmpty(dmpDir))
+                dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
 
-            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
-            {
-                try
-                {
-                    if (string.IsNullOrEmpty(dmpDir))
-                    {
-                        dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
-                        Log("[WARNING] No log path provided - using test results dir ({0})", dmpDir);
-                    }
-
-                    Directory.CreateDirectory(dmpDir);
-
-                    var path = Path.Combine(dmpDir, "pre_" + dumpFileName);
-                    if (!MiniDump.WriteMiniDump(path))
-                        Log("[WARNING] Failed to write pre mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
-                }
-                catch(Exception ex)
-                {
-                    Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
-                }
-            }
+            var preDumpPath = WritePreMiniDumpIfRequested(test, pass, testNumber, dmpDir);
 
             string tmpTestDir = null; // If non-null, we've put temp files in an elaborately named temp directory, so delete it when done
 
@@ -447,36 +428,8 @@ namespace TestRunnerLib
             LastUserHandleCount = GetHandleCount(User32Test.HandleType.user);
             LastGdiHandleCount = GetHandleCount(User32Test.HandleType.gdi);
 
-            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
-            {
-                try
-                {
-                    var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
-                    if (leak > test.MinidumpLeakThreshold.Value)
-                    {
-                        var path = Path.Combine(dmpDir, "post_" + dumpFileName);
-                        if (!MiniDump.WriteMiniDump(path))
-                            Log("[WARNING] Failed to write post mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
-                    }
-                    else
-                    {
-                        var prePath = Path.Combine(dmpDir, "pre_" + dumpFileName);
-                      
-                        var i = 5;
-                        while (i-- > 0)
-                        {
-                            File.Delete(prePath);
-                            if (!File.Exists(prePath))
-                                break;
-                            Thread.Sleep(200);
-                        }
-                    }
-                }
-                catch(Exception ex)
-                {
-                    Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
-                }
-            }
+            var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
+            WritePostMiniDumpIfRequested(test, preDumpPath, leak);
 
             if (exception == null)
             {
@@ -654,6 +607,57 @@ namespace TestRunnerLib
             }
 
             return tmpTestDir;
+        }
+
+        /// <summary>
+        /// Writes a "pre_" minidump before the test runs, if WriteMiniDumps is enabled
+        /// and the test has a MinidumpLeakThreshold attribute.
+        /// </summary>
+        /// <returns>The full path of the pre-dump file, or null if no dump was written.</returns>
+        private string WritePreMiniDumpIfRequested(TestInfo test, int pass, int testNumber, string dmpDir)
+        {
+            if (!WriteMiniDumps || test.MinidumpLeakThreshold == null)
+                return null;
+
+            var dumpFileName = string.Format("pre_{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp",
+                pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
+            var path = Path.Combine(dmpDir, dumpFileName);
+            WriteMiniDump(path);
+            return path;
+        }
+
+        /// <summary>
+        /// Writes a "post_" minidump after a leak is detected, using the pre-dump path
+        /// to derive the post-dump filename.
+        /// </summary>
+        private void WritePostMiniDumpIfRequested(TestInfo test, string preDumpPath, long leak)
+        {
+            if (preDumpPath == null)
+                return;
+            if (leak < test.MinidumpLeakThreshold)
+            {
+                FileEx.SafeDelete(preDumpPath, true);
+            }
+            else
+            {
+                var path = preDumpPath.Replace(@"\pre_", @"\post_");
+                WriteMiniDump(path);
+            }
+        }
+
+        private void WriteMiniDump(string path)
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+
+                if (!MiniDump.WriteMiniDump(path))
+                    Log("[WARNING] Failed to write mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
+            }
+            catch (Exception ex)
+            {
+                Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
+            }
         }
 
         private string SetTMP(TestInfo test)
