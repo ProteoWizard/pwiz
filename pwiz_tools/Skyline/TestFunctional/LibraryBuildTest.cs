@@ -67,7 +67,6 @@ namespace pwiz.SkylineTestFunctional
         {
             MainTest();
             CirtLibraryBuildTest();
-            PeptideSettingsUI = null; // Release reference to prevent GC leak (SkylineWindow retained via _parent)
         }
 
         private void MainTest()

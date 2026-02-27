@@ -134,12 +134,6 @@ namespace pwiz.SkylineTestFunctional
                 TestModificationMatching();
                 TestTooltip();
             }
-            // Release references to prevent GC leak (SkylineWindow retained via _parent/Owner
-            // and via child control event handlers chaining back to ViewLibraryDlg._documentUiContainer)
-            PeptideSettingsUI = null;
-            _viewLibUI = null;
-            _libComboBox = null;
-            _pepList = null;
         }
 
         private void SetUpTestLibraries()
