@@ -438,4 +438,7 @@ To enable, install the following items:
       - waters_connect TQ Skyline Adapter 1.0.0 or later
       - Relevant MS drivers version 2.0 or later</value>
   </data>
+  <data name="ToolService_ReorderElements_Elements_reordered_by_external_tool" xml:space="preserve">
+    <value>Elements reordered by external tool</value>
+  </data>
 </root>

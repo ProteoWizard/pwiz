@@ -902,11 +902,11 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Order of elements changed by external tool.
+        ///   Looks up a localized string similar to Elements reordered by external tool.
         /// </summary>
-        public static string ToolService_ReorderElements_Order_of_elements_changed_by_external_tool {
+        public static string ToolService_ReorderElements_Elements_reordered_by_external_tool {
             get {
-                return ResourceManager.GetString("ToolService_ReorderElements_Order_of_elements_changed_by_external_tool", resourceCulture);
+                return ResourceManager.GetString("ToolService_ReorderElements_Elements_reordered_by_external_tool", resourceCulture);
             }
         }
         
