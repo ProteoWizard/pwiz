@@ -606,13 +606,11 @@ namespace pwiz.Skyline.ToolsUI
                             }
 
                             return newDocument;
-                        }, pair=>AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.sort_protein_name, newDocument.DocumentType)));
+                        }, pair=>AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.reordered_elements, newDocument.DocumentType)));
                     }
                 }
             }));
         }
-        
-        
         
         private ElementRef GetSelectedElementRefNow(string elementType)
         {

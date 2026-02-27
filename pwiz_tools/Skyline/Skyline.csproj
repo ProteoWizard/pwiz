@@ -563,6 +563,11 @@
     <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Databinding\CandidatePeakGroupFactory.cs" />
     <Compile Include="Model\Databinding\Collections\ResultMap.cs" />
     <Compile Include="Model\Databinding\ReportExporters.cs" />
@@ -579,11 +584,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EnumNames.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
