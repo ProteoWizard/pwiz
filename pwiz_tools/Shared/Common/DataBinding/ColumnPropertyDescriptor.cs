@@ -30,7 +30,7 @@ namespace pwiz.Common.DataBinding
         {
         }
         public ColumnPropertyDescriptor(DisplayColumn displayColumn, string name, PropertyPath propertyPath, PivotKey pivotKey)
-            : base(name, displayColumn.GetColumnCaption(pivotKey), displayColumn.DataSchema.DataSchemaLocalizer, displayColumn.GetAttributes(pivotKey).ToArray())
+            : base(name, displayColumn.GetColumnCaption(pivotKey), displayColumn.DataSchema, displayColumn.GetAttributes(pivotKey).ToArray())
         {
             DisplayColumn = displayColumn;
             PropertyPath = propertyPath;
