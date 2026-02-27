@@ -17,23 +17,13 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using pwiz.Skyline.Model.Databinding.Entities;
-
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
     public class Peptides : NodeList<Entities.Peptide> 
     {
-        public Peptides(Protein protein) : base(protein.DataSchema, protein.IdentityPath)
+        public Peptides(SkylineDataSchema dataSchema) : base(dataSchema, ROOT_IDENTITY_PATH)
         {
-        }
-        public Peptides(SkylineDataSchema dataSchema, IList<IdentityPath> ancestorIdentityPaths): base(dataSchema, ancestorIdentityPaths)
-        {
-        }
 
-        protected override Entities.Peptide ConstructItem(IdentityPath identityPath)
-        {
-            return new Entities.Peptide(DataSchema, identityPath);
         }
 
         protected override int NodeDepth 

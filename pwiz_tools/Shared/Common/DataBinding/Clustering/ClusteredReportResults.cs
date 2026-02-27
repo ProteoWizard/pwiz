@@ -26,12 +26,12 @@ namespace pwiz.Common.DataBinding.Clustering
     public class ClusteredReportResults : ReportResults
     {
         public new static readonly ClusteredReportResults EMPTY = new ClusteredReportResults(
-            ImmutableList.Empty<RowItem>(),
+            BigList<RowItem>.Empty,
             ClusteredProperties.EMPTY, null, null);
 
         public ClusteredReportResults(IEnumerable<RowItem> rowItems, ClusteredProperties clusteredProperties,
             CaptionedDendrogramData rowDendrogramData, IEnumerable<CaptionedDendrogramData> columnDendrogramDatas) 
-            : base(rowItems, clusteredProperties.PivotedProperties.ItemProperties)
+            : base(rowItems.ToBigList(), clusteredProperties.PivotedProperties.ItemProperties)
         {
             if (rowDendrogramData != null && rowDendrogramData.DendrogramData.LeafCount != RowItems.Count)
             {
