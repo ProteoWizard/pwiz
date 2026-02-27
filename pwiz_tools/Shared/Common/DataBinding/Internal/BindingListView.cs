@@ -366,7 +366,7 @@ namespace pwiz.Common.DataBinding.Internal
                 CancelNew(newRowPos);
             }
             RowItemList.Clear();
-            RowItemList.AddRange(QueryResults.ResultRows);
+            RowItemList.AddRange(QueryResults.ResultRows.Take(ViewInfo?.DataSchema.MaxGridRowCount ?? int.MaxValue));
             if (newRow != null && !NewRowHandler.IsNewRowEmpty(newRow))
             {
                 _newRow = newRow;
@@ -392,6 +392,7 @@ namespace pwiz.Common.DataBinding.Internal
                 OnAllRowsChanged();
             }
         }
+
         public string Filter
         {
             get
