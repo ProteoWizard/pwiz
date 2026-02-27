@@ -613,6 +613,15 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
+        public virtual void SelectDocNode(IdentityPath identityPath)
+        {
+            
+        }
+
+        public virtual void ShowCalibrationCurve(Model.Databinding.Entities.Peptide peptide)
+        {
+        }
+
         private class BatchChangesState
         {
             public BatchChangesState(SrmDocument originalDocument, IUndoState undoState)
@@ -624,6 +633,14 @@ namespace pwiz.Skyline.Model.Databinding
             public SrmDocument OriginalDocument { get; }
             public IUndoState UndoState { get; }
             public List<EditDescription> EditDescriptions { get; }
+        }
+
+        public override int MaxGridRowCount
+        {
+            get
+            {
+                return Settings.Default.MaxGridRowCount;
+            }
         }
     }
 }

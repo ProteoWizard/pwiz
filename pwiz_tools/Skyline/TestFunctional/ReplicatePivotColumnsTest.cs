@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
