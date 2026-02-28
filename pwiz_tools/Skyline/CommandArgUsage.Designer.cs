@@ -2799,6 +2799,16 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No help section matching &apos;{0}&apos; found. Use --help=sections to list available sections..
+        /// </summary>
+        public static string CommandArgs_Usage_No_help_section_matching___0___found__Use___help_sections_to_list_available_sections_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_Usage_No_help_section_matching___0___found__Use___help_sections_to_lis" +
+                        "t_available_sections_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Until the section titled Settings Customization all other command line arguments rely on the &apos;--in&apos; argument because they all rely on having a Skyline document open..
         /// </summary>
         public static string CommandArgs_Usage_Until_the_section_titled_Settings_Customization_all_other_command_line_arguments_rely_on_the____in__argument_because_they_all_rely_on_having_a_Skyline_document_open_ {

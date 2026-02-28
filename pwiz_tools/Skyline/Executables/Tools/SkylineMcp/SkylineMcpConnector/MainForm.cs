@@ -135,7 +135,7 @@ namespace SkylineMcpConnector
             ConnectionInfo.Delete();
             if (_toolClient != null)
             {
-                _toolClient.Dispose();
+                try { _toolClient.Dispose(); } catch (IOException) { } // Skyline may already be gone
                 _toolClient = null;
             }
         }

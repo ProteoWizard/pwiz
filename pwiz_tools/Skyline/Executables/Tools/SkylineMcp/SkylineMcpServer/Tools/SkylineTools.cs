@@ -88,6 +88,18 @@ public static class SkylineTools
         return FormatReportResult("Custom", csv);
     }
 
+    [McpServerTool(Name = "skyline_run_command"),
+     Description("Run a command line against the running Skyline instance. Uses the same command syntax as SkylineCmd/SkylineRunner. Commands are echoed to Skyline's Immediate Window for user visibility. Examples: '--report-name=\"Peak Area\" --report-file=output.csv', '--import-file=results.raw', '--refine-cv-remove-above-cutoff=20'. Use '--help' to see all available commands.")]
+    public static string RunCommand(
+        [Description("Command line arguments in SkylineCmd format (e.g., '--report-name=\"Peak Area\" --report-file=output.csv')")] string commandArgs)
+    {
+        using var connection = SkylineConnection.Connect();
+        string output = connection.Call("RunCommand", commandArgs);
+        if (string.IsNullOrEmpty(output))
+            return "Command completed with no output.";
+        return output;
+    }
+
     private static string FormatReportResult(string reportName, string csv)
     {
         if (string.IsNullOrEmpty(csv))

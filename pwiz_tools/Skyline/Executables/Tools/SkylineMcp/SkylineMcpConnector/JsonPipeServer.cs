@@ -144,7 +144,8 @@ namespace SkylineMcpConnector
                     {
                         "GetDocumentPath", "GetVersion", "GetDocumentLocationName",
                         "GetReplicateName", "GetProcessId", "GetReport",
-                        "GetReportFromDefinition", "GetSelectedElementLocator"
+                        "GetReportFromDefinition", "GetSelectedElementLocator",
+                        "RunCommand"
                     });
 
                 case "GetDocumentPath":
@@ -175,6 +176,10 @@ namespace SkylineMcpConnector
                 case "GetSelectedElementLocator":
                     RequireArgs(method, args, 1);
                     return _client.GetSelectedElementLocator(args[0]);
+
+                case "RunCommand":
+                    RequireArgs(method, args, 1);
+                    return _client.RunCommand(args[0]);
 
                 default:
                     throw new ArgumentException("Unknown method: " + method);

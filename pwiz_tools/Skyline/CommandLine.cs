@@ -70,9 +70,10 @@ namespace pwiz.Skyline
         /// </summary>
         private bool _importedResults;
 
-        public CommandLine(CommandStatusWriter output)
+        public CommandLine(CommandStatusWriter output, SrmDocument doc = null)
         {
             _out = output;
+            _doc = doc;
         }
 
         public SrmDocument Document { get { return _doc; } }
@@ -4694,6 +4695,11 @@ namespace pwiz.Skyline
         }
 
         public override void Write(char value)
+        {
+            _writer.Write(value);
+        }
+
+        public override void Write(string value)
         {
             _writer.Write(value);
         }

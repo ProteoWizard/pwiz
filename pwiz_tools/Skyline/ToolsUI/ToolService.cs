@@ -561,6 +561,79 @@ namespace pwiz.Skyline.ToolsUI
             }));
         }
 
+        public string RunCommand(string args)
+        {
+            // Show the Immediate Window and echo the command on the UI thread (blocking but fast).
+            // We need this to complete before accessing ImmediateWindow.Writer.
+            TextWriter immediateWriter = null;
+            _skylineWindow.Invoke(new Action(() =>
+            {
+                _skylineWindow.ShowImmediateWindow();
+                _skylineWindow.ImmediateWindow.WriteFresh(args);
+                _skylineWindow.ImmediateWindow.WriteLine(string.Empty);
+                immediateWriter = _skylineWindow.ImmediateWindow.Writer;
+            }));
+
+            // Run on the current thread (already a background pipe server thread).
+            // The Immediate Window writer handles cross-thread writes via BeginInvoke.
+            var capture = new StringWriter();
+            var tee = new TeeTextWriter(capture, immediateWriter);
+
+            var parsedArgs = CommandLine.ParseArgs(args);
+            var commandLine = new CommandLine(new CommandStatusWriter(tee), _skylineWindow.Document);
+            commandLine.Run(parsedArgs, true);
+
+            return capture.ToString();
+        }
+
+        /// <summary>
+        /// A TextWriter that writes to two underlying writers simultaneously.
+        /// Used to capture command output while also echoing to the Immediate Window.
+        /// </summary>
+        private class TeeTextWriter : TextWriter
+        {
+            private readonly TextWriter _writer1;
+            private readonly TextWriter _writer2;
+
+            public TeeTextWriter(TextWriter writer1, TextWriter writer2)
+            {
+                _writer1 = writer1;
+                _writer2 = writer2;
+            }
+
+            public override Encoding Encoding => _writer1.Encoding;
+
+            public override void Write(char value)
+            {
+                _writer1.Write(value);
+                _writer2.Write(value);
+            }
+
+            public override void Write(string value)
+            {
+                _writer1.Write(value);
+                _writer2.Write(value);
+            }
+
+            public override void WriteLine(string value)
+            {
+                _writer1.WriteLine(value);
+                _writer2.WriteLine(value);
+            }
+
+            public override void WriteLine()
+            {
+                _writer1.WriteLine();
+                _writer2.WriteLine();
+            }
+
+            public override void Flush()
+            {
+                _writer1.Flush();
+                _writer2.Flush();
+            }
+        }
+
         public string GetSelectedElementLocator(string elementType)
         {
             ElementRef result = null;

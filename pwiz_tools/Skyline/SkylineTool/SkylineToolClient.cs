@@ -140,6 +140,11 @@ namespace SkylineTool
             _client.ImportPeakBoundaries(peakBoundariesCsv);
         }
 
+        public string RunCommand(string args)
+        {
+            return _client.RunCommand(args);
+        }
+
         private class DocumentChangeReceiver : RemoteService, IDocumentChangeReceiver
         {
             private readonly SkylineToolClient _toolClient;
@@ -267,6 +272,11 @@ namespace SkylineTool
             public string GetSelectedElementLocator(string elementType)
             {
                 return _remoteClient.RemoteCallFunction(GetSelectedElementLocator, elementType);
+            }
+
+            public string RunCommand(string args)
+            {
+                return _remoteClient.RemoteCallFunction(RunCommand, args);
             }
         }
 

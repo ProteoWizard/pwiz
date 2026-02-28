@@ -75,6 +75,15 @@ namespace SkylineTool
         void ImportProperties(string csvText);
         void ImportPeakBoundaries(string csvText);
         string GetSelectedElementLocator(string elementType);
+
+        /// <summary>
+        /// Runs a command line string against the running Skyline instance, as if typed
+        /// into the Immediate Window or used with SkylineRunner/SkylineCmd.
+        /// Output is also echoed to the Immediate Window for user visibility.
+        /// </summary>
+        /// <param name="args">Command line arguments (e.g. "--report-name=\"Peak Area\" --report-file=output.csv")</param>
+        /// <returns>The text output produced by the command</returns>
+        string RunCommand(string args);
     }
 
     public interface IDocumentChangeReceiver

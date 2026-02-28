@@ -221,10 +221,11 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_MEMSTAMP = new Argument(@"memstamp", (c, p) => c._out.IsMemStamped = true);
         public static readonly Argument ARG_LOG_FILE = new Argument(@"log-file", PATH_TO_FILE, (c, p) => c.LogFile = p.Value);
         public static readonly Argument ARG_HELP = new Argument(@"help",
-            new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS },
-            (c, p) => c.Usage(p.Value)) {OptionalValue = true};
+            new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS, ARG_VALUE_SECTIONS },
+            (c, p) => c.Usage(p.Value)) {OptionalValue = true, HasValueChecking = true};
         public const string ARG_VALUE_ASCII = "ascii";
         public const string ARG_VALUE_NO_BORDERS = "no-borders";
+        public const string ARG_VALUE_SECTIONS = "sections";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
         public static readonly Argument ARG_VERBOSE_ERRORS =
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
@@ -2458,11 +2459,34 @@ namespace pwiz.Skyline
                 if (formatType == ARG_VALUE_ASCII)
                     CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;  // Use invariant culture for ascii output
                 UsageShown = true;
-                foreach (var block in UsageBlocks)
-                    _out.Write(block.ToString(_usageWidth, formatType));
+
+                if (formatType == ARG_VALUE_SECTIONS)
+                {
+                    // List section names only
+                    foreach (var block in SectionGroups)
+                        _out.WriteLine(block.Title);
+                }
+                else if (formatType == null || formatType == ARG_VALUE_ASCII || formatType == ARG_VALUE_NO_BORDERS)
+                {
+                    foreach (var block in UsageBlocks)
+                        _out.Write(block.ToString(_usageWidth, formatType));
+                }
+                else
+                {
+                    // Treat as a section name filter — show matching sections
+                    var group = SectionGroups.FirstOrDefault(
+                        g => g.Title.IndexOf(formatType, StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (group == null)
+                        _out.WriteLine(CommandArgUsage.CommandArgs_Usage_No_help_section_matching___0___found__Use___help_sections_to_list_available_sections_, formatType);
+                    else
+                        _out.Write(group.ToString(_usageWidth, ARG_VALUE_NO_BORDERS));
+                }
             }
             return false;   // End argument processing
         }
+
+        private IEnumerable<ArgumentGroup> SectionGroups =>
+            UsageBlocks.OfType<ArgumentGroup>().Where(g => g.IncludeInUsage);
 
         private int _usageWidth = 78;
 
