@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>SkylineMcpConnector</RootNamespace>
+    <AssemblyName>SkylineMcpConnector</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="SkylineTool">
+      <HintPath>..\..\..\..\bin\x64\Release\SkylineTool.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <!-- Package the Skyline External Tool ZIP after build -->
+  <Target Name="PackageToolZip" AfterTargets="Build">
+    <PropertyGroup>
+      <_ToolZipDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp\</_ToolZipDir>
+      <_ToolZipPath>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\SkylineMcp.zip</_ToolZipPath>
+      <_ConnectorBinDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\</_ConnectorBinDir>
+      <_McpServerBinDir>$(MSBuildProjectDirectory)\..\SkylineMcpServer\bin\$(Configuration)\net8.0-windows\win-x64\</_McpServerBinDir>
+    </PropertyGroup>
+
+    <!-- Clean staging directory -->
+    <RemoveDir Directories="$(_ToolZipDir)" />
+    <MakeDir Directories="$(_ToolZipDir)" />
+    <MakeDir Directories="$(_ToolZipDir)tool-inf\" />
+    <MakeDir Directories="$(_ToolZipDir)mcp-server\" />
+
+    <!-- Copy connector output (exe + all dependencies) -->
+    <ItemGroup>
+      <ConnectorFiles Include="$(_ConnectorBinDir)*.exe;$(_ConnectorBinDir)*.dll;$(_ConnectorBinDir)*.config" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ConnectorFiles)" DestinationFolder="$(_ToolZipDir)" />
+
+    <!-- Copy tool-inf -->
+    <ItemGroup>
+      <ToolInfFiles Include="$(MSBuildProjectDirectory)\tool-inf\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ToolInfFiles)" DestinationFolder="$(_ToolZipDir)tool-inf\" />
+
+    <!-- Copy MCP server output -->
+    <ItemGroup>
+      <McpServerFiles Include="$(_McpServerBinDir)*.exe;$(_McpServerBinDir)*.dll;$(_McpServerBinDir)*.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(McpServerFiles)" DestinationFolder="$(_ToolZipDir)mcp-server\" />
+
+    <!-- Create ZIP (delete existing first) -->
+    <Delete Files="$(_ToolZipPath)" Condition="Exists('$(_ToolZipPath)')" />
+    <ZipDirectory SourceDirectory="$(_ToolZipDir)" DestinationFile="$(_ToolZipPath)" />
+
+    <Message Importance="high" Text="Tool ZIP created: $(_ToolZipPath)" />
+  </Target>
+
+</Project>
