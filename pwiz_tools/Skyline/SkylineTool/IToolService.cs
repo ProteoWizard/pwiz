@@ -75,36 +75,6 @@ namespace SkylineTool
         void ImportProperties(string csvText);
         void ImportPeakBoundaries(string csvText);
         string GetSelectedElementLocator(string elementType);
-
-        /// <summary>
-        /// Runs a command line string against the running Skyline instance, as if typed
-        /// into the Immediate Window or used with SkylineRunner/SkylineCmd.
-        /// Output is also echoed to the Immediate Window for user visibility.
-        /// </summary>
-        /// <param name="args">Command line arguments (e.g. "--report-name=\"Peak Area\" --report-file=output.csv")</param>
-        /// <returns>The text output produced by the command</returns>
-        string RunCommand(string args);
-
-        /// <summary>
-        /// Enumerates all settings list types available in Settings.Default.
-        /// Returns tab-separated lines of PropertyName\tTitle.
-        /// </summary>
-        string GetSettingsListTypes();
-
-        /// <summary>
-        /// Gets item names from a specific settings list.
-        /// </summary>
-        /// <param name="listType">The property name of the settings list (e.g. "EnzymeList")</param>
-        /// <returns>Newline-separated item names</returns>
-        string GetSettingsListNames(string listType);
-
-        /// <summary>
-        /// Gets the XML serialization of a single item from a settings list.
-        /// </summary>
-        /// <param name="listType">The property name of the settings list</param>
-        /// <param name="itemName">The name/key of the item</param>
-        /// <returns>XML representation of the item</returns>
-        string GetSettingsListItem(string listType, string itemName);
     }
 
     public interface IDocumentChangeReceiver

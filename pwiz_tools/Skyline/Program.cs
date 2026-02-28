@@ -511,6 +511,9 @@ namespace pwiz.Skyline
                 MainToolService = new ToolService(MainToolServiceName, MainWindow);
                 MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
                 MainToolService.RunAsync();
+
+                MainJsonToolServer = new JsonToolServer(MainToolService);
+                MainJsonToolServer.Start();
             }
         }
 
@@ -518,6 +521,12 @@ namespace pwiz.Skyline
         {
             if (MainToolService != null)
             {
+                if (MainJsonToolServer != null)
+                {
+                    MainJsonToolServer.Dispose();
+                    MainJsonToolServer = null;
+                }
+
                 MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
                 MainToolService.Stop();
                 MainToolService = null;
@@ -637,6 +646,7 @@ namespace pwiz.Skyline
 
         private static readonly object _unhandledExceptionLock = new object();
         public static ToolService MainToolService;
+        public static JsonToolServer MainJsonToolServer;
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {

@@ -12,10 +12,6 @@
   <ItemGroup>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="SkylineTool">
-      <HintPath>..\..\..\..\bin\x64\Release\SkylineTool.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

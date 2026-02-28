@@ -18,66 +18,45 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
 using System.Windows.Forms;
-using SkylineTool;
 
 namespace SkylineMcpConnector
 {
     public partial class MainForm : Form
     {
-        private SkylineToolClient _toolClient;
-        private JsonPipeServer _pipeServer;
-
         public MainForm(string[] args)
         {
             InitializeComponent();
 
-            if (args.Length > 0)
+            // The $(SkylineConnection) arg triggers StartToolService() in Skyline,
+            // which creates the JsonToolServer and writes connection.json.
+            // We just need to read it and display status.
+            try
             {
-                try
-                {
-                    _toolClient = new SkylineToolClient(args[0], "Skyline MCP Connector");
-                    ConnectToSkyline();
-                }
-                catch (Exception ex)
-                {
-                    labelStatus.Text = "Error: " + ex.Message;
-                }
+                ConnectToSkyline();
             }
-            else
+            catch (Exception ex)
             {
-                labelStatus.Text = "No Skyline connection provided";
+                labelStatus.Text = "Error: " + ex.Message;
                 buttonDisconnect.Enabled = false;
             }
         }
 
         private void ConnectToSkyline()
         {
-            string documentPath = _toolClient.GetDocumentPath();
-            var skylineVersion = _toolClient.GetSkylineVersion();
-            int processId = _toolClient.GetProcessId();
-
-            // Start the JSON pipe bridge server
-            _pipeServer = new JsonPipeServer(_toolClient);
-            _pipeServer.Start();
-
-            // Write connection info for the MCP server to find
-            var connectionInfo = new ConnectionInfo
+            var connectionInfo = ConnectionInfo.Load();
+            if (connectionInfo == null)
             {
-                PipeName = _pipeServer.PipeName,
-                ProcessId = processId,
-                ConnectedAt = DateTime.UtcNow.ToString("o"),
-                SkylineVersion = skylineVersion != null ? skylineVersion.ToString() : "unknown",
-                DocumentPath = documentPath != null ? documentPath.Replace('\\', '/') : null
-            };
-            connectionInfo.Save();
+                labelStatus.Text = "Waiting for Skyline connection...";
+                buttonDisconnect.Enabled = false;
+                return;
+            }
 
             // Update connection status UI
             labelStatus.Text = "Connected to Skyline";
             labelVersion.Text = "Version: " + connectionInfo.SkylineVersion;
-            labelDocument.Text = "Document: " + (documentPath ?? "(none)");
-            labelPipe.Text = "Pipe: " + _pipeServer.PipeName;
+            labelDocument.Text = "Document: " + (connectionInfo.DocumentPath ?? "(none)");
+            labelPipe.Text = "Pipe: " + connectionInfo.PipeName;
 
             // Deploy MCP server and show setup help
             DeployMcpServer();
@@ -128,17 +107,9 @@ namespace SkylineMcpConnector
 
         private void Cleanup()
         {
-            if (_pipeServer != null)
-            {
-                _pipeServer.Dispose();
-                _pipeServer = null;
-            }
+            // Skyline's JsonToolServer owns connection.json lifecycle,
+            // but clean up if it's still around when we exit
             ConnectionInfo.Delete();
-            if (_toolClient != null)
-            {
-                try { _toolClient.Dispose(); } catch (IOException) { } // Skyline may already be gone
-                _toolClient = null;
-            }
         }
     }
 }

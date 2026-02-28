@@ -140,26 +140,6 @@ namespace SkylineTool
             _client.ImportPeakBoundaries(peakBoundariesCsv);
         }
 
-        public string RunCommand(string args)
-        {
-            return _client.RunCommand(args);
-        }
-
-        public string GetSettingsListTypes()
-        {
-            return _client.GetSettingsListTypes();
-        }
-
-        public string GetSettingsListNames(string listType)
-        {
-            return _client.GetSettingsListNames(listType);
-        }
-
-        public string GetSettingsListItem(string listType, string itemName)
-        {
-            return _client.GetSettingsListItem(listType, itemName);
-        }
-
         private class DocumentChangeReceiver : RemoteService, IDocumentChangeReceiver
         {
             private readonly SkylineToolClient _toolClient;
@@ -287,26 +267,6 @@ namespace SkylineTool
             public string GetSelectedElementLocator(string elementType)
             {
                 return _remoteClient.RemoteCallFunction(GetSelectedElementLocator, elementType);
-            }
-
-            public string RunCommand(string args)
-            {
-                return _remoteClient.RemoteCallFunction(RunCommand, args);
-            }
-
-            public string GetSettingsListTypes()
-            {
-                return _remoteClient.RemoteCallFunction(GetSettingsListTypes);
-            }
-
-            public string GetSettingsListNames(string listType)
-            {
-                return _remoteClient.RemoteCallFunction(GetSettingsListNames, listType);
-            }
-
-            public string GetSettingsListItem(string listType, string itemName)
-            {
-                return _remoteClient.RemoteCallFunction(GetSettingsListItem, listType, itemName);
             }
         }
 
