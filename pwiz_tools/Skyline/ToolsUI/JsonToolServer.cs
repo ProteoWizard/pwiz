@@ -22,13 +22,17 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -53,9 +57,12 @@ namespace pwiz.Skyline.ToolsUI
             @"ExportReportFromDefinition",
             @"GetSelectedElementLocator",
             @"RunCommand",
+            @"RunCommandSilent",
             @"GetSettingsListTypes",
             @"GetSettingsListNames",
-            @"GetSettingsListItem"
+            @"GetSettingsListItem",
+            @"GetReportDocTopics",
+            @"GetReportDocTopic"
         };
 
         private readonly ToolService _toolService;
@@ -237,6 +244,10 @@ namespace pwiz.Skyline.ToolsUI
                     RequireArgs(method, args, 1);
                     return _toolService.RunCommand(args[0]);
 
+                case "RunCommandSilent":
+                    RequireArgs(method, args, 1);
+                    return _toolService.RunCommand(args[0], true);
+
                 case "GetSettingsListTypes":
                     return _toolService.GetSettingsListTypes();
 
@@ -247,6 +258,13 @@ namespace pwiz.Skyline.ToolsUI
                 case "GetSettingsListItem":
                     RequireArgs(method, args, 2);
                     return _toolService.GetSettingsListItem(args[0], args[1]);
+
+                case "GetReportDocTopics":
+                    return GetReportDocTopics();
+
+                case "GetReportDocTopic":
+                    RequireArgs(method, args, 1);
+                    return GetReportDocTopic(args[0]);
 
                 default:
                     throw new ArgumentException(@"Unknown method: " + method);
@@ -267,7 +285,7 @@ namespace pwiz.Skyline.ToolsUI
             string ext = Path.GetExtension(filePath);
             var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            DirectoryEx.CreateForFilePath(filePath);
 
             using (var saver = new FileSaver(filePath, true))
             {
@@ -306,7 +324,7 @@ namespace pwiz.Skyline.ToolsUI
             string ext = Path.GetExtension(filePath);
             var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            DirectoryEx.CreateForFilePath(filePath);
 
             using (var saver = new FileSaver(filePath, true))
             {
@@ -433,6 +451,113 @@ namespace pwiz.Skyline.ToolsUI
                 memoryStream.Write(buffer, 0, count);
             } while (!stream.IsMessageComplete);
             return memoryStream.ToArray();
+        }
+
+        private string GetReportDocTopics()
+        {
+            string html = GenerateReportDocHtml();
+            var sb = new StringBuilder();
+            // Match <div id="qualified.name"><span class="RowType">DisplayName</span>
+            var matches = Regex.Matches(html,
+                @"<div\s+id=""([^""]+)""><span\s+class=""RowType"">([^<]+)</span>");
+            foreach (Match match in matches)
+            {
+                string qualifiedName = WebUtility.HtmlDecode(match.Groups[1].Value);
+                string displayName = WebUtility.HtmlDecode(match.Groups[2].Value);
+                if (sb.Length > 0)
+                    sb.AppendLine();
+                sb.Append(displayName);
+                sb.Append('\t');
+                sb.Append(qualifiedName);
+            }
+            return sb.ToString();
+        }
+
+        private string GetReportDocTopic(string topicName)
+        {
+            string html = GenerateReportDocHtml();
+            // Find all section boundaries
+            var divMatches = Regex.Matches(html,
+                @"<div\s+id=""([^""]+)""><span\s+class=""RowType"">([^<]+)</span>");
+            // Strip spaces from the search term for flexible matching (e.g., "Transition Result" -> "TransitionResult")
+            string normalizedTopic = topicName.Replace(@" ", string.Empty);
+            int matchIndex = -1;
+            // Pass 1: exact match on qualified type name or display name
+            for (int i = 0; i < divMatches.Count; i++)
+            {
+                string qualifiedName = WebUtility.HtmlDecode(divMatches[i].Groups[1].Value);
+                string displayName = WebUtility.HtmlDecode(divMatches[i].Groups[2].Value);
+                if (string.Equals(qualifiedName, topicName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(displayName, normalizedTopic, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchIndex = i;
+                    break;
+                }
+            }
+            // Pass 2: partial match on display name
+            if (matchIndex < 0)
+            {
+                for (int i = 0; i < divMatches.Count; i++)
+                {
+                    string displayName = WebUtility.HtmlDecode(divMatches[i].Groups[2].Value);
+                    if (displayName.IndexOf(normalizedTopic, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        matchIndex = i;
+                        break;
+                    }
+                }
+            }
+            if (matchIndex < 0)
+                return null;
+
+            // Extract section HTML between this div and the next
+            int sectionStart = divMatches[matchIndex].Index;
+            int sectionEnd = matchIndex + 1 < divMatches.Count
+                ? divMatches[matchIndex + 1].Index
+                : html.Length;
+            string sectionHtml = html.Substring(sectionStart, sectionEnd - sectionStart);
+
+            string qualName = WebUtility.HtmlDecode(divMatches[matchIndex].Groups[1].Value);
+            string dispName = WebUtility.HtmlDecode(divMatches[matchIndex].Groups[2].Value);
+
+            // Convert HTML table to plain text
+            var sb = new StringBuilder();
+            sb.AppendLine(dispName + @" (" + qualName + @")");
+            sb.AppendLine();
+            sb.AppendLine(@"Name" + '\t' + @"Description" + '\t' + @"Type");
+
+            // Extract table rows: <tr><td ...>Name</td><td ...>Description</td><td ...>Type</td></tr>
+            var rowMatches = Regex.Matches(sectionHtml,
+                @"<tr><td[^>]*>(.*?)</td><td[^>]*>(.*?)</td><td[^>]*>(.*?)</td>",
+                RegexOptions.Singleline);
+            foreach (Match row in rowMatches)
+            {
+                string name = StripHtmlTags(row.Groups[1].Value);
+                string description = StripHtmlTags(row.Groups[2].Value);
+                string type = StripHtmlTags(row.Groups[3].Value);
+                sb.AppendLine(name + '\t' + description + '\t' + type);
+            }
+            return sb.ToString();
+        }
+
+        private string GenerateReportDocHtml()
+        {
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+            var rootColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument));
+            var generator = new DocumentationGenerator(rootColumn)
+            {
+                IncludeHidden = false
+            };
+            return generator.GenerateDocumentation(rootColumn);
+        }
+
+        private static string StripHtmlTags(string html)
+        {
+            if (string.IsNullOrEmpty(html))
+                return string.Empty;
+            string text = Regex.Replace(html, @"<[^>]+>", string.Empty);
+            return WebUtility.HtmlDecode(text);
         }
     }
 }

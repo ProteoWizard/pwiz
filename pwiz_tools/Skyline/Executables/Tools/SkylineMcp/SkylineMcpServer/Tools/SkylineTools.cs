@@ -149,6 +149,52 @@ public static class SkylineTools
         return output;
     }
 
+    [McpServerTool(Name = "skyline_get_cli_help_sections"),
+     Description("List available CLI help sections. Returns section names (one per line) that can be passed to skyline_get_cli_help for detailed help on each topic.")]
+    public static string GetCliHelpSections()
+    {
+        using var connection = SkylineConnection.Connect();
+        string output = connection.Call("RunCommandSilent", "--help=sections");
+        if (string.IsNullOrEmpty(output))
+            return "No help sections available.";
+        return output;
+    }
+
+    [McpServerTool(Name = "skyline_get_cli_help"),
+     Description("Get detailed CLI help for a specific section. Use skyline_get_cli_help_sections to discover available sections. Section matching is case-insensitive and supports partial matches.")]
+    public static string GetCliHelp(
+        [Description("The help section name (e.g., 'import', 'export', 'refine'). Case-insensitive partial match.")] string section)
+    {
+        using var connection = SkylineConnection.Connect();
+        string output = connection.Call("RunCommandSilent", "--help=" + section + " --help=no-borders");
+        if (string.IsNullOrEmpty(output))
+            return "No help found for section: " + section;
+        return output;
+    }
+
+    [McpServerTool(Name = "skyline_get_report_doc_topics"),
+     Description("List available report column documentation topics. Returns tab-separated lines of DisplayName and QualifiedTypeName for each entity type (e.g., Molecule, Precursor, Transition). Use skyline_get_report_doc_topic to get column details for a specific topic.")]
+    public static string GetReportDocTopics()
+    {
+        using var connection = SkylineConnection.Connect();
+        string result = connection.Call("GetReportDocTopics");
+        return string.IsNullOrEmpty(result)
+            ? "No report documentation topics found."
+            : result;
+    }
+
+    [McpServerTool(Name = "skyline_get_report_doc_topic"),
+     Description("Get column documentation for a specific report entity type. Returns a table of column names, descriptions, and types. Use skyline_get_report_doc_topics to discover available topics.")]
+    public static string GetReportDocTopic(
+        [Description("The topic name (display name like 'Molecule' or qualified type name). Case-insensitive partial match on display name.")] string topic)
+    {
+        using var connection = SkylineConnection.Connect();
+        string result = connection.Call("GetReportDocTopic", topic);
+        return string.IsNullOrEmpty(result)
+            ? "No documentation found for topic: " + topic
+            : result;
+    }
+
     private static string FormatReportResult(string metadataJson)
     {
         if (string.IsNullOrEmpty(metadataJson))

@@ -565,26 +565,35 @@ namespace pwiz.Skyline.ToolsUI
             }));
         }
 
-        public string RunCommand(string args)
+        public string RunCommand(string args, bool silent = false)
         {
-            // Show the Immediate Window and echo the command on the UI thread (blocking but fast).
-            // We need this to complete before accessing ImmediateWindow.Writer.
-            TextWriter immediateWriter = null;
-            _skylineWindow.Invoke(new Action(() =>
+            var capture = new StringWriter();
+            TextWriter output;
+
+            if (silent)
             {
-                _skylineWindow.ShowImmediateWindow();
-                _skylineWindow.ImmediateWindow.WriteFresh(args);
-                _skylineWindow.ImmediateWindow.WriteLine(string.Empty);
-                immediateWriter = _skylineWindow.ImmediateWindow.Writer;
-            }));
+                // Silent mode: capture output without showing the Immediate Window
+                output = capture;
+            }
+            else
+            {
+                // Show the Immediate Window and echo the command on the UI thread (blocking but fast).
+                // We need this to complete before accessing ImmediateWindow.Writer.
+                TextWriter immediateWriter = null;
+                _skylineWindow.Invoke(new Action(() =>
+                {
+                    _skylineWindow.ShowImmediateWindow();
+                    _skylineWindow.ImmediateWindow.WriteFresh(args);
+                    _skylineWindow.ImmediateWindow.WriteLine(string.Empty);
+                    immediateWriter = _skylineWindow.ImmediateWindow.Writer;
+                }));
+                output = new TeeTextWriter(capture, immediateWriter);
+            }
 
             // Run on the current thread (already a background pipe server thread).
             // The Immediate Window writer handles cross-thread writes via BeginInvoke.
-            var capture = new StringWriter();
-            var tee = new TeeTextWriter(capture, immediateWriter);
-
             var parsedArgs = CommandLine.ParseArgs(args);
-            var commandLine = new CommandLine(new CommandStatusWriter(tee), _skylineWindow.Document);
+            var commandLine = new CommandLine(new CommandStatusWriter(output), _skylineWindow.Document);
             commandLine.Run(parsedArgs, true);
 
             return capture.ToString();
