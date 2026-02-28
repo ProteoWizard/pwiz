@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -27,6 +28,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Xml;
+using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -632,6 +636,130 @@ namespace pwiz.Skyline.ToolsUI
                 _writer1.Flush();
                 _writer2.Flush();
             }
+        }
+
+        public string GetSettingsListTypes()
+        {
+            var sb = new StringBuilder();
+            foreach (var prop in typeof(Settings).GetProperties())
+            {
+                if (!IsSettingsListBase(prop.PropertyType))
+                    continue;
+                string title;
+                try
+                {
+                    var list = prop.GetValue(Settings.Default) as IListEditorSupport;
+                    title = list?.Title ?? prop.Name;
+                }
+                catch
+                {
+                    title = prop.Name;
+                }
+                sb.Append(prop.Name).Append('\t').AppendLine(title);
+            }
+            sb.Append(@"PersistedViews").Append('\t').AppendLine(@"Reports");
+            return sb.ToString();
+        }
+
+        public string GetSettingsListNames(string listType)
+        {
+            if (listType == @"PersistedViews")
+                return GetPersistedViewNames();
+
+            var prop = typeof(Settings).GetProperty(listType);
+            if (prop == null)
+                throw new ArgumentException(@"Unknown settings list type: " + listType);
+            var value = prop.GetValue(Settings.Default);
+            if (value == null)
+                throw new ArgumentException(@"Settings list is null: " + listType);
+            var sb = new StringBuilder();
+            foreach (var item in (IEnumerable)value)
+            {
+                var keyContainer = item as IKeyContainer<string>;
+                if (keyContainer != null)
+                    sb.AppendLine(keyContainer.GetKey());
+            }
+            return sb.ToString();
+        }
+
+        public string GetSettingsListItem(string listType, string itemName)
+        {
+            if (listType == @"PersistedViews")
+                return GetPersistedViewItem(itemName);
+
+            var prop = typeof(Settings).GetProperty(listType);
+            if (prop == null)
+                throw new ArgumentException(@"Unknown settings list type: " + listType);
+            var value = prop.GetValue(Settings.Default);
+            if (value == null)
+                throw new ArgumentException(@"Settings list is null: " + listType);
+            foreach (var item in (IEnumerable)value)
+            {
+                var keyContainer = item as IKeyContainer<string>;
+                if (keyContainer == null || keyContainer.GetKey() != itemName)
+                    continue;
+                return SerializeSettingsItem(item);
+            }
+            throw new ArgumentException(@"Item not found: " + itemName);
+        }
+
+        private static bool IsSettingsListBase(Type type)
+        {
+            while (type != null)
+            {
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SettingsListBase<>))
+                    return true;
+                type = type.BaseType;
+            }
+            return false;
+        }
+
+        private static string GetPersistedViewNames()
+        {
+            var persistedViews = Settings.Default.PersistedViews;
+            var sb = new StringBuilder();
+            sb.AppendLine(@"# Main");
+            foreach (var viewSpec in persistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).ViewSpecs)
+                sb.AppendLine(viewSpec.Name);
+            sb.AppendLine(@"# External Tools");
+            foreach (var viewSpec in persistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).ViewSpecs)
+                sb.AppendLine(viewSpec.Name);
+            return sb.ToString();
+        }
+
+        private static string GetPersistedViewItem(string itemName)
+        {
+            var persistedViews = Settings.Default.PersistedViews;
+            var viewSpec = persistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).GetView(itemName)
+                           ?? persistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).GetView(itemName);
+            if (viewSpec == null)
+                throw new ArgumentException(@"View not found: " + itemName);
+            return SerializeViewSpec(viewSpec);
+        }
+
+        private static string SerializeViewSpec(ViewSpec viewSpec)
+        {
+            var sb = new StringBuilder();
+            using (var writer = XmlWriter.Create(sb, new XmlWriterSettings { Indent = true, OmitXmlDeclaration = true }))
+            {
+                writer.WriteStartElement(@"view");
+                viewSpec.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+            return sb.ToString();
+        }
+
+        private static string SerializeSettingsItem(object item)
+        {
+            var xmlSerializable = (IXmlSerializable)item;
+            var sb = new StringBuilder();
+            using (var writer = XmlWriter.Create(sb, new XmlWriterSettings { Indent = true, OmitXmlDeclaration = true }))
+            {
+                writer.WriteStartElement(item.GetType().Name);
+                xmlSerializable.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+            return sb.ToString();
         }
 
         public string GetSelectedElementLocator(string elementType)

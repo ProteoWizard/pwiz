@@ -88,6 +88,42 @@ public static class SkylineTools
         return FormatReportResult("Custom", csv);
     }
 
+    [McpServerTool(Name = "skyline_get_settings_list_types"),
+     Description("Enumerate all settings list types available in Skyline (enzymes, modifications, reports, etc.). Returns tab-separated lines of PropertyName and Title. Use this to discover what configuration lists exist before querying their contents.")]
+    public static string GetSettingsListTypes()
+    {
+        using var connection = SkylineConnection.Connect();
+        string result = connection.Call("GetSettingsListTypes");
+        return string.IsNullOrEmpty(result)
+            ? "No settings lists found."
+            : result;
+    }
+
+    [McpServerTool(Name = "skyline_get_settings_list_names"),
+     Description("Get item names from a specific settings list. Use skyline_get_settings_list_types first to discover available list types. For PersistedViews (reports), names are grouped by Main and External Tools sections.")]
+    public static string GetSettingsListNames(
+        [Description("The settings list property name (e.g., 'EnzymeList', 'PersistedViews')")] string listType)
+    {
+        using var connection = SkylineConnection.Connect();
+        string result = connection.Call("GetSettingsListNames", listType);
+        return string.IsNullOrEmpty(result)
+            ? "No items found in " + listType + "."
+            : result;
+    }
+
+    [McpServerTool(Name = "skyline_get_settings_list_item"),
+     Description("Get the XML definition of a single item from a settings list. Useful for inspecting report definitions, enzyme cut rules, modification details, etc.")]
+    public static string GetSettingsListItem(
+        [Description("The settings list property name (e.g., 'EnzymeList', 'PersistedViews')")] string listType,
+        [Description("The name of the item to retrieve (e.g., 'Trypsin', 'Peak Area')")] string itemName)
+    {
+        using var connection = SkylineConnection.Connect();
+        string result = connection.Call("GetSettingsListItem", listType, itemName);
+        return string.IsNullOrEmpty(result)
+            ? "Item not found: " + itemName + " in " + listType + "."
+            : result;
+    }
+
     [McpServerTool(Name = "skyline_run_command"),
      Description("Run a command line against the running Skyline instance. Uses the same command syntax as SkylineCmd/SkylineRunner. Commands are echoed to Skyline's Immediate Window for user visibility. Examples: '--report-name=\"Peak Area\" --report-file=output.csv', '--import-file=results.raw', '--refine-cv-remove-above-cutoff=20'. Use '--help' to see all available commands.")]
     public static string RunCommand(

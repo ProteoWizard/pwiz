@@ -145,7 +145,8 @@ namespace SkylineMcpConnector
                         "GetDocumentPath", "GetVersion", "GetDocumentLocationName",
                         "GetReplicateName", "GetProcessId", "GetReport",
                         "GetReportFromDefinition", "GetSelectedElementLocator",
-                        "RunCommand"
+                        "RunCommand", "GetSettingsListTypes", "GetSettingsListNames",
+                        "GetSettingsListItem"
                     });
 
                 case "GetDocumentPath":
@@ -180,6 +181,17 @@ namespace SkylineMcpConnector
                 case "RunCommand":
                     RequireArgs(method, args, 1);
                     return _client.RunCommand(args[0]);
+
+                case "GetSettingsListTypes":
+                    return _client.GetSettingsListTypes();
+
+                case "GetSettingsListNames":
+                    RequireArgs(method, args, 1);
+                    return _client.GetSettingsListNames(args[0]);
+
+                case "GetSettingsListItem":
+                    RequireArgs(method, args, 2);
+                    return _client.GetSettingsListItem(args[0], args[1]);
 
                 default:
                     throw new ArgumentException("Unknown method: " + method);
