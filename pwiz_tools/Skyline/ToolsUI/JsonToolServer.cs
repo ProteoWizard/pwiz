@@ -21,10 +21,17 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -42,8 +49,8 @@ namespace pwiz.Skyline.ToolsUI
             @"GetDocumentLocationName",
             @"GetReplicateName",
             @"GetProcessId",
-            @"GetReport",
-            @"GetReportFromDefinition",
+            @"ExportReport",
+            @"ExportReportFromDefinition",
             @"GetSelectedElementLocator",
             @"RunCommand",
             @"GetSettingsListTypes",
@@ -214,13 +221,13 @@ namespace pwiz.Skyline.ToolsUI
                 case "GetProcessId":
                     return _toolService.GetProcessId();
 
-                case "GetReport":
-                    RequireArgs(method, args, 1);
-                    return _toolService.GetReport(@"MCP", args[0]);
+                case "ExportReport":
+                    RequireArgs(method, args, 2);
+                    return ExportNamedReport(args);
 
-                case "GetReportFromDefinition":
-                    RequireArgs(method, args, 1);
-                    return _toolService.GetReportFromDefinition(args[0]);
+                case "ExportReportFromDefinition":
+                    RequireArgs(method, args, 2);
+                    return ExportDefinitionReport(args);
 
                 case "GetSelectedElementLocator":
                     RequireArgs(method, args, 1);
@@ -244,6 +251,140 @@ namespace pwiz.Skyline.ToolsUI
                 default:
                     throw new ArgumentException(@"Unknown method: " + method);
             }
+        }
+
+        private string ExportNamedReport(string[] args)
+        {
+            string reportName = args[0];
+            string filePath = args[1];
+            var localizer = ParseCulture(args, 2);
+
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer);
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+
+            var viewName = FindReportViewName(reportName);
+            string ext = Path.GetExtension(filePath);
+            var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+            using (var saver = new FileSaver(filePath, true))
+            {
+                if (!saver.CanSave())
+                    throw new IOException(@"Cannot write to " + filePath);
+                IProgressStatus status = new ProgressStatus(string.Empty);
+                rowFactories.ExportReport(saver.Stream, viewName, exporter,
+                    Program.MainWindow, ref status);
+                saver.Commit();
+            }
+
+            return BuildReportMetadata(filePath, reportName);
+        }
+
+        private string ExportDefinitionReport(string[] args)
+        {
+            string xml = args[0];
+            string filePath = args[1];
+            var localizer = ParseCulture(args, 2);
+
+            var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+            var reportOrViewSpecList = ReportSharing.DeserializeReportList(memoryStream);
+            if (reportOrViewSpecList.Count == 0)
+                throw new ArgumentException(@"No report definition found");
+            if (reportOrViewSpecList.Count > 1)
+                throw new ArgumentException(@"Too many report definitions");
+            var reportOrViewSpec = reportOrViewSpecList.First();
+            if (null == reportOrViewSpec.ViewSpecLayout)
+                throw new ArgumentException(@"The report definition uses the old format.");
+
+            var viewSpecLayout = reportOrViewSpec.ViewSpecLayout;
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer);
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+
+            string ext = Path.GetExtension(filePath);
+            var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+
+            using (var saver = new FileSaver(filePath, true))
+            {
+                if (!saver.CanSave())
+                    throw new IOException(@"Cannot write to " + filePath);
+                IProgressStatus status = new ProgressStatus(string.Empty);
+                rowFactories.ExportReport(saver.Stream, viewSpecLayout.ViewSpec,
+                    viewSpecLayout.DefaultViewLayout, exporter, Program.MainWindow, ref status);
+                saver.Commit();
+            }
+
+            string reportName = viewSpecLayout.Name ?? @"Custom";
+            return BuildReportMetadata(filePath, reportName);
+        }
+
+        private static string BuildReportMetadata(string filePath, string reportName)
+        {
+            var obj = new JObject();
+            obj[@"file_path"] = filePath.Replace('\\', '/');
+            obj[@"report_name"] = reportName;
+
+            string ext = Path.GetExtension(filePath);
+            if (string.Equals(ext, TextUtil.EXT_PARQUET, StringComparison.OrdinalIgnoreCase))
+            {
+                obj[@"format"] = @"parquet";
+                return obj.ToString(Newtonsoft.Json.Formatting.None);
+            }
+
+            var previewLines = new string[6];
+            int lineCount = 0;
+            using (var reader = new StreamReader(filePath))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (lineCount < 6)
+                        previewLines[lineCount] = line;
+                    lineCount++;
+                }
+            }
+
+            int rowCount = Math.Max(0, lineCount - 1);
+            obj[@"row_count"] = rowCount;
+
+            if (lineCount > 0)
+                obj[@"columns"] = previewLines[0];
+
+            int previewCount = Math.Min(lineCount, 6);
+            if (previewCount > 0)
+            {
+                var sb = new StringBuilder();
+                for (int i = 0; i < previewCount; i++)
+                {
+                    if (i > 0)
+                        sb.AppendLine();
+                    sb.Append(previewLines[i]);
+                }
+                obj[@"preview"] = sb.ToString();
+            }
+
+            return obj.ToString(Newtonsoft.Json.Formatting.None);
+        }
+
+        private static DataSchemaLocalizer ParseCulture(string[] args, int index)
+        {
+            if (args.Length > index && string.Equals(args[index], @"localized", StringComparison.OrdinalIgnoreCase))
+                return SkylineDataSchema.GetLocalizedSchemaLocalizer();
+            return DataSchemaLocalizer.INVARIANT;
+        }
+
+        private static ViewName FindReportViewName(string reportName)
+        {
+            var persistedViews = Settings.Default.PersistedViews;
+            if (persistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).GetView(reportName) != null)
+                return PersistedViews.MainGroup.Id.ViewName(reportName);
+            if (persistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).GetView(reportName) != null)
+                return PersistedViews.ExternalToolsGroup.Id.ViewName(reportName);
+            throw new ArgumentException(@"Report not found: " + reportName);
         }
 
         private static string SerializeResult(object result)

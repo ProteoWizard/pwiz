@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using ModelContextProtocol.Server;
 
 namespace SkylineMcpServer.Tools;
@@ -71,21 +72,33 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_get_report"),
      Description("Run a named Skyline report and return results. For large reports, saves full data to a CSV file and returns a summary with preview rows and the file path. Use the Read tool to explore the full dataset.")]
     public static string GetReport(
-        [Description("The name of a Skyline report to run (e.g., 'Peak Area', 'Transition Results')")] string reportName)
+        [Description("The name of a Skyline report to run (e.g., 'Peak Area', 'Transition Results')")] string reportName,
+        [Description("Output file path. If not specified, saves to a temp directory. Extension determines format (.csv, .tsv, .parquet).")] string filePath = null,
+        [Description("Output format when filePath is not specified: csv, tsv, or parquet (default: csv)")] string format = "csv",
+        [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
     {
+        filePath ??= GetTempReportPath(reportName, format);
+        string culture = invariant ? "invariant" : "localized";
+
         using var connection = SkylineConnection.Connect();
-        string csv = connection.Call("GetReport", reportName);
-        return FormatReportResult(reportName, csv);
+        string metadata = connection.Call("ExportReport", reportName, filePath, culture);
+        return FormatReportResult(metadata);
     }
 
     [McpServerTool(Name = "skyline_get_report_from_definition"),
      Description("Run a custom Skyline report from an XML report definition and return results. Use this when you need specific columns not available in predefined reports. The XML format follows Skyline's report schema.")]
     public static string GetReportFromDefinition(
-        [Description("XML report definition in Skyline report schema format")] string reportDefinitionXml)
+        [Description("XML report definition in Skyline report schema format")] string reportDefinitionXml,
+        [Description("Output file path. If not specified, saves to a temp directory. Extension determines format (.csv, .tsv, .parquet).")] string filePath = null,
+        [Description("Output format when filePath is not specified: csv, tsv, or parquet (default: csv)")] string format = "csv",
+        [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
     {
+        filePath ??= GetTempReportPath("Custom", format);
+        string culture = invariant ? "invariant" : "localized";
+
         using var connection = SkylineConnection.Connect();
-        string csv = connection.Call("GetReportFromDefinition", reportDefinitionXml);
-        return FormatReportResult("Custom", csv);
+        string metadata = connection.Call("ExportReportFromDefinition", reportDefinitionXml, filePath, culture);
+        return FormatReportResult(metadata);
     }
 
     [McpServerTool(Name = "skyline_get_settings_list_types"),
@@ -136,43 +149,42 @@ public static class SkylineTools
         return output;
     }
 
-    private static string FormatReportResult(string reportName, string csv)
+    private static string FormatReportResult(string metadataJson)
     {
-        if (string.IsNullOrEmpty(csv))
+        if (string.IsNullOrEmpty(metadataJson))
             return "Report returned no data. The report may not exist or the document may be empty.";
 
-        // Parse CSV to get row count and column names
-        var lines = csv.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-        if (lines.Length == 0)
-            return "Report returned no data.";
+        using var doc = JsonDocument.Parse(metadataJson);
+        var root = doc.RootElement;
 
-        string headerLine = lines[0];
-        int rowCount = lines.Length - 1;
-
-        // Save full data to file for large reports
-        string filePath = SaveReportFile(reportName, csv);
+        string filePath = root.TryGetProperty("file_path", out var fpEl) ? fpEl.GetString() : null;
+        string reportName = root.TryGetProperty("report_name", out var rnEl) ? rnEl.GetString() : "Report";
+        int rowCount = root.TryGetProperty("row_count", out var rcEl) ? rcEl.GetInt32() : -1;
+        string columns = root.TryGetProperty("columns", out var colEl) ? colEl.GetString() : null;
+        string preview = root.TryGetProperty("preview", out var pvEl) ? pvEl.GetString() : null;
+        string format = root.TryGetProperty("format", out var fmtEl) ? fmtEl.GetString() : null;
 
         var sb = new StringBuilder();
         sb.AppendLine($"Report: {reportName}");
-        sb.AppendLine($"Rows: {rowCount}");
-        sb.AppendLine($"Columns: {headerLine}");
+        if (rowCount >= 0)
+            sb.AppendLine($"Rows: {rowCount}");
+        if (columns != null)
+            sb.AppendLine($"Columns: {columns}");
+        if (format != null)
+            sb.AppendLine($"Format: {format}");
         sb.AppendLine();
 
-        // Preview first 5 rows
-        int previewRows = Math.Min(rowCount + 1, 6); // header + up to 5 data rows
-        sb.AppendLine("Preview:");
-        for (int i = 0; i < previewRows && i < lines.Length; i++)
+        if (!string.IsNullOrEmpty(preview))
         {
-            sb.AppendLine(lines[i]);
-        }
-        if (rowCount > 5)
-        {
-            sb.AppendLine($"... ({rowCount - 5} more rows)");
+            sb.AppendLine("Preview:");
+            sb.AppendLine(preview);
+            if (rowCount > 5)
+                sb.AppendLine($"... ({rowCount - 5} more rows)");
+            sb.AppendLine();
         }
 
         if (filePath != null)
         {
-            sb.AppendLine();
             sb.AppendLine($"Full data saved to: {filePath}");
             sb.AppendLine("Use the Read tool to explore the full dataset.");
         }
@@ -180,31 +192,21 @@ public static class SkylineTools
         return sb.ToString();
     }
 
-    private static string SaveReportFile(string reportName, string csv)
+    private static string GetTempReportPath(string reportName, string format)
     {
-        try
+        string tmpDir = Environment.GetEnvironmentVariable("SKYLINE_MCP_TMP_DIR");
+        if (string.IsNullOrEmpty(tmpDir))
         {
-            // Use SKYLINE_MCP_TMP_DIR env var, fallback to %LOCALAPPDATA%/Skyline/mcp/tmp/
-            string tmpDir = Environment.GetEnvironmentVariable("SKYLINE_MCP_TMP_DIR");
-            if (string.IsNullOrEmpty(tmpDir))
-            {
-                tmpDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "Skyline", "mcp", "tmp");
-            }
-            Directory.CreateDirectory(tmpDir);
-
-            string safeName = string.Join("_", reportName.Split(Path.GetInvalidFileNameChars()));
-            string timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            string fileName = $"skyline-report-{safeName}-{timestamp}.csv";
-            string filePath = Path.Combine(tmpDir, fileName);
-
-            File.WriteAllText(filePath, csv);
-            return filePath.Replace('\\', '/');
+            tmpDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Skyline", "mcp", "tmp");
         }
-        catch
-        {
-            return null; // If saving fails, just return the preview
-        }
+        Directory.CreateDirectory(tmpDir);
+
+        string safeName = string.Join("_", reportName.Split(Path.GetInvalidFileNameChars()));
+        string timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        string ext = format.StartsWith(".") ? format : "." + format;
+        string fileName = $"skyline-report-{safeName}-{timestamp}{ext}";
+        return Path.Combine(tmpDir, fileName);
     }
 }
