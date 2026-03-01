@@ -458,7 +458,40 @@ namespace pwiz.Common.DataBinding
 
         public virtual IFilterHandler GetFilterHandler(ColumnDescriptor columnDescriptor)
         {
-            throw new NotImplementedException();
+            return GetFilterHandler(GetWrappedValueType(columnDescriptor.PropertyType));
+
+        }
+
+        private static Dictionary<Type, IFilterHandler> _filterHandlers = new Dictionary<Type, IFilterHandler>
+        {
+
+            { typeof(sbyte), NumericFilterHandler.INSTANCE },
+            { typeof(byte), NumericFilterHandler.INSTANCE },
+            { typeof(short), NumericFilterHandler.INSTANCE },
+            { typeof(ushort), NumericFilterHandler.INSTANCE },
+            { typeof(int), NumericFilterHandler.INSTANCE },
+            { typeof(uint), NumericFilterHandler.INSTANCE },
+            { typeof(long), NumericFilterHandler.INSTANCE },
+            { typeof(ulong), NumericFilterHandler.INSTANCE },
+            { typeof(float), NumericFilterHandler.INSTANCE },
+            { typeof(double), NumericFilterHandler.INSTANCE },
+            { typeof(Decimal), NumericFilterHandler.INSTANCE },
+        };
+
+        protected virtual IFilterHandler GetFilterHandler(Type type)
+        {
+            var listElementType = ListColumnValue.GetElementType(type);
+            if (listElementType != null)
+            {
+                return new ListFilterHandler(GetFilterHandler(listElementType));
+            }
+
+            if (_filterHandlers.TryGetValue(type, out var filterHandler))
+            {
+                return filterHandler;
+            }
+
+            return TextFilterHandler.INSTANCE;
         }
         /// <summary>
         /// Maximum number of rows to display in a DataGridView. Reports with more than this number of rows can be exported to a CSV file etc.,

@@ -65,8 +65,9 @@ namespace pwiz.Common.DataBinding.Filtering
         protected abstract bool TryConvertColumnValue(object value, out TColumn columnValue);
     }
 
-    public class StringFilterHandler : FilterHandler<string, string>, IFilterHandler.IContains
+    public class TextFilterHandler : FilterHandler<string, string>, IFilterHandler.IContains
     {
+        public static readonly TextFilterHandler INSTANCE = new TextFilterHandler();
         public override bool IsBlank(object value)
         {
             return value == null || ValueEqualsOperand(string.Empty, value);
@@ -114,6 +115,7 @@ namespace pwiz.Common.DataBinding.Filtering
 
     public class NumericFilterHandler : FilterHandler<double, PrecisionNumber>, IFilterHandler.ICompare
     {
+        public static readonly NumericFilterHandler INSTANCE = new NumericFilterHandler();
         public override bool IsBlank(object value)
         {
             return value == null;
@@ -156,6 +158,46 @@ namespace pwiz.Common.DataBinding.Filtering
         protected int? Compare(double doubleValue, PrecisionNumber precisionNumber)
         {
             return precisionNumber.CompareTo(doubleValue);
+        }
+    }
+
+    public class ListFilterHandler : IFilterHandler, IFilterHandler.IContains
+    {
+        public ListFilterHandler(IFilterHandler elementHandler)
+        {
+            ElementHandler = elementHandler;
+        }
+
+        public IFilterHandler ElementHandler { get; }
+
+        public bool IsBlank(object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object ParseOperand(string text, CultureInfo cultureInfo)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool ValueEqualsOperand(object value, object operand)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string OperandToString(object operand, CultureInfo cultureInfo)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool StartsWith(object value, object operand)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Contains(object value, object operand)
+        {
+            throw new NotImplementedException();
         }
     }
 }

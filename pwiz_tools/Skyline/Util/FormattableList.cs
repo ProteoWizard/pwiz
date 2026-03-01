@@ -54,11 +54,6 @@ namespace pwiz.Skyline.Util
                 Items.Select(item => ((object) item ?? string.Empty).ToString()));
         }
 
-        public T[] ToArray()
-        {
-            return _list?.ToArray();
-        }
-
         private static string SeparateValues(char separator, IEnumerable<string> values)
         {
             var stringWriter = new StringWriter();
