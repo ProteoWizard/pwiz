@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected virtual int FirstDataIndex { get { return 0; } }
 
-        protected abstract int SelectedIndex { get; }
+        public abstract int SelectedIndex { get; }
 
         protected abstract IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex);
 
