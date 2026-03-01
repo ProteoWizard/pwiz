@@ -345,7 +345,7 @@ namespace pwiz.Common.DataBinding
                 {
                     var converted = ConvertValue(dataSchema, columnType, columnValue);
                     if (converted is double dVal)
-                        return precisionNumber.EqualsWithinPrecision(new PrecisionNumber(dVal));
+                        return precisionNumber.EqualsWithinPrecision(dVal);
                 }
                 return Equals(
                     ConvertValue(dataSchema, columnType, columnValue),
@@ -375,7 +375,7 @@ namespace pwiz.Common.DataBinding
                 {
                     var converted = ConvertValue(dataSchema, columnType, columnValue);
                     if (converted is double dVal)
-                        return !precisionNumber.EqualsWithinPrecision(new PrecisionNumber(dVal));
+                        return !precisionNumber.EqualsWithinPrecision(dVal);
                 }
                 return !Equals(ConvertValue(dataSchema, columnType, columnValue), operandValue);
             }

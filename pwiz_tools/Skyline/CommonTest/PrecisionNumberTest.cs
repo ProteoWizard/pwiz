@@ -84,23 +84,12 @@ namespace CommonTest
             // Tolerance is 0.005, range is [3.135, 3.145]
             Assert.IsTrue(pn.EqualsWithinPrecision(3.14));
             Assert.IsTrue(pn.EqualsWithinPrecision(3.1401));
-            Assert.IsTrue(pn.EqualsWithinPrecision(new PrecisionNumber(3.1399)));
-            Assert.IsTrue(pn.EqualsWithinPrecision(new PrecisionNumber(3.1441)));
-            Assert.IsTrue(pn.EqualsWithinPrecision(new PrecisionNumber(3.1359)));
+            Assert.IsTrue(pn.EqualsWithinPrecision(3.1399));
+            Assert.IsTrue(pn.EqualsWithinPrecision(3.1441));
+            Assert.IsTrue(pn.EqualsWithinPrecision(3.1359));
             // Values clearly outside the precision range
-            Assert.IsFalse(pn.EqualsWithinPrecision(new PrecisionNumber(3.146)));
-            Assert.IsFalse(pn.EqualsWithinPrecision(new PrecisionNumber(3.134)));
-        }
-
-        [TestMethod]
-        public void TestEqualsWithinPrecisionBothLowPrecision()
-        {
-            // When both numbers have low precision, the larger tolerance dominates
-            var a = PrecisionNumber.Parse("3.1", CultureInfo.InvariantCulture); // tolerance = 0.05
-            var b = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture); // tolerance = 0.005
-            // Max tolerance is 0.05, so |3.1 - 3.14| = 0.04 < 0.05 → match
-            Assert.IsTrue(a.EqualsWithinPrecision(b));
-            Assert.IsTrue(b.EqualsWithinPrecision(a));
+            Assert.IsFalse(pn.EqualsWithinPrecision(3.146));
+            Assert.IsFalse(pn.EqualsWithinPrecision(3.134));
         }
 
         [TestMethod]

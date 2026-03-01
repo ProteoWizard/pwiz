@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Filtering;
 
 namespace pwiz.Common.DataBinding
 {
@@ -168,6 +169,11 @@ namespace pwiz.Common.DataBinding
         public virtual bool IsExpensive
         {
             get { return Parent != null && Parent.IsExpensive; }
+        }
+
+        public IFilterHandler GetFilterHandler()
+        {
+            return DataSchema.GetFilterHandler(this);
         }
 
         #region Equality Members

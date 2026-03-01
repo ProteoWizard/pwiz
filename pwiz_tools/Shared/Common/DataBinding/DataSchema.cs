@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Filtering;
 
 namespace pwiz.Common.DataBinding
 {
@@ -453,6 +454,11 @@ namespace pwiz.Common.DataBinding
         public IEnumerable<T> FilterAttributes<T>(string uiMode, IEnumerable<T> attributes) where T : Attribute
         {
             return attributes.Where(attr=>AttributeApplies(uiMode, attr)).OrderByDescending(GetAttributeClassDepth);
+        }
+
+        public virtual IFilterHandler GetFilterHandler(ColumnDescriptor columnDescriptor)
+        {
+            throw new NotImplementedException();
         }
     }
 }

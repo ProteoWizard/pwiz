@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
@@ -174,7 +175,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             [Format(Formats.MASS_ERROR)]
             public FormattableList<float> MassErrors { get { return new FormattableList<float>(_timeIntensities.MassErrors); }}
 
-            public FormattableList<string> SpectrumIds
+            public ListColumnValue<string> SpectrumIds
             {
                 get
                 {
@@ -189,7 +190,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         return null;
                     }
 
-                    return new FormattableList<string>(_timeIntensities.ScanIds
+                    return new ListColumnValue<string>(_timeIntensities.ScanIds
                         .Select(index => scanIds.GetMsDataFileSpectrumId(index)).ToArray());
                 }
             }
