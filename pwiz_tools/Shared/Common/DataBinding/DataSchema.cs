@@ -460,5 +460,13 @@ namespace pwiz.Common.DataBinding
         {
             throw new NotImplementedException();
         }
+        /// <summary>
+        /// Maximum number of rows to display in a DataGridView. Reports with more than this number of rows can be exported to a CSV file etc.,
+        /// but the dataset displayed in the DataGridView will be truncated to this count.
+        /// </summary>
+        public virtual int MaxGridRowCount
+        {
+            get { return 10_000_000; }
+        }
     }
 }

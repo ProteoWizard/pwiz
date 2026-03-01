@@ -84,13 +84,16 @@ namespace pwiz.SkylineTestUtil
             AssertEx.AreEqual(0, unexpectedOpenForms.Count, $@"Can't open a document when other dialogs are still open: {CommonTextUtil.LineSeparate(unexpectedOpenForms)}");
 
             string documentFile = documentPath; // Default to assuming an absolute path
-            // Check for relative path in test files dirs
-            foreach (var testFileDir in TestFilesDirs)
+            if (!Path.IsPathRooted(documentFile))
             {
-                documentFile = testFileDir.GetTestPath(documentPath);
-                if (File.Exists(documentFile))
+                // Check for relative path in test files dirs
+                foreach (var testFileDir in TestFilesDirs)
                 {
-                    break;
+                    documentFile = testFileDir.GetTestPath(documentPath);
+                    if (File.Exists(documentFile))
+                    {
+                        break;
+                    }
                 }
             }
 
