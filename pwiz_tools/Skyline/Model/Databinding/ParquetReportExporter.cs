@@ -293,12 +293,7 @@ namespace pwiz.Skyline.Model.Databinding
             private Array ConvertListColumnValue(object listColumnValue)
             {
                 // Get the underlying list via ToImmutableList() method
-                var toArrayMethod = listColumnValue.GetType().GetMethod(nameof(ListColumnValue<object>.ToArray));
-                if (toArrayMethod == null)
-                {
-                    return null;
-                }
-                Array array = (Array)toArrayMethod.Invoke(listColumnValue, null);
+                Array array = (listColumnValue as IListColumnValue)?.ToArray();
                 if (array == null)
                 {
                     return null;

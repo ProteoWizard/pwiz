@@ -491,7 +491,11 @@ namespace pwiz.Common.DataBinding
                 return filterHandler;
             }
 
-            return TextFilterHandler.INSTANCE;
+            if (typeof(IFormattable).IsAssignableFrom(type))
+            {
+                return TextFilterHandler.WITHOUT_CONTAINS;
+            }
+            return TextFilterHandler.WITH_CONTAINS;
         }
         /// <summary>
         /// Maximum number of rows to display in a DataGridView. Reports with more than this number of rows can be exported to a CSV file etc.,
