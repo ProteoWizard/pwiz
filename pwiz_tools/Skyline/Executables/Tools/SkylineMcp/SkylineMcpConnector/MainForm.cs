@@ -23,6 +23,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace SkylineMcpConnector
 {
@@ -32,10 +33,13 @@ namespace SkylineMcpConnector
         // Suppress CheckedChanged events while probing initial state
         private bool _suppressCheckEvents;
 
-        private string _versionFormat;
-        private string _documentFormat;
-        private string _setupButtonExpandText;
-        private int _groupHeight;
+        private readonly string _versionFormat;
+        private readonly string _documentFormat;
+        private readonly string _setupButtonExpandText;
+        private readonly int _groupHeight;
+
+        private int _skylineProcessId;
+        private Timer _skylineMonitorTimer;
 
         public MainForm(string[] args)
         {
@@ -76,6 +80,7 @@ namespace SkylineMcpConnector
             labelDocument.Text = string.Format(_documentFormat, connectionInfo.DocumentPath ?? "(unsaved)");
 
             DeployMcpServer();
+            StartSkylineMonitor(connectionInfo.ProcessId);
         }
 
         private void DeployMcpServer()
@@ -103,14 +108,17 @@ namespace SkylineMcpConnector
                         MessageBoxIcon.Warning);
                     return;
                 }
+
+                MessageBox.Show(this,
+                    "The MCP server was updated and a previous instance was stopped.\n\n" +
+                    "Please restart Claude Code and/or Claude Desktop to reconnect.",
+                    "MCP Server Updated",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
 
-            // Notify the user if Claude apps need restarting to pick up the update
-            bool desktopRunning = ChatAppRegistry.IsClaudeDesktopRunning();
-            if (desktopRunning)
-            {
-                labelStatus.Text = "Connected. MCP server updated — restart Claude Desktop to activate.";
-            }
+            // Status label note — settings take effect next time Claude Desktop is launched
+            labelStatus.Text = "Connected. MCP server updated.";
         }
 
         /// <summary>
@@ -138,6 +146,32 @@ namespace SkylineMcpConnector
             }
             // Brief wait for file handles to release
             Thread.Sleep(500);
+        }
+
+        /// <summary>
+        /// Start a timer that polls whether the Skyline process is still running.
+        /// When Skyline exits, the connector closes itself.
+        /// </summary>
+        private void StartSkylineMonitor(int processId)
+        {
+            _skylineProcessId = processId;
+            _skylineMonitorTimer = new Timer { Interval = 2000 };
+            _skylineMonitorTimer.Tick += SkylineMonitorTimer_Tick;
+            _skylineMonitorTimer.Start();
+        }
+
+        private void SkylineMonitorTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                Process.GetProcessById(_skylineProcessId);
+            }
+            catch (ArgumentException)
+            {
+                // Skyline process no longer exists
+                _skylineMonitorTimer.Stop();
+                Close();
+            }
         }
 
         // -- Button handlers --

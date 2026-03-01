@@ -26,6 +26,8 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
+using System.Xml.Serialization;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Documentation;
@@ -34,6 +36,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -69,7 +72,10 @@ namespace pwiz.Skyline.ToolsUI
             @"GetReportDocTopic",
             @"InsertSmallMoleculeTransitionList",
             @"ImportFasta",
-            @"ImportProperties"
+            @"ImportProperties",
+            @"GetDocumentStatus",
+            @"GetDocumentSettings",
+            @"GetDefaultSettings"
         };
 
         private readonly ToolService _toolService;
@@ -120,7 +126,7 @@ namespace pwiz.Skyline.ToolsUI
                 [@"process_id"] = Process.GetCurrentProcess().Id,
                 [@"connected_at"] = DateTime.UtcNow.ToString(@"o"),
                 [@"skyline_version"] = skylineVersion,
-                [@"document_path"] = documentPath != null ? documentPath.Replace('\\', '/') : null
+                [@"document_path"] = documentPath.ToForwardSlashPath()
             };
             File.WriteAllText(GetConnectionFilePath(), info.ToString());
         }
@@ -222,7 +228,7 @@ namespace pwiz.Skyline.ToolsUI
 
                 case "GetDocumentPath":
                     string path = _toolService.GetDocumentPath();
-                    return path?.Replace('\\', '/');
+                    return path.ToForwardSlashPath();
 
                 case "GetVersion":
                     return Install.Version;
@@ -295,6 +301,19 @@ namespace pwiz.Skyline.ToolsUI
                             new MessageInfo(MessageType.imported_annotations,
                                 Program.MainWindow.Document.DocumentType,
                                 @"Import properties from MCP")));
+
+                case "GetDocumentStatus":
+                    return GetDocumentStatusText();
+
+                case "GetDocumentSettings":
+                    RequireArgs(method, args, 1);
+                    return SerializeSettingsToFile(
+                        Program.MainWindow.Document.Settings.ChangeMeasuredResults(null),
+                        args[0]);
+
+                case "GetDefaultSettings":
+                    RequireArgs(method, args, 1);
+                    return SerializeSettingsToFile(SrmSettingsList.GetDefault(), args[0]);
 
                 default:
                     throw new ArgumentException(@"Unknown method: " + method);
@@ -373,7 +392,7 @@ namespace pwiz.Skyline.ToolsUI
         private static string BuildReportMetadata(string filePath, string reportName)
         {
             var obj = new JObject();
-            obj[@"file_path"] = filePath.Replace('\\', '/');
+            obj[@"file_path"] = filePath.ToForwardSlashPath();
             obj[@"report_name"] = reportName;
 
             string ext = Path.GetExtension(filePath);
@@ -597,6 +616,46 @@ namespace pwiz.Skyline.ToolsUI
                 IncludeHidden = false
             };
             return generator.GenerateDocumentation(rootColumn);
+        }
+
+        private string GetDocumentStatusText()
+        {
+            var doc = Program.MainWindow.Document;
+            string mode = doc.DocumentType.ToString();
+            int groups = doc.MoleculeGroupCount;
+            int molecules = doc.MoleculeCount;
+            int precursors = doc.MoleculeTransitionGroupCount;
+            int transitions = doc.MoleculeTransitionCount;
+            int replicates = doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0;
+            string docPath = _toolService.GetDocumentPath();
+            string docDisplay = string.IsNullOrEmpty(docPath)
+                ? @"(unsaved)"
+                : docPath.ToForwardSlashPath();
+
+            return TextUtil.LineSeparate($@"Mode: {mode}",
+                $@"Proteins/Lists: {groups}",
+                $@"Peptides/Molecules: {molecules}",
+                $@"Precursors: {precursors}",
+                $@"Transitions: {transitions}",
+                $@"Replicates: {replicates}",
+                $@"Document: {docDisplay}");
+        }
+
+        private static string SerializeSettingsToFile(SrmSettings settings, string filePath)
+        {
+            DirectoryEx.CreateForFilePath(filePath);
+            using (var saver = new FileSaver(filePath, true))
+            {
+                if (!saver.CanSave())
+                    throw new IOException(@"Cannot write to " + filePath);
+                using (var writer = XmlWriter.Create(saver.Stream,
+                           new XmlWriterSettings { Indent = true }))
+                {
+                    new XmlSerializer(typeof(SrmSettings)).Serialize(writer, settings);
+                }
+                saver.Commit();
+            }
+            return filePath.ToForwardSlashPath();
         }
 
         private static string StripHtmlTags(string html)

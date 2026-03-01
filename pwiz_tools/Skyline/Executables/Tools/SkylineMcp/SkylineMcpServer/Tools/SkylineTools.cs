@@ -222,6 +222,39 @@ public static class SkylineTools
         return connection.CallSkylineImportProperties(csvText);
     }
 
+    [McpServerTool(Name = "skyline_get_document_status"),
+     Description("Get a lightweight overview of the current Skyline document including document type (proteomic, small_molecules, mixed), target counts (proteins/lists, peptides/molecules, precursors, transitions), replicate count, and file path. Much faster than running a report for basic document info.")]
+    public static string GetDocumentStatus()
+    {
+        using var connection = SkylineConnection.Connect();
+        string result = connection.Call("GetDocumentStatus");
+        return result ?? "No document information available.";
+    }
+
+    [McpServerTool(Name = "skyline_get_document_settings"),
+     Description("Export the current document's settings (enzyme, transitions, filters, modifications, full-scan, etc.) as XML to a file. Strips replicate/results data for size. Returns the file path. Compare against skyline_get_default_settings to find what differs from defaults.")]
+    public static string GetDocumentSettings(
+        [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
+    {
+        filePath ??= GetTempSettingsPath("document");
+
+        using var connection = SkylineConnection.Connect();
+        string result = connection.Call("GetDocumentSettings", filePath);
+        return $"Document settings saved to: {result}\nUse the Read tool to examine the settings XML.";
+    }
+
+    [McpServerTool(Name = "skyline_get_default_settings"),
+     Description("Export Skyline's default settings as XML to a file. This is the baseline for new documents — compare against skyline_get_document_settings to find what the user has changed.")]
+    public static string GetDefaultSettings(
+        [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
+    {
+        filePath ??= GetTempSettingsPath("defaults");
+
+        using var connection = SkylineConnection.Connect();
+        string result = connection.Call("GetDefaultSettings", filePath);
+        return $"Default settings saved to: {result}\nUse the Read tool to examine the settings XML.";
+    }
+
     private static string FormatReportResult(string metadataJson)
     {
         if (string.IsNullOrEmpty(metadataJson))
@@ -263,6 +296,22 @@ public static class SkylineTools
         }
 
         return sb.ToString();
+    }
+
+    private static string GetTempSettingsPath(string label)
+    {
+        string tmpDir = Environment.GetEnvironmentVariable("SKYLINE_MCP_TMP_DIR");
+        if (string.IsNullOrEmpty(tmpDir))
+        {
+            tmpDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Skyline", "mcp", "tmp");
+        }
+        Directory.CreateDirectory(tmpDir);
+
+        string timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        string fileName = $"skyline-settings-{label}-{timestamp}.xml";
+        return Path.Combine(tmpDir, fileName);
     }
 
     private static string GetTempReportPath(string reportName, string format)
