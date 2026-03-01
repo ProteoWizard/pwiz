@@ -517,7 +517,7 @@ namespace TestPerf
                 if (IsArdiaTest)
                 {
                     var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-                    var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
+                    var editAccountDlg = ShowDialog<EditRemoteAccountDlg>(() => openDataSourceDialog.SetCurrentDirectory(RemoteUrl.EMPTY));
                     RunUI(() => editAccountDlg.SetRemoteAccount(ArdiaTestUtil.GetTestAccount()));
                     OkDialog(editAccountDlg, editAccountDlg.OkDialog);
                     OpenFile(openDataSourceDialog, "Skyline");
@@ -696,7 +696,7 @@ namespace TestPerf
                 if (IsArdiaTest)
                 {
                     var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-                    RunUI(() => openDataSourceDialog.CurrentDirectory = ArdiaTestUtil.GetTestAccount().GetRootUrl());
+                    RunUI(() => openDataSourceDialog.SetCurrentDirectory(ArdiaTestUtil.GetTestAccount().GetRootUrl()));
                     OpenFile(openDataSourceDialog, "Skyline");
                     OpenFile(openDataSourceDialog, "PRM data");
                     OpenFile(openDataSourceDialog, "Samples");

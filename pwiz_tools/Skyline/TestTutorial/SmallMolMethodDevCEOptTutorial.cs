@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestTutorial
                         importResultsDlg1.GetDataSourcePathsFile(null));
                     RunUI(() =>
                     {
-                        openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Unscheduled"));
+                        openDataSourceDialog1.SetCurrentDirectory(new MsDataFilePath(GetTestPath("Unscheduled")));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form");
@@ -302,7 +302,7 @@ namespace pwiz.SkylineTestTutorial
                         importResultsDlg1.GetDataSourcePathsFile(null));
                     RunUI(() =>
                     {
-                        openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Scheduled"));
+                        openDataSourceDialog1.SetCurrentDirectory(new MsDataFilePath(GetTestPath("Scheduled")));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
@@ -455,7 +455,7 @@ namespace pwiz.SkylineTestTutorial
                     var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.OkDialog());
                     RunUI(() =>
                     {
-                        openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("CE Optimization"));
+                        openDataSourceDialog1.SetCurrentDirectory(new MsDataFilePath(GetTestPath("CE Optimization")));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
                     PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form");
