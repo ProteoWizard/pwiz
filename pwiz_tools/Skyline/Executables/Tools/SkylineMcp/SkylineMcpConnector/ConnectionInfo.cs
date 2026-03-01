@@ -46,21 +46,16 @@ namespace SkylineMcpConnector
             WriteIndented = true
         };
 
-        public static string GetConnectionDirectory()
-        {
-            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return Path.Combine(localAppData, "Skyline", "mcp");
-        }
+        private const string CONNECTION_FILE_NAME = "connection.json";
 
         public static string GetConnectionFilePath()
         {
-            return Path.Combine(GetConnectionDirectory(), "connection.json");
+            return Path.Combine(McpServerDeployer.DeployDir, CONNECTION_FILE_NAME);
         }
 
         public void Save()
         {
-            string directory = GetConnectionDirectory();
-            Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(McpServerDeployer.DeployDir);
             string json = JsonSerializer.Serialize(this, _jsonOptions);
             File.WriteAllText(GetConnectionFilePath(), json);
         }

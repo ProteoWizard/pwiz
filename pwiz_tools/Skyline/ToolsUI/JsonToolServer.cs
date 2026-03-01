@@ -46,6 +46,9 @@ namespace pwiz.Skyline.ToolsUI
     /// </summary>
     public class JsonToolServer : IDisposable
     {
+        private const string DEPLOY_FOLDER_NAME = @".skyline-mcp";
+        private const string CONNECTION_FILE_NAME = @"connection.json";
+
         private static readonly string[] AVAILABLE_METHODS =
         {
             @"GetDocumentPath",
@@ -134,13 +137,14 @@ namespace pwiz.Skyline.ToolsUI
 
         private static string GetConnectionDirectory()
         {
-            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return Path.Combine(localAppData, @"Skyline", @"mcp");
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                DEPLOY_FOLDER_NAME);
         }
 
         private static string GetConnectionFilePath()
         {
-            return Path.Combine(GetConnectionDirectory(), @"connection.json");
+            return Path.Combine(GetConnectionDirectory(), CONNECTION_FILE_NAME);
         }
 
         private void ServerLoop()

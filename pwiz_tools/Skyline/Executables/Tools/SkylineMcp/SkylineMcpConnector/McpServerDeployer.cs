@@ -27,6 +27,7 @@ namespace SkylineMcpConnector
         public const string MCP_SERVER_EXE = "SkylineMcpServer.exe";
         private const string MCP_SERVER_SUBFOLDER = "mcp-server";
         private const string DEPLOY_FOLDER_NAME = ".skyline-mcp";
+        private const string SERVER_SUBFOLDER = "server";
 
         /// <summary>
         /// The deployment target directory: %USERPROFILE%/.skyline-mcp/
@@ -42,11 +43,19 @@ namespace SkylineMcpConnector
         }
 
         /// <summary>
+        /// The server/ subdirectory where MCP server files are deployed.
+        /// </summary>
+        public static string ServerDir
+        {
+            get { return Path.Combine(DeployDir, SERVER_SUBFOLDER); }
+        }
+
+        /// <summary>
         /// Full path to the deployed MCP server executable.
         /// </summary>
         public static string DeployedExePath
         {
-            get { return Path.Combine(DeployDir, MCP_SERVER_EXE); }
+            get { return Path.Combine(ServerDir, MCP_SERVER_EXE); }
         }
 
         /// <summary>
@@ -95,13 +104,13 @@ namespace SkylineMcpConnector
             }
 
             // Create target directory
-            Directory.CreateDirectory(DeployDir);
+            Directory.CreateDirectory(ServerDir);
 
-            // Copy all files from source to target
+            // Copy all files from source to server/ subdirectory
             foreach (string sourceFile in Directory.GetFiles(SourceDir))
             {
                 string fileName = Path.GetFileName(sourceFile);
-                string targetFile = Path.Combine(DeployDir, fileName);
+                string targetFile = Path.Combine(ServerDir, fileName);
                 File.Copy(sourceFile, targetFile, true);
             }
 

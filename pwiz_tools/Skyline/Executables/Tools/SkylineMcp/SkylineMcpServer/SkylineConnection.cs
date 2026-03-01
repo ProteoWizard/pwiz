@@ -29,6 +29,9 @@ namespace SkylineMcpServer;
 
 public class SkylineConnection : IDisposable
 {
+    private const string DEPLOY_FOLDER_NAME = ".skyline-mcp";
+    private const string CONNECTION_FILE_NAME = "connection.json";
+
     private readonly NamedPipeClientStream _pipe;
 
     private SkylineConnection(NamedPipeClientStream pipe)
@@ -126,8 +129,9 @@ public class SkylineConnection : IDisposable
 
     private static string GetConnectionFilePath()
     {
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        return Path.Combine(localAppData, "Skyline", "mcp", "connection.json");
+        return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            DEPLOY_FOLDER_NAME, CONNECTION_FILE_NAME);
     }
 
     private static byte[] ReadAllBytes(PipeStream stream)
