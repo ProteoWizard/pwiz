@@ -476,9 +476,12 @@ namespace pwiz.Common.DataBinding
             { typeof(float), NumericFilterHandler.INSTANCE },
             { typeof(double), NumericFilterHandler.INSTANCE },
             { typeof(Decimal), NumericFilterHandler.INSTANCE },
+            { typeof(bool), new SimpleFilterHandler(typeof(bool)) },
+            { typeof(char), new SimpleFilterHandler(typeof(char)) },
+            { typeof(DateTime), new SimpleFilterHandler(typeof(DateTime)) }
         };
 
-        protected virtual IFilterHandler GetFilterHandler(Type type)
+        public virtual IFilterHandler GetFilterHandler(Type type)
         {
             var listElementType = ListColumnValue.GetElementType(type);
             if (listElementType != null)

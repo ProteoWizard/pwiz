@@ -1,8 +1,9 @@
+using pwiz.Common.SystemUtil;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Filtering
 {
@@ -12,7 +13,7 @@ namespace pwiz.Common.DataBinding.Filtering
         object ParseOperand(string text, CultureInfo cultureInfo);
         bool ValueEqualsOperand(object value, object operand);
         string OperandToString(object operand, CultureInfo cultureInfo);
-        public interface ICompare
+        public interface IComparison
         {
             int? Compare(object value, object operand);
         }
@@ -120,7 +121,7 @@ namespace pwiz.Common.DataBinding.Filtering
         }
     }
 
-    public class NumericFilterHandler : FilterHandler<double, PrecisionNumber>, IFilterHandler.ICompare
+    public class NumericFilterHandler : FilterHandler<double, PrecisionNumber>, IFilterHandler.IComparison
     {
         public static readonly NumericFilterHandler INSTANCE = new NumericFilterHandler();
         public override bool IsBlank(object value)
@@ -270,23 +271,76 @@ namespace pwiz.Common.DataBinding.Filtering
                 ElementHandler.ValueEqualsOperand(item, operand)).All(result => result);
         }
 
-        public class EnumFilterHandler : IFilterHandler
+    }
+    public class EnumFilterHandler : IFilterHandler
+    {
+        public EnumFilterHandler(Type enumType)
         {
-            public EnumFilterHandler(Type enumType)
-            {
-                ValueType = enumType;
-            }
+            EnumType = enumType;
+        }
 
-            public Type ValueType { get; }
-            public int? CompareTo(object value)
+        public Type EnumType { get; }
+        public bool IsBlank(object value)
+        {
+            return value == null;
+        }
+
+        public object ParseOperand(string text, CultureInfo cultureInfo)
+        {
+            if (string.IsNullOrEmpty(text))
             {
                 return null;
             }
-
-            public string ToString(CultureInfo cultureInfo)
+            try
             {
-                throw new NotImplementedException();
+                return Enum.Parse(EnumType, text);
             }
+            catch
+            {
+                return Enum.Parse(EnumType, text, true);
+            }
+        }
+
+        public bool ValueEqualsOperand(object value, object operand)
+        {
+            return Equals(value, operand);
+        }
+
+        public string OperandToString(object operand, CultureInfo cultureInfo)
+        {
+            return operand?.ToString() ?? string.Empty;
+        }
+    }
+
+    public class SimpleFilterHandler : IFilterHandler
+    {
+        public SimpleFilterHandler(Type type)
+        {
+            ValueType = type;
+        }
+
+        public Type ValueType { get; }
+
+        public bool IsBlank(object value)
+        {
+            return value == null;
+        }
+
+        public object ParseOperand(string text, CultureInfo cultureInfo)
+        {
+            var typeConverter = TypeDescriptor.GetConverter(ValueType);
+            // ReSharper disable AssignNullToNotNullAttribute
+            return typeConverter.ConvertFrom(null, cultureInfo, text);
+        }
+
+        public bool ValueEqualsOperand(object value, object operand)
+        {
+            return Equals(value, operand);
+        }
+
+        public string OperandToString(object operand, CultureInfo cultureInfo)
+        {
+            return Convert.ToString(operand, cultureInfo);
         }
     }
 }

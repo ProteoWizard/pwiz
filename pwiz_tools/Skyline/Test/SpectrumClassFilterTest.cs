@@ -45,7 +45,7 @@ namespace pwiz.SkylineTest
             var expectedSpectrumPrecursors =
                 new SpectrumPrecursors(ImmutableList.Singleton(new SpectrumPrecursor(new SignedMz(precursorMz))));
             var dataSchema = new DataSchema(new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentCulture));
-            var filterPredicate = FilterPredicate.CreateFilterPredicate(dataSchema, typeof(SpectrumPrecursors),
+            var filterPredicate = FilterPredicate.Parse(dataSchema, typeof(SpectrumPrecursors),
                 FilterOperations.OP_EQUALS, expectedSpectrumPrecursors.ToString(null, CultureInfo.CurrentCulture));
             var operandValue = filterPredicate.GetOperandValue(dataSchema, typeof(SpectrumPrecursors));
             Assert.IsInstanceOfType(operandValue, typeof(SpectrumPrecursors));
@@ -92,10 +92,8 @@ namespace pwiz.SkylineTest
             });
             var filterSpecs = new[]
             {
-                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, spectrumPrecursors)),
-                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath,
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "SCAN"))
+                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,FilterOperations.OP_EQUALS, spectrumPrecursors),
+                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath, FilterOperations.OP_CONTAINS, "SCAN")
             };
             return new SpectrumClassFilter(new FilterClause(filterSpecs));
         }

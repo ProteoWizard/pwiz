@@ -36,15 +36,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
     {
         public static readonly FilterPage Ms1FilterPage = new FilterPage(() => SpectraResources.SpectrumClassFilter_Ms1FilterPage_MS1,
             ()=>SpectraResources.SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram,
-            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
-                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1))
-            ,
+            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),FilterOperations.OP_EQUALS, 1),
             SpectrumClassColumn.MS1.Select(col => col.PropertyPath));
 
         public static readonly FilterPage Ms2FilterPage = new FilterPage(() => SpectraResources.SpectrumClassFilter_Ms2FilterPage_MS2_,
             ()=>SpectraResources.SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram,
-            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
-                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1)),
+            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)), FilterOperations.OP_IS_GREATER_THAN, 1),
             SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
 
         public static readonly FilterPage GenericFilterPage = new FilterPage(SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
@@ -246,8 +243,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return filterSpec.Predicate.InvariantOperandText;
             }
 
-            var operandType = filterSpec.Operation.GetOperandType(dataSchema, column.ValueType);
-            if (operandType == null)
+            if (!filterSpec.Operation.HasOperand())
             {
                 return null;
             }

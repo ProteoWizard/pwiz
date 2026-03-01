@@ -300,7 +300,6 @@
     </Compile>
     <Compile Include="DataBinding\Filtering\FilterHandler.cs" />
     <Compile Include="DataBinding\Filtering\FilterClause.cs" />
-    <Compile Include="DataBinding\Filtering\FilterOperand.cs" />
     <Compile Include="DataBinding\Filtering\FilterPage.cs" />
     <Compile Include="DataBinding\Filtering\FilterPages.cs" />
     <Compile Include="DataBinding\Filtering\IFilterAutoComplete.cs" />

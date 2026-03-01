@@ -44,9 +44,9 @@ namespace CommonTest.DataBinding
                 foreach (var testOperand in ListTestOperands())
                 {
                     var columnType = testOperand.GetType();
-                    var filterPredicate = FilterPredicate.CreateFilterPredicate(dataSchema, columnType,
+                    var filterPredicate = FilterPredicate.Parse(dataSchema, columnType,
                         FilterOperations.OP_EQUALS, ValueToString(testOperand, cultureInfo));
-                    var invariantFilterPredicate = FilterPredicate.CreateFilterPredicate(invariantDataSchema, columnType,
+                    var invariantFilterPredicate = FilterPredicate.Parse(invariantDataSchema, columnType,
                         FilterOperations.OP_EQUALS, ValueToString(testOperand, CultureInfo.InvariantCulture));
                     Assert.AreEqual(invariantFilterPredicate, filterPredicate);
                     var filterSpec = new FilterSpec(propertyPath, filterPredicate);

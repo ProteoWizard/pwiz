@@ -3195,9 +3195,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public static readonly FilterClause IgnoreSimScansFilter = new FilterClause(
             SpectrumClassFilter.Ms1FilterPage.Discriminant.FilterSpecs.Append(
                 new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.ScanWindowWidth)),
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN,
-                        Results.SpectrumFilter.SIM_ISOLATION_CUTOFF)
-                )));
+                    FilterOperations.OP_IS_GREATER_THAN,
+                    new PrecisionNumber(Results.SpectrumFilter.SIM_ISOLATION_CUTOFF, 0))));
     }
 
     [XmlRoot("transition_integration")]

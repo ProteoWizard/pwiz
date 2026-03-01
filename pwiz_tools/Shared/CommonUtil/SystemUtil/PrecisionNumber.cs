@@ -27,7 +27,7 @@ namespace pwiz.Common.SystemUtil
     /// and provides tolerance-aware comparisons so that values rounding to 3.14
     /// at 2 decimal places will match.
     /// </summary>
-    public readonly struct PrecisionNumber : IEquatable<PrecisionNumber>
+    public readonly struct PrecisionNumber : IEquatable<PrecisionNumber>, IFormattable
     {
         /// <summary>
         /// Maximum decimal places used when wrapping a raw double that has no
@@ -141,11 +141,11 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
-        public string ToString(CultureInfo cultureInfo)
+        public string ToString(string format, IFormatProvider formatProvider)
         {
             if (DecimalPlaces >= 0)
             {
-                return Value.ToString(@"F" + DecimalPlaces, cultureInfo);
+                return Value.ToString(@"F" + DecimalPlaces, formatProvider);
             }
 
             // Negative decimal places: use scientific notation.
@@ -161,12 +161,17 @@ namespace pwiz.Common.SystemUtil
                 mantissaDecimals = 0;
 
             double mantissa = Value / Math.Pow(10, exponent);
-            return mantissa.ToString(@"F" + mantissaDecimals, cultureInfo) + @"e" + exponent;
+            return mantissa.ToString(@"F" + mantissaDecimals, formatProvider) + @"e" + exponent;
+        }
+
+        public string ToString(CultureInfo cultureInfo)
+        {
+            return ToString(null, cultureInfo);
         }
 
         public override string ToString()
         {
-            return ToString(CultureInfo.InvariantCulture);
+            return ToString(CultureInfo.CurrentCulture);
         }
 
         public int CompareTo(double value)

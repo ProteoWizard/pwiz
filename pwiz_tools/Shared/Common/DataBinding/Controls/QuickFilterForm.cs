@@ -126,7 +126,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 return null;
             }
-            var filterPredicate = FilterPredicate.CreateFilterPredicate(DataSchema, PropertyDescriptor.PropertyType,
+            var filterPredicate = FilterPredicate.Parse(DataSchema, PropertyDescriptor.PropertyType,
                 filterItem.FilterOperation, text.Text);
             return new RowFilter.ColumnFilter(ColumnId.GetColumnId(PropertyDescriptor), filterPredicate);
         }
@@ -135,7 +135,7 @@ namespace pwiz.Common.DataBinding.Controls
         {
             FilterItem filterItem = comboOperation.SelectedItem as FilterItem;
             if (null == filterItem ||
-                null == filterItem.FilterOperation.GetOperandType(DataSchema, PropertyDescriptor.PropertyType))
+                !filterItem.FilterOperation.HasOperand())
             {
                 text.Text = string.Empty;
                 text.Enabled = false;

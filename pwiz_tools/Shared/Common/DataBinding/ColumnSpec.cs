@@ -23,6 +23,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
@@ -230,15 +231,28 @@ namespace pwiz.Common.DataBinding
         {
         }
 
-        public FilterSpec(PropertyPath propertyPath, FilterPredicate predicate)
+        public FilterSpec(FilterSpec filterSpec)
         {
-            Column = propertyPath.ToString();
+            Column = filterSpec.Column;
+            Predicate = filterSpec.Predicate;
+        }
+
+        public FilterSpec(PropertyPath column, FilterPredicate predicate)
+        {
+            Column = column.ToString();
             Predicate = predicate;
         }
-        private FilterSpec(FilterSpec that)
+
+        public FilterSpec(PropertyPath propertyPath, IFilterOperation operation, string operand)
         {
-            Column = that.Column;
-            Predicate = that.Predicate;
+            Column = propertyPath.ToString();
+            Predicate = FilterPredicate.Create(operation, operand);
+        }
+
+        public FilterSpec(PropertyPath propertyPath, IFilterOperation operation, IFormattable operand)
+        {
+            Column = propertyPath.ToString();
+            Predicate = FilterPredicate.Create(operation, operand);
         }
 
         [Track]

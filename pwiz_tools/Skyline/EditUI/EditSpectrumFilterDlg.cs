@@ -331,7 +331,7 @@ namespace pwiz.Skyline.EditUI
                 try
                 {
                     filterPredicate =
-                        FilterPredicate.CreateFilterPredicate(_rootColumn.DataSchema, propertyColumnDescriptor.PropertyType, filterOperation,
+                        FilterPredicate.Parse(_rootColumn.DataSchema, propertyColumnDescriptor.PropertyType, filterOperation,
                             row.Value);
                 }
                 catch (Exception ex)

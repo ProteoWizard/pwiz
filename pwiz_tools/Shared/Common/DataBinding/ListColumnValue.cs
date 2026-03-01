@@ -34,7 +34,7 @@ namespace pwiz.Common.DataBinding
         public static string ItemsToString<T>(CultureInfo cultureInfo, IEnumerable<T> items)
         {
             var csvSeparator = GetCsvSeparator(cultureInfo);
-            return string.Join(csvSeparator.ToString(), items.Select(item => DsvWriter.ToDsvField(csvSeparator, item?.ToString() ?? string.Empty)));
+            return string.Join(csvSeparator.ToString(), items.Select(item => DsvWriter.ToDsvField(csvSeparator, Convert.ToString(item))));
         }
 
         public static IEnumerable<string> ParseDsvFields(CultureInfo cultureInfo, string line)

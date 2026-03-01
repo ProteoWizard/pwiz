@@ -173,9 +173,9 @@ namespace CommonTest.DataBinding
             var columnDescriptor = ColumnDescriptor.RootColumn(dataSchema, typeof(TItem));
             if (null != operand)
             {
-                Assert.IsNotNull(filterOperation.GetOperandType(columnDescriptor));
+                Assert.IsTrue(filterOperation.HasOperand());
             }
-            var filterPredicate = FilterPredicate.CreateFilterPredicate(dataSchema, typeof (TItem), filterOperation, operand);
+            var filterPredicate = FilterPredicate.Parse(dataSchema, typeof (TItem), filterOperation, operand);
             var predicate = filterPredicate.MakePredicate(dataSchema, typeof(TItem));
             return items.Where(item => predicate(item)).ToList();
         }

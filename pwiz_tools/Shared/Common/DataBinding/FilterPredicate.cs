@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.Xml;
 using pwiz.Common.SystemUtil;
@@ -28,40 +27,50 @@ namespace pwiz.Common.DataBinding
     {
         public static readonly FilterPredicate HAS_ANY_VALUE = new FilterPredicate(FilterOperations.OP_HAS_ANY_VALUE, null);
         public static readonly FilterPredicate IS_NOT_BLANK = new FilterPredicate(FilterOperations.OP_IS_NOT_BLANK, null);
+        public static readonly FilterPredicate IS_BLANK = new FilterPredicate(FilterOperations.OP_IS_BLANK, null);
 
         /// <summary>
         /// Constructs a new FilterPredicate from a value that the user has typed in the user interface.
         /// "operandText" is expected to be formatted according to the locale settings of "dataSchema".
         /// </summary>
-        public static FilterPredicate CreateFilterPredicate(DataSchema dataSchema, Type columnType, IFilterOperation filterOperation, string operandText)
+        public static FilterPredicate Create(IFilterOperation filterOperation, IFormattable operand)
         {
-            object operandValue;
-            if (string.IsNullOrEmpty(operandText))
-            {
-                operandValue = null;
-            }
-            else
-            {
-                Type operandType = filterOperation.GetOperandType(dataSchema, columnType);
-                if (null == operandType)
-                {
-                    operandValue = null;
-                }
-                else
-                {
-                    operandValue = ParseOperandValue(dataSchema.DataSchemaLocalizer.FormatProvider, operandType, operandText);
-                }
-            }
-            string invariantOperandText = OperandValueToString(CultureInfo.InvariantCulture, operandValue);
-            return new FilterPredicate(filterOperation, invariantOperandText);
+            return new FilterPredicate(filterOperation,
+                operand == null ? null : Convert.ToString(operand, CultureInfo.InvariantCulture));
         }
 
-        public static FilterPredicate CreateFilterPredicate<T>(IFilterOperation filterOperation, T operand)
+        public static FilterPredicate Create(IFilterOperation filterOperation,
+            string invariantOperantText)
         {
-            return new FilterPredicate(filterOperation, OperandValueToString(CultureInfo.InvariantCulture, operand));
+            return new FilterPredicate(filterOperation, invariantOperantText);
         }
 
-        private FilterPredicate(IFilterOperation filterOperation, String invariantOperandText)
+        public static FilterPredicate Parse(DataSchema dataSchema, Type columnType, IFilterOperation filterOperation,
+            string operandText)
+        {
+            if (!filterOperation.HasOperand())
+            {
+                return new FilterPredicate(filterOperation, null);
+            }
+
+            var handler = dataSchema.GetFilterHandler(columnType);
+            return new FilterPredicate(filterOperation, handler.OperandToString(handler.ParseOperand(operandText, CultureInfo.CurrentCulture), CultureInfo.InvariantCulture));
+        }
+
+        public static FilterPredicate SafeParse(DataSchema dataSchema, Type columnType,
+            IFilterOperation filterOperation, string operandText)
+        {
+            try
+            {
+                return Parse(dataSchema, columnType, filterOperation, operandText);
+            }
+            catch
+            {
+                return Create(filterOperation, operandText);
+            }
+        }
+
+        public FilterPredicate(IFilterOperation filterOperation, String invariantOperandText)
         {
             FilterOperation = filterOperation;
             InvariantOperandText = invariantOperandText;
@@ -77,14 +86,9 @@ namespace pwiz.Common.DataBinding
             return new FilterPredicate(filterOperation, invariantOperandText);
         }
 
-        public object GetOperandValue(ColumnDescriptor columnDescriptor)
-        {
-            return GetOperandValue(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
-        }
-
         public object GetOperandValue(DataSchema dataSchema, Type columnType)
         {
-            return ParseOperandValue(CultureInfo.InvariantCulture, FilterOperations.GetTypeToConvertOperandTo(dataSchema, columnType), InvariantOperandText);
+            return dataSchema.GetFilterHandler(columnType).ParseOperand(InvariantOperandText, CultureInfo.InvariantCulture);
         }
 
         public string GetOperandDisplayText(ColumnDescriptor columnDescriptor)
@@ -100,57 +104,14 @@ namespace pwiz.Common.DataBinding
         {
             try
             {
-                object operand = GetOperandValue(dataSchema, propertyType);
-                return OperandValueToString(dataSchema.DataSchemaLocalizer.FormatProvider, operand);
+                return Convert.ToString(
+                    dataSchema.GetFilterHandler(propertyType)
+                        .ParseOperand(InvariantOperandText, CultureInfo.InvariantCulture), CultureInfo.CurrentCulture);
             }
             catch (Exception)
             {
                 return InvariantOperandText;
             }
-        }
-
-        private static object ParseOperandValue(CultureInfo cultureInfo, Type type, string operandValue)
-        {
-            if (null == operandValue)
-            {
-                return null;
-            }
-            if (type == null)
-            {
-                return operandValue;
-            }
-            if (typeof(char) == type)
-            {
-                if (operandValue.Length != 1)
-                {
-                    return null;
-                }
-                return operandValue[0];
-            }
-            if (type.IsEnum)
-            {
-                if (string.IsNullOrEmpty(operandValue))
-                {
-                    return null;
-                }
-                try
-                {
-                    return Enum.Parse(type, operandValue);
-                }
-                catch
-                {
-                    return Enum.Parse(type, operandValue, true);
-                }
-            }
-            if (string.IsNullOrEmpty(operandValue))
-            {
-                return null;
-            }
-
-            var typeConverter = TypeDescriptor.GetConverter(type);
-            // ReSharper disable AssignNullToNotNullAttribute
-            return typeConverter.ConvertFrom(null, cultureInfo, operandValue);
-            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         private static string OperandValueToString(CultureInfo cultureInfo, object operandValue)
@@ -165,12 +126,17 @@ namespace pwiz.Common.DataBinding
 
         public Predicate<object> MakePredicate(DataSchema dataSchema, Type columnType)
         {
-            object operandValue = GetOperandValue(dataSchema, columnType);
-            if (operandValue is double && PrecisionNumber.TryParse(InvariantOperandText, CultureInfo.InvariantCulture, out var precisionNumber))
+            var filterHandler = dataSchema.GetFilterHandler(columnType);
+            object operandValue;
+            if (FilterOperation.HasOperand())
             {
-                operandValue = precisionNumber;
+                operandValue = filterHandler.ParseOperand(InvariantOperandText, CultureInfo.InvariantCulture);
             }
-            return columnValue => FilterOperation.Matches(dataSchema, columnType, columnValue, operandValue);
+            else
+            {
+                operandValue = null;
+            }
+            return columnValue => FilterOperation.Matches(filterHandler, columnValue, operandValue);
         }
 
         #region Equality members
