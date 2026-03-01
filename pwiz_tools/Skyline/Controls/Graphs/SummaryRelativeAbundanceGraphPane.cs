@@ -306,7 +306,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 try
                 {
                     Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
-                    Settings.Default.GroupComparisonSuspendLabelLayout = false;
+                    if (Settings.Default.GroupComparisonAvoidLabelOverlap == false)
+                        Settings.Default.GroupComparisonSuspendLabelLayout = false;
                 }
                 finally
                 {
@@ -613,14 +614,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
                     AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
                 }
                 else
                 {
                     AdjustLabelSpacings(_labeledPoints, _labelsLayout);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
-                    //UpdateConnectors();
                 }
+                if (_labeledPoints.Any() && GraphSummary.GraphControl.GraphPane.Layout != null)
+                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout.PointsLayout;
             }
         }
 
