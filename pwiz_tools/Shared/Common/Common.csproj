@@ -297,7 +297,7 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Filtering\FilterAdapter.cs" />
+    <Compile Include="DataBinding\Filtering\FilterHandler.cs" />
     <Compile Include="DataBinding\Filtering\FilterClause.cs" />
     <Compile Include="DataBinding\Filtering\FilterOperand.cs" />
     <Compile Include="DataBinding\Filtering\FilterPage.cs" />

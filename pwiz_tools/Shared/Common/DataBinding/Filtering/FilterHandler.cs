@@ -7,28 +7,28 @@ namespace pwiz.Common.DataBinding.Filtering
     public interface IFilterHandler
     {
         bool IsBlank(object value);
-        object ParseOperand(IFilterOperation filterOperation, string text, CultureInfo cultureInfo);
-        bool Equals(object value, IFilterOperand operand);
+        object ParseOperand(string text, CultureInfo cultureInfo);
+        bool ValueEqualsOperand(object value, object operand);
         string OperandToString(object operand, CultureInfo cultureInfo);
+        public interface ICompare
+        {
+            int? Compare(object value, object operand);
+        }
+
+        public interface IContains
+        {
+            bool StartsWith(object value, object operand);
+            bool Contains(object value, object operand);
+        }
     }
 
-    public interface ICompareFilter
-    {
-        int? Compare(object value, IFilterOperand operand);
-    }
-
-    public interface IContainsFilter
-    {
-        bool StartsWith(object value, object operand);
-        bool Contains(object value, object operand);
-    }
 
     public abstract class FilterHandler<TColumn, TOperand> : IFilterHandler
     {
-        object IFilterHandler.ParseOperand(IFilterOperation filterOperation, string text,
+        object IFilterHandler.ParseOperand(string text,
             CultureInfo cultureInfo)
         {
-            return ParseOperand(filterOperation, text, cultureInfo);
+            return ParseOperand(text, cultureInfo);
         }
 
         string IFilterHandler.OperandToString(object operand, CultureInfo cultureInfo)
@@ -42,17 +42,16 @@ namespace pwiz.Common.DataBinding.Filtering
 
         protected abstract string OperandToString(TOperand operand, CultureInfo cultureInfo);
 
-        protected abstract TOperand ParseOperand(IFilterOperation filterOperation, string text,
-            CultureInfo cultureInfo);
+        protected abstract TOperand ParseOperand(string text, CultureInfo cultureInfo);
 
         public abstract bool IsBlank(object value);
 
-        public bool Equals(object value, IFilterOperand operand)
+        public bool ValueEqualsOperand(object value, object operand)
         {
-            return CallWithOperand(value, operand, Equals);
+            return CallWithOperand(value, operand, ValueEqualsOperand);
         }
 
-        protected abstract bool Equals(TColumn value, TOperand operand);
+        protected abstract bool ValueEqualsOperand(TColumn value, TOperand operand);
 
         protected T CallWithOperand<T>(object value, object operand, Func<TColumn, TOperand, T> func)
         {
@@ -66,20 +65,20 @@ namespace pwiz.Common.DataBinding.Filtering
         protected abstract bool TryConvertColumnValue(object value, out TColumn columnValue);
     }
 
-    public class StringFilterHandler : FilterHandler<string, string>, IContainsFilter
+    public class StringFilterHandler : FilterHandler<string, string>, IFilterHandler.IContains
     {
         public override bool IsBlank(object value)
         {
-            return value == null || Equals(string.Empty, value);
+            return value == null || ValueEqualsOperand(string.Empty, value);
         }
 
-        protected override string ParseOperand(IFilterOperation filterOperation, string text, CultureInfo cultureInfo)
+        protected override string ParseOperand(string text, CultureInfo cultureInfo)
         {
             return text;
         }
 
 
-        protected override bool Equals(string value, string operand)
+        protected override bool ValueEqualsOperand(string value, string operand)
         {
             return StringComparer.Ordinal.Equals(value, operand);
         }
@@ -113,14 +112,14 @@ namespace pwiz.Common.DataBinding.Filtering
         }
     }
 
-    public class NumericFilterHandler : FilterHandler<double, PrecisionNumber>, ICompareFilter
+    public class NumericFilterHandler : FilterHandler<double, PrecisionNumber>, IFilterHandler.ICompare
     {
         public override bool IsBlank(object value)
         {
             return value == null;
         }
 
-        protected override PrecisionNumber ParseOperand(IFilterOperation filterOperation, string text, CultureInfo cultureInfo)
+        protected override PrecisionNumber ParseOperand(string text, CultureInfo cultureInfo)
         {
             return PrecisionNumber.Parse(text, cultureInfo);
         }
@@ -130,7 +129,7 @@ namespace pwiz.Common.DataBinding.Filtering
             return operand.ToString(cultureInfo);
         }
 
-        protected override bool Equals(double value, PrecisionNumber operand)
+        protected override bool ValueEqualsOperand(double value, PrecisionNumber operand)
         {
             return operand.EqualsWithinPrecision(value);
         }
@@ -149,11 +148,14 @@ namespace pwiz.Common.DataBinding.Filtering
             }
         }
 
-        public int? Compare(object value, IFilterOperand operand)
+        public int? Compare(object value, object operand)
         {
-            return CallWithOperand(value, operand, (doubleValue, precisionNumber) => -precisionNumber.CompareTo(doubleValue));
+            return CallWithOperand(value, operand, Compare);
+        }
+
+        protected int? Compare(double doubleValue, PrecisionNumber precisionNumber)
+        {
+            return precisionNumber.CompareTo(doubleValue);
         }
     }
-
-    
 }
