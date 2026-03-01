@@ -18,7 +18,6 @@
  */
 using System;
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -28,17 +27,26 @@ namespace pwiz.Common.SystemUtil
     /// and provides tolerance-aware comparisons so that values rounding to 3.14
     /// at 2 decimal places will match.
     /// </summary>
-    public struct PrecisionNumber : IEquatable<PrecisionNumber>, IComparable<PrecisionNumber>
+    public readonly struct PrecisionNumber : IEquatable<PrecisionNumber>
     {
-        // Matches optional sign, digits, optional decimal part, optional exponent
-        private static readonly Regex SCIENTIFIC_REGEX = new Regex(
-            @"^[+-]?(\d+)(\.(\d+))?([eE][+-]?\d+)?$",
-            RegexOptions.Compiled);
+        /// <summary>
+        /// Maximum decimal places used when wrapping a raw double that has no
+        /// known textual precision. This gives an effectively zero tolerance.
+        /// </summary>
+        private const int MAX_DECIMAL_PLACES = 15;
 
         public PrecisionNumber(double value, int decimalPlaces)
         {
             Value = value;
             DecimalPlaces = decimalPlaces;
+        }
+
+        /// <summary>
+        /// Wraps a raw double with maximum precision (effectively zero tolerance).
+        /// Use this for column values that have no known textual precision.
+        /// </summary>
+        public PrecisionNumber(double value) : this(value, MAX_DECIMAL_PLACES)
+        {
         }
 
         public double Value { get; }
@@ -54,14 +62,14 @@ namespace pwiz.Common.SystemUtil
             get { return 0.5 * Math.Pow(10, -DecimalPlaces); }
         }
 
-        public static PrecisionNumber Parse(string text)
+        public static PrecisionNumber Parse(string text, CultureInfo cultureInfo)
         {
-            if (TryParse(text, out var result))
+            if (TryParse(text, cultureInfo, out var result))
                 return result;
             throw new FormatException(string.Format(@"Unable to parse '{0}' as a PrecisionNumber", text));
         }
 
-        public static bool TryParse(string text, out PrecisionNumber result)
+        public static bool TryParse(string text, CultureInfo cultureInfo, out PrecisionNumber result)
         {
             result = default;
             if (string.IsNullOrWhiteSpace(text))
@@ -69,62 +77,51 @@ namespace pwiz.Common.SystemUtil
 
             text = text.Trim();
 
-            // Try InvariantCulture first, then CurrentCulture
-            if (TryParseWithCulture(text, CultureInfo.InvariantCulture, out result))
-                return true;
-            if (!Equals(CultureInfo.CurrentCulture, CultureInfo.InvariantCulture) &&
-                TryParseWithCulture(text, CultureInfo.CurrentCulture, out result))
-                return true;
-
-            return false;
-        }
-
-        private static bool TryParseWithCulture(string text, CultureInfo culture, out PrecisionNumber result)
-        {
-            result = default;
-
-            if (!double.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, culture, out double value))
+            if (!double.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, cultureInfo, out double value))
                 return false;
 
-            int decimalPlaces = CountDecimalPlaces(text, culture);
+            int decimalPlaces = CountDecimalPlaces(text, cultureInfo);
             result = new PrecisionNumber(value, decimalPlaces);
             return true;
         }
 
         private static int CountDecimalPlaces(string text, CultureInfo culture)
         {
-            // Normalize: replace culture decimal separator with '.' for regex matching
             string decimalSep = culture.NumberFormat.NumberDecimalSeparator;
-            string normalized = text.Replace(decimalSep, @".");
 
-            var match = SCIENTIFIC_REGEX.Match(normalized);
-            if (!match.Success)
-                return 0;
-
-            int mantissaDecimalDigits = match.Groups[3].Success ? match.Groups[3].Value.Length : 0;
-
-            if (match.Groups[4].Success)
+            // Find the exponent part (e or E) if present
+            int exponentIndex = text.IndexOfAny(new[] { 'e', 'E' });
+            int exponent = 0;
+            string mantissa = text;
+            if (exponentIndex >= 0)
             {
-                // Scientific notation: e.g. "1.5e3" has mantissa decimals=1, exponent=3
-                // Effective decimal places = mantissa decimals - exponent
-                string exponentStr = match.Groups[4].Value.Substring(1); // Remove 'e' or 'E'
-                int exponent = int.Parse(exponentStr, CultureInfo.InvariantCulture);
-                return mantissaDecimalDigits - exponent;
+                mantissa = text.Substring(0, exponentIndex);
+                if (int.TryParse(text.Substring(exponentIndex + 1), NumberStyles.AllowLeadingSign,
+                        CultureInfo.InvariantCulture, out int exp))
+                {
+                    exponent = exp;
+                }
             }
 
-            return mantissaDecimalDigits;
+            // Find decimal separator in the mantissa
+            int decimalIndex = mantissa.IndexOf(decimalSep, StringComparison.Ordinal);
+            if (decimalIndex < 0)
+                return -exponent; // No decimal point: e.g. "300" → 0, "15e2" → -2
+
+            // Count digits after the decimal separator
+            int digitsAfterDecimal = mantissa.Length - decimalIndex - decimalSep.Length;
+            return digitsAfterDecimal - exponent;
         }
 
         /// <summary>
-        /// Returns true if the given value is within the precision range of this number.
-        /// For "3.14" (Tolerance=0.005), this returns true for values in [3.135, 3.145).
+        /// Returns true if this number and the other are equal within the lower
+        /// precision of the two. The effective tolerance is the larger of the two
+        /// tolerances, so the less-precise number dominates the comparison.
         /// </summary>
-        public bool EqualsWithinPrecision(double value)
+        public bool EqualsWithinPrecision(double other)
         {
-            return Math.Abs(value - Value) < Tolerance;
+            return Math.Abs(Value - other) <= Tolerance;
         }
-
-        #region IEquatable, IComparable, operators
 
         public bool Equals(PrecisionNumber other)
         {
@@ -133,7 +130,6 @@ namespace pwiz.Common.SystemUtil
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
             return obj is PrecisionNumber other && Equals(other);
         }
 
@@ -145,48 +141,41 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
-        public int CompareTo(PrecisionNumber other)
+        public string ToString(CultureInfo cultureInfo)
         {
-            int cmp = Value.CompareTo(other.Value);
-            if (cmp != 0) return cmp;
-            return DecimalPlaces.CompareTo(other.DecimalPlaces);
-        }
+            if (DecimalPlaces >= 0)
+            {
+                return Value.ToString(@"F" + DecimalPlaces, cultureInfo);
+            }
 
-        public static bool operator ==(PrecisionNumber left, PrecisionNumber right)
-        {
-            return left.Equals(right);
-        }
+            // Negative decimal places: use scientific notation.
+            // E.g. DecimalPlaces=-2, Value=1500 → "1.5e3"
+            if (Value == 0)
+            {
+                return @"0e" + (-DecimalPlaces);
+            }
 
-        public static bool operator !=(PrecisionNumber left, PrecisionNumber right)
-        {
-            return !left.Equals(right);
-        }
+            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(Value)));
+            int mantissaDecimals = DecimalPlaces + exponent;
+            if (mantissaDecimals < 0)
+                mantissaDecimals = 0;
 
-        public static bool operator <(PrecisionNumber left, PrecisionNumber right)
-        {
-            return left.CompareTo(right) < 0;
+            double mantissa = Value / Math.Pow(10, exponent);
+            return mantissa.ToString(@"F" + mantissaDecimals, cultureInfo) + @"e" + exponent;
         }
-
-        public static bool operator >(PrecisionNumber left, PrecisionNumber right)
-        {
-            return left.CompareTo(right) > 0;
-        }
-
-        public static bool operator <=(PrecisionNumber left, PrecisionNumber right)
-        {
-            return left.CompareTo(right) <= 0;
-        }
-
-        public static bool operator >=(PrecisionNumber left, PrecisionNumber right)
-        {
-            return left.CompareTo(right) >= 0;
-        }
-
-        #endregion
 
         public override string ToString()
         {
-            return Value.ToString(CultureInfo.InvariantCulture);
+            return ToString(CultureInfo.InvariantCulture);
+        }
+
+        public int CompareTo(double value)
+        {
+            if (EqualsWithinPrecision(value))
+            {
+                return 0;
+            }
+            return Value.CompareTo(value);
         }
     }
 }

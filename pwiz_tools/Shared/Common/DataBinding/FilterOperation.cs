@@ -38,6 +38,11 @@ namespace pwiz.Common.DataBinding
         bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue);
     }
 
+    public interface IComparisonFilterOperation : IFilterOperation
+    {
+        bool ComparisonMatches(int? comparison);
+    }
+
     public static class FilterOperations
     {
         /// <summary>
@@ -318,7 +323,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        class OpEquals : FilterOperation
+        class OpEquals : FilterOperation, IComparisonFilterOperation
         {
             public OpEquals() : base(@"equals")
             {
@@ -340,17 +345,20 @@ namespace pwiz.Common.DataBinding
                 {
                     var converted = ConvertValue(dataSchema, columnType, columnValue);
                     if (converted is double dVal)
-                        return precisionNumber.EqualsWithinPrecision(dVal);
+                        return precisionNumber.EqualsWithinPrecision(new PrecisionNumber(dVal));
                 }
                 return Equals(
                     ConvertValue(dataSchema, columnType, columnValue),
                     operandValue);
             }
 
-
+            public bool ComparisonMatches(int? comparison)
+            {
+                return comparison == 0;
+            }
         }
 
-        class OpNotEquals : FilterOperation
+        class OpNotEquals : FilterOperation, IComparisonFilterOperation
         {
             public OpNotEquals() : base(@"<>")
             {
@@ -367,9 +375,14 @@ namespace pwiz.Common.DataBinding
                 {
                     var converted = ConvertValue(dataSchema, columnType, columnValue);
                     if (converted is double dVal)
-                        return !precisionNumber.EqualsWithinPrecision(dVal);
+                        return !precisionNumber.EqualsWithinPrecision(new PrecisionNumber(dVal));
                 }
                 return !Equals(ConvertValue(dataSchema, columnType, columnValue), operandValue);
+            }
+
+            public bool ComparisonMatches(int? comparison)
+            {
+                return comparison != 0;
             }
         }
 
@@ -426,9 +439,10 @@ namespace pwiz.Common.DataBinding
                 return comparisonResult > 0;
             }
 
-            protected override bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            protected override bool PrecisionComparisonMatches(PrecisionNumber value, PrecisionNumber operand)
             {
-                return value >= operand.Value + operand.Tolerance;
+                double tolerance = Math.Max(value.Tolerance, operand.Tolerance);
+                return value.Value >= operand.Value + tolerance;
             }
         }
 
@@ -449,9 +463,10 @@ namespace pwiz.Common.DataBinding
                 return comparisonResult >= 0;
             }
 
-            protected override bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            protected override bool PrecisionComparisonMatches(PrecisionNumber value, PrecisionNumber operand)
             {
-                return value >= operand.Value - operand.Tolerance;
+                double tolerance = Math.Max(value.Tolerance, operand.Tolerance);
+                return value.Value >= operand.Value - tolerance;
             }
         }
 
@@ -472,9 +487,10 @@ namespace pwiz.Common.DataBinding
                 return comparisonResult < 0;
             }
 
-            protected override bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            protected override bool PrecisionComparisonMatches(PrecisionNumber value, PrecisionNumber operand)
             {
-                return value < operand.Value - operand.Tolerance;
+                double tolerance = Math.Max(value.Tolerance, operand.Tolerance);
+                return value.Value < operand.Value - tolerance;
             }
         }
 
@@ -494,13 +510,14 @@ namespace pwiz.Common.DataBinding
                 return comparisonResult <= 0;
             }
 
-            protected override bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            protected override bool PrecisionComparisonMatches(PrecisionNumber value, PrecisionNumber operand)
             {
-                return value < operand.Value + operand.Tolerance;
+                double tolerance = Math.Max(value.Tolerance, operand.Tolerance);
+                return value.Value < operand.Value + tolerance;
             }
         }
 
-        abstract class ComparisonFilterOperation : FilterOperation
+        abstract class ComparisonFilterOperation : FilterOperation, IComparisonFilterOperation
         {
             protected ComparisonFilterOperation(string opName)
                 : base(opName)
@@ -533,15 +550,20 @@ namespace pwiz.Common.DataBinding
                 {
                     var converted = Convert.ChangeType(columnValue, GetTypeToConvertOperandTo(dataSchema, columnType));
                     if (converted is double dVal)
-                        return PrecisionComparisonMatches(dVal, precisionNumber);
+                        return PrecisionComparisonMatches(new PrecisionNumber(dVal), precisionNumber);
                 }
                 columnValue = Convert.ChangeType(columnValue, GetTypeToConvertOperandTo(dataSchema, columnType));
                 return ComparisonMatches(dataSchema.Compare(columnValue, operandValue));
             }
 
-            protected virtual bool PrecisionComparisonMatches(double value, PrecisionNumber operand)
+            protected virtual bool PrecisionComparisonMatches(PrecisionNumber value, PrecisionNumber operand)
             {
-                return ComparisonMatches(value.CompareTo(operand.Value));
+                return ComparisonMatches(value.Value.CompareTo(operand.Value));
+            }
+
+            public bool ComparisonMatches(int? comparison)
+            {
+                return comparison.HasValue && ComparisonMatches(comparison.Value);
             }
 
             protected abstract bool ComparisonMatches(int comparisonResult);

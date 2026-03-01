@@ -166,7 +166,7 @@ namespace pwiz.Common.DataBinding
         public Predicate<object> MakePredicate(DataSchema dataSchema, Type columnType)
         {
             object operandValue = GetOperandValue(dataSchema, columnType);
-            if (operandValue is double && PrecisionNumber.TryParse(InvariantOperandText, out var precisionNumber))
+            if (operandValue is double && PrecisionNumber.TryParse(InvariantOperandText, CultureInfo.InvariantCulture, out var precisionNumber))
             {
                 operandValue = precisionNumber;
             }
