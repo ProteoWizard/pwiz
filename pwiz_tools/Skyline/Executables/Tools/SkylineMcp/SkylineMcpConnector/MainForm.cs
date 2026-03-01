@@ -19,6 +19,7 @@
  */
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -38,6 +39,7 @@ namespace SkylineMcpConnector
         public MainForm(string[] args)
         {
             InitializeComponent();
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
             _versionFormat = labelVersion.Text;
             _documentFormat = labelDocument.Text;
