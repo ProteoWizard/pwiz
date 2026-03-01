@@ -483,6 +483,7 @@ namespace pwiz.Common.DataBinding
 
         public virtual IFilterHandler GetFilterHandler(Type type)
         {
+            type = GetWrappedValueType(type);
             var listElementType = ListColumnValue.GetElementType(type);
             if (listElementType != null)
             {
@@ -492,6 +493,11 @@ namespace pwiz.Common.DataBinding
             if (_filterHandlers.TryGetValue(type, out var filterHandler))
             {
                 return filterHandler;
+            }
+
+            if (type.IsEnum)
+            {
+                return new EnumFilterHandler(type);
             }
 
             if (typeof(IFormattable).IsAssignableFrom(type))

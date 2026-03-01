@@ -37,18 +37,9 @@ namespace pwiz.Common.DataBinding
             return string.Join(csvSeparator.ToString(), items.Select(item => DsvWriter.ToDsvField(csvSeparator, Convert.ToString(item))));
         }
 
-        public static IEnumerable<string> ParseDsvFields(CultureInfo cultureInfo, string line)
+        public static ListColumnValue<string> Parse(string line, char separator)
         {
-            return ParseDsvFields(line, GetCsvSeparator(cultureInfo));
-        }
-
-        public static ListColumnValue<T> Parse<T>(CultureInfo cultureInfo, string line, Func<string, T> converter)
-        {
-            return new ListColumnValue<T>(ParseDsvFields(cultureInfo, line).Select(converter));
-        }
-
-        public static IEnumerable<string> ParseDsvFields(string line, char separator)
-        {
+            var list = new List<string>();
             var sbField = new StringBuilder();
             bool inQuotes = false;
             for (var chIndex = 0; chIndex < line.Length; chIndex++)
@@ -68,7 +59,7 @@ namespace pwiz.Common.DataBinding
                 }
                 else if (ch == separator && !inQuotes)
                 {
-                    yield return Unquote(sbField.ToString());
+                    list.Add(Unquote(sbField.ToString()));
                     sbField.Clear();
                 }
                 else
@@ -76,7 +67,9 @@ namespace pwiz.Common.DataBinding
                     sbField.Append(ch);
                 }
             }
-            yield return Unquote(sbField.ToString());
+
+            list.Add(Unquote(sbField.ToString()));
+            return new ListColumnValue<string>(list);
         }
 
         private static string Unquote(string value)

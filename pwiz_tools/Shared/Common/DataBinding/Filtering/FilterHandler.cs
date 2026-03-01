@@ -143,7 +143,8 @@ namespace pwiz.Common.DataBinding.Filtering
 
         protected int? Compare(double doubleValue, PrecisionNumber precisionNumber)
         {
-            return precisionNumber.CompareTo(doubleValue);
+            // Return the negative of the result because we want the doubleValue compared to the precisionNumber
+            return -precisionNumber.CompareTo(doubleValue);
         }
     }
 
@@ -163,12 +164,24 @@ namespace pwiz.Common.DataBinding.Filtering
 
         public object ParseOperand(string text, CultureInfo cultureInfo)
         {
-            return ListColumnValue.Parse(cultureInfo, text, field => ElementHandler.ParseOperand(text, cultureInfo));
+            if (text == null)
+            {
+                return null;
+            }
+
+            var strings = ListColumnValue.Parse(text, ListColumnValue.GetCsvSeparator(cultureInfo));
+            if (strings == null)
+            {
+                return null;
+            }
+
+            return new ListColumnValue<object>(
+                strings.Items.Select(str => ElementHandler.ParseOperand(str, cultureInfo)));
         }
 
         public bool ValueEqualsOperand(object value, object operand)
         {
-            if (!(value is IListColumnValue listValue) || !(operand is IList<object> listOperand))
+            if (!(value is IListColumnValue listValue) || !(operand is IListColumnValue listOperand))
             {
                 return false;
             }
@@ -181,14 +194,14 @@ namespace pwiz.Common.DataBinding.Filtering
             if (listOperand.Count == 1)
             {
                 return listValue.Count > 0 && listValue.AsEnumerable()
-                    .All(item => ElementHandler.ValueEqualsOperand(item, listOperand[0]));
+                    .All(item => ElementHandler.ValueEqualsOperand(item, listOperand.AsEnumerable().First()));
             }
 
             if (listOperand.Count != listValue.Count)
             {
                 return false;
             }
-            return ElementsEqual(listValue.AsEnumerable(), listOperand);
+            return ElementsEqual(listValue.AsEnumerable(), listOperand.AsEnumerable().ToList());
         }
 
         public string OperandToString(object operand, CultureInfo cultureInfo)
