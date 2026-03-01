@@ -35,7 +35,7 @@ public static class SkylineTools
     {
         using var connection = SkylineConnection.Connect();
         string path = connection.Call("GetDocumentPath");
-        return path ?? "No document is open in Skyline.";
+        return path ?? "(unsaved)";
     }
 
     [McpServerTool(Name = "skyline_get_version"),
@@ -193,6 +193,33 @@ public static class SkylineTools
         return string.IsNullOrEmpty(result)
             ? "No documentation found for topic: " + topic
             : result;
+    }
+
+    [McpServerTool(Name = "skyline_insert_small_molecule_transition_list"),
+     Description("Insert a small molecule transition list into the Skyline document. The input is CSV text with column headers in the first row. Skyline determines column meaning from headers. Common headers: MoleculeGroup, PrecursorName, ProductName, PrecursorFormula, ProductFormula, PrecursorAdduct, ProductAdduct, PrecursorMz, ProductMz, PrecursorCharge, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note. This is the same format as Edit > Insert > Transition List in the Skyline UI. If Skyline cannot interpret the headers, it returns an error - adjust header names and retry.")]
+    public static string InsertSmallMoleculeTransitionList(
+        [Description("CSV text with column headers in the first row and data rows. Common headers: MoleculeGroup, PrecursorName, PrecursorFormula, PrecursorAdduct, PrecursorMz, PrecursorCharge, ProductFormula, ProductAdduct, ProductMz, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note.")] string textCSV)
+    {
+        using var connection = SkylineConnection.Connect();
+        return connection.CallSkylineInsertSmallMoleculeTransitionList(textCSV);
+    }
+
+    [McpServerTool(Name = "skyline_import_fasta"),
+     Description("Import protein sequences in FASTA format into the Skyline document. Skyline will digest proteins using current enzyme settings and add peptides and transitions based on current transition settings. Each protein starts with a '>' header line followed by sequence lines.")]
+    public static string ImportFasta(
+        [Description("Protein sequences in standard FASTA format. Each protein starts with a '>' header line (e.g., '>sp|P01308|INS_HUMAN Insulin') followed by one or more sequence lines.")] string textFasta)
+    {
+        using var connection = SkylineConnection.Connect();
+        return connection.CallSkylineImportFasta(textFasta);
+    }
+
+    [McpServerTool(Name = "skyline_import_properties"),
+     Description("Import properties (annotations) into the Skyline document. The input is CSV text where the first column contains ElementLocator paths identifying targets or replicates, and remaining columns are annotation names with values. Export a report containing locators first to understand the document structure. The locator format uses paths like /MoleculeGroup[name='Lipids']/Molecule[name='CE 18:1'].")]
+    public static string ImportProperties(
+        [Description("CSV text where the first column is ElementLocator (paths identifying document elements) and remaining columns are annotation names with values.")] string csvText)
+    {
+        using var connection = SkylineConnection.Connect();
+        return connection.CallSkylineImportProperties(csvText);
     }
 
     private static string FormatReportResult(string metadataJson)

@@ -20,6 +20,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -72,7 +73,7 @@ namespace SkylineMcpConnector
 
             labelStatus.Text = "Connected to Skyline";
             labelVersion.Text = string.Format(_versionFormat, connectionInfo.SkylineVersion);
-            labelDocument.Text = string.Format(_documentFormat, connectionInfo.DocumentPath ?? "(none)");
+            labelDocument.Text = string.Format(_documentFormat, connectionInfo.DocumentPath ?? "(unsaved)");
 
             DeployMcpServer();
         }
@@ -81,12 +82,62 @@ namespace SkylineMcpConnector
         {
             try
             {
-                McpServerDeployer.Deploy();
+                if (!McpServerDeployer.Deploy())
+                    return; // Already up to date
             }
-            catch (Exception ex)
+            catch (IOException)
             {
-                Debug.WriteLine($@"MCP server deployment failed: {ex.Message}");
+                // Files are locked by a running MCP server process — stop it and retry
+                StopMcpServerProcesses();
+                try
+                {
+                    McpServerDeployer.Deploy();
+                }
+                catch (Exception ex2)
+                {
+                    MessageBox.Show(this,
+                        "Could not update the MCP server. Close Claude Desktop and Claude Code, then reconnect.\n\n" +
+                        ex2.Message,
+                        "MCP Server Update Failed",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
             }
+
+            // Notify the user if Claude apps need restarting to pick up the update
+            bool desktopRunning = ChatAppRegistry.IsClaudeDesktopRunning();
+            if (desktopRunning)
+            {
+                labelStatus.Text = "Connected. MCP server updated — restart Claude Desktop to activate.";
+            }
+        }
+
+        /// <summary>
+        /// Kill any running SkylineMcpServer processes so that the server DLL
+        /// can be overwritten during deployment.
+        /// </summary>
+        private static void StopMcpServerProcesses()
+        {
+            foreach (var process in Process.GetProcessesByName("SkylineMcpServer"))
+            {
+                try
+                {
+                    if (!process.HasExited)
+                        process.Kill();
+                    process.WaitForExit(3000);
+                }
+                catch
+                {
+                    // Best effort
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
+            // Brief wait for file handles to release
+            Thread.Sleep(500);
         }
 
         // -- Button handlers --

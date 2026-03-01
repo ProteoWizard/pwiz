@@ -94,12 +94,16 @@ namespace SkylineMcpConnector
                     "MCP server executable not found: " + sourceExe);
             }
 
-            // Check if deployment is needed by comparing the exe timestamps
+            // Check if deployment is needed by comparing the exe timestamp and size.
+            // Size check is needed because Skyline tool re-install extracts from ZIP,
+            // which can preserve original timestamps even when content has changed.
             if (File.Exists(DeployedExePath))
             {
                 var sourceTime = File.GetLastWriteTimeUtc(sourceExe);
                 var deployedTime = File.GetLastWriteTimeUtc(DeployedExePath);
-                if (sourceTime <= deployedTime)
+                var sourceSize = new FileInfo(sourceExe).Length;
+                var deployedSize = new FileInfo(DeployedExePath).Length;
+                if (sourceTime <= deployedTime && sourceSize == deployedSize)
                     return false; // Already up to date
             }
 

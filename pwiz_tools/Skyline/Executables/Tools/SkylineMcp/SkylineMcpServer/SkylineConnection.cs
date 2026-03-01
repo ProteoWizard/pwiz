@@ -122,6 +122,21 @@ public class SkylineConnection : IDisposable
         return null;
     }
 
+    public string CallSkylineInsertSmallMoleculeTransitionList(string textCSV)
+    {
+        return Call("InsertSmallMoleculeTransitionList", textCSV);
+    }
+
+    public string CallSkylineImportFasta(string textFasta)
+    {
+        return Call("ImportFasta", textFasta);
+    }
+
+    public string CallSkylineImportProperties(string csvText)
+    {
+        return Call("ImportProperties", csvText);
+    }
+
     public void Dispose()
     {
         _pipe.Dispose();

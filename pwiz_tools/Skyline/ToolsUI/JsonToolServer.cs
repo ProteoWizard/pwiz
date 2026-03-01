@@ -31,6 +31,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
@@ -65,7 +66,10 @@ namespace pwiz.Skyline.ToolsUI
             @"GetSettingsListNames",
             @"GetSettingsListItem",
             @"GetReportDocTopics",
-            @"GetReportDocTopic"
+            @"GetReportDocTopic",
+            @"InsertSmallMoleculeTransitionList",
+            @"ImportFasta",
+            @"ImportProperties"
         };
 
         private readonly ToolService _toolService;
@@ -270,6 +274,28 @@ namespace pwiz.Skyline.ToolsUI
                     RequireArgs(method, args, 1);
                     return GetReportDocTopic(args[0]);
 
+                case "InsertSmallMoleculeTransitionList":
+                    RequireArgs(method, args, 1);
+                    return InvokeOnUiThread(() =>
+                        Program.MainWindow.InsertSmallMoleculeTransitionList(args[0],
+                            @"Insert small molecule transition list"));
+
+                case "ImportFasta":
+                    RequireArgs(method, args, 1);
+                    return InvokeOnUiThread(() =>
+                        Program.MainWindow.ImportFasta(new StringReader(args[0]),
+                            Helpers.CountLinesInString(args[0]), false,
+                            @"Import FASTA from MCP",
+                            new SkylineWindow.ImportFastaInfo(false, args[0])));
+
+                case "ImportProperties":
+                    RequireArgs(method, args, 1);
+                    return InvokeOnUiThread(() =>
+                        Program.MainWindow.ImportAnnotations(new StringReader(args[0]),
+                            new MessageInfo(MessageType.imported_annotations,
+                                Program.MainWindow.Document.DocumentType,
+                                @"Import properties from MCP")));
+
                 default:
                     throw new ArgumentException(@"Unknown method: " + method);
             }
@@ -455,6 +481,23 @@ namespace pwiz.Skyline.ToolsUI
                 memoryStream.Write(buffer, 0, count);
             } while (!stream.IsMessageComplete);
             return memoryStream.ToArray();
+        }
+
+        private string InvokeOnUiThread(Action action)
+        {
+            string error = null;
+            Program.MainWindow.Invoke(new Action(() =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                }
+            }));
+            return error ?? @"OK";
         }
 
         private string GetReportDocTopics()
