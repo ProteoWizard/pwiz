@@ -54,7 +54,7 @@ namespace pwiz.Common.DataBinding
             }
 
             var handler = dataSchema.GetFilterHandler(columnType);
-            return new FilterPredicate(filterOperation, handler.OperandToString(handler.ParseOperand(operandText, CultureInfo.CurrentCulture), CultureInfo.InvariantCulture));
+            return new FilterPredicate(filterOperation, Convert.ToString(handler.ParseOperand(operandText, CultureInfo.CurrentCulture), CultureInfo.InvariantCulture));
         }
 
         public static FilterPredicate SafeParse(DataSchema dataSchema, Type columnType,

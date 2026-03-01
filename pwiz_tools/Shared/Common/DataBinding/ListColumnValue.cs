@@ -42,6 +42,11 @@ namespace pwiz.Common.DataBinding
             return ParseDsvFields(line, GetCsvSeparator(cultureInfo));
         }
 
+        public static ListColumnValue<T> Parse<T>(CultureInfo cultureInfo, string line, Func<string, T> converter)
+        {
+            return new ListColumnValue<T>(ParseDsvFields(cultureInfo, line).Select(converter));
+        }
+
         public static IEnumerable<string> ParseDsvFields(string line, char separator)
         {
             var sbField = new StringBuilder();
