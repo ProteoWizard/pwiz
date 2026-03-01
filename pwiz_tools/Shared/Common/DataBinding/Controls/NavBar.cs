@@ -302,10 +302,11 @@ namespace pwiz.Common.DataBinding.Controls
 
         void OnEditView(object sender, EventArgs eventArgs)
         {
+            EditLock = true;
             CustomizeView();
         }
 
-        public void CustomizeView()
+        public void CustomizeView(bool applyChanges = false)
         {
             var viewGroup = BindingListSource.ViewInfo.ViewGroup;
             var viewSpec = BindingListSource.ViewSpec;
@@ -314,12 +315,16 @@ namespace pwiz.Common.DataBinding.Controls
                 viewSpec = viewSpec.SetName(string.Empty);
                 viewGroup = ViewContext.DefaultViewGroup;
             }
-            var newView = ViewContext.CustomizeView(this, viewSpec, viewGroup);
+            var newView = ViewContext.CustomizeView(this, viewSpec, viewGroup, true);
             if (newView == null)
             {
                 return;
             }
             BindingListSource.SetViewContext(ViewContext, ViewContext.GetViewInfo(viewGroup, newView));
+            if (applyChanges)
+            {
+                CustomizeView();
+            }
         }
 
         void OnCopyView(object sender, EventArgs eventArgs)
@@ -329,7 +334,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 viewGroup = ViewContext.DefaultViewGroup;
             }
-            var newView = ViewContext.CustomizeView(this, BindingListSource.ViewSpec.SetName(null), viewGroup);
+            var newView = ViewContext.CustomizeView(this, BindingListSource.ViewSpec.SetName(null), viewGroup, true);
             if (newView == null)
             {
                 return;
@@ -342,9 +347,11 @@ namespace pwiz.Common.DataBinding.Controls
             ManageViews();
         }
 
+        public bool EditLock { get; set; }
         public void ManageViews()
         {
-            ViewContext.ManageViews(this);
+            if (!EditLock)
+                ViewContext.ManageViews(this);
         }
 
         void OnExport(object sender, EventArgs eventArgs)
@@ -802,6 +809,11 @@ namespace pwiz.Common.DataBinding.Controls
                     BindingListSource.ClusteringSpec = clusteringEditor.GetClusteringSpec();
                 }
             }
+        }
+
+        public void CustomizeView()
+        {
+            CustomizeView(false);
         }
     }
 }

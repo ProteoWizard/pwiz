@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            const string reportName = "My Custom Report";
+            const string reportName = @"My Custom Report";
             Assert.IsFalse(Settings.Default.AlphabeticalReportEditor);
             RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
