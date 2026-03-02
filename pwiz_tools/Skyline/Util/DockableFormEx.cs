@@ -22,7 +22,6 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Util
 {
@@ -56,10 +55,6 @@ namespace pwiz.Skyline.Util
         public Helpers.ModeUIExtender ModeUIExtender; // Allows UI mode management in Designer
         private Container _components; // For IExtender use
 
-        // Title translation support for UI mode changes
-        private string _baseTitleText; // As initially loaded from resx
-        private SrmDocument.DOCUMENT_TYPE _lastTitleModeUI;
-
         public DockableFormEx()
         {
             InitializeComponent(); // Required for Windows Form Designer support
@@ -87,35 +82,6 @@ namespace pwiz.Skyline.Util
         public string ModeUIAwareStringFormat(string format, params object[] args)
         {
             return _modeUIHelper.Format(format, args);
-        }
-
-        /// <summary>
-        /// Sets the window title with automatic translation for UI mode.
-        /// Call this instead of setting Text directly when the title contains
-        /// mode-dependent terms like "Peptide" that should become "Molecule" in small molecule mode.
-        /// </summary>
-        protected void SetTitleWithModeUITranslation(string title)
-        {
-            _baseTitleText = title;
-            _lastTitleModeUI = Program.ModeUI;
-            Text = Helpers.PeptideToMoleculeTextMapper.Translate(title, _lastTitleModeUI);
-        }
-
-        /// <summary>
-        /// Updates the window title when the UI mode changes between proteomic/small molecule/mixed.
-        /// Call this from your UpdateUI method if you used SetTitleWithModeUITranslation.
-        /// </summary>
-        protected void UpdateTitleForModeUI()
-        {
-            if (_baseTitleText == null)
-                return;
-
-            var currentModeUI = Program.ModeUI;
-            if (currentModeUI != _lastTitleModeUI)
-            {
-                _lastTitleModeUI = currentModeUI;
-                Text = Helpers.PeptideToMoleculeTextMapper.Translate(_baseTitleText, currentModeUI);
-            }
         }
 
         protected override void OnParentChanged(EventArgs e)

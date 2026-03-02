@@ -21,6 +21,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -41,6 +42,12 @@ namespace pwiz.Skyline.Util
         public class PeptideToMoleculeTextMapper
         {
             public static readonly PeptideToMoleculeTextMapper SMALL_MOLECULE_MAPPER = new PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.small_molecules, null);
+
+            // Stores original (pre-translation) texts for persistent menu items translated in place.
+            // Allows restoring to proteomic text before each translation pass so that switching
+            // back from Mixed/SmallMolecule to Proteomic mode correctly reverts item texts.
+            private static readonly ConditionalWeakTable<ToolStripItem, OriginalMenuItemText> _originalMenuTexts =
+                new ConditionalWeakTable<ToolStripItem, OriginalMenuItemText>();
 
             private readonly List<KeyValuePair<string, string>> TRANSLATION_TABLE;
             private List<ToolTip> ToolTips; // Used when working on an entire form
@@ -262,8 +269,22 @@ namespace pwiz.Skyline.Util
                         }
                         item.Visible = isActive;
                     }
-                    mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
+                    // Restore each active item to its original text before translating.
+                    // Without this, persistent menu items become stuck in molecule-mode text
+                    // and cannot revert when switching back to Proteomic mode.
+                    foreach (var item in activeItems)
+                    {
+                        OriginalMenuItemText original;
+                        if (!_originalMenuTexts.TryGetValue(item, out original))
+                            _originalMenuTexts.Add(item, new OriginalMenuItemText { Text = item.Text, ToolTipText = item.ToolTipText });
+                        else
+                        {
+                            item.Text = original.Text;
+                            item.ToolTipText = original.ToolTipText;
+                        }
+                    }
 
+                    mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
 
                     if (recurse)
                     {
@@ -462,6 +483,12 @@ namespace pwiz.Skyline.Util
                                 .Select(item => item.Key).ToHashSet()
                             : null;
                 return inappropriateComponents;
+            }
+
+            private class OriginalMenuItemText
+            {
+                public string Text;
+                public string ToolTipText;
             }
 
             private void FindInUseKeyboardAccelerators(IEnumerable controls)

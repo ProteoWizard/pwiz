@@ -167,7 +167,6 @@ namespace pwiz.Skyline.Controls.Graphs
                              new DefaultStateProvider();
 
             Type = type;
-            SetTitleWithModeUITranslation(Controller.Text + @" - " + Type.CustomToString());
 
             UpdateUI();
         }
@@ -307,7 +306,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             UpdateGraph(selectionChanged);
             UpdateToolbar();
-            UpdateTitleForModeUI();
+            Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(), _documentContainer.Document.DocumentType);
         }
 
         public void UpdateUIWithoutToolbar(bool selectionChanged = true)
