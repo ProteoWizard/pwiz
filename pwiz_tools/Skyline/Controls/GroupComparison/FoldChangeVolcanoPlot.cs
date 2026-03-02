@@ -947,9 +947,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return null;
             }
 
-            needsUpdate =
-                filter.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)) !=
-                operand.ToString(CultureInfo.CurrentCulture);
+            needsUpdate = filter.Predicate.InvariantOperandText != operand.ToString(CultureInfo.InvariantCulture);
 
             return filter;
         }

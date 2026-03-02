@@ -33,7 +33,7 @@ namespace pwiz.Common.SystemUtil
         /// Maximum decimal places used when wrapping a raw double that has no
         /// known textual precision. This gives an effectively zero tolerance.
         /// </summary>
-        private const int MAX_DECIMAL_PLACES = 15;
+        private const int MAX_DECIMAL_PLACES = 17;
 
         public PrecisionNumber(double value, int decimalPlaces)
         {
@@ -163,6 +163,11 @@ namespace pwiz.Common.SystemUtil
 
         public string ToString(IFormatProvider formatProvider, bool scientificPrecisionOnly)
         {
+            if (scientificPrecisionOnly && DecimalPlaces == MAX_DECIMAL_PLACES)
+            {
+                return Value.ToString(@"G" + DecimalPlaces, formatProvider);
+            }
+
             if (DecimalPlaces >= 0 && !scientificPrecisionOnly)
             {
                 return Value.ToString(@"F" + DecimalPlaces, formatProvider);
