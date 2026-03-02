@@ -176,6 +176,27 @@ namespace pwiz.Common.DataBinding
             return DataSchema.GetFilterHandler(this);
         }
 
+        /// <summary>
+        /// Returns true if values in this column can satisfy "is blank".
+        /// </summary>
+        public bool CanBeBlank()
+        {
+            if (!PropertyType.IsValueType)
+            {
+                return true;
+            }
+            if (!PropertyPath.IsRoot && !PropertyPath.Parent.IsRoot)
+            {
+                return true;
+            }
+            if (PropertyType.IsGenericType && PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                return true;
+            }
+
+            return GetFilterHandler().CanBeBlank;
+        }
+
         #region Equality Members
         protected bool Equals(ColumnDescriptor other)
         {

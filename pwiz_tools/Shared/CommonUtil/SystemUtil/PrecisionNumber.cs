@@ -18,6 +18,7 @@
  */
 using System;
 using System.Globalization;
+using pwiz.Common.CommonResources;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -66,7 +67,7 @@ namespace pwiz.Common.SystemUtil
         {
             if (TryParse(text, cultureInfo, scientificPrecisionOnly, out var result))
                 return result;
-            throw new FormatException(string.Format(@"Unable to parse '{0}' as a PrecisionNumber", text));
+            throw new FormatException(string.Format(MessageResources.PrecisionNumber_Parse_Unable_to_parse___0___as_a_number, text));
         }
 
         public static PrecisionNumber Parse(string text, CultureInfo cultureInfo)

@@ -32,27 +32,28 @@ namespace pwiz.Common.DataBinding.Controls
         {
             InitializeComponent();
         }
-        public DataSchema DataSchema { get; private set; }
+        public DataSchema DataSchema
+        {
+            get { return PropertyDescriptor.DataSchema; }
+        }
         public IViewContext ViewContext { get; set; }
         public DataPropertyDescriptor PropertyDescriptor { get; private set; }
         public RowFilter RowFilter { get; private set; }
 
-        public void SetPropertyDescriptor(DataSchema dataSchema, DataPropertyDescriptor propertyDescriptor)
+        public void SetPropertyDescriptor(DataPropertyDescriptor propertyDescriptor)
         {
-            DataSchema = dataSchema;
             PropertyDescriptor = propertyDescriptor;
-            PopulateCombo(comboOperation1, FilterOperations.OP_HAS_ANY_VALUE.DisplayName, dataSchema, propertyDescriptor.PropertyType);
-            PopulateCombo(comboOperation2, Resources.QuickFilterForm_SetPropertyDescriptor_No_other_filter, dataSchema, propertyDescriptor.PropertyType);
+            PopulateCombo(comboOperation1, FilterOperations.OP_HAS_ANY_VALUE.DisplayName, propertyDescriptor);
+            PopulateCombo(comboOperation2, Resources.QuickFilterForm_SetPropertyDescriptor_No_other_filter, propertyDescriptor);
             Text = string.Format(Resources.QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____, propertyDescriptor.DisplayName);
         }
 
-        private void PopulateCombo(ComboBox comboBox, String hasAnyValueCaption, DataSchema dataSchema,
-            Type propertyType)
+        private void PopulateCombo(ComboBox comboBox, String hasAnyValueCaption, DataPropertyDescriptor propertyDescriptor)
         {
             comboBox.Items.Clear();
             foreach (var filterOperation in FilterOperations.ListOperations())
             {
-                if (!filterOperation.IsValidFor(dataSchema, propertyType))
+                if (!propertyDescriptor.CanBeFiltered(filterOperation))
                 {
                     continue;
                 }
@@ -69,15 +70,15 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        public void SetFilter(DataSchema dataSchema, DataPropertyDescriptor propertyDescriptor, RowFilter rowFilter)
+        public void SetFilter(DataPropertyDescriptor propertyDescriptor, RowFilter rowFilter)
         {
             RowFilter = rowFilter;
-            SetPropertyDescriptor(dataSchema, propertyDescriptor);
+            SetPropertyDescriptor(propertyDescriptor);
             var columnFilters = rowFilter.GetColumnFilters(propertyDescriptor).ToArray();
             if (columnFilters.Length >= 1)
             {
                 SetFilterOperation(comboOperation1, tbxOperand1, columnFilters[0]);
-                tbxOperand1.Text = columnFilters[0].Predicate.GetOperandDisplayText(dataSchema, propertyDescriptor.PropertyType);
+                tbxOperand1.Text = columnFilters[0].Predicate.GetOperandDisplayText(propertyDescriptor.DataSchema, propertyDescriptor.PropertyType);
             }
             if (columnFilters.Length >= 2)
             {

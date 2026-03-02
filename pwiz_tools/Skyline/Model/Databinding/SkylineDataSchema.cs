@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -34,6 +35,7 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -641,6 +643,15 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return Settings.Default.MaxGridRowCount;
             }
+        }
+
+        public override IFilterHandler GetFilterHandler(Type type)
+        {
+            if (type == typeof(SpectrumPrecursors))
+            {
+                return SpectrumPrecursors.FILTER_HANDLER;
+            }
+            return base.GetFilterHandler(type);
         }
     }
 }

@@ -193,4 +193,7 @@
   <data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_" xml:space="preserve">
     <value>The file '{0}' is locked by: {1}</value>
   </data>
+	<data name="PrecisionNumber_Parse_Unable_to_parse___0___as_a_number" xml:space="preserve">
+		<value>Unable to parse '{0}' as a number</value>
+	</data>
 </root>

@@ -23,7 +23,9 @@ using System.Globalization;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util.Extensions;
@@ -34,7 +36,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
     [Filterable]
     public class SpectrumPrecursors : IFormattable
     {
+        public static readonly ListFilterHandler FILTER_HANDLER = new FilterHandler();
         private ImmutableList<SpectrumPrecursor> _precursors;
+
         public SpectrumPrecursors(IEnumerable<SpectrumPrecursor> precursors)
         {
             _precursors = SortedByMz(precursors);
@@ -98,6 +102,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 throw new FormatException(string.Format(@"Unable to convert '{0}' to a list of precursors", s), formatException);
             }
+
+
         }
 
         public class Converter : TypeConverter
@@ -131,6 +137,25 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
             // list was already sorted
             return list;
+        }
+
+        private class FilterHandler : ListFilterHandler
+        {
+            public FilterHandler() : base(NumericFilterHandler.INSTANCE)
+            {
+            }
+
+            protected override IListColumnValue ToListValue(object columnValue)
+            {
+                var spectrumPrecursors = columnValue as SpectrumPrecursors;
+                if (spectrumPrecursors == null)
+                {
+                    return null;
+                }
+
+                return new ListColumnValue<double>(
+                    spectrumPrecursors._precursors.Select(precursor => precursor.PrecursorMz.RawValue));
+            }
         }
     }
 }

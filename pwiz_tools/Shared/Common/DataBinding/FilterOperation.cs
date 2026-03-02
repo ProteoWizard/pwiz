@@ -32,7 +32,6 @@ namespace pwiz.Common.DataBinding
         string DisplayName { get; }
         string ShortDisplayName { get; }
         bool IsValidFor(ColumnDescriptor columnDescriptor);
-        bool IsValidFor(DataSchema dataSchema, Type columnType);
         bool IsValidFor(IFilterHandler filterHandler);
         bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue);
         bool HasOperand();
@@ -110,14 +109,9 @@ namespace pwiz.Common.DataBinding
                 get { return DisplayName; }
             }
 
-            public bool IsValidFor(ColumnDescriptor columnDescriptor)
+            public virtual bool IsValidFor(ColumnDescriptor columnDescriptor)
             {
-                return IsValidFor(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
-            }
-
-            public bool IsValidFor(DataSchema dataSchema, Type columnType)
-            {
-                return IsValidFor(dataSchema.GetFilterHandler(columnType));
+                return IsValidFor(columnDescriptor.DataSchema.GetFilterHandler(columnDescriptor.PropertyType));
             }
 
             public abstract bool IsValidFor(IFilterHandler filterHandler);
@@ -305,6 +299,10 @@ namespace pwiz.Common.DataBinding
                 return filterHandler.IsBlank(columnValue);
             }
 
+            public override bool IsValidFor(ColumnDescriptor columnDescriptor)
+            {
+                return columnDescriptor.CanBeBlank();
+            }
         }
 
         class OpIsNotBlank : UnaryFilterOperation
@@ -322,6 +320,11 @@ namespace pwiz.Common.DataBinding
             protected override bool Matches(IFilterHandler filterHandler, object columnValue)
             {
                 return !filterHandler.IsBlank(columnValue);
+            }
+
+            public override bool IsValidFor(ColumnDescriptor columnDescriptor)
+            {
+                return columnDescriptor.CanBeBlank();
             }
         }
 
@@ -444,7 +447,7 @@ namespace pwiz.Common.DataBinding
             {
                 return true;
             }
-
+            
             public override bool HasOperand()
             {
                 return false;
@@ -453,7 +456,6 @@ namespace pwiz.Common.DataBinding
             {
                 return false;
             }
-
         }
 
         class OpHasAnyValue : UnaryFilterOperation
