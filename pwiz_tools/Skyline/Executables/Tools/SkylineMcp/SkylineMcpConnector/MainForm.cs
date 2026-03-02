@@ -23,7 +23,9 @@ using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using SkylineTool;
 using Timer = System.Windows.Forms.Timer;
+using Version = SkylineTool.Version;
 
 namespace SkylineMcpConnector
 {
@@ -51,6 +53,14 @@ namespace SkylineMcpConnector
             _setupButtonExpandText = buttonSetup.Text;
             _groupHeight = groupBoxSetup.Height;
 
+            ShowHideSetupPane();
+
+            // Check whether this version of Skyline supports the MCP connector.
+            // The $(SkylineConnection) arg is the legacy ToolService pipe name,
+            // available in all versions of Skyline that support external tools.
+            if (!CheckSkylineVersion(args))
+                return;
+
             // The $(SkylineConnection) arg triggers StartToolService() in Skyline,
             // which creates the JsonToolServer and writes connection.json.
             // We just need to read it and display status.
@@ -62,8 +72,52 @@ namespace SkylineMcpConnector
             {
                 labelStatus.Text = "Error: " + ex.Message;
             }
+        }
 
-            ShowHideSetupPane();
+        /// <summary>
+        /// Use the legacy ToolService pipe to check the Skyline version.
+        /// MCP support (JsonToolServer) was introduced in Skyline 26.1.
+        /// Returns true if the version is supported or could not be determined.
+        /// Returns false if the version is definitely too old.
+        /// </summary>
+        private bool CheckSkylineVersion(string[] args)
+        {
+            if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
+                return true; // No connection info — let existing flow handle it
+
+            try
+            {
+                var client = new RemoteClient(args[0]);
+                var version = (Version)client.RemoteCallName("GetVersion", []);
+                if (IsSupportedVersion(version))
+                    return true;
+
+                labelStatus.Text = string.Format("Skyline {0}.{1}.{2}.{3} does not support AI connections.",
+                    version.Major, version.Minor, version.Build, version.Revision);
+                labelVersion.Text = "This tool requires Skyline 26.1.1.061 or later.";
+                labelDocument.Visible = false;
+                buttonSetup.Enabled = false;
+
+                // Still monitor the Skyline process so the form closes when Skyline exits
+                StartSkylineMonitor((int)client.RemoteCallName("GetProcessId", new object[0]));
+                return false;
+            }
+            catch
+            {
+                // Connection failed — let existing ConnectToSkyline() handle it
+                return true;
+            }
+        }
+
+        private static bool IsSupportedVersion(Version version)
+        {
+            if (version.Major < 26) // 25.x or earlier
+                return false;
+            if (version.Major == 26 && version.Minor < 1) // 26.0.9
+                return false;
+            if (version.Major == 26 && version.Minor == 1 && version.Build < 1) // 26.1.0
+                return false;
+            return version.Major != 26 || version.Minor != 1 || version.Build != 1 || version.Revision >= 61; // 26.1.1.xxx < 61
         }
 
         private void ConnectToSkyline()
@@ -101,7 +155,7 @@ namespace SkylineMcpConnector
                 catch (Exception ex2)
                 {
                     MessageBox.Show(this,
-                        "Could not update the MCP server. Close Claude Desktop and Claude Code, then reconnect.\n\n" +
+                        "Could not update the MCP server. Close all AI apps using the MCP server, then reconnect.\n\n" +
                         ex2.Message,
                         "MCP Server Update Failed",
                         MessageBoxButtons.OK,
@@ -111,7 +165,7 @@ namespace SkylineMcpConnector
 
                 MessageBox.Show(this,
                     "The MCP server was updated and a previous instance was stopped.\n\n" +
-                    "Please restart Claude Code and/or Claude Desktop to reconnect.",
+                    "Please restart your AI apps to reconnect.",
                     "MCP Server Updated",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -241,6 +295,78 @@ namespace SkylineMcpConnector
             }
         }
 
+        private void checkGeminiCli_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_suppressCheckEvents)
+                return;
+            try
+            {
+                if (checkGeminiCli.Checked)
+                {
+                    ChatAppRegistry.AddToGeminiCli();
+                    labelSetupStatus.Text = "Gemini CLI: Registered.";
+                }
+                else
+                {
+                    ChatAppRegistry.RemoveFromGeminiCli();
+                    labelSetupStatus.Text = "Gemini CLI: Removed.";
+                }
+            }
+            catch (Exception ex)
+            {
+                labelSetupStatus.Text = "Gemini CLI: " + ex.Message;
+                RevertCheckbox(checkGeminiCli);
+            }
+        }
+
+        private void checkVSCode_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_suppressCheckEvents)
+                return;
+            try
+            {
+                if (checkVSCode.Checked)
+                {
+                    ChatAppRegistry.AddToVSCode();
+                    labelSetupStatus.Text = "VS Code: Registered. Restart VS Code to activate.";
+                }
+                else
+                {
+                    ChatAppRegistry.RemoveFromVSCode();
+                    labelSetupStatus.Text = "VS Code: Removed. Restart VS Code to apply.";
+                }
+            }
+            catch (Exception ex)
+            {
+                labelSetupStatus.Text = "VS Code: " + ex.Message;
+                RevertCheckbox(checkVSCode);
+            }
+        }
+
+        private void checkCursor_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_suppressCheckEvents)
+                return;
+            try
+            {
+                if (checkCursor.Checked)
+                {
+                    ChatAppRegistry.AddToCursor();
+                    labelSetupStatus.Text = "Cursor: Registered. Restart Cursor to activate.";
+                }
+                else
+                {
+                    ChatAppRegistry.RemoveFromCursor();
+                    labelSetupStatus.Text = "Cursor: Removed. Restart Cursor to apply.";
+                }
+            }
+            catch (Exception ex)
+            {
+                labelSetupStatus.Text = "Cursor: " + ex.Message;
+                RevertCheckbox(checkCursor);
+            }
+        }
+
         // -- Expand/collapse --
 
         private void ToggleSetupPanel()
@@ -289,6 +415,30 @@ namespace SkylineMcpConnector
                     checkClaudeCode.Checked = ChatAppRegistry.IsRegisteredInClaudeCode();
                 else
                     checkClaudeCode.Text = "Claude Code (not installed)";
+
+                // Gemini CLI
+                bool geminiInstalled = ChatAppRegistry.IsGeminiCliInstalled();
+                checkGeminiCli.Enabled = geminiInstalled;
+                if (geminiInstalled)
+                    checkGeminiCli.Checked = ChatAppRegistry.IsRegisteredInGeminiCli();
+                else
+                    checkGeminiCli.Text = "Gemini CLI (not installed)";
+
+                // VS Code (Copilot)
+                bool vscodeInstalled = ChatAppRegistry.IsVSCodeInstalled();
+                checkVSCode.Enabled = vscodeInstalled;
+                if (vscodeInstalled)
+                    checkVSCode.Checked = ChatAppRegistry.IsRegisteredInVSCode();
+                else
+                    checkVSCode.Text = "VS Code (Copilot) (not installed)";
+
+                // Cursor
+                bool cursorInstalled = ChatAppRegistry.IsCursorInstalled();
+                checkCursor.Enabled = cursorInstalled;
+                if (cursorInstalled)
+                    checkCursor.Checked = ChatAppRegistry.IsRegisteredInCursor();
+                else
+                    checkCursor.Text = "Cursor (not installed)";
             }
             finally
             {

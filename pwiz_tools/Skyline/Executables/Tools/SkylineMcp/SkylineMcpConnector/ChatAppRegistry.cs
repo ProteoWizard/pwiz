@@ -31,11 +31,15 @@ namespace SkylineMcpConnector
     /// MCP server in each app's configuration.
     /// - Claude Desktop: direct JSON edit of claude_desktop_config.json
     /// - Claude Code: delegates to the `claude` CLI for user-scope registration
+    /// - Gemini CLI: direct JSON edit of ~/.gemini/settings.json
+    /// - VS Code (Copilot): direct JSON edit of %APPDATA%/Code/User/mcp.json
+    /// - Cursor: direct JSON edit of ~/.cursor/mcp.json
     /// </summary>
     public static class ChatAppRegistry
     {
         private const string MCP_SERVER_NAME = "skyline";
         private const string MCP_SERVERS_KEY = "mcpServers";
+        private const string SERVERS_KEY = "servers"; // VS Code uses a different key
         private const string CLAUDE_PROCESS_NAME = "claude";
         private const string WINDOWS_APPS_PATH_MARKER = @"\WindowsApps\";
 
@@ -63,26 +67,17 @@ namespace SkylineMcpConnector
 
         public static bool IsRegisteredInClaudeDesktop()
         {
-            return HasJsonEntry(ClaudeDesktopConfigPath,
-                root => root[MCP_SERVERS_KEY]?[MCP_SERVER_NAME]);
+            return IsRegisteredInJsonConfig(ClaudeDesktopConfigPath, MCP_SERVERS_KEY);
         }
 
         public static void AddToClaudeDesktop()
         {
-            EditJsonFile(ClaudeDesktopConfigPath, root =>
-            {
-                var servers = EnsureObject(root, MCP_SERVERS_KEY);
-                servers[MCP_SERVER_NAME] = BuildDesktopServerEntry();
-            });
+            AddToJsonConfig(ClaudeDesktopConfigPath, MCP_SERVERS_KEY, BuildServerEntry());
         }
 
         public static void RemoveFromClaudeDesktop()
         {
-            EditJsonFile(ClaudeDesktopConfigPath, root =>
-            {
-                var servers = root[MCP_SERVERS_KEY]?.AsObject();
-                servers?.Remove(MCP_SERVER_NAME);
-            });
+            RemoveFromJsonConfig(ClaudeDesktopConfigPath, MCP_SERVERS_KEY);
         }
 
         /// <summary>
@@ -141,8 +136,7 @@ namespace SkylineMcpConnector
         public static bool IsRegisteredInClaudeCode()
         {
             // User-scope MCPs are at the top-level mcpServers key in ~/.claude.json
-            return HasJsonEntry(ClaudeCodeConfigPath,
-                root => root[MCP_SERVERS_KEY]?[MCP_SERVER_NAME]);
+            return IsRegisteredInJsonConfig(ClaudeCodeConfigPath, MCP_SERVERS_KEY);
         }
 
         /// <summary>
@@ -159,9 +153,155 @@ namespace SkylineMcpConnector
             RunClaudeCli($@"mcp remove -s user {MCP_SERVER_NAME}");
         }
 
-        // -- Helpers --
+        // -- Gemini CLI --
 
-        private static JsonObject BuildDesktopServerEntry()
+        private static string GeminiCliConfigPath
+        {
+            get
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".gemini", "settings.json");
+            }
+        }
+
+        public static bool IsGeminiCliInstalled()
+        {
+            // Check for gemini.cmd in npm global bin
+            string npmGemini = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "npm", "gemini.cmd");
+            return File.Exists(npmGemini);
+        }
+
+        public static bool IsRegisteredInGeminiCli()
+        {
+            return IsRegisteredInJsonConfig(GeminiCliConfigPath, MCP_SERVERS_KEY);
+        }
+
+        public static void AddToGeminiCli()
+        {
+            AddToJsonConfig(GeminiCliConfigPath, MCP_SERVERS_KEY, BuildServerEntry());
+        }
+
+        public static void RemoveFromGeminiCli()
+        {
+            RemoveFromJsonConfig(GeminiCliConfigPath, MCP_SERVERS_KEY);
+        }
+
+        // -- VS Code (GitHub Copilot) --
+
+        private static string VSCodeConfigPath
+        {
+            get
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "Code", "User", "mcp.json");
+            }
+        }
+
+        public static bool IsVSCodeInstalled()
+        {
+            string vscodePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Programs", "Microsoft VS Code", "Code.exe");
+            return File.Exists(vscodePath);
+        }
+
+        public static bool IsRegisteredInVSCode()
+        {
+            return IsRegisteredInJsonConfig(VSCodeConfigPath, SERVERS_KEY);
+        }
+
+        public static void AddToVSCode()
+        {
+            // VS Code requires "type": "stdio" in the server entry
+            AddToJsonConfig(VSCodeConfigPath, SERVERS_KEY, BuildVSCodeServerEntry());
+        }
+
+        public static void RemoveFromVSCode()
+        {
+            RemoveFromJsonConfig(VSCodeConfigPath, SERVERS_KEY);
+        }
+
+        // -- Cursor --
+
+        private static string CursorConfigPath
+        {
+            get
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".cursor", "mcp.json");
+            }
+        }
+
+        public static bool IsCursorInstalled()
+        {
+            string cursorPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Programs", "cursor", "Cursor.exe");
+            return File.Exists(cursorPath);
+        }
+
+        public static bool IsRegisteredInCursor()
+        {
+            return IsRegisteredInJsonConfig(CursorConfigPath, MCP_SERVERS_KEY);
+        }
+
+        public static void AddToCursor()
+        {
+            AddToJsonConfig(CursorConfigPath, MCP_SERVERS_KEY, BuildServerEntry());
+        }
+
+        public static void RemoveFromCursor()
+        {
+            RemoveFromJsonConfig(CursorConfigPath, MCP_SERVERS_KEY);
+        }
+
+        // -- Shared JSON config helpers --
+
+        /// <summary>
+        /// Add/update the skyline MCP server entry in a JSON config file.
+        /// Creates the file and parent directory if they don't exist.
+        /// </summary>
+        private static void AddToJsonConfig(string configPath, string serversKey, JsonObject serverEntry)
+        {
+            EditJsonFile(configPath, root =>
+            {
+                var servers = EnsureObject(root, serversKey);
+                servers[MCP_SERVER_NAME] = serverEntry;
+            });
+        }
+
+        /// <summary>
+        /// Remove the skyline MCP server entry from a JSON config file.
+        /// </summary>
+        private static void RemoveFromJsonConfig(string configPath, string serversKey)
+        {
+            EditJsonFile(configPath, root =>
+            {
+                var servers = root[serversKey]?.AsObject();
+                servers?.Remove(MCP_SERVER_NAME);
+            });
+        }
+
+        /// <summary>
+        /// Check whether the skyline MCP server is registered in a JSON config file.
+        /// </summary>
+        private static bool IsRegisteredInJsonConfig(string configPath, string serversKey)
+        {
+            return HasJsonEntry(configPath,
+                root => root[serversKey]?[MCP_SERVER_NAME]);
+        }
+
+        // -- Server entry builders --
+
+        /// <summary>
+        /// Standard server entry used by Claude Desktop, Gemini CLI, and Cursor.
+        /// </summary>
+        private static JsonObject BuildServerEntry()
         {
             string exePath = McpServerDeployer.DeployedExePath.Replace('\\', '/');
             return new JsonObject
@@ -169,6 +309,21 @@ namespace SkylineMcpConnector
                 ["command"] = exePath
             };
         }
+
+        /// <summary>
+        /// VS Code server entry — requires "type": "stdio".
+        /// </summary>
+        private static JsonObject BuildVSCodeServerEntry()
+        {
+            string exePath = McpServerDeployer.DeployedExePath.Replace('\\', '/');
+            return new JsonObject
+            {
+                ["type"] = "stdio",
+                ["command"] = exePath
+            };
+        }
+
+        // -- Helpers --
 
         private static void RunClaudeCli(string arguments)
         {
