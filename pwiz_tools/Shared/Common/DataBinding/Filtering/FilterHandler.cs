@@ -10,7 +10,8 @@ namespace pwiz.Common.DataBinding.Filtering
     public interface IFilterHandler
     {
         bool IsBlank(object value);
-        object ParseOperand(string text, CultureInfo cultureInfo);
+        object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo);
+        string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo);
         bool ValueEqualsOperand(object value, object operand);
         public interface IComparison
         {
@@ -27,13 +28,23 @@ namespace pwiz.Common.DataBinding.Filtering
 
     public abstract class FilterHandler<TColumn, TOperand> : IFilterHandler
     {
-        object IFilterHandler.ParseOperand(string text,
-            CultureInfo cultureInfo)
+        object IFilterHandler.ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
-            return ParseOperand(text, cultureInfo);
+            return ParseOperand(operation, text, cultureInfo);
         }
 
-        protected abstract TOperand ParseOperand(string text, CultureInfo cultureInfo);
+        protected abstract TOperand ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo);
+
+        public string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
+        {
+            if (operand is TOperand tOperand)
+            {
+                return OperandToString(operation, tOperand, cultureInfo);
+            }
+            return string.Empty;
+        }
+
+        protected abstract string OperandToString(IFilterOperation operation, TOperand operand, CultureInfo cultureInfo);
 
         public abstract bool IsBlank(object value);
 
@@ -65,18 +76,22 @@ namespace pwiz.Common.DataBinding.Filtering
             return value == null || ValueEqualsOperand(string.Empty, value);
         }
 
-        protected override string ParseOperand(string text, CultureInfo cultureInfo)
+
+        protected override string ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
             return text;
         }
 
+        protected override string OperandToString(IFilterOperation operation, string operand, CultureInfo cultureInfo)
+        {
+            return operand;
+        }
 
         protected override bool ValueEqualsOperand(string value, string operand)
         {
             return StringComparer.Ordinal.Equals(value, operand);
         }
-
-
+        
         protected override bool TryConvertColumnValue(object value, out string columnValue)
         {
             if (value == null)
@@ -112,9 +127,14 @@ namespace pwiz.Common.DataBinding.Filtering
             return value == null;
         }
 
-        protected override PrecisionNumber ParseOperand(string text, CultureInfo cultureInfo)
+        protected override PrecisionNumber ParseOperand(IFilterOperation filterOperation, string text, CultureInfo cultureInfo)
         {
-            return PrecisionNumber.Parse(text, cultureInfo);
+            return PrecisionNumber.Parse(text, cultureInfo, ScientificPrecisionOnly(filterOperation, cultureInfo));
+        }
+
+        protected override string OperandToString(IFilterOperation operation, PrecisionNumber operand, CultureInfo cultureInfo)
+        {
+            return operand.ToString(cultureInfo, ScientificPrecisionOnly(operation, cultureInfo));
         }
 
         protected override bool ValueEqualsOperand(double value, PrecisionNumber operand)
@@ -146,6 +166,11 @@ namespace pwiz.Common.DataBinding.Filtering
             // Return the negative of the result because we want the doubleValue compared to the precisionNumber
             return -precisionNumber.CompareTo(doubleValue);
         }
+
+        private bool ScientificPrecisionOnly(IFilterOperation filterOperation, CultureInfo cultureInfo)
+        {
+            return string.IsNullOrEmpty(cultureInfo.Name) || !filterOperation.UsesEquality();
+        }
     }
 
     public class ListFilterHandler : IFilterHandler, IFilterHandler.IContains
@@ -162,7 +187,7 @@ namespace pwiz.Common.DataBinding.Filtering
             return 0 == ((value as IListColumnValue)?.Count ?? 0);
         }
 
-        public object ParseOperand(string text, CultureInfo cultureInfo)
+        public object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
             if (text == null)
             {
@@ -176,7 +201,7 @@ namespace pwiz.Common.DataBinding.Filtering
             }
 
             return new ListColumnValue<object>(
-                strings.Items.Select(str => ElementHandler.ParseOperand(str, cultureInfo)));
+                strings.Items.Select(str => ElementHandler.ParseOperand(FilterOperations.OP_EQUALS, str, cultureInfo)));
         }
 
         public bool ValueEqualsOperand(object value, object operand)
@@ -204,14 +229,16 @@ namespace pwiz.Common.DataBinding.Filtering
             return ElementsEqual(listValue.AsEnumerable(), listOperand.AsEnumerable().ToList());
         }
 
-        public string OperandToString(object operand, CultureInfo cultureInfo)
+        public string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
         {
-            if (operand is IList<object> list)
+            var operandList = operand as IListColumnValue;
+            if (operandList == null)
             {
-                return ListColumnValue.ItemsToString(cultureInfo, list);
+                return string.Empty;
             }
 
-            return string.Empty;
+            return new ListColumnValue<string>(operandList.AsEnumerable()
+                .Select(v => ElementHandler.OperandToString(FilterOperations.OP_EQUALS, operand, cultureInfo))).ToString();
         }
 
         public bool StartsWith(object value, object operand)
@@ -274,7 +301,7 @@ namespace pwiz.Common.DataBinding.Filtering
             return value == null;
         }
 
-        public object ParseOperand(string text, CultureInfo cultureInfo)
+        public object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -288,6 +315,11 @@ namespace pwiz.Common.DataBinding.Filtering
             {
                 return Enum.Parse(EnumType, text, true);
             }
+        }
+
+        public string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
+        {
+            return operand?.ToString() ?? string.Empty;
         }
 
         public bool ValueEqualsOperand(object value, object operand)
@@ -315,11 +347,16 @@ namespace pwiz.Common.DataBinding.Filtering
             return value == null;
         }
 
-        public object ParseOperand(string text, CultureInfo cultureInfo)
+        public object ParseOperand(IFilterOperation operation, string text, CultureInfo cultureInfo)
         {
             var typeConverter = TypeDescriptor.GetConverter(ValueType);
             // ReSharper disable AssignNullToNotNullAttribute
             return typeConverter.ConvertFrom(null, cultureInfo, text);
+        }
+
+        public string OperandToString(IFilterOperation operation, object operand, CultureInfo cultureInfo)
+        {
+            return Convert.ToString(operand, cultureInfo);
         }
 
         public bool ValueEqualsOperand(object value, object operand)

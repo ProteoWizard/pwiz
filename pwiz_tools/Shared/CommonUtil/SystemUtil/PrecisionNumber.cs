@@ -62,14 +62,19 @@ namespace pwiz.Common.SystemUtil
             get { return 0.5 * Math.Pow(10, -DecimalPlaces); }
         }
 
-        public static PrecisionNumber Parse(string text, CultureInfo cultureInfo)
+        public static PrecisionNumber Parse(string text, CultureInfo cultureInfo, bool scientificPrecisionOnly)
         {
-            if (TryParse(text, cultureInfo, out var result))
+            if (TryParse(text, cultureInfo, scientificPrecisionOnly, out var result))
                 return result;
             throw new FormatException(string.Format(@"Unable to parse '{0}' as a PrecisionNumber", text));
         }
 
-        public static bool TryParse(string text, CultureInfo cultureInfo, out PrecisionNumber result)
+        public static PrecisionNumber Parse(string text, CultureInfo cultureInfo)
+        {
+            return Parse(text, cultureInfo, false);
+        }
+
+        public static bool TryParse(string text, CultureInfo cultureInfo, bool scientificPrecisionOnly, out PrecisionNumber result)
         {
             result = default;
             if (string.IsNullOrWhiteSpace(text))
@@ -80,12 +85,17 @@ namespace pwiz.Common.SystemUtil
             if (!double.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, cultureInfo, out double value))
                 return false;
 
-            int decimalPlaces = CountDecimalPlaces(text, cultureInfo);
+            int decimalPlaces = CountDecimalPlaces(text, cultureInfo, scientificPrecisionOnly);
             result = new PrecisionNumber(value, decimalPlaces);
             return true;
         }
 
-        private static int CountDecimalPlaces(string text, CultureInfo culture)
+        public static bool TryParse(string text, CultureInfo cultureInfo, out PrecisionNumber result)
+        {
+            return TryParse(text, cultureInfo, false, out result);
+        }
+
+        private static int CountDecimalPlaces(string text, CultureInfo culture, bool scientificPrecisionOnly)
         {
             string decimalSep = culture.NumberFormat.NumberDecimalSeparator;
 
@@ -101,6 +111,11 @@ namespace pwiz.Common.SystemUtil
                 {
                     exponent = exp;
                 }
+            }
+
+            if (scientificPrecisionOnly)
+            {
+                return MAX_DECIMAL_PLACES;
             }
 
             // Find decimal separator in the mantissa
@@ -143,7 +158,12 @@ namespace pwiz.Common.SystemUtil
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            if (DecimalPlaces >= 0)
+            return ToString(formatProvider, true);
+        }
+
+        public string ToString(IFormatProvider formatProvider, bool scientificPrecisionOnly)
+        {
+            if (DecimalPlaces >= 0 && !scientificPrecisionOnly)
             {
                 return Value.ToString(@"F" + DecimalPlaces, formatProvider);
             }

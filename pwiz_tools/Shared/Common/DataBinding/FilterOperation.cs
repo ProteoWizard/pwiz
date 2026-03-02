@@ -36,6 +36,7 @@ namespace pwiz.Common.DataBinding
         bool IsValidFor(IFilterHandler filterHandler);
         bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue);
         bool HasOperand();
+        bool UsesEquality();
     }
 
     public static class FilterOperations
@@ -125,6 +126,8 @@ namespace pwiz.Common.DataBinding
             {
                 return true;
             }
+
+            public abstract bool UsesEquality();
         }
         abstract class StringFilterOperation : FilterOperation
         {
@@ -150,7 +153,10 @@ namespace pwiz.Common.DataBinding
 
             protected abstract bool Matches(IFilterHandler.IContains filterHandler, object columnValue,
                 object operandValue);
-
+            public override bool UsesEquality()
+            {
+                return true;
+            }
         }
 
         class OpContains : StringFilterOperation
@@ -168,6 +174,7 @@ namespace pwiz.Common.DataBinding
             {
                 return filterHandler.Contains(columnValue, operandValue);
             }
+
         }
 
         class OpNotContains : StringFilterOperation
@@ -246,6 +253,11 @@ namespace pwiz.Common.DataBinding
             {
                 return filterHandler.ValueEqualsOperand(columnValue, operandValue);
             }
+            public override bool UsesEquality()
+            {
+                return true;
+            }
+
         }
 
         class OpNotEquals : FilterOperation
@@ -270,6 +282,10 @@ namespace pwiz.Common.DataBinding
             {
                 return !filterHandler.ValueEqualsOperand(columnValue, operandValue);
             }
+            public override bool UsesEquality()
+            {
+                return true;
+            }
         }
 
         class OpIsBlank : UnaryFilterOperation
@@ -288,6 +304,7 @@ namespace pwiz.Common.DataBinding
             {
                 return filterHandler.IsBlank(columnValue);
             }
+
         }
 
         class OpIsNotBlank : UnaryFilterOperation
@@ -403,6 +420,10 @@ namespace pwiz.Common.DataBinding
                 int? comparisonValue = (filterHandler as IFilterHandler.IComparison)?.Compare(columnValue, operandValue);
                 return comparisonValue.HasValue && ComparisonMatches(comparisonValue.Value);
             }
+            public override bool UsesEquality()
+            {
+                return ComparisonMatches(0);
+            }
         }
 
         abstract class UnaryFilterOperation : FilterOperation
@@ -428,6 +449,11 @@ namespace pwiz.Common.DataBinding
             {
                 return false;
             }
+            public override bool UsesEquality()
+            {
+                return false;
+            }
+
         }
 
         class OpHasAnyValue : UnaryFilterOperation

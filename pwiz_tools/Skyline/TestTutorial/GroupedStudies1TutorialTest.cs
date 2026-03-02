@@ -30,7 +30,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -1544,7 +1543,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_LESS_THAN);
-                    quickFilterForm.SetFilterOperand(0, new PrecisionNumber(0.01).ToString());
+                    quickFilterForm.SetFilterOperand(0, 0.01.ToString(CultureInfo.CurrentCulture));
                 });
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);
             }
@@ -1616,8 +1615,8 @@ namespace pwiz.SkylineTestTutorial
                 });
                 RunUI(() =>
                 {
-                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL);
-                    quickFilterForm.SetFilterOperand(0, new PrecisionNumber(0.01).ToString(CultureInfo.CurrentCulture));
+                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN);
+                    quickFilterForm.SetFilterOperand(0, 0.01.ToString(CultureInfo.CurrentCulture));
                 });
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);
             }

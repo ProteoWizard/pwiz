@@ -29,7 +29,7 @@ namespace CommonTest
         [TestMethod]
         public void TestParseRegularNumbers()
         {
-            var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture);
+            var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture, false);
             Assert.AreEqual(3.14, pn.Value, 1e-15);
             Assert.AreEqual(2, pn.DecimalPlaces);
             Assert.AreEqual(0.005, pn.Tolerance, 1e-15);
