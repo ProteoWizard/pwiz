@@ -19,6 +19,14 @@
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
+  <!-- Build the MCP server (net8.0) before packaging, since cross-targeting
+       prevents a normal ProjectReference from net472 to net8.0 -->
+  <Target Name="BuildMcpServer" BeforeTargets="PackageToolZip">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\SkylineMcpServer\SkylineMcpServer.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+  </Target>
+
   <!-- Package the Skyline External Tool ZIP after build -->
   <Target Name="PackageToolZip" AfterTargets="Build">
     <PropertyGroup>

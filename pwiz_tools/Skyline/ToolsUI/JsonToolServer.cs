@@ -31,6 +31,7 @@ using System.Xml.Serialization;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Documentation;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -62,6 +63,7 @@ namespace pwiz.Skyline.ToolsUI
             @"GetProcessId",
             @"ExportReport",
             @"ExportReportFromDefinition",
+            @"AddReportFromDefinition",
             @"GetSelectedElementLocator",
             @"RunCommand",
             @"RunCommandSilent",
@@ -88,7 +90,7 @@ namespace pwiz.Skyline.ToolsUI
         public JsonToolServer(ToolService toolService)
         {
             _toolService = toolService;
-            _pipeName = @"SkylineMcpJson-" + Guid.NewGuid().ToString("N");
+            _pipeName = @"SkylineMcpJson-" + Guid.NewGuid().ToString(@"N");
             _serverThread = new Thread(ServerLoop) { IsBackground = true };
         }
 
@@ -215,7 +217,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                return new JObject { [@"error"] = ex.Message }.ToString();
+                return new JObject { [@"error"] = ex.ToString() }.ToString();
             }
         }
 
@@ -248,7 +250,11 @@ namespace pwiz.Skyline.ToolsUI
 
                 case "ExportReportFromDefinition":
                     RequireArgs(method, args, 2);
-                    return ExportDefinitionReport(args);
+                    return ExportJsonDefinitionReport(args);
+
+                case "AddReportFromDefinition":
+                    RequireArgs(method, args, 1);
+                    return AddJsonDefinitionReport(args);
 
                 case "GetSelectedElementLocator":
                     RequireArgs(method, args, 1);
@@ -349,25 +355,15 @@ namespace pwiz.Skyline.ToolsUI
             return BuildReportMetadata(filePath, reportName);
         }
 
-        private string ExportDefinitionReport(string[] args)
+        private string ExportJsonDefinitionReport(string[] args)
         {
-            string xml = args[0];
+            string json = args[0];
             string filePath = args[1];
             var localizer = ParseCulture(args, 2);
 
-            var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
-            var reportOrViewSpecList = ReportSharing.DeserializeReportList(memoryStream);
-            if (reportOrViewSpecList.Count == 0)
-                throw new ArgumentException(@"No report definition found");
-            if (reportOrViewSpecList.Count > 1)
-                throw new ArgumentException(@"Too many report definitions");
-            var reportOrViewSpec = reportOrViewSpecList.First();
-            if (null == reportOrViewSpec.ViewSpecLayout)
-                throw new ArgumentException(@"The report definition uses the old format.");
-
-            var viewSpecLayout = reportOrViewSpec.ViewSpecLayout;
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer);
+            var viewSpec = ResolveJsonReportDefinition(json, dataSchema);
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
 
             string ext = Path.GetExtension(filePath);
@@ -380,13 +376,94 @@ namespace pwiz.Skyline.ToolsUI
                 if (!saver.CanSave())
                     throw new IOException(@"Cannot write to " + filePath);
                 IProgressStatus status = new ProgressStatus(string.Empty);
-                rowFactories.ExportReport(saver.Stream, viewSpecLayout.ViewSpec,
-                    viewSpecLayout.DefaultViewLayout, exporter, Program.MainWindow, ref status);
+                rowFactories.ExportReport(saver.Stream, viewSpec, null, exporter,
+                    Program.MainWindow, ref status);
                 saver.Commit();
             }
 
-            string reportName = viewSpecLayout.Name ?? @"Custom";
+            string reportName = viewSpec.Name ?? @"Custom";
             return BuildReportMetadata(filePath, reportName);
+        }
+
+        private string AddJsonDefinitionReport(string[] args)
+        {
+            string json = args[0];
+
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+            var viewSpec = ResolveJsonReportDefinition(json, dataSchema);
+
+            if (string.IsNullOrEmpty(viewSpec.Name) || viewSpec.Name == @"Custom")
+                throw new ArgumentException(new LlmInstruction(
+                    @"The 'name' field is required when adding a report."));
+
+            var groupId = PersistedViews.MainGroup.Id;
+            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(groupId);
+            var layout = new ViewSpecLayout(viewSpec, ViewLayoutList.EMPTY);
+            viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, layout);
+            Settings.Default.PersistedViews.SetViewSpecList(groupId, viewSpecList);
+
+            return new LlmInstruction(
+                string.Format(@"Report {0} has been added to Skyline.", viewSpec.Name.SingleQuote()));
+        }
+
+        private static ViewSpec ResolveJsonReportDefinition(string json, SkylineDataSchema dataSchema)
+        {
+            JObject root;
+            try
+            {
+                root = JObject.Parse(json);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    string.Format(@"Invalid JSON: {0}", ex.Message)));
+            }
+
+            var selectToken = root[@"select"];
+            if (selectToken == null || selectToken.Type != JTokenType.Array || !selectToken.HasValues)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The 'select' array is required and must not be empty."));
+
+            var columnNames = selectToken.Select(t => (string)t).ToList();
+            if (columnNames.Any(string.IsNullOrWhiteSpace))
+                throw new ArgumentException(new LlmInstruction(
+                    @"Column names in 'select' must not be empty."));
+
+            string reportName = (string)root[@"name"] ?? @"Custom";
+
+            try
+            {
+                var resolver = new ColumnResolver(dataSchema);
+                var result = resolver.Resolve(columnNames);
+
+                var columnSpecs = result.PropertyPaths.Select(p => new ColumnSpec(p)).ToList();
+                var viewSpec = new ViewSpec()
+                    .SetName(reportName)
+                    .SetRowType(result.RowSourceType)
+                    .SetColumns(columnSpecs);
+                if (!result.SublistId.IsRoot)
+                    viewSpec = viewSpec.SetSublistId(result.SublistId);
+                return viewSpec;
+            }
+            catch (ColumnResolver.UnresolvedColumnsException ex)
+            {
+                throw new ArgumentException(FormatUnresolvedColumnsError(ex));
+            }
+        }
+
+        private static LlmInstruction FormatUnresolvedColumnsError(
+            ColumnResolver.UnresolvedColumnsException ex)
+        {
+            var parts = ex.UnresolvedColumns.Select(col =>
+            {
+                if (col.Suggestions.Count > 0)
+                    return string.Format(@"Unknown column {0}. Did you mean: {1}?",
+                        col.Name.SingleQuote(),
+                        string.Join(@", ", col.Suggestions.Select(s => s.SingleQuote())));
+                return string.Format(@"Unknown column {0}.", col.Name.SingleQuote());
+            });
+            return new LlmInstruction(string.Join(@" ", parts));
         }
 
         private static string BuildReportMetadata(string filePath, string reportName)

@@ -380,6 +380,11 @@ namespace pwiz.Skyline.Util.Extensions
             return '"' + text + '"';
         }
 
+        public static string SingleQuote(this string text)
+        {
+            return '\'' + text + '\'';
+        }
+
         /// <summary>
         /// This function can be used as a replacement for String.Join("\n", ...)
         /// </summary>
@@ -1074,5 +1079,32 @@ namespace pwiz.Skyline.Util.Extensions
         public string PlainMessage { get; private set; }
         public long LineNumber { get; private set; }
         public int ColumnIndex { get; private set; }
+    }
+
+    /// <summary>
+    /// Natural language text intended as instruction for an LLM consumer,
+    /// not for direct display to end users. Distinguished from user-facing
+    /// text (which must be in .resx for localization) and debug text
+    /// (which is developer-only). Currently English, but marked distinctly
+    /// so it can be localized for LLM prompt translation in the future.
+    /// </summary>
+    public readonly struct LlmInstruction
+    {
+        public LlmInstruction(string value)
+        {
+            Value = value;
+        }
+
+        public string Value { get; }
+
+        public static implicit operator string(LlmInstruction instruction)
+        {
+            return instruction.Value;
+        }
+
+        public override string ToString()
+        {
+            return Value;
+        }
     }
 }

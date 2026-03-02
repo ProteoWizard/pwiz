@@ -33,40 +33,52 @@ public static class SkylineTools
      Description("Get the file path of the currently open Skyline document.")]
     public static string GetDocumentPath()
     {
-        using var connection = SkylineConnection.Connect();
-        string path = connection.Call("GetDocumentPath");
-        return path ?? "(unsaved)";
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string path = connection.Call("GetDocumentPath");
+            return path ?? "(unsaved)";
+        });
     }
 
     [McpServerTool(Name = "skyline_get_version"),
      Description("Get the version of the running Skyline instance.")]
     public static string GetVersion()
     {
-        using var connection = SkylineConnection.Connect();
-        string version = connection.Call("GetVersion");
-        return version ?? "Unknown version";
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string version = connection.Call("GetVersion");
+            return version ?? "Unknown version";
+        });
     }
 
     [McpServerTool(Name = "skyline_get_selection"),
      Description("Get the currently selected element in Skyline (protein, peptide, precursor, transition, etc.). Returns the name/description of whatever is selected in the document tree.")]
     public static string GetSelection()
     {
-        using var connection = SkylineConnection.Connect();
-        string selection = connection.Call("GetDocumentLocationName");
-        return string.IsNullOrEmpty(selection)
-            ? "Nothing is currently selected in Skyline."
-            : selection;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string selection = connection.Call("GetDocumentLocationName");
+            return string.IsNullOrEmpty(selection)
+                ? "Nothing is currently selected in Skyline."
+                : selection;
+        });
     }
 
     [McpServerTool(Name = "skyline_get_replicate"),
      Description("Get the name of the currently active replicate in Skyline.")]
     public static string GetReplicate()
     {
-        using var connection = SkylineConnection.Connect();
-        string replicate = connection.Call("GetReplicateName");
-        return string.IsNullOrEmpty(replicate)
-            ? "No replicate is currently selected."
-            : replicate;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string replicate = connection.Call("GetReplicateName");
+            return string.IsNullOrEmpty(replicate)
+                ? "No replicate is currently selected."
+                : replicate;
+        });
     }
 
     [McpServerTool(Name = "skyline_get_report"),
@@ -77,39 +89,60 @@ public static class SkylineTools
         [Description("Output format when filePath is not specified: csv, tsv, or parquet (default: csv)")] string format = "csv",
         [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
     {
-        filePath ??= GetTempReportPath(reportName, format);
-        string culture = invariant ? "invariant" : "localized";
+        return Invoke(() =>
+        {
+            filePath ??= GetTempReportPath(reportName, format);
+            string culture = invariant ? "invariant" : "localized";
 
-        using var connection = SkylineConnection.Connect();
-        string metadata = connection.Call("ExportReport", reportName, filePath, culture);
-        return FormatReportResult(metadata);
+            using var connection = SkylineConnection.Connect();
+            string metadata = connection.Call("ExportReport", reportName, filePath, culture);
+            return FormatReportResult(metadata);
+        });
     }
 
     [McpServerTool(Name = "skyline_get_report_from_definition"),
-     Description("Run a custom Skyline report from an XML report definition and return results. Use this when you need specific columns not available in predefined reports. The XML format follows Skyline's report schema.")]
+     Description("Run a custom Skyline report from a JSON report definition and return results. Use this when you need specific columns not available in predefined reports. The JSON format uses a 'select' array of column display names (PascalCase, invariant). Use skyline_get_report_doc_topics and skyline_get_report_doc_topic to discover available column names. Example: {\"select\": [\"ProteinName\", \"PeptideModifiedSequence\", \"PrecursorMz\", \"BestRetentionTime\", \"Area\"]}. The row source is automatically inferred from the selected columns.")]
     public static string GetReportFromDefinition(
-        [Description("XML report definition in Skyline report schema format")] string reportDefinitionXml,
+        [Description("JSON report definition with a 'select' array of column names. Example: {\"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}. Optional 'name' field for the report name.")] string reportDefinitionJson,
         [Description("Output file path. If not specified, saves to a temp directory. Extension determines format (.csv, .tsv, .parquet).")] string filePath = null,
         [Description("Output format when filePath is not specified: csv, tsv, or parquet (default: csv)")] string format = "csv",
         [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
     {
-        filePath ??= GetTempReportPath("Custom", format);
-        string culture = invariant ? "invariant" : "localized";
+        return Invoke(() =>
+        {
+            filePath ??= GetTempReportPath("Custom", format);
+            string culture = invariant ? "invariant" : "localized";
 
-        using var connection = SkylineConnection.Connect();
-        string metadata = connection.Call("ExportReportFromDefinition", reportDefinitionXml, filePath, culture);
-        return FormatReportResult(metadata);
+            using var connection = SkylineConnection.Connect();
+            string metadata = connection.Call("ExportReportFromDefinition", reportDefinitionJson, filePath, culture);
+            return FormatReportResult(metadata);
+        });
+    }
+
+    [McpServerTool(Name = "skyline_add_report"),
+     Description("Save a custom report definition to the user's Skyline session. Uses the same JSON format as skyline_get_report_from_definition but persists the report so it appears in Skyline's report list. The 'name' field is required. Use skyline_get_report_doc_topics and skyline_get_report_doc_topic to discover available column names.")]
+    public static string AddReport(
+        [Description("JSON report definition with a required 'name' field and a 'select' array of column names. Example: {\"name\": \"My Report\", \"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}")] string reportDefinitionJson)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            return connection.Call("AddReportFromDefinition", reportDefinitionJson);
+        });
     }
 
     [McpServerTool(Name = "skyline_get_settings_list_types"),
      Description("Enumerate all settings list types available in Skyline (enzymes, modifications, reports, etc.). Returns tab-separated lines of PropertyName and Title. Use this to discover what configuration lists exist before querying their contents.")]
     public static string GetSettingsListTypes()
     {
-        using var connection = SkylineConnection.Connect();
-        string result = connection.Call("GetSettingsListTypes");
-        return string.IsNullOrEmpty(result)
-            ? "No settings lists found."
-            : result;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetSettingsListTypes");
+            return string.IsNullOrEmpty(result)
+                ? "No settings lists found."
+                : result;
+        });
     }
 
     [McpServerTool(Name = "skyline_get_settings_list_names"),
@@ -117,11 +150,14 @@ public static class SkylineTools
     public static string GetSettingsListNames(
         [Description("The settings list property name (e.g., 'EnzymeList', 'PersistedViews')")] string listType)
     {
-        using var connection = SkylineConnection.Connect();
-        string result = connection.Call("GetSettingsListNames", listType);
-        return string.IsNullOrEmpty(result)
-            ? "No items found in " + listType + "."
-            : result;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetSettingsListNames", listType);
+            return string.IsNullOrEmpty(result)
+                ? $"No items found in {listType}."
+                : result;
+        });
     }
 
     [McpServerTool(Name = "skyline_get_settings_list_item"),
@@ -130,11 +166,14 @@ public static class SkylineTools
         [Description("The settings list property name (e.g., 'EnzymeList', 'PersistedViews')")] string listType,
         [Description("The name of the item to retrieve (e.g., 'Trypsin', 'Peak Area')")] string itemName)
     {
-        using var connection = SkylineConnection.Connect();
-        string result = connection.Call("GetSettingsListItem", listType, itemName);
-        return string.IsNullOrEmpty(result)
-            ? "Item not found: " + itemName + " in " + listType + "."
-            : result;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetSettingsListItem", listType, itemName);
+            return string.IsNullOrEmpty(result)
+                ? $"Item not found: {itemName} in {listType}."
+                : result;
+        });
     }
 
     [McpServerTool(Name = "skyline_run_command"),
@@ -142,22 +181,28 @@ public static class SkylineTools
     public static string RunCommand(
         [Description("Command line arguments in SkylineCmd format (e.g., '--report-name=\"Peak Area\" --report-file=output.csv')")] string commandArgs)
     {
-        using var connection = SkylineConnection.Connect();
-        string output = connection.Call("RunCommand", commandArgs);
-        if (string.IsNullOrEmpty(output))
-            return "Command completed with no output.";
-        return output;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string output = connection.Call("RunCommand", commandArgs);
+            return string.IsNullOrEmpty(output)
+                ? "Command completed with no output."
+                : output;
+        });
     }
 
     [McpServerTool(Name = "skyline_get_cli_help_sections"),
      Description("List available CLI help sections. Returns section names (one per line) that can be passed to skyline_get_cli_help for detailed help on each topic.")]
     public static string GetCliHelpSections()
     {
-        using var connection = SkylineConnection.Connect();
-        string output = connection.Call("RunCommandSilent", "--help=sections");
-        if (string.IsNullOrEmpty(output))
-            return "No help sections available.";
-        return output;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string output = connection.Call("RunCommandSilent", "--help=sections");
+            return string.IsNullOrEmpty(output)
+                ? "No help sections available."
+                : output;
+        });
     }
 
     [McpServerTool(Name = "skyline_get_cli_help"),
@@ -165,22 +210,28 @@ public static class SkylineTools
     public static string GetCliHelp(
         [Description("The help section name (e.g., 'import', 'export', 'refine'). Case-insensitive partial match.")] string section)
     {
-        using var connection = SkylineConnection.Connect();
-        string output = connection.Call("RunCommandSilent", "--help=" + section + " --help=no-borders");
-        if (string.IsNullOrEmpty(output))
-            return "No help found for section: " + section;
-        return output;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string output = connection.Call("RunCommandSilent", $"--help={section} --help=no-borders");
+            return string.IsNullOrEmpty(output)
+                ? $"No help found for section: {section}"
+                : output;
+        });
     }
 
     [McpServerTool(Name = "skyline_get_report_doc_topics"),
      Description("List available report column documentation topics. Returns tab-separated lines of DisplayName and QualifiedTypeName for each entity type (e.g., Molecule, Precursor, Transition). Use skyline_get_report_doc_topic to get column details for a specific topic.")]
     public static string GetReportDocTopics()
     {
-        using var connection = SkylineConnection.Connect();
-        string result = connection.Call("GetReportDocTopics");
-        return string.IsNullOrEmpty(result)
-            ? "No report documentation topics found."
-            : result;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetReportDocTopics");
+            return string.IsNullOrEmpty(result)
+                ? "No report documentation topics found."
+                : result;
+        });
     }
 
     [McpServerTool(Name = "skyline_get_report_doc_topic"),
@@ -188,11 +239,14 @@ public static class SkylineTools
     public static string GetReportDocTopic(
         [Description("The topic name (display name like 'Molecule' or qualified type name). Case-insensitive partial match on display name.")] string topic)
     {
-        using var connection = SkylineConnection.Connect();
-        string result = connection.Call("GetReportDocTopic", topic);
-        return string.IsNullOrEmpty(result)
-            ? "No documentation found for topic: " + topic
-            : result;
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetReportDocTopic", topic);
+            return string.IsNullOrEmpty(result)
+                ? $"No documentation found for topic: {topic}"
+                : result;
+        });
     }
 
     [McpServerTool(Name = "skyline_insert_small_molecule_transition_list"),
@@ -200,8 +254,11 @@ public static class SkylineTools
     public static string InsertSmallMoleculeTransitionList(
         [Description("CSV text with column headers in the first row and data rows. Common headers: MoleculeGroup, PrecursorName, PrecursorFormula, PrecursorAdduct, PrecursorMz, PrecursorCharge, ProductFormula, ProductAdduct, ProductMz, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note.")] string textCSV)
     {
-        using var connection = SkylineConnection.Connect();
-        return connection.CallSkylineInsertSmallMoleculeTransitionList(textCSV);
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            return connection.CallSkylineInsertSmallMoleculeTransitionList(textCSV);
+        });
     }
 
     [McpServerTool(Name = "skyline_import_fasta"),
@@ -209,8 +266,11 @@ public static class SkylineTools
     public static string ImportFasta(
         [Description("Protein sequences in standard FASTA format. Each protein starts with a '>' header line (e.g., '>sp|P01308|INS_HUMAN Insulin') followed by one or more sequence lines.")] string textFasta)
     {
-        using var connection = SkylineConnection.Connect();
-        return connection.CallSkylineImportFasta(textFasta);
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            return connection.CallSkylineImportFasta(textFasta);
+        });
     }
 
     [McpServerTool(Name = "skyline_import_properties"),
@@ -218,17 +278,23 @@ public static class SkylineTools
     public static string ImportProperties(
         [Description("CSV text where the first column is ElementLocator (paths identifying document elements) and remaining columns are annotation names with values.")] string csvText)
     {
-        using var connection = SkylineConnection.Connect();
-        return connection.CallSkylineImportProperties(csvText);
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            return connection.CallSkylineImportProperties(csvText);
+        });
     }
 
     [McpServerTool(Name = "skyline_get_document_status"),
      Description("Get a lightweight overview of the current Skyline document including document type (proteomic, small_molecules, mixed), target counts (proteins/lists, peptides/molecules, precursors, transitions), replicate count, and file path. Much faster than running a report for basic document info.")]
     public static string GetDocumentStatus()
     {
-        using var connection = SkylineConnection.Connect();
-        string result = connection.Call("GetDocumentStatus");
-        return result ?? "No document information available.";
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetDocumentStatus");
+            return result ?? "No document information available.";
+        });
     }
 
     [McpServerTool(Name = "skyline_get_document_settings"),
@@ -236,11 +302,14 @@ public static class SkylineTools
     public static string GetDocumentSettings(
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
-        filePath ??= GetTempSettingsPath("document");
+        return Invoke(() =>
+        {
+            filePath ??= GetTempSettingsPath("document");
 
-        using var connection = SkylineConnection.Connect();
-        string result = connection.Call("GetDocumentSettings", filePath);
-        return $"Document settings saved to: {result}\nUse the Read tool to examine the settings XML.";
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetDocumentSettings", filePath);
+            return $"Document settings saved to: {result}\nUse the Read tool to examine the settings XML.";
+        });
     }
 
     [McpServerTool(Name = "skyline_get_default_settings"),
@@ -248,11 +317,50 @@ public static class SkylineTools
     public static string GetDefaultSettings(
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
-        filePath ??= GetTempSettingsPath("defaults");
+        return Invoke(() =>
+        {
+            filePath ??= GetTempSettingsPath("defaults");
 
-        using var connection = SkylineConnection.Connect();
-        string result = connection.Call("GetDefaultSettings", filePath);
-        return $"Default settings saved to: {result}\nUse the Read tool to examine the settings XML.";
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetDefaultSettings", filePath);
+            return $"Default settings saved to: {result}\nUse the Read tool to examine the settings XML.";
+        });
+    }
+
+    /// <summary>
+    /// Controls the level of detail in error messages returned to the LLM.
+    /// </summary>
+    public enum ErrorDetail
+    {
+        /// <summary>Only the exception message.</summary>
+        Message,
+        /// <summary>Full exception including type, message, inner exceptions, and stack trace.</summary>
+        Full
+    }
+
+    /// <summary>
+    /// Error reporting level for MCP tool responses. Defaults to Full so that
+    /// LLMs and developers always see the complete error context.
+    /// </summary>
+    public static ErrorDetail ErrorDetailLevel { get; set; } = ErrorDetail.Full;
+
+    /// <summary>
+    /// Wraps every MCP tool call in consistent exception handling.
+    /// Exceptions are returned as text so the LLM always sees the error details
+    /// instead of a generic framework error message.
+    /// </summary>
+    private static string Invoke(Func<string> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (Exception ex)
+        {
+            return ErrorDetailLevel == ErrorDetail.Full
+                ? $"Error: {ex}"
+                : $"Error: {ex.Message}";
+        }
     }
 
     private static string FormatReportResult(string metadataJson)
