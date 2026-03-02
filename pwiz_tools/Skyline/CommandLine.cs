@@ -988,13 +988,19 @@ namespace pwiz.Skyline
         public void ModifyDocumentWithLogging(Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
             var setSeenEntries = GetSeenAuditLogEntries();
-            var docBefore = Document;
-            if (!docBefore.Settings.DataSettings.AuditLogging)
+            var docOriginal = _doc;
+            if (!docOriginal.Settings.DataSettings.AuditLogging)
                 _doc = AuditLogList.ToggleAuditLogging(_doc, true);
+            var docBefore = _doc;
             ModifyDocument(act, logFunc);
+            if (ReferenceEquals(_doc, docBefore))
+            {
+                _doc = docOriginal;
+                return;
+            }
             LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
-            LogDocumentDelta(docBefore, Document);
-            if (!docBefore.Settings.DataSettings.AuditLogging)
+            LogDocumentDelta(docOriginal, Document);
+            if (!docOriginal.Settings.DataSettings.AuditLogging)
                 _doc = AuditLogList.ToggleAuditLogging(_doc, false);
         }
 

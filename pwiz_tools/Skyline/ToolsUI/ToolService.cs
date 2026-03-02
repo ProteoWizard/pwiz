@@ -593,8 +593,25 @@ namespace pwiz.Skyline.ToolsUI
             // Run on the current thread (already a background pipe server thread).
             // The Immediate Window writer handles cross-thread writes via BeginInvoke.
             var parsedArgs = CommandLine.ParseArgs(args);
-            var commandLine = new CommandLine(new CommandStatusWriter(output), _skylineWindow.Document);
+            var docBefore = _skylineWindow.Document;
+            var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore);
             commandLine.Run(parsedArgs, true);
+
+            // If the command modified the document, apply it back to SkylineWindow
+            // as a single undo record with a RunCommand audit log entry.
+            if (!ReferenceEquals(commandLine.Document, docBefore))
+            {
+                var docResult = commandLine.Document;
+                _skylineWindow.Invoke(new Action(() =>
+                {
+                    _skylineWindow.ModifyDocument(
+                        ToolsUIResources.ToolService_RunCommand_Run_command,
+                        doc => docResult,
+                        docPair => AuditLogEntry.CreateSimpleEntry(
+                            MessageType.ran_command_line,
+                            docPair.NewDocumentType, args));
+                }));
+            }
 
             return capture.ToString();
         }
