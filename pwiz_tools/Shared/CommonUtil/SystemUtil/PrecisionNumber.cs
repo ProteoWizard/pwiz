@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using pwiz.Common.CommonResources;
 
@@ -135,9 +134,9 @@ namespace pwiz.Common.SystemUtil
             throw new FormatException(string.Format(MessageResources.PrecisionNumber_Parse_Unable_to_parse___0___as_a_number, text));
         }
 
-        public static PrecisionNumber Parse(string text, CultureInfo cultureInfo)
+        public static PrecisionNumber Parse(string text)
         {
-            return Parse(text, cultureInfo, false);
+            return Parse(text, CultureInfo.CurrentCulture, false);
         }
 
         public static bool TryParse(string text, CultureInfo cultureInfo, bool defaultToFullPrecision, out PrecisionNumber result)
@@ -254,14 +253,9 @@ namespace pwiz.Common.SystemUtil
             return mantissa.ToString(@"F" + mantissaDecimals, formatProvider) + @"e" + exponent;
         }
 
-        public string ToString(CultureInfo cultureInfo)
-        {
-            return ToString(null, cultureInfo);
-        }
-
         public override string ToString()
         {
-            return ToString(CultureInfo.CurrentCulture);
+            return ToString(CultureInfo.CurrentCulture, false);
         }
 
         public int CompareTo(double value)

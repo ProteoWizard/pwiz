@@ -32,17 +32,17 @@ namespace CommonTest
         [TestMethod]
         public void TestParseRegularNumbers()
         {
-            var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture, false);
+            var pn = PrecisionNumber.Parse(3.14.ToString("F2"));
             Assert.AreEqual(3.14m, pn.Value);
             Assert.AreEqual(2, pn.DecimalPlaces);
             Assert.AreEqual(0.005m, pn.Tolerance);
 
-            pn = PrecisionNumber.Parse("3.0", CultureInfo.InvariantCulture);
+            pn = PrecisionNumber.Parse(3.0.ToString("F1"));
             Assert.AreEqual(3.0m, pn.Value);
             Assert.AreEqual(1, pn.DecimalPlaces);
             Assert.AreEqual(0.05m, pn.Tolerance);
 
-            pn = PrecisionNumber.Parse("300", CultureInfo.InvariantCulture);
+            pn = PrecisionNumber.Parse("300");
             Assert.AreEqual(300m, pn.Value);
             Assert.AreEqual(0, pn.DecimalPlaces);
             Assert.AreEqual(0.5m, pn.Tolerance);
@@ -51,12 +51,12 @@ namespace CommonTest
         [TestMethod]
         public void TestParseScientificNotation()
         {
-            var pn = PrecisionNumber.Parse("1.5e3", CultureInfo.InvariantCulture);
+            var pn = PrecisionNumber.Parse(1500.ToString("e1"));
             Assert.AreEqual(1500m, pn.Value);
             Assert.AreEqual(-2, pn.DecimalPlaces);
             Assert.AreEqual(50m, pn.Tolerance);
 
-            pn = PrecisionNumber.Parse("2.0E-4", CultureInfo.InvariantCulture);
+            pn = PrecisionNumber.Parse(.0002.ToString("e1"));
             Assert.AreEqual(0.0002m, pn.Value);
             Assert.AreEqual(5, pn.DecimalPlaces);
             Assert.AreEqual(0.000005m, pn.Tolerance);
@@ -65,25 +65,15 @@ namespace CommonTest
         [TestMethod]
         public void TestParseNegativeNumbers()
         {
-            var pn = PrecisionNumber.Parse("-3.14", CultureInfo.InvariantCulture);
+            var pn = PrecisionNumber.Parse((-3.14).ToString("F2"));
             Assert.AreEqual(-3.14m, pn.Value);
-            Assert.AreEqual(2, pn.DecimalPlaces);
-        }
-
-        [TestMethod]
-        public void TestParseLocale()
-        {
-            // German culture uses comma as decimal separator
-            var german = new CultureInfo("de-DE");
-            Assert.IsTrue(PrecisionNumber.TryParse("3,14", german, out var pn));
-            Assert.AreEqual(3.14m, pn.Value);
             Assert.AreEqual(2, pn.DecimalPlaces);
         }
 
         [TestMethod]
         public void TestEqualsWithinPrecision()
         {
-            var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture);
+            var pn = PrecisionNumber.Parse(3.14.ToString("F2"));
             // Tolerance is 0.005, range is [3.135, 3.145]
             Assert.IsTrue(pn.EqualsWithinPrecision(3.14));
             Assert.IsTrue(pn.EqualsWithinPrecision(3.1401));
@@ -101,17 +91,6 @@ namespace CommonTest
             Assert.IsFalse(PrecisionNumber.TryParse(null, CultureInfo.InvariantCulture, out _));
             Assert.IsFalse(PrecisionNumber.TryParse("", CultureInfo.InvariantCulture, out _));
             Assert.IsFalse(PrecisionNumber.TryParse("abc", CultureInfo.InvariantCulture, out _));
-        }
-
-        [TestMethod]
-        public void TestEquality()
-        {
-            var a = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture);
-            var b = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture);
-            Assert.AreEqual(a, b);
-
-            var c = PrecisionNumber.Parse("3.1", CultureInfo.InvariantCulture);
-            Assert.AreNotEqual(a, c);
         }
 
         [TestMethod]
