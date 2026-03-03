@@ -73,6 +73,16 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap AcquisitionComparison_start {
+            get {
+                object obj = ResourceManager.GetObject("AcquisitionComparison_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap AuditLog_start {
             get {
                 object obj = ResourceManager.GetObject("AuditLog_start", resourceCulture);
@@ -260,6 +270,16 @@ namespace pwiz.Skyline.Controls.Startup {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PeakBoundaryImputation_start {
+            get {
+                object obj = ResourceManager.GetObject("PeakBoundaryImputation_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>

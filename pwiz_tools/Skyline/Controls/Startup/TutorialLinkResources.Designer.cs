@@ -79,6 +79,24 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_comp_acq.
+        /// </summary>
+        internal static string AcquisitionComparison_pdf {
+            get {
+                return ResourceManager.GetString("AcquisitionComparison_pdf", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/tutorials/AcquisitionComparisonMzml.zip.
+        /// </summary>
+        internal static string AcquisitionComparison_zip {
+            get {
+                return ResourceManager.GetString("AcquisitionComparison_zip", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_audit_log.
         /// </summary>
         internal static string AuditLog_pdf {
@@ -501,6 +519,24 @@ namespace pwiz.Skyline.Controls.Startup {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_peak_impute_dia.
+        /// </summary>
+        internal static string PeakBoundaryImputation_pdf {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImputation_pdf", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/tutorials/PeakBoundaryImputation-DIA.zip.
+        /// </summary>
+        internal static string PeakBoundaryImputation_zip {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImputation_zip", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_prm_orbi.
         /// </summary>

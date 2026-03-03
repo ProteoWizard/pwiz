@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Controls.Startup
             var labelFont = new Font(@"Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
             var labelWidth = flowLayoutPanelTutorials.ClientRectangle.Width - SystemInformation.VerticalScrollBarWidth;
-            var tutorialProteomicBoxPanels = new Control[]
+            var tutorialIntroBoxPanels = new Control[]
             {
                 new Label // Section heading
                 {
@@ -320,6 +320,52 @@ namespace pwiz.Skyline.Controls.Startup
                     ),
                     Description = TutorialTextResources.ExistingQuant_Description,
                 },
+            };
+            var tutorialIntroFullScanBoxPanels = new Control[]
+            {
+                new Label // Section heading
+                {
+                    Text = TutorialTextResources.Section_Intro_Full_Scan,
+                    Font = labelFont,
+                    Anchor = labelAnchor,
+                    Width = labelWidth
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.AcquisitionComparison_Caption,
+                    Icon = TutorialImageResources.AcquisitionComparison_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.AcquisitionComparison_zip,
+                        TutorialLinkResources.AcquisitionComparison_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.AcquisitionComparison_Description
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.PRMOrbitrap_Caption,
+                    Icon = TutorialImageResources.PRMOrbitrap_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.PRMOrbitrap_zip,
+                        TutorialLinkResources.PRMOrbitrap_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.PRMOrbitraip_Description
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.DIA_Caption,
+                    Icon = TutorialImageResources.DIA_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.DIA_zip,
+                        TutorialLinkResources.DIA_pdf,
+                        TutorialLinkResources.DIA_sky
+                    ),
+                    Description = TutorialTextResources.DIA_Description
+                },
+            };
+            var tutorialFullScanBoxPanels = new Control[]
+            {
                 new Label // Section heading
                 {
                     Text = TutorialTextResources.Section_Full_Scan_Acquisition_Data,
@@ -362,28 +408,6 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new TutorialActionBoxControl
                 {
-                    Caption = TutorialTextResources.PRMOrbitrap_Caption,
-                    Icon = TutorialImageResources.PRMOrbitrap_start,
-                    EventAction = () => Tutorial(
-                        TutorialLinkResources.PRMOrbitrap_zip,
-                        TutorialLinkResources.PRMOrbitrap_pdf,
-                        string.Empty
-                    ),
-                    Description = TutorialTextResources.PRMOrbitraip_Description
-                },
-                new TutorialActionBoxControl
-                {
-                    Caption = TutorialTextResources.DIA_Caption,
-                    Icon = TutorialImageResources.DIA_start,
-                    EventAction = () => Tutorial(
-                        TutorialLinkResources.DIA_zip,
-                        TutorialLinkResources.DIA_pdf,
-                        TutorialLinkResources.DIA_sky
-                    ),
-                    Description = TutorialTextResources.DIA_Description
-                },
-                new TutorialActionBoxControl
-                {
                     Caption = TutorialTextResources.DIA_SWATH_Caption,
                     Icon = TutorialImageResources.DIA_SWATH_start,
                     EventAction = () => Tutorial(
@@ -414,7 +438,18 @@ namespace pwiz.Skyline.Controls.Startup
                         string.Empty
                     ),
                     Description = TutorialTextResources.DIA_Umpire_TTOF_Description
-                }
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.PeakBoundaryImputation_Caption,
+                    Icon = TutorialImageResources.PeakBoundaryImputation_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.PeakBoundaryImputation_zip,
+                        TutorialLinkResources.PeakBoundaryImputation_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.PeakBoundaryImputation_Description
+                },
             };
             var tutorialSmallMoleculeBoxPanels = new Control[]
             {
@@ -602,13 +637,24 @@ namespace pwiz.Skyline.Controls.Startup
             };
 
             Control previousBox = null;
-            // For small molecule mode, lead with small molecule tutorials
-            var tutorialBoxPanels = ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
-                ? tutorialSmallMoleculeBoxPanels.ToList()
-                : tutorialProteomicBoxPanels.ToList();
-            tutorialBoxPanels.AddRange(ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules
-                ? tutorialSmallMoleculeBoxPanels
-                : tutorialProteomicBoxPanels);
+            List<Control> tutorialBoxPanels;
+            if (ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                // Small molecule mode: SmallMol -> Intro -> IntroFullScan -> FullScan -> Reports -> Advanced
+                tutorialBoxPanels = tutorialSmallMoleculeBoxPanels.ToList();
+                tutorialBoxPanels.AddRange(tutorialIntroBoxPanels);
+            }
+            else
+            {
+                // Proteomic mode: Intro -> IntroFullScan -> FullScan -> SmallMol -> Reports -> Advanced
+                tutorialBoxPanels = tutorialIntroBoxPanels.ToList();
+            }
+            tutorialBoxPanels.AddRange(tutorialIntroFullScanBoxPanels);
+            tutorialBoxPanels.AddRange(tutorialFullScanBoxPanels);
+            if (ModeUI != SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                tutorialBoxPanels.AddRange(tutorialSmallMoleculeBoxPanels);
+            }
             tutorialBoxPanels.AddRange(tutorialReportsBoxPanels);
             tutorialBoxPanels.AddRange(tutorialAdvancedBoxPanels);
             flowLayoutPanelTutorials.Controls.Clear();

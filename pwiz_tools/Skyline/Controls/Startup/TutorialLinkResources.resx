@@ -365,4 +365,20 @@
     <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_audit_log</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
+  <data name="AcquisitionComparison_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/AcquisitionComparisonMzml.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="AcquisitionComparison_pdf" xml:space="preserve">
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_comp_acq</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="PeakBoundaryImputation_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/PeakBoundaryImputation-DIA.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="PeakBoundaryImputation_pdf" xml:space="preserve">
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_peak_impute_dia</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
 </root>
