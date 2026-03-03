@@ -161,7 +161,7 @@
     <value>https://skyline.ms/tutorials/DdaSearchMs1Filtering.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
-  <data name="DDSearch_pdf" xml:space="preserve">
+  <data name="DDASearch_pdf" xml:space="preserve">
     <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_dda_search</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>

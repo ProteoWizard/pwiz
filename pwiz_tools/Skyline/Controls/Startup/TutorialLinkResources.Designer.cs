@@ -153,9 +153,9 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized string similar to https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_dda_search.
         /// </summary>
-        internal static string DDSearch_pdf {
+        internal static string DDASearch_pdf {
             get {
-                return ResourceManager.GetString("DDSearch_pdf", resourceCulture);
+                return ResourceManager.GetString("DDASearch_pdf", resourceCulture);
             }
         }
         

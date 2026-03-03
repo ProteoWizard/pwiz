@@ -144,9 +144,9 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized string similar to Get hands-on experience starting DDA mass spectrometer files, running a peptide search with MS Amanda, building a spectral library from the search results and finally extracting chromatograms for quantitative analysis from the MS1 spectra in the DDA files. In this tutorial, you will use the Skyline Peptide Search wizard to search 3 DDA data files acquired from a human whole cell lysate with the Sigma Alrich UPS1 standard mix of stable isotope labeled proteins spiked in. You will set up Skyline to extract th [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string DDSearch_Description {
+        internal static string DDASearch_Description {
             get {
-                return ResourceManager.GetString("DDSearch_Description", resourceCulture);
+                return ResourceManager.GetString("DDASearch_Description", resourceCulture);
             }
         }
         
@@ -204,6 +204,24 @@ namespace pwiz.Skyline.Controls.Startup {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Analysis of TripleTOF DIA/SWATH Data.
+        /// </summary>
+        internal static string DIA_TTOF_Caption {
+            get {
+                return ResourceManager.GetString("DIA_TTOF_Caption", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience using Skyline to perform targeted post-acquisition analysis for peptide and inferred protein detection and quantification using a SWATH-MS dataset acquired on a SCIEX TripleTOF 6600 instrument....
+        /// </summary>
+        internal static string DIA_TTOF_Description {
+            get {
+                return ResourceManager.GetString("DIA_TTOF_Description", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Library-Free DIA/SWATH.
         /// </summary>
@@ -459,9 +477,9 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized string similar to Get hands-on experience setting up an acquisition method to quantify 31 peptides from 19 proteins of interest in murine fibroblasts using Parallel Reaction Monitoring (PRM). Work with three biological replicates measured in 9 runs on a Thermo Fusion mass spectrometer employing the Orbitrap mass analyzer..
         /// </summary>
-        internal static string PRMOrbitraip_Description {
+        internal static string PRMOrbitrap_Description {
             get {
-                return ResourceManager.GetString("PRMOrbitraip_Description", resourceCulture);
+                return ResourceManager.GetString("PRMOrbitrap_Description", resourceCulture);
             }
         }
         

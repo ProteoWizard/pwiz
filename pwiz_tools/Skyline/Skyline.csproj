@@ -1311,6 +1311,7 @@
     </Compile>
     <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
     <Compile Include="ToolsUI\JsonToolServer.cs" />
+    <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
@@ -1612,6 +1613,7 @@
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Startup\ActionTutorial.cs" />
+    <Compile Include="Controls\Startup\TutorialCatalog.cs" />
     <Compile Include="Controls\Startup\RecentFileControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

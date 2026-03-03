@@ -410,6 +410,99 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_get_available_tutorials"),
+     Description("List all available Skyline tutorials with their categories, descriptions, " +
+        "wiki page URLs, and data download URLs. Returns tab-separated lines: " +
+        "Category, Name, Title, Description, WikiUrl, ZipUrl. Use skyline_get_tutorial " +
+        "to fetch the full content of a specific tutorial.")]
+    public static string GetAvailableTutorials()
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetAvailableTutorials");
+            return string.IsNullOrEmpty(result)
+                ? "No tutorials available."
+                : result;
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_tutorial"),
+     Description("Fetch the content of a Skyline tutorial as markdown text. The tutorial " +
+        "is fetched from GitHub (pinned to the running Skyline version), converted to " +
+        "markdown, and saved to a local file. Returns a JSON object with file_path, " +
+        "title, and toc (table of contents with headings and line numbers). Use the " +
+        "Read tool with offset/limit to read specific sections from the file. " +
+        "Use skyline_get_available_tutorials to discover tutorial names.")]
+    public static string GetTutorial(
+        [Description("Tutorial name (e.g., 'MethodEdit', 'DIA-TTOF', 'SmallMolecule'). " +
+            "Use the Name column from skyline_get_available_tutorials.")] string name,
+        [Description("Language code (default: 'en'). Also available: 'ja' (Japanese), " +
+            "'zh-CHS' (Simplified Chinese) for some tutorials.")] string language = "en",
+        [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetTutorial", name, language, filePath);
+            if (string.IsNullOrEmpty(result))
+                return $"Tutorial not found: {name}";
+
+            // Parse the JSON to give a friendly summary
+            using var doc = JsonDocument.Parse(result);
+            var root = doc.RootElement;
+            string savedPath = root.GetProperty("file_path").GetString();
+            string title = root.GetProperty("title").GetString();
+            int lineCount = root.GetProperty("line_count").GetInt32();
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Tutorial: {title}");
+            sb.AppendLine($"Lines: {lineCount}");
+            sb.AppendLine($"File: {savedPath}");
+            sb.AppendLine();
+            sb.AppendLine("Table of Contents:");
+            foreach (var entry in root.GetProperty("toc").EnumerateArray())
+            {
+                int level = entry.GetProperty("level").GetInt32();
+                string heading = entry.GetProperty("heading").GetString();
+                int line = entry.GetProperty("line").GetInt32();
+                string indent = level > 1 ? "  " : "";
+                sb.AppendLine($"{indent}- {heading} (line {line})");
+            }
+            sb.AppendLine();
+            sb.AppendLine("Use the Read tool to read sections from the file.");
+            return sb.ToString();
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_tutorial_image"),
+     Description("Download a screenshot image from a Skyline tutorial. Use this to view " +
+        "tutorial screenshots referenced in the markdown content (e.g., '[Screenshot: s-01.png]'). " +
+        "The image is downloaded from GitHub (pinned to the running Skyline version) and saved " +
+        "to a local file. Use the Read tool to view the image at the returned file path.")]
+    public static string GetTutorialImage(
+        [Description("Tutorial name (e.g., 'MethodEdit', 'DIA-TTOF'). " +
+            "Use the Name column from skyline_get_available_tutorials.")] string name,
+        [Description("Image filename from the tutorial markdown " +
+            "(e.g., 's-01.png', 's-ttof-label-free-proteome-quantification.png').")] string imageFilename,
+        [Description("Language code (default: 'en').")] string language = "en",
+        [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetTutorialImage", name, imageFilename, language, filePath);
+            if (string.IsNullOrEmpty(result))
+                return $"Image not found: {imageFilename} in tutorial {name}";
+
+            using var doc = JsonDocument.Parse(result);
+            var root = doc.RootElement;
+            string savedPath = root.GetProperty("file_path").GetString();
+
+            return $"Image downloaded: {savedPath}\n\nUse the Read tool to view this image.";
+        });
+    }
+
     /// <summary>
     /// Controls the level of detail in error messages returned to the LLM.
     /// </summary>

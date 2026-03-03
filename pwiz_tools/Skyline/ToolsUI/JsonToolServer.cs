@@ -349,6 +349,11 @@ namespace pwiz.Skyline.ToolsUI
                 $@"Document: {docDisplay}");
         }
 
+        public string GetAvailableTutorials()
+        {
+            return JsonTutorialCatalog.FormatCatalog();
+        }
+
         public string GetReportDocTopics()
         {
             string html = GenerateReportDocHtml();
@@ -695,6 +700,16 @@ namespace pwiz.Skyline.ToolsUI
                 return SerializeSettingsItem(item);
             }
             throw new ArgumentException(@"Item not found: " + itemName);
+        }
+
+        public string GetTutorial(string name, string language = @"en", string filePath = null)
+        {
+            return JsonTutorialCatalog.FetchTutorial(name, language, filePath);
+        }
+
+        public string GetTutorialImage(string name, string imageFilename, string language = @"en", string filePath = null)
+        {
+            return JsonTutorialCatalog.FetchTutorialImage(name, imageFilename, language, filePath);
         }
 
         public string GetDocumentSettings(string filePath)
