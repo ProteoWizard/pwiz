@@ -612,6 +612,8 @@ namespace TestPerf
 //            RunPerfTests = true;
 //            IsCoverShotMode = true;
             CoverShotName = IsTtof ? "DIA-TTOF" : RootName;
+            if (IsDiaNN)
+                CoverShotName += "-DIANN";
 
             RunFunctionalTest();
         }
