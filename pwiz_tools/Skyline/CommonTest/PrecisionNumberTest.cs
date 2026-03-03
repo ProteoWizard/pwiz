@@ -27,7 +27,7 @@ using pwiz.SkylineTestUtil;
 namespace CommonTest
 {
     [TestClass]
-    public class PrecisionNumberTest
+    public class PrecisionNumberTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestParseRegularNumbers()

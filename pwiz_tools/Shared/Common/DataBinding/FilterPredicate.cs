@@ -54,7 +54,7 @@ namespace pwiz.Common.DataBinding
             }
 
             var handler = dataSchema.GetFilterHandler(columnType);
-            return new FilterPredicate(filterOperation, Convert.ToString(handler.ParseOperand(filterOperation, operandText, CultureInfo.CurrentCulture), CultureInfo.InvariantCulture));
+            return new FilterPredicate(filterOperation, handler.OperandToString(filterOperation, handler.ParseOperand(filterOperation, operandText, CultureInfo.CurrentCulture), CultureInfo.InvariantCulture));
         }
 
         public static FilterPredicate SafeParse(DataSchema dataSchema, Type columnType,
@@ -104,24 +104,13 @@ namespace pwiz.Common.DataBinding
         {
             try
             {
-                return Convert.ToString(
-                    dataSchema.GetFilterHandler(propertyType)
-                        .ParseOperand(FilterOperation, InvariantOperandText, CultureInfo.InvariantCulture), CultureInfo.CurrentCulture);
+                var handler = dataSchema.GetFilterHandler(propertyType);
+                return handler.OperandToString(FilterOperation, InvariantOperandText, CultureInfo.CurrentCulture);
             }
             catch (Exception)
             {
                 return InvariantOperandText;
             }
-        }
-
-        private static string OperandValueToString(CultureInfo cultureInfo, object operandValue)
-        {
-            if (operandValue == null)
-            {
-                return null;
-            }
-
-            return LocalizationHelper.CallWithCulture(cultureInfo, operandValue.ToString);
         }
 
         public Predicate<object> MakePredicate(DataSchema dataSchema, Type columnType)

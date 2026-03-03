@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.Filtering
 {
@@ -257,8 +258,10 @@ namespace pwiz.Common.DataBinding.Filtering
                 return string.Empty;
             }
 
-            return new ListColumnValue<string>(operandList.AsEnumerable()
-                .Select(v => ElementHandler.OperandToString(FilterOperations.OP_EQUALS, operand, cultureInfo))).ToString();
+            var strings = operandList.AsEnumerable()
+                .Select(v => ElementHandler.OperandToString(FilterOperations.OP_EQUALS, v, cultureInfo))
+                .ToImmutable();
+            return new ListColumnValue<string>(strings).ToString();
         }
 
         public bool StartsWith(object value, object operand)
