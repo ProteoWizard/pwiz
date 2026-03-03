@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ColumnToolTips {
@@ -1344,6 +1344,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Group {
             get {
                 return ResourceManager.GetString("Group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of the group comparison.
+        /// </summary>
+        public static string GroupComparison {
+            get {
+                return ResourceManager.GetString("GroupComparison", resourceCulture);
             }
         }
         
@@ -4230,6 +4239,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SMILES {
             get {
                 return ResourceManager.GetString("SMILES", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation.
+        /// </summary>
+        public static string SourceOffsetVoltage {
+            get {
+                return ResourceManager.GetString("SourceOffsetVoltage", resourceCulture);
             }
         }
         

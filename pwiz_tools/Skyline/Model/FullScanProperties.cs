@@ -128,6 +128,11 @@ namespace pwiz.Skyline.Model
             {
                 res.WindowGroup = spectrum.WindowGroup.ToString(CultureInfo.CurrentCulture); // For Bruker PASEF MS2
             }
+
+            if (spectrum.Metadata.SourceOffsetVoltage.HasValue)
+            {
+                res.SourceOffsetVoltage = spectrum.Metadata.SourceOffsetVoltage.Value.ToString(Formats.OPT_PARAMETER, CultureInfo.CurrentCulture);
+            }
             return res;
         }
         [Category("FileInfo")] public string FileName { get; set; }
@@ -157,6 +162,7 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string InjectionTime { get; set; }
         [Category("AcquisitionInfo")] public string IsCentroided { get; set; }
         [Category("AcquisitionInfo")] public string WindowGroup { get; set; } // For Bruker PASEF
+        [Category("AcquisitionInfo")] public string SourceOffsetVoltage { get; set; }
         [Category("MatchInfo")] public string dotp { get; set; }
         [Category("MatchInfo")] public string idotp { get; set; }
         [Category("MatchInfo")] public string rdotp { get; set; }

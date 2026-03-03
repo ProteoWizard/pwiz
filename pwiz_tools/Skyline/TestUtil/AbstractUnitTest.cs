@@ -17,18 +17,19 @@
  * limitations under the License.
  */
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
-using pwiz.ProteomeDatabase.Util;
-using pwiz.Skyline;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.ProteomeDatabase.Util;
+using pwiz.Skyline;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
 
 // Once-per-application setup information to perform logging with log4net.
@@ -186,6 +187,27 @@ namespace pwiz.SkylineTestUtil
         public static string GetPerfTestDataURL(string filename)
         {
             return @"https://" + PanoramaDomainAndPath + @"/perftests/" + filename;
+        }
+
+        /// <summary>
+        /// Finds the ai/.tmp directory by walking up from the Skyline project directory
+        /// looking for a sibling "ai" folder that contains a ".tmp" subfolder.
+        /// Returns null if not found (e.g. on build servers without the ai repo).
+        /// </summary>
+        public static string FindAiTmpPath(string relativePath = null)
+        {
+            var projectDir = ExtensionTestContext.GetProjectDirectory();
+            if (projectDir == null)
+                return null;
+            for (var dir = Path.GetDirectoryName(projectDir);
+                 dir != null && dir.Length > 3;
+                 dir = Path.GetDirectoryName(dir))
+            {
+                var aiTmp = Path.Combine(dir, "ai", ".tmp");
+                if (Directory.Exists(aiTmp))
+                    return relativePath != null ? Path.Combine(aiTmp, relativePath) : aiTmp;
+            }
+            return null;
         }
 
         private string[] _testFilesZips;
@@ -441,6 +463,7 @@ namespace pwiz.SkylineTestUtil
                 if (isTeamCity)
                     DesiredCleanupLevel = DesiredCleanupLevel.all;
             }
+            FileStreamManager.Default.StartTrackingHistory();
             STOPWATCH.Restart();
             Initialize();
         }
@@ -480,6 +503,34 @@ namespace pwiz.SkylineTestUtil
         public bool IsParallelClient => TestContext.Properties.Contains("ParallelClientId");
 
         private void CleanupFiles()
+        {
+            // Report any pooled streams left open, then stop tracking and clean up
+            string poolReport = FileStreamManager.Default.ReportPooledStreams();
+            FileStreamManager.Default.EndTrackingHistory();
+            FileStreamManager.Default.CloseAllStreams();
+
+            Exception cleanupException = null;
+            try
+            {
+                CleanupSystemFiles();
+            }
+            catch (Exception ex)
+            {
+                cleanupException = ex;
+            }
+
+            if (poolReport != null || cleanupException != null)
+            {
+                var errors = new List<string>();
+                if (poolReport != null)
+                    errors.AddRange(new[] {"Streams left open:", string.Empty, poolReport});
+                if (cleanupException != null)
+                    errors.AddRange(new[] {"CleanupFiles failed:", string.Empty, cleanupException.Message});
+                Assert.Fail(TextUtil.LineSeparate(errors));
+            }
+        }
+
+        private void CleanupSystemFiles()
         {
             using var traceListener = EnableTraceOutputDuringCleanup ? new ScopedConsoleTraceListener() : null;
 

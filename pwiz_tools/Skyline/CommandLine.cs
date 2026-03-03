@@ -33,7 +33,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -3385,15 +3384,13 @@ namespace pwiz.Skyline
 
         private bool ExportLiveReport(CommandArgs commandArgs)
         {
-            char reportColSeparator = commandArgs.ReportColumnSeparator;
-            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, commandArgs.IsReportInvariant
+            char? reportColSeparator = commandArgs.ReportColumnSeparator;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(_doc, commandArgs.IsReportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            // Make sure invariant report format uses a true comma if a tab separator was not specified.
-            if (commandArgs.IsReportInvariant && commandArgs.ReportColumnSeparator != TextUtil.SEPARATOR_TSV)
-                reportColSeparator = TextUtil.SEPARATOR_CSV;
-            var viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName));
-            if (null == viewInfo)
+            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
+            if (null == viewSpecList.GetView(commandArgs.ReportName))
             {
                 _out.WriteLine(SkylineResources.CommandLine_ExportLiveReport_Error__The_report__0__does_not_exist__If_it_has_spaces_in_its_name__use__double_quotes__around_the_entire_list_of_command_parameters_, commandArgs.ReportName);
                 return false;
@@ -3402,7 +3399,7 @@ namespace pwiz.Skyline
             var success = true;
             var exceptionThrown = !HandleExceptions(commandArgs, () => 
             {
-                using (var saver = new FileSaver(commandArgs.ReportFile))
+                using (var saver = new FileSaver(commandArgs.ReportFile, true))
                 {
                     if (!saver.CanSave())
                     {
@@ -3415,11 +3412,18 @@ namespace pwiz.Skyline
                     IProgressStatus status = new ProgressStatus(string.Empty);
                     IProgressMonitor broker = new CommandProgressMonitor(_out, status);
 
-                    using (var writer = new StreamWriter(saver.SafeName))
+                    IReportExporter rowItemExporter;
+                    if (reportColSeparator.HasValue)
                     {
-                        viewContext.Export(CancellationToken.None, broker, ref status, viewInfo, writer,
-                            reportColSeparator);
+                        rowItemExporter =
+                            ReportExporters.ForSeparator(dataSchema.DataSchemaLocalizer, reportColSeparator.Value);
                     }
+                    else
+                    {
+                        rowItemExporter = ReportExporters.ForFilenameExtension(dataSchema.DataSchemaLocalizer,
+                            Path.GetExtension(commandArgs.ReportFile), TextUtil.EXT_CSV);
+                    }
+                    rowFactories.ExportReport(saver.Stream, PersistedViews.MainGroup.Id.ViewName(commandArgs.ReportName), rowItemExporter, broker, ref status);
 
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();

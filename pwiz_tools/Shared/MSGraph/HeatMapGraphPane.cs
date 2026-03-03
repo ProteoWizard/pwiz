@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using ZedGraph;
 
 namespace pwiz.MSGraph
@@ -33,7 +32,7 @@ namespace pwiz.MSGraph
         public int MinDotRadius { get; set; }
         public int MaxDotRadius { get; set; }
 
-        private HeatMapData _heatMapData;
+        protected HeatMapData _heatMapData;
         private float _yMin;
         private float _yMax;
 
@@ -112,32 +111,6 @@ namespace pwiz.MSGraph
             _heatMapData = heatMapData;
             _yMin = (float) yMin;
             _yMax = (float) Math.Min(yMax, float.MaxValue);
-        }
-
-        /// <summary>
-        /// Provides clean 3-column data (m/z, ion mobility, intensity) for clipboard copy.
-        /// This bypasses the default curve-based extraction which would output data for each
-        /// of the 100 intensity-colored curves separately.
-        /// </summary>
-        /// <returns>Tuple of (xAxisTitle, yAxisTitle, points) or null if no data available</returns>
-        public Tuple<string, string, IEnumerable<Point3D>> GetHeatMapDataForClipboard()
-        {
-            if (_heatMapData == null || !ShowHeatMap)
-            {
-                return null;
-            }
-
-            var points = _heatMapData.GetAllPoints().Select(p => p.Point).ToList();
-            if (points.Count == 0)
-            {
-                return null;
-            }
-
-            // Get axis titles for column headers
-            var xAxisTitle = XAxis?.Title?.Text ?? @"m/z";
-            var yAxisTitle = YAxis?.Title?.Text ?? @"Ion Mobility";
-
-            return Tuple.Create(xAxisTitle, yAxisTitle, (IEnumerable<Point3D>)points);
         }
 
         /// <summary>

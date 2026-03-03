@@ -3632,5 +3632,17 @@ namespace pwiz.Skyline.Properties {
                 this["MaxChromatogramGraphs"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10000000")]
+        public int MaxGridRowCount {
+            get {
+                return ((int)(this["MaxGridRowCount"]));
+            }
+            set {
+                this["MaxGridRowCount"] = value;
+            }
+        }
     }
 }
