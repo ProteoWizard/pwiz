@@ -74,10 +74,10 @@ namespace CommonTest
         public void TestDefaultPrecisionNumber()
         {
             var pnDefault = default(PrecisionNumber);
-            Assert.AreEqual(0, pnDefault.DecimalPlaces);
+            Assert.AreEqual(-1, pnDefault.DecimalPlaces);
             Assert.AreEqual(0, pnDefault.SignificantDigits);
             Assert.AreEqual(0m, pnDefault.Value);
-            Assert.AreEqual(0.5m, pnDefault.Tolerance);
+            Assert.AreEqual(5m, pnDefault.Tolerance);
             var pnZero = new PrecisionNumber(0m).ChangeSignificantDigits(0);
             Assert.AreEqual(pnDefault, pnZero);
         }
@@ -100,34 +100,42 @@ namespace CommonTest
         [TestMethod]
         public void TestParsePrecisionNumber()
         {
-            var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture, true);
-            Assert.AreEqual("3.14", pn.ToString(CultureInfo.InvariantCulture, true));
+            var str = 3.14.ToString("F2");
+            var pn = PrecisionNumber.Parse(str);
+            Assert.AreEqual(str, pn.ToString());
         }
 
         [TestMethod]
-        public void TestPrecisionNumbers()
+        public void TestFinitePrecisionNumbers()
         {
-            foreach (var value in new[] { Math.PI, Math.E })
+            VerifyFiniteNumber(Math.PI);
+            VerifyFiniteNumber(Math.E);
+            VerifyFiniteNumber(PrecisionNumber.MIN_DOUBLE);
+            VerifyFiniteNumber(PrecisionNumber.MAX_DOUBLE);
+        }
+
+        private void VerifyFiniteNumber(double value)
+        {
+            for (int significantDigits = 1; significantDigits <= PrecisionNumber.MAX_SIGNIFICANT_DIGITS; significantDigits++)
             {
-                for (int significantDigits = 1; significantDigits <= PrecisionNumber.MAX_SIGNIFICANT_DIGITS; significantDigits++)
+                var precisionNumber = PrecisionNumber.FromDouble(value).ChangeSignificantDigits(significantDigits);
+                AssertEx.IsTrue(precisionNumber.EqualsWithinPrecision((decimal) value));
+                VerifyNumber(precisionNumber, precisionNumber.ToDouble());
+                for (var scaledValue = value / 10; scaledValue > 1e-15; scaledValue /= 10)
                 {
-                    var precisionNumber = PrecisionNumber.WithSignificantDigits((decimal) value, significantDigits);
-                    VerifyRoundTrip(precisionNumber);
-                    for (var scaledValue = value / 10; scaledValue > 1e-15; scaledValue /= 10)
-                    {
-                        precisionNumber = PrecisionNumber.WithSignificantDigits((decimal) scaledValue, significantDigits);
-                        VerifyRoundTrip(precisionNumber);
-                    }
-                    for (var scaledValue = value * 10; scaledValue < 1e15; scaledValue *= 10)
-                    {
-                        precisionNumber = PrecisionNumber.WithSignificantDigits((decimal) scaledValue, significantDigits);
-                        VerifyRoundTrip(precisionNumber);
-                    }
+                    precisionNumber = PrecisionNumber.FromDouble(scaledValue).ChangeSignificantDigits(significantDigits);
+                    AssertEx.IsTrue(precisionNumber.EqualsWithinPrecision(scaledValue));
+                    VerifyNumber(precisionNumber, precisionNumber.ToDouble());
+                }
+                for (var scaledValue = value * 10; Math.Abs(scaledValue) < 1e15; scaledValue *= 10)
+                {
+                    precisionNumber = PrecisionNumber.FromDouble(scaledValue).ChangeSignificantDigits(significantDigits);
+                    Assert.IsTrue(precisionNumber.EqualsWithinPrecision(scaledValue));
+                    VerifyNumber(precisionNumber, precisionNumber.ToDouble());
                 }
             }
         }
 
-        
 
         private void VerifyRoundTrip(PrecisionNumber precisionNumber)
         {
@@ -150,17 +158,51 @@ namespace CommonTest
         [TestMethod]
         public void TestInfinitePrecisionNumbers()
         {
-            foreach ((PrecisionNumber precisionValue, double doubleValue) in new[]
-                     {
-                         (PrecisionNumber.NAN, double.NaN),
-                         (PrecisionNumber.NEGATIVE_INFINITY, double.NegativeInfinity),
-                         (PrecisionNumber.POSITIVE_INFINITY, double.PositiveInfinity)
-                     })
+            VerifyNumber(PrecisionNumber.NAN, double.NaN);
+
+            VerifyNumber(PrecisionNumber.NEGATIVE_INFINITY, double.NegativeInfinity);
+            VerifyNumber(PrecisionNumber.FromDouble(BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits((double)decimal.MinValue) + 1)), double.NegativeInfinity);
+
+            VerifyNumber(PrecisionNumber.POSITIVE_INFINITY, double.PositiveInfinity);
+            VerifyNumber(PrecisionNumber.FromDouble(BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits((double)decimal.MaxValue) + 1)), double.PositiveInfinity);
+        }
+
+        private void VerifyNumber(PrecisionNumber precisionNumber, double expectedDoubleValue)
+        {
+            VerifyRoundTrip(precisionNumber);
+            Assert.AreEqual(expectedDoubleValue, precisionNumber.ToDouble());
+            Assert.AreEqual(precisionNumber, PrecisionNumber.FromDouble(expectedDoubleValue).ChangeSignificantDigits(precisionNumber.SignificantDigits));
+            Assert.AreEqual(precisionNumber, PrecisionNumber.FromDouble(expectedDoubleValue).ChangeDecimalPlaces(precisionNumber.DecimalPlaces));
+            Assert.IsTrue(precisionNumber.EqualsWithinPrecision(expectedDoubleValue));
+            if (double.IsNaN(expectedDoubleValue) || double.IsInfinity(expectedDoubleValue))
             {
-                Assert.IsFalse(precisionValue.IsFinite);
-                Assert.AreEqual(doubleValue, precisionValue.ToDouble());
-                Assert.AreEqual(doubleValue.ToString(CultureInfo.CurrentCulture), precisionValue.ToString());
-                Assert.AreEqual(precisionValue, PrecisionNumber.Parse(doubleValue.ToString(CultureInfo.CurrentCulture)));
+                Assert.IsFalse(precisionNumber.IsFinite);
+            }
+            else
+            {
+                Assert.IsTrue(precisionNumber.IsFinite);
+                Assert.AreEqual(-1, precisionNumber.CompareTo(double.MaxValue));
+                Assert.AreEqual(1, precisionNumber.CompareTo(double.MinValue));
+                if (Equals(decimal.MinValue, precisionNumber.Value))
+                {
+                    Assert.AreEqual(0, precisionNumber.CompareTo(decimal.MinValue));
+                }
+                else
+                {
+                    Assert.AreEqual(1, precisionNumber.CompareTo(decimal.MinValue));
+                }
+
+                if (Equals(decimal.MaxValue, precisionNumber.Value))
+                {
+                    Assert.AreEqual(0, precisionNumber.CompareTo(decimal.MaxValue));
+                }
+                else
+                {
+                    Assert.AreEqual(-1, precisionNumber.CompareTo(decimal.MaxValue));
+                }
+                Assert.AreEqual(precisionNumber.ToDouble(), PrecisionNumber.Parse(precisionNumber.Value.ToString(CultureInfo.CurrentCulture))
+                    .ChangeSignificantDigits(precisionNumber.SignificantDigits).ToDouble());
+
             }
         }
 

@@ -34,46 +34,32 @@ namespace pwiz.Common.SystemUtil
         public static readonly PrecisionNumber NAN = new PrecisionNumber(0, short.MinValue, 0);
         public static readonly PrecisionNumber POSITIVE_INFINITY = new PrecisionNumber(0, short.MinValue, 1);
         public static readonly PrecisionNumber NEGATIVE_INFINITY = new PrecisionNumber(0, short.MinValue, -1);
+        public static readonly PrecisionNumber MAX_VALUE = new PrecisionNumber(7e28m, 28, 1);
+        public static readonly PrecisionNumber MIN_VALUE = new PrecisionNumber(-7e28m, 28, 1);
+
+        public static readonly double MAX_DOUBLE =
+            BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(MAX_VALUE.ToDouble()) - 1);
+        public static readonly double MIN_DOUBLE =
+            BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(MIN_VALUE.ToDouble()) - 1);
+
 
         public PrecisionNumber(int value) : this((decimal)value)
         {
         }
 
-        public PrecisionNumber(double value) : this((decimal)value)
+        public PrecisionNumber(double value) : this(FromDouble(value))
         {
         }
 
-        public PrecisionNumber(decimal value) : this(value, MAX_SIGNIFICANT_DIGITS)
+        public PrecisionNumber(decimal value) : this(WithSignificantDigits(value, MAX_SIGNIFICANT_DIGITS))
         {
         }
 
-        private PrecisionNumber(decimal value, int significantDigits)
+        private PrecisionNumber(PrecisionNumber other)
         {
-            double absValue = Math.Abs((double)value);
-            var log10 = absValue == 0 ? double.NaN : Math.Log10(absValue);
-            if (double.IsInfinity(log10) || double.IsNaN(log10))
-            {
-                _log10 = 0;
-                _significantDigits = (short)Math.Min(Math.Max(0, significantDigits), MAX_SIGNIFICANT_DIGITS);
-                Value = 0;
-                return;
-            }
-            _log10 = (short) log10;
-            _significantDigits = (short)Math.Min(Math.Max(significantDigits, 1), MAX_SIGNIFICANT_DIGITS);
-            int decimalPlaces = _significantDigits - _log10;
-            if (decimalPlaces > 28)
-            {
-                Value = value;
-            }
-            else if (decimalPlaces >= 0)
-            {
-                Value = Math.Round(value, decimalPlaces);
-            }
-            else
-            {
-                var pow10 = Pow10(-decimalPlaces);
-                Value = Math.Round(value / pow10) * pow10;
-            }
+            Value = other.Value;
+            _log10 = other._log10;
+            _significantDigits = other._significantDigits;
         }
 
         private PrecisionNumber(decimal value, short log10, short significantDigits)
@@ -85,21 +71,25 @@ namespace pwiz.Common.SystemUtil
 
         public PrecisionNumber ChangeSignificantDigits(int newSignificantDigits)
         {
+            if (!IsFinite)
+            {
+                return this;
+            }
             if (newSignificantDigits == SignificantDigits)
             {
                 return this;
             }
-            return new PrecisionNumber(Value, newSignificantDigits);
+            return WithSignificantDigits(Value, newSignificantDigits);
         }
 
         public PrecisionNumber ChangeDecimalPlaces(int newDecimalPlaces)
         {
-            int newSignificantDigits = newDecimalPlaces + _log10;
+            int newSignificantDigits = newDecimalPlaces + _log10 + 1;
             if (newSignificantDigits == SignificantDigits)
             {
                 return this;
             }
-            return new PrecisionNumber(Value, newSignificantDigits);
+            return WithSignificantDigits(Value, newSignificantDigits);
         }
 
         public static PrecisionNumber WithDecimalPlaces(decimal value, int decimalPlaces)
@@ -109,7 +99,58 @@ namespace pwiz.Common.SystemUtil
 
         public static PrecisionNumber WithSignificantDigits(decimal value, int significantDigits)
         {
-            return new PrecisionNumber(value).ChangeSignificantDigits(significantDigits);
+            if (value < MIN_VALUE.Value)
+            {
+                return NEGATIVE_INFINITY;
+            }
+
+            if (value > MAX_VALUE.Value)
+            {
+                return POSITIVE_INFINITY;
+            }
+            double absValue = Math.Abs((double)value);
+            var log10 = absValue == 0 ? double.NaN : Math.Log10(absValue);
+            if (double.IsInfinity(log10) || double.IsNaN(log10))
+            {
+                return new PrecisionNumber(0, 0, (short)Math.Min(Math.Max(0, significantDigits), MAX_SIGNIFICANT_DIGITS));
+            }
+            var floorLog10 = (short)Math.Floor(log10);
+            var sigFigs = (short)Math.Min(Math.Max(significantDigits, 1), MAX_SIGNIFICANT_DIGITS);
+            int decimalPlaces = sigFigs - floorLog10 - 1;
+            decimal roundedValue;
+            if (decimalPlaces > 28)
+            {
+                roundedValue = value;
+            }
+            else if (decimalPlaces >= 0)
+            {
+                roundedValue = Math.Round(value, decimalPlaces);
+            }
+            else
+            {
+                var pow10 = Pow10(-decimalPlaces);
+                roundedValue = Math.Round(value / pow10) * pow10;
+            }
+
+            return new PrecisionNumber(roundedValue, floorLog10, sigFigs);
+        }
+
+        public static PrecisionNumber FromDouble(double value)
+        {
+            if (double.IsNaN(value))
+            {
+                return NAN;
+            }
+            if (value <= (double) decimal.MinValue)
+            {
+                return NEGATIVE_INFINITY;
+            }
+            if (value >= (double) decimal.MaxValue)
+            {
+                return POSITIVE_INFINITY;
+            }
+
+            return WithSignificantDigits((decimal)value, MAX_SIGNIFICANT_DIGITS);
         }
 
         public decimal Value
@@ -121,7 +162,7 @@ namespace pwiz.Common.SystemUtil
         private readonly short _log10;
         public int DecimalPlaces
         {
-            get { return _significantDigits - _log10; }
+            get { return _significantDigits - _log10 - 1; }
         }
 
         public int SignificantDigits
@@ -134,7 +175,22 @@ namespace pwiz.Common.SystemUtil
         /// For "3.14" (DecimalPlaces=2): 0.005
         /// For "300" (DecimalPlaces=0): 0.5
         /// </summary>
-        public decimal Tolerance => 0.5m / Pow10(DecimalPlaces);
+        public decimal Tolerance
+        {
+            get
+            {
+                if (IsFinite)
+                {
+                    if (DecimalPlaces >= 28)
+                    {
+                        return 1e-28m;
+                    }
+                    return .5m / Pow10(DecimalPlaces);
+                }
+
+                return 0;
+            }
+        }
 
         private static decimal Pow10(int power)
         {
@@ -175,15 +231,15 @@ namespace pwiz.Common.SystemUtil
                         return true;
                     }
 
-                    if (double.IsNegativeInfinity(doubleValue))
+                    if (doubleValue > (double) decimal.MaxValue)
                     {
-                        result = NEGATIVE_INFINITY;
+                        result = POSITIVE_INFINITY;
                         return true;
                     }
 
-                    if (double.IsPositiveInfinity(doubleValue))
+                    if (doubleValue < (double) decimal.MinValue)
                     {
-                        result = POSITIVE_INFINITY;
+                        result = NEGATIVE_INFINITY;
                         return true;
                     }
                 }
@@ -231,6 +287,10 @@ namespace pwiz.Common.SystemUtil
         {
             if (IsFinite)
             {
+                if (other <= (double)decimal.MaxValue && other >= (double)decimal.MinValue)
+                {
+                    return EqualsWithinPrecision((decimal)other);
+                }
                 return other >= (double)(Value - Tolerance) && other <= (double)(Value + Tolerance);
             }
 
