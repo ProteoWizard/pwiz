@@ -54,13 +54,15 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_get_selection"),
-     Description("Get the currently selected element in Skyline (protein, peptide, precursor, transition, etc.). Returns the name/description of whatever is selected in the document tree.")]
+     Description("Get the currently selected element in Skyline (protein, peptide, precursor, " +
+        "transition, etc.). Returns the ElementLocator of the selection, which can be passed " +
+        "to skyline_set_selection. For multi-selection, returns one locator per line.")]
     public static string GetSelection()
     {
         return Invoke(() =>
         {
             using var connection = SkylineConnection.Connect();
-            string selection = connection.Call("GetDocumentLocationName");
+            string selection = connection.Call("GetSelection");
             return string.IsNullOrEmpty(selection)
                 ? "Nothing is currently selected in Skyline."
                 : selection;
@@ -78,6 +80,47 @@ public static class SkylineTools
             return string.IsNullOrEmpty(replicate)
                 ? "No replicate is currently selected."
                 : replicate;
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_replicate_names"),
+     Description("Get the names of all replicates in the Skyline document, one per line. " +
+        "Use skyline_set_replicate to activate a specific replicate.")]
+    public static string GetReplicateNames()
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetReplicateNames");
+            return string.IsNullOrEmpty(result)
+                ? "No replicates in the document."
+                : result;
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_locations"),
+     Description("Enumerate document tree elements at a specified level, optionally scoped " +
+        "to a parent element. Returns tab-separated Name and ElementLocator per line. " +
+        "Use the returned locators with skyline_set_selection to navigate, or as rootLocator " +
+        "for deeper enumeration.")]
+    public static string GetLocations(
+        [Description("Tree level to enumerate: 'group' (proteins/molecule lists), " +
+            "'molecule' (peptides/molecules), 'precursor', or 'transition'.")]
+        string level,
+        [Description("Optional ElementLocator to scope enumeration to a specific parent. " +
+            "If omitted, enumerates from the document root. Get locators from previous " +
+            "skyline_get_locations calls or from report columns like ProteinLocator.")]
+        string rootLocator = null)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = string.IsNullOrEmpty(rootLocator)
+                ? connection.Call("GetLocations", level)
+                : connection.Call("GetLocations", level, rootLocator);
+            return string.IsNullOrEmpty(result)
+                ? "No elements found at the specified level."
+                : result;
         });
     }
 
@@ -282,6 +325,38 @@ public static class SkylineTools
         {
             using var connection = SkylineConnection.Connect();
             return connection.CallSkylineImportProperties(csvText);
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_selection"),
+     Description("Navigate to a specific element in the Skyline document tree by its " +
+        "ElementLocator string. Get locators from report columns like PeptideLocator, " +
+        "PrecursorLocator, ProteinLocator, or TransitionLocator.")]
+    public static string SetSelection(
+        [Description("ElementLocator string (e.g. from a PeptideLocator report column)")] string elementLocator,
+        [Description("Optional newline-separated list of additional ElementLocator strings " +
+            "to add to the selection. The first locator is always the primary (focused) " +
+            "selection; these are secondary selections.")] string additionalLocators = null)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            if (string.IsNullOrEmpty(additionalLocators))
+                return connection.Call("SetSelectedElement", elementLocator);
+            return connection.Call("SetSelectedElement", elementLocator, additionalLocators);
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_replicate"),
+     Description("Set the active replicate in Skyline by name. Use skyline_get_replicate " +
+        "to see the current replicate, or run a report with ReplicateName to list all.")]
+    public static string SetReplicate(
+        [Description("Name of the replicate to activate")] string replicateName)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            return connection.Call("SetReplicate", replicateName);
         });
     }
 
