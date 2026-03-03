@@ -298,9 +298,15 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
 
-                    // Track per-target scan window coverage for narrow scan windows
+                    // Track per-target scan window coverage for narrow scan windows.
+                    // Only activate for genuinely narrow scan windows (e.g. SCIEX TOFMSMS with
+                    // ~20 m/z product scan windows that cycle across different mass ranges).
+                    // Most instruments report scan window metadata for broad windows (e.g. 400-1400 m/z)
+                    // where this filtering would incorrectly remove valid zero-intensity points.
                     if (spectrum.Metadata?.ScanWindowLowerLimit != null &&
-                        spectrum.Metadata?.ScanWindowUpperLimit != null)
+                        spectrum.Metadata?.ScanWindowUpperLimit != null &&
+                        spectrum.Metadata.ScanWindowUpperLimit.Value - spectrum.Metadata.ScanWindowLowerLimit.Value <
+                            SpectrumFilter.NARROW_SCAN_WINDOW_CUTOFF)
                     {
                         if (hasScanWindowCoverage == null)
                             hasScanWindowCoverage = new bool[targetCount];
@@ -313,7 +319,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else if (hasScanWindowCoverage != null)
                     {
-                        // Spectrum without scan window limits covers all targets
+                        // Spectrum without narrow scan window covers all targets
                         hasScanWindowCoverage[targetIndex] = true;
                     }
 
