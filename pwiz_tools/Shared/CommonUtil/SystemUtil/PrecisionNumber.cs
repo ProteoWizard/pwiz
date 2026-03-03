@@ -18,6 +18,7 @@
  */
 using System;
 using System.Globalization;
+using System.Linq;
 using pwiz.Common.CommonResources;
 
 namespace pwiz.Common.SystemUtil
@@ -34,9 +35,12 @@ namespace pwiz.Common.SystemUtil
         /// Maximum decimal places used when wrapping a raw double that has no
         /// known textual precision. This gives an effectively zero tolerance.
         /// </summary>
-        private const int MAX_DECIMAL_PLACES = 17;
+        private const int MAX_DECIMAL_PLACES = 15;
 
-        public PrecisionNumber(double value, int decimalPlaces)
+        private static decimal[] _powersOf10 =
+            Enumerable.Range(0, MAX_DECIMAL_PLACES).Select(i => (decimal)Math.Pow(10, i)).ToArray();
+
+        public PrecisionNumber(decimal value, int decimalPlaces)
         {
             Value = value;
             DecimalPlaces = decimalPlaces;
@@ -46,11 +50,14 @@ namespace pwiz.Common.SystemUtil
         /// Wraps a raw double with maximum precision (effectively zero tolerance).
         /// Use this for column values that have no known textual precision.
         /// </summary>
-        public PrecisionNumber(double value) : this(value, MAX_DECIMAL_PLACES)
+        public PrecisionNumber(decimal value) : this(value, MAX_DECIMAL_PLACES)
         {
         }
 
-        public double Value { get; }
+        public decimal Value
+        {
+            get;
+        }
         public int DecimalPlaces { get; }
 
         /// <summary>
@@ -58,9 +65,20 @@ namespace pwiz.Common.SystemUtil
         /// For "3.14" (DecimalPlaces=2): 0.005
         /// For "300" (DecimalPlaces=0): 0.5
         /// </summary>
-        public double Tolerance
+        public decimal Tolerance => 0.5m / Pow10(DecimalPlaces);
+
+        private decimal Pow10(int power)
         {
-            get { return 0.5 * Math.Pow(10, -DecimalPlaces); }
+            if (power < 0)
+            {
+                return 1 / Pow10(-power);
+            }
+
+            if (power < _powersOf10.Length)
+            {
+                return _powersOf10[power];
+            }
+            return (decimal)Math.Pow(10, power);
         }
 
         public static PrecisionNumber Parse(string text, CultureInfo cultureInfo, bool scientificPrecisionOnly)
@@ -83,7 +101,7 @@ namespace pwiz.Common.SystemUtil
 
             text = text.Trim();
 
-            if (!double.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, cultureInfo, out double value))
+            if (!decimal.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, cultureInfo, out var value))
                 return false;
 
             int decimalPlaces = CountDecimalPlaces(text, cultureInfo, scientificPrecisionOnly);
@@ -113,8 +131,7 @@ namespace pwiz.Common.SystemUtil
                     exponent = exp;
                 }
             }
-
-            if (scientificPrecisionOnly)
+            else if (scientificPrecisionOnly)
             {
                 return MAX_DECIMAL_PLACES;
             }
@@ -136,7 +153,17 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public bool EqualsWithinPrecision(double other)
         {
-            return Math.Abs(Value - other) <= Tolerance;
+            if (other < (double) decimal.MinValue || other > (double) decimal.MaxValue)
+            {
+                return false;
+            }
+
+            return EqualsWithinPrecision((decimal)other);
+        }
+
+        public bool EqualsWithinPrecision(decimal other)
+        {
+            return other >= Value - Tolerance && other <= Value + Tolerance;
         }
 
         public bool Equals(PrecisionNumber other)
@@ -181,12 +208,12 @@ namespace pwiz.Common.SystemUtil
                 return @"0e" + (-DecimalPlaces);
             }
 
-            int exponent = (int)Math.Floor(Math.Log10(Math.Abs(Value)));
+            int exponent = (int)Math.Floor(Math.Log10(Math.Abs((double) Value)));
             int mantissaDecimals = DecimalPlaces + exponent;
             if (mantissaDecimals < 0)
                 mantissaDecimals = 0;
 
-            double mantissa = Value / Math.Pow(10, exponent);
+            var mantissa = Value / Pow10(exponent);
             return mantissa.ToString(@"F" + mantissaDecimals, formatProvider) + @"e" + exponent;
         }
 
@@ -201,6 +228,20 @@ namespace pwiz.Common.SystemUtil
         }
 
         public int CompareTo(double value)
+        {
+            if (value > (double) decimal.MaxValue)
+            {
+                return -1;
+            }
+            if (value < (double) decimal.MinValue)
+            {
+                return 1;
+            }
+
+            return CompareTo((decimal)value);
+        }
+
+        public int CompareTo(decimal value)
         {
             if (EqualsWithinPrecision(value))
             {

@@ -26,7 +26,9 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
@@ -43,14 +45,14 @@ namespace pwiz.SkylineTest
         {
             double precursorMz = 422.5;
             var expectedSpectrumPrecursors =
-                new SpectrumPrecursors(ImmutableList.Singleton(new SpectrumPrecursor(new SignedMz(precursorMz))));
-            var dataSchema = new DataSchema(new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentCulture));
+                new ListColumnValue<object>(new object[] { new PrecisionNumber((decimal)precursorMz, 1) });
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(new SrmDocument(SrmSettingsList.GetDefault()),
+                SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var filterPredicate = FilterPredicate.Parse(dataSchema, typeof(SpectrumPrecursors),
-                FilterOperations.OP_EQUALS, expectedSpectrumPrecursors.ToString(null, CultureInfo.CurrentCulture));
+                FilterOperations.OP_EQUALS, precursorMz.ToString(null, CultureInfo.CurrentCulture));
             var operandValue = filterPredicate.GetOperandValue(dataSchema, typeof(SpectrumPrecursors));
-            Assert.IsInstanceOfType(operandValue, typeof(SpectrumPrecursors));
-            var spectrumPrecursors = operandValue as SpectrumPrecursors;
-            Assert.AreEqual(expectedSpectrumPrecursors, spectrumPrecursors);
+            Assert.IsInstanceOfType(operandValue, typeof(ListColumnValue<object>));
+            Assert.AreEqual(expectedSpectrumPrecursors, operandValue);
         }
 
         [TestMethod]

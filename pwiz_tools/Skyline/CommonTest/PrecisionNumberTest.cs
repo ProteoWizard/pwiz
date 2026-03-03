@@ -30,40 +30,40 @@ namespace CommonTest
         public void TestParseRegularNumbers()
         {
             var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture, false);
-            Assert.AreEqual(3.14, pn.Value, 1e-15);
+            Assert.AreEqual(3.14m, pn.Value);
             Assert.AreEqual(2, pn.DecimalPlaces);
-            Assert.AreEqual(0.005, pn.Tolerance, 1e-15);
+            Assert.AreEqual(0.005m, pn.Tolerance);
 
             pn = PrecisionNumber.Parse("3.0", CultureInfo.InvariantCulture);
-            Assert.AreEqual(3.0, pn.Value, 1e-15);
+            Assert.AreEqual(3.0m, pn.Value);
             Assert.AreEqual(1, pn.DecimalPlaces);
-            Assert.AreEqual(0.05, pn.Tolerance, 1e-15);
+            Assert.AreEqual(0.05m, pn.Tolerance);
 
             pn = PrecisionNumber.Parse("300", CultureInfo.InvariantCulture);
-            Assert.AreEqual(300.0, pn.Value, 1e-15);
+            Assert.AreEqual(300m, pn.Value);
             Assert.AreEqual(0, pn.DecimalPlaces);
-            Assert.AreEqual(0.5, pn.Tolerance, 1e-15);
+            Assert.AreEqual(0.5m, pn.Tolerance);
         }
 
         [TestMethod]
         public void TestParseScientificNotation()
         {
             var pn = PrecisionNumber.Parse("1.5e3", CultureInfo.InvariantCulture);
-            Assert.AreEqual(1500.0, pn.Value, 1e-10);
+            Assert.AreEqual(1500m, pn.Value);
             Assert.AreEqual(-2, pn.DecimalPlaces);
-            Assert.AreEqual(50.0, pn.Tolerance, 1e-10);
+            Assert.AreEqual(50m, pn.Tolerance);
 
             pn = PrecisionNumber.Parse("2.0E-4", CultureInfo.InvariantCulture);
-            Assert.AreEqual(0.0002, pn.Value, 1e-15);
+            Assert.AreEqual(0.0002m, pn.Value);
             Assert.AreEqual(5, pn.DecimalPlaces);
-            Assert.AreEqual(0.000005, pn.Tolerance, 1e-15);
+            Assert.AreEqual(0.000005m, pn.Tolerance);
         }
 
         [TestMethod]
         public void TestParseNegativeNumbers()
         {
             var pn = PrecisionNumber.Parse("-3.14", CultureInfo.InvariantCulture);
-            Assert.AreEqual(-3.14, pn.Value, 1e-15);
+            Assert.AreEqual(-3.14m, pn.Value);
             Assert.AreEqual(2, pn.DecimalPlaces);
         }
 
@@ -73,7 +73,7 @@ namespace CommonTest
             // German culture uses comma as decimal separator
             var german = new CultureInfo("de-DE");
             Assert.IsTrue(PrecisionNumber.TryParse("3,14", german, out var pn));
-            Assert.AreEqual(3.14, pn.Value, 1e-15);
+            Assert.AreEqual(3.14m, pn.Value);
             Assert.AreEqual(2, pn.DecimalPlaces);
         }
 
@@ -119,7 +119,7 @@ namespace CommonTest
             Assert.AreEqual("3.14", pn.ToString());
             var rt = PrecisionNumber.Parse(pn.ToString(), CultureInfo.InvariantCulture);
             Assert.AreEqual(pn.DecimalPlaces, rt.DecimalPlaces);
-            Assert.AreEqual(pn.Value, rt.Value, 1e-15);
+            Assert.AreEqual(pn.Value, rt.Value);
 
             // Trailing zero preserved
             pn = PrecisionNumber.Parse("3.0", CultureInfo.InvariantCulture);
@@ -133,14 +133,14 @@ namespace CommonTest
             pn = PrecisionNumber.Parse("1.5e3", CultureInfo.InvariantCulture);
             var str = pn.ToString();
             rt = PrecisionNumber.Parse(str, CultureInfo.InvariantCulture);
-            Assert.AreEqual(pn.Value, rt.Value, 1e-10);
+            Assert.AreEqual(pn.Value, rt.Value);
             Assert.AreEqual(pn.DecimalPlaces, rt.DecimalPlaces);
 
             // Small scientific notation
             pn = PrecisionNumber.Parse("2.0E-4", CultureInfo.InvariantCulture);
             Assert.AreEqual("0.00020", pn.ToString()); // DecimalPlaces=5, so F5
             rt = PrecisionNumber.Parse(pn.ToString(), CultureInfo.InvariantCulture);
-            Assert.AreEqual(pn.Value, rt.Value, 1e-15);
+            Assert.AreEqual(pn.Value, rt.Value);
             Assert.AreEqual(pn.DecimalPlaces, rt.DecimalPlaces);
         }
 
@@ -148,11 +148,18 @@ namespace CommonTest
         public void TestFromDouble()
         {
             // A raw double wraps with max precision (effectively zero tolerance)
-            var pn = new PrecisionNumber(3.14);
-            Assert.AreEqual(3.14, pn.Value, 1e-15);
+            var pn = new PrecisionNumber(3.14m);
+            Assert.AreEqual(3.14, pn.Value);
             Assert.AreEqual(15, pn.DecimalPlaces);
             // Tolerance is 5e-16, essentially zero
-            Assert.IsTrue(pn.Tolerance < 1e-14);
+            Assert.IsTrue(pn.Tolerance < 1e-14m);
+        }
+
+        [TestMethod]
+        public void TestParsePrecisionNumber()
+        {
+            var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture, true);
+            Assert.AreEqual("3.14", pn.ToString(CultureInfo.InvariantCulture, true));
         }
     }
 }

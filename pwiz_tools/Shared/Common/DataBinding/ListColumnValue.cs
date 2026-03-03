@@ -124,5 +124,35 @@ namespace pwiz.Common.DataBinding
 
             return ListColumnValue.ItemsToString(CultureInfo.CurrentCulture, Items);
         }
+
+        protected bool Equals(ListColumnValue<T> other)
+        {
+            return Equals(Items, other.Items);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
+            return Equals((ListColumnValue<T>)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Items != null ? Items.GetHashCode() : 0;
+        }
     }
 }
