@@ -477,8 +477,8 @@ namespace pwiz.Common.DataBinding
             { typeof(double), NumericFilterHandler.INSTANCE },
             { typeof(Decimal), NumericFilterHandler.INSTANCE },
             { typeof(bool), new SimpleFilterHandler(typeof(bool)) },
-            { typeof(char), new SimpleFilterHandler(typeof(char)) },
-            { typeof(DateTime), new SimpleFilterHandler(typeof(DateTime)) }
+            { typeof(char), new SimpleFilterHandler.Comparable(typeof(char)) },
+            { typeof(DateTime), new SimpleFilterHandler.Comparable(typeof(DateTime)) }
         };
 
         public virtual IFilterHandler GetFilterHandler(Type type)

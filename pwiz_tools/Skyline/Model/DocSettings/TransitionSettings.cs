@@ -3196,7 +3196,7 @@ namespace pwiz.Skyline.Model.DocSettings
             SpectrumClassFilter.Ms1FilterPage.Discriminant.FilterSpecs.Append(
                 new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.ScanWindowWidth)),
                     FilterOperations.OP_IS_GREATER_THAN,
-                    PrecisionNumber.WithDecimalPlaces(Results.SpectrumFilter.SIM_ISOLATION_CUTOFF, 0))));
+                    new PrecisionNumber(Results.SpectrumFilter.SIM_ISOLATION_CUTOFF))));
     }
 
     [XmlRoot("transition_integration")]

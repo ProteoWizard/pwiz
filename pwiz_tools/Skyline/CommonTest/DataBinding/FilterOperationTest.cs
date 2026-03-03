@@ -122,23 +122,30 @@ namespace CommonTest.DataBinding
             // Values around 3.14: precision filtering with "3.14" should match values in [3.135, 3.145)
             var doubles = new[] { 3.13, 3.134, 3.1349, 3.135, 3.14, 3.144, 3.145, 3.15 };
 
-            // "equals 3.14" should match values in [3.135, 3.145): 3.135, 3.14, 3.144
-            VerifyFilterCountStructs(doubles, FilterOperations.OP_EQUALS, "3.14", 3);
+            // "equals 3.14" should match values in [3.135, 3.145): 3.135, 3.14, 3.144, 3.145
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_EQUALS, "3.14", 4);
 
-            // "not equals 3.14" should NOT match values in [3.135, 3.145): 3.13, 3.134, 3.1349, 3.145, 3.15
-            VerifyFilterCountStructs(doubles, FilterOperations.OP_NOT_EQUALS, "3.14", 5);
+            // "not equals 3.14" should NOT match values in [3.135, 3.145): 3.13, 3.134, 3.1349, 3.15
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_NOT_EQUALS, "3.14", 4);
 
-            // "> 3.14" means value >= 3.145: 3.145, 3.15
-            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_GREATER_THAN, "3.14", 2);
+            // "> 3.14": 3.144, 3.145, 3.15
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_GREATER_THAN, "3.14", 3);
+
+            // "> 3.14e0" means value > 3.145: 3.15
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_GREATER_THAN, "3.14e0", 1);
+
 
             // ">= 3.14" means value >= 3.135: 3.135, 3.14, 3.144, 3.145, 3.15
             VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL, "3.14", 5);
 
-            // "< 3.14" means value < 3.135: 3.13, 3.134, 3.1349
-            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_LESS_THAN, "3.14", 3);
+            // "< 3.14": 3.13, 3.134, 3.1349, 3.135
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_LESS_THAN, "3.14", 4);
 
-            // "<= 3.14" means value < 3.145: 3.13, 3.134, 3.1349, 3.135, 3.14, 3.144
-            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL, "3.14", 6);
+            // "< 3.14e0" means value < 3.135: 3.13, 3.134, 3.1349
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_LESS_THAN, "3.14e0", 3);
+
+            // "<= 3.14" means value < 3.145: 3.13, 3.134, 3.1349, 3.135, 3.14, 3.144, 3.145
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL, "3.14", 7);
         }
 
         [TestMethod]

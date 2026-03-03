@@ -135,12 +135,12 @@ namespace pwiz.Common.DataBinding.Filtering
 
         protected override PrecisionNumber ParseOperand(IFilterOperation filterOperation, string text, CultureInfo cultureInfo)
         {
-            return PrecisionNumber.Parse(text, cultureInfo, ScientificPrecisionOnly(filterOperation, cultureInfo));
+            return PrecisionNumber.Parse(text, cultureInfo, ExplicitPrecision(filterOperation, cultureInfo));
         }
 
         protected override string OperandToString(IFilterOperation operation, PrecisionNumber operand, CultureInfo cultureInfo)
         {
-            return operand.ToString(cultureInfo, ScientificPrecisionOnly(operation, cultureInfo));
+            return operand.ToString(cultureInfo, ExplicitPrecision(operation, cultureInfo));
         }
 
         protected override bool ValueEqualsOperand(double value, PrecisionNumber operand)
@@ -150,16 +150,20 @@ namespace pwiz.Common.DataBinding.Filtering
 
         protected override bool TryConvertColumnValue(object value, out double columnValue)
         {
-            try
+            if (value != null)
             {
-                columnValue = Convert.ToDouble(value);
-                return true;
+                try
+                {
+                    columnValue = Convert.ToDouble(value);
+                    return true;
+                }
+                catch
+                {
+                    // ignore
+                }
             }
-            catch
-            {
-                columnValue = 0;
-                return false;
-            }
+            columnValue = 0;
+            return false;
         }
 
         public int? Compare(object value, object operand)
@@ -173,7 +177,7 @@ namespace pwiz.Common.DataBinding.Filtering
             return -precisionNumber.CompareTo(doubleValue);
         }
 
-        private bool ScientificPrecisionOnly(IFilterOperation filterOperation, CultureInfo cultureInfo)
+        private bool ExplicitPrecision(IFilterOperation filterOperation, CultureInfo cultureInfo)
         {
             return string.IsNullOrEmpty(cultureInfo.Name) || !filterOperation.UsesEquality();
         }
@@ -396,16 +400,23 @@ namespace pwiz.Common.DataBinding.Filtering
             return Equals(value, operand);
         }
 
-        public string OperandToString(object operand, CultureInfo cultureInfo)
-        {
-            return Convert.ToString(operand, cultureInfo);
-        }
-
         public bool CanBeBlank
         {
             get
             {
                 return !ValueType.IsValueType;
+            }
+        }
+
+        public class Comparable : SimpleFilterHandler, IFilterHandler.IComparison
+        {
+            public Comparable(Type type) : base(type)
+            {
+            }
+
+            public int? Compare(object value, object operand)
+            {
+                return (value as IComparable)?.CompareTo(operand);
             }
         }
     }

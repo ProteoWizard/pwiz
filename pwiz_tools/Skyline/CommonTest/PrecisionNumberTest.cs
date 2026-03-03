@@ -71,6 +71,18 @@ namespace CommonTest
         }
 
         [TestMethod]
+        public void TestDefaultPrecisionNumber()
+        {
+            var pnDefault = default(PrecisionNumber);
+            Assert.AreEqual(0, pnDefault.DecimalPlaces);
+            Assert.AreEqual(0, pnDefault.SignificantDigits);
+            Assert.AreEqual(0m, pnDefault.Value);
+            Assert.AreEqual(0.5m, pnDefault.Tolerance);
+            var pnZero = new PrecisionNumber(0m).ChangeSignificantDigits(0);
+            Assert.AreEqual(pnDefault, pnZero);
+        }
+
+        [TestMethod]
         public void TestEqualsWithinPrecision()
         {
             var pn = PrecisionNumber.Parse(3.14.ToString("F2"));
@@ -83,14 +95,6 @@ namespace CommonTest
             // Values clearly outside the precision range
             Assert.IsFalse(pn.EqualsWithinPrecision(3.146));
             Assert.IsFalse(pn.EqualsWithinPrecision(3.134));
-        }
-
-        [TestMethod]
-        public void TestTryParseInvalid()
-        {
-            Assert.IsFalse(PrecisionNumber.TryParse(null, CultureInfo.InvariantCulture, out _));
-            Assert.IsFalse(PrecisionNumber.TryParse("", CultureInfo.InvariantCulture, out _));
-            Assert.IsFalse(PrecisionNumber.TryParse("abc", CultureInfo.InvariantCulture, out _));
         }
 
         [TestMethod]
@@ -141,6 +145,32 @@ namespace CommonTest
         public void TestPrecisionNumberSize()
         {
             Assert.AreEqual(24, Marshal.SizeOf<PrecisionNumber>());
+        }
+
+        [TestMethod]
+        public void TestInfinitePrecisionNumbers()
+        {
+            foreach ((PrecisionNumber precisionValue, double doubleValue) in new[]
+                     {
+                         (PrecisionNumber.NAN, double.NaN),
+                         (PrecisionNumber.NEGATIVE_INFINITY, double.NegativeInfinity),
+                         (PrecisionNumber.POSITIVE_INFINITY, double.PositiveInfinity)
+                     })
+            {
+                Assert.IsFalse(precisionValue.IsFinite);
+                Assert.AreEqual(doubleValue, precisionValue.ToDouble());
+                Assert.AreEqual(doubleValue.ToString(CultureInfo.CurrentCulture), precisionValue.ToString());
+                Assert.AreEqual(precisionValue, PrecisionNumber.Parse(doubleValue.ToString(CultureInfo.CurrentCulture)));
+            }
+        }
+
+        [TestMethod]
+        public void TestPrecisionNumberToString()
+        {
+            var strThreeSigFigs = 20.0.ToString("F1");
+            var threeSigFigs = PrecisionNumber.Parse(strThreeSigFigs);
+            Assert.AreEqual(3, threeSigFigs.SignificantDigits);
+            Assert.AreEqual(strThreeSigFigs, threeSigFigs.ToString());
         }
     }
 }

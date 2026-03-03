@@ -31,6 +31,9 @@ namespace pwiz.Common.SystemUtil
     public readonly struct PrecisionNumber : IEquatable<PrecisionNumber>, IFormattable
     {
         public const int MAX_SIGNIFICANT_DIGITS = 17;
+        public static readonly PrecisionNumber NAN = new PrecisionNumber(0, short.MinValue, 0);
+        public static readonly PrecisionNumber POSITIVE_INFINITY = new PrecisionNumber(0, short.MinValue, 1);
+        public static readonly PrecisionNumber NEGATIVE_INFINITY = new PrecisionNumber(0, short.MinValue, -1);
 
         public PrecisionNumber(int value) : this((decimal)value)
         {
@@ -46,9 +49,17 @@ namespace pwiz.Common.SystemUtil
 
         private PrecisionNumber(decimal value, int significantDigits)
         {
-            _log10 = (short)Math.Log10((double)value);
+            double absValue = Math.Abs((double)value);
+            var log10 = absValue == 0 ? double.NaN : Math.Log10(absValue);
+            if (double.IsInfinity(log10) || double.IsNaN(log10))
+            {
+                _log10 = 0;
+                _significantDigits = (short)Math.Min(Math.Max(0, significantDigits), MAX_SIGNIFICANT_DIGITS);
+                Value = 0;
+                return;
+            }
+            _log10 = (short) log10;
             _significantDigits = (short)Math.Min(Math.Max(significantDigits, 1), MAX_SIGNIFICANT_DIGITS);
-
             int decimalPlaces = _significantDigits - _log10;
             if (decimalPlaces > 28)
             {
@@ -63,6 +74,13 @@ namespace pwiz.Common.SystemUtil
                 var pow10 = Pow10(-decimalPlaces);
                 Value = Math.Round(value / pow10) * pow10;
             }
+        }
+
+        private PrecisionNumber(decimal value, short log10, short significantDigits)
+        {
+            Value = value;
+            _log10 = log10;
+            _significantDigits = significantDigits;
         }
 
         public PrecisionNumber ChangeSignificantDigits(int newSignificantDigits)
@@ -146,18 +164,35 @@ namespace pwiz.Common.SystemUtil
                 return false;
 
             text = text.Trim();
-
+            
             if (!decimal.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, cultureInfo, out var value))
+            {
+                if (double.TryParse(text, NumberStyles.Float, cultureInfo, out var doubleValue))
+                {
+                    if (double.IsNaN(doubleValue))
+                    {
+                        result = NAN;
+                        return true;
+                    }
+
+                    if (double.IsNegativeInfinity(doubleValue))
+                    {
+                        result = NEGATIVE_INFINITY;
+                        return true;
+                    }
+
+                    if (double.IsPositiveInfinity(doubleValue))
+                    {
+                        result = POSITIVE_INFINITY;
+                        return true;
+                    }
+                }
                 return false;
+            }
 
             int decimalPlaces = CountDecimalPlaces(text, cultureInfo, defaultToFullPrecision);
             result = WithDecimalPlaces(value, decimalPlaces);
             return true;
-        }
-
-        public static bool TryParse(string text, CultureInfo cultureInfo, out PrecisionNumber result)
-        {
-            return TryParse(text, cultureInfo, false, out result);
         }
 
         private static int CountDecimalPlaces(string text, CultureInfo culture, bool defaultToFullPrecision)
@@ -194,7 +229,12 @@ namespace pwiz.Common.SystemUtil
 
         public bool EqualsWithinPrecision(double other)
         {
-            return other >= (double) (Value - Tolerance) && other <= (double) (Value + Tolerance);
+            if (IsFinite)
+            {
+                return other >= (double)(Value - Tolerance) && other <= (double)(Value + Tolerance);
+            }
+
+            return Equals(ToDouble(), other);
         }
 
         public bool EqualsWithinPrecision(decimal other)
@@ -204,7 +244,7 @@ namespace pwiz.Common.SystemUtil
 
         public bool Equals(PrecisionNumber other)
         {
-            return Value.Equals(other.Value) && DecimalPlaces == other.DecimalPlaces;
+            return Value.Equals(other.Value) && _significantDigits == other._significantDigits;
         }
 
         public override bool Equals(object obj)
@@ -216,17 +256,21 @@ namespace pwiz.Common.SystemUtil
         {
             unchecked
             {
-                return (Value.GetHashCode() * 397) ^ DecimalPlaces;
+                return (Value.GetHashCode() * 397) ^ _significantDigits;
             }
         }
 
-        public string ToString(string format, IFormatProvider formatProvider)
+        string IFormattable.ToString(string format, IFormatProvider formatProvider)
         {
             return ToString(formatProvider, true);
         }
 
         public string ToString(IFormatProvider formatProvider, bool explicitPrecision)
         {
+            if (!IsFinite)
+            {
+                return ToDouble().ToString(null, formatProvider);
+            }
             if (explicitPrecision && DecimalPlaces == MAX_SIGNIFICANT_DIGITS)
             {
                 return Value.ToString(formatProvider);
@@ -255,7 +299,7 @@ namespace pwiz.Common.SystemUtil
 
         public override string ToString()
         {
-            return ToString(CultureInfo.CurrentCulture, false);
+            return ToString(CultureInfo.CurrentCulture, SignificantDigits == MAX_SIGNIFICANT_DIGITS);
         }
 
         public int CompareTo(double value)
@@ -279,6 +323,31 @@ namespace pwiz.Common.SystemUtil
                 return 0;
             }
             return Value.CompareTo(value);
+        }
+
+        public bool IsFinite
+        {
+            get { return _log10 != NAN._log10; }
+        }
+
+        public double ToDouble()
+        {
+            if (IsFinite)
+            {
+                return (double)Value;
+            }
+
+            if (Equals(NEGATIVE_INFINITY))
+            {
+                return double.NegativeInfinity;
+            }
+
+            if (Equals(POSITIVE_INFINITY))
+            {
+                return double.PositiveInfinity;
+            }
+
+            return double.NaN;
         }
     }
 }
