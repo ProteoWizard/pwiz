@@ -67,14 +67,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(chromGroupInfos);
             Assert.AreEqual(1, chromGroupInfos.Length);
             var chromGroupInfo = chromGroupInfos[0];
-            PauseTest();
             foreach (var transition in heavyGroup.Transitions)
             {
                 var chromInfo = chromGroupInfo.GetTransitionInfo(transition, tolerance, TransformChrom.raw);
                 Assert.IsNotNull(chromInfo,
                     $"Heavy {transition.FragmentIonName} should have chromatogram data");
 
-                var times = chromInfo.TimeIntensities.Times;
                 var intensities = chromInfo.TimeIntensities.Intensities;
                 int totalCount = intensities.Count;
                 int nonZeroCount = intensities.Count(i => i > 0);

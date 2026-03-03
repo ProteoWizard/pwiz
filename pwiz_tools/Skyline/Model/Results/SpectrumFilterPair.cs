@@ -310,10 +310,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         if (hasScanWindowCoverage == null)
                             hasScanWindowCoverage = new bool[targetCount];
-                        double startFilter = productFilter.TargetMz - productFilter.FilterWidth / 2;
-                        double endFilter2 = productFilter.TargetMz + productFilter.FilterWidth / 2;
-                        if (endFilter2 < spectrum.Metadata.ScanWindowLowerLimit.Value ||
-                            startFilter > spectrum.Metadata.ScanWindowUpperLimit.Value)
+                        double scanWindowStart = productFilter.TargetMz - productFilter.FilterWidth / 2;
+                        double scanWindowEnd = productFilter.TargetMz + productFilter.FilterWidth / 2;
+                        if (scanWindowEnd < spectrum.Metadata.ScanWindowLowerLimit.Value ||
+                            scanWindowStart > spectrum.Metadata.ScanWindowUpperLimit.Value)
                             continue;
                         hasScanWindowCoverage[targetIndex] = true;
                     }
