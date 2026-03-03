@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using pwiz.Common.CommonResources;
 
 namespace pwiz.Common.SystemUtil
@@ -31,34 +31,86 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public readonly struct PrecisionNumber : IEquatable<PrecisionNumber>, IFormattable
     {
-        /// <summary>
-        /// Maximum decimal places used when wrapping a raw double that has no
-        /// known textual precision. This gives an effectively zero tolerance.
-        /// </summary>
-        private const int MAX_DECIMAL_PLACES = 15;
+        public const int MAX_SIGNIFICANT_DIGITS = 17;
 
-        private static decimal[] _powersOf10 =
-            Enumerable.Range(0, MAX_DECIMAL_PLACES).Select(i => (decimal)Math.Pow(10, i)).ToArray();
-
-        public PrecisionNumber(decimal value, int decimalPlaces)
+        public PrecisionNumber(int value) : this((decimal)value)
         {
-            Value = value;
-            DecimalPlaces = decimalPlaces;
         }
 
-        /// <summary>
-        /// Wraps a raw double with maximum precision (effectively zero tolerance).
-        /// Use this for column values that have no known textual precision.
-        /// </summary>
-        public PrecisionNumber(decimal value) : this(value, MAX_DECIMAL_PLACES)
+        public PrecisionNumber(double value) : this((decimal)value)
         {
+        }
+
+        public PrecisionNumber(decimal value) : this(value, MAX_SIGNIFICANT_DIGITS)
+        {
+        }
+
+        private PrecisionNumber(decimal value, int significantDigits)
+        {
+            _log10 = (short)Math.Log10((double)value);
+            _significantDigits = (short)Math.Min(Math.Max(significantDigits, 1), MAX_SIGNIFICANT_DIGITS);
+
+            int decimalPlaces = _significantDigits - _log10;
+            if (decimalPlaces > 28)
+            {
+                Value = value;
+            }
+            else if (decimalPlaces >= 0)
+            {
+                Value = Math.Round(value, decimalPlaces);
+            }
+            else
+            {
+                var pow10 = Pow10(-decimalPlaces);
+                Value = Math.Round(value / pow10) * pow10;
+            }
+        }
+
+        public PrecisionNumber ChangeSignificantDigits(int newSignificantDigits)
+        {
+            if (newSignificantDigits == SignificantDigits)
+            {
+                return this;
+            }
+            return new PrecisionNumber(Value, newSignificantDigits);
+        }
+
+        public PrecisionNumber ChangeDecimalPlaces(int newDecimalPlaces)
+        {
+            int newSignificantDigits = newDecimalPlaces + _log10;
+            if (newSignificantDigits == SignificantDigits)
+            {
+                return this;
+            }
+            return new PrecisionNumber(Value, newSignificantDigits);
+        }
+
+        public static PrecisionNumber WithDecimalPlaces(decimal value, int decimalPlaces)
+        {
+            return new PrecisionNumber(value).ChangeDecimalPlaces(decimalPlaces);
+        }
+
+        public static PrecisionNumber WithSignificantDigits(decimal value, int significantDigits)
+        {
+            return new PrecisionNumber(value).ChangeSignificantDigits(significantDigits);
         }
 
         public decimal Value
         {
             get;
         }
-        public int DecimalPlaces { get; }
+
+        private readonly short _significantDigits;
+        private readonly short _log10;
+        public int DecimalPlaces
+        {
+            get { return _significantDigits - _log10; }
+        }
+
+        public int SignificantDigits
+        {
+            get { return _significantDigits; }
+        }
 
         /// <summary>
         /// Half a unit in the last decimal place.
@@ -67,23 +119,18 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public decimal Tolerance => 0.5m / Pow10(DecimalPlaces);
 
-        private decimal Pow10(int power)
+        private static decimal Pow10(int power)
         {
             if (power < 0)
             {
                 return 1 / Pow10(-power);
             }
-
-            if (power < _powersOf10.Length)
-            {
-                return _powersOf10[power];
-            }
             return (decimal)Math.Pow(10, power);
         }
 
-        public static PrecisionNumber Parse(string text, CultureInfo cultureInfo, bool scientificPrecisionOnly)
+        public static PrecisionNumber Parse(string text, CultureInfo cultureInfo, bool explicitPrecision)
         {
-            if (TryParse(text, cultureInfo, scientificPrecisionOnly, out var result))
+            if (TryParse(text, cultureInfo, explicitPrecision, out var result))
                 return result;
             throw new FormatException(string.Format(MessageResources.PrecisionNumber_Parse_Unable_to_parse___0___as_a_number, text));
         }
@@ -93,7 +140,7 @@ namespace pwiz.Common.SystemUtil
             return Parse(text, cultureInfo, false);
         }
 
-        public static bool TryParse(string text, CultureInfo cultureInfo, bool scientificPrecisionOnly, out PrecisionNumber result)
+        public static bool TryParse(string text, CultureInfo cultureInfo, bool defaultToFullPrecision, out PrecisionNumber result)
         {
             result = default;
             if (string.IsNullOrWhiteSpace(text))
@@ -104,8 +151,8 @@ namespace pwiz.Common.SystemUtil
             if (!decimal.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, cultureInfo, out var value))
                 return false;
 
-            int decimalPlaces = CountDecimalPlaces(text, cultureInfo, scientificPrecisionOnly);
-            result = new PrecisionNumber(value, decimalPlaces);
+            int decimalPlaces = CountDecimalPlaces(text, cultureInfo, defaultToFullPrecision);
+            result = WithDecimalPlaces(value, decimalPlaces);
             return true;
         }
 
@@ -114,7 +161,7 @@ namespace pwiz.Common.SystemUtil
             return TryParse(text, cultureInfo, false, out result);
         }
 
-        private static int CountDecimalPlaces(string text, CultureInfo culture, bool scientificPrecisionOnly)
+        private static int CountDecimalPlaces(string text, CultureInfo culture, bool defaultToFullPrecision)
         {
             string decimalSep = culture.NumberFormat.NumberDecimalSeparator;
 
@@ -131,9 +178,9 @@ namespace pwiz.Common.SystemUtil
                     exponent = exp;
                 }
             }
-            else if (scientificPrecisionOnly)
+            else if (defaultToFullPrecision)
             {
-                return MAX_DECIMAL_PLACES;
+                return MAX_SIGNIFICANT_DIGITS;
             }
 
             // Find decimal separator in the mantissa
@@ -146,19 +193,9 @@ namespace pwiz.Common.SystemUtil
             return digitsAfterDecimal - exponent;
         }
 
-        /// <summary>
-        /// Returns true if this number and the other are equal within the lower
-        /// precision of the two. The effective tolerance is the larger of the two
-        /// tolerances, so the less-precise number dominates the comparison.
-        /// </summary>
         public bool EqualsWithinPrecision(double other)
         {
-            if (other < (double) decimal.MinValue || other > (double) decimal.MaxValue)
-            {
-                return false;
-            }
-
-            return EqualsWithinPrecision((decimal)other);
+            return other >= (double) (Value - Tolerance) && other <= (double) (Value + Tolerance);
         }
 
         public bool EqualsWithinPrecision(decimal other)
@@ -189,14 +226,14 @@ namespace pwiz.Common.SystemUtil
             return ToString(formatProvider, true);
         }
 
-        public string ToString(IFormatProvider formatProvider, bool scientificPrecisionOnly)
+        public string ToString(IFormatProvider formatProvider, bool explicitPrecision)
         {
-            if (scientificPrecisionOnly && DecimalPlaces == MAX_DECIMAL_PLACES)
+            if (explicitPrecision && DecimalPlaces == MAX_SIGNIFICANT_DIGITS)
             {
-                return Value.ToString(@"G" + DecimalPlaces, formatProvider);
+                return Value.ToString(formatProvider);
             }
 
-            if (DecimalPlaces >= 0 && !scientificPrecisionOnly)
+            if (DecimalPlaces >= 0 && !explicitPrecision)
             {
                 return Value.ToString(@"F" + DecimalPlaces, formatProvider);
             }

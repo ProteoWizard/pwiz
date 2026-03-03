@@ -16,7 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.SkylineTestUtil;
@@ -24,7 +27,7 @@ using pwiz.SkylineTestUtil;
 namespace CommonTest
 {
     [TestClass]
-    public class PrecisionNumberTest : AbstractUnitTest
+    public class PrecisionNumberTest
     {
         [TestMethod]
         public void TestParseRegularNumbers()
@@ -112,54 +115,53 @@ namespace CommonTest
         }
 
         [TestMethod]
-        public void TestToStringRoundTrip()
-        {
-            // Regular numbers preserve decimal places
-            var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture);
-            Assert.AreEqual("3.14", pn.ToString());
-            var rt = PrecisionNumber.Parse(pn.ToString(), CultureInfo.InvariantCulture);
-            Assert.AreEqual(pn.DecimalPlaces, rt.DecimalPlaces);
-            Assert.AreEqual(pn.Value, rt.Value);
-
-            // Trailing zero preserved
-            pn = PrecisionNumber.Parse("3.0", CultureInfo.InvariantCulture);
-            Assert.AreEqual("3.0", pn.ToString());
-
-            // Integer
-            pn = PrecisionNumber.Parse("300", CultureInfo.InvariantCulture);
-            Assert.AreEqual("300", pn.ToString());
-
-            // Scientific notation with negative decimal places
-            pn = PrecisionNumber.Parse("1.5e3", CultureInfo.InvariantCulture);
-            var str = pn.ToString();
-            rt = PrecisionNumber.Parse(str, CultureInfo.InvariantCulture);
-            Assert.AreEqual(pn.Value, rt.Value);
-            Assert.AreEqual(pn.DecimalPlaces, rt.DecimalPlaces);
-
-            // Small scientific notation
-            pn = PrecisionNumber.Parse("2.0E-4", CultureInfo.InvariantCulture);
-            Assert.AreEqual("0.00020", pn.ToString()); // DecimalPlaces=5, so F5
-            rt = PrecisionNumber.Parse(pn.ToString(), CultureInfo.InvariantCulture);
-            Assert.AreEqual(pn.Value, rt.Value);
-            Assert.AreEqual(pn.DecimalPlaces, rt.DecimalPlaces);
-        }
-
-        [TestMethod]
-        public void TestFromDouble()
-        {
-            // A raw double wraps with max precision (effectively zero tolerance)
-            var pn = new PrecisionNumber(3.14m);
-            Assert.AreEqual(3.14, pn.Value);
-            Assert.AreEqual(15, pn.DecimalPlaces);
-            // Tolerance is 5e-16, essentially zero
-            Assert.IsTrue(pn.Tolerance < 1e-14m);
-        }
-
-        [TestMethod]
         public void TestParsePrecisionNumber()
         {
             var pn = PrecisionNumber.Parse("3.14", CultureInfo.InvariantCulture, true);
             Assert.AreEqual("3.14", pn.ToString(CultureInfo.InvariantCulture, true));
+        }
+
+        [TestMethod]
+        public void TestPrecisionNumbers()
+        {
+            foreach (var value in new[] { Math.PI, Math.E })
+            {
+                for (int significantDigits = 1; significantDigits <= PrecisionNumber.MAX_SIGNIFICANT_DIGITS; significantDigits++)
+                {
+                    var precisionNumber = PrecisionNumber.WithSignificantDigits((decimal) value, significantDigits);
+                    VerifyRoundTrip(precisionNumber);
+                    for (var scaledValue = value / 10; scaledValue > 1e-15; scaledValue /= 10)
+                    {
+                        precisionNumber = PrecisionNumber.WithSignificantDigits((decimal) scaledValue, significantDigits);
+                        VerifyRoundTrip(precisionNumber);
+                    }
+                    for (var scaledValue = value * 10; scaledValue < 1e15; scaledValue *= 10)
+                    {
+                        precisionNumber = PrecisionNumber.WithSignificantDigits((decimal) scaledValue, significantDigits);
+                        VerifyRoundTrip(precisionNumber);
+                    }
+                }
+            }
+        }
+
+        
+
+        private void VerifyRoundTrip(PrecisionNumber precisionNumber)
+        {
+            var textImplicitPrecision = precisionNumber.ToString(CultureInfo.CurrentCulture, false);
+            var roundTripImplicitPrecision =
+                PrecisionNumber.Parse(textImplicitPrecision, CultureInfo.CurrentCulture, false);
+            AssertEx.AreEqual(precisionNumber, roundTripImplicitPrecision);
+            var textExplicitPrecision = precisionNumber.ToString(CultureInfo.CurrentCulture, true);
+            var roundTripExplicitPrecision =
+                PrecisionNumber.Parse(textExplicitPrecision, CultureInfo.CurrentCulture, true);
+            AssertEx.AreEqual(precisionNumber, roundTripExplicitPrecision);
+        }
+
+        [TestMethod]
+        public void TestPrecisionNumberSize()
+        {
+            Assert.AreEqual(24, Marshal.SizeOf<PrecisionNumber>());
         }
     }
 }

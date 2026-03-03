@@ -21,6 +21,7 @@ using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -90,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, transitionGroupDocNode.SpectrumClassFilter.Clauses.Count);
                 var ms2Clause = transitionGroupDocNode.SpectrumClassFilter.Clauses[1];
                 Assert.AreEqual(2, ms2Clause.FilterSpecs.Count);
-                Assert.AreEqual(3.0,
+                Assert.AreEqual(new PrecisionNumber(3).ChangeDecimalPlaces(0),
                     ms2Clause.FilterSpecs[1].Predicate.GetOperandValue(new DataSchema(), typeof(double)));
             });
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>

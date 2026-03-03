@@ -45,7 +45,7 @@ namespace pwiz.SkylineTest
         {
             double precursorMz = 422.5;
             var expectedSpectrumPrecursors =
-                new ListColumnValue<object>(new object[] { new PrecisionNumber((decimal)precursorMz, 1) });
+                new ListColumnValue<object>(new object[] { PrecisionNumber.WithDecimalPlaces((decimal)precursorMz, 1) });
             var dataSchema = SkylineDataSchema.MemoryDataSchema(new SrmDocument(SrmSettingsList.GetDefault()),
                 SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var filterPredicate = FilterPredicate.Parse(dataSchema, typeof(SpectrumPrecursors),
