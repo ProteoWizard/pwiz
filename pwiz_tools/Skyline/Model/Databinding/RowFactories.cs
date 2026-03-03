@@ -172,6 +172,14 @@ namespace pwiz.Skyline.Model.Databinding
         public void ExportReport(Stream stream, ViewSpec viewSpec, ViewLayout layout, IReportExporter rowItemExporter,
             IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
+            ExportReport(stream, viewSpec, null, layout, rowItemExporter, progressMonitor, ref status);
+        }
+
+        public void ExportReport(Stream stream, ViewSpec viewSpec,
+            IList<RowFilter.ColumnSort> columnSorts, ViewLayout layout,
+            IReportExporter rowItemExporter,
+            IProgressMonitor progressMonitor, ref IProgressStatus status)
+        {
             if (!_factoriesByName.TryGetValue(viewSpec.RowSource, out var factory))
             {
                 throw new ArgumentException(string.Format(DatabindingResources.RowFactories_ExportReport_The_row_type___0___cannot_be_exported_,
@@ -179,24 +187,36 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             var viewInfo = new ViewInfo(DataSchema, factory.ItemType, viewSpec);
-            ExportReport(CancellationToken, stream, viewInfo, layout, factory, rowItemExporter, progressMonitor, ref status);
-
+            ExportReport(CancellationToken, stream, viewInfo, columnSorts, layout, factory, rowItemExporter, progressMonitor, ref status);
         }
 
-        public static void ExportReport(CancellationToken cancellationToken, Stream stream, ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
-            IReportExporter rowItemExporter, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public static void ExportReport(CancellationToken cancellationToken, Stream stream,
+            ViewInfo viewInfo, ViewLayout layout, IRowSource rowSource,
+            IReportExporter rowItemExporter, IProgressMonitor progressMonitor,
+            ref IProgressStatus status)
+        {
+            ExportReport(cancellationToken, stream, viewInfo, null, layout, rowSource,
+                rowItemExporter, progressMonitor, ref status);
+        }
+
+        public static void ExportReport(CancellationToken cancellationToken, Stream stream,
+            ViewInfo viewInfo, IList<RowFilter.ColumnSort> columnSorts, ViewLayout layout,
+            IRowSource rowSource, IReportExporter rowItemExporter,
+            IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             RowItemEnumerator rowItemEnumerator = null;
             if (layout == null || layout.RowTransforms.Count == 0)
             {
-
-                rowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
+                if (columnSorts == null || columnSorts.Count == 0)
+                    rowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
             }
 
             if (rowItemEnumerator == null)
             {
                 using var bindingListSource = new BindingListSource(cancellationToken);
                 bindingListSource.SetView(viewInfo, rowSource);
+                if (columnSorts != null && columnSorts.Count > 0)
+                    bindingListSource.RowFilter = RowFilter.Empty.SetColumnSorts(columnSorts);
                 cancellationToken.ThrowIfCancellationRequested();
                 rowItemEnumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
                 {

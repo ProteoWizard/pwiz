@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var paths = TryResolveAll(columnNames, index);
                 if (paths != null)
                 {
-                    var result = BuildResult(rowSourceType, paths);
+                    var result = BuildResult(rowSourceType, paths, index);
                     // If every resolved path goes through a collection, this is a
                     // replicate-centric query. Defer to the Replicate row source
                     // if it can resolve all columns, since target-level resolution
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var index = BuildColumnIndex(typeof(Replicate));
                 var paths = TryResolveAll(columnNames, index);
                 if (paths != null)
-                    return BuildResult(typeof(Replicate), paths);
+                    return BuildResult(typeof(Replicate), paths, index);
             }
 
             // If a target row source matched (all-Results paths) but Replicate
@@ -200,10 +200,11 @@ namespace pwiz.Skyline.Model.Databinding
             return paths;
         }
 
-        private static ResolveResult BuildResult(Type rowSourceType, List<PropertyPath> paths)
+        private static ResolveResult BuildResult(Type rowSourceType, List<PropertyPath> paths,
+            Dictionary<string, PropertyPath> columnIndex)
         {
             var sublistId = FindDeepestSublist(paths);
-            return new ResolveResult(rowSourceType, paths, sublistId);
+            return new ResolveResult(rowSourceType, paths, sublistId, columnIndex);
         }
 
         /// <summary>
@@ -246,7 +247,7 @@ namespace pwiz.Skyline.Model.Databinding
             return false;
         }
 
-        private static List<string> FindSuggestions(string name,
+        internal static List<string> FindSuggestions(string name,
             Dictionary<string, PropertyPath> index)
         {
             // Find close matches by case-insensitive substring
@@ -275,16 +276,18 @@ namespace pwiz.Skyline.Model.Databinding
         public class ResolveResult
         {
             public ResolveResult(Type rowSourceType, List<PropertyPath> propertyPaths,
-                PropertyPath sublistId)
+                PropertyPath sublistId, Dictionary<string, PropertyPath> columnIndex)
             {
                 RowSourceType = rowSourceType;
                 PropertyPaths = propertyPaths;
                 SublistId = sublistId;
+                ColumnIndex = columnIndex;
             }
 
             public Type RowSourceType { get; }
             public List<PropertyPath> PropertyPaths { get; }
             public PropertyPath SublistId { get; }
+            public Dictionary<string, PropertyPath> ColumnIndex { get; }
         }
 
         /// <summary>

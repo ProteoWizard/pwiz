@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -37,6 +38,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -572,7 +574,8 @@ namespace pwiz.Skyline.ToolsUI
         {
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
-            var viewSpec = ResolveJsonReportDefinition(json, dataSchema);
+            var root = ParseJsonDefinition(json);
+            var viewSpec = ResolveJsonReportDefinition(root, dataSchema);
 
             if (string.IsNullOrEmpty(viewSpec.Name) || viewSpec.Name == @"Custom")
                 throw new ArgumentException(new LlmInstruction(
@@ -734,7 +737,12 @@ namespace pwiz.Skyline.ToolsUI
         {
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer);
-            var viewSpec = ResolveJsonReportDefinition(json, dataSchema);
+
+            // Parse the JSON once; extract sort separately since it's not part of the report definition
+            var root = ParseJsonDefinition(json);
+            var viewSpec = ResolveJsonReportDefinition(root, dataSchema);
+            var sortSpecs = ParseSortSpecs(root);
+
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
 
             string ext = Path.GetExtension(filePath);
@@ -747,7 +755,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (!saver.CanSave())
                     throw new IOException(@"Cannot write to " + filePath);
                 IProgressStatus status = new ProgressStatus(string.Empty);
-                rowFactories.ExportReport(saver.Stream, viewSpec, null, exporter,
+                rowFactories.ExportReport(saver.Stream, viewSpec, sortSpecs, null, exporter,
                     Program.MainWindow, ref status);
                 saver.Commit();
             }
@@ -763,19 +771,21 @@ namespace pwiz.Skyline.ToolsUI
             return DataSchemaLocalizer.INVARIANT;
         }
 
-        private static ViewSpec ResolveJsonReportDefinition(string json, SkylineDataSchema dataSchema)
+        private static JObject ParseJsonDefinition(string json)
         {
-            JObject root;
             try
             {
-                root = JObject.Parse(json);
+                return JObject.Parse(json);
             }
             catch (Exception ex)
             {
                 throw new ArgumentException(new LlmInstruction(
                     string.Format(@"Invalid JSON: {0}", ex.Message)));
             }
+        }
 
+        private static ViewSpec ResolveJsonReportDefinition(JObject root, SkylineDataSchema dataSchema)
+        {
             var selectToken = root[@"select"];
             if (selectToken == null || selectToken.Type != JTokenType.Array || !selectToken.HasValues)
                 throw new ArgumentException(new LlmInstruction(
@@ -794,12 +804,30 @@ namespace pwiz.Skyline.ToolsUI
                 var result = resolver.Resolve(columnNames);
 
                 var columnSpecs = result.PropertyPaths.Select(p => new ColumnSpec(p)).ToList();
+
                 var viewSpec = new ViewSpec()
                     .SetName(reportName)
                     .SetRowType(result.RowSourceType)
                     .SetColumns(columnSpecs);
                 if (!result.SublistId.IsRoot)
                     viewSpec = viewSpec.SetSublistId(result.SublistId);
+
+                // Apply filter specs
+                var filterToken = root[@"filter"];
+                if (filterToken is JArray filterArray && filterArray.Count > 0)
+                    viewSpec = viewSpec.SetFilters(ParseFilterSpecs(filterArray, result));
+
+                // Apply pivot specs
+                var pivotReplicate = (bool?)root[@"pivotReplicate"];
+                if (pivotReplicate == true)
+                    viewSpec = viewSpec.SetSublistId(PropertyPath.Root);
+                else if (pivotReplicate == false)
+                    viewSpec = viewSpec.SetSublistId(
+                        SublistPaths.GetReplicateSublist(result.RowSourceType));
+
+                if ((bool?)root[@"pivotIsotopeLabel"] == true)
+                    viewSpec = PivotReplicateAndIsotopeLabelWidget.PivotIsotopeLabel(viewSpec, true);
+
                 return viewSpec;
             }
             catch (ColumnResolver.UnresolvedColumnsException ex)
@@ -820,6 +848,100 @@ namespace pwiz.Skyline.ToolsUI
                 return string.Format(@"Unknown column {0}.", col.Name.SingleQuote());
             });
             return new LlmInstruction(string.Join(@" ", parts));
+        }
+
+        private static List<FilterSpec> ParseFilterSpecs(JArray filterArray,
+            ColumnResolver.ResolveResult result)
+        {
+            var filters = new List<FilterSpec>();
+            foreach (var item in filterArray)
+            {
+                string columnName = (string)item[@"column"];
+                if (string.IsNullOrWhiteSpace(columnName))
+                    throw new ArgumentException(new LlmInstruction(
+                        @"Each filter must have a 'column' field."));
+
+                string opName = (string)item[@"op"];
+                if (string.IsNullOrWhiteSpace(opName))
+                    throw new ArgumentException(new LlmInstruction(
+                        string.Format(@"Filter on column {0} must have an 'op' field.",
+                            columnName.SingleQuote())));
+
+                // Resolve column against the row source's full column index
+                if (!result.ColumnIndex.TryGetValue(columnName, out var propertyPath))
+                {
+                    var suggestions = ColumnResolver.FindSuggestions(columnName, result.ColumnIndex);
+                    if (suggestions.Count > 0)
+                        throw new ArgumentException(new LlmInstruction(
+                            string.Format(@"Unknown filter column {0}. Did you mean: {1}?",
+                                columnName.SingleQuote(),
+                                string.Join(@", ", suggestions.Select(s => s.SingleQuote())))));
+                    throw new ArgumentException(new LlmInstruction(
+                        string.Format(@"Unknown filter column {0}.", columnName.SingleQuote())));
+                }
+
+                // Look up filter operation
+                var operation = FilterOperations.GetOperation(opName);
+                if (operation == null)
+                {
+                    var validOps = FilterOperations.ListOperations()
+                        .Where(o => !string.IsNullOrEmpty(o.OpName))
+                        .Select(o => o.OpName.SingleQuote());
+                    throw new ArgumentException(new LlmInstruction(
+                        string.Format(@"Unknown filter operation {0}. Valid operations: {1}.",
+                            opName.SingleQuote(), string.Join(@", ", validOps))));
+                }
+
+                // Validate operand presence
+                string operand = (string)item[@"value"];
+                bool isUnaryOp = operation == FilterOperations.OP_IS_BLANK ||
+                                 operation == FilterOperations.OP_IS_NOT_BLANK;
+                if (!isUnaryOp && string.IsNullOrEmpty(operand))
+                    throw new ArgumentException(new LlmInstruction(
+                        string.Format(@"Filter operation {0} on column {1} requires a 'value' field.",
+                            opName.SingleQuote(), columnName.SingleQuote())));
+
+                var predicate = FilterPredicate.FromInvariantOperandText(operation, operand ?? string.Empty);
+                filters.Add(new FilterSpec(propertyPath, predicate));
+            }
+            return filters;
+        }
+
+        private static List<RowFilter.ColumnSort> ParseSortSpecs(JObject root)
+        {
+            var sortToken = root[@"sort"];
+            if (!(sortToken is JArray sortArray) || sortArray.Count == 0)
+                return null;
+
+            var sorts = new List<RowFilter.ColumnSort>();
+            foreach (var item in sortArray)
+            {
+                string columnName = (string)item[@"column"];
+                if (string.IsNullOrWhiteSpace(columnName))
+                    throw new ArgumentException(new LlmInstruction(
+                        @"Each sort item must have a 'column' field."));
+
+                string dirString = (string)item[@"direction"];
+                var direction = ParseSortDirection(dirString);
+
+                sorts.Add(new RowFilter.ColumnSort(new ColumnId(columnName), direction));
+            }
+            return sorts;
+        }
+
+        private static ListSortDirection ParseSortDirection(string direction)
+        {
+            if (string.IsNullOrWhiteSpace(direction))
+                return ListSortDirection.Ascending;
+            if (string.Equals(direction, @"asc", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(direction, @"ascending", StringComparison.OrdinalIgnoreCase))
+                return ListSortDirection.Ascending;
+            if (string.Equals(direction, @"desc", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(direction, @"descending", StringComparison.OrdinalIgnoreCase))
+                return ListSortDirection.Descending;
+            throw new ArgumentException(new LlmInstruction(
+                string.Format(@"Invalid sort direction {0}. Use 'asc' or 'desc'.",
+                    direction.SingleQuote())));
         }
 
         private static string BuildReportMetadata(string filePath, string reportName)
