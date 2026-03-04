@@ -62,6 +62,8 @@ namespace pwiz.Skyline.Model
             CacheFormatVersion.Eighteen, DocumentFormat.VERSION_24_1);
         public static readonly SkylineVersion V25_1 = ReleaseVersion(25, 1,
             CacheFormatVersion.Eighteen, DocumentFormat.VERSION_25_1);
+        public static readonly SkylineVersion V26_1 = ReleaseVersion(26, 1,
+            CacheFormatVersion.Nineteen, DocumentFormat.VERSION_26_1);
 
         private SkylineVersion(Func<String> getLabelFunc, String versionName, 
             int majorVersion,
@@ -122,7 +124,7 @@ namespace pwiz.Skyline.Model
         {
             List<SkylineVersion> versions = new List<SkylineVersion>
             {
-                V25_1, V24_1, V23_1, V22_2, V21_2, V21_1, V20_2, V20_1, V19_1, V4_2, V4_1, V3_7, V3_6
+                V26_1, V25_1, V24_1, V23_1, V22_2, V21_2, V21_1, V20_2, V20_1, V19_1, V4_2, V4_1, V3_7, V3_6
             };
             if (CURRENT.CompareTo(versions.First()) != 0)
             {

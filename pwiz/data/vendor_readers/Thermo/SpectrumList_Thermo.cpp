@@ -381,6 +381,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         if (scanInfo->FAIMSOn())
             result->set(MS_FAIMS_compensation_voltage, scanInfo->compensationVoltage());
 
+        if (scanInfo->sourceOffsetVoltage() > 0)
+            scan.set(MS_offset_voltage, scanInfo->sourceOffsetVoltage(), UO_volt);
+
         size_t scanRangeCount = scanInfo->scanRangeCount();
         if ((scanType == ScanType_SIM || scanType == ScanType_SRM) && scanRangeCount > 1)
         {
