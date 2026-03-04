@@ -168,7 +168,7 @@ namespace pwiz.CommonMsData
 
         public static bool IsWiffFile(string filePath)
         {
-            return PathEx.HasExtension(filePath, EXT_WIFF);
+            return IsWiffOrWiff2File(filePath);
         }
 
         public static bool IsWiffOrWiff2File(string filePath)
