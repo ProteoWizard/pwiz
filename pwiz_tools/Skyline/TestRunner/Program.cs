@@ -1419,6 +1419,7 @@ namespace TestRunner
             if (pauseSeconds < 0)
             {
                 offscreen = false;
+                LogDisplayInfo(log);
             }
 
             // If pausing for screenshots, make sure this process is allowed to fully activate its forms
@@ -1864,6 +1865,17 @@ namespace TestRunner
         }
 
         //
+        private static void LogDisplayInfo(StreamWriter log)
+        {
+            foreach (var s in Screen.AllScreens)
+            {
+                var b = s.Bounds;
+                var w = s.WorkingArea;
+                var scale = ShcoreTest.GetScaleFactor(b.X + 1, b.Y + 1);
+                log.WriteLine($"# Display: {s.DeviceName} Bounds={b.Width}x{b.Height}@{b.X},{b.Y} WorkingArea={w.Width}x{w.Height}@{w.X},{w.Y} Primary={s.Primary} Scale={scale:P0}");
+            }
+        }
+
         // Check for local ban on certain tests in nightly runs
         //
         private static void HandleNightlyTestExclusions(List<TestInfo> testList, List<TestInfo> unfilteredTestList, StreamWriter log, bool asNightly)

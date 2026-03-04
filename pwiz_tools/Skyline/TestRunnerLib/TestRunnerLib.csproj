@@ -95,6 +95,7 @@
     <Compile Include="MiniDump.cs" />
     <Compile Include="PInvoke\DwmapiTest.cs" />
     <Compile Include="PInvoke\Gdi32Test.cs" />
+    <Compile Include="PInvoke\ShcoreTest.cs" />
     <Compile Include="PInvoke\Kernel32Test.cs" />
     <Compile Include="PInvoke\Ole32Test.cs" />
     <Compile Include="PInvoke\Shell32Test.cs" />
