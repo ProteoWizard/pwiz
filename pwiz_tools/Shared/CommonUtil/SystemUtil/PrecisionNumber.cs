@@ -336,7 +336,7 @@ namespace pwiz.Common.SystemUtil
                 return Value.ToString(formatProvider);
             }
 
-            if (DecimalPlaces >= 0 && !explicitPrecision)
+            if (DecimalPlaces >= 0 && !explicitPrecision && _log10 > -1)
             {
                 return Value.ToString(@"F" + DecimalPlaces, formatProvider);
             }
@@ -345,7 +345,7 @@ namespace pwiz.Common.SystemUtil
             // E.g. DecimalPlaces=-2, Value=1500 → "1.5e3"
             if (Value == 0)
             {
-                return @"0e" + (-DecimalPlaces);
+                return @"0E" + (-DecimalPlaces);
             }
 
             int exponent = (int)Math.Floor(Math.Log10(Math.Abs((double) Value)));
@@ -354,7 +354,15 @@ namespace pwiz.Common.SystemUtil
                 mantissaDecimals = 0;
 
             var mantissa = Value / Pow10(exponent);
-            return mantissa.ToString(@"F" + mantissaDecimals, formatProvider) + @"e" + exponent;
+            var mantissaString = mantissa.ToString(@"F" + mantissaDecimals, formatProvider);
+            if (exponent >= 0)
+            {
+                return mantissaString + @"E+" + exponent;
+            }
+            else
+            {
+                return mantissaString + @"E" + exponent;
+            }
         }
 
         public override string ToString()

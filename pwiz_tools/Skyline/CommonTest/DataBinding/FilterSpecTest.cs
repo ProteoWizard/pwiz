@@ -37,28 +37,31 @@ namespace CommonTest.DataBinding
         public void TestFilterSpecRoundTrips()
         {
             var propertyPath = PropertyPath.Root.Property("property");
-            var invariantDataSchema = new DataSchema();
             foreach (var cultureInfo in ListTestCultureInfos())
             {
                 var dataSchema = new DataSchema(new DataSchemaLocalizer(cultureInfo, cultureInfo));
                 foreach (var testOperand in ListTestOperands())
                 {
                     var columnType = testOperand.GetType();
-                    var filterPredicate = FilterPredicate.Parse(dataSchema, columnType,
-                        FilterOperations.OP_EQUALS, ValueToString(testOperand, cultureInfo));
-                    var invariantFilterPredicate = FilterPredicate.Parse(invariantDataSchema, columnType,
-                        FilterOperations.OP_EQUALS, ValueToString(testOperand, CultureInfo.InvariantCulture));
-                    Assert.AreEqual(invariantFilterPredicate, filterPredicate);
+                    var filterPredicate =  LocalizationHelper.CallWithCulture(cultureInfo, ()=>FilterPredicate.Parse(dataSchema, columnType,
+                        FilterOperations.OP_EQUALS, ValueToString(testOperand, cultureInfo)));
+                    var invariantFilterPredicate = LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, ()=>
+                        FilterPredicate.Parse(dataSchema, columnType, FilterOperations.OP_EQUALS,
+                            filterPredicate.InvariantOperandText));
+                    Assert.AreEqual(filterPredicate, invariantFilterPredicate);
                     var filterSpec = new FilterSpec(propertyPath, filterPredicate);
                     var predicateOperandValue = filterSpec.Predicate.GetOperandValue(dataSchema, columnType);
-                    var expectedOperandValue = predicateOperandValue is double
-                        ? Convert.ChangeType(testOperand, typeof (double))
-                        : testOperand;
-                    Assert.AreEqual(expectedOperandValue, predicateOperandValue);
-                    Assert.AreEqual(ValueToString(testOperand, cultureInfo), filterSpec.Predicate.GetOperandDisplayText(dataSchema, columnType));
+                    Assert.AreEqual(ValueToString(testOperand, cultureInfo),
+                        LocalizationHelper.CallWithCulture(cultureInfo,
+                            () => filterSpec.Predicate.GetOperandDisplayText(dataSchema, columnType)));
                     var filterSpecRoundTrip = RoundTripToXml(filterSpec);
-                    Assert.AreEqual(expectedOperandValue, filterSpecRoundTrip.Predicate.GetOperandValue(dataSchema, columnType));
-                    Assert.AreEqual(ValueToString(testOperand, cultureInfo), filterSpecRoundTrip.Predicate.GetOperandDisplayText(dataSchema, columnType));
+                    Assert.AreEqual(filterSpec, filterSpecRoundTrip);
+                    if (!(predicateOperandValue is PrecisionNumber))
+                    {
+                        Assert.AreEqual(testOperand, predicateOperandValue);
+                        Assert.AreEqual(testOperand, filterSpecRoundTrip.Predicate.GetOperandValue(dataSchema, columnType));
+                        Assert.AreEqual(ValueToString(testOperand, cultureInfo), filterSpecRoundTrip.Predicate.GetOperandDisplayText(dataSchema, columnType));
+                    }
                 }
             }
         }

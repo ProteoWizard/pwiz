@@ -105,7 +105,7 @@ namespace pwiz.Common.DataBinding
             try
             {
                 var handler = dataSchema.GetFilterHandler(propertyType);
-                return handler.OperandToString(FilterOperation, InvariantOperandText, CultureInfo.CurrentCulture);
+                return handler.OperandToString(FilterOperation, handler.ParseOperand(FilterOperation, InvariantOperandText, CultureInfo.InvariantCulture), CultureInfo.CurrentCulture);
             }
             catch (Exception)
             {
