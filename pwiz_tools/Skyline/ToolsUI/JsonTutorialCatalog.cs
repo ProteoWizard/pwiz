@@ -27,6 +27,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -55,11 +56,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (sb.Length > 0)
                     sb.AppendLine();
-                sb.Append(TutorialCatalog.GetSectionDisplayNameInvariant(t.Section)).Append('\t');
-                sb.Append(t.FolderName).Append('\t');
-                sb.Append(textRes.GetString(t.ResourcePrefix + @"_Caption", invariant) ?? t.ResourcePrefix).Append('\t');
-                sb.Append(textRes.GetString(t.ResourcePrefix + @"_Description", invariant) ?? string.Empty).Append('\t');
-                sb.Append(linkRes.GetString(t.ResourcePrefix + @"_pdf", invariant) ?? string.Empty).Append('\t');
+                sb.Append(TutorialCatalog.GetSectionDisplayNameInvariant(t.Section)).Append(TextUtil.SEPARATOR_TSV);
+                sb.Append(t.FolderName).Append(TextUtil.SEPARATOR_TSV);
+                sb.Append(textRes.GetString(t.ResourcePrefix + @"_Caption", invariant) ?? t.ResourcePrefix).Append(TextUtil.SEPARATOR_TSV);
+                sb.Append(textRes.GetString(t.ResourcePrefix + @"_Description", invariant) ?? string.Empty).Append(TextUtil.SEPARATOR_TSV);
+                sb.Append(linkRes.GetString(t.ResourcePrefix + @"_pdf", invariant) ?? string.Empty).Append(TextUtil.SEPARATOR_TSV);
                 sb.Append(linkRes.GetString(t.ResourcePrefix + @"_zip", invariant) ?? string.Empty);
             }
             return sb.ToString();
@@ -122,7 +123,7 @@ namespace pwiz.Skyline.ToolsUI
 
             var result = new JObject
             {
-                [@"file_path"] = filePath.Replace('\\', '/'),
+                [@"file_path"] = filePath.ToForwardSlashPath(),
                 [@"title"] = t.Caption,
                 [@"tutorial"] = t.FolderName,
                 [@"language"] = language,
@@ -175,7 +176,7 @@ namespace pwiz.Skyline.ToolsUI
 
             var result = new JObject
             {
-                [@"file_path"] = filePath.Replace('\\', '/'),
+                [@"file_path"] = filePath.ToForwardSlashPath(),
                 [@"tutorial"] = t.FolderName,
                 [@"image"] = imageFilename,
                 [@"language"] = language
@@ -297,28 +298,15 @@ namespace pwiz.Skyline.ToolsUI
 
         private static string GetTutorialFilePath(string tutorialName, string language)
         {
-            return Path.Combine(GetTutorialTmpDir(),
+            return Path.Combine(JsonUiService.GetMcpTmpDir(),
                 string.Format(@"skyline-tutorial-{0}-{1}.md", tutorialName, language));
         }
 
         private static string GetTutorialImageFilePath(string tutorialName, string language, string imageFilename)
         {
-            string dir = Path.Combine(GetTutorialTmpDir(), @"images", tutorialName, language);
+            string dir = Path.Combine(JsonUiService.GetMcpTmpDir(), @"images", tutorialName, language);
             Directory.CreateDirectory(dir);
             return Path.Combine(dir, imageFilename);
-        }
-
-        private static string GetTutorialTmpDir()
-        {
-            string tmpDir = Environment.GetEnvironmentVariable(@"SKYLINE_MCP_TMP_DIR");
-            if (string.IsNullOrEmpty(tmpDir))
-            {
-                tmpDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    @"Skyline", @"mcp", @"tmp");
-            }
-            Directory.CreateDirectory(tmpDir);
-            return tmpDir;
         }
     }
 }

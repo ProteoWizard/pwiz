@@ -223,8 +223,10 @@ namespace pwiz.Skyline.ToolsUI
             var parameters = methodInfo.GetParameters();
             int requiredCount = parameters.Count(p => !p.HasDefaultValue);
             if (args.Length < requiredCount)
+            {
                 throw new ArgumentException(
                     string.Format(@"{0} requires at least {1} argument(s)", method, requiredCount));
+            }
 
             var invokeArgs = new object[parameters.Length];
             for (int i = 0; i < parameters.Length; i++)
@@ -252,29 +254,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSelection()
         {
-            return InvokeOnUiThread(() =>
-            {
-                var skylineWindow = Program.MainWindow;
-                var document = skylineWindow.DocumentUI;
-                var selectedPaths = skylineWindow.SequenceTree.SelectedPaths;
-                if (selectedPaths.Count == 0)
-                    return string.Empty;
-
-                var elementRefs = new ElementRefs(document);
-                var sb = new StringBuilder();
-                foreach (var path in selectedPaths)
-                {
-                    if (path.IsRoot)
-                        continue;
-                    var nodeRef = elementRefs.GetNodeRef(path);
-                    if (nodeRef == null)
-                        continue;
-                    if (sb.Length > 0)
-                        sb.AppendLine();
-                    sb.Append(nodeRef);
-                }
-                return sb.ToString();
-            });
+            return JsonUiService.GetSelection();
         }
 
         public string GetReplicateName()
@@ -518,18 +498,24 @@ namespace pwiz.Skyline.ToolsUI
             {
                 var elementRef = ElementRefs.FromObjectReference(ElementLocator.Parse(rootLocator));
                 if (!(elementRef is NodeRef nodeRef))
+                {
                     throw new ArgumentException(new LlmInstruction(
                         @"The rootLocator must refer to a document node."));
+                }
                 rootPath = nodeRef.ToIdentityPath(document);
                 if (rootPath == null)
+                {
                     throw new ArgumentException(new LlmInstruction(
                         string.Format(@"Element not found: {0}", rootLocator)));
+                }
                 rootDepth = rootPath.Length;
             }
 
             if (targetDepth <= rootDepth)
+            {
                 throw new ArgumentException(new LlmInstruction(
                     string.Format(@"Level '{0}' must be deeper than the root element.", level)));
+            }
 
             var sb = new StringBuilder();
             EnumerateAtDepth(document, elementRefs,
@@ -583,8 +569,10 @@ namespace pwiz.Skyline.ToolsUI
             var viewSpec = ResolveJsonReportDefinition(root, dataSchema);
 
             if (string.IsNullOrEmpty(viewSpec.Name) || viewSpec.Name == @"Custom")
+            {
                 throw new ArgumentException(new LlmInstruction(
                     @"The 'name' field is required when adding a report."));
+            }
 
             var groupId = PersistedViews.MainGroup.Id;
             var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(groupId);
@@ -598,14 +586,14 @@ namespace pwiz.Skyline.ToolsUI
 
         public string InsertSmallMoleculeTransitionList(string textCSV)
         {
-            return InvokeOnUiThread(() =>
+            return JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
                     @"Insert small molecule transition list"));
         }
 
         public string ImportFasta(string textFasta)
         {
-            return InvokeOnUiThread(() =>
+            return JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.ImportFasta(new StringReader(textFasta),
                     Helpers.CountLinesInString(textFasta), false,
                     @"Import FASTA from MCP",
@@ -614,7 +602,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string ImportProperties(string csvText)
         {
-            return InvokeOnUiThread(() =>
+            return JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations,
                         Program.MainWindow.Document.DocumentType,
@@ -623,50 +611,27 @@ namespace pwiz.Skyline.ToolsUI
 
         public string SetSelectedElement(string elementLocatorString, string additionalLocators = null)
         {
-            return InvokeOnUiThread(() =>
-            {
-                var skylineWindow = Program.MainWindow;
-
-                // Primary selection - full navigation (bookmark, replicate, scroll)
-                skylineWindow.SelectElement(
-                    ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString)));
-
-                // Secondary selections
-                if (!string.IsNullOrEmpty(additionalLocators))
-                {
-                    var document = skylineWindow.DocumentUI;
-                    var allPaths = new List<IdentityPath> { skylineWindow.SequenceTree.SelectedPath };
-                    foreach (var line in additionalLocators.Split('\n'))
-                    {
-                        var trimmed = line.Trim();
-                        if (string.IsNullOrEmpty(trimmed))
-                            continue;
-                        var elementRef = ElementRefs.FromObjectReference(ElementLocator.Parse(trimmed));
-                        if (elementRef is NodeRef nodeRef)
-                        {
-                            var path = nodeRef.ToIdentityPath(document);
-                            if (path != null)
-                                allPaths.Add(path);
-                        }
-                    }
-                    skylineWindow.SequenceTree.SelectedPaths = allPaths;
-                }
-            });
+            return JsonUiService.SetSelection(elementLocatorString, additionalLocators);
         }
 
         public string SetReplicate(string replicateName)
         {
-            return InvokeOnUiThread(() =>
-            {
-                var document = Program.MainWindow.DocumentUI;
-                if (!document.Settings.HasResults)
-                    throw new InvalidOperationException(@"Document has no results");
-                var chromatograms = document.Settings.MeasuredResults.Chromatograms;
-                int index = chromatograms.IndexOf(c => c.Name == replicateName);
-                if (index < 0)
-                    throw new ArgumentException(@"Replicate not found: " + replicateName);
-                Program.MainWindow.SelectedResultsIndex = index;
-            });
+            return JsonUiService.SetReplicate(replicateName);
+        }
+
+        public string GetOpenForms()
+        {
+            return JsonUiService.GetOpenForms();
+        }
+
+        public string GetGraphData(string graphId, string filePath = null)
+        {
+            return JsonUiService.GetGraphData(graphId, filePath);
+        }
+
+        public string GetGraphImage(string graphId, string filePath = null)
+        {
+            return JsonUiService.GetGraphImage(graphId, filePath);
         }
 
         // Multi-arg methods
@@ -803,13 +768,17 @@ namespace pwiz.Skyline.ToolsUI
         {
             var selectToken = root[@"select"];
             if (selectToken == null || selectToken.Type != JTokenType.Array || !selectToken.HasValues)
+            {
                 throw new ArgumentException(new LlmInstruction(
                     @"The 'select' array is required and must not be empty."));
+            }
 
             var columnNames = selectToken.Select(t => (string)t).ToList();
             if (columnNames.Any(string.IsNullOrWhiteSpace))
+            {
                 throw new ArgumentException(new LlmInstruction(
                     @"Column names in 'select' must not be empty."));
+            }
 
             string reportName = (string)root[@"name"] ?? @"Custom";
 
@@ -837,8 +806,10 @@ namespace pwiz.Skyline.ToolsUI
                 if (pivotReplicate == true)
                     viewSpec = viewSpec.SetSublistId(PropertyPath.Root);
                 else if (pivotReplicate == false)
+                {
                     viewSpec = viewSpec.SetSublistId(
                         SublistPaths.GetReplicateSublist(result.RowSourceType));
+                }
 
                 if ((bool?)root[@"pivotIsotopeLabel"] == true)
                     viewSpec = PivotReplicateAndIsotopeLabelWidget.PivotIsotopeLabel(viewSpec, true);
@@ -857,9 +828,11 @@ namespace pwiz.Skyline.ToolsUI
             var parts = ex.UnresolvedColumns.Select(col =>
             {
                 if (col.Suggestions.Count > 0)
+                {
                     return string.Format(@"Unknown column {0}. Did you mean: {1}?",
                         col.Name.SingleQuote(),
                         string.Join(@", ", col.Suggestions.Select(s => s.SingleQuote())));
+                }
                 return string.Format(@"Unknown column {0}.", col.Name.SingleQuote());
             });
             return new LlmInstruction(string.Join(@" ", parts));
@@ -873,24 +846,31 @@ namespace pwiz.Skyline.ToolsUI
             {
                 string columnName = (string)item[@"column"];
                 if (string.IsNullOrWhiteSpace(columnName))
+                {
                     throw new ArgumentException(new LlmInstruction(
                         @"Each filter must have a 'column' field."));
+                }
 
                 string opName = (string)item[@"op"];
                 if (string.IsNullOrWhiteSpace(opName))
+                {
                     throw new ArgumentException(new LlmInstruction(
                         string.Format(@"Filter on column {0} must have an 'op' field.",
                             columnName.SingleQuote())));
+                }
 
                 // Resolve column against the row source's full column index
+                // ReSharper disable once AssignNullToNotNullAttribute
                 if (!result.ColumnIndex.TryGetValue(columnName, out var propertyPath))
                 {
                     var suggestions = ColumnResolver.FindSuggestions(columnName, result.ColumnIndex);
                     if (suggestions.Count > 0)
+                    {
                         throw new ArgumentException(new LlmInstruction(
                             string.Format(@"Unknown filter column {0}. Did you mean: {1}?",
                                 columnName.SingleQuote(),
                                 string.Join(@", ", suggestions.Select(s => s.SingleQuote())))));
+                    }
                     throw new ArgumentException(new LlmInstruction(
                         string.Format(@"Unknown filter column {0}.", columnName.SingleQuote())));
                 }
@@ -912,9 +892,11 @@ namespace pwiz.Skyline.ToolsUI
                 bool isUnaryOp = operation == FilterOperations.OP_IS_BLANK ||
                                  operation == FilterOperations.OP_IS_NOT_BLANK;
                 if (!isUnaryOp && string.IsNullOrEmpty(operand))
+                {
                     throw new ArgumentException(new LlmInstruction(
                         string.Format(@"Filter operation {0} on column {1} requires a 'value' field.",
                             opName.SingleQuote(), columnName.SingleQuote())));
+                }
 
                 var predicate = FilterPredicate.FromInvariantOperandText(operation, operand ?? string.Empty);
                 filters.Add(new FilterSpec(propertyPath, predicate));
@@ -933,8 +915,10 @@ namespace pwiz.Skyline.ToolsUI
             {
                 string columnName = (string)item[@"column"];
                 if (string.IsNullOrWhiteSpace(columnName))
+                {
                     throw new ArgumentException(new LlmInstruction(
                         @"Each sort item must have a 'column' field."));
+                }
 
                 string dirString = (string)item[@"direction"];
                 var direction = ParseSortDirection(dirString);
@@ -1053,33 +1037,6 @@ namespace pwiz.Skyline.ToolsUI
             return memoryStream.ToArray();
         }
 
-        private string InvokeOnUiThread(Action action)
-        {
-            string error = null;
-            Program.MainWindow.Invoke(new Action(() =>
-            {
-                try
-                {
-                    action();
-                }
-                catch (Exception ex)
-                {
-                    error = ex.Message;
-                }
-            }));
-            return error ?? @"OK";
-        }
-
-        private string InvokeOnUiThread(Func<string> func)
-        {
-            string result = null;
-            Program.MainWindow.Invoke(new Action(() =>
-            {
-                result = func();
-            }));
-            return result;
-        }
-
         private string GenerateReportDocHtml()
         {
             var document = Program.MainWindow.Document;
@@ -1123,22 +1080,9 @@ namespace pwiz.Skyline.ToolsUI
             TextWriter output;
 
             if (silent)
-            {
                 output = capture;
-            }
             else
-            {
-                // Show the Immediate Window and echo the command on the UI thread.
-                TextWriter immediateWriter = null;
-                Program.MainWindow.Invoke(new Action(() =>
-                {
-                    Program.MainWindow.ShowImmediateWindow();
-                    Program.MainWindow.ImmediateWindow.WriteFresh(args);
-                    Program.MainWindow.ImmediateWindow.WriteLine(string.Empty);
-                    immediateWriter = Program.MainWindow.ImmediateWindow.Writer;
-                }));
-                output = new TeeTextWriter(capture, immediateWriter);
-            }
+                output = JsonUiService.CreateImmediateWindowTee(capture, args);
 
             // Run on the current thread (already a background pipe server thread).
             // The Immediate Window writer handles cross-thread writes via BeginInvoke.
@@ -1225,52 +1169,5 @@ namespace pwiz.Skyline.ToolsUI
             return sb.ToString();
         }
 
-        /// <summary>
-        /// A TextWriter that writes to two underlying writers simultaneously.
-        /// Used to capture command output while also echoing to the Immediate Window.
-        /// </summary>
-        private class TeeTextWriter : TextWriter
-        {
-            private readonly TextWriter _writer1;
-            private readonly TextWriter _writer2;
-
-            public TeeTextWriter(TextWriter writer1, TextWriter writer2)
-            {
-                _writer1 = writer1;
-                _writer2 = writer2;
-            }
-
-            public override Encoding Encoding => _writer1.Encoding;
-
-            public override void Write(char value)
-            {
-                _writer1.Write(value);
-                _writer2.Write(value);
-            }
-
-            public override void Write(string value)
-            {
-                _writer1.Write(value);
-                _writer2.Write(value);
-            }
-
-            public override void WriteLine(string value)
-            {
-                _writer1.WriteLine(value);
-                _writer2.WriteLine(value);
-            }
-
-            public override void WriteLine()
-            {
-                _writer1.WriteLine();
-                _writer2.WriteLine();
-            }
-
-            public override void Flush()
-            {
-                _writer1.Flush();
-                _writer2.Flush();
-            }
-        }
     }
 }

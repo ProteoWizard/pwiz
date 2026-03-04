@@ -303,12 +303,12 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_insert_small_molecule_transition_list"),
      Description("Insert a small molecule transition list into the Skyline document. The input is CSV text with column headers in the first row. Skyline determines column meaning from headers. Common headers: MoleculeGroup, PrecursorName, ProductName, PrecursorFormula, ProductFormula, PrecursorAdduct, ProductAdduct, PrecursorMz, ProductMz, PrecursorCharge, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note. This is the same format as Edit > Insert > Transition List in the Skyline UI. If Skyline cannot interpret the headers, it returns an error - adjust header names and retry.")]
     public static string InsertSmallMoleculeTransitionList(
-        [Description("CSV text with column headers in the first row and data rows. Common headers: MoleculeGroup, PrecursorName, PrecursorFormula, PrecursorAdduct, PrecursorMz, PrecursorCharge, ProductFormula, ProductAdduct, ProductMz, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note.")] string textCSV)
+        [Description("CSV text with column headers in the first row and data rows. Common headers: MoleculeGroup, PrecursorName, PrecursorFormula, PrecursorAdduct, PrecursorMz, PrecursorCharge, ProductFormula, ProductAdduct, ProductMz, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note.")] string textCsv)
     {
         return Invoke(() =>
         {
             using var connection = SkylineConnection.Connect();
-            return connection.CallSkylineInsertSmallMoleculeTransitionList(textCSV);
+            return connection.CallSkylineInsertSmallMoleculeTransitionList(textCsv);
         });
     }
 
@@ -377,6 +377,62 @@ public static class SkylineTools
             using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetDocumentStatus");
             return result ?? "No document information available.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_open_forms"),
+     Description("Enumerate all open forms in the Skyline window. Returns tab-separated lines " +
+        "with form type, title, whether it contains a ZedGraph graph, dock state, and a stable " +
+        "identifier. Use the identifier with skyline_get_graph_data and skyline_get_graph_image. " +
+        "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc.")]
+    public static string GetOpenForms()
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = connection.Call("GetOpenForms");
+            return string.IsNullOrEmpty(result)
+                ? "No forms are currently open in Skyline."
+                : result;
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_graph_data"),
+     Description("Extract tab-separated data from a Skyline graph. Returns the same data as " +
+        "Skyline's Copy Data clipboard format, including pane titles, axis labels, and all " +
+        "curve data points. Use skyline_get_open_forms to discover graph IDs.")]
+    public static string GetGraphData(
+        [Description("Graph identifier from skyline_get_open_forms (e.g., 'graph:0')")] string graphId,
+        [Description("Output file path. If not specified, saves to a temp directory. " +
+            "Extension determines format (.tsv default).")] string filePath = null)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = string.IsNullOrEmpty(filePath)
+                ? connection.Call("GetGraphData", graphId)
+                : connection.Call("GetGraphData", graphId, filePath);
+            return string.IsNullOrEmpty(result)
+                ? "No data in graph."
+                : $"Graph data saved to: {result}\n\nUse the Read tool to examine the data.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_graph_image"),
+     Description("Export a PNG image of a Skyline graph. Saves to a file and returns the " +
+        "path. Use the Read tool to view the image. Use skyline_get_open_forms to discover " +
+        "graph IDs.")]
+    public static string GetGraphImage(
+        [Description("Graph identifier from skyline_get_open_forms (e.g., 'graph:0')")] string graphId,
+        [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = string.IsNullOrEmpty(filePath)
+                ? connection.Call("GetGraphImage", graphId)
+                : connection.Call("GetGraphImage", graphId, filePath);
+            return $"Graph image saved to: {result}\n\nUse the Read tool to view this image.";
         });
     }
 
