@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 // TODO: refresh all items in the cache periodically and when Skyline regains focus. Also consider restarting the FileSystemWatchers.
 namespace pwiz.Skyline.Controls.FilesTree
@@ -357,7 +358,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// completion port threads, so unhandled exceptions would terminate the process.
         /// See GitHub issue #3845.
         /// </summary>
-        private void SafeInvokeFswHandler(Action action)
+        private void SafeInvokeFswHandler(Action action, string filePath, params string[] additionalFilePaths)
         {
             if (_isStopped)
                 return;
@@ -377,19 +378,24 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // Silently ignore expected FSW exceptions (IOException from network disconnects, etc.).
                 // Files view is auxiliary UI; its background processing should never interrupt user workflow.
                 if (ExceptionUtil.IsProgrammingDefect(ex))
-                    Program.ReportException(ex);
+                {
+                    
+                    var message = string.Format("Error processing files: {0}",
+                        TextUtil.CommaSeparateListItems(additionalFilePaths??Array.Empty<string>().Prepend(filePath)));
+                    Program.ReportException(new ApplicationException(message, ex));
+                }
             }
         }
 
         private void FileSystemWatcher_OnError(object sender, ErrorEventArgs e)
         {
+            var fsw = sender as FileSystemWatcher;
+            if (fsw == null)
+                return;
             SafeInvokeFswHandler(() =>
             {
-                var fsw = sender as FileSystemWatcher;
-                if (fsw == null)
-                    return;
                 HandleFswError(fsw.Path, e.GetException());
-            });
+            }, fsw.Path);
         }
 
         private void HandleFswError(string directoryPath, Exception exception)
@@ -545,7 +551,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FileSystemWatcher_OnDeleted(object sender, FileSystemEventArgs e)
         {
-            SafeInvokeFswHandler(() => HandleFileDeleted(e.FullPath));
+            SafeInvokeFswHandler(() => HandleFileDeleted(e.FullPath), e.FullPath);
         }
 
         private void HandleFileDeleted(string fullPath)
@@ -584,7 +590,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FileSystemWatcher_OnCreated(object sender, FileSystemEventArgs e)
         {
-            SafeInvokeFswHandler(() => HandleFileCreated(e.FullPath));
+            SafeInvokeFswHandler(() => HandleFileCreated(e.FullPath), e.FullPath);
         }
 
         private void HandleFileCreated(string fullPath)
@@ -622,7 +628,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FileSystemWatcher_OnRenamed(object sender, RenamedEventArgs e)
         {
-            SafeInvokeFswHandler(() => HandleFileRenamed(e.OldFullPath, e.FullPath));
+            SafeInvokeFswHandler(() => HandleFileRenamed(e.OldFullPath, e.FullPath), e.OldFullPath, e.FullPath);
         }
 
         private void HandleFileRenamed(string oldFullPath, string fullPath)
