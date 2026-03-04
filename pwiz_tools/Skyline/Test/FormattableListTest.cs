@@ -52,22 +52,23 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(TextUtil.CsvSeparator, ListColumnValue.GetCsvSeparator(CultureInfo.CurrentCulture));
             Assert.IsFalse(typeof(IFormattable).IsAssignableFrom(typeof(ListColumnValue<string>)));
             var strings = new[] { "Hello", "World" };
-            var list = ListColumnValue.FromItems(strings);
-            Assert.IsInstanceOfType(list, typeof(IFormattable));
-            Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), strings), Convert.ToString(list));
+            var stringListColumnValue = ListColumnValue.FromItems(strings);
+            Assert.IsInstanceOfType(stringListColumnValue, typeof(IFormattable));
+            Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), strings), Convert.ToString(stringListColumnValue));
             Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), strings),
-                Convert.ToString(list, CultureInfo.CurrentCulture));
+                Convert.ToString(stringListColumnValue, CultureInfo.CurrentCulture));
             Assert.AreEqual(string.Join(TextUtil.SEPARATOR_CSV.ToString(), strings),
-                Convert.ToString(list, CultureInfo.InvariantCulture));
+                Convert.ToString(stringListColumnValue, CultureInfo.InvariantCulture));
             var doubles = new[] { Math.PI, Math.E };
+            var doublesListColumnValue = ListColumnValue.FromItems(doubles);
             Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(),
-                doubles.Select(v => v.ToString(CultureInfo.CurrentCulture))), Convert.ToString(list));
+                doubles.Select(v => v.ToString(CultureInfo.CurrentCulture))), Convert.ToString(doublesListColumnValue));
             Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(),
                     doubles.Select(v => v.ToString(CultureInfo.CurrentCulture))),
-                Convert.ToString(list, CultureInfo.CurrentCulture));
+                Convert.ToString(doublesListColumnValue, CultureInfo.CurrentCulture));
             Assert.AreEqual(string.Join(TextUtil.SEPARATOR_CSV.ToString(),
                     doubles.Select(v => v.ToString(CultureInfo.CurrentCulture))),
-                Convert.ToString(list, CultureInfo.InvariantCulture));
+                Convert.ToString(doublesListColumnValue, CultureInfo.InvariantCulture));
         }
     }
 }

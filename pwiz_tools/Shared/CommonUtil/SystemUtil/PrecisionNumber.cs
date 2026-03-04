@@ -42,6 +42,8 @@ namespace pwiz.Common.SystemUtil
         public static readonly double MIN_DOUBLE =
             BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(MIN_VALUE.ToDouble()) - 1);
 
+        private const decimal TRIM_TRAILING_ZEROS_DIVISOR = 1.0000000000000000000000000000m;
+
         public PrecisionNumber(decimal value) : this(WithSignificantDigits(value, MAX_SIGNIFICANT_DIGITS))
         {
         }
@@ -115,7 +117,7 @@ namespace pwiz.Common.SystemUtil
             }
             else if (decimalPlaces >= 0)
             {
-                roundedValue = Math.Round(value, decimalPlaces);
+                roundedValue = Math.Round(value, decimalPlaces) / TRIM_TRAILING_ZEROS_DIVISOR;
             }
             else
             {
