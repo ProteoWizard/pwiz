@@ -32,7 +32,7 @@ namespace pwiz.Common.SystemUtil.Caching
         private bool _progressNotificationPending;
         private WorkOrder _workOrder;
         private readonly IProductionListener _listener;
-        private SynchronizationContext _synchronizationContext;
+        private WindowsFormsSynchronizationContext _synchronizationContext;
         public Receiver(ProductionFacility cache, Control ownerControl, Producer factory)
         {
             Cache = cache;
@@ -43,7 +43,14 @@ namespace pwiz.Common.SystemUtil.Caching
             {
                 throw new InvalidOperationException(@"Must be constructed on event thread");
             }
-            _synchronizationContext = SynchronizationContext.Current;
+            _synchronizationContext = SynchronizationContext.Current as WindowsFormsSynchronizationContext;
+            if (_synchronizationContext == null)
+            {
+                // If called during main window construction, then SynchronizationContext.Current might not be the WindowsFormsSynchronizationContext yet.
+                // In that case, we create a new one. When the real WindowsFormsSynchronizationContext gets created, it will use the same marshalling control
+                // so we do not need to dispose the one we created here.
+                _synchronizationContext = new WindowsFormsSynchronizationContext();
+            }
             _listener = new Listener(this);
         }
 
@@ -76,8 +83,17 @@ namespace pwiz.Common.SystemUtil.Caching
         {
             _synchronizationContext?.Post(_ =>
             {
-                if (OwnerControl != null)
-                    action();
+                try
+                {
+                    if (OwnerControl != null)
+                    {
+                        action();
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Messages.WriteAsyncDebugMessage(@"Receiver.BeginInvoke unhandled exception {0}", exception);
+                }
             }, null);
         }
 
