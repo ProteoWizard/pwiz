@@ -1004,10 +1004,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public ScaledRetentionTime GetValidPeakBoundaryTime(double displayTime)
         {
-            double measuredTime = TimeRegressionFunction == null
-                ? displayTime
-                : TimeRegressionFunction.GetX(displayTime);
             var chromatogramInfo = Chromatogram;
+            if (chromatogramInfo == null)
+            {
+                return ScaledRetentionTime.ZERO;
+            }
+            double measuredTime = TimeRegressionFunction?.GetX(displayTime) ?? displayTime;
             if (chromatogramInfo.TimeIntervals != null)
             {
                 return ScaleRetentionTime(measuredTime);
