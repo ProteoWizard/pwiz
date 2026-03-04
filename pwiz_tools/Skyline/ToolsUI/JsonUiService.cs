@@ -19,11 +19,14 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -190,21 +193,34 @@ namespace pwiz.Skyline.ToolsUI
                 var skylineWindow = Program.MainWindow;
                 var sb = new StringBuilder();
                 sb.Append(TextUtil.ToEscapedTSV(new[] {@"Type", @"Title", @"HasGraph", @"DockState", @"ID"}));
-                int graphIndex = 0, formIndex = 0;
+                var dockedForms = new HashSet<Form>();
                 foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                 {
+                    dockedForms.Add(form);
                     var dockState = form.DockState;
                     if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                         continue;
                     var zedGraph = TryGetZedGraphControl(form);
                     bool hasGraph = zedGraph != null;
-                    string id = hasGraph ? @"graph:" + graphIndex++ : @"form:" + formIndex++;
+                    string id = GetFormId(form);
                     string type = form.GetType().Name;
-                    string title = !string.IsNullOrEmpty(form.Text) ? form.Text
-                        : !string.IsNullOrEmpty(form.TabText) ? form.TabText
-                        : type;
+                    string title = GetFormTitle(form);
                     sb.AppendLine();
                     sb.Append(TextUtil.ToEscapedTSV(new[] {type, title, hasGraph.ToString(), dockState.ToString(), id}));
+                }
+
+                // Enumerate non-docked forms (dialogs, popups)
+                foreach (var form in FormUtil.OpenForms)
+                {
+                    if (form == skylineWindow || dockedForms.Contains(form))
+                        continue;
+                    if (!form.Visible)
+                        continue;
+                    string id = GetFormId(form);
+                    string type = form.GetType().Name;
+                    string title = GetFormTitle(form);
+                    sb.AppendLine();
+                    sb.Append(TextUtil.ToEscapedTSV(new[] {type, title, false.ToString(), @"Dialog", id}));
                 }
                 return sb.ToString();
             });
@@ -214,8 +230,14 @@ namespace pwiz.Skyline.ToolsUI
         {
             return InvokeOnUiThread(() =>
             {
-                var form = FindGraphForm(graphId);
-                var zedGraph = TryGetZedGraphControl(form);
+                var form = FindFormById(graphId) as DockableFormEx;
+                var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
+                if (zedGraph == null)
+                {
+                    throw new ArgumentException(new LlmInstruction(
+                        @"Not a graph form: " + graphId +
+                        @". Use skyline_get_open_forms to find forms with HasGraph=True."));
+                }
                 var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(zedGraph.MasterPane);
                 if (graphData.Panes.Count == 0)
                     return string.Empty;
@@ -235,8 +257,14 @@ namespace pwiz.Skyline.ToolsUI
         {
             return InvokeOnUiThread(() =>
             {
-                var form = FindGraphForm(graphId);
-                var zedGraph = TryGetZedGraphControl(form);
+                var form = FindFormById(graphId) as DockableFormEx;
+                var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
+                if (zedGraph == null)
+                {
+                    throw new ArgumentException(new LlmInstruction(
+                        @"Not a graph form: " + graphId +
+                        @". Use skyline_get_open_forms to find forms with HasGraph=True."));
+                }
                 using (var bitmap = zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias))
                 {
                     filePath = filePath ?? GetMcpTmpFilePath(
@@ -252,7 +280,66 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
+        private const string FORM_FILE_PREFIX = @"skyline-form";
+
+        public static string GetFormImage(string formId, string filePath)
+        {
+            return InvokeOnUiThread(() =>
+            {
+                var form = FindFormById(formId);
+
+                // Check permission (dialog may appear over the target form)
+                bool dialogShown = ScreenCapture.EnsurePermission(out bool wasFirstPrompt);
+                if (!dialogShown)
+                    return @"Screen capture denied by user.";
+
+                // Activate the form
+                ScreenCapture.ActivateForm(form);
+
+                // If the permission dialog was just shown, allow time for it to
+                // fully dismiss and for Windows to repaint the target form.
+                if (wasFirstPrompt)
+                    Thread.Sleep(1000);
+
+                // Get screen rectangle
+                var screenRect = ScreenCapture.GetWindowRectangle(form);
+
+                // Resolve output path before capture so we can derive log path
+                filePath = filePath ?? GetMcpTmpFilePath(
+                    FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
+
+                // Capture with redaction
+                using (var bitmap = ScreenCapture.CaptureAndRedact(screenRect, form))
+                {
+                    DirectoryEx.CreateForFilePath(filePath);
+                    bitmap.Save(filePath, ImageFormat.Png);
+                }
+                return filePath.ToForwardSlashPath();
+            });
+        }
+
         // Private helpers - Graph support
+
+        /// <summary>
+        /// Returns the display title for a form, used both in GetOpenForms output
+        /// and in FindFormById matching.
+        /// </summary>
+        private static string GetFormTitle(Form form)
+        {
+            if (form is DockableFormEx dockable)
+                return !string.IsNullOrEmpty(dockable.Text) ? dockable.Text
+                    : !string.IsNullOrEmpty(dockable.TabText) ? dockable.TabText
+                    : dockable.GetType().Name;
+            return !string.IsNullOrEmpty(form.Text) ? form.Text : form.GetType().Name;
+        }
+
+        /// <summary>
+        /// Builds a stable form identifier from type name and title.
+        /// </summary>
+        private static string GetFormId(Form form)
+        {
+            return form.GetType().Name + @":" + GetFormTitle(form);
+        }
 
         private static ZedGraphControl TryGetZedGraphControl(DockableFormEx form)
         {
@@ -267,31 +354,51 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private static DockableFormEx FindGraphForm(string graphId)
+        /// <summary>
+        /// Finds a form by its TypeName:Title identifier from GetOpenForms.
+        /// Searches docked forms first, then non-docked forms (dialogs).
+        /// </summary>
+        private static Form FindFormById(string formId)
         {
-            if (!graphId.StartsWith(@"graph:") ||
-                !int.TryParse(graphId.Substring(6), out int targetIndex))
+            int colonIndex = formId.IndexOf(':');
+            if (colonIndex < 0)
             {
                 throw new ArgumentException(new LlmInstruction(
-                    @"Invalid graph ID: " + graphId +
-                    @". Use skyline_get_open_forms to get valid IDs."));
+                    @"Invalid form ID format: " + formId +
+                    @". Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs."));
             }
 
-            int graphIndex = 0;
-            foreach (var form in Program.MainWindow.DockPanel.Contents.OfType<DockableFormEx>())
+            string typeName = formId.Substring(0, colonIndex);
+            string title = formId.Substring(colonIndex + 1);
+
+            var skylineWindow = Program.MainWindow;
+
+            // Search docked forms
+            foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
             {
                 var dockState = form.DockState;
                 if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                     continue;
-                if (TryGetZedGraphControl(form) == null)
-                    continue;
-                if (graphIndex == targetIndex)
+                if (form.GetType().Name == typeName && GetFormTitle(form) == title)
                     return form;
-                graphIndex++;
             }
+
+            // Search non-docked forms (dialogs)
+            var dockedForms = new HashSet<Form>(
+                skylineWindow.DockPanel.Contents.OfType<DockableFormEx>().Cast<Form>());
+            foreach (var form in FormUtil.OpenForms)
+            {
+                if (form == skylineWindow || dockedForms.Contains(form))
+                    continue;
+                if (!form.Visible)
+                    continue;
+                if (form.GetType().Name == typeName && GetFormTitle(form) == title)
+                    return form;
+            }
+
             throw new ArgumentException(new LlmInstruction(
-                @"Graph not found: " + graphId +
-                @". Use skyline_get_open_forms to see current graphs."));
+                @"Form not found: " + formId +
+                @". Use skyline_get_open_forms to see available forms."));
         }
 
         /// <summary>

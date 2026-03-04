@@ -634,6 +634,11 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.GetGraphImage(graphId, filePath);
         }
 
+        public string GetFormImage(string formId, string filePath = null)
+        {
+            return JsonUiService.GetFormImage(formId, filePath);
+        }
+
         // Multi-arg methods
 
         public string ExportReport(string reportName, string filePath, string culture)

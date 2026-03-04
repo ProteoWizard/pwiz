@@ -307,6 +307,12 @@
     <Compile Include="Alerts\ReportErrorDlg.Designer.cs">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\ScreenCapturePermissionDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ScreenCapturePermissionDlg.Designer.cs">
+      <DependentUpon>ScreenCapturePermissionDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\ShareTypeDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -5265,6 +5271,7 @@
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />
+    <Compile Include="Util\ScreenCapture.cs" />
     <Compile Include="Util\FormEx.cs">
       <SubType>Form</SubType>
     </Compile>

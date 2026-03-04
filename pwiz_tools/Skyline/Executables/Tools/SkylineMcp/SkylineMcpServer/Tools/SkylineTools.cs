@@ -383,8 +383,9 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_get_open_forms"),
      Description("Enumerate all open forms in the Skyline window. Returns tab-separated lines " +
         "with form type, title, whether it contains a ZedGraph graph, dock state, and a stable " +
-        "identifier. Use the identifier with skyline_get_graph_data and skyline_get_graph_image. " +
-        "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc.")]
+        "identifier in TypeName:Title format (e.g., 'GraphSummary:Peak Areas - Replicate Comparison'). " +
+        "Use the identifier with skyline_get_graph_data, skyline_get_graph_image, and skyline_get_form_image. " +
+        "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc., Dialog.")]
     public static string GetOpenForms()
     {
         return Invoke(() =>
@@ -402,7 +403,7 @@ public static class SkylineTools
         "Skyline's Copy Data clipboard format, including pane titles, axis labels, and all " +
         "curve data points. Use skyline_get_open_forms to discover graph IDs.")]
     public static string GetGraphData(
-        [Description("Graph identifier from skyline_get_open_forms (e.g., 'graph:0')")] string graphId,
+        [Description("Graph identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string graphId,
         [Description("Output file path. If not specified, saves to a temp directory. " +
             "Extension determines format (.tsv default).")] string filePath = null)
     {
@@ -423,7 +424,7 @@ public static class SkylineTools
         "path. Use the Read tool to view the image. Use skyline_get_open_forms to discover " +
         "graph IDs.")]
     public static string GetGraphImage(
-        [Description("Graph identifier from skyline_get_open_forms (e.g., 'graph:0')")] string graphId,
+        [Description("Graph identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string graphId,
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
         return Invoke(() =>
@@ -433,6 +434,27 @@ public static class SkylineTools
                 ? connection.Call("GetGraphImage", graphId)
                 : connection.Call("GetGraphImage", graphId, filePath);
             return $"Graph image saved to: {result}\n\nUse the Read tool to view this image.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_form_image"),
+     Description("Export a PNG screenshot of any open Skyline form, dialog, or dockable panel. " +
+        "The screenshot is captured from the screen with non-Skyline content automatically redacted. " +
+        "Use skyline_get_open_forms to discover form IDs. For graphs, prefer skyline_get_graph_image " +
+        "which renders directly without screen capture.")]
+    public static string GetFormImage(
+        [Description("Form identifier from skyline_get_open_forms (e.g., 'SequenceTreeForm:Targets', 'PeptideSettingsUI:Peptide Settings')")] string formId,
+        [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
+    {
+        return Invoke(() =>
+        {
+            using var connection = SkylineConnection.Connect();
+            string result = string.IsNullOrEmpty(filePath)
+                ? connection.Call("GetFormImage", formId)
+                : connection.Call("GetFormImage", formId, filePath);
+            if (result == "Screen capture denied by user.")
+                return result;
+            return $"Form image saved to: {result}\n\nUse the Read tool to view this image.";
         });
     }
 

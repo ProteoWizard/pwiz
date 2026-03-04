@@ -3644,5 +3644,17 @@ namespace pwiz.Skyline.Properties {
                 this["MaxGridRowCount"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AllowMcpScreenCapture {
+            get {
+                return ((bool)(this["AllowMcpScreenCapture"]));
+            }
+            set {
+                this["AllowMcpScreenCapture"] = value;
+            }
+        }
     }
 }
