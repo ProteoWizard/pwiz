@@ -947,7 +947,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return null;
             }
 
-            needsUpdate = filter.Predicate.InvariantOperandText != operand.ToString(CultureInfo.InvariantCulture);
+            needsUpdate =
+                filter.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)) !=
+                operand.ToString(CultureInfo.CurrentCulture);
 
             return filter;
         }
@@ -962,7 +964,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private RowFilter.ColumnFilter CreateColumnFilter(ColumnId columnId, IFilterOperation filterOp, double operand)
         {
-            var op = FilterPredicate.Parse(_bindingListSource.ViewInfo.DataSchema,
+            var op = FilterPredicate.CreateFilterPredicate(_bindingListSource.ViewInfo.DataSchema,
                 typeof(double), filterOp,
                 operand.ToString(CultureInfo.CurrentCulture));
 

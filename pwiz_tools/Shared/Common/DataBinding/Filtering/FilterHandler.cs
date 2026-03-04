@@ -216,8 +216,8 @@ namespace pwiz.Common.DataBinding.Filtering
                 return null;
             }
 
-            return new ListColumnValue<object>(
-                strings.Items.Select(str => ElementHandler.ParseOperand(FilterOperations.OP_EQUALS, str, cultureInfo)));
+            return ListColumnValue.FromItems(strings.Items.Select(str =>
+                ElementHandler.ParseOperand(FilterOperations.OP_EQUALS, str, cultureInfo)));
         }
 
         public bool ValueEqualsOperand(object value, object operand)
@@ -261,7 +261,7 @@ namespace pwiz.Common.DataBinding.Filtering
             var strings = operandList.AsEnumerable()
                 .Select(v => ElementHandler.OperandToString(FilterOperations.OP_EQUALS, v, cultureInfo))
                 .ToImmutable();
-            return new ListColumnValue<string>(strings).ToString();
+            return ListColumnValue.ItemsToString(cultureInfo, strings);
         }
 
         public bool StartsWith(object value, object operand)

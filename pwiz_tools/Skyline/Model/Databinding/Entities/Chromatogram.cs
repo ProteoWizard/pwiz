@@ -190,8 +190,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         return null;
                     }
 
-                    return new ListColumnValue<string>(_timeIntensities.ScanIds
-                        .Select(index => scanIds.GetMsDataFileSpectrumId(index)).ToArray());
+                    return ListColumnValue.FromItems(
+                        _timeIntensities.ScanIds.Select(index => scanIds.GetMsDataFileSpectrumId(index)));
                 }
             }
 

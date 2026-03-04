@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Common.DataBinding;
@@ -41,7 +42,9 @@ namespace pwiz.Skyline.Util
             {
                 return string.Empty;
             }
-            return SeparateValues(TextUtil.GetCsvSeparator(formatProvider), Items.Select(item => ValueToString(item, format, formatProvider)));
+
+            return SeparateValues(TextUtil.GetCsvSeparator(formatProvider ?? CultureInfo.CurrentCulture),
+                Items.Select(item => ValueToString(item, format, formatProvider)));
         }
 
         public override string ToString()

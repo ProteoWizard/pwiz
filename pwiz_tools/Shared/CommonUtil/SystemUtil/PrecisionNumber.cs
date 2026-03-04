@@ -31,9 +31,9 @@ namespace pwiz.Common.SystemUtil
     public readonly struct PrecisionNumber : IEquatable<PrecisionNumber>, IFormattable
     {
         public const int MAX_SIGNIFICANT_DIGITS = 17;
-        public static readonly PrecisionNumber NAN = new PrecisionNumber(0, short.MinValue, 0);
-        public static readonly PrecisionNumber POSITIVE_INFINITY = new PrecisionNumber(0, short.MinValue, 1);
-        public static readonly PrecisionNumber NEGATIVE_INFINITY = new PrecisionNumber(0, short.MinValue, -1);
+        public static readonly PrecisionNumber NAN = new PrecisionNumber(0, short.MaxValue, 0);
+        public static readonly PrecisionNumber POSITIVE_INFINITY = new PrecisionNumber(0, short.MaxValue, 1);
+        public static readonly PrecisionNumber NEGATIVE_INFINITY = new PrecisionNumber(0, short.MaxValue, -1);
         public static readonly PrecisionNumber MAX_VALUE = new PrecisionNumber(7e28m, 28, 1);
         public static readonly PrecisionNumber MIN_VALUE = new PrecisionNumber(-7e28m, 28, 1);
 
@@ -42,15 +42,6 @@ namespace pwiz.Common.SystemUtil
         public static readonly double MIN_DOUBLE =
             BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(MIN_VALUE.ToDouble()) - 1);
 
-
-        public PrecisionNumber(int value) : this((decimal)value)
-        {
-        }
-
-        public PrecisionNumber(double value) : this(FromDouble(value))
-        {
-        }
-
         public PrecisionNumber(decimal value) : this(WithSignificantDigits(value, MAX_SIGNIFICANT_DIGITS))
         {
         }
@@ -58,14 +49,14 @@ namespace pwiz.Common.SystemUtil
         private PrecisionNumber(PrecisionNumber other)
         {
             Value = other.Value;
-            _log10 = other._log10;
+            _magnitude = other._magnitude;
             _significantDigits = other._significantDigits;
         }
 
-        private PrecisionNumber(decimal value, short log10, short significantDigits)
+        private PrecisionNumber(decimal value, short magnitude, short significantDigits)
         {
             Value = value;
-            _log10 = log10;
+            _magnitude = magnitude;
             _significantDigits = significantDigits;
         }
 
@@ -84,7 +75,7 @@ namespace pwiz.Common.SystemUtil
 
         public PrecisionNumber ChangeDecimalPlaces(int newDecimalPlaces)
         {
-            int newSignificantDigits = newDecimalPlaces + _log10 + 1;
+            int newSignificantDigits = newDecimalPlaces + _magnitude + 1;
             if (newSignificantDigits == SignificantDigits)
             {
                 return this;
@@ -159,12 +150,18 @@ namespace pwiz.Common.SystemUtil
         }
 
         private readonly short _significantDigits;
-        private readonly short _log10;
+        /// <summary>
+        /// Magnitude of the most significant digit, e.g. 0 for "3.14", 2 for "300", and -3 for ".004".
+        /// </summary>
+        private readonly short _magnitude;
+        /// <summary>
+        /// Number of significant digits to the right of the decimal point.
+        /// Can be negative if the least significant digit is to the left of the decimal point.
+        /// </summary>
         public int DecimalPlaces
         {
-            get { return _significantDigits - _log10 - 1; }
+            get { return _significantDigits - _magnitude - 1; }
         }
-
         public int SignificantDigits
         {
             get { return _significantDigits; }
@@ -336,7 +333,7 @@ namespace pwiz.Common.SystemUtil
                 return Value.ToString(formatProvider);
             }
 
-            if (DecimalPlaces >= 0 && !explicitPrecision && _log10 > -1)
+            if (DecimalPlaces >= 0 && !explicitPrecision && _magnitude > -1)
             {
                 return Value.ToString(@"F" + DecimalPlaces, formatProvider);
             }
@@ -395,7 +392,7 @@ namespace pwiz.Common.SystemUtil
 
         public bool IsFinite
         {
-            get { return _log10 != NAN._log10; }
+            get { return _magnitude != NAN._magnitude; }
         }
 
         public double ToDouble()

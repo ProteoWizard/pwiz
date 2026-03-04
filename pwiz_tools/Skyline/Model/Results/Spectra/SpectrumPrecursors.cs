@@ -153,8 +153,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     return null;
                 }
 
-                return new ListColumnValue<double>(
-                    spectrumPrecursors._precursors.Select(precursor => precursor.PrecursorMz.RawValue));
+                return ListColumnValue.FromItems(spectrumPrecursors._precursors.Select(precursor => precursor.PrecursorMz.RawValue));
             }
         }
     }

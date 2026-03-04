@@ -26,14 +26,31 @@ namespace pwiz.Common.DataBinding
             return null;
         }
 
-        public static char GetCsvSeparator(CultureInfo cultureInfo)
+        public static char GetCsvSeparator(IFormatProvider formatProvider)
         {
-            return cultureInfo.NumberFormat.CurrencyDecimalSeparator == @"," ? ';' : ',';
+            var numberDecimalSeparator =
+                ((formatProvider ?? CultureInfo.CurrentCulture).GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo)
+                ?.NumberDecimalSeparator;
+            return numberDecimalSeparator == @"," ? ';' : ',';
         }
 
-        public static string ItemsToString<T>(CultureInfo cultureInfo, IEnumerable<T> items)
+        public static ListColumnValue<T> FromItems<T>(IEnumerable<T> items)
         {
-            var csvSeparator = GetCsvSeparator(cultureInfo);
+            if (items == null)
+            {
+                return null;
+            }
+
+            return new Impl<T>(items);
+        }
+
+        public static string ItemsToString<T>(IFormatProvider formatProvider, IEnumerable<T> items)
+        {
+            if (items == null)
+            {
+                return string.Empty;
+            }
+            var csvSeparator = GetCsvSeparator(formatProvider);
             return string.Join(csvSeparator.ToString(), items.Select(item => DsvWriter.ToDsvField(csvSeparator, Convert.ToString(item))));
         }
 
@@ -69,7 +86,7 @@ namespace pwiz.Common.DataBinding
             }
 
             list.Add(Unquote(sbField.ToString()));
-            return new ListColumnValue<string>(list);
+            return new Impl<string>(list);
         }
 
         private static string Unquote(string value)
@@ -81,6 +98,25 @@ namespace pwiz.Common.DataBinding
 
             return value;
         }
+
+        /// <summary>
+        /// Subclass of ListColumnValue which implements IFormattable.
+        /// This is hidden in a private class so the declared type of the Property will
+        /// not implement IFormattable so the user will not be presented with options to
+        /// customize the formatting of the column. We only care about the IFormatProvider
+        /// in the ToString override.
+        /// </summary>
+        private class Impl<T> : ListColumnValue<T>, IFormattable
+        {
+            public Impl(IEnumerable<T> list) : base(list)
+            {
+            }
+
+            string IFormattable.ToString(string format, IFormatProvider formatProvider)
+            {
+                return ItemsToString(formatProvider, Items);
+            }
+        }
     }
 
     public interface IListColumnValue
@@ -90,9 +126,9 @@ namespace pwiz.Common.DataBinding
         IEnumerable<object> AsEnumerable();
     }
 
-    public class ListColumnValue<T> : IListColumnValue
+    public abstract class ListColumnValue<T> : IListColumnValue
     {
-        public ListColumnValue(IEnumerable<T> items)
+        protected ListColumnValue(IEnumerable<T> items)
         {
             Items = ImmutableList.ValueOf(items);
         }
