@@ -189,6 +189,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 var skylineWindow = Program.MainWindow;
                 var sb = new StringBuilder();
+                sb.Append(TextUtil.ToEscapedTSV(new[] {@"Type", @"Title", @"HasGraph", @"DockState", @"ID"}));
                 int graphIndex = 0, formIndex = 0;
                 foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                 {
@@ -199,13 +200,11 @@ namespace pwiz.Skyline.ToolsUI
                     bool hasGraph = zedGraph != null;
                     string id = hasGraph ? @"graph:" + graphIndex++ : @"form:" + formIndex++;
                     string type = form.GetType().Name;
-                    string title = form.Text ?? form.TabText ?? type;
-                    if (sb.Length > 0) sb.AppendLine();
-                    sb.Append(type).Append(TextUtil.SEPARATOR_TSV)
-                        .Append(title).Append(TextUtil.SEPARATOR_TSV)
-                        .Append(hasGraph).Append(TextUtil.SEPARATOR_TSV)
-                        .Append(dockState).Append(TextUtil.SEPARATOR_TSV)
-                        .Append(id);
+                    string title = !string.IsNullOrEmpty(form.Text) ? form.Text
+                        : !string.IsNullOrEmpty(form.TabText) ? form.TabText
+                        : type;
+                    sb.AppendLine();
+                    sb.Append(TextUtil.ToEscapedTSV(new[] {type, title, hasGraph.ToString(), dockState.ToString(), id}));
                 }
                 return sb.ToString();
             });
