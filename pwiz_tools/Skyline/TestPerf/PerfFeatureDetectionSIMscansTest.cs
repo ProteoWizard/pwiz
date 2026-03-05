@@ -16,14 +16,13 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Util;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.SkylineTestUtil;
 
 //
@@ -54,6 +53,12 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            // Converted mzML file is created in the persistent directory alongside the raw file
+            // and intentionally left for reuse on subsequent runs. Declare it so the end-of-test
+            // file change detection doesn't flag it as unexpected.
+            TestFilesDir.PotentialAdditionalPersistentFileSet = new HashSet<string>(
+                new[] { Path.Combine(MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, Path.ChangeExtension(RAW_FILE, ".mzML")) });
+
             OpenDocument(GetTestPath(SKY_ZIP));
 
             // Launch the Feature Detection wizard
@@ -68,10 +73,8 @@ namespace TestPerf
                     new MsDataFileUri[] { new MsDataFilePath(GetTestPath(RAW_FILE)) };
             });
 
-            // Single file - name dialog still appears; accept defaults
-            var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(
-                () => importPeptideSearchDlg.ClickNextButton());
-            OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
+            // Accept single file name
+            RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
             RunUI(() =>
             {
@@ -114,13 +117,22 @@ namespace TestPerf
             var actualTransitions = doc.MoleculeTransitionCount - doc.PeptideTransitionCount;
 
             // TODO: fill in expected counts after first successful test run
-            const int EXPECTED_FEATURES = 0;
-            const int EXPECTED_TRANSITION_GROUPS = 0;
-            const int EXPECTED_TRANSITIONS = 0;
+            const int EXPECTED_FEATURES = 1451;
+            const int EXPECTED_TRANSITION_GROUPS = 1959;
+            const int EXPECTED_TRANSITIONS = 5877;
 
             AssertEx.AreEqual(EXPECTED_FEATURES, actualFeatures);
             AssertEx.AreEqual(EXPECTED_TRANSITION_GROUPS, actualTransitionGroups);
             AssertEx.AreEqual(EXPECTED_TRANSITIONS, actualTransitions);
+
+            // Verify that every detected feature transition group has an extracted chromatogram.
+            // This is the key regression check for SIM scan support: without the fix, features
+            // spanning non-overlapping SIM windows would be fragmented or dropped entirely.
+            var featureTGs = doc.MoleculeTransitionGroups.Where(tg => tg.IsCustomIon).ToArray();
+            var featuresWithoutChrom = featureTGs
+                .Count(tg => !tg.HasResults || !tg.ChromInfos.Any(ci => ci.Area.HasValue));
+            AssertEx.AreEqual(0, featuresWithoutChrom,
+                $"{featuresWithoutChrom} of {featureTGs.Length} detected features have no extracted chromatogram");
         }
     }
 }
