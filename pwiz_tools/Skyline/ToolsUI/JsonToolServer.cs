@@ -591,13 +591,15 @@ namespace pwiz.Skyline.ToolsUI
                     @"Insert small molecule transition list"));
         }
 
-        public string ImportFasta(string textFasta)
+        public string ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
+            bool? keepEmpty = keepEmptyProteins == null ? (bool?)null : bool.Parse(keepEmptyProteins);
             return JsonUiService.InvokeOnUiThread(() =>
                 Program.MainWindow.ImportFasta(new StringReader(textFasta),
                     Helpers.CountLinesInString(textFasta), false,
                     @"Import FASTA from MCP",
-                    new SkylineWindow.ImportFastaInfo(false, textFasta)));
+                    new SkylineWindow.ImportFastaInfo(false, textFasta),
+                    keepEmpty));
         }
 
         public string ImportProperties(string csvText)

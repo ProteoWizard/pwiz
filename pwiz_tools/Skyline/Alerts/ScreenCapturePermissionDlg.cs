@@ -31,7 +31,11 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
         }
 
-        public bool DoNotAskAgain => cbDoNotAskAgain.Checked;
+        public bool DoNotAskAgain
+        {
+            get { return cbDoNotAskAgain.Checked; }
+            set { cbDoNotAskAgain.Checked = value; }
+        }
 
         private void btnAllow_Click(object sender, EventArgs e)
         {

@@ -20,12 +20,18 @@
 
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -80,13 +86,18 @@ namespace pwiz.SkylineTestFunctional
             TestAvailableTutorials(server);
             TestCliHelp(server);
             TestOpenForms(server);
+            TestScreenCapturePermissionDlg(server);
+            TestFormImage(server);
+            TestGraphDataAndImage(server);
+            TestTutorialFetch(server);
+            TestTutorialFetchErrors(server);
 
             // Document-modifying tools
             TestAddReport(server);
-            // TestImportFasta(server);
             TestInsertSmallMoleculeTransitionList(server);
             TestImportProperties(server);
-            TestRunCommand(server);
+            var doc = TestImportFasta(server);
+            TestRunCommand(server, doc);
         }
 
         private void TestDocumentInfo(JsonToolServer server)
@@ -120,6 +131,10 @@ namespace pwiz.SkylineTestFunctional
             string sel = server.GetSelection();
             Assert.IsFalse(string.IsNullOrEmpty(sel));
 
+            // GetSelectionText - human-readable location name
+            string selText = server.GetSelectionText();
+            Assert.IsFalse(string.IsNullOrEmpty(selText));
+
             // Navigate to a specific peptide and verify selection changes
             var doc = SkylineWindow.Document;
             var firstGroup = doc.MoleculeGroups.First();
@@ -131,15 +146,43 @@ namespace pwiz.SkylineTestFunctional
             string sel2 = server.GetSelection();
             Assert.IsFalse(string.IsNullOrEmpty(sel2));
 
+            // GetSelectedElementLocator - get locator for selected molecule
+            string moleculeLocator = server.GetSelectedElementLocator(@"Molecule");
+            Assert.IsFalse(string.IsNullOrEmpty(moleculeLocator));
+
             // SetSelectedElement - navigate to a different location via locator
             string locations = server.GetLocations(LEVEL_MOLECULE);
             Assert.AreEqual(doc.MoleculeCount, Helpers.CountLinesInString(locations));
 
             // Pick the last molecule and navigate to it
-            var lines = TextUtil.ReadLines(locations);
-            string lastLocator = lines.Last().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
-            server.SetSelectedElement(lastLocator);
-            WaitForConditionUI(() => server.GetSelection().Contains(lastLocator));
+            var moleculeLines = TextUtil.ReadLines(locations).ToArray();
+            string lastMoleculeLocator = moleculeLines.Last().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            server.SetSelectedElement(lastMoleculeLocator);
+            WaitForConditionUI(() => server.GetSelection().Contains(lastMoleculeLocator));
+
+            // Multi-selection: select multiple molecules at once
+            string firstMoleculeLocator = moleculeLines.First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            string secondMoleculeLocator = moleculeLines.Skip(1).First().ParseDsvFields(TextUtil.SEPARATOR_TSV)[1];
+            server.SetSelectedElement(firstMoleculeLocator,
+                TextUtil.LineSeparate(secondMoleculeLocator, lastMoleculeLocator));
+            string multiSel = server.GetSelection();
+            // Multi-selection should return multiple locators, one per line
+            var multiSelLines = TextUtil.ReadLines(multiSel).ToArray();
+            Assert.AreEqual(3, multiSelLines.Length,
+                @"Multi-selection should return 3 locators");
+            AssertEx.Contains(multiSel, firstMoleculeLocator);
+            AssertEx.Contains(multiSel, secondMoleculeLocator);
+            AssertEx.Contains(multiSel, lastMoleculeLocator);
+
+            // Select the insertion node and verify round-trip
+            server.SetSelectedElement(JsonUiService.INSERT_NODE_LOCATOR);
+            string insertSel = server.GetSelection();
+            Assert.AreEqual(JsonUiService.INSERT_NODE_LOCATOR, insertSel,
+                @"Insertion node selection should round-trip through GetSelection");
+
+            // Navigate back to a regular element to leave things in a known state
+            server.SetSelectedElement(firstMoleculeLocator);
+            WaitForConditionUI(() => server.GetSelection().Contains(firstMoleculeLocator));
         }
 
         private void TestLocations(JsonToolServer server)
@@ -367,17 +410,22 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestDocumentSettings(JsonToolServer server)
         {
+            string elementName = typeof(SrmSettings)
+                .GetCustomAttribute<XmlRootAttribute>()
+                ?.ElementName; // "settings_summary"
+            string expectedTag = @"<" + elementName;
+
             string docSettingsPath = TestFilesDir.GetTestPath(@"doc_settings.xml");
             string result = server.GetDocumentSettings(docSettingsPath);
             Assert.IsTrue(File.Exists(docSettingsPath));
             string xml = File.ReadAllText(docSettingsPath);
-            AssertEx.Contains(xml, @"<settings_summary");
+            AssertEx.Contains(xml, expectedTag);
 
             string defSettingsPath = TestFilesDir.GetTestPath(@"default_settings.xml");
             string defResult = server.GetDefaultSettings(defSettingsPath);
             Assert.IsTrue(File.Exists(defSettingsPath));
             string defXml = File.ReadAllText(defSettingsPath);
-            AssertEx.Contains(defXml, @"<settings_summary");
+            AssertEx.Contains(defXml, expectedTag);
 
             // Document settings and default settings should differ
             Assert.AreNotEqual(xml, defXml);
@@ -402,8 +450,11 @@ namespace pwiz.SkylineTestFunctional
         private void TestCliHelp(JsonToolServer server)
         {
             // RunCommandSilent with --help should return sections list
+            string iwBefore = GetImmediateWindowText();
             string sections = server.RunCommandSilent(@"--help=sections --help=no-borders");
             Assert.IsFalse(string.IsNullOrEmpty(sections));
+            // Silent mode should not write to Immediate Window
+            Assert.AreEqual(iwBefore, GetImmediateWindowText());
         }
 
         private void TestOpenForms(JsonToolServer server)
@@ -411,7 +462,266 @@ namespace pwiz.SkylineTestFunctional
             string forms = server.GetOpenForms();
             Assert.IsFalse(string.IsNullOrEmpty(forms));
             // The Targets panel (SequenceTreeForm) should always be open
-            AssertEx.Contains(forms, @"SequenceTreeForm");
+            AssertEx.Contains(forms, nameof(SequenceTreeForm));
+        }
+
+        private void TestScreenCapturePermissionDlg(JsonToolServer server)
+        {
+            // Ensure permission is not pre-granted
+            RunUI(() =>
+            {
+                Settings.Default.AllowMcpScreenCapture = false;
+                ScreenCapture.ResetSessionPermission();
+            });
+
+            string formId = server.GetOpenForms().ReadLines()
+                .First(l => l.Contains(nameof(SequenceTreeForm)))
+                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+
+            // Test Deny - dialog should return denial message
+            string imagePath = TestFilesDir.GetTestPath(@"deny_test.png");
+            string denyResult = null;
+            var dlg = ShowDialog<ScreenCapturePermissionDlg>(
+                () => denyResult = server.GetFormImage(formId, imagePath));
+            Assert.IsFalse(dlg.DoNotAskAgain);
+            CancelDialog(dlg);
+            WaitForConditionUI(() => denyResult != null);
+            AssertEx.Contains(denyResult, @"denied");
+            Assert.IsFalse(File.Exists(imagePath));
+
+            // Test Allow - dialog should grant session permission
+            string allowPath = TestFilesDir.GetTestPath(@"allow_test.png");
+            string allowResult = null;
+            dlg = ShowDialog<ScreenCapturePermissionDlg>(
+                () => allowResult = server.GetFormImage(formId, allowPath));
+            Assert.IsFalse(dlg.DoNotAskAgain);
+            OkDialog(dlg);
+            WaitForConditionUI(() => allowResult != null);
+            // After Allow, file should be created (content may be blank in offscreen mode)
+            Assert.IsTrue(File.Exists(allowPath));
+            Assert.IsTrue(new FileInfo(allowPath).Length > 0);
+
+            // Session permission is now granted - subsequent calls should not show dialog
+            string sessionPath = TestFilesDir.GetTestPath(@"session_test.png");
+            string sessionResult = server.GetFormImage(formId, sessionPath);
+            Assert.IsTrue(File.Exists(sessionPath));
+
+            // Test Allow + DoNotAskAgain - should persist the setting
+            RunUI(() =>
+            {
+                Settings.Default.AllowMcpScreenCapture = false;
+                ScreenCapture.ResetSessionPermission();
+            });
+
+            string persistPath = TestFilesDir.GetTestPath(@"persist_test.png");
+            string persistResult = null;
+            dlg = ShowDialog<ScreenCapturePermissionDlg>(
+                () => persistResult = server.GetFormImage(formId, persistPath));
+            RunUI(() => dlg.DoNotAskAgain = true);
+            OkDialog(dlg);
+            WaitForConditionUI(() => persistResult != null);
+            Assert.IsTrue(File.Exists(persistPath));
+            Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
+
+            // Clean up setting for other tests
+            RunUI(() =>
+            {
+                Settings.Default.AllowMcpScreenCapture = false;
+                ScreenCapture.ResetSessionPermission();
+            });
+        }
+
+        private void TestFormImage(JsonToolServer server)
+        {
+            // Grant permission so we can test image capture without dialog
+            RunUI(() => Settings.Default.AllowMcpScreenCapture = true);
+
+            // Capture the Targets panel
+            string formId = server.GetOpenForms().ReadLines()
+                .First(l => l.Contains(nameof(SequenceTreeForm)))
+                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            string imageName = @"form_image_test.png";
+            string imagePath = TestFilesDir.GetTestPath(imageName);
+
+            string result = server.GetFormImage(formId, imagePath);
+            Assert.IsTrue(File.Exists(imagePath));
+            Assert.IsTrue(new FileInfo(imagePath).Length > 0);
+            // Result should be the file path (forward-slash format)
+            AssertEx.Contains(result, imageName);
+
+            // Verify the image is valid by loading it
+            using (var img = Image.FromFile(imagePath))
+            {
+                Assert.IsTrue(img.Width > 0);
+                Assert.IsTrue(img.Height > 0);
+            }
+
+            // Auto-generated path (null filePath) - exercise default path logic
+            string autoImagePath = null;
+            try
+            {
+                autoImagePath = server.GetFormImage(formId);
+                Assert.IsTrue(File.Exists(autoImagePath));
+            }
+            finally
+            {
+                if (autoImagePath != null)
+                    FileEx.SafeDelete(autoImagePath);
+            }
+
+            // Error: invalid form ID
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetFormImage(@"NonexistentForm:NoTitle",
+                    TestFilesDir.GetTestPath(@"form_bad.png")));
+
+            // Clean up
+            RunUI(() => Settings.Default.AllowMcpScreenCapture = false);
+        }
+
+        private void TestGraphDataAndImage(JsonToolServer server)
+        {
+            // Find a graph form from the open forms list
+            string forms = server.GetOpenForms();
+            string graphLine = forms.ReadLines()
+                .FirstOrDefault(l => l.Contains(@"GraphSummary"));
+            if (graphLine == null)
+            {
+                // No graph open - skip gracefully (Rat_plasma.sky should have graphs)
+                return;
+            }
+
+            string graphId = graphLine.ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+
+            // GetGraphData - export to TSV
+            string dataPath = TestFilesDir.GetTestPath(@"graph_data.tsv");
+            string dataResult = server.GetGraphData(graphId, dataPath);
+            Assert.IsTrue(File.Exists(dataPath));
+            Assert.IsTrue(new FileInfo(dataPath).Length > 0);
+
+            // GetGraphImage - export to PNG
+            string imagePath = TestFilesDir.GetTestPath(@"graph_image.png");
+            string imageResult = server.GetGraphImage(graphId, imagePath);
+            Assert.IsTrue(File.Exists(imagePath));
+            Assert.IsTrue(new FileInfo(imagePath).Length > 0);
+            // Verify it's a valid image
+            using (var img = Image.FromFile(imagePath))
+            {
+                Assert.IsTrue(img.Width > 0);
+                Assert.IsTrue(img.Height > 0);
+            }
+
+            // Auto-generated path (null filePath) - exercise default path logic
+            string autoDataPath = null;
+            try
+            {
+                autoDataPath = server.GetGraphData(graphId);
+                Assert.IsTrue(File.Exists(autoDataPath));
+            }
+            finally
+            {
+                if (autoDataPath != null)
+                    FileEx.SafeDelete(autoDataPath);
+            }
+
+            // Error: invalid graph ID
+            string badGraphPath = TestFilesDir.GetTestPath(@"graph_bad.tsv");
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetGraphData(@"NonexistentGraph:NoTitle", badGraphPath));
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetGraphImage(@"NonexistentGraph:NoTitle",
+                    TestFilesDir.GetTestPath(@"graph_bad.png")));
+
+            // Error: non-graph form used with graph methods
+            string nonGraphId = forms.ReadLines()
+                .First(l => l.Contains(nameof(SequenceTreeForm)))
+                .ParseDsvFields(TextUtil.SEPARATOR_TSV).Last();
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetGraphData(nonGraphId, badGraphPath));
+        }
+
+        private const string TUTORIAL_NAME = @"MethodEdit";
+        private const string TUTORIAL_EN = @"en";
+
+        private void TestTutorialFetch(JsonToolServer server)
+        {
+            // Read real tutorial HTML from the repo (same content GitHub would serve)
+            string tutorialsDir = TestContext.GetProjectDirectory(@"Documentation\Tutorials");
+            string htmlPath = Path.Combine(tutorialsDir, TUTORIAL_NAME, TUTORIAL_EN, @"index.html");
+            Assert.IsTrue(File.Exists(htmlPath), @"Tutorial HTML not found: " + htmlPath);
+            string realHtml = File.ReadAllText(htmlPath);
+
+            // Serve the real HTML via HttpClientTestHelper (no network access)
+            string tutorialPath = TestFilesDir.GetTestPath(@"tutorial_test.md");
+            using (HttpClientTestHelper.SimulateSuccessfulDownload(realHtml))
+            {
+                string result = server.GetTutorial(TUTORIAL_NAME, TUTORIAL_EN, tutorialPath);
+                var metadata = JObject.Parse(result);
+
+                // Verify metadata
+                Assert.AreEqual(TUTORIAL_NAME, (string)metadata[@"tutorial"]);
+                Assert.AreEqual(TUTORIAL_EN, (string)metadata[@"language"]);
+                var toc = (JArray)metadata[@"toc"];
+                Assert.IsTrue(toc?.Count > 0);
+                Assert.IsTrue((int)metadata[@"line_count"] > 10);
+            }
+
+            // Verify markdown was written and has expected structure
+            Assert.IsTrue(File.Exists(tutorialPath));
+            string markdown = File.ReadAllText(tutorialPath);
+            AssertEx.Contains(markdown, @"# ");  // Has headings
+            AssertEx.Contains(markdown, @"[Screenshot:");  // Has image placeholders
+
+            // Serve a real tutorial image from the repo
+            string imageFilename = @"s-01.png";
+            string repoImagePath = Path.Combine(tutorialsDir, TUTORIAL_NAME, TUTORIAL_EN, imageFilename);
+            Assert.IsTrue(File.Exists(repoImagePath), @"Tutorial image not found: " + repoImagePath);
+            byte[] realImageData = File.ReadAllBytes(repoImagePath);
+
+            string imagePath = TestFilesDir.GetTestPath(@"tutorial_image.png");
+            using (HttpClientTestHelper.SimulateSuccessfulDownload(realImageData))
+            {
+                string imageResult = server.GetTutorialImage(TUTORIAL_NAME, imageFilename, TUTORIAL_EN, imagePath);
+                var imageMetadata = JObject.Parse(imageResult);
+                Assert.AreEqual(TUTORIAL_NAME, (string)imageMetadata[@"tutorial"]);
+                Assert.AreEqual(imageFilename, (string)imageMetadata[@"image"]);
+            }
+            Assert.IsTrue(File.Exists(imagePath));
+            Assert.AreEqual(realImageData.Length, new FileInfo(imagePath).Length);
+        }
+
+        private void TestTutorialFetchErrors(JsonToolServer server)
+        {
+            // Unknown tutorial name
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetTutorial(@"NonexistentTutorial"));
+
+            // HTTP 404 - tutorial not found on GitHub
+            string tempPath = TestFilesDir.GetTestPath(@"tutorial_404.md");
+            using (HttpClientTestHelper.SimulateHttp404())
+            {
+                AssertEx.ThrowsException<IOException>(() =>
+                    server.GetTutorial(TUTORIAL_NAME, TUTORIAL_EN, tempPath));
+            }
+
+            // Network failure
+            using (HttpClientTestHelper.SimulateNoNetworkInterface())
+            {
+                AssertEx.ThrowsException<IOException>(() =>
+                    server.GetTutorial(TUTORIAL_NAME, TUTORIAL_EN, tempPath));
+            }
+
+            // User cancellation
+            using (HttpClientTestHelper.SimulateCancellation())
+            {
+                AssertEx.ThrowsException<IOException>(() =>
+                    server.GetTutorial(TUTORIAL_NAME, TUTORIAL_EN, tempPath));
+            }
+
+            // Invalid image filename (path traversal prevention)
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetTutorialImage(TUTORIAL_NAME, @"../../../etc/passwd"));
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetTutorialImage(TUTORIAL_NAME, @"sub\dir\img.png"));
         }
 
         private void TestAddReport(JsonToolServer server)
@@ -426,24 +736,6 @@ namespace pwiz.SkylineTestFunctional
             var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(
                 PersistedViews.MainGroup.Id);
             Assert.IsTrue(viewSpecList.ViewSpecs.Any(v => v.Name == reportName));
-        }
-
-        private void TestImportFasta(JsonToolServer server)
-        {
-            var doc = SkylineWindow.Document;
-            int groupsBefore = doc.MoleculeGroupCount;
-            int moleculesBefore = doc.MoleculeCount;
-
-            // Select the insert node so FASTA import has a valid location
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode =
-                SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1]);
-
-            string result = server.ImportFasta(TEXT_FASTA);
-            WaitForProteinMetadataBackgroundLoaderCompletedUI();
-
-            var docAfter = SkylineWindow.Document;
-            Assert.IsTrue(docAfter.MoleculeGroupCount > groupsBefore);
-            Assert.IsTrue(docAfter.MoleculeCount > moleculesBefore);
         }
 
         private void TestInsertSmallMoleculeTransitionList(JsonToolServer server)
@@ -482,13 +774,112 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(string.IsNullOrEmpty(result));
         }
 
-        private void TestRunCommand(JsonToolServer server)
+        private SrmDocument TestImportFasta(JsonToolServer server)
         {
+            var docBefore = SkylineWindow.Document;
+
+            // Select the insertion node to append at end (matching command-line behavior)
+            server.SetSelectedElement(JsonUiService.INSERT_NODE_LOCATOR);
+
+            // Import with keepEmptyProteins=true - protein has no peptides matching
+            // the document filter criteria, so it will be empty
+            server.ImportFasta(TEXT_FASTA, @"true");
+            var docAfterKeep = SkylineWindow.Document;
+            Assert.IsTrue(docAfterKeep.MoleculeGroupCount > docBefore.MoleculeGroupCount,
+                @"FASTA import should add protein groups");
+            Assert.IsTrue(docAfterKeep.MoleculeGroups.Any(g => g.Name.Contains(@"ALBU_BOVIN")),
+                @"Document should contain the imported ALBU_BOVIN protein");
+
+            RunUI(() => SkylineWindow.Undo());
+            Assert.AreSame(docBefore, SkylineWindow.Document);
+
+            // Import with keepEmptyProteins=false - empty protein should be removed
+            server.ImportFasta(TEXT_FASTA, @"false");
+            var docAfterRemove = SkylineWindow.Document;
+            Assert.IsFalse(docAfterRemove.MoleculeGroups.Any(g => g.Name.Contains(@"ALBU_BOVIN")),
+                @"Empty ALBU_BOVIN protein should have been removed");
+            Assert.AreSame(docBefore, SkylineWindow.Document,
+                @"Document should be unchanged when all imported proteins are empty");
+            return docAfterKeep;
+        }
+
+        private void TestRunCommand(JsonToolServer server, SrmDocument docAfterKeep)
+        {
+            // --version output should contain both parts of the version string
+            string versionResult = server.RunCommandSilent(@"--version");
+            // GetVersion returns "26.1.1.061-6c3244bc0a", --version shows "26.1.1.061 (6c3244bc0a)"
+            AssertEx.Contains(versionResult, server.GetVersion().Split('-'));
+
+            // Read operation: export a report via CLI (non-silent, writes to Immediate Window)
             string reportPath = TestFilesDir.GetTestPath(@"run_command_report.csv");
-            string args = string.Format(@"--report-name={0} --report-file={1}",
+            string reportArgs = string.Format(@"--report-name={0} --report-file={1}",
                 REPORT_AREAS.Quote(), reportPath.ToForwardSlashPath().Quote());
-            string result = server.RunCommand(args);
+            server.RunCommand(reportArgs);
             Assert.IsTrue(File.Exists(reportPath));
+            Assert.IsTrue(new FileInfo(reportPath).Length > 0);
+            // Verify Immediate Window contains the command header and report output
+            string iwAfterReport = GetImmediateWindowText();
+            AssertEx.Contains(iwAfterReport, reportArgs);
+            // Resource: "Exporting report {0}..." and "Report {0} exported successfully to {1}."
+            AssertEx.Contains(iwAfterReport,
+                string.Format(SkylineResources.CommandLine_ExportLiveReport_Exporting_report__0____, REPORT_AREAS));
+            AssertEx.Contains(iwAfterReport,
+                string.Format(SkylineResources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__,
+                    REPORT_AREAS, reportPath));
+
+            // Write operation: refine to remove proteins with fewer than 100 peptides
+            var docBeforeRefine = SkylineWindow.Document;
+            string refineArgs = @"--refine-min-peptides=100";
+            server.RunCommand(refineArgs);
+            Assert.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount,
+                @"Refine with min-peptides=100 should remove all proteins");
+            string iwAfterRefine = GetImmediateWindowText();
+            AssertEx.Contains(iwAfterRefine, refineArgs);
+            // Resource: "Refining document..."
+            AssertEx.Contains(iwAfterRefine,
+                Resources.CommandLine_RefineDocument_Refining_document___);
+
+            // Undo and verify exact document identity is restored
+            RunUI(() => SkylineWindow.Undo());
+            Assert.AreSame(docBeforeRefine, SkylineWindow.Document);
+
+            // Write operation: import FASTA via CLI
+            string fastaPath = TestFilesDir.GetTestPath(@"import_test.fasta");
+            File.WriteAllText(fastaPath, TEXT_FASTA);
+            var docBeforeFasta = SkylineWindow.Document;
+            string fastaArgs = string.Format(@"--import-fasta={0} --keep-empty-proteins",
+                fastaPath.ToForwardSlashPath().Quote());
+            server.RunCommand(fastaArgs);
+            var docAfterFasta = SkylineWindow.Document;
+            Assert.IsTrue(docAfterFasta.MoleculeGroupCount > docBeforeFasta.MoleculeGroupCount,
+                @"FASTA import should add protein groups");
+            Assert.IsTrue(docAfterFasta.MoleculeGroups.Any(g => g.Name.Contains(@"ALBU_BOVIN")),
+                @"Document should contain the imported ALBU_BOVIN protein");
+            AssertEx.DocumentCloned(docAfterKeep, docAfterFasta);
+            string iwAfterFasta = GetImmediateWindowText();
+            AssertEx.Contains(iwAfterFasta, fastaArgs);
+            // Resource: "Importing FASTA file {0}..."
+            AssertEx.Contains(iwAfterFasta,
+                string.Format(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____,
+                    Path.GetFileName(fastaPath)));
+
+            // Undo and verify exact document identity is restored
+            RunUI(() => SkylineWindow.Undo());
+            Assert.AreSame(docBeforeFasta, SkylineWindow.Document);
+        }
+
+        /// <summary>
+        /// Get the current text content of the Immediate Window.
+        /// </summary>
+        private string GetImmediateWindowText()
+        {
+            string text = null;
+            RunUI(() =>
+            {
+                SkylineWindow.ShowImmediateWindow();
+                text = SkylineWindow.ImmediateWindow.TextContent;
+            });
+            return text;
         }
 
         // Small FASTA sequence for import test

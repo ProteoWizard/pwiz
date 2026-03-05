@@ -40,6 +40,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         private const string GITHUB_RAW_BASE = @"https://raw.githubusercontent.com/ProteoWizard/pwiz";
         private const string TUTORIALS_PATH = @"pwiz_tools/Skyline/Documentation/Tutorials";
+        private const string NL = "\n";
 
         /// <summary>
         /// Format the full tutorial catalog as tab-separated text for MCP consumers.
@@ -200,13 +201,13 @@ namespace pwiz.Skyline.ToolsUI
 
             // Convert headings before stripping other tags
             html = Regex.Replace(html, @"<h1[^>]*>(.*?)</h1>",
-                m => @"\n# " + StripTags(m.Groups[1].Value) + @"\n",
+                m => NL + "# " + StripTags(m.Groups[1].Value) + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
             html = Regex.Replace(html, @"<h2[^>]*>(.*?)</h2>",
-                m => @"\n## " + StripTags(m.Groups[1].Value) + @"\n",
+                m => NL + "## " + StripTags(m.Groups[1].Value) + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
             html = Regex.Replace(html, @"<h3[^>]*>(.*?)</h3>",
-                m => @"\n### " + StripTags(m.Groups[1].Value) + @"\n",
+                m => NL + "### " + StripTags(m.Groups[1].Value) + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
             // Convert images to descriptive placeholders
@@ -236,19 +237,19 @@ namespace pwiz.Skyline.ToolsUI
 
             // Convert list items (before stripping ol/ul tags)
             html = Regex.Replace(html, @"<li\b[^>]*>(.*?)</li>",
-                m => @"- " + StripTags(m.Groups[1].Value).Trim() + @"\n",
+                m => "- " + StripTags(m.Groups[1].Value).Trim() + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
             // Convert table cells to tab-separated values
             html = Regex.Replace(html, @"<t[dh]\b[^>]*>(.*?)</t[dh]>",
-                m => StripTags(m.Groups[1].Value).Trim() + @"\t",
+                m => StripTags(m.Groups[1].Value).Trim() + "\t",
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
-            html = Regex.Replace(html, @"<tr\b[^>]*>", @"\n", RegexOptions.IgnoreCase);
+            html = Regex.Replace(html, @"<tr\b[^>]*>", NL, RegexOptions.IgnoreCase);
 
             // Convert paragraphs and line breaks
-            html = Regex.Replace(html, @"<br\s*/?>", @"\n", RegexOptions.IgnoreCase);
-            html = Regex.Replace(html, @"<p\b[^>]*>", @"\n", RegexOptions.IgnoreCase);
-            html = Regex.Replace(html, @"</p>", @"\n", RegexOptions.IgnoreCase);
+            html = Regex.Replace(html, @"<br\s*/?>", NL, RegexOptions.IgnoreCase);
+            html = Regex.Replace(html, @"<p\b[^>]*>", NL, RegexOptions.IgnoreCase);
+            html = Regex.Replace(html, @"</p>", NL, RegexOptions.IgnoreCase);
 
             // Strip all remaining HTML tags
             html = Regex.Replace(html, @"<[^>]+>", string.Empty);

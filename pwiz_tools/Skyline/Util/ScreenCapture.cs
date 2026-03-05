@@ -42,6 +42,14 @@ namespace pwiz.Skyline.Util
     {
         private static bool _sessionPermissionGranted;
 
+        /// <summary>
+        /// Resets the session-level screen capture permission. Used by tests.
+        /// </summary>
+        public static void ResetSessionPermission()
+        {
+            _sessionPermissionGranted = false;
+        }
+
         public class PointFactor
         {
             private readonly float _factor;

@@ -29,6 +29,7 @@ using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.EditUI;
@@ -109,13 +110,20 @@ namespace pwiz.Skyline.ToolsUI
 
         // Level 3: Complete UI operations - Selection
 
+        /// <summary>
+        /// Special locator string representing the insertion point at the end of the document tree.
+        /// Used by GetSelection/SetSelection to round-trip the insertion node selection.
+        /// </summary>
+        public const string INSERT_NODE_LOCATOR = @"/Insert";
+
         public static string GetSelection()
         {
             return InvokeOnUiThread(() =>
             {
                 var skylineWindow = Program.MainWindow;
                 var document = skylineWindow.DocumentUI;
-                var selectedPaths = skylineWindow.SequenceTree.SelectedPaths;
+                var sequenceTree = skylineWindow.SequenceTree;
+                var selectedPaths = sequenceTree.SelectedPaths;
                 if (selectedPaths.Count == 0)
                     return string.Empty;
 
@@ -125,6 +133,13 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     if (path.IsRoot)
                         continue;
+                    if (sequenceTree.IsInsertPath(path))
+                    {
+                        if (sb.Length > 0)
+                            sb.AppendLine();
+                        sb.Append(INSERT_NODE_LOCATOR);
+                        continue;
+                    }
                     var nodeRef = elementRefs.GetNodeRef(path);
                     if (nodeRef == null)
                         continue;
@@ -142,9 +157,18 @@ namespace pwiz.Skyline.ToolsUI
             {
                 var skylineWindow = Program.MainWindow;
 
-                // Primary selection - full navigation (bookmark, replicate, scroll)
-                skylineWindow.SelectElement(
-                    ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString)));
+                // Primary selection
+                if (elementLocatorString == INSERT_NODE_LOCATOR)
+                {
+                    skylineWindow.SequenceTree.SelectedPath =
+                        new IdentityPath(SequenceTree.NODE_INSERT_ID);
+                }
+                else
+                {
+                    // Full navigation (bookmark, replicate, scroll)
+                    skylineWindow.SelectElement(
+                        ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString)));
+                }
 
                 // Secondary selections
                 if (!string.IsNullOrEmpty(additionalLocators))
@@ -156,6 +180,11 @@ namespace pwiz.Skyline.ToolsUI
                         var trimmed = line.Trim();
                         if (string.IsNullOrEmpty(trimmed))
                             continue;
+                        if (trimmed == INSERT_NODE_LOCATOR)
+                        {
+                            allPaths.Add(new IdentityPath(SequenceTree.NODE_INSERT_ID));
+                            continue;
+                        }
                         var elementRef = ElementRefs.FromObjectReference(ElementLocator.Parse(trimmed));
                         if (elementRef is NodeRef nodeRef)
                         {
