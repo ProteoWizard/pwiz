@@ -375,13 +375,7 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < targetCount; i++)
                     extractedIntensities[i] *= scale;
             }
-            var dtFilter = GetIonMobilityWindow();
-            return new ExtractedSpectrum(ChromatogramGroupId,
-                PeptideColor,
-                Q1,
-                dtFilter, 
-                Extractor,
-                Id,
+            return new ExtractedSpectrum(this,
                 productFilters,
                 extractedIntensities,
                 massErrors);

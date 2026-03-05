@@ -25,35 +25,44 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ExtractedSpectrum
     {
-        public ExtractedSpectrum(ChromatogramGroupId chromatogramGroupId,
-                                 Color peptideColor,
-                                 SignedMz precursorMz,
-                                 IonMobilityFilter ionMobility,
-                                 ChromExtractor chromExtractor,
-                                 int filterIndex,
+        public ExtractedSpectrum(SpectrumFilterPair filterPair,
                                  SpectrumProductFilter[] productFilters,
                                  float[] intensities,
                                  float[] massErrors)
         {
-            ChromatogramGroupId = chromatogramGroupId;
-            PeptideColor = peptideColor;
-            PrecursorMz = precursorMz;
-            IonMobility = ionMobility;
-            Extractor = chromExtractor;
-            FilterIndex = filterIndex;
+            FilterPair = filterPair;
             ProductFilters = productFilters;
             Intensities = intensities;
             MassErrors = massErrors;
         }
 
-        public ChromatogramGroupId ChromatogramGroupId { get; private set; }
-        public Color PeptideColor { get; private set; }
-        public SignedMz PrecursorMz { get; private set; }
-        public IonMobilityFilter IonMobility { get; private set; }
-        public int FilterIndex { get; private set; }
+        public ChromatogramGroupId ChromatogramGroupId
+        {
+            get { return FilterPair.ChromatogramGroupId; }
+        }
+        public Color PeptideColor
+        {
+            get { return FilterPair.PeptideColor; }
+        }
+        public SignedMz PrecursorMz
+        {
+            get { return FilterPair.Q1; }
+        }
+        public IonMobilityFilter IonMobility
+        {
+            get { return FilterPair.GetIonMobilityWindow(); }
+        }
+        public SpectrumFilterPair FilterPair { get; }
+        public int FilterIndex
+        {
+            get { return FilterPair.Id; }
+        }
         public SpectrumProductFilter[] ProductFilters { get; private set; }
         public float[] Intensities { get; private set; }
         public float[] MassErrors { get; private set; }
-        public ChromExtractor Extractor { get; private set; }
+        public ChromExtractor Extractor
+        {
+            get { return FilterPair.Extractor; }
+        }
     }
 }
