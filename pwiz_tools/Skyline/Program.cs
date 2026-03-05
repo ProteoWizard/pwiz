@@ -512,7 +512,7 @@ namespace pwiz.Skyline
                 MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
                 MainToolService.RunAsync();
 
-                MainJsonToolServer = new JsonToolServer(MainToolService);
+                MainJsonToolServer = new JsonToolServer(MainToolService, MainToolServiceName);
                 MainJsonToolServer.Start();
             }
         }

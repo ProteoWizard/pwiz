@@ -59,7 +59,9 @@ namespace pwiz.Skyline.ToolsUI
     public class JsonToolServer : IDisposable
     {
         private const string DEPLOY_FOLDER_NAME = @".skyline-mcp";
-        private const string CONNECTION_FILE_NAME = @"connection.json";
+        private const string CONNECTION_FILE_PREFIX = @"connection-";
+        private const string CONNECTION_FILE_EXT = @".json";
+        public const string JSON_PIPE_PREFIX = @"SkylineMcpJson-";
 
         private readonly ToolService _toolService;
         private readonly string _pipeName;
@@ -69,10 +71,20 @@ namespace pwiz.Skyline.ToolsUI
 
         public string PipeName { get { return _pipeName; } }
 
-        public JsonToolServer(ToolService toolService)
+        /// <summary>
+        /// Derive the JSON pipe name from the legacy ToolService name (a GUID).
+        /// Both the Connector and the server use this convention to find each other
+        /// without requiring an IToolService method.
+        /// </summary>
+        public static string GetJsonPipeName(string legacyToolServiceName)
+        {
+            return JSON_PIPE_PREFIX + legacyToolServiceName.Replace(@"-", string.Empty);
+        }
+
+        public JsonToolServer(ToolService toolService, string legacyToolServiceName)
         {
             _toolService = toolService;
-            _pipeName = @"SkylineMcpJson-" + Guid.NewGuid().ToString(@"N");
+            _pipeName = GetJsonPipeName(legacyToolServiceName);
             _serverThread = new Thread(ServerLoop) { IsBackground = true };
             _methods = GetType()
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
@@ -83,7 +95,6 @@ namespace pwiz.Skyline.ToolsUI
 
         public void Start()
         {
-            WriteConnectionInfo();
             _serverThread.Start();
         }
 
@@ -103,28 +114,11 @@ namespace pwiz.Skyline.ToolsUI
             DeleteConnectionInfo();
         }
 
-        private void WriteConnectionInfo()
-        {
-            string directory = GetConnectionDirectory();
-            Directory.CreateDirectory(directory);
-            string documentPath = _toolService.GetDocumentPath();
-            string skylineVersion = Install.Version ?? @"unknown";
-            var info = new JObject
-            {
-                [@"pipe_name"] = _pipeName,
-                [@"process_id"] = Process.GetCurrentProcess().Id,
-                [@"connected_at"] = DateTime.UtcNow.ToString(@"o"),
-                [@"skyline_version"] = skylineVersion,
-                [@"document_path"] = documentPath.ToForwardSlashPath()
-            };
-            File.WriteAllText(GetConnectionFilePath(), info.ToString());
-        }
-
-        private static void DeleteConnectionInfo()
+        private void DeleteConnectionInfo()
         {
             try
             {
-                string path = GetConnectionFilePath();
+                string path = GetConnectionFilePath(_pipeName);
                 if (File.Exists(path))
                     File.Delete(path);
             }
@@ -141,9 +135,10 @@ namespace pwiz.Skyline.ToolsUI
                 DEPLOY_FOLDER_NAME);
         }
 
-        private static string GetConnectionFilePath()
+        private static string GetConnectionFilePath(string pipeName)
         {
-            return Path.Combine(GetConnectionDirectory(), CONNECTION_FILE_NAME);
+            return Path.Combine(GetConnectionDirectory(),
+                CONNECTION_FILE_PREFIX + pipeName + CONNECTION_FILE_EXT);
         }
 
         private void ServerLoop()
@@ -320,9 +315,24 @@ namespace pwiz.Skyline.ToolsUI
                 ? @"(unsaved)"
                 : docPath.ToForwardSlashPath();
 
+            string groupsLabel, moleculesLabel;
+            if (doc.DocumentType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                groupsLabel = @"Lists";
+                moleculesLabel = @"Molecules";
+            }
+            else
+            {
+                // proteomic and mixed both support proteins and free-form peptide lists
+                groupsLabel = @"Proteins/Lists";
+                moleculesLabel = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.mixed
+                    ? @"Peptides/Molecules"
+                    : @"Peptides";
+            }
+
             return TextUtil.LineSeparate($@"Mode: {mode}",
-                $@"Proteins/Lists: {groups}",
-                $@"Peptides/Molecules: {molecules}",
+                $@"{groupsLabel}: {groups}",
+                $@"{moleculesLabel}: {molecules}",
                 $@"Precursors: {precursors}",
                 $@"Transitions: {transitions}",
                 $@"Replicates: {replicates}",

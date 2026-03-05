@@ -71,8 +71,9 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument(DOCUMENT_NAME);
 
-            var toolService = new ToolService(@"test-" + Guid.NewGuid(), SkylineWindow);
-            var server = new JsonToolServer(toolService);
+            string testGuid = @"test-" + Guid.NewGuid();
+            var toolService = new ToolService(testGuid, SkylineWindow);
+            var server = new JsonToolServer(toolService, testGuid);
 
             // Read-only tools
             TestDispatch(server);

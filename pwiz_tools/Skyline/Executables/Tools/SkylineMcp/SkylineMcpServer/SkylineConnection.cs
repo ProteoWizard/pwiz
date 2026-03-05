@@ -18,9 +18,11 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -30,7 +32,10 @@ namespace SkylineMcpServer;
 public class SkylineConnection : IDisposable
 {
     private const string DEPLOY_FOLDER_NAME = ".skyline-mcp";
-    private const string CONNECTION_FILE_NAME = "connection.json";
+    private const string CONNECTION_FILE_PREFIX = "connection-";
+    private const string CONNECTION_FILE_EXT = ".json";
+    // Keep legacy name for backward compatibility during transition
+    private const string LEGACY_CONNECTION_FILE = "connection.json";
 
     private readonly NamedPipeClientStream _pipe;
 
@@ -39,55 +44,86 @@ public class SkylineConnection : IDisposable
         _pipe = pipe;
     }
 
-    public static SkylineConnection Connect()
+    /// <summary>
+    /// Human-readable status message describing the current Skyline connection state.
+    /// Returns null when connected; returns a message when not connected.
+    /// </summary>
+    public static string GetConnectionStatus()
     {
-        string connectionFile = GetConnectionFilePath();
-        if (!File.Exists(connectionFile))
+        var infos = FindConnectionFiles();
+        if (infos.Count == 0)
         {
-            throw new InvalidOperationException(
-                "Skyline is not connected. Launch 'Connect to Claude' from Skyline's External Tools menu.");
+            return "No Skyline instance is connected. " +
+                   "Start Skyline and choose Tools > AI Connector to connect.";
         }
 
-        string json = File.ReadAllText(connectionFile);
-        var info = JsonSerializer.Deserialize<ConnectionInfo>(json);
-        if (info == null)
+        // Try to find a live one
+        foreach (var info in infos)
         {
-            throw new InvalidOperationException(
-                "Invalid connection file. Launch 'Connect to Claude' from Skyline's External Tools menu.");
+            if (IsProcessAlive(info.ProcessId))
+                return null; // At least one is alive — we can connect
         }
 
-        // Validate that the Skyline process is still alive
-        try
+        // All stale
+        CleanupStaleFiles(infos);
+        return "No Skyline instance is connected. " +
+               "Start Skyline and choose Tools > AI Connector to connect.";
+    }
+
+    /// <summary>
+    /// Connect to the most recently started Skyline instance.
+    /// Returns null with a status message when no Skyline is available,
+    /// instead of throwing an exception.
+    /// </summary>
+    public static (SkylineConnection Connection, string Error) TryConnect()
+    {
+        var infos = FindConnectionFiles();
+        if (infos.Count == 0)
         {
-            Process.GetProcessById(info.ProcessId);
-        }
-        catch (ArgumentException)
-        {
-            throw new InvalidOperationException(
-                $"Skyline process {info.ProcessId} is no longer running. Launch 'Connect to Claude' from Skyline to reconnect.");
+            return (null, "No Skyline instance is connected. " +
+                          "Start Skyline and choose Tools > AI Connector to connect.");
         }
 
-        // Connect to the bridge's JSON named pipe
-        var pipe = new NamedPipeClientStream(".", info.PipeName, PipeDirection.InOut);
-        try
+        // Sort by connected_at descending to prefer the most recent
+        var sorted = infos.OrderByDescending(i => i.ConnectedAt).ToList();
+        var stale = new List<ConnectionInfo>();
+
+        foreach (var info in sorted)
         {
-            pipe.Connect(5000);
-            pipe.ReadMode = PipeTransmissionMode.Message;
-        }
-        catch (TimeoutException)
-        {
-            pipe.Dispose();
-            throw new InvalidOperationException(
-                "Skyline is not responding. It may be busy processing data or showing a dialog. Try again in a moment.");
-        }
-        catch (IOException)
-        {
-            pipe.Dispose();
-            throw new InvalidOperationException(
-                "Connection to Skyline was lost. Launch 'Connect to Claude' from Skyline to reconnect.");
+            if (!IsProcessAlive(info.ProcessId))
+            {
+                stale.Add(info);
+                continue;
+            }
+
+            // Try to connect to the pipe
+            var pipe = new NamedPipeClientStream(".", info.PipeName, PipeDirection.InOut);
+            try
+            {
+                pipe.Connect(5000);
+                pipe.ReadMode = PipeTransmissionMode.Message;
+                CleanupStaleFiles(stale);
+                return (new SkylineConnection(pipe), null);
+            }
+            catch (TimeoutException)
+            {
+                pipe.Dispose();
+                // Skyline process is alive but not responding — may be busy
+                CleanupStaleFiles(stale);
+                return (null, "Skyline is not responding. " +
+                              "It may be busy processing data or showing a dialog. Try again in a moment.");
+            }
+            catch (IOException)
+            {
+                pipe.Dispose();
+                stale.Add(info);
+            }
         }
 
-        return new SkylineConnection(pipe);
+        // All connections failed
+        CleanupStaleFiles(stale);
+        return (null, "No Skyline instance is connected. " +
+                      "Start Skyline and choose Tools > AI Connector to connect.");
     }
 
     public string Call(string method, params string[] args)
@@ -122,31 +158,100 @@ public class SkylineConnection : IDisposable
         return null;
     }
 
-    public string CallSkylineInsertSmallMoleculeTransitionList(string textCSV)
-    {
-        return Call("InsertSmallMoleculeTransitionList", textCSV);
-    }
-
-    public string CallSkylineImportFasta(string textFasta)
-    {
-        return Call("ImportFasta", textFasta);
-    }
-
-    public string CallSkylineImportProperties(string csvText)
-    {
-        return Call("ImportProperties", csvText);
-    }
-
     public void Dispose()
     {
         _pipe.Dispose();
     }
 
-    private static string GetConnectionFilePath()
+    private static string GetConnectionDirectory()
     {
         return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            DEPLOY_FOLDER_NAME, CONNECTION_FILE_NAME);
+            DEPLOY_FOLDER_NAME);
+    }
+
+    /// <summary>
+    /// Find all connection files (both new pattern and legacy).
+    /// </summary>
+    private static List<ConnectionInfo> FindConnectionFiles()
+    {
+        string dir = GetConnectionDirectory();
+        if (!Directory.Exists(dir))
+            return new List<ConnectionInfo>();
+
+        var results = new List<ConnectionInfo>();
+
+        // Scan for connection-*.json files
+        foreach (string file in Directory.GetFiles(dir, CONNECTION_FILE_PREFIX + "*" + CONNECTION_FILE_EXT))
+        {
+            var info = TryLoadConnectionFile(file);
+            if (info != null)
+                results.Add(info);
+        }
+
+        // Also check legacy connection.json
+        string legacyPath = Path.Combine(dir, LEGACY_CONNECTION_FILE);
+        if (File.Exists(legacyPath))
+        {
+            var info = TryLoadConnectionFile(legacyPath);
+            if (info != null)
+            {
+                // Avoid duplicates if same pipe name
+                if (!results.Any(r => r.PipeName == info.PipeName))
+                    results.Add(info);
+            }
+        }
+
+        return results;
+    }
+
+    private static ConnectionInfo TryLoadConnectionFile(string path)
+    {
+        try
+        {
+            string json = File.ReadAllText(path);
+            var info = JsonSerializer.Deserialize<ConnectionInfo>(json);
+            if (info != null)
+                info.FilePath = path;
+            return info;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool IsProcessAlive(int processId)
+    {
+        try
+        {
+            Process.GetProcessById(processId);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Remove connection files for Skyline instances that are no longer running.
+    /// </summary>
+    private static void CleanupStaleFiles(List<ConnectionInfo> staleInfos)
+    {
+        foreach (var info in staleInfos)
+        {
+            if (string.IsNullOrEmpty(info.FilePath))
+                continue;
+            try
+            {
+                File.Delete(info.FilePath);
+            }
+            catch
+            {
+                // Best effort cleanup
+            }
+        }
     }
 
     private static byte[] ReadAllBytes(PipeStream stream)
@@ -163,7 +268,7 @@ public class SkylineConnection : IDisposable
         return memoryStream.ToArray();
     }
 
-    // POCO matching the connector's connection.json format
+    // POCO matching the Skyline connection file format
     private class ConnectionInfo
     {
         [JsonPropertyName("pipe_name")]
@@ -178,7 +283,7 @@ public class SkylineConnection : IDisposable
         [JsonPropertyName("skyline_version")]
         public string SkylineVersion { get; set; } = string.Empty;
 
-        [JsonPropertyName("document_path")]
-        public string DocumentPath { get; set; } = string.Empty;
+        [JsonIgnore]
+        public string FilePath { get; set; }
     }
 }

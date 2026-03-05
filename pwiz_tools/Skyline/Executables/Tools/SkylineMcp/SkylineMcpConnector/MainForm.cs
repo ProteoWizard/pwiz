@@ -41,7 +41,9 @@ namespace SkylineMcpConnector
         private readonly int _groupHeight;
 
         private int _skylineProcessId;
+        private RemoteClient _remoteClient;
         private Timer _skylineMonitorTimer;
+        private ConnectionInfo _connectionInfo;
 
         public MainForm(string[] args)
         {
@@ -55,18 +57,13 @@ namespace SkylineMcpConnector
 
             ShowHideSetupPane();
 
-            // Check whether this version of Skyline supports the MCP connector.
-            // The $(SkylineConnection) arg is the legacy ToolService pipe name,
-            // available in all versions of Skyline that support external tools.
-            if (!CheckSkylineVersion(args))
-                return;
-
-            // The $(SkylineConnection) arg triggers StartToolService() in Skyline,
-            // which creates the JsonToolServer and writes connection.json.
-            // We just need to read it and display status.
+            // The $(SkylineConnection) arg is the legacy ToolService pipe name (a GUID).
+            // Launching this tool triggers StartToolService() in Skyline, which creates
+            // the JsonToolServer pipe. The JSON pipe name is derived from the same GUID.
+            // We write the connection file to advertise this Skyline instance to MCP clients.
             try
             {
-                ConnectToSkyline();
+                ConnectToSkyline(args);
             }
             catch (Exception ex)
             {
@@ -74,24 +71,33 @@ namespace SkylineMcpConnector
             }
         }
 
-        /// <summary>
-        /// Use the legacy ToolService pipe to check the Skyline version.
-        /// MCP support (JsonToolServer) was introduced in Skyline 26.1.
-        /// Returns true if the version is supported or could not be determined.
-        /// Returns false if the version is definitely too old.
-        /// </summary>
-        private bool CheckSkylineVersion(string[] args)
+        private void ConnectToSkyline(string[] args)
         {
             if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
-                return true; // No connection info — let existing flow handle it
+            {
+                labelStatus.Text = "No Skyline connection argument provided.";
+                return;
+            }
 
+            string legacyPipeName = args[0];
+
+            // Query Skyline version and process ID via the legacy ToolService pipe
+            Version version;
+            int processId;
             try
             {
-                var client = new RemoteClient(args[0]);
-                var version = (Version)client.RemoteCallName("GetVersion", []);
-                if (IsSupportedVersion(version))
-                    return true;
+                _remoteClient = new RemoteClient(legacyPipeName);
+                version = (Version)_remoteClient.RemoteCallName("GetVersion", new object[0]);
+                processId = (int)_remoteClient.RemoteCallName("GetProcessId", new object[0]);
+            }
+            catch
+            {
+                labelStatus.Text = "Could not connect to Skyline.";
+                return;
+            }
 
+            if (!IsSupportedVersion(version))
+            {
                 labelStatus.Text = string.Format("Skyline {0}.{1}.{2}.{3} does not support AI connections.",
                     version.Major, version.Minor, version.Build, version.Revision);
                 labelVersion.Text = "This tool requires Skyline 26.1.1.061 or later.";
@@ -99,14 +105,22 @@ namespace SkylineMcpConnector
                 buttonSetup.Enabled = false;
 
                 // Still monitor the Skyline process so the form closes when Skyline exits
-                StartSkylineMonitor((int)client.RemoteCallName("GetProcessId", new object[0]));
-                return false;
+                StartSkylineMonitor(processId);
+                return;
             }
-            catch
-            {
-                // Connection failed — let existing ConnectToSkyline() handle it
-                return true;
-            }
+
+            // Write the connection file so MCP clients can find this Skyline instance
+            string versionString = string.Format("{0}.{1}.{2}.{3}",
+                version.Major, version.Minor, version.Build, version.Revision);
+            _connectionInfo = ConnectionInfo.Create(legacyPipeName, versionString, processId);
+            _connectionInfo.Save();
+
+            labelStatus.Text = "Connected to Skyline";
+            labelVersion.Text = string.Format(_versionFormat, versionString);
+            UpdateDocumentPath();
+
+            DeployMcpServer();
+            StartSkylineMonitor(processId);
         }
 
         private static bool IsSupportedVersion(Version version)
@@ -118,23 +132,6 @@ namespace SkylineMcpConnector
             if (version.Major == 26 && version.Minor == 1 && version.Build < 1) // 26.1.0
                 return false;
             return version.Major != 26 || version.Minor != 1 || version.Build != 1 || version.Revision >= 61; // 26.1.1.xxx < 61
-        }
-
-        private void ConnectToSkyline()
-        {
-            var connectionInfo = ConnectionInfo.Load();
-            if (connectionInfo == null)
-            {
-                labelStatus.Text = "Waiting for Skyline connection...";
-                return;
-            }
-
-            labelStatus.Text = "Connected to Skyline";
-            labelVersion.Text = string.Format(_versionFormat, connectionInfo.SkylineVersion);
-            labelDocument.Text = string.Format(_documentFormat, connectionInfo.DocumentPath ?? "(unsaved)");
-
-            DeployMcpServer();
-            StartSkylineMonitor(connectionInfo.ProcessId);
         }
 
         private void DeployMcpServer()
@@ -225,6 +222,26 @@ namespace SkylineMcpConnector
                 // Skyline process no longer exists
                 _skylineMonitorTimer.Stop();
                 Close();
+                return;
+            }
+
+            UpdateDocumentPath();
+        }
+
+        private void UpdateDocumentPath()
+        {
+            if (_remoteClient == null)
+                return;
+
+            try
+            {
+                string path = (string)_remoteClient.RemoteCallName("GetDocumentPath", new object[0]);
+                labelDocument.Text = string.Format(_documentFormat, path ?? "(unsaved)");
+                labelDocument.Visible = true;
+            }
+            catch
+            {
+                // Skyline may be busy or shutting down — leave label as-is
             }
         }
 

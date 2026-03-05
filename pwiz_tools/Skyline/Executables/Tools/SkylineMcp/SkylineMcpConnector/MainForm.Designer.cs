@@ -49,7 +49,7 @@ namespace SkylineMcpConnector
             this.labelVersion.Name = "labelVersion";
             this.labelVersion.Size = new System.Drawing.Size(65, 15);
             this.labelVersion.TabIndex = 1;
-            this.labelVersion.Text = "Version: {0}";
+            this.labelVersion.Text = "Skyline Version: {0}";
             //
             // labelDocument
             //

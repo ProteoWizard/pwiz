@@ -33,9 +33,8 @@ public static class SkylineTools
      Description("Get the file path of the currently open Skyline document.")]
     public static string GetDocumentPath()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string path = connection.Call("GetDocumentPath");
             return path ?? "(unsaved)";
         });
@@ -45,9 +44,8 @@ public static class SkylineTools
      Description("Get the version of the running Skyline instance.")]
     public static string GetVersion()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string version = connection.Call("GetVersion");
             return version ?? "Unknown version";
         });
@@ -59,9 +57,8 @@ public static class SkylineTools
         "to skyline_set_selection. For multi-selection, returns one locator per line.")]
     public static string GetSelection()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string selection = connection.Call("GetSelection");
             return string.IsNullOrEmpty(selection)
                 ? "Nothing is currently selected in Skyline."
@@ -73,9 +70,8 @@ public static class SkylineTools
      Description("Get the name of the currently active replicate in Skyline.")]
     public static string GetReplicate()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string replicate = connection.Call("GetReplicateName");
             return string.IsNullOrEmpty(replicate)
                 ? "No replicate is currently selected."
@@ -88,9 +84,8 @@ public static class SkylineTools
         "Use skyline_set_replicate to activate a specific replicate.")]
     public static string GetReplicateNames()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetReplicateNames");
             return string.IsNullOrEmpty(result)
                 ? "No replicates in the document."
@@ -112,9 +107,8 @@ public static class SkylineTools
             "skyline_get_locations calls or from report columns like ProteinLocator.")]
         string rootLocator = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = string.IsNullOrEmpty(rootLocator)
                 ? connection.Call("GetLocations", level)
                 : connection.Call("GetLocations", level, rootLocator);
@@ -132,12 +126,10 @@ public static class SkylineTools
         [Description("Output format when filePath is not specified: csv, tsv, or parquet (default: csv)")] string format = "csv",
         [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
             filePath ??= GetTempReportPath(reportName, format);
             string culture = invariant ? "invariant" : "localized";
-
-            using var connection = SkylineConnection.Connect();
             string metadata = connection.Call("ExportReport", reportName, filePath, culture);
             return FormatReportResult(metadata);
         });
@@ -157,12 +149,10 @@ public static class SkylineTools
         [Description("Output format when filePath is not specified: csv, tsv, or parquet (default: csv)")] string format = "csv",
         [Description("Use invariant locale for consistent decimal separators and full precision (default: true). Set to false for localized format.")] bool invariant = true)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
             filePath ??= GetTempReportPath("Custom", format);
             string culture = invariant ? "invariant" : "localized";
-
-            using var connection = SkylineConnection.Connect();
             string metadata = connection.Call("ExportReportFromDefinition", reportDefinitionJson, filePath, culture);
             return FormatReportResult(metadata);
         });
@@ -175,9 +165,8 @@ public static class SkylineTools
     public static string AddReport(
         [Description("JSON report definition with a required 'name' field and a 'select' array of column names. Example: {\"name\": \"My Report\", \"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}. Optional 'filter', 'pivotReplicate', and 'pivotIsotopeLabel' fields.")] string reportDefinitionJson)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             return connection.Call("AddReportFromDefinition", reportDefinitionJson);
         });
     }
@@ -186,9 +175,8 @@ public static class SkylineTools
      Description("Enumerate all settings list types available in Skyline (enzymes, modifications, reports, etc.). Returns tab-separated lines of PropertyName and Title. Use this to discover what configuration lists exist before querying their contents.")]
     public static string GetSettingsListTypes()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetSettingsListTypes");
             return string.IsNullOrEmpty(result)
                 ? "No settings lists found."
@@ -201,9 +189,8 @@ public static class SkylineTools
     public static string GetSettingsListNames(
         [Description("The settings list property name (e.g., 'EnzymeList', 'PersistedViews')")] string listType)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetSettingsListNames", listType);
             return string.IsNullOrEmpty(result)
                 ? $"No items found in {listType}."
@@ -217,9 +204,8 @@ public static class SkylineTools
         [Description("The settings list property name (e.g., 'EnzymeList', 'PersistedViews')")] string listType,
         [Description("The name of the item to retrieve (e.g., 'Trypsin', 'Peak Area')")] string itemName)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetSettingsListItem", listType, itemName);
             return string.IsNullOrEmpty(result)
                 ? $"Item not found: {itemName} in {listType}."
@@ -232,9 +218,8 @@ public static class SkylineTools
     public static string RunCommand(
         [Description("Command line arguments in SkylineCmd format (e.g., '--report-name=\"Peak Area\" --report-file=output.csv')")] string commandArgs)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string output = connection.Call("RunCommand", commandArgs);
             return string.IsNullOrEmpty(output)
                 ? "Command completed with no output."
@@ -246,9 +231,8 @@ public static class SkylineTools
      Description("List available CLI help sections. Returns section names (one per line) that can be passed to skyline_get_cli_help for detailed help on each topic.")]
     public static string GetCliHelpSections()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string output = connection.Call("RunCommandSilent", "--help=sections");
             return string.IsNullOrEmpty(output)
                 ? "No help sections available."
@@ -261,9 +245,8 @@ public static class SkylineTools
     public static string GetCliHelp(
         [Description("The help section name (e.g., 'import', 'export', 'refine'). Case-insensitive partial match.")] string section)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string output = connection.Call("RunCommandSilent", $"--help={section} --help=no-borders");
             return string.IsNullOrEmpty(output)
                 ? $"No help found for section: {section}"
@@ -275,9 +258,8 @@ public static class SkylineTools
      Description("List available report column documentation topics. Returns tab-separated lines of DisplayName and QualifiedTypeName for each entity type (e.g., Molecule, Precursor, Transition). Use skyline_get_report_doc_topic to get column details for a specific topic.")]
     public static string GetReportDocTopics()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetReportDocTopics");
             return string.IsNullOrEmpty(result)
                 ? "No report documentation topics found."
@@ -290,9 +272,8 @@ public static class SkylineTools
     public static string GetReportDocTopic(
         [Description("The topic name (display name like 'Molecule' or qualified type name). Case-insensitive partial match on display name.")] string topic)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetReportDocTopic", topic);
             return string.IsNullOrEmpty(result)
                 ? $"No documentation found for topic: {topic}"
@@ -305,10 +286,9 @@ public static class SkylineTools
     public static string InsertSmallMoleculeTransitionList(
         [Description("CSV text with column headers in the first row and data rows. Common headers: MoleculeGroup, PrecursorName, PrecursorFormula, PrecursorAdduct, PrecursorMz, PrecursorCharge, ProductFormula, ProductAdduct, ProductMz, ProductCharge, PrecursorRT, LabelType, CAS, InChiKey, HMDB, SMILES, Note.")] string textCsv)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
-            return connection.CallSkylineInsertSmallMoleculeTransitionList(textCsv);
+            return connection.Call("InsertSmallMoleculeTransitionList", textCsv);
         });
     }
 
@@ -317,10 +297,9 @@ public static class SkylineTools
     public static string ImportFasta(
         [Description("Protein sequences in standard FASTA format. Each protein starts with a '>' header line (e.g., '>sp|P01308|INS_HUMAN Insulin') followed by one or more sequence lines.")] string textFasta)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
-            return connection.CallSkylineImportFasta(textFasta);
+            return connection.Call("ImportFasta", textFasta);
         });
     }
 
@@ -329,10 +308,9 @@ public static class SkylineTools
     public static string ImportProperties(
         [Description("CSV text where the first column is ElementLocator (paths identifying document elements) and remaining columns are annotation names with values.")] string csvText)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
-            return connection.CallSkylineImportProperties(csvText);
+            return connection.Call("ImportProperties", csvText);
         });
     }
 
@@ -346,9 +324,8 @@ public static class SkylineTools
             "to add to the selection. The first locator is always the primary (focused) " +
             "selection; these are secondary selections.")] string additionalLocators = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             if (string.IsNullOrEmpty(additionalLocators))
                 return connection.Call("SetSelectedElement", elementLocator);
             return connection.Call("SetSelectedElement", elementLocator, additionalLocators);
@@ -361,9 +338,8 @@ public static class SkylineTools
     public static string SetReplicate(
         [Description("Name of the replicate to activate")] string replicateName)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             return connection.Call("SetReplicate", replicateName);
         });
     }
@@ -372,9 +348,8 @@ public static class SkylineTools
      Description("Get a lightweight overview of the current Skyline document including document type (proteomic, small_molecules, mixed), target counts (proteins/lists, peptides/molecules, precursors, transitions), replicate count, and file path. Much faster than running a report for basic document info.")]
     public static string GetDocumentStatus()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetDocumentStatus");
             return result ?? "No document information available.";
         });
@@ -388,9 +363,8 @@ public static class SkylineTools
         "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc., Dialog.")]
     public static string GetOpenForms()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetOpenForms");
             return string.IsNullOrEmpty(result)
                 ? "No forms are currently open in Skyline."
@@ -407,9 +381,8 @@ public static class SkylineTools
         [Description("Output file path. If not specified, saves to a temp directory. " +
             "Extension determines format (.tsv default).")] string filePath = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = string.IsNullOrEmpty(filePath)
                 ? connection.Call("GetGraphData", graphId)
                 : connection.Call("GetGraphData", graphId, filePath);
@@ -427,9 +400,8 @@ public static class SkylineTools
         [Description("Graph identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string graphId,
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = string.IsNullOrEmpty(filePath)
                 ? connection.Call("GetGraphImage", graphId)
                 : connection.Call("GetGraphImage", graphId, filePath);
@@ -446,9 +418,8 @@ public static class SkylineTools
         [Description("Form identifier from skyline_get_open_forms (e.g., 'SequenceTreeForm:Targets', 'PeptideSettingsUI:Peptide Settings')")] string formId,
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = string.IsNullOrEmpty(filePath)
                 ? connection.Call("GetFormImage", formId)
                 : connection.Call("GetFormImage", formId, filePath);
@@ -463,11 +434,9 @@ public static class SkylineTools
     public static string GetDocumentSettings(
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
             filePath ??= GetTempSettingsPath("document");
-
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetDocumentSettings", filePath);
             return $"Document settings saved to: {result}\nUse the Read tool to examine the settings XML.";
         });
@@ -478,11 +447,9 @@ public static class SkylineTools
     public static string GetDefaultSettings(
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
             filePath ??= GetTempSettingsPath("defaults");
-
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetDefaultSettings", filePath);
             return $"Default settings saved to: {result}\nUse the Read tool to examine the settings XML.";
         });
@@ -495,9 +462,8 @@ public static class SkylineTools
         "to fetch the full content of a specific tutorial.")]
     public static string GetAvailableTutorials()
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetAvailableTutorials");
             return string.IsNullOrEmpty(result)
                 ? "No tutorials available."
@@ -519,9 +485,8 @@ public static class SkylineTools
             "'zh-CHS' (Simplified Chinese) for some tutorials.")] string language = "en",
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetTutorial", name, language, filePath);
             if (string.IsNullOrEmpty(result))
                 return $"Tutorial not found: {name}";
@@ -566,9 +531,8 @@ public static class SkylineTools
         [Description("Language code (default: 'en').")] string language = "en",
         [Description("Output file path. If not specified, saves to a temp directory.")] string filePath = null)
     {
-        return Invoke(() =>
+        return Invoke(connection =>
         {
-            using var connection = SkylineConnection.Connect();
             string result = connection.Call("GetTutorialImage", name, imageFilename, language, filePath);
             if (string.IsNullOrEmpty(result))
                 return $"Image not found: {imageFilename} in tutorial {name}";
@@ -599,18 +563,32 @@ public static class SkylineTools
     public static ErrorDetail ErrorDetailLevel { get; set; } = ErrorDetail.Full;
 
     /// <summary>
-    /// Wraps every MCP tool call in consistent exception handling.
-    /// Exceptions are returned as text so the LLM always sees the error details
-    /// instead of a generic framework error message.
+    /// Wraps every MCP tool call in consistent connection handling and exception handling.
+    /// When Skyline is not connected, returns a helpful message instead of throwing.
+    /// The connection is established per-call and disposed after each call.
     /// </summary>
-    private static string Invoke(Func<string> action)
+    private static string Invoke(Func<SkylineConnection, string> action)
     {
         try
         {
-            return action();
+            var (connection, error) = SkylineConnection.TryConnect();
+            if (connection == null)
+                return error;
+
+            using (connection)
+            {
+                return action(connection);
+            }
         }
         catch (Exception ex)
         {
+            // Check if this is a broken pipe (Skyline exited mid-call)
+            if (ex is IOException)
+            {
+                return "Skyline disconnected during the operation. " +
+                       "The Skyline process may have exited or been restarted. Try again.";
+            }
+
             return ErrorDetailLevel == ErrorDetail.Full
                 ? $"Error: {ex}"
                 : $"Error: {ex.Message}";
