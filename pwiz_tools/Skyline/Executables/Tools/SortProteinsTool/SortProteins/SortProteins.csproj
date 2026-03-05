@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="ProteinLocators.skyr" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ProteinLocators.skyr" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\SkylineTool\SkylineTool.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CommandLine">
+      <HintPath>..\lib\CommandLine.dll</HintPath>
+    </Reference>
+    <Reference Include="CsvHelper">
+      <HintPath>..\lib\CsvHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\..\..\..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="&quot;$(ProjectDir)..\..\..\..\..\..\libraries\7za.exe&quot; a &quot;$(ProjectDir)..\SortProteinsTool.zip&quot; &quot;$(TargetDir)*&quot;" />
+    <Exec Command="&quot;$(ProjectDir)..\..\..\..\..\..\libraries\7za.exe&quot; a &quot;$(ProjectDir)..\SortProteinsTool.zip&quot; &quot;$(ProjectDir)..\tool-inf&quot;" />
+  </Target>
+
+</Project>

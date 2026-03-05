@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class AuditLogStrings {
@@ -681,6 +681,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edited ion mobility library named {0} from the Files window.
+        /// </summary>
+        public static string files_tree_ion_mobility_library_update {
+            get {
+                return ResourceManager.GetString("files_tree_ion_mobility_library_update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removed all spectral libraries in the Files window.
         /// </summary>
         public static string files_tree_libraries_remove_all {
@@ -735,6 +744,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edited optimization library named {0} from the Files window.
+        /// </summary>
+        public static string files_tree_optimization_library_update {
+            get {
+                return ResourceManager.GetString("files_tree_optimization_library_update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removed all replicates in the Files window.
         /// </summary>
         public static string files_tree_replicates_remove_all {
@@ -758,6 +776,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string files_tree_replicates_remove_several {
             get {
                 return ResourceManager.GetString("files_tree_replicates_remove_several", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edited retention time calculator named {0} from the Files window.
+        /// </summary>
+        public static string files_tree_rt_calculator_update {
+            get {
+                return ResourceManager.GetString("files_tree_rt_calculator_update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edited spectral library named {0} from the Files window.
+        /// </summary>
+        public static string files_tree_spectral_library_update {
+            get {
+                return ResourceManager.GetString("files_tree_spectral_library_update", resourceCulture);
             }
         }
         
@@ -1633,6 +1669,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string renamed_single_protein {
             get {
                 return ResourceManager.GetString("renamed_single_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ordering of elements in document changed.
+        /// </summary>
+        public static string reordered_elements {
+            get {
+                return ResourceManager.GetString("reordered_elements", resourceCulture);
             }
         }
         

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<views>
+  <view name="ProteinLocators" rowsource="pwiz.Skyline.Model.Databinding.Entities.Protein" sublist="Results!*.Value.Files" uimode="proteomic">
+    <column name="Locator" />
+  </view>
+</views>

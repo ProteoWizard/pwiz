@@ -726,4 +726,7 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="files_tree_spectral_library_update" xml:space="preserve">
     <value>Edited spectral library named {0} from the Files window</value>
   </data>
+  <data name="reordered_elements" xml:space="preserve">
+    <value>Ordering of elements in document changed</value>
+  </data>
 </root>

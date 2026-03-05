@@ -187,6 +187,7 @@
     <Compile Include="OpenPeakAreasFromStartPageTest.cs" />
     <Compile Include="OriginalPeakScoreTest.cs" />
     <Compile Include="RemovePeakFromAllTest.cs" />
+    <Compile Include="ReorderElementsTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
