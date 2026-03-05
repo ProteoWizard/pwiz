@@ -1872,7 +1872,9 @@ namespace TestRunner
                 var b = s.Bounds;
                 var w = s.WorkingArea;
                 var scale = ShcoreTest.GetScaleFactor(b.X + 1, b.Y + 1);
-                log.WriteLine($"# Display: {s.DeviceName} Bounds={b.Width}x{b.Height}@{b.X},{b.Y} WorkingArea={w.Width}x{w.Height}@{w.X},{w.Y} Primary={s.Primary} Scale={scale:P0}");
+                var line = $"# Display: {s.DeviceName} Bounds={b.Width}x{b.Height}@{b.X},{b.Y} WorkingArea={w.Width}x{w.Height}@{w.X},{w.Y} Primary={s.Primary} Scale={scale:P0}";
+                log.WriteLine(line);
+                Console.WriteLine(line);
             }
         }
 
