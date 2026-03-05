@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
@@ -74,6 +75,7 @@ namespace pwiz.SkylineTestFunctional
             var server = new JsonToolServer(toolService);
 
             // Read-only tools
+            TestDispatch(server);
             TestDocumentInfo(server);
             TestSelection(server);
             TestLocations(server);
@@ -98,6 +100,67 @@ namespace pwiz.SkylineTestFunctional
             TestImportProperties(server);
             var doc = TestImportFasta(server);
             TestRunCommand(server, doc);
+        }
+
+        /// <summary>
+        /// Test the HandleRequest dispatch path that the MCP server uses over the named pipe.
+        /// </summary>
+        private void TestDispatch(JsonToolServer server)
+        {
+            // Helper to build a JSON request like the MCP server sends
+            string buildRequest(string method, params string[] args)
+            {
+                var obj = new JObject { [@"method"] = method };
+                if (args.Length > 0)
+                    obj[@"args"] = new JArray(args);
+                return obj.ToString();
+            }
+
+            // Successful call: GetVersion (0-arg method)
+            string versionResponse = server.HandleRequest(
+                Encoding.UTF8.GetBytes(buildRequest(@"GetVersion")));
+            var versionResult = JObject.Parse(versionResponse);
+            Assert.IsNotNull(versionResult[@"result"]);
+            AssertEx.Contains((string)versionResult[@"result"], Install.Version);
+
+            // Successful call: GetSelectedElementLocator (1-arg method with default)
+            string locatorResponse = server.HandleRequest(
+                Encoding.UTF8.GetBytes(buildRequest(@"GetSelectedElementLocator", @"Molecule")));
+            var locatorResult = JObject.Parse(locatorResponse);
+            Assert.IsNotNull(locatorResult[@"result"]);
+
+            // QueryAvailableMethods - special dispatch path
+            string methodsResponse = server.HandleRequest(
+                Encoding.UTF8.GetBytes(buildRequest(@"QueryAvailableMethods")));
+            var methodsResult = JObject.Parse(methodsResponse);
+            string methods = (string)methodsResult[@"result"];
+            AssertEx.Contains(methods, @"GetVersion");
+            AssertEx.Contains(methods, @"GetSelection");
+            AssertEx.Contains(methods, @"ExportReport");
+
+            // Error: unknown method (caught by Dispatch, returned as error JSON)
+            string unknownResponse = server.HandleRequest(
+                Encoding.UTF8.GetBytes(buildRequest(@"NotARealMethod")));
+            var unknownResult = JObject.Parse(unknownResponse);
+            Assert.IsNotNull(unknownResult[@"error"]);
+
+            // Error: too few arguments for a method that requires them
+            string tooFewResponse = server.HandleRequest(
+                Encoding.UTF8.GetBytes(buildRequest(@"ExportReport")));
+            var tooFewResult = JObject.Parse(tooFewResponse);
+            Assert.IsNotNull(tooFewResult[@"error"]);
+
+            // Error: malformed JSON request
+            string badJsonResponse = server.HandleRequest(
+                Encoding.UTF8.GetBytes(@"not json at all"));
+            var badJsonResult = JObject.Parse(badJsonResponse);
+            Assert.IsNotNull(badJsonResult[@"error"]);
+
+            // Null args array (exercises ParseArgs null path)
+            string noArgsResponse = server.HandleRequest(
+                Encoding.UTF8.GetBytes(@"{""method"":""GetVersion""}"));
+            var noArgsResult = JObject.Parse(noArgsResponse);
+            Assert.IsNotNull(noArgsResult[@"result"]);
         }
 
         private void TestDocumentInfo(JsonToolServer server)
@@ -257,6 +320,16 @@ namespace pwiz.SkylineTestFunctional
             string enzymeXml = server.GetSettingsListItem(nameof(EnzymeList), defaultEnzyme.GetKey());
             AssertEx.Contains(enzymeXml, string.Format(@"name={0}", defaultEnzyme.Name.Quote()));
 
+            // GetSettingsListNames for PersistedViews (reports) - exercises GetPersistedViewNames
+            string viewNames = server.GetSettingsListNames(@"PersistedViews");
+            AssertEx.Contains(viewNames, @"# Main");
+            AssertEx.Contains(viewNames, REPORT_AREAS);
+
+            // GetSettingsListItem for PersistedViews - exercises GetPersistedViewItem + SerializeViewSpec
+            string viewXml = server.GetSettingsListItem(@"PersistedViews", REPORT_AREAS);
+            AssertEx.Contains(viewXml, @"<view");
+            AssertEx.Contains(viewXml, REPORT_AREAS);
+
             // Error: nonexistent list
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.GetSettingsListNames(@"NonexistentList"));
@@ -264,6 +337,10 @@ namespace pwiz.SkylineTestFunctional
             // Error: nonexistent item
             AssertEx.ThrowsException<ArgumentException>(() =>
                 server.GetSettingsListItem(nameof(EnzymeList), @"NotAnEnzyme"));
+
+            // Error: nonexistent persisted view
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.GetSettingsListItem(@"PersistedViews", @"NotAView_12345"));
         }
 
         private void TestReportDocumentation(JsonToolServer server)
@@ -383,12 +460,73 @@ namespace pwiz.SkylineTestFunctional
             int pivotColCount = pivotHeader.ParseDsvFields(TextUtil.SEPARATOR_CSV).Length;
             Assert.IsTrue(pivotColCount > 2);
 
+            // With sort ascending (exercises "asc" path in ParseSortDirection)
+            string tempPathSortAsc = TestFilesDir.GetTestPath(@"report_def_sort_asc.csv");
+            string sortAscJson = string.Format(
+                @"{{""select"": [{0}, {1}], ""sort"": [{{""column"": {1}, ""direction"": ""asc""}}]}}",
+                COL_PROTEIN_NAME.Quote(), COL_PRECURSOR_MZ.Quote());
+            server.ExportReportFromDefinition(sortAscJson, tempPathSortAsc, CULTURE_INVARIANT);
+            var sortAscLines = File.ReadAllLines(tempPathSortAsc);
+            int sortAscMzIndex = Array.IndexOf(sortAscLines[0].ParseDsvFields(TextUtil.SEPARATOR_CSV), COL_PRECURSOR_MZ);
+            double prevAscMz = 0;
+            for (int i = 1; i < sortAscLines.Length; i++)
+            {
+                string[] cols = sortAscLines[i].ParseDsvFields(TextUtil.SEPARATOR_CSV);
+                if (cols.Length <= sortAscMzIndex || string.IsNullOrEmpty(cols[sortAscMzIndex]))
+                    continue;
+                double mz = double.Parse(cols[sortAscMzIndex], CultureInfo.InvariantCulture);
+                Assert.IsTrue(mz >= prevAscMz, @"Row {0}: {1} should be >= {2}", i, mz, prevAscMz);
+                prevAscMz = mz;
+            }
+
+            // With unary filter: isnullorblank (exercises unary op path in ParseFilterSpecs)
+            string tempPathUnary = TestFilesDir.GetTestPath(@"report_def_unary.csv");
+            string unaryJson = string.Format(
+                @"{{""select"": [{0}, {1}], ""filter"": [{{""column"": {1}, ""op"": ""isnotnullorblank""}}]}}",
+                COL_PROTEIN_NAME.Quote(), COL_TOTAL_AREA.Quote());
+            string unaryResult = server.ExportReportFromDefinition(unaryJson, tempPathUnary, CULTURE_INVARIANT);
+            Assert.IsTrue(GetRowCount(JObject.Parse(unaryResult)) > 0);
+
+            // Error: invalid JSON
+            string tempPathBadJson = TestFilesDir.GetTestPath(@"report_def_badjson.csv");
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.ExportReportFromDefinition(@"not valid json", tempPathBadJson, CULTURE_INVARIANT));
+
             // Error: unknown column with "did you mean" suggestion
             string badColJson = BuildSelectJson(COL_PRECURSOR_MZ + "z", COL_PROTEIN_NAME);
             string tempPathBad = TestFilesDir.GetTestPath(@"report_def_bad.csv");
             AssertEx.ThrowsException<ArgumentException>(() =>
                     server.ExportReportFromDefinition(badColJson, tempPathBad, CULTURE_INVARIANT),
                 ex => AssertEx.Contains(ex.Message, COL_PRECURSOR_MZ));
+
+            // Error: unknown filter column
+            string badFilterColJson = string.Format(
+                @"{{""select"": [{0}], ""filter"": [{{""column"": ""NotAColumn_xyz"", ""op"": "">"", ""value"": ""1""}}]}}",
+                COL_PROTEIN_NAME.Quote());
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.ExportReportFromDefinition(badFilterColJson, tempPathBad, CULTURE_INVARIANT));
+
+            // Error: unknown filter operation
+            string badFilterOpJson = string.Format(
+                @"{{""select"": [{0}], ""filter"": [{{""column"": {0}, ""op"": ""bogus"", ""value"": ""1""}}]}}",
+                COL_PROTEIN_NAME.Quote());
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                    server.ExportReportFromDefinition(badFilterOpJson, tempPathBad, CULTURE_INVARIANT),
+                ex => AssertEx.Contains(ex.Message, @"bogus"));
+
+            // Error: missing value for binary filter op
+            string missingValJson = string.Format(
+                @"{{""select"": [{0}], ""filter"": [{{""column"": {0}, ""op"": "">""}}]}}",
+                COL_PROTEIN_NAME.Quote());
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.ExportReportFromDefinition(missingValJson, tempPathBad, CULTURE_INVARIANT));
+
+            // Error: invalid sort direction
+            string badSortJson = string.Format(
+                @"{{""select"": [{0}], ""sort"": [{{""column"": {0}, ""direction"": ""sideways""}}]}}",
+                COL_PROTEIN_NAME.Quote());
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                server.ExportReportFromDefinition(badSortJson, tempPathBad, CULTURE_INVARIANT));
         }
 
         private static int GetRowCount(JObject jObject)
@@ -784,6 +922,7 @@ namespace pwiz.SkylineTestFunctional
             // Import with keepEmptyProteins=true - protein has no peptides matching
             // the document filter criteria, so it will be empty
             server.ImportFasta(TEXT_FASTA, @"true");
+            WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var docAfterKeep = SkylineWindow.Document;
             Assert.IsTrue(docAfterKeep.MoleculeGroupCount > docBefore.MoleculeGroupCount,
                 @"FASTA import should add protein groups");
@@ -850,6 +989,7 @@ namespace pwiz.SkylineTestFunctional
             string fastaArgs = string.Format(@"--import-fasta={0} --keep-empty-proteins",
                 fastaPath.ToForwardSlashPath().Quote());
             server.RunCommand(fastaArgs);
+            WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var docAfterFasta = SkylineWindow.Document;
             Assert.IsTrue(docAfterFasta.MoleculeGroupCount > docBeforeFasta.MoleculeGroupCount,
                 @"FASTA import should add protein groups");

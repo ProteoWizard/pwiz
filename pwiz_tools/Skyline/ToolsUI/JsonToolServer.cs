@@ -190,7 +190,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private string HandleRequest(byte[] requestBytes)
+        public string HandleRequest(byte[] requestBytes)
         {
             try
             {
