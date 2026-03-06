@@ -234,9 +234,6 @@ namespace pwiz.Common.SystemUtil.Caching
                         try
                         {
                             Cache.IncrementWaitingCount();
-                            // TEMPORARY: Delay so IsProcessing() returns true when
-                            // the UI thread switches replicates.
-                            Thread.Sleep(2000);
                             object value = Key.Producer.ProduceResult(progressCallback, Key.WorkParameter,
                                 _dependencyResultValues);
                             NotifyResultAvailable(ProductionResult.Success(value));

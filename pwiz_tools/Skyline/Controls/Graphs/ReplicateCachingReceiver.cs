@@ -337,9 +337,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var listener = new CompletionListener(this, cacheKey, workOrder);
             if (_pendingListeners.TryAdd(cacheKey, listener))
             {
-                // TEMPORARY: Widen the race window so the background calculation
-                // completes before Cache.Listen adds the CompletionListener.
-                Thread.Sleep(3000);
                 _receiver.Cache.Listen(workOrder, listener);
 
                 // If the result became available between the IsProcessing() check
