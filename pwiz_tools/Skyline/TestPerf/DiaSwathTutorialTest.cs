@@ -775,12 +775,19 @@ namespace TestPerf
             if (IsPauseForScreenShots)
             {
                 // delete -diaumpire files so they don't show up for screenshots
-                foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
-                    FileEx.SafeDelete(file);
+                DeleteFilesForScreenshots(Directory.GetFiles(diaDir, "*-diaumpire.*"));
             }
 
             if (!IsDiaNN)
             {
+                // Get rid of the DIANN directory for the screenshot if it is there
+                var diannDir = Path.Combine(diaDir, "DIANN");
+                if (IsPauseForScreenShots && Directory.Exists(diannDir))
+                {
+                    DeleteFilesForScreenshots(Directory.EnumerateFiles(diannDir, "*", SearchOption.AllDirectories));
+                    Directory.Delete(diannDir, true);
+                }
+
                 var importResultsDia = importResults as ImportResultsDIAControl;
                 Assert.IsNotNull(importResults);
                 var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResultsDia.Browse(diaDir));
@@ -1584,6 +1591,27 @@ namespace TestPerf
         private int GetBarCount(FoldChangeBarGraph barGraph)
         {
             return barGraph.ZedGraphControl.GraphPane.CurveList[0].Points.Count;
+        }
+
+        /// <summary>
+        /// Registers files as potentially missing in their owning persistent directory, then
+        /// deletes them. Use when a test intentionally removes files for clean screenshots so
+        /// that the persistent-dir modification check does not flag them as unexpected deletions.
+        /// </summary>
+        private void DeleteFilesForScreenshots(IEnumerable<string> filePaths)
+        {
+            foreach (var filePath in filePaths)
+            {
+                var testFilesDir = TestFilesDirs.FirstOrDefault(d =>
+                    filePath.StartsWith(d.PersistentFilesDir ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+                if (testFilesDir != null)
+                {
+                    var relativePath = PathEx.GetRelativePath(testFilesDir.PersistentFilesDir, filePath);
+                    testFilesDir.PotentialMissingPersistentFileSet ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    testFilesDir.PotentialMissingPersistentFileSet.Add(relativePath);
+                }
+                FileEx.SafeDelete(filePath);
+            }
         }
 
         private static void SortByFoldChange(DataboundGridControl fcGridControl, PropertyPath fcResultProperty)

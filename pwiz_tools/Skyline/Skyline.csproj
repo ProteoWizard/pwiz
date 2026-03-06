@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>271</ApplicationRevision>
-    <ApplicationVersion>25.1.1.271</ApplicationVersion>
+    <ApplicationRevision>058</ApplicationRevision>
+    <ApplicationVersion>26.1.1.058</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -159,6 +159,12 @@
       <HintPath>..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
+    <Reference Include="ParquetNet">
+      <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Emit.Lightweight">
+      <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
+    </Reference>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -184,14 +190,8 @@
       <HintPath>..\Shared\Lib\System.Interactive.Async.dll</HintPath>
     </Reference>
     <Reference Include="System.Management" />
-    <Reference Include="System.Memory">
-      <HintPath>..\Shared\Lib\System.Memory.dll</HintPath>
-    </Reference>
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>..\Shared\Lib\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions">
@@ -563,7 +563,15 @@
     <Compile Include="FileUI\PublishDocumentDlgPanorama.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Model\Databinding\CandidatePeakGroupFactory.cs" />
+    <Compile Include="Model\Databinding\Collections\ResultMap.cs" />
+    <Compile Include="Model\Databinding\ReportExporters.cs" />
+    <Compile Include="Model\Databinding\ParquetReportExporter.cs" />
+    <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
+    <Compile Include="Model\Databinding\DsvReportExporter.cs" />
+    <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
+    <Compile Include="Model\GroupComparison\FoldChangeRowFactory.cs" />
     <Compile Include="Model\GroupComparison\FoldChangeRows.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
@@ -603,7 +611,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\DdaSearch\TideSearchEngine.cs" />
     <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
@@ -654,6 +661,7 @@
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
     <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
+    <Compile Include="Model\Results\ReplicatePositions.cs" />
     <Compile Include="Model\Results\TransitionGroupIntegrator.cs" />
     <Compile Include="Model\WatersConnect\MethodModel.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
@@ -991,6 +999,7 @@
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
+    <Compile Include="Util\SkylineRemoteAccountServices.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

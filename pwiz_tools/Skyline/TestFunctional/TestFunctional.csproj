@@ -126,6 +126,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
+    <Reference Include="ParquetNet, Version=3.0.0.0, Culture=neutral, PublicKeyToken=de28deb604dd91c9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -176,9 +180,13 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
+    <Compile Include="ExportHugeParquetReportTest.cs" />
     <Compile Include="FilesTreeFileSystemTest.cs" />
+    <Compile Include="ParquetReportExporterTest.cs" />
     <Compile Include="MedianDocumentRetentionTimesTest.cs" />
+    <Compile Include="OpenPeakAreasFromStartPageTest.cs" />
     <Compile Include="OriginalPeakScoreTest.cs" />
+    <Compile Include="RemovePeakFromAllTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />
     <Compile Include="SkylineWindowEventsTest.cs" />
@@ -263,6 +271,7 @@
     <Compile Include="SequenceTreeExpandCollapseTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="SkipZoomScansTest.cs" />
+    <Compile Include="SourceOffsetVoltageTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
@@ -490,6 +499,7 @@
     <Compile Include="ReintegrateDlgTest.cs" />
     <Compile Include="AssayLibraryImportTest.cs" />
     <Compile Include="PeakBoundaryCompareTest.cs" />
+    <Compile Include="PeakIntegrationLibraryGuardTest.cs" />
     <Compile Include="SwathIsolationListsTest.cs" />
     <Compile Include="TriggeredAcquisitionTest.cs" />
     <Compile Include="UIModeTest.cs" />
@@ -561,6 +571,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="AccessServerTest.zip" />
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
     <None Include="AddIrtStandardsTest.zip" />

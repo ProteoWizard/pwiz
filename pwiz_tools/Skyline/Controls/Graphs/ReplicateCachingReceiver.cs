@@ -338,6 +338,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_pendingListeners.TryAdd(cacheKey, listener))
             {
                 _receiver.Cache.Listen(workOrder, listener);
+
+                // If the result became available between the IsProcessing() check
+                // and Cache.Listen, the CompletionListener missed the notification
+                // from NotifyResultAvailable (which snapshots listeners before we
+                // were added). Check now and handle it directly.
+                var result = _receiver.Cache.GetResult(workOrder);
+                if (result != null)
+                {
+                    listener.OnProductAvailable(workOrder, result);
+                }
             }
         }
 
@@ -436,31 +446,34 @@ namespace pwiz.Skyline.Controls.Graphs
 
         #region Cache tracking for tests
 
-        /// <summary>
-        /// When true, records all cached results for later inspection by tests.
-        /// Use ScopedAction to enable/disable around test code.
-        /// Setting to true clears any previously tracked results.
-        /// </summary>
-        public static bool TrackCaching
-        {
-            get => _trackCaching;
-            set
-            {
-                _trackCaching = value;
-                if (value)
-                    _cachedSinceTracked = new List<TResult>();
-                // Don't clear on false - test needs to read the results
-            }
-        }
-
         // ReSharper disable once StaticMemberInGenericType
         private static bool _trackCaching;
         private static List<TResult> _cachedSinceTracked;
 
         /// <summary>
-        /// Returns all results cached since TrackCaching was enabled.
-        /// Use First() to get the initial (full) calculation after document reopen.
-        /// Subsequent entries should be incremental updates with zero recalculation.
+        /// Begin recording cached results for test inspection.
+        /// Clears any stale results from a previous tracking session.
+        /// Use with <see cref="EndTrackCaching"/> in a ScopedAction.
+        /// </summary>
+        public static void StartTrackCaching()
+        {
+            _cachedSinceTracked = new List<TResult>();
+            _trackCaching = true;
+        }
+
+        /// <summary>
+        /// Stop recording and release all tracked results to free references
+        /// (e.g., SrmDocument held by GraphData).
+        /// </summary>
+        public static void EndTrackCaching()
+        {
+            _trackCaching = false;
+            _cachedSinceTracked = null;
+        }
+
+        /// <summary>
+        /// Returns all results cached since StartTrackCaching was called.
+        /// Must be read before EndTrackCaching clears the list.
         /// </summary>
         public static IEnumerable<TResult> CachedSinceTracked =>
             _cachedSinceTracked ?? Enumerable.Empty<TResult>();

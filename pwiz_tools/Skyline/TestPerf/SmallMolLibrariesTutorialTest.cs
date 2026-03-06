@@ -295,7 +295,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             RestoreViewOnScreen(13);
             WaitForGraphs();
             var libraryMatchView = WaitForOpenForm<GraphSpectrum>();
-            RunUI(() => libraryMatchView.ZoomXAxis(100, 400));
+            RunUI(() => ZoomXAxis(libraryMatchView.ZedGraphControl, 100, 400));
             PauseForScreenShot<GraphSpectrum>("Library Match");
 
             //Since there are only 38 precursors in this document, you may want to review all 38 to get an overall feel for how the XIC look prior to IMS filtering.Before starting this review, do the following:
