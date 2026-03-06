@@ -337,7 +337,20 @@ namespace pwiz.Skyline.Controls.Graphs
             var listener = new CompletionListener(this, cacheKey, workOrder);
             if (_pendingListeners.TryAdd(cacheKey, listener))
             {
+                // TEMPORARY: Widen the race window so the background calculation
+                // completes before Cache.Listen adds the CompletionListener.
+                Thread.Sleep(3000);
                 _receiver.Cache.Listen(workOrder, listener);
+
+                // If the result became available between the IsProcessing() check
+                // and Cache.Listen, the CompletionListener missed the notification
+                // from NotifyResultAvailable (which snapshots listeners before we
+                // were added). Check now and handle it directly.
+                var result = _receiver.Cache.GetResult(workOrder);
+                if (result != null)
+                {
+                    listener.OnProductAvailable(workOrder, result);
+                }
             }
         }
 
