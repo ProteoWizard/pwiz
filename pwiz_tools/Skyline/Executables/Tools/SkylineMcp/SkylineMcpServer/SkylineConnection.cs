@@ -38,6 +38,12 @@ public class SkylineConnection : IDisposable
 
     private readonly NamedPipeClientStream _pipe;
 
+    /// <summary>
+    /// When set, TryConnect targets this specific Skyline process instead of the
+    /// most recently started one. Set via the skyline_set_instance MCP tool.
+    /// </summary>
+    public static int? TargetProcessId { get; set; }
+
     private SkylineConnection(NamedPipeClientStream pipe)
     {
         _pipe = pipe;
@@ -70,9 +76,9 @@ public class SkylineConnection : IDisposable
     }
 
     /// <summary>
-    /// Connect to the most recently started Skyline instance.
-    /// Returns null with a status message when no Skyline is available,
-    /// instead of throwing an exception.
+    /// Connect to a Skyline instance. If TargetProcessId is set, connects to that
+    /// specific instance; otherwise connects to the most recently started one.
+    /// Returns null with a status message when no Skyline is available.
     /// </summary>
     public static (SkylineConnection Connection, string Error) TryConnect()
     {
@@ -81,6 +87,28 @@ public class SkylineConnection : IDisposable
         {
             return (null, "No Skyline instance is connected. " +
                           "Start Skyline and choose Tools > AI Connector to connect.");
+        }
+
+        // If a specific instance is targeted, try it first
+        if (TargetProcessId.HasValue)
+        {
+            var targeted = infos.FirstOrDefault(i => i.ProcessId == TargetProcessId.Value);
+            if (targeted != null)
+            {
+                if (!IsProcessAlive(targeted.ProcessId))
+                {
+                    TargetProcessId = null; // Clear stale target
+                    CleanupStaleFiles(new List<ConnectionInfo> { targeted });
+                }
+                else
+                {
+                    return TryConnectToInstance(targeted);
+                }
+            }
+            else
+            {
+                TargetProcessId = null; // Target no longer exists
+            }
         }
 
         // Sort by connected_at descending to prefer the most recent
@@ -95,34 +123,97 @@ public class SkylineConnection : IDisposable
                 continue;
             }
 
-            // Try to connect to the pipe
-            var pipe = new NamedPipeClientStream(".", info.PipeName, PipeDirection.InOut);
-            try
+            var result2 = TryConnectToInstance(info);
+            if (result2.Connection != null)
             {
-                pipe.Connect(5000);
-                pipe.ReadMode = PipeTransmissionMode.Message;
                 CleanupStaleFiles(stale);
-                return (new SkylineConnection(pipe), null);
+                return result2;
             }
-            catch (TimeoutException)
+
+            if (result2.Error != null && result2.Error.Contains("not responding"))
             {
-                pipe.Dispose();
-                // Skyline process is alive but not responding — may be busy
                 CleanupStaleFiles(stale);
-                return (null, "Skyline is not responding. " +
-                              "It may be busy processing data or showing a dialog. Try again in a moment.");
+                return result2;
             }
-            catch (IOException)
-            {
-                pipe.Dispose();
-                stale.Add(info);
-            }
+
+            stale.Add(info);
         }
 
         // All connections failed
         CleanupStaleFiles(stale);
         return (null, "No Skyline instance is connected. " +
                       "Start Skyline and choose Tools > AI Connector to connect.");
+    }
+
+    /// <summary>
+    /// Get information about all available Skyline instances, including document paths
+    /// queried from each live instance.
+    /// </summary>
+    public static List<InstanceInfo> GetAvailableInstances()
+    {
+        var infos = FindConnectionFiles();
+        var results = new List<InstanceInfo>();
+        var stale = new List<ConnectionInfo>();
+
+        foreach (var info in infos)
+        {
+            if (!IsProcessAlive(info.ProcessId))
+            {
+                stale.Add(info);
+                continue;
+            }
+
+            string documentPath = null;
+            try
+            {
+                var (connection, _) = TryConnectToInstance(info);
+                if (connection != null)
+                {
+                    using (connection)
+                    {
+                        documentPath = connection.Call(nameof(IJsonToolService.GetDocumentPath));
+                    }
+                }
+            }
+            catch
+            {
+                // Best effort — document path will be null
+            }
+
+            results.Add(new InstanceInfo
+            {
+                ProcessId = info.ProcessId,
+                SkylineVersion = info.SkylineVersion,
+                ConnectedAt = info.ConnectedAt,
+                DocumentPath = documentPath,
+                IsTargeted = TargetProcessId.HasValue && TargetProcessId.Value == info.ProcessId
+            });
+        }
+
+        CleanupStaleFiles(stale);
+        return results;
+    }
+
+    private static (SkylineConnection Connection, string Error) TryConnectToInstance(ConnectionInfo info)
+    {
+        var pipe = new NamedPipeClientStream(".", info.PipeName, PipeDirection.InOut);
+        try
+        {
+            pipe.Connect(5000);
+            pipe.ReadMode = PipeTransmissionMode.Message;
+            return (new SkylineConnection(pipe), null);
+        }
+        catch (TimeoutException)
+        {
+            pipe.Dispose();
+            return (null, "Skyline is not responding. " +
+                          "It may be busy processing data or showing a dialog. Try again in a moment.");
+        }
+        catch (IOException)
+        {
+            pipe.Dispose();
+            return (null, null); // Connection failed silently — try next
+        }
     }
 
     public string Call(string method, params string[] args)
@@ -277,5 +368,14 @@ public class SkylineConnection : IDisposable
 
         [JsonIgnore]
         public string FilePath { get; set; }
+    }
+
+    public class InstanceInfo
+    {
+        public int ProcessId { get; set; }
+        public string SkylineVersion { get; set; }
+        public string ConnectedAt { get; set; }
+        public string DocumentPath { get; set; }
+        public bool IsTargeted { get; set; }
     }
 }

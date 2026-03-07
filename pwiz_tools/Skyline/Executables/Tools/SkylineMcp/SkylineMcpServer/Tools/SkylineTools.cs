@@ -20,6 +20,7 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using ModelContextProtocol.Server;
@@ -546,6 +547,84 @@ public static class SkylineTools
 
             return $"Image downloaded: {savedPath}\n\nUse the Read tool to view this image.";
         });
+    }
+
+    [McpServerTool(Name = "skyline_get_instances"),
+     Description("List all connected Skyline instances. Returns process ID, version, document " +
+        "path, and whether each is the active target. When multiple Skyline windows are open, " +
+        "use skyline_set_instance to select which one to work with.")]
+    public static string GetInstances()
+    {
+        var instances = SkylineConnection.GetAvailableInstances();
+        if (instances.Count == 0)
+        {
+            return "No Skyline instances are connected. " +
+                   "Start Skyline and choose Tools > AI Connector to connect.";
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Connected Skyline instances: {instances.Count}");
+        sb.AppendLine();
+        foreach (var inst in instances)
+        {
+            string targeted = inst.IsTargeted ? " [ACTIVE TARGET]" : "";
+            string docPath = inst.DocumentPath ?? "(unsaved)";
+            sb.AppendLine($"Process ID: {inst.ProcessId}{targeted}");
+            sb.AppendLine($"  Version: {inst.SkylineVersion}");
+            sb.AppendLine($"  Document: {docPath}");
+            sb.AppendLine($"  Connected: {inst.ConnectedAt}");
+            sb.AppendLine();
+        }
+
+        if (!instances.Any(i => i.IsTargeted) && instances.Count > 1)
+        {
+            sb.AppendLine("No specific instance is targeted. Calls go to the most recently connected instance.");
+            sb.AppendLine("Use skyline_set_instance to target a specific instance by process ID.");
+        }
+
+        return sb.ToString();
+    }
+
+    [McpServerTool(Name = "skyline_set_instance"),
+     Description("Set which Skyline instance to target for subsequent tool calls. Use " +
+        "skyline_get_instances to see available instances and their process IDs. " +
+        "Pass 0 to clear the target and revert to auto-selecting the most recent instance.")]
+    public static string SetInstance(
+        [Description("Process ID of the Skyline instance to target. Use 0 to clear.")] int processId)
+    {
+        if (processId == 0)
+        {
+            SkylineConnection.TargetProcessId = null;
+            return "Cleared instance target. Calls will go to the most recently connected Skyline instance.";
+        }
+
+        SkylineConnection.TargetProcessId = processId;
+
+        // Verify the target is reachable
+        try
+        {
+            var (connection, error) = SkylineConnection.TryConnect();
+            if (connection == null)
+            {
+                SkylineConnection.TargetProcessId = null;
+                return $"Failed to connect to Skyline process {processId}: {error}\n" +
+                       "Target has been cleared.";
+            }
+
+            using (connection)
+            {
+                string docPath = connection.Call(nameof(IJsonToolService.GetDocumentPath)) ?? "(unsaved)";
+                string version = connection.Call(nameof(IJsonToolService.GetVersion)) ?? "unknown";
+                return $"Now targeting Skyline process {processId} (v{version})\n" +
+                       $"Document: {docPath}";
+            }
+        }
+        catch (Exception ex)
+        {
+            SkylineConnection.TargetProcessId = null;
+            return $"Failed to connect to Skyline process {processId}: {ex.Message}\n" +
+                   "Target has been cleared.";
+        }
     }
 
     /// <summary>
