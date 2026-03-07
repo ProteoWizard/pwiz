@@ -52,23 +52,28 @@ namespace pwiz.Skyline.Model.Databinding
 
         public ResolveResult Resolve(IList<string> columnNames)
         {
-            // Try each target row source, shallowest first
-            ResolveResult firstTargetMatch = null;
+            // Try each target row source, shallowest first.
+            // When all resolved paths go through collections (replicate-centric query),
+            // continue trying deeper row sources and prefer the one with the shallowest
+            // SublistId. E.g., Peptide with Results!* is preferred over Protein with
+            // Peptides!*.Precursors!*.Transitions!*.Results!*, because the deeper sublist
+            // from Protein produces a pivoted cross-join instead of one row per replicate.
+            ResolveResult bestAllCollectionMatch = null;
             foreach (var rowSourceType in TARGET_ROW_SOURCES)
             {
                 var index = BuildColumnIndex(rowSourceType);
                 var paths = TryResolveAll(columnNames, index);
                 if (paths != null)
                 {
-                    var result = BuildResult(rowSourceType, paths, index);
-                    // If every resolved path goes through a collection, this is a
-                    // replicate-centric query. Defer to the Replicate row source
-                    // if it can resolve all columns, since target-level resolution
-                    // produces a pivoted cross-join instead of one row per replicate.
                     if (!AllPathsThroughCollection(paths))
-                        return result;
-                    firstTargetMatch = result;
-                    break;
+                        return BuildResult(rowSourceType, paths, index);
+
+                    var result = BuildResult(rowSourceType, paths, index);
+                    if (bestAllCollectionMatch == null ||
+                        CountCollectionSteps(result.SublistId) < CountCollectionSteps(bestAllCollectionMatch.SublistId))
+                    {
+                        bestAllCollectionMatch = result;
+                    }
                 }
             }
 
@@ -80,10 +85,10 @@ namespace pwiz.Skyline.Model.Databinding
                     return BuildResult(typeof(Replicate), paths, index);
             }
 
-            // If a target row source matched (all-Results paths) but Replicate
-            // didn't work, use the target match we found earlier
-            if (firstTargetMatch != null)
-                return firstTargetMatch;
+            // If a target row source matched (all-collection paths) but Replicate
+            // didn't work, use the best match we found (shallowest SublistId)
+            if (bestAllCollectionMatch != null)
+                return bestAllCollectionMatch;
 
             // None worked -- collect structured error info
             var broadIndex = BuildColumnIndex(typeof(Entities.Transition));
@@ -94,6 +99,24 @@ namespace pwiz.Skyline.Model.Databinding
                     unresolvedColumns.Add(new UnresolvedColumn(name, FindSuggestions(name, broadIndex)));
             }
             throw new UnresolvedColumnsException(unresolvedColumns);
+        }
+
+        /// <summary>
+        /// Count collection lookup steps (!*) in a PropertyPath.
+        /// Used to prefer shallower sublists (e.g., Results!* over
+        /// Peptides!*.Precursors!*.Transitions!*.Results!*).
+        /// </summary>
+        private static int CountCollectionSteps(PropertyPath path)
+        {
+            int count = 0;
+            var walk = path;
+            while (!walk.IsRoot)
+            {
+                if (walk.IsUnboundLookup)
+                    count++;
+                walk = walk.Parent;
+            }
+            return count;
         }
 
         private Dictionary<string, PropertyPath> BuildColumnIndex(Type rowSourceType)
@@ -130,14 +153,15 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     else if (IsScalarType(child.PropertyType))
                     {
-                        // Leaf column - record invariant name -> PropertyPath mapping
-                        string invariantName = GetInvariantName(child);
-                        if (!index.ContainsKey(invariantName))
-                            index[invariantName] = child.PropertyPath;
+                        IndexColumn(child, index);
                     }
                     else
                     {
-                        // Complex navigation property - recurse into children
+                        // Complex navigation property - index parent if checkable
+                        // (e.g., AnnotatedDouble has children but the ViewEditor lets
+                        // users check the parent node), then recurse into children.
+                        if (IsCheckableParent(child.PropertyType))
+                            IndexColumn(child, index);
                         TraverseColumns(child, index, visitedTypes, depth + 1);
                     }
                 }
@@ -145,6 +169,27 @@ namespace pwiz.Skyline.Model.Databinding
             finally
             {
                 visitedTypes.Remove(wrappedType);
+            }
+        }
+
+        /// <summary>
+        /// Add a column to the index, preferring paths with fewer collection steps.
+        /// The traversal may find the same invariant name through multiple paths
+        /// (e.g., ReplicateName via Precursors!*.Transitions!*.Results!*.Key vs
+        /// Results!*.Value.ResultFile.Replicate). The path with fewer collection
+        /// lookups produces cleaner reports that match what the ViewEditor generates.
+        /// </summary>
+        private void IndexColumn(ColumnDescriptor child, Dictionary<string, PropertyPath> index)
+        {
+            string invariantName = GetInvariantName(child);
+            if (index.TryGetValue(invariantName, out var existing))
+            {
+                if (CountCollectionSteps(child.PropertyPath) < CountCollectionSteps(existing))
+                    index[invariantName] = child.PropertyPath;
+            }
+            else
+            {
+                index[invariantName] = child.PropertyPath;
             }
         }
 
@@ -165,9 +210,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 else if (IsScalarType(child.PropertyType))
                 {
-                    string invariantName = GetInvariantName(child);
-                    if (!index.ContainsKey(invariantName))
-                        index[invariantName] = child.PropertyPath;
+                    IndexColumn(child, index);
                 }
                 else
                 {
@@ -185,6 +228,18 @@ namespace pwiz.Skyline.Model.Databinding
         private bool IsScalarType(Type type)
         {
             return !_dataSchema.GetPropertyDescriptors(type).Any();
+        }
+
+        /// <summary>
+        /// Returns true for complex types that the ViewEditor displays as checkable
+        /// parent nodes (not just expandable containers). These types have child
+        /// properties but are also valid as standalone column selections.
+        /// AnnotatedDouble is the primary example: users check "Normalized Area"
+        /// in the tree and get the parent value, not a child like "Raw".
+        /// </summary>
+        private static bool IsCheckableParent(Type type)
+        {
+            return typeof(IAnnotatedValue).IsAssignableFrom(type);
         }
 
         private static List<PropertyPath> TryResolveAll(IList<string> columnNames,

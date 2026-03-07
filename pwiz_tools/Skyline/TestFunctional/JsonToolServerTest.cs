@@ -473,7 +473,8 @@ namespace pwiz.SkylineTestFunctional
             string pivotJson = BuildSelectPivotJson(COL_PEPTIDE_SEQUENCE, COL_TOTAL_AREA);
             string pivotResult = server.ExportReportFromDefinition(pivotJson, tempPathPivot, JsonToolConstants.CULTURE_INVARIANT);
             var pivotMetadata = JObject.Parse(pivotResult);
-            Assert.AreEqual(5, GetRowCount(pivotMetadata));
+            // Peptide row source: one row per peptide (13), not per protein (5)
+            Assert.AreEqual(13, GetRowCount(pivotMetadata));
             // Pivoted header should contain replicate names as column suffixes
             var pivotHeader = File.ReadLines(tempPathPivot).First();
             // The document has replicates, so the header should have more columns than the 2 we selected
