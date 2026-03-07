@@ -65,6 +65,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public int RequestId;
             public GraphPane Pane;
+            public ZedGraphControl GraphControl;
             public IList<LabeledPoint> LabeledPoints;
             public IList<LabeledPoint.PointLayout> SavedLayout;
             public Action<List<LabeledPoint.PointLayout>> SaveLayout;
@@ -196,7 +197,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void Start(GraphPane pane, IList<LabeledPoint> labeledPoints, IList<LabeledPoint.PointLayout> savedLayout,
             Action<List<LabeledPoint.PointLayout>> saveLayout, Action invalidate, Func<bool> isDisposed,
-            IProgressMonitor progressMonitor, string statusMessage)
+            IProgressMonitor progressMonitor, string statusMessage, ZedGraphControl graphControl = null)
         {
             if (pane == null || labeledPoints == null)
                 return;
@@ -216,6 +217,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 RequestId = requestId,
                 Pane = pane,
+                GraphControl = graphControl ?? (pane as SummaryGraphPane)?.GraphSummary?.GraphControl,
                 LabeledPoints = labeledPoints,
                 SavedLayout = savedLayout,
                 SaveLayout = saveLayout,
@@ -245,7 +247,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphControl.Invalidate,
                 () => graphControl.IsDisposed,
                 Program.MainWindow,
-                GraphsResources.LabelLayoutRunner_Start_Label_layout);
+                GraphsResources.LabelLayoutRunner_Start_Label_layout,
+                graphControl);
         }
 
         private void EnsureDebounceTimer()
@@ -363,7 +366,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var saveLayout = request.SaveLayout;
             var invalidate = request.Invalidate;
             var isDisposed = request.IsDisposed;
-            var graphControl = (pane as SummaryGraphPane)?.GraphSummary?.GraphControl;
+            var graphControl = request.GraphControl;
             Action<Action> runOnUiThread = uiAction =>
             {
                 if (uiAction == null)
@@ -450,7 +453,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 catch (Exception ex)
                 {
                     workerError = ex;
-                    Program.ReportException(ex);
+                    Messages.WriteAsyncDebugMessage(@"LabelLayoutRunner worker exception: {0}", ex);
                 }
 
                 var completionPosted = CommonActionUtil.SafeBeginInvoke(graphControl, (() =>

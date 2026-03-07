@@ -115,48 +115,116 @@ namespace ZedGraph
                 }
             }
 
-            foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
+            foreach (var line in GetMarkerLinesSnapshot())
             {
-                for (var i = 0; i < line.Points.Count; i++)
+                int pointCount;
+                try
                 {
-                    if (!line.GetCoords(this._graph, i, out var coords))
-                    {
-                        continue;
-                    }
+                    pointCount = line.Points.Count;
+                }
+                catch (InvalidOperationException)
+                {
+                    continue;
+                }
 
-                    var sides = Array.ConvertAll(coords.Split(','), int.Parse);
-                    var markerRect = new Rectangle(sides[0], sides[1], sides[2] - sides[0],
-                        sides[3] - sides[1]);
-
-                    foreach (var cell in GetRectangleCells(markerRect))
+                for (var i = 0; i < pointCount; i++)
+                {
+                    try
                     {
-                        var intersect = RectangleF.Intersect(markerRect, cell._bounds);
-                        if (intersect != Rectangle.Empty)
+                        if (!line.GetCoords(this._graph, i, out var coords))
                         {
-                            cell._density += intersect.Height * intersect.Width;
+                            continue;
+                        }
+
+                        var sides = Array.ConvertAll(coords.Split(','), int.Parse);
+                        var markerRect = new Rectangle(sides[0], sides[1], sides[2] - sides[0],
+                            sides[3] - sides[1]);
+
+                        foreach (var cell in GetRectangleCells(markerRect))
+                        {
+                            var intersect = RectangleF.Intersect(markerRect, cell._bounds);
+                            if (intersect != Rectangle.Empty)
+                            {
+                                cell._density += intersect.Height * intersect.Width;
+                            }
                         }
                     }
+                    catch (InvalidOperationException)
+                    {
+                        break;
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        break;
+                    }
                 }
+            }
+        }
+
+        private LineItem[] GetMarkerLinesSnapshot()
+        {
+            try
+            {
+                return _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None).ToArray();
+            }
+            catch (InvalidOperationException)
+            {
+                return Array.Empty<LineItem>();
             }
         }
 
         private void GetPointMarkerRectangle(PointF pt, out RectangleF rect)
         {
             rect = RectangleF.Empty;
-            foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
+            foreach (var line in GetMarkerLinesSnapshot())
             {
-                for (var i = 0; i < line.Points.Count; i++)
+                int pointCount;
+                try
                 {
-                    var screenPt = _graph.TransformCoord(line.Points[i].X, line.Points[i].Y, CoordType.AxisXYScale);
-                    if (Math.Abs(screenPt.X - pt.X) < 1 && Math.Abs(screenPt.Y - pt.Y) < 1 )
+                    pointCount = line.Points.Count;
+                }
+                catch (InvalidOperationException)
+                {
+                    continue;
+                }
 
+                for (var i = 0; i < pointCount; i++)
+                {
+                    PointF screenPt;
+                    try
                     {
-                        if (!line.GetCoords(this._graph, i, out var coords))
+                        var point = line.Points[i];
+                        screenPt = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        break;
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        break;
+                    }
+
+                    if (Math.Abs(screenPt.X - pt.X) < 1 && Math.Abs(screenPt.Y - pt.Y) < 1 )
+                    {
+                        try
                         {
-                            continue;
+                            if (!line.GetCoords(this._graph, i, out var coords))
+                            {
+                                continue;
+                            }
+                            var sides = Array.ConvertAll(coords.Split(','), int.Parse);
+                            rect = new Rectangle(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
+                            return;
                         }
-                        var sides = Array.ConvertAll(coords.Split(','), int.Parse);
-                        rect = new Rectangle(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
+                        catch (InvalidOperationException)
+                        {
+                            break;
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -514,7 +582,7 @@ namespace ZedGraph
             StreamWriter log = null;
             try
             {
-                var logPath = Path.Combine(Environment.CurrentDirectory, @"LabelLayoutAnneal.csv");
+                var logPath = Path.Combine(Path.GetTempPath(), @"LabelLayoutAnneal.csv");
                 if (File.Exists(logPath))
                     File.Delete(logPath);
                 log = new StreamWriter(logPath);
@@ -595,11 +663,11 @@ namespace ZedGraph
                 if (log != null)
                     log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString(CultureInfo.InvariantCulture)}," +
                                   $"{bestCost.ToString(CultureInfo.InvariantCulture)}, {delta.ToString(CultureInfo.InvariantCulture)}, {jump}");
-#endif
             }
-#if DEBUG
             if (log != null)
                 log.Dispose();
+#else
+            }
 #endif
             progress?.Report(100);
             placements = bestPlacement;
