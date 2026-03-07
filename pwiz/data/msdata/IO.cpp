@@ -1643,7 +1643,10 @@ void writeMzMLbExtra<BinaryDataArray>(stream<Connection_mzMLb>* mzMLb_os, string
             else dataset += "_numpress_slof";
 
             offset = (*mzMLb_os)->seek(dataset, 0, std::ios_base::cur);
-            (*mzMLb_os)->write_opaque(dataset, (const unsigned char*)&encoded[0], encoded_size);
+            if (encoded_size > 0)
+            {
+                (*mzMLb_os)->write_opaque(dataset, (const unsigned char*)&encoded[0], encoded_size);
+            }
         }
         else if (usedConfig.precision == BinaryDataEncoder::Precision_32)
         {
@@ -1730,7 +1733,10 @@ void writeMzMLbExtra<BinaryDataArray>(stream<Connection_mzMLb>* mzMLb_os, string
             dataset += "_float";
             offset = (*mzMLb_os)->seek(dataset, 0, std::ios_base::cur);
             encoded_size = float_data.size() * sizeof(float);
-            (*mzMLb_os)->write(dataset, &float_data[0], float_data.size());
+            if (encoded_size > 0)
+            {
+                (*mzMLb_os)->write(dataset, &float_data[0], float_data.size());
+            }
         }
         else
         {
@@ -1835,7 +1841,10 @@ void writeMzMLbExtra<IntegerDataArray>(stream<Connection_mzMLb>* mzMLb_os, strin
             else dataset += "_numpress_slof";
 
             offset = (*mzMLb_os)->seek(dataset, 0, std::ios_base::cur);
-            (*mzMLb_os)->write_opaque(dataset, (const unsigned char*)&encoded[0], encoded_size);
+            if (encoded_size > 0)
+            {
+                (*mzMLb_os)->write_opaque(dataset, (const unsigned char*)&encoded[0], encoded_size);
+            }
         }
         else
         {
@@ -1844,7 +1853,10 @@ void writeMzMLbExtra<IntegerDataArray>(stream<Connection_mzMLb>* mzMLb_os, strin
             dataset += "_int64";
             offset = (*mzMLb_os)->seek(dataset, 0, std::ios_base::cur);
             encoded_size = int_data.size() * sizeof(int64_t);
-            (*mzMLb_os)->write(dataset, &int_data[0], int_data.size());
+            if (encoded_size > 0)
+            {
+                (*mzMLb_os)->write(dataset, &int_data[0], int_data.size());
+            }
         }
     }
 }

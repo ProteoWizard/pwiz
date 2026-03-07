@@ -4102,6 +4102,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Source Offset Voltage.
+        /// </summary>
+        public static string SourceOffsetVoltage {
+            get {
+                return ResourceManager.GetString("SourceOffsetVoltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectrum Filter.
         /// </summary>
         public static string SpectrumFilter {

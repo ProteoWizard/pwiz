@@ -32,7 +32,7 @@ namespace pwiz.MSGraph
         public int MinDotRadius { get; set; }
         public int MaxDotRadius { get; set; }
 
-        private HeatMapData _heatMapData;
+        protected HeatMapData _heatMapData;
         private float _yMin;
         private float _yMax;
 

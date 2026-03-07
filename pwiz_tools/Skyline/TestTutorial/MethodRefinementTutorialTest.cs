@@ -263,6 +263,9 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AutoZoomNone();
             });
             RestoreViewOnScreen(13);
+            WaitForGraphs();
+            JiggleSelection(true);  // To ensure the zoom none set above
+            WaitForGraphs();
             PauseForScreenShot<GraphChromatogram>("Unrefined chromatogram graph page clipped from main window"); // Not L10N
 
 //            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
