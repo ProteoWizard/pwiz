@@ -26,14 +26,13 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SkylineTool;
+using JSON = SkylineTool.JsonToolConstants.JSON;
 
 namespace SkylineMcpServer;
 
 public class SkylineConnection : IDisposable
 {
-    private const string DEPLOY_FOLDER_NAME = ".skyline-mcp";
-    private const string CONNECTION_FILE_PREFIX = "connection-";
-    private const string CONNECTION_FILE_EXT = ".json";
     // Keep legacy name for backward compatibility during transition
     private const string LEGACY_CONNECTION_FILE = "connection.json";
 
@@ -140,13 +139,13 @@ public class SkylineConnection : IDisposable
         using var doc = JsonDocument.Parse(responseJson);
         var root = doc.RootElement;
 
-        if (root.TryGetProperty("error", out var errorElement))
+        if (root.TryGetProperty(nameof(JSON.error), out var errorElement))
         {
             string error = errorElement.GetString();
             throw new InvalidOperationException(error ?? "Unknown error from Skyline");
         }
 
-        if (root.TryGetProperty("result", out var resultElement))
+        if (root.TryGetProperty(nameof(JSON.result), out var resultElement))
         {
             if (resultElement.ValueKind == JsonValueKind.Null)
                 return null;
@@ -163,26 +162,19 @@ public class SkylineConnection : IDisposable
         _pipe.Dispose();
     }
 
-    private static string GetConnectionDirectory()
-    {
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            DEPLOY_FOLDER_NAME);
-    }
-
     /// <summary>
     /// Find all connection files (both new pattern and legacy).
     /// </summary>
     private static List<ConnectionInfo> FindConnectionFiles()
     {
-        string dir = GetConnectionDirectory();
+        string dir = JsonToolConstants.GetConnectionDirectory();
         if (!Directory.Exists(dir))
             return new List<ConnectionInfo>();
 
         var results = new List<ConnectionInfo>();
 
         // Scan for connection-*.json files
-        foreach (string file in Directory.GetFiles(dir, CONNECTION_FILE_PREFIX + "*" + CONNECTION_FILE_EXT))
+        foreach (string file in Directory.GetFiles(dir, JsonToolConstants.CONNECTION_FILE_PREFIX + "*" + JsonToolConstants.CONNECTION_FILE_EXT))
         {
             var info = TryLoadConnectionFile(file);
             if (info != null)

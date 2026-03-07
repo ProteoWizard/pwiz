@@ -352,6 +352,11 @@ namespace pwiz.Skyline
                     SendAnalyticsHitAsync();
 
                 MainToolServiceName = Guid.NewGuid().ToString();
+                if (Settings.Default.EnableMcpAutoConnect)
+                {
+                    StartToolService();
+                    MainJsonToolServer.WriteConnectionInfo();
+                }
                 Application.Run(MainWindow);
                 StopToolService();
             }

@@ -19,6 +19,7 @@
  */
 using System;
 using System.IO;
+using SkylineTool;
 
 namespace SkylineMcpConnector
 {
@@ -26,7 +27,6 @@ namespace SkylineMcpConnector
     {
         public const string MCP_SERVER_EXE = "SkylineMcpServer.exe";
         private const string MCP_SERVER_SUBFOLDER = "mcp-server";
-        private const string DEPLOY_FOLDER_NAME = ".skyline-mcp";
         private const string SERVER_SUBFOLDER = "server";
 
         /// <summary>
@@ -34,12 +34,7 @@ namespace SkylineMcpConnector
         /// </summary>
         public static string DeployDir
         {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    DEPLOY_FOLDER_NAME);
-            }
+            get { return JsonToolConstants.GetConnectionDirectory(); }
         }
 
         /// <summary>

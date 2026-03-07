@@ -28,6 +28,8 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
+using TUTORIAL = SkylineTool.JsonToolConstants.TUTORIAL;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -112,9 +114,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 string line = lines[i];
                 if (line.StartsWith(@"## "))
-                    toc.Add(new JObject { [@"heading"] = line.Substring(3).Trim(), [@"level"] = 2, [@"line"] = i + 1 });
+                    toc.Add(new JObject { [nameof(TUTORIAL.heading)] = line.Substring(3).Trim(), [nameof(TUTORIAL.level)] = 2, [nameof(TUTORIAL.line)] = i + 1 });
                 else if (line.StartsWith(@"# "))
-                    toc.Add(new JObject { [@"heading"] = line.Substring(2).Trim(), [@"level"] = 1, [@"line"] = i + 1 });
+                    toc.Add(new JObject { [nameof(TUTORIAL.heading)] = line.Substring(2).Trim(), [nameof(TUTORIAL.level)] = 1, [nameof(TUTORIAL.line)] = i + 1 });
             }
 
             // Write to file
@@ -124,12 +126,12 @@ namespace pwiz.Skyline.ToolsUI
 
             var result = new JObject
             {
-                [@"file_path"] = filePath.ToForwardSlashPath(),
-                [@"title"] = t.Caption,
-                [@"tutorial"] = t.FolderName,
-                [@"language"] = language,
-                [@"line_count"] = lines.Length,
-                [@"toc"] = toc
+                [nameof(TUTORIAL.file_path)] = filePath.ToForwardSlashPath(),
+                [nameof(TUTORIAL.title)] = t.Caption,
+                [nameof(TUTORIAL.tutorial)] = t.FolderName,
+                [nameof(TUTORIAL.language)] = language,
+                [nameof(TUTORIAL.line_count)] = lines.Length,
+                [nameof(TUTORIAL.toc)] = toc
             };
             return result.ToString();
         }
@@ -177,10 +179,10 @@ namespace pwiz.Skyline.ToolsUI
 
             var result = new JObject
             {
-                [@"file_path"] = filePath.ToForwardSlashPath(),
-                [@"tutorial"] = t.FolderName,
-                [@"image"] = imageFilename,
-                [@"language"] = language
+                [nameof(TUTORIAL.file_path)] = filePath.ToForwardSlashPath(),
+                [nameof(TUTORIAL.tutorial)] = t.FolderName,
+                [nameof(TUTORIAL.image)] = imageFilename,
+                [nameof(TUTORIAL.language)] = language
             };
             return result.ToString();
         }

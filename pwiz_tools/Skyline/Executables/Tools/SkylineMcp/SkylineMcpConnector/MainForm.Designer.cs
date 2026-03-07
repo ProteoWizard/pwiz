@@ -27,6 +27,7 @@ namespace SkylineMcpConnector
             this.checkGeminiCli = new System.Windows.Forms.CheckBox();
             this.checkVSCode = new System.Windows.Forms.CheckBox();
             this.checkCursor = new System.Windows.Forms.CheckBox();
+            this.checkAutoConnect = new System.Windows.Forms.CheckBox();
             this.labelSetupStatus = new System.Windows.Forms.Label();
             this.groupBoxSetup = new System.Windows.Forms.GroupBox();
             this.groupBoxSetup.SuspendLayout();
@@ -62,13 +63,23 @@ namespace SkylineMcpConnector
             this.labelDocument.TabIndex = 2;
             this.labelDocument.Text = "Document: {0}";
             //
+            // checkAutoConnect
+            //
+            this.checkAutoConnect.AutoSize = true;
+            this.checkAutoConnect.Location = new System.Drawing.Point(23, 97);
+            this.checkAutoConnect.Name = "checkAutoConnect";
+            this.checkAutoConnect.Size = new System.Drawing.Size(250, 19);
+            this.checkAutoConnect.TabIndex = 3;
+            this.checkAutoConnect.Text = "Configure Skyline to connect at startup";
+            this.checkAutoConnect.CheckedChanged += new System.EventHandler(this.checkAutoConnect_CheckedChanged);
+            //
             // buttonSetup
             //
             this.buttonSetup.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonSetup.Location = new System.Drawing.Point(312, 105);
+            this.buttonSetup.Location = new System.Drawing.Point(312, 125);
             this.buttonSetup.Name = "buttonSetup";
             this.buttonSetup.Size = new System.Drawing.Size(75, 23);
-            this.buttonSetup.TabIndex = 3;
+            this.buttonSetup.TabIndex = 4;
             this.buttonSetup.Text = "&Setup >>";
             this.buttonSetup.Click += new System.EventHandler(this.buttonSetup_Click);
             //
@@ -76,10 +87,10 @@ namespace SkylineMcpConnector
             //
             this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonClose.Location = new System.Drawing.Point(393, 105);
+            this.buttonClose.Location = new System.Drawing.Point(393, 125);
             this.buttonClose.Name = "buttonClose";
             this.buttonClose.Size = new System.Drawing.Size(75, 23);
-            this.buttonClose.TabIndex = 4;
+            this.buttonClose.TabIndex = 5;
             this.buttonClose.Text = "Close";
             this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
             //
@@ -154,7 +165,7 @@ namespace SkylineMcpConnector
             this.groupBoxSetup.Controls.Add(this.checkVSCode);
             this.groupBoxSetup.Controls.Add(this.checkCursor);
             this.groupBoxSetup.Controls.Add(this.labelSetupStatus);
-            this.groupBoxSetup.Location = new System.Drawing.Point(13, 141);
+            this.groupBoxSetup.Location = new System.Drawing.Point(13, 161);
             this.groupBoxSetup.Name = "groupBoxSetup";
             this.groupBoxSetup.Size = new System.Drawing.Size(455, 200);
             this.groupBoxSetup.TabIndex = 5;
@@ -166,16 +177,17 @@ namespace SkylineMcpConnector
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonClose;
-            this.ClientSize = new System.Drawing.Size(480, 357);
+            this.ClientSize = new System.Drawing.Size(480, 377);
             this.Controls.Add(this.groupBoxSetup);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.labelVersion);
             this.Controls.Add(this.labelDocument);
+            this.Controls.Add(this.checkAutoConnect);
             this.Controls.Add(this.buttonSetup);
             this.Controls.Add(this.buttonClose);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.MaximizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(496, 184);
+            this.MinimumSize = new System.Drawing.Size(496, 204);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "AI Connector";
@@ -193,6 +205,7 @@ namespace SkylineMcpConnector
         private System.Windows.Forms.Label labelDocument;
         private System.Windows.Forms.Button buttonSetup;
         private System.Windows.Forms.Button buttonClose;
+        private System.Windows.Forms.CheckBox checkAutoConnect;
         private System.Windows.Forms.CheckBox checkClaudeDesktop;
         private System.Windows.Forms.CheckBox checkClaudeCode;
         private System.Windows.Forms.CheckBox checkGeminiCli;

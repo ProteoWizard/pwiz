@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Windows.Forms;
 using SkylineTool;
@@ -40,10 +41,11 @@ namespace SkylineMcpConnector
         private readonly string _setupButtonExpandText;
         private readonly int _groupHeight;
 
+        private bool _autoConnectEnabled;
+
         private int _skylineProcessId;
         private RemoteClient _remoteClient;
         private Timer _skylineMonitorTimer;
-        private ConnectionInfo _connectionInfo;
 
         public MainForm(string[] args)
         {
@@ -109,13 +111,29 @@ namespace SkylineMcpConnector
                 return;
             }
 
-            // Write the connection file so MCP clients can find this Skyline instance
             string versionString = string.Format("{0}.{1}.{2}.{3}",
                 version.Major, version.Minor, version.Build, version.Revision);
-            _connectionInfo = ConnectionInfo.Create(legacyPipeName, versionString, processId);
-            _connectionInfo.Save();
 
-            labelStatus.Text = "Connected to Skyline";
+            // Ask Skyline to write the connection file and get auto-connect state
+            string mcpResult;
+            try
+            {
+                mcpResult = (string)_remoteClient.RemoteCallName("StartMcpConnection", new object[] { null });
+            }
+            catch
+            {
+                labelStatus.Text = "Could not start MCP connection in Skyline.";
+                return;
+            }
+
+            _autoConnectEnabled = ParseAutoConnect(mcpResult);
+            _suppressCheckEvents = true;
+            checkAutoConnect.Checked = _autoConnectEnabled;
+            _suppressCheckEvents = false;
+
+            labelStatus.Text = _autoConnectEnabled
+                ? "Skyline will connect to AI at startup."
+                : "Connected to Skyline";
             labelVersion.Text = string.Format(_versionFormat, versionString);
             UpdateDocumentPath();
 
@@ -496,6 +514,39 @@ namespace SkylineMcpConnector
             ChatAppRegistry.StopClaudeDesktop();
             Thread.Sleep(1000); // Brief wait for processes to exit
             return !ChatAppRegistry.IsClaudeDesktopRunning();
+        }
+
+        private void checkAutoConnect_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_suppressCheckEvents || _remoteClient == null)
+                return;
+            try
+            {
+                string result = (string)_remoteClient.RemoteCallName("StartMcpConnection",
+                    new object[] { checkAutoConnect.Checked.ToString() });
+                _autoConnectEnabled = ParseAutoConnect(result);
+                labelStatus.Text = _autoConnectEnabled
+                    ? "Skyline will connect to AI at startup."
+                    : "Connected to Skyline";
+            }
+            catch (Exception ex)
+            {
+                labelStatus.Text = "Error: " + ex.Message;
+                RevertCheckbox(checkAutoConnect);
+            }
+        }
+
+        private static bool ParseAutoConnect(string json)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                return doc.RootElement.GetProperty(nameof(JsonToolConstants.JSON.auto_connect)).GetBoolean();
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private void RevertCheckbox(CheckBox checkBox)

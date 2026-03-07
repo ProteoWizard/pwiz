@@ -48,6 +48,9 @@ using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
+using JSON = SkylineTool.JsonToolConstants.JSON;
+using REPORT = SkylineTool.JsonToolConstants.REPORT;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -56,12 +59,8 @@ namespace pwiz.Skyline.ToolsUI
     /// Replaces the connector's JsonPipeServer by dispatching directly
     /// to ToolService methods without BinaryFormatter serialization.
     /// </summary>
-    public class JsonToolServer : IDisposable
+    public class JsonToolServer : IJsonToolService, IDisposable
     {
-        private const string DEPLOY_FOLDER_NAME = @".skyline-mcp";
-        private const string CONNECTION_FILE_PREFIX = @"connection-";
-        private const string CONNECTION_FILE_EXT = @".json";
-        public const string JSON_PIPE_PREFIX = @"SkylineMcpJson-";
 
         private readonly ToolService _toolService;
         private readonly string _pipeName;
@@ -71,20 +70,10 @@ namespace pwiz.Skyline.ToolsUI
 
         public string PipeName { get { return _pipeName; } }
 
-        /// <summary>
-        /// Derive the JSON pipe name from the legacy ToolService name (a GUID).
-        /// Both the Connector and the server use this convention to find each other
-        /// without requiring an IToolService method.
-        /// </summary>
-        public static string GetJsonPipeName(string legacyToolServiceName)
-        {
-            return JSON_PIPE_PREFIX + legacyToolServiceName.Replace(@"-", string.Empty);
-        }
-
         public JsonToolServer(ToolService toolService, string legacyToolServiceName)
         {
             _toolService = toolService;
-            _pipeName = GetJsonPipeName(legacyToolServiceName);
+            _pipeName = JsonToolConstants.GetJsonPipeName(legacyToolServiceName);
             _serverThread = new Thread(ServerLoop) { IsBackground = true };
             _methods = GetType()
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
@@ -114,11 +103,25 @@ namespace pwiz.Skyline.ToolsUI
             DeleteConnectionInfo();
         }
 
+        public void WriteConnectionInfo()
+        {
+            string dir = JsonToolConstants.GetConnectionDirectory();
+            Directory.CreateDirectory(dir);
+            var obj = new JObject
+            {
+                [nameof(JSON.pipe_name)] = _pipeName,
+                [nameof(JSON.process_id)] = Process.GetCurrentProcess().Id,
+                [nameof(JSON.connected_at)] = DateTime.UtcNow.ToString(@"o"),
+                [nameof(JSON.skyline_version)] = Install.Version
+            };
+            File.WriteAllText(JsonToolConstants.GetConnectionFilePath(_pipeName), obj.ToString());
+        }
+
         private void DeleteConnectionInfo()
         {
             try
             {
-                string path = GetConnectionFilePath(_pipeName);
+                string path = JsonToolConstants.GetConnectionFilePath(_pipeName);
                 if (File.Exists(path))
                     File.Delete(path);
             }
@@ -126,19 +129,6 @@ namespace pwiz.Skyline.ToolsUI
             {
                 // Ignore cleanup errors
             }
-        }
-
-        private static string GetConnectionDirectory()
-        {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                DEPLOY_FOLDER_NAME);
-        }
-
-        private static string GetConnectionFilePath(string pipeName)
-        {
-            return Path.Combine(GetConnectionDirectory(),
-                CONNECTION_FILE_PREFIX + pipeName + CONNECTION_FILE_EXT);
         }
 
         private void ServerLoop()
@@ -191,19 +181,19 @@ namespace pwiz.Skyline.ToolsUI
             {
                 string json = Encoding.UTF8.GetString(requestBytes);
                 var root = JObject.Parse(json);
-                string method = (string) root[@"method"];
-                string[] args = ParseArgs(root[@"args"]);
+                string method = (string) root[nameof(JSON.method)];
+                string[] args = ParseArgs(root[nameof(JSON.args)]);
 
                 object result = Dispatch(method, args);
                 return SerializeResult(result);
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
-                return new JObject { [@"error"] = ex.InnerException.ToString() }.ToString();
+                return new JObject { [nameof(JSON.error)] = ex.InnerException.ToString() }.ToString();
             }
             catch (Exception ex)
             {
-                return new JObject { [@"error"] = ex.ToString() }.ToString();
+                return new JObject { [nameof(JSON.error)] = ex.ToString() }.ToString();
             }
         }
 
@@ -479,16 +469,16 @@ namespace pwiz.Skyline.ToolsUI
             switch (level.ToLowerInvariant())
             {
                 case @"list":
-                case @"group":
+                case JsonToolConstants.LEVEL_GROUP:
                     targetDepth = 1;
                     break;
-                case @"molecule":
+                case JsonToolConstants.LEVEL_MOLECULE:
                     targetDepth = 2;
                     break;
-                case @"precursor":
+                case JsonToolConstants.LEVEL_PRECURSOR:
                     targetDepth = 3;
                     break;
-                case @"transition":
+                case JsonToolConstants.LEVEL_TRANSITION:
                     targetDepth = 4;
                     break;
                 default:
@@ -578,7 +568,7 @@ namespace pwiz.Skyline.ToolsUI
             var root = ParseJsonDefinition(json);
             var viewSpec = ResolveJsonReportDefinition(root, dataSchema);
 
-            if (string.IsNullOrEmpty(viewSpec.Name) || viewSpec.Name == @"Custom")
+            if (string.IsNullOrEmpty(viewSpec.Name) || viewSpec.Name == JsonToolConstants.DEFAULT_REPORT_NAME)
             {
                 throw new ArgumentException(new LlmInstruction(
                     @"The 'name' field is required when adding a report."));
@@ -757,13 +747,13 @@ namespace pwiz.Skyline.ToolsUI
                 saver.Commit();
             }
 
-            string reportName = viewSpec.Name ?? @"Custom";
+            string reportName = viewSpec.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
             return BuildReportMetadata(filePath, reportName);
         }
 
         private static DataSchemaLocalizer ParseCulture(string culture)
         {
-            if (string.Equals(culture, @"localized", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(culture, JsonToolConstants.CULTURE_LOCALIZED, StringComparison.OrdinalIgnoreCase))
                 return SkylineDataSchema.GetLocalizedSchemaLocalizer();
             return DataSchemaLocalizer.INVARIANT;
         }
@@ -783,7 +773,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private static ViewSpec ResolveJsonReportDefinition(JObject root, SkylineDataSchema dataSchema)
         {
-            var selectToken = root[@"select"];
+            var selectToken = root[nameof(REPORT.select)];
             if (selectToken == null || selectToken.Type != JTokenType.Array || !selectToken.HasValues)
             {
                 throw new ArgumentException(new LlmInstruction(
@@ -797,7 +787,7 @@ namespace pwiz.Skyline.ToolsUI
                     @"Column names in 'select' must not be empty."));
             }
 
-            string reportName = (string)root[@"name"] ?? @"Custom";
+            string reportName = (string)root[nameof(REPORT.name)] ?? JsonToolConstants.DEFAULT_REPORT_NAME;
 
             try
             {
@@ -814,12 +804,12 @@ namespace pwiz.Skyline.ToolsUI
                     viewSpec = viewSpec.SetSublistId(result.SublistId);
 
                 // Apply filter specs
-                var filterToken = root[@"filter"];
+                var filterToken = root[nameof(REPORT.filter)];
                 if (filterToken is JArray filterArray && filterArray.Count > 0)
                     viewSpec = viewSpec.SetFilters(ParseFilterSpecs(filterArray, result));
 
                 // Apply pivot specs
-                var pivotReplicate = (bool?)root[@"pivotReplicate"];
+                var pivotReplicate = (bool?)root[nameof(REPORT.pivot_replicate)];
                 if (pivotReplicate == true)
                     viewSpec = viewSpec.SetSublistId(PropertyPath.Root);
                 else if (pivotReplicate == false)
@@ -828,7 +818,7 @@ namespace pwiz.Skyline.ToolsUI
                         SublistPaths.GetReplicateSublist(result.RowSourceType));
                 }
 
-                if ((bool?)root[@"pivotIsotopeLabel"] == true)
+                if ((bool?)root[nameof(REPORT.pivot_isotope_label)] == true)
                     viewSpec = PivotReplicateAndIsotopeLabelWidget.PivotIsotopeLabel(viewSpec, true);
 
                 return viewSpec;
@@ -861,14 +851,14 @@ namespace pwiz.Skyline.ToolsUI
             var filters = new List<FilterSpec>();
             foreach (var item in filterArray)
             {
-                string columnName = (string)item[@"column"];
+                string columnName = (string)item[nameof(REPORT.column)];
                 if (string.IsNullOrWhiteSpace(columnName))
                 {
                     throw new ArgumentException(new LlmInstruction(
                         @"Each filter must have a 'column' field."));
                 }
 
-                string opName = (string)item[@"op"];
+                string opName = (string)item[nameof(REPORT.op)];
                 if (string.IsNullOrWhiteSpace(opName))
                 {
                     throw new ArgumentException(new LlmInstruction(
@@ -905,7 +895,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
 
                 // Validate operand presence
-                string operand = (string)item[@"value"];
+                string operand = (string)item[nameof(REPORT.value)];
                 bool isUnaryOp = operation == FilterOperations.OP_IS_BLANK ||
                                  operation == FilterOperations.OP_IS_NOT_BLANK;
                 if (!isUnaryOp && string.IsNullOrEmpty(operand))
@@ -923,21 +913,21 @@ namespace pwiz.Skyline.ToolsUI
 
         private static List<RowFilter.ColumnSort> ParseSortSpecs(JObject root)
         {
-            var sortToken = root[@"sort"];
+            var sortToken = root[nameof(REPORT.sort)];
             if (!(sortToken is JArray sortArray) || sortArray.Count == 0)
                 return null;
 
             var sorts = new List<RowFilter.ColumnSort>();
             foreach (var item in sortArray)
             {
-                string columnName = (string)item[@"column"];
+                string columnName = (string)item[nameof(REPORT.column)];
                 if (string.IsNullOrWhiteSpace(columnName))
                 {
                     throw new ArgumentException(new LlmInstruction(
                         @"Each sort item must have a 'column' field."));
                 }
 
-                string dirString = (string)item[@"direction"];
+                string dirString = (string)item[nameof(REPORT.direction)];
                 var direction = ParseSortDirection(dirString);
 
                 sorts.Add(new RowFilter.ColumnSort(new ColumnId(columnName), direction));
@@ -949,10 +939,10 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (string.IsNullOrWhiteSpace(direction))
                 return ListSortDirection.Ascending;
-            if (string.Equals(direction, @"asc", StringComparison.OrdinalIgnoreCase) ||
+            if (string.Equals(direction, JsonToolConstants.SORT_ASC, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(direction, @"ascending", StringComparison.OrdinalIgnoreCase))
                 return ListSortDirection.Ascending;
-            if (string.Equals(direction, @"desc", StringComparison.OrdinalIgnoreCase) ||
+            if (string.Equals(direction, JsonToolConstants.SORT_DESC, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(direction, @"descending", StringComparison.OrdinalIgnoreCase))
                 return ListSortDirection.Descending;
             throw new ArgumentException(new LlmInstruction(
@@ -963,13 +953,13 @@ namespace pwiz.Skyline.ToolsUI
         private static string BuildReportMetadata(string filePath, string reportName)
         {
             var obj = new JObject();
-            obj[@"file_path"] = filePath.ToForwardSlashPath();
-            obj[@"report_name"] = reportName;
+            obj[nameof(REPORT.file_path)] = filePath.ToForwardSlashPath();
+            obj[nameof(REPORT.report_name)] = reportName;
 
             string ext = Path.GetExtension(filePath);
             if (string.Equals(ext, TextUtil.EXT_PARQUET, StringComparison.OrdinalIgnoreCase))
             {
-                obj[@"format"] = @"parquet";
+                obj[nameof(REPORT.format)] = @"parquet";
                 return obj.ToString(Newtonsoft.Json.Formatting.None);
             }
 
@@ -987,10 +977,10 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             int rowCount = Math.Max(0, lineCount - 1);
-            obj[@"row_count"] = rowCount;
+            obj[nameof(REPORT.row_count)] = rowCount;
 
             if (lineCount > 0)
-                obj[@"columns"] = previewLines[0];
+                obj[nameof(REPORT.columns)] = previewLines[0];
 
             int previewCount = Math.Min(lineCount, 6);
             if (previewCount > 0)
@@ -1002,7 +992,7 @@ namespace pwiz.Skyline.ToolsUI
                         sb.AppendLine();
                     sb.Append(previewLines[i]);
                 }
-                obj[@"preview"] = sb.ToString();
+                obj[nameof(REPORT.preview)] = sb.ToString();
             }
 
             return obj.ToString(Newtonsoft.Json.Formatting.None);
@@ -1022,7 +1012,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             var obj = new JObject
             {
-                [@"result"] = result as string
+                [nameof(JSON.result)] = result as string
             };
             return obj.ToString();
         }

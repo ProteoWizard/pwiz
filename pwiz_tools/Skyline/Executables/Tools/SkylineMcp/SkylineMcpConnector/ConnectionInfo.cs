@@ -18,11 +18,11 @@
  * limitations under the License.
  */
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SkylineTool;
 
 namespace SkylineMcpConnector
 {
@@ -40,9 +40,6 @@ namespace SkylineMcpConnector
         [JsonPropertyName("skyline_version")]
         public string SkylineVersion { get; set; }
 
-        private const string CONNECTION_FILE_PREFIX = "connection-";
-        private const string CONNECTION_FILE_EXT = ".json";
-        private const string JSON_PIPE_PREFIX = "SkylineMcpJson-";
         // Legacy single-file name for backward compatibility
         private const string LEGACY_CONNECTION_FILE = "connection.json";
 
@@ -52,22 +49,13 @@ namespace SkylineMcpConnector
         };
 
         /// <summary>
-        /// Derive the JSON pipe name from the legacy ToolService name (a GUID).
-        /// Must match JsonToolServer.GetJsonPipeName() in Skyline.
-        /// </summary>
-        public static string GetJsonPipeName(string legacyToolServiceName)
-        {
-            return JSON_PIPE_PREFIX + legacyToolServiceName.Replace("-", string.Empty);
-        }
-
-        /// <summary>
         /// Build a ConnectionInfo for the current Skyline instance.
         /// </summary>
         public static ConnectionInfo Create(string legacyToolServiceName, string skylineVersion, int processId)
         {
             return new ConnectionInfo
             {
-                PipeName = GetJsonPipeName(legacyToolServiceName),
+                PipeName = JsonToolConstants.GetJsonPipeName(legacyToolServiceName),
                 ProcessId = processId,
                 ConnectedAt = DateTime.UtcNow.ToString("o"),
                 SkylineVersion = skylineVersion
@@ -82,7 +70,7 @@ namespace SkylineMcpConnector
         {
             Directory.CreateDirectory(McpServerDeployer.DeployDir);
             string json = JsonSerializer.Serialize(this, _jsonOptions);
-            File.WriteAllText(GetConnectionFilePath(PipeName), json);
+            File.WriteAllText(JsonToolConstants.GetConnectionFilePath(PipeName), json);
         }
 
         /// <summary>
@@ -90,7 +78,7 @@ namespace SkylineMcpConnector
         /// </summary>
         public static void Delete(string pipeName)
         {
-            string path = GetConnectionFilePath(pipeName);
+            string path = JsonToolConstants.GetConnectionFilePath(pipeName);
             if (File.Exists(path))
                 File.Delete(path);
         }
@@ -107,7 +95,8 @@ namespace SkylineMcpConnector
                 return null;
 
             // Find all connection files, sorted by write time descending
-            var candidates = Directory.GetFiles(dir, CONNECTION_FILE_PREFIX + "*" + CONNECTION_FILE_EXT)
+            var candidates = Directory.GetFiles(dir,
+                    JsonToolConstants.CONNECTION_FILE_PREFIX + "*" + JsonToolConstants.CONNECTION_FILE_EXT)
                 .Select(f => new FileInfo(f))
                 .ToList();
 
@@ -136,12 +125,6 @@ namespace SkylineMcpConnector
             }
 
             return null;
-        }
-
-        private static string GetConnectionFilePath(string pipeName)
-        {
-            return Path.Combine(McpServerDeployer.DeployDir,
-                CONNECTION_FILE_PREFIX + pipeName + CONNECTION_FILE_EXT);
         }
     }
 }

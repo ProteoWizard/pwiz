@@ -14,4 +14,8 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\..\..\SkylineTool\IJsonToolService.cs" Link="IJsonToolService.cs" />
+  </ItemGroup>
+
 </Project>

@@ -88,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DocumentLocation.cs" />
+    <Compile Include="IJsonToolService.cs" />
     <Compile Include="IToolService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteBase.cs" />
