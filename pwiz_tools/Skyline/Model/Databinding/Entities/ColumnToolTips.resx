@@ -545,6 +545,9 @@ which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</value>
   <data name="Group">
     <value>Value of the replicate annotation of the replicates that were compared to the control group.</value>
   </data>
+  <data name="GroupComparison">
+    <value>Name of the group comparison</value>
+  </data>
   <data name="Height">
     <value>The maximum intensity of the points between the transition peak integration
 boundaries.</value>
