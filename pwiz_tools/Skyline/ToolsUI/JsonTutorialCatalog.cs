@@ -28,7 +28,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using SkylineTool;
 using TUTORIAL = SkylineTool.JsonToolConstants.TUTORIAL;
 
 namespace pwiz.Skyline.ToolsUI
@@ -203,13 +202,13 @@ namespace pwiz.Skyline.ToolsUI
 
             // Convert headings before stripping other tags
             html = Regex.Replace(html, @"<h1[^>]*>(.*?)</h1>",
-                m => NL + "# " + StripTags(m.Groups[1].Value) + NL,
+                m => NL + @"# " + StripTags(m.Groups[1].Value) + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
             html = Regex.Replace(html, @"<h2[^>]*>(.*?)</h2>",
-                m => NL + "## " + StripTags(m.Groups[1].Value) + NL,
+                m => NL + @"## " + StripTags(m.Groups[1].Value) + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
             html = Regex.Replace(html, @"<h3[^>]*>(.*?)</h3>",
-                m => NL + "### " + StripTags(m.Groups[1].Value) + NL,
+                m => NL + @"### " + StripTags(m.Groups[1].Value) + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
             // Convert images to descriptive placeholders
@@ -239,12 +238,12 @@ namespace pwiz.Skyline.ToolsUI
 
             // Convert list items (before stripping ol/ul tags)
             html = Regex.Replace(html, @"<li\b[^>]*>(.*?)</li>",
-                m => "- " + StripTags(m.Groups[1].Value).Trim() + NL,
+                m => @"- " + StripTags(m.Groups[1].Value).Trim() + NL,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
             // Convert table cells to tab-separated values
             html = Regex.Replace(html, @"<t[dh]\b[^>]*>(.*?)</t[dh]>",
-                m => StripTags(m.Groups[1].Value).Trim() + "\t",
+                m => StripTags(m.Groups[1].Value).Trim() + TextUtil.SEPARATOR_TSV,
                 RegexOptions.Singleline | RegexOptions.IgnoreCase);
             html = Regex.Replace(html, @"<tr\b[^>]*>", NL, RegexOptions.IgnoreCase);
 

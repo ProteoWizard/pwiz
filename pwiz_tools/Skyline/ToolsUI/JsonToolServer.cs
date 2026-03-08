@@ -25,24 +25,20 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
@@ -287,7 +283,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 sb.Append(prop.Name).Append('\t').AppendLine(title);
             }
-            sb.Append(@"PersistedViews").Append('\t').AppendLine(@"Reports");
+            sb.Append(nameof(PersistedViews)).Append('\t').AppendLine(@"Reports");
             return sb.ToString();
         }
 
@@ -336,20 +332,15 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetReportDocTopics()
         {
-            string html = GenerateReportDocHtml();
+            var topics = GetTopicList();
             var sb = new StringBuilder();
-            // Match <div id="qualified.name"><span class="RowType">DisplayName</span>
-            var matches = Regex.Matches(html,
-                @"<div\s+id=""([^""]+)""><span\s+class=""RowType"">([^<]+)</span>");
-            foreach (Match match in matches)
+            foreach (var topic in topics)
             {
-                string qualifiedName = WebUtility.HtmlDecode(match.Groups[1].Value);
-                string displayName = WebUtility.HtmlDecode(match.Groups[2].Value);
                 if (sb.Length > 0)
                     sb.AppendLine();
-                sb.Append(displayName);
-                sb.Append('\t');
-                sb.Append(qualifiedName);
+                sb.Append(topic.DisplayName);
+                sb.Append(TextUtil.SEPARATOR_TSV);
+                sb.Append(topic.Columns.Count);
             }
             return sb.ToString();
         }
@@ -373,7 +364,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSettingsListNames(string listType)
         {
-            if (listType == @"PersistedViews")
+            if (listType == nameof(PersistedViews))
                 return GetPersistedViewNames();
 
             var prop = typeof(Settings).GetProperty(listType);
@@ -394,69 +385,50 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetReportDocTopic(string topicName)
         {
-            string html = GenerateReportDocHtml();
-            // Find all section boundaries
-            var divMatches = Regex.Matches(html,
-                @"<div\s+id=""([^""]+)""><span\s+class=""RowType"">([^<]+)</span>");
-            // Strip spaces from the search term for flexible matching (e.g., "Transition Result" -> "TransitionResult")
-            string normalizedTopic = topicName.Replace(@" ", string.Empty);
-            int matchIndex = -1;
-            // Pass 1: exact match on qualified type name or display name
-            for (int i = 0; i < divMatches.Count; i++)
-            {
-                string qualifiedName = WebUtility.HtmlDecode(divMatches[i].Groups[1].Value);
-                string displayName = WebUtility.HtmlDecode(divMatches[i].Groups[2].Value);
-                if (string.Equals(qualifiedName, topicName, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(displayName, normalizedTopic, StringComparison.OrdinalIgnoreCase))
-                {
-                    matchIndex = i;
-                    break;
-                }
-            }
-            // Pass 2: partial match on display name
-            if (matchIndex < 0)
-            {
-                for (int i = 0; i < divMatches.Count; i++)
-                {
-                    string displayName = WebUtility.HtmlDecode(divMatches[i].Groups[2].Value);
-                    if (displayName.IndexOf(normalizedTopic, StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        matchIndex = i;
-                        break;
-                    }
-                }
-            }
-            if (matchIndex < 0)
+            var topics = GetTopicList();
+            var matchedTopic = FindMatchingTopic(topicName, topics);
+            if (matchedTopic == null)
                 return null;
 
-            // Extract section HTML between this div and the next
-            int sectionStart = divMatches[matchIndex].Index;
-            int sectionEnd = matchIndex + 1 < divMatches.Count
-                ? divMatches[matchIndex + 1].Index
-                : html.Length;
-            string sectionHtml = html.Substring(sectionStart, sectionEnd - sectionStart);
-
-            string qualName = WebUtility.HtmlDecode(divMatches[matchIndex].Groups[1].Value);
-            string dispName = WebUtility.HtmlDecode(divMatches[matchIndex].Groups[2].Value);
-
-            // Convert HTML table to plain text
             var sb = new StringBuilder();
-            sb.AppendLine(dispName + @" (" + qualName + @")");
+            sb.AppendLine(matchedTopic.DisplayName);
             sb.AppendLine();
-            sb.AppendLine(@"Name" + '\t' + @"Description" + '\t' + @"Type");
-
-            // Extract table rows: <tr><td ...>Name</td><td ...>Description</td><td ...>Type</td></tr>
-            var rowMatches = Regex.Matches(sectionHtml,
-                @"<tr><td[^>]*>(.*?)</td><td[^>]*>(.*?)</td><td[^>]*>(.*?)</td>",
-                RegexOptions.Singleline);
-            foreach (Match row in rowMatches)
-            {
-                string name = StripHtmlTags(row.Groups[1].Value);
-                string description = StripHtmlTags(row.Groups[2].Value);
-                string type = StripHtmlTags(row.Groups[3].Value);
-                sb.AppendLine(name + '\t' + description + '\t' + type);
-            }
+            sb.AppendLine(@"Name" + TextUtil.SEPARATOR_TSV + @"Description" + TextUtil.SEPARATOR_TSV + @"Type");
+            foreach (var col in matchedTopic.Columns)
+                sb.AppendLine(col.InvariantName + TextUtil.SEPARATOR_TSV +
+                              col.Description.FlattenToSingleLine() + TextUtil.SEPARATOR_TSV +
+                              col.TypeName);
             return sb.ToString();
+        }
+
+        private IList<ColumnResolver.TopicInfo> GetTopicList()
+        {
+            var document = Program.MainWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+            var resolver = new ColumnResolver(dataSchema);
+            return resolver.GetTopics();
+        }
+
+        private static ColumnResolver.TopicInfo FindMatchingTopic(string topicName,
+            IList<ColumnResolver.TopicInfo> topics)
+        {
+            string normalized = topicName.Replace(@" ", string.Empty);
+            // Pass 1: exact match (ignoring spaces)
+            foreach (var topic in topics)
+            {
+                if (string.Equals(topic.DisplayName.Replace(@" ", string.Empty),
+                        normalized, StringComparison.OrdinalIgnoreCase))
+                    return topic;
+            }
+            // Pass 2: partial match (e.g., "Peptide" matches "PeptideResult")
+            foreach (var topic in topics)
+            {
+                string dn = topic.DisplayName.Replace(@" ", string.Empty);
+                if (dn.IndexOf(normalized, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    normalized.IndexOf(dn, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return topic;
+            }
+            return null;
         }
 
         public string GetLocations(string level, string rootLocator = null)
@@ -655,7 +627,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSettingsListItem(string listType, string itemName)
         {
-            if (listType == @"PersistedViews")
+            if (listType == nameof(PersistedViews))
                 return GetPersistedViewItem(itemName);
 
             var prop = typeof(Settings).GetProperty(listType);
@@ -734,6 +706,24 @@ namespace pwiz.Skyline.ToolsUI
 
             string ext = Path.GetExtension(filePath);
             var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
+
+            // When the viewSpec has pivot operations (PivotKey/PivotValue), the export
+            // must use BindingListSource instead of streaming to process cross-tab totals.
+            // RowFactories.ExportReport uses streaming when layout and sortSpecs are
+            // null/empty, bypassing pivot processing. Force BindingListSource by adding
+            // a no-op sort on the first GroupBy column.
+            if (viewSpec.HasTotals && (sortSpecs == null || sortSpecs.Count == 0))
+            {
+                var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
+                if (groupByCol != null)
+                {
+                    sortSpecs = new List<RowFilter.ColumnSort>
+                    {
+                        new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
+                            ListSortDirection.Ascending)
+                    };
+                }
+            }
 
             DirectoryEx.CreateForFilePath(filePath);
 
@@ -868,9 +858,9 @@ namespace pwiz.Skyline.ToolsUI
 
                 // Resolve column against the row source's full column index
                 // ReSharper disable once AssignNullToNotNullAttribute
-                if (!result.ColumnIndex.TryGetValue(columnName, out var propertyPath))
+                if (!result.ColumnIndex.TryGetValue(columnName, out var columnInfo))
                 {
-                    var suggestions = ColumnResolver.FindSuggestions(columnName, result.ColumnIndex);
+                    var suggestions = ColumnResolver.FindSuggestions(columnName, result.ColumnIndex.Keys);
                     if (suggestions.Count > 0)
                     {
                         throw new ArgumentException(new LlmInstruction(
@@ -906,7 +896,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
 
                 var predicate = FilterPredicate.FromInvariantOperandText(operation, operand ?? string.Empty);
-                filters.Add(new FilterSpec(propertyPath, predicate));
+                filters.Add(new FilterSpec(columnInfo.PropertyPath, predicate));
             }
             return filters;
         }
@@ -1044,18 +1034,6 @@ namespace pwiz.Skyline.ToolsUI
             return memoryStream.ToArray();
         }
 
-        private string GenerateReportDocHtml()
-        {
-            var document = Program.MainWindow.Document;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
-            var rootColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument));
-            var generator = new DocumentationGenerator(rootColumn)
-            {
-                IncludeHidden = false
-            };
-            return generator.GenerateDocumentation(rootColumn);
-        }
-
         private static string SerializeSettingsToFile(SrmSettings settings, string filePath)
         {
             DirectoryEx.CreateForFilePath(filePath);
@@ -1071,14 +1049,6 @@ namespace pwiz.Skyline.ToolsUI
                 saver.Commit();
             }
             return filePath.ToForwardSlashPath();
-        }
-
-        private static string StripHtmlTags(string html)
-        {
-            if (string.IsNullOrEmpty(html))
-                return string.Empty;
-            string text = Regex.Replace(html, @"<[^>]+>", string.Empty);
-            return WebUtility.HtmlDecode(text);
         }
 
         private string RunCommandImpl(string args, bool silent)

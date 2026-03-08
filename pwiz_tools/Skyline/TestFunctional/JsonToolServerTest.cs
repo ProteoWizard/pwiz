@@ -29,12 +29,14 @@ using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -322,12 +324,12 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Contains(enzymeXml, string.Format(@"name={0}", defaultEnzyme.Name.Quote()));
 
             // GetSettingsListNames for PersistedViews (reports) - exercises GetPersistedViewNames
-            string viewNames = server.GetSettingsListNames(@"PersistedViews");
+            string viewNames = server.GetSettingsListNames(nameof(PersistedViews));
             AssertEx.Contains(viewNames, @"# Main");
             AssertEx.Contains(viewNames, REPORT_AREAS);
 
             // GetSettingsListItem for PersistedViews - exercises GetPersistedViewItem + SerializeViewSpec
-            string viewXml = server.GetSettingsListItem(@"PersistedViews", REPORT_AREAS);
+            string viewXml = server.GetSettingsListItem(nameof(PersistedViews), REPORT_AREAS);
             AssertEx.Contains(viewXml, @"<view");
             AssertEx.Contains(viewXml, REPORT_AREAS);
 
@@ -341,31 +343,137 @@ namespace pwiz.SkylineTestFunctional
 
             // Error: nonexistent persisted view
             AssertEx.ThrowsException<ArgumentException>(() =>
-                server.GetSettingsListItem(@"PersistedViews", @"NotAView_12345"));
+                server.GetSettingsListItem(nameof(PersistedViews), @"NotAView_12345"));
         }
 
         private void TestReportDocumentation(JsonToolServer server)
         {
-            // GetReportDocTopics - should list available entity types
             string topics = server.GetReportDocTopics();
-            Assert.IsFalse(string.IsNullOrEmpty(topics));
-            // Should contain common entity types
-            Assert.IsTrue(Helpers.CountLinesInString(topics) > 5);
-            // Each line should have tab-separated DisplayName and QualifiedTypeName
-            foreach (var line in topics.ReadLines())
-                AssertEx.Contains(line, @"	");
+            AssertEx.IsFalse(string.IsNullOrEmpty(topics));
+            var topicLines = topics.ReadLines().ToList();
 
-            // GetReportDocTopic - should return column documentation
-            string moleculeTopic = server.GetReportDocTopic(@"Peptide");
-            Assert.IsNotNull(moleculeTopic);
-            AssertEx.Contains(moleculeTopic, @"Name");
+            // Expect ~12 higher-level entity topics (10 target + 2 summary + replicate + audit log)
+            AssertEx.IsTrue(topicLines.Count >= 10 && topicLines.Count <= 16,
+                @"Expected 10-16 topics, got " + topicLines.Count);
+
+            // No IList`1 or raw generic type names
+            AssertEx.IsFalse(topicLines.Any(t => t.Contains(@"IList") || t.Contains(@"`")),
+                @"Raw type names should not appear: " + string.Join(@", ", topicLines));
+
+            // Each line is Name\tCount format
+            foreach (var line in topicLines)
+            {
+                var parts = line.Split(TextUtil.SEPARATOR_TSV);
+                AssertEx.AreEqual(2, parts.Length, @"Expected Name\tCount format: " + line);
+                AssertEx.IsTrue(int.TryParse(parts[1], out int count) && count > 0,
+                    @"Expected positive column count: " + line);
+            }
+
+            // Extract just names for ordering checks
+            var topicNames = topicLines.Select(l => l.Split(TextUtil.SEPARATOR_TSV)[0]).ToList();
+
+            // Check hierarchy ordering (using Contains for UI-mode flexibility)
+            int proteinsIdx = topicNames.FindIndex(t => t.Contains(@"Protein") || t.Contains(@"MoleculeList"));
+            int peptidesIdx = topicNames.FindIndex(t =>
+                (t.Contains(@"Peptide") || t.Contains(@"Molecule")) &&
+                !t.Contains(@"Result") && !t.Contains(@"List"));
+            int precursorsIdx = topicNames.FindIndex(t =>
+                t.Contains(@"Precursor") && !t.Contains(@"Result") && !t.Contains(@"Summary"));
+            int transitionsIdx = topicNames.FindIndex(t =>
+                t.Contains(@"Transition") && !t.Contains(@"Result") && !t.Contains(@"Summary"));
+            int replicateIdx = topicNames.FindIndex(t => t.Contains(@"Replicate"));
+
+            AssertEx.IsTrue(proteinsIdx >= 0, @"Expected Protein/MoleculeList topic");
+            AssertEx.IsTrue(peptidesIdx >= 0, @"Expected Peptides/Molecules topic");
+            AssertEx.IsTrue(precursorsIdx >= 0, @"Expected Precursors topic");
+            AssertEx.IsTrue(transitionsIdx >= 0, @"Expected Transitions topic");
+            AssertEx.IsTrue(replicateIdx >= 0, @"Expected Replicate topic");
+            AssertEx.IsTrue(proteinsIdx < peptidesIdx, @"Protein should come before Peptides");
+            AssertEx.IsTrue(peptidesIdx < precursorsIdx, @"Peptides before Precursors");
+            AssertEx.IsTrue(precursorsIdx < transitionsIdx, @"Precursors before Transitions");
+
+            // Topic detail retrieval
+            string firstTopic = server.GetReportDocTopic(topicNames[0]);
+            AssertEx.IsNotNull(firstTopic);
+            AssertEx.Contains(firstTopic, @"Name" + TextUtil.SEPARATOR_TSV + @"Description");
 
             // Case-insensitive matching
-            string precursorTopic = server.GetReportDocTopic(@"precursor");
-            Assert.IsNotNull(precursorTopic);
+            AssertEx.IsNotNull(server.GetReportDocTopic(topicNames[0].ToLowerInvariant()));
 
-            // Nonexistent topic - returns null
-            Assert.IsNull(server.GetReportDocTopic(@"CompletelyBogusTopicName"));
+            // Nonexistent topic
+            AssertEx.IsNull(server.GetReportDocTopic(@"CompletelyBogusTopicName"));
+
+            // NormalizedArea discoverable (folded into a topic)
+            bool foundNormalizedArea = false;
+            foreach (var name in topicNames)
+            {
+                string detail = server.GetReportDocTopic(name);
+                if (detail != null && detail.Contains(@"NormalizedArea"))
+                {
+                    foundNormalizedArea = true;
+                    break;
+                }
+            }
+            AssertEx.IsTrue(foundNormalizedArea, @"NormalizedArea should appear in some topic");
+
+            // Audit log topics present
+            AssertEx.IsTrue(topicNames.Any(t => t.Contains(@"Audit")),
+                @"Expected audit log topic");
+
+            // Spot-check: resolve a few columns from first topic
+            var document = SkylineWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, DataSchemaLocalizer.INVARIANT);
+            var resolver = new ColumnResolver(dataSchema);
+            var sampleColumns = firstTopic.ReadLines().Skip(3).Take(3)
+                .Select(line => line.Split(TextUtil.SEPARATOR_TSV)[0]).ToList();
+            if (sampleColumns.Count > 0)
+                AssertEx.IsNotNull(resolver.Resolve(sampleColumns));
+
+            // Entity references and nested parents must be resolvable (bug fix:
+            // ViewEditor lets users check these nodes, so they appear in reports)
+            AssertEx.IsNotNull(resolver.Resolve(new[] { @"Precursor" }),
+                @"Root entity 'Precursor' should be resolvable");
+            AssertEx.IsNotNull(resolver.Resolve(new[] { @"Peptide" }),
+                @"Parent entity 'Peptide' should be resolvable from Precursor");
+            AssertEx.IsNotNull(resolver.Resolve(new[] { @"ModifiedSequence" }),
+                @"Nested parent 'ModifiedSequence' should be resolvable");
+
+            var aquaMods = new[]
+            {
+                UniMod.GetModification("Label:13C(6)15N(4) (C-term R)", out _),
+                UniMod.GetModification("Label:13C(6)15N(2) (C-term K)", out _),
+            };
+            RunUI(() => SkylineWindow.ModifyDocument("Add K and R labeling", doc =>
+                doc.ChangeSettings(doc.Settings.ChangePeptideModifications(pm =>
+                        pm.AddHeavyModifications(aquaMods))
+                    .ChangeTransitionFilter(tf => tf.ChangeAutoSelect(true)))));
+
+            // Isotope label type pivoting: Precursor and ModifiedSequence should pivot
+            // into label-prefixed columns (e.g., "light Precursor", "heavy Precursor")
+            string isotopePivotPath = TestFilesDir.GetTestPath(@"report_isotope_pivot.csv");
+            string isotopePivotJson = new JObject
+            {
+                [nameof(REPORT.select)] = new JArray(@"Peptide", @"Precursor", @"ModifiedSequence"),
+                [nameof(REPORT.pivot_isotope_label)] = true
+            }.ToString();
+            string isotopePivotResult = server.ExportReportFromDefinition(
+                isotopePivotJson, isotopePivotPath, JsonToolConstants.CULTURE_INVARIANT);
+            var isotopePivotMetadata = JObject.Parse(isotopePivotResult);
+            // With light + heavy labels, pivoting produces one row per peptide
+            // with fewer rows than the unpivoted 2-per-peptide result
+            int isotopePivotRows = GetRowCount(isotopePivotMetadata);
+            AssertEx.IsTrue(isotopePivotRows == 13,
+                string.Format(@"Expected 13 pivoted rows (one per peptide), got {0}", isotopePivotRows));
+            // Header should contain label-prefixed columns
+            var isotopePivotHeader = File.ReadLines(isotopePivotPath).First();
+            AssertEx.Contains(isotopePivotHeader, @"light");
+            AssertEx.Contains(isotopePivotHeader, @"heavy");
+            // Should have more columns than the 3 selected (pivoted into label x value columns)
+            int isotopePivotColCount = isotopePivotHeader.ParseDsvFields(TextUtil.SEPARATOR_CSV).Length;
+            AssertEx.IsTrue(isotopePivotColCount > 3,
+                string.Format(@"Expected pivoted columns > 3, got {0}", isotopePivotColCount));
+
+            RunUI(SkylineWindow.Undo);
         }
 
         private void TestNamedReports(JsonToolServer server)

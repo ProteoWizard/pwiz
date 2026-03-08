@@ -603,8 +603,46 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Replaces tabs, carriage returns, and newlines with spaces, collapsing
+        /// consecutive whitespace into a single space. Useful for embedding
+        /// multi-line descriptions into TSV fields without escaping.
+        /// </summary>
+        public static string FlattenToSingleLine(this string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return string.Empty;
+            var sb = new StringBuilder(str.Length);
+            bool lastWasSpace = false;
+            foreach (char c in str)
+            {
+                if (c == '\r' || c == '\n' || c == '\t')
+                {
+                    if (!lastWasSpace)
+                    {
+                        sb.Append(' ');
+                        lastWasSpace = true;
+                    }
+                }
+                else if (c == ' ')
+                {
+                    if (!lastWasSpace)
+                    {
+                        sb.Append(' ');
+                        lastWasSpace = true;
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                    lastWasSpace = false;
+                }
+            }
+            return sb.ToString().TrimEnd();
+        }
+
         private const int TAB_SIZE = 4;
-        
+
         public static string GetIndentation(int indentLevel, int tabSize = TAB_SIZE)
         {
             if (indentLevel <= 0)
