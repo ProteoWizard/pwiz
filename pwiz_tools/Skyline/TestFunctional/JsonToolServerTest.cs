@@ -37,6 +37,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -46,7 +47,9 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using SkylineTool;
 using JSON = SkylineTool.JsonToolConstants.JSON;
+using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using REPORT = SkylineTool.JsonToolConstants.REPORT;
+using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 using TUTORIAL = SkylineTool.JsonToolConstants.TUTORIAL;
 
 namespace pwiz.SkylineTestFunctional
@@ -103,6 +106,14 @@ namespace pwiz.SkylineTestFunctional
             TestImportProperties(server);
             var doc = TestImportFasta(server);
             TestRunCommand(server, doc);
+
+            // Molecule mode: File > New, switch to small molecules, verify uimode
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
+            });
+            TestAddReportMoleculeMode(server);
         }
 
         /// <summary>
@@ -439,6 +450,17 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsNotNull(resolver.Resolve(new[] { @"ModifiedSequence" }),
                 @"Nested parent 'ModifiedSequence' should be resolvable");
 
+            // Row source selection: deepest entity level touched by any column wins
+            // (matching DocumentViewTransformer.ConvertFromDocumentView behavior)
+            VerifyRowSource(resolver, new[] { @"PeptideModifiedSequence", @"PrecursorMz", @"Area" },
+                typeof(Transition), @"Area is TransitionResult -> Transition row source");
+            VerifyRowSource(resolver, new[] { @"PeptideModifiedSequence", @"TotalArea" },
+                typeof(Precursor), @"TotalArea is PrecursorResult -> Precursor row source");
+            VerifyRowSource(resolver, new[] { @"ProteinName", @"PeptideModifiedSequence" },
+                typeof(Peptide), @"PeptideModifiedSequence is Peptide -> Peptide row source");
+            VerifyRowSource(resolver, new[] { @"ProteinName", @"ProteinDescription" },
+                typeof(Protein), @"Only Protein columns -> Protein row source");
+
             var aquaMods = new[]
             {
                 UniMod.GetModification("Label:13C(6)15N(4) (C-term R)", out _),
@@ -718,6 +740,14 @@ namespace pwiz.SkylineTestFunctional
         private static int GetRowCount(JObject jObject)
         {
             return (int)jObject[nameof(REPORT.row_count)];
+        }
+
+        private static void VerifyRowSource(ColumnResolver resolver, string[] columns,
+            Type expectedRowSource, string message)
+        {
+            var result = resolver.Resolve(columns);
+            AssertEx.AreEqual(expectedRowSource, result.RowSourceType,
+                string.Format(@"Row source mismatch: {0}", message));
         }
 
         private static string BuildSelectJson(params string[] columns)
@@ -1132,10 +1162,33 @@ namespace pwiz.SkylineTestFunctional
             string result = server.AddReportFromDefinition(json);
             Assert.IsFalse(string.IsNullOrEmpty(result));
 
-            // Verify the report was persisted
+            // Verify the report was persisted with correct uimode
             var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(
                 PersistedViews.MainGroup.Id);
-            Assert.IsTrue(viewSpecList.ViewSpecs.Any(v => v.Name == reportName));
+            var viewSpec = viewSpecList.ViewSpecs.FirstOrDefault(v => v.Name == reportName);
+            AssertEx.IsNotNull(viewSpec, @"Report should be persisted");
+            AssertEx.AreEqual(UiModes.PROTEOMIC, viewSpec.UiMode,
+                @"Report should have proteomic uimode matching current SkylineWindow mode");
+        }
+
+        private void TestAddReportMoleculeMode(JsonToolServer server)
+        {
+            const string reportName = @"TestMcpMoleculeReport";
+            string json = new JObject
+            {
+                [nameof(REPORT.name)] = reportName,
+                [nameof(REPORT.select)] = new JArray(@"MoleculeListName", @"MoleculeFormula")
+            }.ToString();
+            string result = server.AddReportFromDefinition(json);
+            Assert.IsFalse(string.IsNullOrEmpty(result));
+
+            // Verify molecule mode report gets small_molecules uimode
+            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(
+                PersistedViews.MainGroup.Id);
+            var viewSpec = viewSpecList.ViewSpecs.FirstOrDefault(v => v.Name == reportName);
+            AssertEx.IsNotNull(viewSpec, @"Molecule report should be persisted");
+            AssertEx.AreEqual(UiModes.SMALL_MOLECULES, viewSpec.UiMode,
+                @"Report should have small_molecules uimode matching current SkylineWindow mode");
         }
 
         private void TestInsertSmallMoleculeTransitionList(JsonToolServer server)

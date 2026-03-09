@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.Databinding
     /// <summary>
     /// Maps invariant column display names to PropertyPaths by traversing
     /// the ColumnDescriptor tree for each candidate row source type.
-    /// Selects the shallowest row source that resolves all requested columns.
+    /// Selects the deepest row source that resolves all requested columns.
     /// </summary>
     public class ColumnResolver
     {
@@ -89,43 +89,47 @@ namespace pwiz.Skyline.Model.Databinding
 
         public ResolveResult Resolve(IList<string> columnNames)
         {
-            // Try each target row source, shallowest first.
-            // When all resolved paths go through collections (replicate-centric query),
-            // continue trying deeper row sources and prefer the one with the shallowest
-            // SublistId. E.g., Peptide with Results!* is preferred over Protein with
-            // Peptides!*.Precursors!*.Transitions!*.Results!*, because the deeper sublist
-            // from Protein produces a pivoted cross-join instead of one row per replicate.
-            ResolveResult bestAllCollectionMatch = null;
+            // Try each target row source and pick the one that minimizes the total
+            // number of collection steps across all resolved paths. This matches
+            // DocumentViewTransformer.ConvertFromDocumentView, which determines
+            // row source by the deepest entity level any column touches.
+            // From the correct row source, entity columns resolve via navigation
+            // up (no collections) and only result columns traverse the Results
+            // collection. From a too-shallow row source, columns traverse entity
+            // hierarchy collections (Precursors!*, Transitions!*), inflating the
+            // total collection step count.
+            ResolveResult bestMatch = null;
+            int bestCollectionSteps = int.MaxValue;
             foreach (var rowSourceType in TARGET_ROW_SOURCES)
             {
                 var index = BuildColumnIndex(rowSourceType);
                 var paths = TryResolveAll(columnNames, index);
                 if (paths != null)
                 {
-                    if (!AllPathsThroughCollection(paths))
-                        return BuildResult(rowSourceType, paths, index);
-
                     var result = BuildResult(rowSourceType, paths, index);
-                    if (bestAllCollectionMatch == null ||
-                        CountCollectionSteps(result.SublistId) < CountCollectionSteps(bestAllCollectionMatch.SublistId))
+                    int totalSteps = TotalCollectionSteps(paths);
+                    if (totalSteps < bestCollectionSteps)
                     {
-                        bestAllCollectionMatch = result;
+                        bestMatch = result;
+                        bestCollectionSteps = totalSteps;
                     }
                 }
             }
 
-            // Try Replicate row source
+            // Try Replicate row source - preferred when all paths from the best
+            // target row source go through collections (replicate-centric query)
             {
                 var index = BuildColumnIndex(typeof(Replicate));
                 var paths = TryResolveAll(columnNames, index);
                 if (paths != null)
-                    return BuildResult(typeof(Replicate), paths, index);
+                {
+                    if (bestMatch == null || AllPathsThroughCollection(bestMatch.PropertyPaths))
+                        return BuildResult(typeof(Replicate), paths, index);
+                }
             }
 
-            // If a target row source matched (all-collection paths) but Replicate
-            // didn't work, use the best match we found (shallowest SublistId)
-            if (bestAllCollectionMatch != null)
-                return bestAllCollectionMatch;
+            if (bestMatch != null)
+                return bestMatch;
 
             // None worked -- collect structured error info
             var broadIndex = BuildColumnIndex(typeof(Entities.Transition));
@@ -179,9 +183,17 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         /// <summary>
+        /// Sum collection lookup steps across all paths. Used by Resolve to
+        /// pick the row source that minimizes total collection traversal.
+        /// </summary>
+        private static int TotalCollectionSteps(List<PropertyPath> paths)
+        {
+            return paths.Sum(CountCollectionSteps);
+        }
+
+        /// <summary>
         /// Count collection lookup steps (!*) in a PropertyPath.
-        /// Used to prefer shallower sublists (e.g., Results!* over
-        /// Peptides!*.Precursors!*.Transitions!*.Results!*).
+        /// Used by IndexColumn to prefer paths with fewer collection steps.
         /// </summary>
         private static int CountCollectionSteps(PropertyPath path)
         {

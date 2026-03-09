@@ -97,6 +97,7 @@ namespace SkylineTool
             file_path, report_name, format, row_count, columns, preview,  // metadata
             select, name, filter, sort, column, op, value, direction,     // definition
             pivot_replicate, pivot_isotope_label,                         // pivot
+            uimode,                                                       // UI mode
         }
 
         /// <summary>Tutorial metadata property names.</summary>

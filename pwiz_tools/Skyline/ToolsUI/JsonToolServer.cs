@@ -821,6 +821,12 @@ namespace pwiz.Skyline.ToolsUI
                 if (!result.SublistId.IsRoot)
                     viewSpec = viewSpec.SetSublistId(result.SublistId);
 
+                // Apply UI mode: use explicit value or default to current SkylineWindow mode
+                var uiMode = (string)root[nameof(REPORT.uimode)];
+                if (string.IsNullOrEmpty(uiMode))
+                    uiMode = UiModes.FromDocumentType(Program.MainWindow.ModeUI);
+                viewSpec = viewSpec.SetUiMode(uiMode);
+
                 // Apply filter specs
                 var filterToken = root[nameof(REPORT.filter)];
                 if (filterToken is JArray filterArray && filterArray.Count > 0)
