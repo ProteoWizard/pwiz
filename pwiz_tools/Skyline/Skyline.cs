@@ -4987,6 +4987,21 @@ namespace pwiz.Skyline
                 Cast<ArdiaAccount>().
                 ForEach(ArdiaCredentialHelper.ClearToken);
         }
+
+        private void diagnosticsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var diagnosticsForm = FormUtil.OpenForms.OfType<DiagnosticsWindow>().FirstOrDefault();
+            if (diagnosticsForm != null)
+            {
+                diagnosticsForm.Activate();
+            }
+            else
+            {
+                diagnosticsForm = new DiagnosticsWindow();
+                diagnosticsForm.Show(this);
+            }
+        }
+
     }
 }
 

@@ -205,6 +205,12 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Alerts\DiagnosticsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\DiagnosticsWindow.Designer.cs">
+      <DependentUpon>DiagnosticsWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
     <Compile Include="Controls\FilesTree\FileSystemUtil.cs" />
     <Compile Include="Controls\FilesTree\ManagedFileSystemWatcher.cs" />
@@ -2574,6 +2580,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.zh-CHS.resx">
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\DiagnosticsWindow.resx">
+      <DependentUpon>DiagnosticsWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\EmptyProteinsDlg.ja.resx">
       <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>

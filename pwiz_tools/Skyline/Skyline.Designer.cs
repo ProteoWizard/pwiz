@@ -297,6 +297,7 @@ namespace pwiz.Skyline
             this.updatesToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStoreMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.searchToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator46 = new System.Windows.Forms.ToolStripSeparator();
             this.immediateWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator47 = new System.Windows.Forms.ToolStripSeparator();
@@ -366,7 +367,7 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.searchToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuRetentionTimes.SuspendLayout();
@@ -1870,7 +1871,6 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.ardiaPublishMenuItem, "ardiaPublishMenuItem");
             this.ardiaPublishMenuItem.Name = "ardiaPublishMenuItem";
             this.ardiaPublishMenuItem.Click += new System.EventHandler(this.ardiaPublishMenuItem_Click);
-
             // 
             // toolStripSeparator2
             // 
@@ -2221,6 +2221,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.configureToolsMenuItem, "configureToolsMenuItem");
             this.configureToolsMenuItem.Click += new System.EventHandler(this.configureToolsMenuItem_Click);
             // 
+            // searchToolsMenuItem
+            // 
+            this.searchToolsMenuItem.Name = "searchToolsMenuItem";
+            resources.ApplyResources(this.searchToolsMenuItem, "searchToolsMenuItem");
+            this.searchToolsMenuItem.Click += new System.EventHandler(this.searchToolsMenuItem_Click);
+            // 
             // toolStripSeparator46
             // 
             this.toolStripSeparator46.Name = "toolStripSeparator46";
@@ -2258,7 +2264,8 @@ namespace pwiz.Skyline
             this.checkForUpdatesSeparator,
             this.checkForUpdatesMenuItem,
             this.toolStripSeparator29,
-            this.aboutMenuItem});
+            this.aboutMenuItem,
+            this.toolStripMenuItem2});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             resources.ApplyResources(this.helpToolStripMenuItem, "helpToolStripMenuItem");
             this.helpToolStripMenuItem.DropDownOpening += new System.EventHandler(this.helpToolStripMenuItem_DropDownOpening);
@@ -2699,11 +2706,11 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
             // 
-            // searchToolsMenuItem
+            // toolStripMenuItem2
             // 
-            this.searchToolsMenuItem.Name = "searchToolsMenuItem";
-            resources.ApplyResources(this.searchToolsMenuItem, "searchToolsMenuItem");
-            this.searchToolsMenuItem.Click += new System.EventHandler(this.searchToolsMenuItem_Click);
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            resources.ApplyResources(this.toolStripMenuItem2, "toolStripMenuItem2");
+            this.toolStripMenuItem2.Click += new System.EventHandler(this.diagnosticsToolStripMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -3070,6 +3077,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem importFeatureDetectionMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ardiaPublishMenuItem;
         private System.Windows.Forms.ToolStripMenuItem searchToolsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem diagnosticsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
     }
 }
 
