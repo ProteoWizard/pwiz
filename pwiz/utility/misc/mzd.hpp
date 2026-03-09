@@ -165,8 +165,29 @@ namespace mzd
         template <typename T>
         void transpose(const std::vector<T> &data, buffer_t &buffer)
         {
-            const tcb::span<const T> view = tcb::span<const T>(data.data(), data.size());
-            return transpose<T>(view, buffer);
+            auto nData = data.size();
+            auto nBytes = nData * sizeof(T);
+
+            buffer.clear();
+            buffer.reserve(nBytes);
+            for (size_t i = 0; i < sizeof(T); i++)
+            {
+                for (size_t j = 0; j < data.size(); j++)
+                {
+                    auto value = data[j];
+                    byte_view<T> view = byte_view(value);
+                    auto buf = view.buffer();
+                    if (is_big_endian())
+                    {
+                        buffer.push_back(buf[(sizeof(T) - 1) - i]);
+                    }
+                    else
+                    {
+                        buffer.push_back(buf[i]);
+                    }
+                }
+            }
+            return;
         }
 
         /// @brief Shuffle the bytes of `data` into `buffer`. Also enforces little-endian ordering
