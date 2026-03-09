@@ -53,7 +53,7 @@ rule init ( version ? : location : options * )
                 <include>$(location)/lib/common
                 <location-prefix>zstd
                 <link>static
-                <define>ZSTD_NO_ASM=1
+                <define>ZSTD_DISABLE_ASM=1
                 # Suppress deprecation warnings from zstd internals on MSVC
                 <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
             :   # default-build
