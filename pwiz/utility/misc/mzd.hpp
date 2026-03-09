@@ -163,7 +163,7 @@ namespace mzd
         /// @param data The data to transpose
         /// @param buffer Where to transpose the data into
         template <typename T>
-        void transpose(const std::vector<T> &data, buffer_t &buffer)
+        void transpose(const std::vector<const T> &data, buffer_t &buffer)
         {
             const tcb::span<const T> view = tcb::span<const T>(data.data(), data.size());
             return transpose<T>(view, buffer);
@@ -244,7 +244,7 @@ namespace mzd
             std::unordered_map<I, size_t> value_to_indices;
             value_to_indices.reserve(sorted_values.size());
 
-            for (auto i = 0; i < sorted_values.size(); i++)
+            for (size_t i = 0; i < sorted_values.size(); i++)
             {
                 value_to_indices[sorted_values[i]] = i;
 
@@ -311,7 +311,7 @@ namespace mzd
             }
             else
             {
-                throw new std::exception("Cannot encode a dictionary with more than 2 ** 64 distinct values");
+                throw runtime_error("Cannot encode a dictionary with more than 2 ** 64 distinct values");
             }
             return 0;
         }
@@ -337,7 +337,7 @@ namespace mzd
             }
             else
             {
-                throw new std::exception("Cannot encode a dictionary with more values longer than 8 bytes");
+                throw runtime_error("Cannot encode a dictionary with more values longer than 8 bytes");
             }
             return 0;
         }
@@ -399,7 +399,7 @@ namespace mzd
                     outBuffer.clear();
                     return 0;
                 }
-                throw new std::exception("Buffer less than 16 bytes long, invalid dictionary buffer");
+                throw runtime_error("Buffer less than 16 bytes long, invalid dictionary buffer");
             }
 
             byte_view<uint64_t> view;
@@ -419,7 +419,7 @@ namespace mzd
 
             if (data.size() < offset)
             {
-                throw new std::exception("Buffer less than value offsets, invalid dictionary buffer");
+                throw runtime_error("Buffer less than value offsets, invalid dictionary buffer");
             }
 
             if (n_values == 0)
@@ -452,7 +452,7 @@ namespace mzd
                 }
                 else
                 {
-                    throw new std::exception("Too many value indices!");
+                    throw runtime_error("Too many value indices!");
                 }
             }
             else if (value_size == 2)
@@ -476,7 +476,7 @@ namespace mzd
                 }
                 else
                 {
-                    throw new std::exception("Too many value indices!");
+                    throw runtime_error("Too many value indices!");
                 }
             }
             else if (value_size == 4)
@@ -500,7 +500,7 @@ namespace mzd
                 }
                 else
                 {
-                    throw new std::exception("Too many value indices!");
+                    throw runtime_error("Too many value indices!");
                 }
             }
             else if (value_size == 8)
@@ -524,12 +524,12 @@ namespace mzd
                 }
                 else
                 {
-                    throw new std::exception("Too many value indices!");
+                    throw runtime_error("Too many value indices!");
                 }
             }
             else
             {
-                throw new std::exception("Value size too large, value cannot be longer than 8 bytes");
+                throw runtime_error("Value size too large, value cannot be longer than 8 bytes");
             }
 
             return 0;
