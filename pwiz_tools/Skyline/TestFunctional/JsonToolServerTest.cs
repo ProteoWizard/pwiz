@@ -89,6 +89,7 @@ namespace pwiz.SkylineTestFunctional
             TestDocumentSettings(server);
             TestAvailableTutorials(server);
             TestCliHelp(server);
+            TestDiagnosticLogging(server);
             TestOpenForms(server);
             TestScreenCapturePermissionDlg(server);
             TestFormImage(server);
@@ -120,25 +121,25 @@ namespace pwiz.SkylineTestFunctional
 
             // Successful call: GetVersion (0-arg method)
             string versionResponse = server.HandleRequest(
-                Encoding.UTF8.GetBytes(buildRequest(@"GetVersion")));
+                Encoding.UTF8.GetBytes(buildRequest(nameof(IJsonToolService.GetVersion))));
             var versionResult = JObject.Parse(versionResponse);
             Assert.IsNotNull(versionResult[nameof(JSON.result)]);
             AssertEx.Contains((string)versionResult[nameof(JSON.result)], Install.Version);
 
             // Successful call: GetSelectedElementLocator (1-arg method with default)
             string locatorResponse = server.HandleRequest(
-                Encoding.UTF8.GetBytes(buildRequest(@"GetSelectedElementLocator", @"Molecule")));
+                Encoding.UTF8.GetBytes(buildRequest(nameof(IJsonToolService.GetSelectedElementLocator), @"Molecule")));
             var locatorResult = JObject.Parse(locatorResponse);
             Assert.IsNotNull(locatorResult[nameof(JSON.result)]);
 
-            // QueryAvailableMethods - special dispatch path
+            // QueryAvailableMethods - special dispatch path (not on the interface)
             string methodsResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(buildRequest(@"QueryAvailableMethods")));
             var methodsResult = JObject.Parse(methodsResponse);
             string methods = (string)methodsResult[nameof(JSON.result)];
-            AssertEx.Contains(methods, @"GetVersion");
-            AssertEx.Contains(methods, @"GetSelection");
-            AssertEx.Contains(methods, @"ExportReport");
+            AssertEx.Contains(methods, nameof(IJsonToolService.GetVersion));
+            AssertEx.Contains(methods, nameof(IJsonToolService.GetSelection));
+            AssertEx.Contains(methods, nameof(IJsonToolService.ExportReport));
 
             // Error: unknown method (caught by Dispatch, returned as error JSON)
             string unknownResponse = server.HandleRequest(
@@ -148,7 +149,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Error: too few arguments for a method that requires them
             string tooFewResponse = server.HandleRequest(
-                Encoding.UTF8.GetBytes(buildRequest(@"ExportReport")));
+                Encoding.UTF8.GetBytes(buildRequest(nameof(IJsonToolService.ExportReport))));
             var tooFewResult = JObject.Parse(tooFewResponse);
             Assert.IsNotNull(tooFewResult[nameof(JSON.error)]);
 
@@ -159,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(badJsonResult[nameof(JSON.error)]);
 
             // Null args array (exercises ParseArgs null path)
-            var noArgsRequest = new JObject { [nameof(JSON.method)] = @"GetVersion" };
+            var noArgsRequest = new JObject { [nameof(JSON.method)] = nameof(IJsonToolService.GetVersion) };
             string noArgsResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(noArgsRequest.ToString()));
             var noArgsResult = JObject.Parse(noArgsResponse);
@@ -783,6 +784,74 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(string.IsNullOrEmpty(sections));
             // Silent mode should not write to Immediate Window
             Assert.AreEqual(iwBefore, GetImmediateWindowText());
+        }
+
+        private void TestDiagnosticLogging(JsonToolServer server)
+        {
+            // Helper to build a JSON request with optional logging
+            byte[] buildRequest(string method, bool log, params string[] args)
+            {
+                var obj = new JObject { [nameof(JSON.method)] = method };
+                if (args.Length > 0)
+                    obj[nameof(JSON.args)] = new JArray(args);
+                if (log)
+                    obj[nameof(JSON.log)] = true;
+                return Encoding.UTF8.GetBytes(obj.ToString());
+            }
+
+            // Logging disabled by default - no log field in response
+            string normalResult = server.HandleRequest(
+                buildRequest(nameof(IJsonToolService.GetVersion), false));
+            var normalJson = JObject.Parse(normalResult);
+            Assert.IsNotNull(normalJson[nameof(JSON.result)]);
+            Assert.IsNull(normalJson[nameof(JSON.log)]);
+
+            // Logging enabled but GetVersion has no Log() calls - no log field
+            string loggedResult = server.HandleRequest(
+                buildRequest(nameof(IJsonToolService.GetVersion), true));
+            var loggedJson = JObject.Parse(loggedResult);
+            Assert.IsNotNull(loggedJson[nameof(JSON.result)]);
+            Assert.IsNull(loggedJson[nameof(JSON.log)]);
+
+            // Error response without logging - no log field
+            string errorResult = server.HandleRequest(
+                buildRequest(@"NotARealMethod", false));
+            var errorJson = JObject.Parse(errorResult);
+            Assert.IsNotNull(errorJson[nameof(JSON.error)]);
+            Assert.IsNull(errorJson[nameof(JSON.log)]);
+
+            // ExportReportFromDefinition with logging - log field should appear
+            string reportPath = TestFilesDir.GetTestPath(@"report_log_test.csv");
+            string reportJson = BuildSelectJson(COL_PROTEIN_NAME, COL_PRECURSOR_MZ);
+            var reportRequest = new JObject
+            {
+                [nameof(JSON.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
+                [nameof(JSON.args)] = new JArray(reportJson, reportPath,
+                    JsonToolConstants.CULTURE_INVARIANT),
+                [nameof(JSON.log)] = true
+            };
+            string reportResult = server.HandleRequest(
+                Encoding.UTF8.GetBytes(reportRequest.ToString()));
+            var reportResultJson = JObject.Parse(reportResult);
+            Assert.IsNotNull(reportResultJson[nameof(JSON.result)]);
+            string logContent = (string)reportResultJson[nameof(JSON.log)];
+            Assert.IsNotNull(logContent, @"Log should appear for method with Log() calls");
+            AssertEx.Contains(logContent, @"ms");
+            AssertEx.Contains(logContent, @"Resolved");
+
+            // Same call without logging - no log field
+            string reportPath2 = TestFilesDir.GetTestPath(@"report_nolog_test.csv");
+            var noLogRequest = new JObject
+            {
+                [nameof(JSON.method)] = nameof(IJsonToolService.ExportReportFromDefinition),
+                [nameof(JSON.args)] = new JArray(reportJson, reportPath2,
+                    JsonToolConstants.CULTURE_INVARIANT),
+            };
+            string noLogResult = server.HandleRequest(
+                Encoding.UTF8.GetBytes(noLogRequest.ToString()));
+            var noLogResultJson = JObject.Parse(noLogResult);
+            Assert.IsNotNull(noLogResultJson[nameof(JSON.result)]);
+            Assert.IsNull(noLogResultJson[nameof(JSON.log)]);
         }
 
         private void TestOpenForms(JsonToolServer server)

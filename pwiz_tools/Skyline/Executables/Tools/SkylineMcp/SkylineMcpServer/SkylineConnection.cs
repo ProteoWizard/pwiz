@@ -44,6 +44,17 @@ public class SkylineConnection : IDisposable
     /// </summary>
     public static int? TargetProcessId { get; set; }
 
+    /// <summary>
+    /// When true, requests include "log": true to enable diagnostic logging.
+    /// Set via the skyline_set_logging MCP tool.
+    /// </summary>
+    public static bool LoggingEnabled { get; set; }
+
+    /// <summary>
+    /// Diagnostic log content from the most recent response, or null if absent.
+    /// </summary>
+    public static string LastLog { get; set; }
+
     private SkylineConnection(NamedPipeClientStream pipe)
     {
         _pipe = pipe;
@@ -218,7 +229,9 @@ public class SkylineConnection : IDisposable
 
     public string Call(string method, params string[] args)
     {
-        var request = new { method, args };
+        object request = LoggingEnabled
+            ? (object)new { method, args, log = true }
+            : new { method, args };
         byte[] requestBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(request));
         _pipe.Write(requestBytes, 0, requestBytes.Length);
         _pipe.Flush();
@@ -229,6 +242,10 @@ public class SkylineConnection : IDisposable
 
         using var doc = JsonDocument.Parse(responseJson);
         var root = doc.RootElement;
+
+        LastLog = root.TryGetProperty(nameof(JSON.log), out var logElement)
+            ? logElement.GetString()
+            : null;
 
         if (root.TryGetProperty(nameof(JSON.error), out var errorElement))
         {

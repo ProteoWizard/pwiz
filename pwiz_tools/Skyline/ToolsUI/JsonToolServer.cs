@@ -63,6 +63,7 @@ namespace pwiz.Skyline.ToolsUI
         private readonly Thread _serverThread;
         private readonly Dictionary<string, MethodInfo> _methods;
         private volatile bool _stopping;
+        private ToolLog _currentLog;
 
         public string PipeName { get { return _pipeName; } }
 
@@ -180,17 +181,36 @@ namespace pwiz.Skyline.ToolsUI
                 string method = (string) root[nameof(JSON.method)];
                 string[] args = ParseArgs(root[nameof(JSON.args)]);
 
-                object result = Dispatch(method, args);
-                return SerializeResult(result);
+                bool logRequested = root[nameof(JSON.log)]?.Value<bool>() == true;
+                _currentLog = logRequested ? new ToolLog() : null;
+
+                try
+                {
+                    object result = Dispatch(method, args);
+                    return SerializeResult(result);
+                }
+                finally
+                {
+                    _currentLog = null;
+                }
             }
             catch (TargetInvocationException ex) when (ex.InnerException != null)
             {
-                return new JObject { [nameof(JSON.error)] = ex.InnerException.ToString() }.ToString();
+                return SerializeError(ex.InnerException);
             }
             catch (Exception ex)
             {
-                return new JObject { [nameof(JSON.error)] = ex.ToString() }.ToString();
+                return SerializeError(ex);
             }
+        }
+
+        /// <summary>
+        /// Writes a diagnostic line to the request-scoped log, if logging is enabled.
+        /// No-op when logging is not active -- safe to call unconditionally.
+        /// </summary>
+        protected void Log(string message)
+        {
+            _currentLog?.Write(message);
         }
 
         private object Dispatch(string method, string[] args)
@@ -551,6 +571,7 @@ namespace pwiz.Skyline.ToolsUI
             var layout = new ViewSpecLayout(viewSpec, ViewLayoutList.EMPTY);
             viewSpecList = viewSpecList.ReplaceView(viewSpec.Name, layout);
             Settings.Default.PersistedViews.SetViewSpecList(groupId, viewSpecList);
+            Log(string.Format(@"Saved report '{0}' to {1}", viewSpec.Name, groupId));
 
             return new LlmInstruction(
                 string.Format(@"Report {0} has been added to Skyline.", viewSpec.Name.SingleQuote()));
@@ -669,6 +690,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private string ExportNamedReport(string reportName, string filePath, DataSchemaLocalizer localizer)
         {
+            Log(string.Format(@"Exporting named report '{0}'", reportName));
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer);
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
@@ -714,6 +736,7 @@ namespace pwiz.Skyline.ToolsUI
             // a no-op sort on the first GroupBy column.
             if (viewSpec.HasTotals && (sortSpecs == null || sortSpecs.Count == 0))
             {
+                Log(@"Pivot detected: injecting sort for BindingListSource path");
                 var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
                 if (groupByCol != null)
                 {
@@ -737,6 +760,7 @@ namespace pwiz.Skyline.ToolsUI
                 saver.Commit();
             }
 
+            Log(string.Format(@"Exported report to {0}", filePath));
             string reportName = viewSpec.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
             return BuildReportMetadata(filePath, reportName);
         }
@@ -761,7 +785,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private static ViewSpec ResolveJsonReportDefinition(JObject root, SkylineDataSchema dataSchema)
+        private ViewSpec ResolveJsonReportDefinition(JObject root, SkylineDataSchema dataSchema)
         {
             var selectToken = root[nameof(REPORT.select)];
             if (selectToken == null || selectToken.Type != JTokenType.Array || !selectToken.HasValues)
@@ -778,6 +802,8 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             string reportName = (string)root[nameof(REPORT.name)] ?? JsonToolConstants.DEFAULT_REPORT_NAME;
+            Log(string.Format(@"Resolving report '{0}' with {1} columns: {2}",
+                reportName, columnNames.Count, string.Join(@", ", columnNames)));
 
             try
             {
@@ -785,6 +811,8 @@ namespace pwiz.Skyline.ToolsUI
                 var result = resolver.Resolve(columnNames);
 
                 var columnSpecs = result.PropertyPaths.Select(p => new ColumnSpec(p)).ToList();
+                Log(string.Format(@"Resolved {0} columns via {1} row source, sublist={2}",
+                    result.PropertyPaths.Count, result.RowSourceType.Name, result.SublistId));
 
                 var viewSpec = new ViewSpec()
                     .SetName(reportName)
@@ -796,20 +824,30 @@ namespace pwiz.Skyline.ToolsUI
                 // Apply filter specs
                 var filterToken = root[nameof(REPORT.filter)];
                 if (filterToken is JArray filterArray && filterArray.Count > 0)
+                {
                     viewSpec = viewSpec.SetFilters(ParseFilterSpecs(filterArray, result));
+                    Log(string.Format(@"Applied {0} filter(s)", filterArray.Count));
+                }
 
                 // Apply pivot specs
                 var pivotReplicate = (bool?)root[nameof(REPORT.pivot_replicate)];
                 if (pivotReplicate == true)
+                {
                     viewSpec = viewSpec.SetSublistId(PropertyPath.Root);
+                    Log(@"pivot_replicate=true: set sublist to root");
+                }
                 else if (pivotReplicate == false)
                 {
                     viewSpec = viewSpec.SetSublistId(
                         SublistPaths.GetReplicateSublist(result.RowSourceType));
+                    Log(@"pivot_replicate=false: set sublist to replicate");
                 }
 
                 if ((bool?)root[nameof(REPORT.pivot_isotope_label)] == true)
+                {
                     viewSpec = PivotReplicateAndIsotopeLabelWidget.PivotIsotopeLabel(viewSpec, true);
+                    Log(@"pivot_isotope_label=true: applied isotope label pivot");
+                }
 
                 return viewSpec;
             }
@@ -998,13 +1036,30 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(@"Report not found: " + reportName);
         }
 
-        private static string SerializeResult(object result)
+        private string SerializeResult(object result)
         {
             var obj = new JObject
             {
                 [nameof(JSON.result)] = result as string
             };
+            AppendLog(obj);
             return obj.ToString();
+        }
+
+        private string SerializeError(Exception ex)
+        {
+            var obj = new JObject
+            {
+                [nameof(JSON.error)] = ex.ToString()
+            };
+            AppendLog(obj);
+            return obj.ToString();
+        }
+
+        private void AppendLog(JObject obj)
+        {
+            if (_currentLog != null && _currentLog.HasContent)
+                obj[nameof(JSON.log)] = _currentLog.ToString();
         }
 
         private static string[] ParseArgs(JToken argsToken)
@@ -1144,6 +1199,30 @@ namespace pwiz.Skyline.ToolsUI
                 writer.WriteEndElement();
             }
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Request-scoped diagnostic log. When enabled, tool methods can append
+        /// timestamped lines that are returned to the caller in the response JSON.
+        /// </summary>
+        private class ToolLog
+        {
+            private readonly StringBuilder _sb = new StringBuilder();
+            private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
+
+            public void Write(string message)
+            {
+                _sb.Append(_stopwatch.ElapsedMilliseconds.ToString().PadLeft(6));
+                _sb.Append(@" ms  ");
+                _sb.AppendLine(message);
+            }
+
+            public bool HasContent => _sb.Length > 0;
+
+            public override string ToString()
+            {
+                return _sb.ToString();
+            }
         }
 
     }

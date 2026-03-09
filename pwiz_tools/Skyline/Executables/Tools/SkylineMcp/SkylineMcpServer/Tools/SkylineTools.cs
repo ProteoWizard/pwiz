@@ -627,6 +627,18 @@ public static class SkylineTools
         }
     }
 
+    [McpServerTool(Name = "skyline_set_logging"),
+     Description("Enable or disable diagnostic logging for Skyline MCP tool calls. " +
+        "When enabled, subsequent tool responses include a diagnostic log " +
+        "showing timing and internal steps. Use 'true' to enable, 'false' to disable.")]
+    public static string SetLogging(
+        [Description("'true' to enable diagnostic logging, 'false' to disable.")] string enabled)
+    {
+        bool value = string.Equals(enabled, @"true", StringComparison.OrdinalIgnoreCase);
+        SkylineConnection.LoggingEnabled = value;
+        return value ? @"Diagnostic logging enabled" : @"Diagnostic logging disabled";
+    }
+
     /// <summary>
     /// Controls the level of detail in error messages returned to the LLM.
     /// </summary>
@@ -659,7 +671,8 @@ public static class SkylineTools
 
             using (connection)
             {
-                return action(connection);
+                string result = action(connection);
+                return AppendDiagnosticLog(result);
             }
         }
         catch (Exception ex)
@@ -675,6 +688,17 @@ public static class SkylineTools
                 ? $"Error: {ex}"
                 : $"Error: {ex.Message}";
         }
+    }
+
+    private static string AppendDiagnosticLog(string result)
+    {
+        string log = SkylineConnection.LastLog;
+        if (!string.IsNullOrEmpty(log))
+        {
+            result = result + "\n\n--- Diagnostic Log ---\n" + log;
+            SkylineConnection.LastLog = null;
+        }
+        return result;
     }
 
     private static string FormatReportResult(string metadataJson)

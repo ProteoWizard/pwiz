@@ -88,6 +88,7 @@ namespace SkylineTool
             method, args, result, error,                              // protocol
             pipe_name, process_id, connected_at, skyline_version,     // connection file
             status, auto_connect,                                     // MCP status
+            log,                                                      // diagnostic log
         }
 
         /// <summary>Report metadata and definition property names.</summary>
