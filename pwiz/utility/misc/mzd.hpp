@@ -781,16 +781,16 @@ namespace mzd
     }
 
     template <typename T>
-    size_t compress_buffer(const std::vector<T> &data,
+    size_t compress_buffer(const std::vector<const T> &data,
                            buffer_t &outBuffer,
                            int level = ZSTD_defaultCLevel())
     {
-        buffer_span_t view(data.data(), data.size());
+        const tcb::span<const T> view(data.data(), data.size());
         return compress_buffer(view, outBuffer, level);
     }
 
     template <typename T>
-    size_t compress_buffer(const tcb::span<T> &data,
+    size_t compress_buffer(const tcb::span<const T> &data,
                            buffer_t &outBuffer,
                            int level = ZSTD_defaultCLevel()) {
         auto outputBound = ZSTD_compressBound(data.size() * sizeof(T));
