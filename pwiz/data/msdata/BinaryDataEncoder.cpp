@@ -1120,7 +1120,19 @@ void writeConfig(ostream& os, const BinaryDataEncoder::Config& config, CVID cvid
             throw runtime_error("[BinaryDataEncoder::writeConfig] Unknown binary numpress mode");
             break;
     }
-    switch (config.compression) {
+
+    BinaryDataEncoder::Compression z;
+
+    auto zOverrideIter = config.compressionOverrides.find(cvid);
+    if (zOverrideIter != config.compressionOverrides.end()) {
+        z = zOverrideIter->second;
+    }
+    else
+    {
+        z = config.compression;
+    }
+
+    switch (z) {
         case BinaryDataEncoder::Compression_Zlib :
             os << "Compression-Zlib";
             break;
