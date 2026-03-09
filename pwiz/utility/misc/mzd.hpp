@@ -163,7 +163,7 @@ namespace mzd
         /// @param data The data to transpose
         /// @param buffer Where to transpose the data into
         template <typename T>
-        void transpose(const std::vector<const T> &data, buffer_t &buffer)
+        void transpose(const std::vector<T> &data, buffer_t &buffer)
         {
             const tcb::span<const T> view = tcb::span<const T>(data.data(), data.size());
             return transpose<T>(view, buffer);
@@ -904,7 +904,7 @@ namespace mzd
     /// @param outBuffer The byte buffer to compress into
     /// @return 0 if successful, some other value corresponding to a ZSTD error code otherwise
     template <typename T>
-    size_t compress_buffer(const std::vector<const T> &data,
+    size_t compress_buffer(const std::vector<T> &data,
                            buffer_t &outBuffer,
                            int level = ZSTD_defaultCLevel())
     {
