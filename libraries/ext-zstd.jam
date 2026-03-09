@@ -22,11 +22,11 @@ rule init ( version ? : location : options * )
         # Extract archive if present and directory not yet created
         if [ path.exists $(location).tar.bz2 ]
         {
-            tar.extract $(location).tar.bz2 : *.c *.h : : : <check-last-file-only>true ;
+            tar.extract $(location).tar.bz2 : *.c *.h *.S : : : <check-last-file-only>true ;
         }
         else if [ path.exists $(location).tar.gz ]
         {
-            tar.extract $(location).tar.gz : *.c *.h : : : <check-last-file-only>true ;
+            tar.extract $(location).tar.gz : *.c *.h *.S : : : <check-last-file-only>true ;
         }
         else if ! [ path.exists $(location) ]
         {
@@ -40,8 +40,10 @@ rule init ( version ? : location : options * )
             [ extension.static-with-fpic ]
             ;
 
+
+
         lib zstd
-            :   # Sources: all .c files under lib/ (excluding legacy and programs)
+            :   # Sources: all .c files under lib/ (excluding legacy and programs), assembly .S files could be added but they seem to have some syntax disagreements with MSVC
                 [ path.glob $(location)/lib/common   : *.c ]
                 [ path.glob $(location)/lib/compress  : *.c ]
                 [ path.glob $(location)/lib/decompress : *.c ]
@@ -51,6 +53,7 @@ rule init ( version ? : location : options * )
                 <include>$(location)/lib/common
                 <location-prefix>zstd
                 <link>static
+                <define>ZSTD_NO_ASM=1
                 # Suppress deprecation warnings from zstd internals on MSVC
                 <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
             :   # default-build
