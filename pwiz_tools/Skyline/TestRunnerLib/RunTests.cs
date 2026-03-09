@@ -649,7 +649,9 @@ namespace TestRunnerLib
         {
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                var dumpDir = Path.GetDirectoryName(path);
+                if (dumpDir != null)    // Keep ReSharper happy
+                    Directory.CreateDirectory(dumpDir);
 
                 if (!MiniDump.WriteMiniDump(path))
                     Log("[WARNING] Failed to write mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
