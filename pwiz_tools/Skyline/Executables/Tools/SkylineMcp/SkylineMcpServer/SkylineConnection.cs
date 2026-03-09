@@ -33,9 +33,6 @@ namespace SkylineMcpServer;
 
 public class SkylineConnection : IDisposable
 {
-    // Keep legacy name for backward compatibility during transition
-    private const string LEGACY_CONNECTION_FILE = "connection.json";
-
     private readonly NamedPipeClientStream _pipe;
 
     /// <summary>
@@ -67,21 +64,9 @@ public class SkylineConnection : IDisposable
     public static string GetConnectionStatus()
     {
         var infos = FindConnectionFiles();
-        if (infos.Count == 0)
-        {
-            return "No Skyline instance is connected. " +
-                   "Start Skyline and choose Tools > AI Connector to connect.";
-        }
+        if (infos.Count > 0)
+            return null; // At least one live Skyline instance
 
-        // Try to find a live one
-        foreach (var info in infos)
-        {
-            if (IsProcessAlive(info.ProcessId))
-                return null; // At least one is alive — we can connect
-        }
-
-        // All stale
-        CleanupStaleFiles(infos);
         return "No Skyline instance is connected. " +
                "Start Skyline and choose Tools > AI Connector to connect.";
     }
@@ -105,53 +90,22 @@ public class SkylineConnection : IDisposable
         {
             var targeted = infos.FirstOrDefault(i => i.ProcessId == TargetProcessId.Value);
             if (targeted != null)
-            {
-                if (!IsProcessAlive(targeted.ProcessId))
-                {
-                    TargetProcessId = null; // Clear stale target
-                    CleanupStaleFiles(new List<ConnectionInfo> { targeted });
-                }
-                else
-                {
-                    return TryConnectToInstance(targeted);
-                }
-            }
-            else
-            {
-                TargetProcessId = null; // Target no longer exists
-            }
+                return TryConnectToInstance(targeted);
+            TargetProcessId = null; // Target no longer exists
         }
 
         // Sort by connected_at descending to prefer the most recent
-        var sorted = infos.OrderByDescending(i => i.ConnectedAt).ToList();
-        var stale = new List<ConnectionInfo>();
-
-        foreach (var info in sorted)
+        foreach (var info in infos.OrderByDescending(i => i.ConnectedAt))
         {
-            if (!IsProcessAlive(info.ProcessId))
-            {
-                stale.Add(info);
-                continue;
-            }
-
             var result2 = TryConnectToInstance(info);
             if (result2.Connection != null)
-            {
-                CleanupStaleFiles(stale);
                 return result2;
-            }
 
             if (result2.Error != null && result2.Error.Contains("not responding"))
-            {
-                CleanupStaleFiles(stale);
                 return result2;
-            }
-
-            stale.Add(info);
         }
 
         // All connections failed
-        CleanupStaleFiles(stale);
         return (null, "No Skyline instance is connected. " +
                       "Start Skyline and choose Tools > AI Connector to connect.");
     }
@@ -164,16 +118,9 @@ public class SkylineConnection : IDisposable
     {
         var infos = FindConnectionFiles();
         var results = new List<InstanceInfo>();
-        var stale = new List<ConnectionInfo>();
 
         foreach (var info in infos)
         {
-            if (!IsProcessAlive(info.ProcessId))
-            {
-                stale.Add(info);
-                continue;
-            }
-
             string documentPath = null;
             try
             {
@@ -201,7 +148,6 @@ public class SkylineConnection : IDisposable
             });
         }
 
-        CleanupStaleFiles(stale);
         return results;
     }
 
@@ -271,7 +217,7 @@ public class SkylineConnection : IDisposable
     }
 
     /// <summary>
-    /// Find all connection files (both new pattern and legacy).
+    /// Find all connection files, cleaning up stale entries whose processes are no longer running.
     /// </summary>
     private static List<ConnectionInfo> FindConnectionFiles()
     {
@@ -281,25 +227,17 @@ public class SkylineConnection : IDisposable
 
         var results = new List<ConnectionInfo>();
 
-        // Scan for connection-*.json files
-        foreach (string file in Directory.GetFiles(dir, JsonToolConstants.CONNECTION_FILE_PREFIX + "*" + JsonToolConstants.CONNECTION_FILE_EXT))
+        // Scan for connection-*.json files, cleaning up stale entries
+        foreach (string file in Directory.GetFiles(dir,
+            JsonToolConstants.CONNECTION_FILE_PREFIX + "*" + JsonToolConstants.CONNECTION_FILE_EXT))
         {
             var info = TryLoadConnectionFile(file);
-            if (info != null)
+            if (info == null)
+                continue;
+            if (IsSkylineProcess(info.ProcessId))
                 results.Add(info);
-        }
-
-        // Also check legacy connection.json
-        string legacyPath = Path.Combine(dir, LEGACY_CONNECTION_FILE);
-        if (File.Exists(legacyPath))
-        {
-            var info = TryLoadConnectionFile(legacyPath);
-            if (info != null)
-            {
-                // Avoid duplicates if same pipe name
-                if (!results.Any(r => r.PipeName == info.PipeName))
-                    results.Add(info);
-            }
+            else
+                TryDeleteFile(file);
         }
 
         return results;
@@ -321,12 +259,12 @@ public class SkylineConnection : IDisposable
         }
     }
 
-    private static bool IsProcessAlive(int processId)
+    private static bool IsSkylineProcess(int processId)
     {
         try
         {
-            Process.GetProcessById(processId);
-            return true;
+            var process = Process.GetProcessById(processId);
+            return process.ProcessName.StartsWith("Skyline", StringComparison.OrdinalIgnoreCase);
         }
         catch (ArgumentException)
         {
@@ -334,24 +272,10 @@ public class SkylineConnection : IDisposable
         }
     }
 
-    /// <summary>
-    /// Remove connection files for Skyline instances that are no longer running.
-    /// </summary>
-    private static void CleanupStaleFiles(List<ConnectionInfo> staleInfos)
+    private static void TryDeleteFile(string path)
     {
-        foreach (var info in staleInfos)
-        {
-            if (string.IsNullOrEmpty(info.FilePath))
-                continue;
-            try
-            {
-                File.Delete(info.FilePath);
-            }
-            catch
-            {
-                // Best effort cleanup
-            }
-        }
+        try { File.Delete(path); }
+        catch { /* Best effort */ }
     }
 
     private static byte[] ReadAllBytes(PipeStream stream)

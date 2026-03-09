@@ -112,6 +112,9 @@ namespace pwiz.Skyline.ToolsUI
                 [nameof(JSON.skyline_version)] = Install.Version
             };
             File.WriteAllText(JsonToolConstants.GetConnectionFilePath(_pipeName), obj.ToString());
+
+            // Clean up stale files from dead instances
+            CleanupStaleConnectionFiles(dir);
         }
 
         private void DeleteConnectionInfo()
@@ -125,6 +128,39 @@ namespace pwiz.Skyline.ToolsUI
             catch
             {
                 // Ignore cleanup errors
+            }
+        }
+
+        private static void CleanupStaleConnectionFiles(string dir)
+        {
+            foreach (string file in Directory.GetFiles(dir,
+                JsonToolConstants.CONNECTION_FILE_PREFIX + @"*" + JsonToolConstants.CONNECTION_FILE_EXT))
+            {
+                try
+                {
+                    string json = File.ReadAllText(file);
+                    var obj = JObject.Parse(json);
+                    int pid = (int)obj[nameof(JSON.process_id)];
+                    if (!IsSkylineProcess(pid))
+                        File.Delete(file);
+                }
+                catch
+                {
+                    // Ignore parse/access errors
+                }
+            }
+        }
+
+        private static bool IsSkylineProcess(int processId)
+        {
+            try
+            {
+                var process = Process.GetProcessById(processId);
+                return process.ProcessName.StartsWith(@"Skyline", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (ArgumentException)
+            {
+                return false;
             }
         }
 

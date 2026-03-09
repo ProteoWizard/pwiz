@@ -357,8 +357,11 @@ namespace pwiz.Skyline
                     StartToolService();
                     MainJsonToolServer.WriteConnectionInfo();
                 }
+                // NOTE: Nothing after Application.Run() reliably executes.
+                // SkylineWindow.OnHandleDestroyed calls Process.Kill() to avoid native
+                // vendor DLL errors. All shutdown cleanup must happen before that point.
                 Application.Run(MainWindow);
-                StopToolService();
+                // Do not add code here. It will never run.
             }
             catch (Exception x)
             {
