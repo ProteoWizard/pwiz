@@ -1,0 +1,61 @@
+#
+# Support for building Zstandard library <https://github.com/facebook/zstd>.
+# Targets:
+#     /ext/zstd//zstd
+
+import extension ;
+
+import property ;
+import project ;
+import feature ;
+import path ;
+import tar ;
+
+extension.declare zstd ;
+
+rule init ( version ? : location : options * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        # Extract archive if present and directory not yet created
+        if [ path.exists $(location).tar.bz2 ]
+        {
+            tar.extract $(location).tar.bz2 : *.c *.h : : : <check-last-file-only>true ;
+        }
+        else if [ path.exists $(location).tar.gz ]
+        {
+            tar.extract $(location).tar.gz : *.c *.h : : : <check-last-file-only>true ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            import errors ;
+            errors.user-error "Zstd source tree not found at $(location)" ;
+        }
+
+        version ?= default ;
+        local requirements =
+            [ extension.define zstd $(version) : $(location) : $(options) ]
+            [ extension.static-with-fpic ]
+            ;
+
+        lib zstd
+            :   # Sources: all .c files under lib/ (excluding legacy and programs)
+                [ path.glob $(location)/lib/common   : *.c ]
+                [ path.glob $(location)/lib/compress  : *.c ]
+                [ path.glob $(location)/lib/decompress : *.c ]
+                [ path.glob $(location)/lib/dictBuilder : *.c ]
+            :   $(requirements)
+                <include>$(location)/lib
+                <include>$(location)/lib/common
+                <location-prefix>zstd
+                <link>static
+                # Suppress deprecation warnings from zstd internals on MSVC
+                <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
+            :   # default-build
+            :   # usage-requirements — consumers only need the top-level include
+                <include>$(location)/lib
+            ;
+    }
+}

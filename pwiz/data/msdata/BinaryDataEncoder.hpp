@@ -7,16 +7,16 @@
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -39,7 +39,7 @@ namespace pwiz {
 namespace msdata {
 
 const double BinaryDataEncoder_default_numpressSlofErrorTolerance = 0.0002; // 2/100th of one percent
-const double BinaryDataEncoder_default_numpressLinearErrorTolerance = 2e-9; 
+const double BinaryDataEncoder_default_numpressLinearErrorTolerance = 2e-9;
 const double BinaryDataEncoder_default_numpressPicErrorTolerance = 0.5; // rounds to nearest integer
 
 /// binary-to-text encoding
@@ -49,14 +49,14 @@ class PWIZ_API_DECL BinaryDataEncoder
 
     enum Precision {Precision_32, Precision_64};
     enum ByteOrder {ByteOrder_LittleEndian, ByteOrder_BigEndian};
-    enum Compression {Compression_None, Compression_Zlib};
+    enum Compression {Compression_None, Compression_Zlib, Compression_Zstd, Compression_ByteShuffleZstd, Compression_DictZstd};
     enum Numpress {Numpress_None, Numpress_Linear, Numpress_Pic, Numpress_Slof}; // lossy numerical representations
 
     enum Prediction {Prediction_None, Prediction_Delta, Prediction_Linear};
     enum Format {Format_MzML, Format_MzMLb}; // if Format_MzMLb, we do not base64 encode, endianise or compress
     enum Type {Type_None, Type_Spectrum, Type_Chromatogram}; // mzMLb needs to know whether this BinaryDataArray is a spectrum or chromatogram (for HDF5 dataset name) [*this not essential*]
-    
-    /// encoding/decoding configuration 
+
+    /// encoding/decoding configuration
     struct PWIZ_API_DECL Config
     {
         Precision precision;
@@ -71,8 +71,9 @@ class PWIZ_API_DECL BinaryDataEncoder
         Prediction prediction;
         Format format;
         Type type;
-        int truncation; // how many bits mantissa to truncate (and hence not store)      
+        int truncation; // how many bits mantissa to truncate (and hence not store)
 
+        std::map<cv::CVID, Compression> compressionOverrides;
         std::map<cv::CVID, Precision> precisionOverrides;
         std::map<cv::CVID, Numpress> numpressOverrides;
         std::map<cv::CVID, Prediction> predictionOverrides;
@@ -106,7 +107,7 @@ class PWIZ_API_DECL BinaryDataEncoder
     void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount = NULL) const;
     void encode(const std::int64_t* data, size_t dataSize, std::string& result, size_t* binaryByteCount = NULL) const;
 
-    /// decode text-encoded data as binary 
+    /// decode text-encoded data as binary
     void decode(const char *encodedData, size_t len, pwiz::util::BinaryData<double>& result) const;
     void decode(const std::string& encodedData, pwiz::util::BinaryData<double>& result) const
     {

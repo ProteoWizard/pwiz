@@ -7,16 +7,16 @@
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -80,7 +80,7 @@ struct HandlerCV : public SAXParser::Handler
     CV* cv;
     HandlerCV(CV* _cv = 0) : cv(_cv) {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -101,7 +101,7 @@ PWIZ_API_DECL void read(std::istream& is, CV& cv)
     HandlerCV handler(&cv);
     SAXParser::parse(is, handler);
 }
-    
+
 
 //
 // UserParam
@@ -131,7 +131,7 @@ struct HandlerUserParam : public SAXParser::Handler
     UserParam* userParam;
     HandlerUserParam(UserParam* _userParam = 0) : userParam(_userParam) {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -160,7 +160,7 @@ PWIZ_API_DECL void read(std::istream& is, UserParam& userParam)
     HandlerUserParam handler(&userParam);
     SAXParser::parse(is, handler);
 }
-    
+
 
 //
 // CVParam
@@ -190,7 +190,7 @@ struct HandlerCVParam : public SAXParser::Handler
 
     HandlerCVParam(CVParam* _cvParam = 0) :  cvParam(_cvParam) {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -198,15 +198,15 @@ struct HandlerCVParam : public SAXParser::Handler
             throw runtime_error(("[IO::HandlerCVParam] Unexpected element name: " + name).c_str());
 
         if (!cvParam)
-            throw runtime_error("[IO::HandlerCVParam] Null cvParam."); 
+            throw runtime_error("[IO::HandlerCVParam] Null cvParam.");
 
-        const char *accession = getAttribute(attributes, "accession",  NoXMLUnescape); 
+        const char *accession = getAttribute(attributes, "accession",  NoXMLUnescape);
         if (accession)
             cvParam->cvid = cvTermInfo(accession).cvid;
 
         getAttribute(attributes, "value", cvParam->value);
 
-        const char *unitAccession = getAttribute(attributes, "unitAccession", NoXMLUnescape); 
+        const char *unitAccession = getAttribute(attributes, "unitAccession", NoXMLUnescape);
         if (unitAccession)
             cvParam->units = cvTermInfo(unitAccession).cvid;
 
@@ -240,15 +240,15 @@ PWIZ_API_DECL void writeParamGroupRef(minimxml::XMLWriter& writer, const ParamGr
 
 PWIZ_API_DECL void writeParamContainer(minimxml::XMLWriter& writer, const ParamContainer& pc)
 {
-    for (vector<ParamGroupPtr>::const_iterator it=pc.paramGroupPtrs.begin(); 
+    for (vector<ParamGroupPtr>::const_iterator it=pc.paramGroupPtrs.begin();
          it!=pc.paramGroupPtrs.end(); ++it)
          writeParamGroupRef(writer, **it);
 
-    for (vector<CVParam>::const_iterator it=pc.cvParams.begin(); 
+    for (vector<CVParam>::const_iterator it=pc.cvParams.begin();
          it!=pc.cvParams.end(); ++it)
          write(writer, *it);
 
-    for (vector<UserParam>::const_iterator it=pc.userParams.begin(); 
+    for (vector<UserParam>::const_iterator it=pc.userParams.begin();
          it!=pc.userParams.end(); ++it)
          write(writer, *it);
 }
@@ -262,7 +262,7 @@ struct HandlerParamContainer : public SAXParser::Handler
     :   paramContainer(_paramContainer)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -271,13 +271,13 @@ struct HandlerParamContainer : public SAXParser::Handler
 
         if (name == "cvParam")
         {
-            paramContainer->cvParams.push_back(CVParam()); 
+            paramContainer->cvParams.push_back(CVParam());
             handlerCVParam_.cvParam = &paramContainer->cvParams.back();
             return Status(Status::Delegate, &handlerCVParam_);
         }
         else if (name == "userParam")
         {
-            paramContainer->userParams.push_back(UserParam()); 
+            paramContainer->userParams.push_back(UserParam());
             handlerUserParam_.userParam = &paramContainer->userParams.back();
             return Status(Status::Delegate, &handlerUserParam_);
         }
@@ -287,11 +287,11 @@ struct HandlerParamContainer : public SAXParser::Handler
             string id;
             decode_xml_id(getAttribute(attributes, "ref", id));
             if (!id.empty())
-                paramContainer->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup(id))); 
+                paramContainer->paramGroupPtrs.push_back(ParamGroupPtr(new ParamGroup(id)));
             return Status::Ok;
         }
 
-        throw runtime_error(("[IO::HandlerParamContainer] Unknown element " + name).c_str()); 
+        throw runtime_error(("[IO::HandlerParamContainer] Unknown element " + name).c_str());
     }
 
     private:
@@ -300,7 +300,7 @@ struct HandlerParamContainer : public SAXParser::Handler
     HandlerUserParam handlerUserParam_;
 };
 
-    
+
 struct HandlerNamedParamContainer : public HandlerParamContainer
 {
     const string name_;
@@ -309,7 +309,7 @@ struct HandlerNamedParamContainer : public HandlerParamContainer
     :   HandlerParamContainer(paramContainer), name_(name)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -340,11 +340,11 @@ struct HandlerParamGroup : public HandlerParamContainer
 {
     ParamGroup* paramGroup;
 
-    HandlerParamGroup(ParamGroup* _paramGroup = 0) 
+    HandlerParamGroup(ParamGroup* _paramGroup = 0)
     :   paramGroup(_paramGroup)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -419,11 +419,11 @@ struct HandlerSourceFile : public HandlerParamContainer
 {
     SourceFile* sourceFile;
 
-    HandlerSourceFile(SourceFile* _sourceFile = 0) 
+    HandlerSourceFile(SourceFile* _sourceFile = 0)
     :   sourceFile(_sourceFile)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -472,7 +472,7 @@ PWIZ_API_DECL void read(std::istream& is, Contact& c)
 
 
 //
-// FileDescription 
+// FileDescription
 //
 
 
@@ -480,10 +480,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FileDescription& fd)
 {
     writer.startElement("fileDescription");
     write(writer, fd.fileContent);
-    
+
     writeList(writer, fd.sourceFilePtrs, "sourceFileList");
 
-    for (vector<Contact>::const_iterator it=fd.contacts.begin(); 
+    for (vector<Contact>::const_iterator it=fd.contacts.begin();
          it!=fd.contacts.end(); ++it)
          write(writer, *it);
     writer.endElement();
@@ -500,13 +500,13 @@ struct HandlerFileDescription : public SAXParser::Handler
         handlerContact_("contact")
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
         if (!fileDescription)
             throw runtime_error("[IO::HandlerFileDescription] Null fileDescription.");
-        
+
         if (name == "fileDescription")
         {
             return Status::Ok;
@@ -533,7 +533,7 @@ struct HandlerFileDescription : public SAXParser::Handler
             return Status(Status::Delegate, &handlerContact_);
         }
 
-        throw runtime_error(("[IO::HandlerFileDescription] Unknown element " + name).c_str()); 
+        throw runtime_error(("[IO::HandlerFileDescription] Unknown element " + name).c_str());
     }
 
     private:
@@ -543,7 +543,7 @@ struct HandlerFileDescription : public SAXParser::Handler
     HandlerNamedParamContainer handlerContact_;
 };
 
- 
+
 PWIZ_API_DECL void read(std::istream& is, FileDescription& fd)
 {
     HandlerFileDescription handler(&fd);
@@ -571,11 +571,11 @@ struct HandlerSample : public HandlerParamContainer
 {
     Sample* sample;
 
-    HandlerSample(Sample* _sample = 0) 
+    HandlerSample(Sample* _sample = 0)
     :   sample(_sample)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -629,7 +629,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Component& component
     writer.endElement();
 }
 
-    
+
 struct HandlerComponent : public HandlerParamContainer
 {
     Component* component;
@@ -638,7 +638,7 @@ struct HandlerComponent : public HandlerParamContainer
     :   component(_component)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -693,7 +693,7 @@ struct HandlerComponentList : public SAXParser::Handler
     ComponentList* componentList;
     HandlerComponentList(ComponentList* _componentList = 0) : componentList(_componentList) {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -760,7 +760,7 @@ struct HandlerSoftware : public HandlerParamContainer
 
     HandlerSoftware(Software* _software = 0) : software(_software) {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -828,11 +828,11 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const InstrumentConfigurat
 struct HandlerInstrumentConfiguration : public HandlerParamContainer
 {
     InstrumentConfiguration* instrumentConfiguration;
-    HandlerInstrumentConfiguration(InstrumentConfiguration* _instrumentConfiguration = 0) 
+    HandlerInstrumentConfiguration(InstrumentConfiguration* _instrumentConfiguration = 0)
     :   instrumentConfiguration(_instrumentConfiguration)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -885,24 +885,24 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProcessingMethod& pr
     XMLWriter::Attributes attributes;
     attributes.add("order", processingMethod.order);
     if (processingMethod.softwarePtr.get())
-        attributes.add("softwareRef", encode_xml_id_copy(processingMethod.softwarePtr->id)); 
+        attributes.add("softwareRef", encode_xml_id_copy(processingMethod.softwarePtr->id));
 
     writer.startElement("processingMethod", attributes);
     writeParamContainer(writer, processingMethod);
     writer.endElement();
 }
 
-    
+
 struct HandlerProcessingMethod : public HandlerParamContainer
 {
     ProcessingMethod* processingMethod;
-    string defaultSoftwareRef; 
+    string defaultSoftwareRef;
 
     HandlerProcessingMethod(ProcessingMethod* _processingMethod = 0)
     :   processingMethod(_processingMethod)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -949,14 +949,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataProcessing& data
 
     writer.startElement("dataProcessing", attributes);
 
-    for (vector<ProcessingMethod>::const_iterator it=dataProcessing.processingMethods.begin(); 
+    for (vector<ProcessingMethod>::const_iterator it=dataProcessing.processingMethods.begin();
          it!=dataProcessing.processingMethods.end(); ++it)
          write(writer, *it);
-    
+
     writer.endElement();
 }
 
-    
+
 struct HandlerDataProcessing : public HandlerParamContainer
 {
     DataProcessing* dataProcessing;
@@ -965,7 +965,7 @@ struct HandlerDataProcessing : public HandlerParamContainer
     :   dataProcessing(_dataProcessing)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -990,7 +990,7 @@ struct HandlerDataProcessing : public HandlerParamContainer
         else if (name == "processingMethod")
         {
             dataProcessing->processingMethods.push_back(ProcessingMethod());
-            handlerProcessingMethod_.processingMethod = &dataProcessing->processingMethods.back(); 
+            handlerProcessingMethod_.processingMethod = &dataProcessing->processingMethods.back();
             return Status(Status::Delegate, &handlerProcessingMethod_);
         }
 
@@ -1041,12 +1041,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSe
 
     writer.startElement("scanSettings", attributes);
 
-    if (!scanSettings.sourceFilePtrs.empty()) 
+    if (!scanSettings.sourceFilePtrs.empty())
     {
         attributes.clear();
         attributes.add("count", scanSettings.sourceFilePtrs.size());
         writer.startElement("sourceFileRefList", attributes);
-        for (vector<SourceFilePtr>::const_iterator it=scanSettings.sourceFilePtrs.begin(); 
+        for (vector<SourceFilePtr>::const_iterator it=scanSettings.sourceFilePtrs.begin();
              it!=scanSettings.sourceFilePtrs.end(); ++it)
              writeSourceFileRef(writer, **it);
         writer.endElement(); // sourceFileRefList
@@ -1058,7 +1058,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSe
         attributes.add("count", scanSettings.targets.size());
         writer.startElement("targetList", attributes);
 
-        for (vector<Target>::const_iterator it=scanSettings.targets.begin(); 
+        for (vector<Target>::const_iterator it=scanSettings.targets.begin();
              it!=scanSettings.targets.end(); ++it)
              write(writer, *it);
 
@@ -1068,17 +1068,17 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSe
     writer.endElement();
 }
 
-    
+
 struct HandlerScanSettings : public HandlerParamContainer
 {
     ScanSettings* scanSettings;
 
     HandlerScanSettings(ScanSettings* _scanSettings = 0)
-    :   scanSettings(_scanSettings), 
+    :   scanSettings(_scanSettings),
         handlerTarget_("target")
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -1144,7 +1144,7 @@ PWIZ_API_DECL void read(std::istream& is, IsolationWindow& isolationWindow)
     HandlerNamedParamContainer handler("isolationWindow", &isolationWindow);
     SAXParser::parse(is, handler);
 }
-    
+
 
 //
 // SelectedIon
@@ -1164,7 +1164,7 @@ PWIZ_API_DECL void read(std::istream& is, SelectedIon& selectedIon)
     HandlerNamedParamContainer handler("selectedIon", &selectedIon);
     SAXParser::parse(is, handler);
 }
-    
+
 
 //
 // Activation
@@ -1184,7 +1184,7 @@ PWIZ_API_DECL void read(std::istream& is, Activation& activation)
     HandlerNamedParamContainer handler("activation", &activation);
     SAXParser::parse(is, handler);
 }
-    
+
 
 //
 // Precursor
@@ -1202,8 +1202,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
             if (!precursor.sourceFilePtr.get())
                 throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
-            attributes.add("sourceFileRef", encode_xml_id_copy(precursor.sourceFilePtr->id)); 
-            attributes.add("externalSpectrumID", precursor.externalSpectrumID); 
+            attributes.add("sourceFileRef", encode_xml_id_copy(precursor.sourceFilePtr->id));
+            attributes.add("externalSpectrumID", precursor.externalSpectrumID);
         }
     }
     else
@@ -1225,7 +1225,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
         attributes.add("count", precursor.selectedIons.size());
         writer.startElement("selectedIonList", attributes);
 
-        for (vector<SelectedIon>::const_iterator it=precursor.selectedIons.begin(); 
+        for (vector<SelectedIon>::const_iterator it=precursor.selectedIons.begin();
              it!=precursor.selectedIons.end(); ++it)
         {
             writer.startElement("selectedIon");
@@ -1239,25 +1239,25 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
     writer.startElement("activation");
     writeParamContainer(writer, precursor.activation);
     writer.endElement(); // activation
-    
+
     writer.endElement();
 }
 
-    
+
 struct HandlerPrecursor : public HandlerParamContainer
 {
     Precursor* precursor;
     const map<string,string>* legacyIdRefToNativeId;
 
     HandlerPrecursor(Precursor* _precursor = 0, const map<string, string>* legacyIdRefToNativeId = 0)
-    :   precursor(_precursor), 
+    :   precursor(_precursor),
         legacyIdRefToNativeId(legacyIdRefToNativeId),
-        handlerIsolationWindow_("isolationWindow"), 
-        handlerSelectedIon_("selectedIon"), 
+        handlerIsolationWindow_("isolationWindow"),
+        handlerSelectedIon_("selectedIon"),
         handlerActivation_("activation")
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -1345,17 +1345,17 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Product& product)
     writer.endElement();
 }
 
-    
+
 struct HandlerProduct : public SAXParser::Handler
 {
     Product* product;
 
     HandlerProduct(Product* _product = 0)
-    :   product(_product), 
+    :   product(_product),
         handlerIsolationWindow_("isolationWindow")
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -1372,7 +1372,7 @@ struct HandlerProduct : public SAXParser::Handler
             return Status(Status::Delegate, &handlerIsolationWindow_);
         }
 
-        throw runtime_error(("[IO::HandlerProduct] Unknown element " + name).c_str()); 
+        throw runtime_error(("[IO::HandlerProduct] Unknown element " + name).c_str());
     }
 
     private:
@@ -1405,7 +1405,7 @@ PWIZ_API_DECL void read(std::istream& is, ScanWindow& scanWindow)
     HandlerNamedParamContainer handler("scanWindow", &scanWindow);
     SAXParser::parse(is, handler);
 }
-    
+
 
 //
 // Scan
@@ -1423,8 +1423,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan, const MS
             if (!scan.sourceFilePtr.get())
                 throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
-            attributes.add("sourceFileRef", encode_xml_id_copy(scan.sourceFilePtr->id)); 
-            attributes.add("externalSpectrumID", scan.externalSpectrumID); 
+            attributes.add("sourceFileRef", encode_xml_id_copy(scan.sourceFilePtr->id));
+            attributes.add("externalSpectrumID", scan.externalSpectrumID);
         }
     }
     else
@@ -1438,24 +1438,24 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan, const MS
 
     writer.startElement("scan", attributes);
     writeParamContainer(writer, scan);
-    
+
     if (!scan.scanWindows.empty())
     {
         attributes.clear();
         attributes.add("count", scan.scanWindows.size());
         writer.startElement("scanWindowList", attributes);
-        
-        for (vector<ScanWindow>::const_iterator it=scan.scanWindows.begin(); 
+
+        for (vector<ScanWindow>::const_iterator it=scan.scanWindows.begin();
              it!=scan.scanWindows.end(); ++it)
              write(writer, *it);
-     
+
         writer.endElement();
     }
 
     writer.endElement();
 }
 
-    
+
 struct HandlerScan : public HandlerParamContainer
 {
     Scan* scan;
@@ -1464,14 +1464,14 @@ struct HandlerScan : public HandlerParamContainer
     :   scan(_scan), handlerScanWindow_("scanWindow")
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
         if (!scan)
             throw runtime_error("[IO::HandlerScan] Null scan.");
 
-        if (name != "cvParam") 
+        if (name != "cvParam")
         { // most common, but not handled here
             if (name == "scan")
             {
@@ -1562,15 +1562,15 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList, 
     attributes.add("count", scanList.scans.size());
     writer.startElement("scanList", attributes);
     writeParamContainer(writer, scanList);
-    
-    for (vector<Scan>::const_iterator it=scanList.scans.begin(); 
+
+    for (vector<Scan>::const_iterator it=scanList.scans.begin();
          it!=scanList.scans.end(); ++it)
          write(writer, *it, msd);
-    
+
     writer.endElement();
 }
 
-    
+
 struct HandlerScanList : public HandlerParamContainer
 {
     ScanList* scanList;
@@ -1579,7 +1579,7 @@ struct HandlerScanList : public HandlerParamContainer
     :   scanList(_scanList)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -1594,7 +1594,7 @@ struct HandlerScanList : public HandlerParamContainer
         {
             scanList->scans.push_back(Scan());
             handlerScan_.version = version;
-            handlerScan_.scan = &scanList->scans.back(); 
+            handlerScan_.scan = &scanList->scans.back();
             return Status(Status::Delegate, &handlerScan_);
         }
 
@@ -1866,17 +1866,20 @@ template <typename BinaryDataArrayType>
 void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType& binaryDataArray, const BinaryDataEncoder::Config& config)
 {
     BinaryDataEncoder::Config usedConfig = config;
-    auto overrideItr = config.precisionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+    auto term = binaryDataArray.cvParamChild(MS_binary_data_array).cvid;
+    auto overrideItr = config.precisionOverrides.find(term);
     if (overrideItr != config.precisionOverrides.end())
         usedConfig.precision = overrideItr->second;
-    auto n_overrideItr = config.numpressOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+    auto n_overrideItr = config.numpressOverrides.find(term);
     if (n_overrideItr != config.numpressOverrides.end())
         usedConfig.numpress = n_overrideItr->second;
-    auto t_overrideItr = config.truncationOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+    auto t_overrideItr = config.truncationOverrides.find(term);
     if (t_overrideItr != config.truncationOverrides.end())
         usedConfig.truncation = t_overrideItr->second;
-    
-    string encoded;	
+    auto c_overrideItr = config.compressionOverrides.find(term);
+    if (c_overrideItr != config.compressionOverrides.end())
+        usedConfig.compression = c_overrideItr->second;
+    string encoded;
 
 #ifndef WITHOUT_MZMLB
     stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<stream<Connection_mzMLb>*>(&writer.getOutputStream());
@@ -1884,7 +1887,7 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
     {
         usedConfig.format = BinaryDataEncoder::Format_MzMLb;
 
-        auto p_overrideItr = config.predictionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+        auto p_overrideItr = config.predictionOverrides.find(term);
         if (p_overrideItr != config.predictionOverrides.end())
             usedConfig.prediction = p_overrideItr->second;
     }
@@ -1897,10 +1900,10 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
         encoder.encode(binaryDataArray.data, encoded);
         usedConfig = encoder.getConfig(); // config may have changed if numpress error was excessive
     }
-    
+
 
     XMLWriter::Attributes attributes;
-    
+
     size_t encoded_size = encoded.size();
 
     string dataset;
@@ -1914,13 +1917,13 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
         !binaryDataArray.hasCVParam(MS_time_array) &&
         !binaryDataArray.hasCVParam(MS_intensity_array))
     {
-#ifndef WITHOUT_MZMLB        
+#ifndef WITHOUT_MZMLB
         if (mzMLb_os)
         {
             attributes.add("arrayLength", 0);
         }
         else
-#endif       
+#endif
         {
             attributes.add("arrayLength", binaryDataArray.data.size());
         }
@@ -1947,6 +1950,7 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
         throw runtime_error("[IO::write()] mzML: must use little endian encoding.");
 
     bool zlib = false; // Handle numpress+zlib
+    bool zstd = false;
 
     if (usedConfig.prediction == BinaryDataEncoder::Prediction_Linear)
         write(writer, MS_truncation__linear_prediction_and_zlib_compression);
@@ -1963,22 +1967,69 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
             if (BinaryDataEncoder::Numpress_None == usedConfig.numpress)
                 write(writer, MS_zlib_compression);
             break;
+        case BinaryDataEncoder::Compression_Zstd:
+            zstd = true;
+            if (BinaryDataEncoder::Numpress_None == usedConfig.numpress)
+                write(writer, MS_zstd_compression);
+            break;
+        case BinaryDataEncoder::Compression_ByteShuffleZstd:
+            // codec doesn't mix with Numpress
+            zstd = true;
+            if (config.numpress != BinaryDataEncoder::Numpress_None)
+                throw runtime_error("[IO::write()] Cannot combine byte-shuffling encoding Zstd with MS-Numpress.");
+            write(writer, MS_byte_shuffled_zstd_compression);
+            break;
+        case BinaryDataEncoder::Compression_DictZstd:
+            // codec doesn't mix with Numpress
+            zstd = true;
+            if (config.numpress != BinaryDataEncoder::Numpress_None)
+                throw runtime_error("[IO::write()] Cannot combine dictionary encoding Zstd with MS-Numpress.");
+            write(writer, MS_dictionary_encoded_zstd_compression);
+            break;
         default:
             throw runtime_error("[IO::write()] Unsupported compression method.");
             break;
     }
+    CVID numpressTerm;
     switch (usedConfig.numpress) {
         case BinaryDataEncoder::Numpress_Linear:
             write(writer, isIntegerArray ? MS_32_bit_integer : MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
-            write(writer, zlib ? MS_MS_Numpress_linear_prediction_compression_followed_by_zlib_compression : MS_MS_Numpress_linear_prediction_compression);
+            numpressTerm = MS_MS_Numpress_linear_prediction_compression;
+            if (zlib)
+            {
+                numpressTerm = MS_MS_Numpress_linear_prediction_compression_followed_by_zlib_compression;
+            }
+            else if (zstd)
+            {
+                numpressTerm = MS_MS_Numpress_linear_prediction_compression_followed_by_zstd_compression;
+            }
+            write(writer, numpressTerm);
             break;
         case BinaryDataEncoder::Numpress_Pic:
             write(writer, isIntegerArray ? MS_32_bit_integer : MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
-            write(writer, zlib ? MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression : MS_MS_Numpress_positive_integer_compression);
+            numpressTerm = MS_MS_Numpress_positive_integer_compression;
+            if (zlib)
+            {
+                numpressTerm = MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression;
+            }
+            else if (zstd)
+            {
+                numpressTerm = MS_MS_Numpress_positive_integer_compression_followed_by_zstd_compression;
+            }
+            write(writer, numpressTerm);
             break;
         case BinaryDataEncoder::Numpress_Slof:
             write(writer, isIntegerArray ? MS_32_bit_integer : MS_32_bit_float); // This should actually be ignored by any reader since numpress defines word size and format, but it makes output standards-compliant and is pretty close to true anyway
-            write(writer, zlib ? MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression : MS_MS_Numpress_short_logged_float_compression);
+            numpressTerm = MS_MS_Numpress_short_logged_float_compression;
+            if (zlib)
+            {
+                numpressTerm = MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression;
+            }
+            else if (zstd)
+            {
+                numpressTerm = MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression;
+            }
+            write(writer, numpressTerm);
             break;
         case BinaryDataEncoder::Numpress_None:
             break;
@@ -1996,7 +2047,7 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
     }
 #endif
 
-    writeParamContainer(writer, binaryDataArray); 
+    writeParamContainer(writer, binaryDataArray);
 
 #ifndef WITHOUT_MZMLB
     if (mzMLb_os)
@@ -2058,12 +2109,12 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         autoUnescapeCharacters = false;
     }
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
         if (name != "cvParam") // most common, but not handled here
-        { 
+        {
             if (name == "binaryDataArray")
             {
                 paramContainer.clear();
@@ -2085,7 +2136,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                 return Status::Ok;
             }
             else if (name == "binary")
-            {               
+            {
                 if (msd) References::resolve(paramContainer, *msd);
 
                 config = getConfig();
@@ -2202,7 +2253,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
 
         if (text.length() != encodedLength_)
-            throw runtime_error("[IO::HandlerBinaryDataArray] At position " + lexical_cast<string>(position) + ": encoded lengths differ."); 
+            throw runtime_error("[IO::HandlerBinaryDataArray] At position " + lexical_cast<string>(position) + ": encoded lengths differ.");
 
         return Status::Ok;
     }
@@ -2212,20 +2263,20 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
     size_t arrayLength_;
     size_t encodedLength_;
     std::string external_dataset_;
-    size_t external_offset_; 
+    size_t external_offset_;
 
     std::istream* is_;
 
     CVID extractCVParam(ParamContainer& container, CVID cvid)
     {
         vector<CVParam>& params = container.cvParams;
-        vector<CVParam>::iterator it = find_if(params.begin(), params.end(), 
+        vector<CVParam>::iterator it = find_if(params.begin(), params.end(),
                                                CVParamIsChildOf(cvid));
 
         CVID result = CVID_Unknown;
 
         if (it != params.end())
-        {   
+        {
             // found the cvid in container -- erase the CVParam
             result = it->cvid;
             params.erase(it);
@@ -2269,7 +2320,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         vector<CVParam>& params = container.cvParams;
         vector<CVParam>::iterator it;
         while ((it = find_if(params.begin(), params.end(),CVParamIsChildOf(cvid))) != params.end())
-        {   
+        {
             // found the cvid in container -- erase the CVParam
             results.push_back(it->cvid);
             params.erase(it);
@@ -2309,13 +2360,13 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
         return false;
     }
-    
+
     BinaryDataEncoder::Config getConfig()
     {
         BinaryDataEncoder::Config config;
 
         //
-        // Note: these CVParams are really info about the encoding, and not 
+        // Note: these CVParams are really info about the encoding, and not
         // part of the BinaryDataArray.  We look at them to see how to decode the data,
         // and remove them from the BinaryDataArray struct (extractCVParam does the removal).
         //
@@ -2329,7 +2380,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             config.prediction = BinaryDataEncoder::Prediction_Delta;
 
         cvidBinaryDataType = extractCVParam(paramContainer, MS_binary_data_type);
- 
+
         // handle mix of zlib and numpress compression
         CVID cvidCompressionType;
         config.compression = BinaryDataEncoder::Compression_None;
@@ -2345,6 +2396,15 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                     break;
                 case MS_zlib_compression:
                     config.compression = BinaryDataEncoder::Compression_Zlib;
+                    break;
+                case MS_zstd_compression:
+                    config.compression = BinaryDataEncoder::Compression_Zstd;
+                    break;
+                case MS_byte_shuffled_zstd_compression:
+                    config.compression = BinaryDataEncoder::Compression_ByteShuffleZstd;
+                    break;
+                case MS_dictionary_encoded_zstd_compression:
+                    config.compression = BinaryDataEncoder::Compression_DictZstd;
                     break;
                 case MS_MS_Numpress_linear_prediction_compression:
                     config.numpress = BinaryDataEncoder::Numpress_Linear;
@@ -2396,9 +2456,14 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                 default:
                     break;
             }
-
-        switch (cvidBinaryDataType)
+        if ((BinaryDataEncoder::Numpress_None != config.numpress || mzMLb_is) &&
+            (config.compression == BinaryDataEncoder::Compression_ByteShuffleZstd || config.compression == BinaryDataEncoder::Compression_DictZstd))
         {
+            throw runtime_error("[IO::HandlerBinaryDataArray] Cannot combine advanced Zstd compression with Numpress or mzMLb.");
+        }
+
+            switch (cvidBinaryDataType)
+            {
             case MS_32_bit_float:
             case MS_32_bit_integer:
                 if (BinaryDataEncoder::Numpress_None == config.numpress)
@@ -2521,17 +2586,17 @@ PWIZ_API_DECL void read(std::istream& is, std::vector<BinaryDataArrayPtr>& binar
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& msd, 
+void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& msd,
            const BinaryDataEncoder::Config& config)
 {
     XMLWriter::Attributes attributes;
     attributes.add("index", spectrum.index);
     attributes.add("id", spectrum.id); // not an XML:ID
     if (!spectrum.spotID.empty())
-        attributes.add("spotID", spectrum.spotID);   
-    
+        attributes.add("spotID", spectrum.spotID);
+
     attributes.add("defaultArrayLength", spectrum.defaultArrayLength);
-    
+
     if (spectrum.dataProcessingPtr.get())
         attributes.add("dataProcessingRef", encode_xml_id_copy(spectrum.dataProcessingPtr->id));
     if (spectrum.sourceFilePtr.get())
@@ -2548,24 +2613,24 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
         XMLWriter::Attributes attributes;
         attributes.add("count", spectrum.precursors.size());
         writer.startElement("precursorList", attributes);
-        
-        for (vector<Precursor>::const_iterator it=spectrum.precursors.begin(); 
+
+        for (vector<Precursor>::const_iterator it=spectrum.precursors.begin();
              it!=spectrum.precursors.end(); ++it)
              write(writer, *it);
-     
+
         writer.endElement();
     }
-   
+
     if (!spectrum.products.empty())
     {
         XMLWriter::Attributes attributes;
         attributes.add("count", spectrum.products.size());
         writer.startElement("productList", attributes);
-        
-        for (vector<Product>::const_iterator it=spectrum.products.begin(); 
+
+        for (vector<Product>::const_iterator it=spectrum.products.begin();
              it!=spectrum.products.end(); ++it)
              write(writer, *it);
-     
+
         writer.endElement();
     }
 
@@ -2590,12 +2655,12 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
     writer.endElement(); // spectrum
 }
 
-    
+
 struct HandlerSpectrum : public HandlerParamContainer
 {
     BinaryDataFlag binaryDataFlag;
     Spectrum* spectrum;
-    const SpectrumIdentityFromXML *spectrumID; 
+    const SpectrumIdentityFromXML *spectrumID;
     const map<string,string>* legacyIdRefToNativeId;
     const MSData* msd;
 
@@ -2615,7 +2680,7 @@ struct HandlerSpectrum : public HandlerParamContainer
     {
     }
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -2623,7 +2688,7 @@ struct HandlerSpectrum : public HandlerParamContainer
             throw runtime_error("[IO::HandlerSpectrum] Null spectrum.");
 
         if (name != "cvParam") // the most common, but not handled here
-        { 
+        {
             if (name == "spectrum")
             {
                 spectrum->sourceFilePosition = position;
@@ -2683,17 +2748,17 @@ struct HandlerSpectrum : public HandlerParamContainer
                 handlerBinaryDataArray_.binaryDataArrayPtrs = &spectrum->binaryDataArrayPtrs;
                 handlerBinaryDataArray_.integerDataArrayPtrs = &spectrum->integerDataArrayPtrs;
                 handlerBinaryDataArray_.defaultArrayLength = &spectrum->defaultArrayLength;
-                handlerBinaryDataArray_.msd = msd;               
+                handlerBinaryDataArray_.msd = msd;
                 handlerBinaryDataArray_.binaryDataFlag = binaryDataFlag;
                 return Status(Status::Delegate, &handlerBinaryDataArray_);
             }
             else if (name == "binaryDataArrayList")
             {
                 // pretty likely to come right back here and read the
-                // binary data once the header info has been inspected, 
+                // binary data once the header info has been inspected,
                 // so note position
                 if (spectrumID) {
-                    spectrumID->sourceFilePositionForBinarySpectrumData = position; 
+                    spectrumID->sourceFilePositionForBinarySpectrumData = position;
                 }
                 return Status::Ok;
             }
@@ -2743,13 +2808,13 @@ PWIZ_API_DECL void read(std::istream& is, Spectrum& spectrum,
 
 
 PWIZ_API_DECL
-void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram, 
+void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
            const BinaryDataEncoder::Config& config)
 {
     XMLWriter::Attributes attributes;
     attributes.add("index", chromatogram.index);
     attributes.add("id", chromatogram.id); // not an XML:ID
-    
+
 #ifndef WITHOUT_MZMLB
     boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
     if (mzMLb_os)
@@ -2760,7 +2825,7 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
 #endif
     {
         attributes.add("defaultArrayLength", chromatogram.defaultArrayLength);
-    }    
+    }
 
     if (chromatogram.dataProcessingPtr.get())
         attributes.add("dataProcessingRef", encode_xml_id_copy(chromatogram.dataProcessingPtr->id));
@@ -2768,10 +2833,10 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
     writer.startElement("chromatogram", attributes);
 
     writeParamContainer(writer, chromatogram);
-    
+
     if (!chromatogram.precursor.empty())
         write(writer, chromatogram.precursor);
-   
+
     if (!chromatogram.product.empty())
         write(writer, chromatogram.product);
 
@@ -2780,7 +2845,7 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
         attributes.clear();
         attributes.add("count", chromatogram.binaryDataArrayPtrs.size() + chromatogram.integerDataArrayPtrs.size());
         writer.startElement("binaryDataArrayList", attributes);
-        
+
         BinaryDataEncoder::Config updated_config = config;
         updated_config.type = BinaryDataEncoder::Type_Chromatogram;
 
@@ -2810,7 +2875,7 @@ struct HandlerChromatogram : public HandlerParamContainer
         handlerBinaryDataArray_(0, 0, 0, is)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -2861,7 +2926,7 @@ struct HandlerChromatogram : public HandlerParamContainer
     }
 
     private:
-        
+
     HandlerPrecursor handlerPrecursor_;
     HandlerProduct handlerProduct_;
     HandlerBinaryDataArray handlerBinaryDataArray_;
@@ -2892,7 +2957,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
     attributes.add("count", spectrumList.size());
 
     if (spectrumList.dataProcessingPtr().get())
-        attributes.push_back(make_pair("defaultDataProcessingRef", 
+        attributes.push_back(make_pair("defaultDataProcessingRef",
                                         spectrumList.dataProcessingPtr()->id));
 
     writer.startElement("spectrumList", attributes); // required by schema, even if empty
@@ -2946,7 +3011,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
         write(writer, *spectrum, msd, config);
         spectrum->index += skipped; // restore original index in case the spectrum is held in memory and the same spectrum is written again
     }
-    
+
 #ifndef WITHOUT_MZMLB
     boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
     if (mzMLb_os)
@@ -2959,7 +3024,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
     writer.endElement();
 }
 
-    
+
 struct HandlerSpectrumListSimple : public HandlerParamContainer
 {
     SpectrumListSimple* spectrumListSimple;
@@ -2969,7 +3034,7 @@ struct HandlerSpectrumListSimple : public HandlerParamContainer
         handlerSpectrum_(ReadBinaryData)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -3028,7 +3093,7 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
     attributes.add("count", chromatogramList.size());
 
     if (chromatogramList.dataProcessingPtr().get())
-        attributes.push_back(make_pair("defaultDataProcessingRef", 
+        attributes.push_back(make_pair("defaultDataProcessingRef",
                                         chromatogramList.dataProcessingPtr()->id));
 
     writer.startElement("chromatogramList", attributes);
@@ -3089,7 +3154,7 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
     writer.endElement();
 }
 
-    
+
 struct HandlerChromatogramListSimple : public HandlerParamContainer
 {
     ChromatogramListSimple* chromatogramListSimple;
@@ -3099,7 +3164,7 @@ struct HandlerChromatogramListSimple : public HandlerParamContainer
         handlerChromatogram_(ReadBinaryData)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -3170,7 +3235,7 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
         attributes.add("startTimeStamp", run.startTimeStamp);
     if (run.defaultSourceFilePtr.get())
         attributes.add("defaultSourceFileRef", encode_xml_id_copy(run.defaultSourceFilePtr->id));
- 
+
     writer.startElement("run", attributes);
 
     writeParamContainer(writer, run);
@@ -3187,7 +3252,7 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
     writer.endElement();
 }
 
-    
+
 struct HandlerRun : public HandlerParamContainer
 {
     SpectrumListFlag spectrumListFlag;
@@ -3197,7 +3262,7 @@ struct HandlerRun : public HandlerParamContainer
     :   spectrumListFlag(_spectrumListFlag), run(_run)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
@@ -3343,16 +3408,16 @@ struct HandlerMSData : public SAXParser::Handler
 {
     MSData* msd;
 
-    HandlerMSData(SpectrumListFlag spectrumListFlag, MSData* _msd = 0) 
-    :  msd(_msd), handlerRun_(spectrumListFlag) 
+    HandlerMSData(SpectrumListFlag spectrumListFlag, MSData* _msd = 0)
+    :  msd(_msd), handlerRun_(spectrumListFlag)
     {}
 
-    virtual Status startElement(const string& name, 
+    virtual Status startElement(const string& name,
                                 const Attributes& attributes,
                                 stream_offset position)
     {
         if (!msd)
-            throw runtime_error("[IO::HandlerMSData] Null msd."); 
+            throw runtime_error("[IO::HandlerMSData] Null msd.");
 
         if (name == "mzML")
         {
@@ -3376,10 +3441,10 @@ struct HandlerMSData : public SAXParser::Handler
 
             return Status::Ok;
         }
-        else if (name == "cvList" || 
+        else if (name == "cvList" ||
                  name == "referenceableParamGroupList" ||
-                 name == "sampleList" || 
-                 name == "instrumentConfigurationList" || 
+                 name == "sampleList" ||
+                 name == "instrumentConfigurationList" ||
                  name == "softwareList" ||
                  name == "dataProcessingList" ||
                  (version == 1 && name == "acquisitionSettingsList") /* mzML 1.0 */ ||
@@ -3416,14 +3481,14 @@ struct HandlerMSData : public SAXParser::Handler
             msd->instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration));
             handlerInstrumentConfiguration_.instrumentConfiguration = msd->instrumentConfigurationPtrs.back().get();
             return Status(Status::Delegate, &handlerInstrumentConfiguration_);
-        }        
+        }
         else if (name == "software")
         {
             msd->softwarePtrs.push_back(SoftwarePtr(new Software));
             handlerSoftware_.version = version;
             handlerSoftware_.software = msd->softwarePtrs.back().get();
             return Status(Status::Delegate, &handlerSoftware_);
-        }        
+        }
         else if (name == "dataProcessing")
         {
             msd->dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing));
@@ -3468,7 +3533,7 @@ void read(std::istream& is, MSData& msd,
 {
     HandlerMSData handler(spectrumListFlag, &msd);
     SAXParser::parse(is, handler);
-    References::resolve(msd); 
+    References::resolve(msd);
 }
 
 
