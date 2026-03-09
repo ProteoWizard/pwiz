@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Util.Extensions
 
         public const string EXT_CSV = ".csv";
         public const string EXT_TSV = ".tsv";
+        public const string EXT_PARQUET = ".parquet";
 
         public static string FILTER_CSV
         {
@@ -59,6 +60,11 @@ namespace pwiz.Skyline.Util.Extensions
         public static string FILTER_TSV
         {
             get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
+        }
+
+        public static string FILTER_PARQUET
+        {
+            get { return FileDialogFilter(ExtensionsResources.TextUtil_DESCRIPTION_PARQUET_Parquet, EXT_PARQUET); }
         }
 
         public const char SEPARATOR_CSV = ',';
@@ -853,6 +859,8 @@ namespace pwiz.Skyline.Util.Extensions
         
         public int NumberOfFields { get; private set; }
         public Dictionary<string, int> FieldDict { get; private set; }
+        // Small molecule list reader supports multiple fragments per input line
+        public Dictionary<string, List<int>> FieldIndicesMulti { get; private set; } // Tracks all indices for duplicate field names
         public List<string> FieldNames { get; private set; } 
 
         public DsvFileReader(string fileName, char separator, bool hasHeaders=true) : 
@@ -876,6 +884,7 @@ namespace pwiz.Skyline.Util.Extensions
             _reader = reader;
             FieldNames = new List<string>();
             FieldDict = new Dictionary<string, int>();
+            FieldIndicesMulti = new Dictionary<string, List<int>>(); // Some formats allow duplicate column types, e.g. small molecule list reader
             _titleLine = _reader.ReadLine(); // we will re-use this if it's not actually a header line
             string saveTitleLine = _titleLine; // because we can overwrite the first line and might want to use it later, save it
             _rereadTitleLine = !hasHeaders; // tells us whether or not to reuse the supposed header line on first read
@@ -900,7 +909,14 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 var fieldName = fields[i].Trim();
                 FieldNames.Add(fieldName);
-                FieldDict[fieldName] = i;
+                // Track all indices for each field name (supports duplicate column headers as in small molecule list reader)
+                if (!FieldIndicesMulti.TryGetValue(fieldName, out var multiList))
+                {
+                    FieldIndicesMulti[fieldName] = multiList = new List<int>();
+                }
+                multiList.Add(i);
+                if (!FieldDict.ContainsKey(fieldName))
+                    FieldDict[fieldName] = i; // Keep first occurrence for backward compat with single-index lookup
                 // Check to see if the given column name is actually a synonym for the internal canonical (no spaces, serialized) name
                 if (headerSynonyms != null)
                 {
@@ -908,6 +924,17 @@ namespace pwiz.Skyline.Util.Extensions
                     if (!string.IsNullOrEmpty(key))
                     {
                         var syn = headerSynonyms[key];
+                        // Track all indices for canonical synonym name too, but only if it
+                        // differs from the field name (avoid double-counting identity mappings
+                        // like "ProductMz" → "ProductMz" which would inflate FragmentCount)
+                        if (!string.Equals(syn, fieldName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!FieldIndicesMulti.TryGetValue(syn, out var synList))
+                            {
+                                FieldIndicesMulti[syn] = synList = new List<int>();
+                            }
+                            synList.Add(i);
+                        }
                         if (!FieldDict.ContainsKey(syn))
                         {
                             // Note the internal name for this field
@@ -987,6 +1014,17 @@ namespace pwiz.Skyline.Util.Extensions
             if (!FieldDict.ContainsKey(fieldName))
                 return -1;
             return FieldDict[fieldName];
+        }
+
+        /// <summary>
+        /// Get all indices for a field name that appears multiple times in the header
+        /// </summary>
+        public List<int> GetFieldIndices(string fieldName)
+        {
+            if (FieldIndicesMulti != null && FieldIndicesMulti.TryGetValue(fieldName, out var indices))
+                return indices;
+            var single = GetFieldIndex(fieldName);
+            return single >= 0 ? new List<int> { single } : new List<int>();
         }
 
         /// <summary>

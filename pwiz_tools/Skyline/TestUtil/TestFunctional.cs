@@ -2300,6 +2300,7 @@ namespace pwiz.SkylineTestUtil
             Program.FunctionalTest = true;
             Program.DefaultUiMode = defaultUiMode;
             Program.TestExceptions = new List<Exception>();
+            Program.GcTracker = new GcTrackerAdapter();
             LocalizationHelper.InitThread();
 
             UnzipTestFiles();
@@ -2546,6 +2547,13 @@ namespace pwiz.SkylineTestUtil
             var recordedFile = GetLogFilePath(AuditLogDir);
             if (File.Exists(recordedFile))
                 TryHelper.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
+            // Release audit log entries that may hold undo action closures
+            // capturing SkylineWindow, preventing GC after test cleanup
+            lock (_setSeenEntries)
+            {
+                _setSeenEntries.Clear();
+            }
+            _lastLoggedEntries.Clear();
         }
 
         private string GetLogFilePath(string folderPath)
@@ -2625,6 +2633,10 @@ namespace pwiz.SkylineTestUtil
 
         private void WaitForSkyline()
         {
+            using var restoreTracking = new ScopedAction(
+                FileStreamManager.Default.StartTrackingHistory,
+                FileStreamManager.Default.EndTrackingHistory);
+
             try
             {
                 int waitCycles = GetWaitCycles();
@@ -2769,18 +2781,19 @@ namespace pwiz.SkylineTestUtil
                 // Try twice, because this operation can fail due to active background processing
                 RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
-                WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
-                if (FileStreamManager.Default.HasPooledStreams)
-                {
-                    // Just write to console to provide more information. This should cause a failure
-                    // trying to remove the test directory, which will provide a path to the problem file
-                    Console.WriteLine(TextUtil.LineSeparate("Streams left open:", string.Empty,
-                        FileStreamManager.Default.ReportPooledStreams()));
-                }
-
                 WaitForGraphs(false);
-                // Wait for any background loaders to notice the change and stop what they're doing
+                // Wait for background loaders first - CloseRemovedStreams runs inside
+                // BackgroundLoaders, so the pool cannot drain until they finish
                 WaitForBackgroundLoaders();
+
+                WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
+                var report = FileStreamManager.Default.ReportPooledStreams();
+                if (report != null)
+                {
+                    var message = TextUtil.LineSeparate("Streams left open:", string.Empty, report);
+                    Console.WriteLine(message);
+                    Program.AddTestException(new IOException(message));
+                }
                 // Wait for FileSystemWatchers to be completely shut down before test cleanup
                 // This prevents race conditions where watchers might access directories during cleanup
                 // Note: FilesTree may be null if already destroyed, in which case watching is already complete
@@ -3532,5 +3545,17 @@ namespace pwiz.SkylineTestUtil
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Bridges <see cref="IGarbageCollectionTracker"/> (Skyline) to
+    /// <see cref="GarbageCollectionTracker"/> (TestRunnerLib).
+    /// </summary>
+    internal class GcTrackerAdapter : IGarbageCollectionTracker
+    {
+        public void Register<T>(T target)
+        {
+            GarbageCollectionTracker.Register(typeof(T), target);
+        }
     }
 }
