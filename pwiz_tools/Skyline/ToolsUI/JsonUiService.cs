@@ -263,9 +263,9 @@ namespace pwiz.Skyline.ToolsUI
                 var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
                 if (zedGraph == null)
                 {
-                    throw new ArgumentException(new LlmInstruction(
-                        @"Not a graph form: " + graphId +
-                        @". Use skyline_get_open_forms to find forms with HasGraph=True."));
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
+                        graphId));
                 }
                 var graphData = CopyGraphDataToolStripMenuItem.GetGraphData(zedGraph.MasterPane);
                 if (graphData.Panes.Count == 0)
@@ -290,9 +290,9 @@ namespace pwiz.Skyline.ToolsUI
                 var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
                 if (zedGraph == null)
                 {
-                    throw new ArgumentException(new LlmInstruction(
-                        @"Not a graph form: " + graphId +
-                        @". Use skyline_get_open_forms to find forms with HasGraph=True."));
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.",
+                        graphId));
                 }
                 using (var bitmap = zedGraph.MasterPane.GetImage(zedGraph.MasterPane.IsAntiAlias))
                 {
@@ -392,9 +392,9 @@ namespace pwiz.Skyline.ToolsUI
             int colonIndex = formId.IndexOf(':');
             if (colonIndex < 0)
             {
-                throw new ArgumentException(new LlmInstruction(
-                    @"Invalid form ID format: " + formId +
-                    @". Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs."));
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Invalid form ID format: {0}. Expected 'TypeName:Title'. Use skyline_get_open_forms to get valid IDs.",
+                    formId));
             }
 
             string typeName = formId.Substring(0, colonIndex);
@@ -425,9 +425,9 @@ namespace pwiz.Skyline.ToolsUI
                     return form;
             }
 
-            throw new ArgumentException(new LlmInstruction(
-                @"Form not found: " + formId +
-                @". Use skyline_get_open_forms to see available forms."));
+            throw new ArgumentException(LlmInstruction.Format(
+                @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
+                formId));
         }
 
         /// <summary>

@@ -1128,6 +1128,21 @@ namespace pwiz.Skyline.Util.Extensions
     /// </summary>
     public readonly struct LlmInstruction
     {
+        public static LlmInstruction Format(string formatString, params string[] args)
+        {
+            return new LlmInstruction(string.Format(formatString, args));
+        }
+
+        public static LlmInstruction SpaceSeparate(params string[] values)
+        {
+            return new LlmInstruction(TextUtil.SpaceSeparate(values));
+        }
+
+        public static LlmInstruction TabSeparate(params string[] values)
+        {
+            return new LlmInstruction(values.ToDsvLine(TextUtil.SEPARATOR_TSV));
+        }
+
         public LlmInstruction(string value)
         {
             Value = value;

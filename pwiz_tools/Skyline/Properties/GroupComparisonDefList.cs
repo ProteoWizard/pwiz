@@ -21,9 +21,11 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
+using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {
+    [LlmName("Group Comparisons")]
     public class GroupComparisonDefList : SettingsList<GroupComparisonDef>
     {
         public override IEnumerable<GroupComparisonDef> GetDefaults(int revisionIndex)

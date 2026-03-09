@@ -318,30 +318,45 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestSettingsLists(JsonToolServer server)
         {
-            // GetSettingsListTypes - should contain known types
-            string types = server.GetSettingsListTypes();
-            AssertEx.Contains(types, nameof(EnzymeList));
-            AssertEx.Contains(types, nameof(PersistedViews));
-            // Each line should be tab-separated
-            foreach (var line in types.ReadLines())
-                AssertEx.Contains(line, TextUtil.SEPARATOR_TSV_STR); // Tab character
+            string enzymesName = JsonToolServer.GetSettingsListName<EnzymeList>();
+            string reportsName = JsonToolServer.GetSettingsListName<PersistedViews>();
+            string heavyModsName = JsonToolServer.GetSettingsListName<HeavyModList>();
 
-            // GetSettingsListNames - enzymes should contain the default enzyme
+            // GetSettingsListTypes - should return LlmName values, not property names
+            string types = server.GetSettingsListTypes();
+            AssertEx.Contains(types, enzymesName);
+            AssertEx.Contains(types, reportsName);
+            AssertEx.Contains(types, heavyModsName);
+            // Should NOT contain internal property names
+            AssertEx.IsFalse(types.Contains(nameof(EnzymeList)),
+                @"GetSettingsListTypes should return LlmName values, not property names");
+
+            // GetSettingsListNames - using LlmName
             var defaultEnzyme = EnzymeList.GetDefault();
-            string enzymes = server.GetSettingsListNames(nameof(EnzymeList));
+            string enzymes = server.GetSettingsListNames(enzymesName);
             AssertEx.Contains(enzymes, defaultEnzyme.Name);
 
-            // GetSettingsListItem - should return valid XML containing the enzyme name
-            string enzymeXml = server.GetSettingsListItem(nameof(EnzymeList), defaultEnzyme.GetKey());
+            // GetSettingsListItem - using LlmName
+            string enzymeXml = server.GetSettingsListItem(enzymesName, defaultEnzyme.GetKey());
             AssertEx.Contains(enzymeXml, string.Format(@"name={0}", defaultEnzyme.Name.Quote()));
 
-            // GetSettingsListNames for PersistedViews (reports) - exercises GetPersistedViewNames
-            string viewNames = server.GetSettingsListNames(nameof(PersistedViews));
+            // Backward compatibility - property names still work
+            string enzymes2 = server.GetSettingsListNames(nameof(EnzymeList));
+            AssertEx.Contains(enzymes2, defaultEnzyme.Name);
+            string enzymeXml2 = server.GetSettingsListItem(nameof(EnzymeList), defaultEnzyme.GetKey());
+            AssertEx.Contains(enzymeXml2, string.Format(@"name={0}", defaultEnzyme.Name.Quote()));
+
+            // GetSettingsListNames for PersistedViews (reports) - using LlmName
+            string viewNames = server.GetSettingsListNames(reportsName);
             AssertEx.Contains(viewNames, @"# Main");
             AssertEx.Contains(viewNames, REPORT_AREAS);
 
-            // GetSettingsListItem for PersistedViews - exercises GetPersistedViewItem + SerializeViewSpec
-            string viewXml = server.GetSettingsListItem(nameof(PersistedViews), REPORT_AREAS);
+            // Backward compatibility - PersistedViews property name still works
+            string viewNames2 = server.GetSettingsListNames(nameof(PersistedViews));
+            AssertEx.Contains(viewNames2, @"# Main");
+
+            // GetSettingsListItem for PersistedViews - using LlmName
+            string viewXml = server.GetSettingsListItem(reportsName, REPORT_AREAS);
             AssertEx.Contains(viewXml, @"<view");
             AssertEx.Contains(viewXml, REPORT_AREAS);
 
@@ -351,11 +366,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Error: nonexistent item
             AssertEx.ThrowsException<ArgumentException>(() =>
-                server.GetSettingsListItem(nameof(EnzymeList), @"NotAnEnzyme"));
+                server.GetSettingsListItem(enzymesName, @"NotAnEnzyme"));
 
             // Error: nonexistent persisted view
             AssertEx.ThrowsException<ArgumentException>(() =>
-                server.GetSettingsListItem(nameof(PersistedViews), @"NotAView_12345"));
+                server.GetSettingsListItem(reportsName, @"NotAView_12345"));
         }
 
         private void TestReportDocumentation(JsonToolServer server)

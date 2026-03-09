@@ -219,14 +219,14 @@ namespace pwiz.Skyline.ToolsUI
                 return string.Join(@",", _methods.Keys.OrderBy(k => k));
 
             if (!_methods.TryGetValue(method, out var methodInfo))
-                throw new ArgumentException(@"Unknown method: " + method);
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Unknown method:", method));
 
             var parameters = methodInfo.GetParameters();
             int requiredCount = parameters.Count(p => !p.HasDefaultValue);
             if (args.Length < requiredCount)
             {
-                throw new ArgumentException(
-                    string.Format(@"{0} requires at least {1} argument(s)", method, requiredCount));
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"{0} requires at least {1} argument(s)", method, requiredCount.ToString()));
             }
 
             var invokeArgs = new object[parameters.Length];
@@ -286,29 +286,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSettingsListTypes()
         {
-            var sb = new StringBuilder();
-            foreach (var prop in typeof(Settings).GetProperties())
-            {
-                if (!IsSettingsListBase(prop.PropertyType))
-                    continue;
-                string title;
-                try
-                {
-                    var list = prop.GetValue(Settings.Default) as IListEditorSupport;
-                    title = list?.Title ?? prop.Name;
-                }
-                catch
-                {
-                    title = prop.Name;
-                }
-                sb.Append(prop.Name).Append('\t').AppendLine(title);
-            }
-            sb.Append(nameof(PersistedViews)).Append('\t').AppendLine(@"Reports");
-            return sb.ToString();
+            return TextUtil.LineSeparate(LlmNameMap.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase));
         }
 
         public string GetDocumentStatus()
         {
+            // All labels in this method are LLM-facing (not localizable)
             var doc = Program.MainWindow.Document;
             string mode = doc.DocumentType.ToString();
             int groups = doc.MoleculeGroupCount;
@@ -318,22 +301,22 @@ namespace pwiz.Skyline.ToolsUI
             int replicates = doc.Settings.MeasuredResults?.Chromatograms.Count ?? 0;
             string docPath = _toolService.GetDocumentPath();
             string docDisplay = string.IsNullOrEmpty(docPath)
-                ? @"(unsaved)"
+                ? new LlmInstruction(@"(unsaved)")
                 : docPath.ToForwardSlashPath();
 
-            string groupsLabel, moleculesLabel;
+            LlmInstruction groupsLabel, moleculesLabel;
             if (doc.DocumentType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
-                groupsLabel = @"Lists";
-                moleculesLabel = @"Molecules";
+                groupsLabel = new LlmInstruction(@"Lists");
+                moleculesLabel = new LlmInstruction(@"Molecules");
             }
             else
             {
                 // proteomic and mixed both support proteins and free-form peptide lists
-                groupsLabel = @"Proteins/Lists";
+                groupsLabel = new LlmInstruction(@"Proteins/Lists");
                 moleculesLabel = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.mixed
-                    ? @"Peptides/Molecules"
-                    : @"Peptides";
+                    ? new LlmInstruction(@"Peptides/Molecules")
+                    : new LlmInstruction(@"Peptides");
             }
 
             return TextUtil.LineSeparate($@"Mode: {mode}",
@@ -384,15 +367,16 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSettingsListNames(string listType)
         {
-            if (listType == nameof(PersistedViews))
+            string propName = ResolveLlmListType(listType);
+            if (propName == nameof(PersistedViews))
                 return GetPersistedViewNames();
 
-            var prop = typeof(Settings).GetProperty(listType);
+            var prop = typeof(Settings).GetProperty(propName);
             if (prop == null)
-                throw new ArgumentException(@"Unknown settings list type: " + listType);
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Unknown settings list type:", listType));
             var value = prop.GetValue(Settings.Default);
             if (value == null)
-                throw new ArgumentException(@"Settings list is null: " + listType);
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Settings list is null:", listType));
             var sb = new StringBuilder();
             foreach (var item in (IEnumerable)value)
             {
@@ -413,7 +397,7 @@ namespace pwiz.Skyline.ToolsUI
             var sb = new StringBuilder();
             sb.AppendLine(matchedTopic.DisplayName);
             sb.AppendLine();
-            sb.AppendLine(@"Name" + TextUtil.SEPARATOR_TSV + @"Description" + TextUtil.SEPARATOR_TSV + @"Type");
+            sb.AppendLine(LlmInstruction.TabSeparate(@"Name", @"Description", @"Type"));
             foreach (var col in matchedTopic.Columns)
                 sb.AppendLine(col.InvariantName + TextUtil.SEPARATOR_TSV +
                               col.Description.FlattenToSingleLine() + TextUtil.SEPARATOR_TSV +
@@ -474,8 +458,8 @@ namespace pwiz.Skyline.ToolsUI
                     targetDepth = 4;
                     break;
                 default:
-                    throw new ArgumentException(new LlmInstruction(
-                        string.Format(@"Invalid level '{0}'. Use: group, molecule, precursor, transition.", level)));
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Invalid level '{0}'. Use: group, molecule, precursor, transition.", level));
             }
 
             // Resolve the root element
@@ -497,16 +481,16 @@ namespace pwiz.Skyline.ToolsUI
                 rootPath = nodeRef.ToIdentityPath(document);
                 if (rootPath == null)
                 {
-                    throw new ArgumentException(new LlmInstruction(
-                        string.Format(@"Element not found: {0}", rootLocator)));
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Element not found: {0}", rootLocator));
                 }
                 rootDepth = rootPath.Length;
             }
 
             if (targetDepth <= rootDepth)
             {
-                throw new ArgumentException(new LlmInstruction(
-                    string.Format(@"Level '{0}' must be deeper than the root element.", level)));
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Level '{0}' must be deeper than the root element.", level));
             }
 
             var sb = new StringBuilder();
@@ -573,8 +557,7 @@ namespace pwiz.Skyline.ToolsUI
             Settings.Default.PersistedViews.SetViewSpecList(groupId, viewSpecList);
             Log(string.Format(@"Saved report '{0}' to {1}", viewSpec.Name, groupId));
 
-            return new LlmInstruction(
-                string.Format(@"Report {0} has been added to Skyline.", viewSpec.Name.SingleQuote()));
+            return LlmInstruction.Format(@"Report {0} has been added to Skyline.", viewSpec.Name.SingleQuote());
         }
 
         public string InsertSmallMoleculeTransitionList(string textCSV)
@@ -648,15 +631,16 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSettingsListItem(string listType, string itemName)
         {
-            if (listType == nameof(PersistedViews))
+            string propName = ResolveLlmListType(listType);
+            if (propName == nameof(PersistedViews))
                 return GetPersistedViewItem(itemName);
 
-            var prop = typeof(Settings).GetProperty(listType);
+            var prop = typeof(Settings).GetProperty(propName);
             if (prop == null)
-                throw new ArgumentException(@"Unknown settings list type: " + listType);
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Unknown settings list type:", listType));
             var value = prop.GetValue(Settings.Default);
             if (value == null)
-                throw new ArgumentException(@"Settings list is null: " + listType);
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Settings list is null:", listType));
             foreach (var item in (IEnumerable)value)
             {
                 var keyContainer = item as IKeyContainer<string>;
@@ -664,7 +648,7 @@ namespace pwiz.Skyline.ToolsUI
                     continue;
                 return SerializeSettingsItem(item);
             }
-            throw new ArgumentException(@"Item not found: " + itemName);
+            throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Item not found:", itemName));
         }
 
         public string GetTutorial(string name, string language = @"en", string filePath = null)
@@ -704,7 +688,7 @@ namespace pwiz.Skyline.ToolsUI
             using (var saver = new FileSaver(filePath, true))
             {
                 if (!saver.CanSave())
-                    throw new IOException(@"Cannot write to " + filePath);
+                    throw new IOException(LlmInstruction.SpaceSeparate(@"Cannot write to", filePath));
                 IProgressStatus status = new ProgressStatus(string.Empty);
                 rowFactories.ExportReport(saver.Stream, viewName, exporter,
                     Program.MainWindow, ref status);
@@ -753,7 +737,7 @@ namespace pwiz.Skyline.ToolsUI
             using (var saver = new FileSaver(filePath, true))
             {
                 if (!saver.CanSave())
-                    throw new IOException(@"Cannot write to " + filePath);
+                    throw new IOException(LlmInstruction.SpaceSeparate(@"Cannot write to", filePath));
                 IProgressStatus status = new ProgressStatus(string.Empty);
                 rowFactories.ExportReport(saver.Stream, viewSpec, sortSpecs, null, exporter,
                     Program.MainWindow, ref status);
@@ -780,8 +764,8 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception ex)
             {
-                throw new ArgumentException(new LlmInstruction(
-                    string.Format(@"Invalid JSON: {0}", ex.Message)));
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Invalid JSON: {0}", ex.Message));
             }
         }
 
@@ -876,7 +860,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 return string.Format(@"Unknown column {0}.", col.Name.SingleQuote());
             });
-            return new LlmInstruction(string.Join(@" ", parts));
+            return LlmInstruction.SpaceSeparate(parts.ToArray());
         }
 
         private static List<FilterSpec> ParseFilterSpecs(JArray filterArray,
@@ -895,9 +879,9 @@ namespace pwiz.Skyline.ToolsUI
                 string opName = (string)item[nameof(REPORT.op)];
                 if (string.IsNullOrWhiteSpace(opName))
                 {
-                    throw new ArgumentException(new LlmInstruction(
-                        string.Format(@"Filter on column {0} must have an 'op' field.",
-                            columnName.SingleQuote())));
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Filter on column {0} must have an 'op' field.",
+                            columnName.SingleQuote()));
                 }
 
                 // Resolve column against the row source's full column index
@@ -907,13 +891,13 @@ namespace pwiz.Skyline.ToolsUI
                     var suggestions = ColumnResolver.FindSuggestions(columnName, result.ColumnIndex.Keys);
                     if (suggestions.Count > 0)
                     {
-                        throw new ArgumentException(new LlmInstruction(
-                            string.Format(@"Unknown filter column {0}. Did you mean: {1}?",
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"Unknown filter column {0}. Did you mean: {1}?",
                                 columnName.SingleQuote(),
-                                string.Join(@", ", suggestions.Select(s => s.SingleQuote())))));
+                                string.Join(@", ", suggestions.Select(s => s.SingleQuote()))));
                     }
-                    throw new ArgumentException(new LlmInstruction(
-                        string.Format(@"Unknown filter column {0}.", columnName.SingleQuote())));
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown filter column {0}.", columnName.SingleQuote()));
                 }
 
                 // Look up filter operation
@@ -923,9 +907,9 @@ namespace pwiz.Skyline.ToolsUI
                     var validOps = FilterOperations.ListOperations()
                         .Where(o => !string.IsNullOrEmpty(o.OpName))
                         .Select(o => o.OpName.SingleQuote());
-                    throw new ArgumentException(new LlmInstruction(
-                        string.Format(@"Unknown filter operation {0}. Valid operations: {1}.",
-                            opName.SingleQuote(), string.Join(@", ", validOps))));
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown filter operation {0}. Valid operations: {1}.",
+                            opName.SingleQuote(), string.Join(@", ", validOps)));
                 }
 
                 // Validate operand presence
@@ -934,9 +918,9 @@ namespace pwiz.Skyline.ToolsUI
                                  operation == FilterOperations.OP_IS_NOT_BLANK;
                 if (!isUnaryOp && string.IsNullOrEmpty(operand))
                 {
-                    throw new ArgumentException(new LlmInstruction(
-                        string.Format(@"Filter operation {0} on column {1} requires a 'value' field.",
-                            opName.SingleQuote(), columnName.SingleQuote())));
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Filter operation {0} on column {1} requires a 'value' field.",
+                            opName.SingleQuote(), columnName.SingleQuote()));
                 }
 
                 var predicate = FilterPredicate.FromInvariantOperandText(operation, operand ?? string.Empty);
@@ -979,9 +963,9 @@ namespace pwiz.Skyline.ToolsUI
             if (string.Equals(direction, JsonToolConstants.SORT_DESC, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(direction, @"descending", StringComparison.OrdinalIgnoreCase))
                 return ListSortDirection.Descending;
-            throw new ArgumentException(new LlmInstruction(
-                string.Format(@"Invalid sort direction {0}. Use 'asc' or 'desc'.",
-                    direction.SingleQuote())));
+            throw new ArgumentException(LlmInstruction.Format(
+                @"Invalid sort direction {0}. Use 'asc' or 'desc'.",
+                    direction.SingleQuote()));
         }
 
         private static string BuildReportMetadata(string filePath, string reportName)
@@ -1039,7 +1023,7 @@ namespace pwiz.Skyline.ToolsUI
                 return PersistedViews.MainGroup.Id.ViewName(reportName);
             if (persistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).GetView(reportName) != null)
                 return PersistedViews.ExternalToolsGroup.Id.ViewName(reportName);
-            throw new ArgumentException(@"Report not found: " + reportName);
+            throw new ArgumentException(LlmInstruction.SpaceSeparate(@"Report not found:", reportName));
         }
 
         private string SerializeResult(object result)
@@ -1101,7 +1085,7 @@ namespace pwiz.Skyline.ToolsUI
             using (var saver = new FileSaver(filePath, true))
             {
                 if (!saver.CanSave())
-                    throw new IOException(@"Cannot write to " + filePath);
+                    throw new IOException(LlmInstruction.SpaceSeparate(@"Cannot write to", filePath));
                 using (var writer = XmlWriter.Create(saver.Stream,
                            new XmlWriterSettings { Indent = true }))
                 {
@@ -1159,14 +1143,55 @@ namespace pwiz.Skyline.ToolsUI
             return false;
         }
 
+        /// <summary>
+        /// Maps LlmName values to Settings property names for all settings list types.
+        /// Includes PersistedViews which is not a SettingsListBase but is exposed as a list type.
+        /// </summary>
+        private static readonly Dictionary<string, string> LlmNameMap = BuildLlmNameMap();
+
+        private static Dictionary<string, string> BuildLlmNameMap()
+        {
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var prop in typeof(Settings).GetProperties())
+            {
+                if (!IsSettingsListBase(prop.PropertyType))
+                    continue;
+                var attr = prop.PropertyType.GetCustomAttribute<LlmNameAttribute>();
+                if (attr != null)
+                    map[attr.Name] = prop.Name;
+            }
+            // PersistedViews is not a SettingsListBase but is handled as a settings list type
+            var pvAttr = typeof(PersistedViews).GetCustomAttribute<LlmNameAttribute>();
+            if (pvAttr != null)
+                map[pvAttr.Name] = nameof(PersistedViews);
+            return map;
+        }
+
+        /// <summary>
+        /// Returns the LlmName for a settings list class, or null if the attribute is not present.
+        /// </summary>
+        public static string GetSettingsListName<T>()
+        {
+            return typeof(T).GetCustomAttribute<LlmNameAttribute>()?.Name;
+        }
+
+        /// <summary>
+        /// Resolves a listType parameter that may be either an LlmName or a property name.
+        /// LlmName takes priority; falls back to the raw value for backward compatibility.
+        /// </summary>
+        private string ResolveLlmListType(string listType)
+        {
+            return LlmNameMap.TryGetValue(listType, out string propName) ? propName : listType;
+        }
+
         private static string GetPersistedViewNames()
         {
             var persistedViews = Settings.Default.PersistedViews;
             var sb = new StringBuilder();
-            sb.AppendLine(@"# Main");
+            sb.AppendLine(new LlmInstruction(@"# Main"));
             foreach (var viewSpec in persistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).ViewSpecs)
                 sb.AppendLine(viewSpec.Name);
-            sb.AppendLine(@"# External Tools");
+            sb.AppendLine(new LlmInstruction(@"# External Tools"));
             foreach (var viewSpec in persistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).ViewSpecs)
                 sb.AppendLine(viewSpec.Name);
             return sb.ToString();
@@ -1178,7 +1203,7 @@ namespace pwiz.Skyline.ToolsUI
             var viewSpec = persistedViews.GetViewSpecList(PersistedViews.MainGroup.Id).GetView(itemName)
                            ?? persistedViews.GetViewSpecList(PersistedViews.ExternalToolsGroup.Id).GetView(itemName);
             if (viewSpec == null)
-                throw new ArgumentException(@"View not found: " + itemName);
+                throw new ArgumentException(LlmInstruction.SpaceSeparate(@"View not found:", itemName));
             return SerializeViewSpec(viewSpec);
         }
 

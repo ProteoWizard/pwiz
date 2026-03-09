@@ -18,8 +18,23 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace SkylineTool
 {
+    /// <summary>
+    /// Attribute providing a stable, culture-invariant, user-friendly name for settings
+    /// list classes. Used by the MCP/JSON tool layer so LLMs can refer to settings lists
+    /// by recognizable names (e.g. "Isotope Modifications") instead of internal class
+    /// names (e.g. "HeavyModList").
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
+    public class LlmNameAttribute : Attribute
+    {
+        public string Name { get; }
+        public LlmNameAttribute(string name) { Name = name; }
+    }
+
     /// <summary>
     /// Contract for the JSON tool service hosted in Skyline.
     /// Method names are used via nameof() for compile-time checked dispatch.

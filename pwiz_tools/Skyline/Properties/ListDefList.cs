@@ -22,9 +22,11 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Util;
+using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {
+    [LlmName("Lists")]
     public class ListDefList : SettingsList<ListData>, IListSerializer<ListData>
     {
         public override ListData CopyItem(ListData item)

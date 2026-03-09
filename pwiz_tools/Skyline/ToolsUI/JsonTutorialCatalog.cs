@@ -28,6 +28,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using LlmInstruction = pwiz.Skyline.Util.Extensions.LlmInstruction;
 using TUTORIAL = SkylineTool.JsonToolConstants.TUTORIAL;
 
 namespace pwiz.Skyline.ToolsUI
@@ -78,8 +79,8 @@ namespace pwiz.Skyline.ToolsUI
             if (tutorial == null)
             {
                 var known = string.Join(@", ", TutorialCatalog.Tutorials.Select(t => t.FolderName));
-                throw new ArgumentException(
-                    $@"Unknown tutorial: {name}. Available tutorials: {known}");
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Unknown tutorial: {0}. Available tutorials: {1}", name, known));
             }
 
             var t = tutorial.Value;
@@ -96,7 +97,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception ex)
                 {
-                    throw new IOException(string.Format(
+                    throw new IOException(LlmInstruction.Format(
                         @"Failed to fetch tutorial from {0}: {1}" +
                         @"\nThe tutorial wiki page is available at: {2}",
                         url, ex.Message, t.WikiUrl), ex);
@@ -145,15 +146,15 @@ namespace pwiz.Skyline.ToolsUI
             if (tutorial == null)
             {
                 var known = string.Join(@", ", TutorialCatalog.Tutorials.Select(t => t.FolderName));
-                throw new ArgumentException(
-                    $@"Unknown tutorial: {name}. Available tutorials: {known}");
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Unknown tutorial: {0}. Available tutorials: {1}", name, known));
             }
 
             var t = tutorial.Value;
 
             // Validate image filename to prevent path traversal
             if (imageFilename.IndexOfAny(new[] { '\\', '/' }) >= 0 || imageFilename.Contains(@".."))
-                throw new ArgumentException(@"Image filename must not contain path separators");
+                throw new ArgumentException(new LlmInstruction(@"Image filename must not contain path separators"));
 
             string url = string.Format(@"{0}/{1}/{2}/{3}/{4}/{5}",
                 GITHUB_RAW_BASE, GetGitHash(), TUTORIALS_PATH, t.FolderName, language, imageFilename);
@@ -170,7 +171,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception ex)
                 {
-                    throw new IOException(string.Format(
+                    throw new IOException(LlmInstruction.Format(
                         @"Failed to fetch tutorial image from {0}: {1}",
                         url, ex.Message), ex);
                 }

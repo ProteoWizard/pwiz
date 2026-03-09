@@ -52,6 +52,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 
 namespace pwiz.Skyline.Properties
 {    
@@ -1426,6 +1427,7 @@ namespace pwiz.Skyline.Properties
     {        
     }
 
+    [LlmName("External Tools")]
     public sealed class ToolList : SettingsList<ToolDescription>
     {
         public override IEnumerable<ToolDescription> GetDefaults(int revisionIndex)
@@ -1466,6 +1468,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Enzymes")]
     public sealed class EnzymeList : SettingsList<Enzyme>
     {
         public static Enzyme GetDefault()
@@ -1528,6 +1531,7 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return PropertiesResources.EnzymeList_Label_Enzymes; } }
     }
 
+    [LlmName("Peptide Exclusions")]
     public sealed class PeptideExcludeList : SettingsList<PeptideExcludeRegex>
     {
         public override IEnumerable<PeptideExcludeRegex> GetDefaults(int revisionIndex)
@@ -1567,6 +1571,7 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return PropertiesResources.PeptideExcludeList_Label_Exclusions; } }
     }
 
+    [LlmName("Servers")]
     public sealed class ServerList : SettingsList<Server>
     {
         public override IEnumerable<Server>  GetDefaults(int revisionIndex)
@@ -1639,6 +1644,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Search Tools")]
     public sealed class SearchToolList : SettingsList<SearchTool>
     {
         public override IEnumerable<SearchTool> GetDefaults(int revisionIndex)
@@ -1691,6 +1697,7 @@ namespace pwiz.Skyline.Properties
     }
 
 
+    [LlmName("Spectral Libraries")]
     public sealed class SpectralLibraryList : SettingsListNotifying<LibrarySpec>
     {
         public override IEnumerable<LibrarySpec> GetDefaults(int revisionIndex)
@@ -1735,6 +1742,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Background Proteomes")]
     public sealed class BackgroundProteomeList : SettingsList<BackgroundProteomeSpec>
     {
         private static readonly BackgroundProteomeSpec NONE = new BackgroundProteomeSpec(ELEMENT_NONE, string.Empty);
@@ -1804,6 +1812,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Structural Modifications")]
     public sealed class StaticModList : SettingsList<StaticMod>
     {
         public const string LEGACY_DEFAULT_NAME = "Carbamidomethyl Cysteine";
@@ -1849,6 +1858,7 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return PropertiesResources.StaticModList_Label_Modifications; } }
     }
 
+    [LlmName("Isotope Modifications")]
     public sealed class HeavyModList : SettingsList<StaticMod>
     {
         public static StaticMod[] GetDefaultsOn()
@@ -1884,6 +1894,7 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return PropertiesResources.StaticModList_Label_Modifications; } }
     }
 
+    [LlmName("Collision Energy Regressions")]
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
         public static readonly CollisionEnergyRegression NONE =
@@ -2144,6 +2155,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
+    [LlmName("Optimization Libraries")]
     public sealed class OptimizationLibraryList : SettingsList<OptimizationLibrary>
     {
         public override string GetDisplayName(OptimizationLibrary item)
@@ -2191,6 +2203,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
+    [LlmName("Declustering Potential Regressions")]
     public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>
     {
         public static readonly DeclusteringPotentialRegression NONE =
@@ -2261,6 +2274,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
+    [LlmName("Compensation Voltage Parameters")]
     public sealed class CompensationVoltageList : SettingsList<CompensationVoltageParameters>
     {
         public static readonly CompensationVoltageParameters NONE = new CompensationVoltageParameters(ELEMENT_NONE, 0, 0, 0, 0, 0);
@@ -2324,6 +2338,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
     
+    [LlmName("Retention Time Calculators")]
     public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
     {
         public static readonly RetentionScoreCalculator[] DEFAULTS =
@@ -2484,6 +2499,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("iRT Standards")]
     public sealed class IrtStandardList : SettingsList<IrtStandard>
     {
         public override IrtStandard EditItem(Control owner, IrtStandard item, IEnumerable<IrtStandard> existing,
@@ -2528,6 +2544,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults => 1;
     }
 
+    [LlmName("Ion Mobility Libraries")]
     public sealed class IonMobilityLibraryList : SettingsListNotifying<IonMobilityLibrary>
     {
         public override bool AcceptList(Control owner, IList<IonMobilityLibrary> listNew)
@@ -2602,6 +2619,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Peak Scoring Models")]
     public sealed class PeakScoringModelList : SettingsListNotifying<PeakScoringModelSpec>
     {
         private static readonly PeakScoringModelSpec[] DEFAULTS =
@@ -2664,6 +2682,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return DEFAULTS.Length; } }
     }
     
+    [LlmName("Retention Time Regressions")]
     public sealed class RetentionTimeList : SettingsList<RetentionTimeRegression>
     {
         private static readonly RetentionTimeRegression NONE =
@@ -2718,6 +2737,7 @@ namespace pwiz.Skyline.Properties
         public override int ExcludeDefaults { get { return 1; } }
     }
 
+    [LlmName("Special Ions")]
     public sealed class MeasuredIonList : SettingsList<MeasuredIon>
     {
         public static readonly MeasuredIon NTERM_PROLINE =
@@ -2815,6 +2835,7 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return PropertiesResources.MeasuredIonList_Label_Special_ion; } }
     }
 
+    [LlmName("Isotope Labeling Enrichments")]
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
     {
         public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(@"Default",   // Persisted in XML
@@ -2864,6 +2885,7 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return PropertiesResources.IsotopeEnrichmentsList_Label_Isotope_labeling_entrichment; } }        
     }
 
+    [LlmName("Isolation Schemes")]
     public sealed class IsolationSchemeList : SettingsList<IsolationScheme>
     {
         public override int RevisionIndexCurrent { get { return 2; } }
@@ -3192,6 +3214,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Settings Profiles")]
     public sealed class SrmSettingsList : SerializableSettingsList<SrmSettings>
     {
         public const string EXT_SETTINGS = ".skys";
@@ -3366,6 +3389,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Legacy Reports")]
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
         /// <summary>
@@ -3528,6 +3552,7 @@ namespace pwiz.Skyline.Properties
     {
     }
 
+    [LlmName("Annotations")]
     public sealed class AnnotationDefList : SettingsList<AnnotationDef>, IListSerializer<AnnotationDef>
     {
         public override IEnumerable<AnnotationDef> GetDefaults(int revisionIndex)
@@ -3569,6 +3594,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
+    [LlmName("Color Schemes")]
     public class ColorSchemeList : SettingsList<ColorScheme>, IListSerializer<ColorScheme>
     {
         // Great websites for generating/finding schemes
