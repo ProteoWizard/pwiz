@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <algorithm>
 #include "pwiz/utility/misc/span.hpp"
+#include "pwiz/utility/misc/endian.hpp"
 
 namespace mzd
 {
@@ -17,8 +18,15 @@ namespace mzd
     /// @brief Implementation of endianness
     namespace binary
     {
-        const int ONE = 1;
         const bool is_big_endian() {
+            // The <bit> header isn't available on the minimum version of C++, so falling back on the method used in MSNumpress.cpp
+            // the
+            // #ifdef PWIZ_BIG_ENDIAN
+            // return false;
+            // #else
+            // return true;
+            // #endif
+            const int ONE = 1;
             return *((char*)&(ONE)) == 1;
         }
 
@@ -191,17 +199,6 @@ namespace mzd
                 }
             }
             return;
-        }
-
-        /// @brief Reverses the byte shuffling done by `tranpose` to read values from `buffer` back out into `data`
-        /// @tparam T
-        /// @param buffer The transposesd data
-        /// @param data Where to store the un-transposed data
-        template <typename T>
-        void reverse_transpose(const buffer_t &buffer, std::vector<T> &data)
-        {
-            const buffer_span_t view(buffer.data(), buffer.size());
-            return reverse_transpose(view, data);
         }
 
         /// @brief Reverses the byte shuffling done by `tranpose` to read values from `buffer` back out into `data`
@@ -539,7 +536,7 @@ namespace mzd
         }
     }
 
-    /// @brief Compress an array of numerical data using byte shuffling and ZSTD compression
+    /// @brief Compress an array of numerical data using byte shuffling and ZSTD compression. Data will be stored in little endian byte order.
     /// @tparam T The data type of the array to compress
     /// @param data The data array to compress
     /// @param transposeBuffer An intermediate byte buffer to shuffle bytes into
@@ -556,6 +553,13 @@ namespace mzd
         return byteshuffle_compress_buffer(view, transposeBuffer, outBuffer, level);
     }
 
+    /// @brief Compress an array of numerical data using byte shuffling and ZSTD compression. Data will be stored in little endian byte order.
+    /// @tparam T The data type of the array to compress
+    /// @param data The data array to compress
+    /// @param transposeBuffer An intermediate byte buffer to shuffle bytes into
+    /// @param outBuffer A byte buffer to write ZSTD-compressed bytes to
+    /// @param level The ZSTD compression level
+    /// @return 0 if successful, some other value corresponding to a ZSTD error code otherwise
     template <typename T>
     size_t byteshuffle_compress_buffer(const tcb::span<const T> &data,
                                        buffer_t &transposeBuffer,
@@ -675,7 +679,7 @@ namespace mzd
         return z;
     }
 
-    /// @brief Compress an array of numerical data using dictionary encoding and ZSTD compression
+    /// @brief Compress an array of numerical data using dictionary encoding and ZSTD compression. Data will be stored in little-endian byte order
     /// @tparam T The data type of the array to compress
     /// @param data The data array to compress
     /// @param dictBuffer An intermediate byte buffer to hold the dictionary encoded bytes in
@@ -695,6 +699,14 @@ namespace mzd
         return dict_compress_buffer(view, dictBuffer, transposeBuffer, outBuffer);
     }
 
+    /// @brief Compress an array of numerical data using dictionary encoding and ZSTD compression. Data will be stored in little-endian byte order
+    /// @tparam T The data type of the array to compress
+    /// @param data The data array to compress
+    /// @param dictBuffer An intermediate byte buffer to hold the dictionary encoded bytes in
+    /// @param transposeBuffer An intermediate byte buffer to hold the intermediate shuffled bytes in
+    /// @param outBuffer A byte buffer to write ZSTD-compressed bytes to
+    /// @param level The ZSTD compression level
+    /// @return 0 if successful, some other value corresponding to a ZSTD error code otherwise
     template <typename T>
     size_t dict_compress_buffer(
         const tcb::span<const T> &data,
@@ -739,7 +751,7 @@ namespace mzd
 
     /// @brief Decompress an array of numerical data using dictionary encoding and ZSTD compression
     /// @tparam T The data type of the array to compress
-    /// @param buffer A byte buffer to containing ZSTD-compressed bytes
+    /// @param buffer A byte buffer containing ZSTD-compressed bytes
     /// @param dictBuffer An intermediate byte buffer to hold the dictionary encoded bytes
     /// @param dataBuffer The data array to decompress into
     /// @return 0 if successful, some other value corresponding to a ZSTD error code otherwise
@@ -758,7 +770,7 @@ namespace mzd
         auto outputBound = ZSTD_getFrameContentSize(buffer.data(), buffer.size());
         if (ZSTD_isError(outputBound))
         {
-            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
+            // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
             return outputBound;
         }
@@ -770,7 +782,7 @@ namespace mzd
             buffer.size());
         if (ZSTD_isError(used))
         {
-            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
+            // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
             return used;
         }
@@ -780,15 +792,11 @@ namespace mzd
             dataBuffer);
     }
 
-    template <typename T>
-    size_t compress_buffer(const std::vector<const T> &data,
-                           buffer_t &outBuffer,
-                           int level = ZSTD_defaultCLevel())
-    {
-        const tcb::span<const T> view(data.data(), data.size());
-        return compress_buffer(view, outBuffer, level);
-    }
-
+    /// @brief Compress an array of numerical data using ZSTD compression. Data will be stored in little-endian byte order
+    /// @tparam T The data type of the array to compress
+    /// @param data The data array to compress
+    /// @param outBuffer The byte buffer to compress into
+    /// @return 0 if successful, some other value corresponding to a ZSTD error code otherwise
     template <typename T>
     size_t compress_buffer(const tcb::span<const T> &data,
                            buffer_t &outBuffer,
@@ -844,6 +852,11 @@ namespace mzd
         return 0;
     }
 
+    /// @brief Decompress Zstd-compressed data back into it's native format.
+    /// @tparam T The data type of the array to decompress to
+    /// @param buffer A byte buffer containing containing little endian ZSTD-compressed bytes
+    /// @param dataBuffer The data array to decompress into. Data will be in native byte ordering
+    /// @return 0 if successful, some other value corresponding to a ZSTD error code otherwise
     template <typename T>
     size_t decompress_buffer(const buffer_span_t &buffer, std::vector<T> &dataBuffer)
     {
@@ -884,4 +897,19 @@ namespace mzd
         }
         return 0;
     }
+
+    /// @brief Compress an array of numerical data using ZSTD compression. Data will be stored in little-endian byte order.
+    /// @tparam T The data type of the array to compress
+    /// @param data The data array to compress
+    /// @param outBuffer The byte buffer to compress into
+    /// @return 0 if successful, some other value corresponding to a ZSTD error code otherwise
+    template <typename T>
+    size_t compress_buffer(const std::vector<const T> &data,
+                           buffer_t &outBuffer,
+                           int level = ZSTD_defaultCLevel())
+    {
+        const tcb::span<const T> view(data.data(), data.size());
+        return compress_buffer(view, outBuffer, level);
+    }
+
 }
