@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <cstdint>
 #include <algorithm>
+#include <sstream>
 #include "pwiz/utility/misc/span.hpp"
 #include "pwiz/utility/misc/endian.hpp"
 
@@ -366,9 +367,9 @@ namespace mzd
         template <typename T, typename I>
         int decode_values(const buffer_t &data, size_t offset, size_t n_values, std::vector<T> &values)
         {
-            auto start = data.begin() + 16;
-            auto end = data.begin() + offset;
-            byte_view<I> block;
+            // auto start = data.begin() + 16;
+            // auto end = data.begin() + offset;
+            // byte_view<I> block;
 
             // buffer_span_t slice(start, end);
             buffer_span_t slice(data.data() + 16, offset - 16);
@@ -388,9 +389,9 @@ namespace mzd
         template <typename T, typename K>
         int decode_indices(const buffer_t &data, size_t offset, std::vector<T> &values_lookup, std::vector<T> &values)
         {
-            auto start = data.begin() + offset;
-            auto end = data.end();
-            byte_view<K> block;
+            // auto start = data.begin() + offset;
+            // auto end = data.end();
+            // byte_view<K> block;
 
             // buffer_span_t slice(start, end);
             buffer_span_t slice(data.data() + offset, data.size() - offset);
@@ -592,9 +593,11 @@ namespace mzd
         auto outputBound = ZSTD_compressBound(transposeBuffer.size());
         if (ZSTD_isError(outputBound))
         {
-            // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
-            // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            return outputBound;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
+            // return outputBound;
         }
         outBuffer.resize(outputBound);
         auto used = ZSTD_compress(
@@ -606,8 +609,10 @@ namespace mzd
         if (ZSTD_isError(used))
         {
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
-            std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            return used;
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
+            // return used;
         }
         outBuffer.resize(used);
         return 0;
@@ -648,7 +653,11 @@ namespace mzd
         auto outputBound = ZSTD_getFrameContentSize(buffer.data(), buffer.size());
         if (ZSTD_isError(outputBound))
         {
-            return outputBound;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
+            // return outputBound;
         }
         transposeBuffer.resize(outputBound);
         auto used = ZSTD_decompress(
@@ -658,7 +667,11 @@ namespace mzd
             buffer.size());
         if (ZSTD_isError(used))
         {
-            return used;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
+            // return used;
         }
         transposeBuffer.resize(used);
         inner::reverse_transpose(transposeBuffer, dataBuffer);
@@ -742,7 +755,11 @@ namespace mzd
 
         auto outputBound = ZSTD_compressBound(dictBuffer.size());
         if (ZSTD_isError(outputBound)) {
-            return outputBound;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
+            // return outputBound;
         }
         outBuffer.resize(outputBound);
         auto used = ZSTD_compress(
@@ -753,7 +770,11 @@ namespace mzd
             level);
         if (ZSTD_isError(used))
         {
-            return used;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
+            // return used;
         }
         outBuffer.resize(used);
         return 0;
@@ -791,9 +812,11 @@ namespace mzd
         auto outputBound = ZSTD_getFrameContentSize(buffer.data(), buffer.size());
         if (ZSTD_isError(outputBound))
         {
-            // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
-            // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            return outputBound;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
+            // return outputBound;
         }
         dictBuffer.resize(outputBound);
         auto used = ZSTD_decompress(
@@ -805,7 +828,11 @@ namespace mzd
         {
             // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            return used;
+            // return used;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
         }
         dataBuffer.clear();
         return dict::dictionary_decode(
@@ -827,7 +854,11 @@ namespace mzd
         {
             // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            return outputBound;
+            // return outputBound;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
         }
         outBuffer.resize(outputBound);
         if (binary::is_big_endian() && sizeof(T) > 1)
@@ -850,7 +881,11 @@ namespace mzd
             {
                 // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
                 // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-                return used;
+                // return used;
+                ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
+                std::stringstream ss;
+                ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+                throw runtime_error(ss.str());
             }
             outBuffer.resize(used);
         }
@@ -864,9 +899,13 @@ namespace mzd
                 level);
             if (ZSTD_isError(used))
             {
-                ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
+                // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
                 // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-                return used;
+                // return used;
+                ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
+                std::stringstream ss;
+                ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+                throw runtime_error(ss.str());
             }
             outBuffer.resize(used);
         }
@@ -891,7 +930,11 @@ namespace mzd
         {
             // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            return outputBound;
+            // return outputBound;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
         }
         dataBuffer.resize(outputBound / sizeof(T));
         auto used = ZSTD_decompress(
@@ -903,7 +946,11 @@ namespace mzd
         {
             // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            return used;
+            // return used;
+            ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
+            std::stringstream ss;
+            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            throw runtime_error(ss.str());
         }
         dataBuffer.resize(used / sizeof(T));
         if (binary::is_big_endian() && sizeof(T) > 1)
