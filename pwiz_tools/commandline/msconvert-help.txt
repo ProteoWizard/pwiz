@@ -37,7 +37,7 @@ Options:
   --noindex                          : do not write index
   -i [ --contactInfo ] arg           : filename for contact info
   -z [ --zlib ] [=arg(=1)]           : use zlib compression for binary data (add =off to disable compression)
-  --zstd [=arg(=0)]                  : use Zstandard compression for binary data
+  --zstd [=arg(=1)]                  : use Zstandard compression for binary data
   --mzShuffleZstd                    : use byte-shuffling Zstandard compression for m/z values
   --dictZstd                         : use dictionary encoding followed by Zstandard compression for m/z and ion mobility values
   --numpressLinear [=arg(=2.0e-09)]  : use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)

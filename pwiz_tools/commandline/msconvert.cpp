@@ -390,7 +390,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&zlib)->implicit_value(true),
             ": use zlib compression for binary data (add =off to disable compression)")
         ("zstd",
-            po::value<bool>(&zstd)->implicit_value(false),
+            po::value<bool>(&zstd)->implicit_value(true),
             ": use Zstandard compression for binary data"
         )
         ("mzShuffleZstd",
@@ -701,34 +701,6 @@ Config parseCommandLine(int argc, char** argv)
         config.writeConfig.binaryDataEncoderConfig.predictionOverrides[MS_time_array] = BinaryDataEncoder::Prediction_Linear;
     }
 
-    if (zstd)
-    {
-        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zstd;
-    }
-
-    if (mz_zstd_shuffle)
-    {
-        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_m_z_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
-        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_time_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
-    }
-
-    if (mz_im_zstd_dict)
-    {
-        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_m_z_array] = BinaryDataEncoder::Compression_DictZstd;
-        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_time_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
-
-        auto imArrays = {
-            MS_ion_mobility_array,
-            MS_raw_ion_mobility_drift_time_array,
-            MS_mean_inverse_reduced_ion_mobility_array,
-            MS_mean_ion_mobility_drift_time_array,
-            MS_deconvoluted_ion_mobility_drift_time_array,
-        };
-
-        for(auto t : imArrays) {
-            config.writeConfig.binaryDataEncoderConfig.compressionOverrides[t] = BinaryDataEncoder::Compression_DictZstd;
-        }
-    }
 
     // precision defaults
 
@@ -779,6 +751,38 @@ Config parseCommandLine(int argc, char** argv)
 
     if (zlib)
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+
+    *os_ << "zlib? " << zlib << " | zstd? " << zstd << std::endl;
+
+    if (zstd)
+    {
+        config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zstd;
+    }
+
+    if (mz_zstd_shuffle)
+    {
+        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_m_z_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
+        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_time_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
+    }
+
+    if (mz_im_zstd_dict)
+    {
+        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_m_z_array] = BinaryDataEncoder::Compression_DictZstd;
+        config.writeConfig.binaryDataEncoderConfig.compressionOverrides[MS_time_array] = BinaryDataEncoder::Compression_ByteShuffleZstd;
+
+        auto imArrays = {
+            MS_ion_mobility_array,
+            MS_raw_ion_mobility_drift_time_array,
+            MS_mean_inverse_reduced_ion_mobility_array,
+            MS_mean_ion_mobility_drift_time_array,
+            MS_deconvoluted_ion_mobility_drift_time_array,
+        };
+
+        for (auto t : imArrays)
+        {
+            config.writeConfig.binaryDataEncoderConfig.compressionOverrides[t] = BinaryDataEncoder::Compression_DictZstd;
+        }
+    }
 
     config.writeConfig.mzMLb_chunk_size = mzMLb_chunk_size;
 
