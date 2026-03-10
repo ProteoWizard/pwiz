@@ -2199,7 +2199,7 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// Waits for the UI to settle by comparing screenshots against the existing reference.
-        /// Starts at 300ms, retries every 200ms until the screenshot matches within 1% or 1500ms elapsed.
+        /// Retries every 200ms until the screenshot matches within 1% or 1500ms elapsed.
         /// Falls back to a full 1500ms wait if no reference screenshot exists.
         /// </summary>
         private void WaitForScreenshotToSettle(Control screenshotForm, bool fullScreen,
@@ -2221,46 +2221,27 @@ namespace pwiz.SkylineTestUtil
                     referenceBmp = new Bitmap(refPath);
             }
 
-            long loadMs = settleTimer.ElapsedMilliseconds;
-
             if (referenceBmp == null)
             {
                 Thread.Sleep(MAX_WAIT_MS);
-                Console.WriteLine($"  [Settle s-{ScreenshotCounter:D2}] no ref, slept {MAX_WAIT_MS}ms");
                 return;
             }
 
             using (referenceBmp)
             {
                 Thread.Sleep(INITIAL_WAIT_MS);
-                var activateTimer = System.Diagnostics.Stopwatch.StartNew();
                 _shotManager.ActivateScreenshotForm(screenshotForm);
-                long activateMs = activateTimer.ElapsedMilliseconds;
-                int retries = 0;
 
                 while (settleTimer.ElapsedMilliseconds < MAX_WAIT_MS)
                 {
-                    var retryTimer = System.Diagnostics.Stopwatch.StartNew();
-
                     using (var shot = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot))
                     {
-                        long shotMs = retryTimer.ElapsedMilliseconds;
-                        var diffPct = QuickDiffPercent(referenceBmp, shot);
-                        long diffMs = retryTimer.ElapsedMilliseconds;
-                        retries++;
-
-                        Console.WriteLine($"  [Settle s-{ScreenshotCounter:D2}] retry {retries}: shot={shotMs}ms diff={diffMs - shotMs}ms ({shot.Width}x{shot.Height}) result={diffPct:F1}%");
-
-                        if (diffPct <= SETTLE_THRESHOLD)
-                        {
-                            Console.WriteLine($"  [Settle s-{ScreenshotCounter:D2}] settled in {settleTimer.ElapsedMilliseconds}ms ({retries} retries, load={loadMs}ms, activate={activateMs}ms)");
+                        if (QuickDiffPercent(referenceBmp, shot) <= SETTLE_THRESHOLD)
                             return;
-                        }
                     }
 
                     Thread.Sleep(RETRY_INTERVAL_MS);
                 }
-                Console.WriteLine($"  [Settle s-{ScreenshotCounter:D2}] timeout after {settleTimer.ElapsedMilliseconds}ms ({retries} retries, load={loadMs}ms, activate={activateMs}ms)");
             }
         }
 
