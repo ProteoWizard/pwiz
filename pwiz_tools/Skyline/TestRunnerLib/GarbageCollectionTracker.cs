@@ -99,6 +99,21 @@ namespace TestRunnerLib
             }
         }
 
+        /// <summary>
+        /// Releases strong references to survivors pinned from the previous test.
+        /// Call this BEFORE FlushMemory so that pinned objects from the prior test
+        /// do not act as GC roots during the current test's collection cycle,
+        /// preventing a cascade where one real leak causes all subsequent tests
+        /// to appear to leak the same unreleased objects.
+        /// </summary>
+        public static void ClearPins()
+        {
+            lock (_lock)
+            {
+                _pinnedSurvivors.Clear();
+            }
+        }
+
         // Strong references to survivors, kept alive for dotMemory inspection
         // ReSharper disable once CollectionNeverQueried.Local
         private static readonly List<object> _pinnedSurvivors = new List<object>();
