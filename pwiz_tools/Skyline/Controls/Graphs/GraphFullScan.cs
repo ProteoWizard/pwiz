@@ -1391,8 +1391,10 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void OnClosed(EventArgs e)
         {
             _cursorTip.Dispose();
+            graphControlExtension.PropertiesSheet.SelectedObject = null;
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
             _msDataFileScanHelper.Dispose();
+            base.OnClosed(e);
         }
 
         private void leftButton_Click(object sender, EventArgs e)
