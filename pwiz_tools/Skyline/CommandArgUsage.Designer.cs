@@ -1258,6 +1258,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Synonym for --in. Open a Skyline file..
+        /// </summary>
+        public static string _open {
+            get {
+                return ResourceManager.GetString("_open", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Same as save except writes to the specified file.
         /// </summary>
         public static string _out {
@@ -1918,7 +1927,16 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("_save", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Synonym for --out. Save to the specified file..
+        /// </summary>
+        public static string _save_as {
+            get {
+                return ResourceManager.GetString("_save_as", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file..
         /// </summary>

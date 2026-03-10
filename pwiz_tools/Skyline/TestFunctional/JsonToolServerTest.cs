@@ -107,12 +107,10 @@ namespace pwiz.SkylineTestFunctional
             var doc = TestImportFasta(server);
             TestRunCommand(server, doc);
 
-            // Molecule mode: File > New, switch to small molecules, verify uimode
-            RunUI(() =>
-            {
-                SkylineWindow.NewDocument(true);
-                SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules);
-            });
+            TestDocumentOperations(server);
+
+            // Molecule mode: File > New via run_command, switch to small molecules, verify uimode
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
             TestAddReportMoleculeMode(server);
         }
 
@@ -1182,7 +1180,7 @@ namespace pwiz.SkylineTestFunctional
                 PersistedViews.MainGroup.Id);
             var viewSpec = viewSpecList.ViewSpecs.FirstOrDefault(v => v.Name == reportName);
             AssertEx.IsNotNull(viewSpec, @"Report should be persisted");
-            AssertEx.AreEqual(UiModes.PROTEOMIC, viewSpec.UiMode,
+            AssertEx.AreEqual(UiModes.PROTEOMIC, viewSpec?.UiMode,
                 @"Report should have proteomic uimode matching current SkylineWindow mode");
         }
 
@@ -1202,7 +1200,7 @@ namespace pwiz.SkylineTestFunctional
                 PersistedViews.MainGroup.Id);
             var viewSpec = viewSpecList.ViewSpecs.FirstOrDefault(v => v.Name == reportName);
             AssertEx.IsNotNull(viewSpec, @"Molecule report should be persisted");
-            AssertEx.AreEqual(UiModes.SMALL_MOLECULES, viewSpec.UiMode,
+            AssertEx.AreEqual(UiModes.SMALL_MOLECULES, viewSpec?.UiMode,
                 @"Report should have small_molecules uimode matching current SkylineWindow mode");
         }
 
@@ -1275,14 +1273,15 @@ namespace pwiz.SkylineTestFunctional
         private void TestRunCommand(JsonToolServer server, SrmDocument docAfterKeep)
         {
             // --version output should contain both parts of the version string
-            string versionResult = server.RunCommandSilent(@"--version");
+            string versionResult = server.RunCommandSilent(CommandArgs.ARG_VERSION.ArgumentText);
             // GetVersion returns "26.1.1.061-6c3244bc0a", --version shows "26.1.1.061 (6c3244bc0a)"
             AssertEx.Contains(versionResult, server.GetVersion().Split('-'));
 
             // Read operation: export a report via CLI (non-silent, writes to Immediate Window)
             string reportPath = TestFilesDir.GetTestPath(@"run_command_report.csv");
-            string reportArgs = string.Format(@"--report-name={0} --report-file={1}",
-                REPORT_AREAS.Quote(), reportPath.ToForwardSlashPath().Quote());
+            string reportArgs = TextUtil.SpaceSeparate(
+                CommandArgs.ARG_REPORT_NAME + REPORT_AREAS.Quote(),
+                CommandArgs.ARG_REPORT_FILE + reportPath.ToForwardSlashPath().Quote());
             server.RunCommand(reportArgs);
             Assert.IsTrue(File.Exists(reportPath));
             Assert.IsTrue(new FileInfo(reportPath).Length > 0);
@@ -1298,7 +1297,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Write operation: refine to remove proteins with fewer than 100 peptides
             var docBeforeRefine = SkylineWindow.Document;
-            string refineArgs = @"--refine-min-peptides=100";
+            string refineArgs = CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100";
             server.RunCommand(refineArgs);
             Assert.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount,
                 @"Refine with min-peptides=100 should remove all proteins");
@@ -1316,8 +1315,9 @@ namespace pwiz.SkylineTestFunctional
             string fastaPath = TestFilesDir.GetTestPath(@"import_test.fasta");
             File.WriteAllText(fastaPath, TEXT_FASTA);
             var docBeforeFasta = SkylineWindow.Document;
-            string fastaArgs = string.Format(@"--import-fasta={0} --keep-empty-proteins",
-                fastaPath.ToForwardSlashPath().Quote());
+            string fastaArgs = TextUtil.SpaceSeparate(
+                CommandArgs.ARG_IMPORT_FASTA + fastaPath.ToForwardSlashPath().Quote(),
+                CommandArgs.ARG_KEEP_EMPTY_PROTEINS.ArgumentText);
             server.RunCommand(fastaArgs);
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
             var docAfterFasta = SkylineWindow.Document;
@@ -1336,6 +1336,80 @@ namespace pwiz.SkylineTestFunctional
             // Undo and verify exact document identity is restored
             RunUI(() => SkylineWindow.Undo());
             Assert.AreSame(docBeforeFasta, SkylineWindow.Document);
+        }
+
+        /// <summary>
+        /// Test document-level operations (--open, --new, --save, --save-as) through
+        /// RunCommand, verifying DocumentFilePath updates, dirty state, and round-trip.
+        /// </summary>
+        private void TestDocumentOperations(JsonToolServer server)
+        {
+            string originalPath = SkylineWindow.DocumentFilePath;
+            int originalGroups = SkylineWindow.Document.MoleculeGroupCount;
+
+            // Save original document so on-disk state matches in-memory state
+            // (prior tests may have modified the document without saving)
+            server.RunCommand(CommandArgs.ARG_SAVE.ArgumentText);
+
+            // --new: create empty document at a temp path
+            // Note: paths must be quoted because test directories may contain spaces
+            string newPath = TestFilesDir.GetTestPath(@"doc_ops_new.sky");
+            string newResult = server.RunCommand(CommandArgs.ARG_NEW + newPath.Quote());
+            AssertEx.Contains(newResult, Path.GetFileName(newPath));
+            AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
+
+            // Import a FASTA to make the document non-trivial
+            server.SetSelectedElement(JsonUiService.INSERT_NODE_LOCATOR);
+            server.ImportFasta(TEXT_FASTA, @"true");
+            WaitForProteinMetadataBackgroundLoaderCompletedUI();
+            Assert.IsTrue(SkylineWindow.Document.MoleculeGroupCount > 0);
+            Assert.IsTrue(SkylineWindow.Dirty);
+
+            // --save: save the modified document, verify clean state
+            string saveResult = server.RunCommand(CommandArgs.ARG_SAVE.ArgumentText);
+            AssertEx.Contains(saveResult, Path.GetFileName(newPath));
+            AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
+            Assert.IsFalse(SkylineWindow.Dirty);
+            int savedGroups = SkylineWindow.Document.MoleculeGroupCount;
+
+            // --save-as (synonym for --out): save to a different path
+            string saveAsPath = TestFilesDir.GetTestPath(@"doc_ops_saveas.sky");
+            string saveAsResult = server.RunCommand(CommandArgs.ARG_SAVE_AS + saveAsPath.Quote());
+            AssertEx.Contains(saveAsResult, Path.GetFileName(saveAsPath));
+            AssertEx.AreEqual(saveAsPath, SkylineWindow.DocumentFilePath);
+            Assert.IsFalse(SkylineWindow.Dirty);
+            Assert.IsTrue(File.Exists(saveAsPath));
+
+            // --open (synonym for --in): re-open the first saved file, verify round-trip
+            string openResult = server.RunCommand(CommandArgs.ARG_OPEN + newPath.Quote());
+            AssertEx.Contains(openResult, Path.GetFileName(newPath));
+            AssertEx.AreEqual(newPath, SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(savedGroups, SkylineWindow.Document.MoleculeGroupCount);
+            Assert.IsTrue(SkylineWindow.Document.MoleculeGroups.Any(
+                g => g.Name.Contains(@"ALBU_BOVIN")));
+
+            // --in: re-open the original document from disk
+            string inResult = server.RunCommand(CommandArgs.ARG_IN + originalPath.Quote());
+            AssertEx.Contains(inResult, Path.GetFileName(originalPath));
+            AssertEx.AreEqual(originalPath, SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(originalGroups, SkylineWindow.Document.MoleculeGroupCount);
+
+            // Combined: --open + --refine + --out
+            string combinedPath = TestFilesDir.GetTestPath(@"doc_ops_combined.sky");
+            string combinedResult = server.RunCommand(TextUtil.SpaceSeparate(
+                CommandArgs.ARG_OPEN + newPath.Quote(),
+                CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100",
+                CommandArgs.ARG_OUT + combinedPath.Quote()));
+            AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
+            Assert.IsTrue(File.Exists(combinedPath));
+
+            // --new to leave a clean state for subsequent tests
+            string tempPath = TestFilesDir.GetTestPath(@"doc_ops_temp.sky");
+            server.RunCommand(TextUtil.SpaceSeparate(
+                CommandArgs.ARG_NEW + tempPath.Quote(),
+                CommandArgs.ARG_OVERWRITE.ArgumentText));
         }
 
         /// <summary>

@@ -40,6 +40,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -355,13 +356,16 @@ namespace pwiz.Skyline.ToolsUI
                     : new LlmInstruction(@"Peptides");
             }
 
+            bool dirty = Program.MainWindow.Dirty;
+
             return TextUtil.LineSeparate($@"Mode: {mode}",
                 $@"{groupsLabel}: {groups}",
                 $@"{moleculesLabel}: {molecules}",
                 $@"Precursors: {precursors}",
                 $@"Transitions: {transitions}",
                 $@"Replicates: {replicates}",
-                $@"Document: {docDisplay}");
+                $@"Document: {docDisplay}",
+                $@"Saved: {(dirty ? new LlmInstruction(@"no (unsaved changes)") : new LlmInstruction(@"yes"))}");
         }
 
         public string GetAvailableTutorials()
@@ -1146,19 +1150,29 @@ namespace pwiz.Skyline.ToolsUI
             // The Immediate Window writer handles cross-thread writes via BeginInvoke.
             var parsedArgs = CommandLine.ParseArgs(args);
             var docBefore = Program.MainWindow.Document;
-            var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore);
+            var commandLine = new CommandLine(new CommandStatusWriter(output), docBefore,
+                Program.MainWindow.DocumentFilePath);
+
+            // Override document operations to go through SkylineWindow UI,
+            // so --in/--new/--save/--out show LongWaitDlg progress and properly
+            // update DocumentFilePath and clean state.
+            commandLine.DocumentOperations = new SkylineWindowDocumentOperations();
+
             commandLine.Run(parsedArgs, true);
 
             // If the command modified the document, apply it back to SkylineWindow
             // as a single undo record with a RunCommand audit log entry.
-            if (!ReferenceEquals(commandLine.Document, docBefore))
+            // Skip if the host already has the current doc (from --in/--new/--save/--out
+            // going through SkylineWindowDocumentOperations).
+            var docAfter = commandLine.Document;
+            if (!ReferenceEquals(docAfter, docBefore) &&
+                !ReferenceEquals(docAfter, Program.MainWindow.Document))
             {
-                var docResult = commandLine.Document;
                 Program.MainWindow.Invoke(new Action(() =>
                 {
                     Program.MainWindow.ModifyDocument(
                         ToolsUIResources.ToolService_RunCommand_Run_command,
-                        doc => docResult,
+                        doc => docAfter,
                         docPair => AuditLogEntry.CreateSimpleEntry(
                             MessageType.ran_command_line,
                             docPair.NewDocumentType, args));
@@ -1166,6 +1180,70 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             return capture.ToString();
+        }
+
+        /// <summary>
+        /// <see cref="IDocumentOperations"/> implementation that delegates to
+        /// SkylineWindow UI methods, providing LongWaitDlg progress and proper
+        /// DocumentFilePath/clean-state management.
+        /// </summary>
+        private class SkylineWindowDocumentOperations : IDocumentOperations
+        {
+            public SrmDocument OpenDocument(string skylineFile)
+            {
+                SrmDocument result = null;
+                Program.MainWindow.Invoke(new Action(() =>
+                {
+                    if (Program.MainWindow.OpenFile(skylineFile))
+                        result = Program.MainWindow.Document;
+                }));
+                return result;
+            }
+
+            public SrmDocument NewDocument(string skylineFile, bool overwrite)
+            {
+                SrmDocument result = null;
+                Program.MainWindow.Invoke(new Action(() =>
+                {
+                    if (overwrite)
+                    {
+                        FileEx.SafeDelete(skylineFile);
+                        FileEx.SafeDelete(Path.ChangeExtension(skylineFile, ChromatogramCache.EXT));
+                    }
+                    Program.MainWindow.NewDocument(true);
+                    // Save empty document to set DocumentFilePath so subsequent
+                    // --save commands know the correct path
+                    Program.MainWindow.SaveDocument(skylineFile);
+                    result = Program.MainWindow.Document;
+                }));
+                return result;
+            }
+
+            public bool SaveDocument(SrmDocument doc, string saveFile)
+            {
+                bool success = false;
+                Program.MainWindow.Invoke(new Action(() =>
+                {
+                    // Apply any in-memory modifications (from --refine, etc.) before saving
+                    var currentDoc = Program.MainWindow.Document;
+                    if (!ReferenceEquals(doc, currentDoc))
+                    {
+                        Program.MainWindow.ModifyDocument(
+                            ToolsUIResources.ToolService_RunCommand_Run_command,
+                            d => doc,
+                            docPair => AuditLogEntry.CreateSimpleEntry(
+                                MessageType.ran_command_line,
+                                docPair.NewDocumentType, string.Empty));
+                    }
+                    // Use no-arg SaveDocument when path is null (--save without --in),
+                    // which falls back to the window's current DocumentFilePath
+                    if (string.IsNullOrEmpty(saveFile))
+                        success = Program.MainWindow.SaveDocument();
+                    else
+                        success = Program.MainWindow.SaveDocument(saveFile);
+                }));
+                return success;
+            }
         }
 
         private static bool IsSettingsListBase(Type type)

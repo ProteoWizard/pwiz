@@ -56,7 +56,20 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
-    public class CommandLine : IDisposable/*, IRemoteAccountUserInteraction*/
+    /// <summary>
+    /// Abstraction for document-level file operations (open, new, save) used by
+    /// CommandLine. Default implementation wraps existing CommandLine methods.
+    /// Override for SkylineWindow-hosted execution (MCP) to delegate to UI methods
+    /// with LongWaitDlg progress.
+    /// </summary>
+    public interface IDocumentOperations
+    {
+        SrmDocument OpenDocument(string skylineFile);
+        SrmDocument NewDocument(string skylineFile, bool overwrite);
+        bool SaveDocument(SrmDocument doc, string saveFile);
+    }
+
+    public class CommandLine : IDisposable, IDocumentOperations/*, IRemoteAccountUserInteraction*/
     {
         private CommandStatusWriter _out;
 
@@ -70,14 +83,17 @@ namespace pwiz.Skyline
         /// </summary>
         private bool _importedResults;
 
-        public CommandLine(CommandStatusWriter output, SrmDocument doc = null)
+        public CommandLine(CommandStatusWriter output, SrmDocument doc = null, string skylineFile = null)
         {
             _out = output;
             _doc = doc;
+            _skylineFile = skylineFile;
+            DocumentOperations = this;
         }
 
         public SrmDocument Document { get { return _doc; } }
         public ImportPeptideSearch ImportPeptideSearch { get; private set; }
+        public IDocumentOperations DocumentOperations { get; set; }
 
         public CommandLine()
             : this(new CommandStatusWriter(new StringWriter()))
@@ -200,16 +216,26 @@ namespace pwiz.Skyline
             }
 
             var skylineFile = commandArgs.SkylineFile;
-            if ((skylineFile != null && (commandArgs.CreateNewFile && !NewSkyFile(skylineFile, commandArgs.OverwriteExisting)) ||
-                (skylineFile != null && (!commandArgs.CreateNewFile && !OpenSkyFile(skylineFile))) ||
-                (skylineFile == null && _doc == null)))
+            if (skylineFile != null)
+            {
+                if (!commandArgs.CreateNewFile)
+                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
+                _doc = commandArgs.CreateNewFile
+                    ? DocumentOperations.NewDocument(skylineFile, commandArgs.OverwriteExisting)
+                    : DocumentOperations.OpenDocument(skylineFile);
+                if (_doc == null)
+                {
+                    _out.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
+                }
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
+                _skylineFile = skylineFile;
+            }
+            else if (_doc == null)
             {
                 _out.WriteLine(SkylineResources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
-
-            if (skylineFile != null)
-                _skylineFile = skylineFile;
 
             TraceWarningListener traceWarningListener = new TraceWarningListener(_out);
             try
@@ -491,8 +517,10 @@ namespace pwiz.Skyline
                 }
 
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
-                if (!SaveFile(saveFile, commandArgs))
+                _out.WriteLine(SkylineResources.CommandLine_SaveFile_Saving_file___);
+                if (!DocumentOperations.SaveDocument(_doc, saveFile))
                     return false;
+                _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
 
                 _skylineFile = saveFile;
             }
@@ -1398,8 +1426,6 @@ namespace pwiz.Skyline
                 if (_doc == null)
                     return false;
 
-                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-
                 // Update settings for this file
                 _doc.Settings.UpdateLists(skylineFile);
 
@@ -1435,13 +1461,11 @@ namespace pwiz.Skyline
                     new XmlReaderSettings { IgnoreWhitespace = true }, 
                     skylineFile);  
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
                 SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
                 if (_doc == null)
                     return false;
 
-                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
                 var hash = hashingStream.Done();
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
@@ -4661,6 +4685,37 @@ namespace pwiz.Skyline
                     throw new NotImplementedException();
             }
         }*/
+
+        #region IDocumentOperations
+
+        SrmDocument IDocumentOperations.OpenDocument(string skylineFile)
+        {
+            return OpenSkyFile(skylineFile) ? _doc : null;
+        }
+
+        SrmDocument IDocumentOperations.NewDocument(string skylineFile, bool overwrite)
+        {
+            return NewSkyFile(skylineFile, overwrite) ? _doc : null;
+        }
+
+        bool IDocumentOperations.SaveDocument(SrmDocument doc, string saveFile)
+        {
+            try
+            {
+                SaveDocument(doc, saveFile, _out);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(
+                    Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_,
+                    saveFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        #endregion
     }
 
     public class CommandStatusWriter : TextWriter

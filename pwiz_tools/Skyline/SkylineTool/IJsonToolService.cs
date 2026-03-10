@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.IO;
 
 namespace SkylineTool
 {
@@ -155,14 +156,14 @@ namespace SkylineTool
 
         public static string GetConnectionDirectory()
         {
-            return System.IO.Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 DEPLOY_FOLDER_NAME);
         }
 
         public static string GetConnectionFilePath(string pipeName)
         {
-            return System.IO.Path.Combine(GetConnectionDirectory(),
+            return Path.Combine(GetConnectionDirectory(),
                 CONNECTION_FILE_PREFIX + pipeName + CONNECTION_FILE_EXT);
         }
     }

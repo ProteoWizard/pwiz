@@ -324,6 +324,9 @@
   <data name="_memstamp" xml:space="preserve">
     <value>All logging output will be preceded by two memory usage values managed and process private bytes in MB, rounded to the nearest MB.</value>
   </data>
+  <data name="_open" xml:space="preserve">
+    <value>Synonym for --in. Open a Skyline file.</value>
+  </data>
   <data name="_out" xml:space="preserve">
     <value>Same as save except writes to the specified file</value>
   </data>
@@ -377,6 +380,9 @@
   </data>
   <data name="_save" xml:space="preserve">
     <value>Saves any changes to the file</value>
+  </data>
+  <data name="_save_as" xml:space="preserve">
+    <value>Synonym for --out. Save to the specified file.</value>
   </data>
   <data name="_share_type" xml:space="preserve">
     <value>Specifies the type, 'minimal' or 'complete', of archive to share when --share-zip is specified. Minimal is the default attempting to reduce the size of the archive to the minimum necessary to represent the targets in the document while 'complete' maintains full fidelity of all project files.</value>

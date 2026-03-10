@@ -265,7 +265,13 @@ namespace pwiz.Skyline
             }
             if (args != null && args.Length != 0)
             {
-                _fileToOpen = args.Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
+                // Support both --opendoc path/to/file and --opendoc=path/to/file
+                _fileToOpen = args.Select(a =>
+                {
+                    if (a.StartsWith(Program.OPEN_DOCUMENT_ARG + @"="))
+                        return a.Substring(Program.OPEN_DOCUMENT_ARG.Length + 1);
+                    return a;
+                }).Where(a => !a.Equals(Program.OPEN_DOCUMENT_ARG)).LastOrDefault();
             }
 
             var defaultUIMode = Settings.Default.UIMode;

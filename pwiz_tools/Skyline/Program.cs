@@ -177,7 +177,8 @@ namespace pwiz.Skyline
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface
-            bool openDoc = args != null && args.Length > 0 && args[0] == OPEN_DOCUMENT_ARG;
+            bool openDoc = args != null && args.Length > 0 &&
+                           (args[0] == OPEN_DOCUMENT_ARG || args[0].StartsWith(OPEN_DOCUMENT_ARG + @"="));
             if (args != null && args.Length > 0 && !openDoc) 
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))

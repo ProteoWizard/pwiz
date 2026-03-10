@@ -19,7 +19,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -414,7 +413,7 @@ namespace pwiz.Skyline.ToolsUI
 
             // Search non-docked forms (dialogs)
             var dockedForms = new HashSet<Form>(
-                skylineWindow.DockPanel.Contents.OfType<DockableFormEx>().Cast<Form>());
+                skylineWindow.DockPanel.Contents.OfType<DockableFormEx>());
             foreach (var form in FormUtil.OpenForms)
             {
                 if (form == skylineWindow || dockedForms.Contains(form))
