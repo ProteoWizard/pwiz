@@ -545,6 +545,9 @@ which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</value>
   <data name="Group">
     <value>Value of the replicate annotation of the replicates that were compared to the control group.</value>
   </data>
+  <data name="GroupComparison">
+    <value>Name of the group comparison</value>
+  </data>
   <data name="Height">
     <value>The maximum intensity of the points between the transition peak integration
 boundaries.</value>
@@ -1587,6 +1590,9 @@ file, or the file name again for other file types.</value>
   </data>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
+  </data>
+  <data name="SourceOffsetVoltage">
+    <value>The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation</value>
   </data>
   <data name="SpectrumFilter">
     <value>Extra criteria that spectra must pass to be included in the extracted ion chromatogram</value>

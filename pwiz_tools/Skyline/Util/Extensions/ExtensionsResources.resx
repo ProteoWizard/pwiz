@@ -148,4 +148,7 @@
   <data name="ListItemSeparator" xml:space="preserve">
 	  <value>, </value>
   </data>
+  <data name="TextUtil_DESCRIPTION_PARQUET_Parquet" xml:space="preserve">
+	  <value>Parquet</value>
+  </data>
 </root>

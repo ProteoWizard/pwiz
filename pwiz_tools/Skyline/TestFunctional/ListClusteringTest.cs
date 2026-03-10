@@ -19,11 +19,13 @@
 
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
@@ -35,7 +37,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ListClusteringTest : AbstractFunctionalTest
+    public class ListClusteringTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestListClustering()
@@ -45,14 +47,18 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Save empty document before creating the list, for testing CloseInapplicableForms later
+            string emptyDocPath = TestContext.GetTestResultsPath("EmptyDocument.sky");
+            RunUI(() => SkylineWindow.SaveDocument(emptyDocPath));
+
             const string listName = "MyList";
             var listDesigner = ShowDialog<ListDesigner>(SkylineWindow.AddListDefinition);
             RunUI(()=>listDesigner.ListName = listName);
-            SetCellValue(listDesigner.ListPropertiesGrid, 0, 0, "Name");
-            SetCellValue(listDesigner.ListPropertiesGrid, 1, 0, "X");
-            SetCellValue(listDesigner.ListPropertiesGrid, 1, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.number));
-            SetCellValue(listDesigner.ListPropertiesGrid, 2, 0, "Y");
-            SetCellValue(listDesigner.ListPropertiesGrid, 2, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.number));
+            SetListCellValue(listDesigner.ListPropertiesGrid, 0, 0, "Name");
+            SetListCellValue(listDesigner.ListPropertiesGrid, 1, 0, "X");
+            SetListCellValue(listDesigner.ListPropertiesGrid, 1, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.number));
+            SetListCellValue(listDesigner.ListPropertiesGrid, 2, 0, "Y");
+            SetListCellValue(listDesigner.ListPropertiesGrid, 2, 1, ListPropertyType.GetAnnotationTypeName(AnnotationDef.AnnotationType.number));
             RunUI(()=>listDesigner.ListPropertiesGrid.CurrentCell = listDesigner.ListPropertiesGrid.Rows[0].Cells[0]);
             OkDialog(listDesigner, listDesigner.OkDialog);
             RunUI(()=>SkylineWindow.ShowList(listName));
@@ -132,21 +138,46 @@ namespace pwiz.SkylineTestFunctional
             var heatMap = WaitForOpenForm<HeatMapGraph>();
             Assert.IsNotNull(heatMap);
             RunUI(()=>SkylineWindow.SaveDocument(skylineDocumentPath));
-            RunUI(()=>
-            {
-                SkylineWindow.NewDocument();
-                SkylineWindow.OpenFile(skylineDocumentPath);
-            });
-            listGrid = FindOpenForm<ListGridForm>();
-            Assert.IsNotNull(listGrid);
-            heatMap = FindOpenForm<HeatMapGraph>();
-            Assert.IsNotNull(heatMap);
-            Assert.AreSame(listGrid.DataboundGridControl, heatMap.DataboundGridControl);
 
-            OkDialog(listGrid, listGrid.Close);
+            // Verify fix for issue #4022: NewDocument/OpenFile should not leave duplicate HeatMapGraph
+            LoadNewDocument(false);
+            // CONSIDER: The new document currently ends up with the same list as the prior document,
+            //           completely populated with the same values. It is not clear this is the right
+            //           behavior, but we test it here. If this changes, the test below may not be necessary.
+            ValidateListGridAndHeatMap(true);
+            OpenDocument(skylineDocumentPath);
+            ValidateListGridAndHeatMap(true);
+
+            // Verify CloseInapplicableForms: open a document without the list
+            // and verify that both the ListGridForm and HeatMapGraph close.
+            // Delete .sky.view so we don't go through LoadLayoutLocked.
+            FileEx.SafeDelete(SkylineWindow.GetViewFile(emptyDocPath));
+            OpenDocument(emptyDocPath);
+            ValidateListGridAndHeatMap(false);
+            // And then that they are truly reopened when the document with the list is opened again.
+            OpenDocument(skylineDocumentPath);
+            ValidateListGridAndHeatMap(true);
         }
 
-        public static void SetCellValue(DataGridView grid, int irow, int icol, object value)
+        private static void ValidateListGridAndHeatMap(bool exist)
+        {
+            var listGrid = FindOpenForm<ListGridForm>();
+            if (exist)
+            {
+                Assert.IsNotNull(listGrid);
+                var heatMap = WaitForOpenForm<HeatMapGraph>();
+                Assert.IsNotNull(heatMap);
+                WaitForCondition(() => heatMap.DataboundGridControl != null);
+                Assert.AreSame(listGrid.DataboundGridControl, heatMap.DataboundGridControl); }
+            else
+            {
+                Assert.IsNull(listGrid);
+                var heatMap = FindOpenForm<HeatMapGraph>();
+                Assert.IsNull(heatMap);
+            }
+        }
+
+        public static void SetListCellValue(DataGridView grid, int irow, int icol, object value)
         {
             ListDesignerTest.SetCellValue(grid, irow, icol, value);
         }

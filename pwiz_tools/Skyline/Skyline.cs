@@ -196,7 +196,8 @@ namespace pwiz.Skyline
             _autoTrainManager.Register(this);
             _immediateWindowWarningListener = new ImmediateWindowWarningListener(this);
             RemoteSession.RemoteAccountUserInteraction = this;
-            RemoteUrl.RemoteAccountStorage = this;
+
+            Program.GcTracker?.Register(this);
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
@@ -744,6 +745,8 @@ namespace pwiz.Skyline
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;
 
+            Program.GcTracker?.Register(docNew);
+
             if (DocumentChangedEvent != null)
                 DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
 
@@ -1195,6 +1198,16 @@ namespace pwiz.Skyline
             {
                 loader.Unregister(this);
                 loader.ClearCache();
+            }
+
+            if (RemoteUrl.RemoteAccountStorage == this)
+            {
+                RemoteUrl.RemoteAccountStorage = null;
+            }
+
+            if (RemoteSession.RemoteAccountUserInteraction == this)
+            {
+                RemoteSession.RemoteAccountUserInteraction = null;
             }
 
             if (!Program.FunctionalTest)

@@ -592,25 +592,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         }
                     }
 
-                    var eCancel = new CancelEventArgs();
-                    if (!BuildPepSearchLibControl.PerformDDASearch && !BuildPeptideSearchLibrary(eCancel, IsFeatureDetectionWorkflow))
-                    {
-                        if (eCancel.Cancel)
-                        {
-                            // Page has shown an error and canceled further progress
-                            return;
-                        }
-                        // A failure has occurred
-                        // CONSIDER(brendanx): This looks suspicious to me. It closes the entire wizard
-                        // when BuildPeptideSearchLibrary has failed but eCancel.Cancel is not set, which
-                        // makes it unclear if the user has seen an error message before the UI disappears.
-                        // I am not ready to dig into this further as it has been this way for years,
-                        // passing most tests. It is hard to imagine how the wizard could continue if
-                        // it fails to create a library, and it is not performing a search.
-                        CloseWizard(DialogResult.Cancel);
-                        // Not a good idea to continue once the wizard has been closed
+                    if (!BuildPeptideSearchLibraryOrCloseWizard())
                         return;
-                    }
 
                     // The user had the option to finish right after 
                     // building the peptide search library, but they
@@ -1454,29 +1437,66 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        /// <summary>
+        /// Builds the peptide search library if not performing a DDA search.
+        /// Closes the wizard on unexpected failure; returns true to continue to the next page.
+        /// </summary>
+        private bool BuildPeptideSearchLibraryOrCloseWizard()
+        {
+            if (BuildPepSearchLibControl.PerformDDASearch)
+                return true;
+
+            var eCancel = new CancelEventArgs();
+            if (BuildPeptideSearchLibrary(eCancel, IsFeatureDetectionWorkflow))
+                return true;
+
+            if (eCancel.Cancel)
+                return false; // Page has shown an error and canceled further progress
+
+            // CONSIDER(brendanx): This looks suspicious to me. It closes the entire wizard
+            // when BuildPeptideSearchLibrary has failed but eCancel.Cancel is not set, which
+            // makes it unclear if the user has seen an error message before the UI disappears.
+            // I am not ready to dig into this further as it has been this way for years,
+            // passing most tests. It is hard to imagine how the wizard could continue if
+            // it fails to create a library, and it is not performing a search.
+            CloseWizard(DialogResult.Cancel);
+            return false;
+        }
+
         private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool isFeatureDetection, bool showWarnings = true)
         {
-            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings, isFeatureDetection);
-            if (result)
+            try
             {
-                Func<SrmDocumentPair, AuditLogEntry> logFunc;
-                if (BuildPepSearchLibControl.UseExistingLibrary)
+                var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings, isFeatureDetection);
+                if (result)
                 {
-                    logFunc = AuditLogEntry.SettingsLogFunction;
+                    Func<SrmDocumentPair, AuditLogEntry> logFunc;
+                    if (BuildPepSearchLibControl.UseExistingLibrary)
+                    {
+                        logFunc = AuditLogEntry.SettingsLogFunction;
+                    }
+                    else
+                    {
+                        logFunc = BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create;
+                    }
+                    SkylineWindow.ModifyDocument(!isFeatureDetection ?
+                            PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library:
+                            PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library
+                        ,
+                        doc => Document, logFunc);
+                    SetDocument(SkylineWindow.Document, _documents.Peek());
                 }
-                else
-                {
-                    logFunc = BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create;
-                }
-                SkylineWindow.ModifyDocument(!isFeatureDetection ?
-                        PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library:
-                        PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library
-                    ,
-                    doc => Document, logFunc);
-                SetDocument(SkylineWindow.Document, _documents.Peek());
-            }
 
-            return result;
+                return result;
+            }
+            catch (Exception x)
+            {
+                ExceptionUtil.DisplayOrReportException(this, x,
+                    string.Format(PeptideSearchResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Failed_to_build_the_library__0__,
+                        Path.GetFileName(BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath))));
+                e.Cancel = true;
+                return false;
+            }
         }
 
         private bool AddExistingLibrary(string libraryPath)
