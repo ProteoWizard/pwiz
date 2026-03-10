@@ -743,34 +743,13 @@ namespace pwiz.Skyline.ToolsUI
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer);
 
-            // Parse the JSON once; extract sort separately since it's not part of the report definition
             var root = ParseJsonDefinition(json);
             var viewSpec = ResolveJsonReportDefinition(root, dataSchema);
-            var sortSpecs = ParseSortSpecs(root);
 
             var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
 
             string ext = Path.GetExtension(filePath);
             var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
-
-            // When the viewSpec has pivot operations (PivotKey/PivotValue), the export
-            // must use BindingListSource instead of streaming to process cross-tab totals.
-            // RowFactories.ExportReport uses streaming when layout and sortSpecs are
-            // null/empty, bypassing pivot processing. Force BindingListSource by adding
-            // a no-op sort on the first GroupBy column.
-            if (viewSpec.HasTotals && (sortSpecs == null || sortSpecs.Count == 0))
-            {
-                Log(@"Pivot detected: injecting sort for BindingListSource path");
-                var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
-                if (groupByCol != null)
-                {
-                    sortSpecs = new List<RowFilter.ColumnSort>
-                    {
-                        new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
-                            ListSortDirection.Ascending)
-                    };
-                }
-            }
 
             DirectoryEx.CreateForFilePath(filePath);
 
@@ -779,7 +758,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (!saver.CanSave())
                     throw new IOException(LlmInstruction.SpaceSeparate(@"Cannot write to", filePath));
                 IProgressStatus status = new ProgressStatus(string.Empty);
-                rowFactories.ExportReport(saver.Stream, viewSpec, sortSpecs, null, exporter,
+                rowFactories.ExportReport(saver.Stream, viewSpec, null, exporter,
                     Program.MainWindow, ref status);
                 saver.Commit();
             }
@@ -879,6 +858,13 @@ namespace pwiz.Skyline.ToolsUI
                     Log(@"pivot_isotope_label=true: applied isotope label pivot");
                 }
 
+                // Apply sort specs - integrates sort into ViewSpec via ColumnSpec.SortIndex/SortDirection
+                var sortToken = root[nameof(REPORT.sort)];
+                if (sortToken is JArray sortArray && sortArray.Count > 0)
+                {
+                    viewSpec = ApplySortSpecs(sortArray, viewSpec, result);
+                }
+
                 return viewSpec;
             }
             catch (ColumnResolver.UnresolvedColumnsException ex)
@@ -969,13 +955,17 @@ namespace pwiz.Skyline.ToolsUI
             return filters;
         }
 
-        private static List<RowFilter.ColumnSort> ParseSortSpecs(JObject root)
+        /// <summary>
+        /// Applies sort specifications to the ViewSpec by setting SortIndex and SortDirection
+        /// on the corresponding ColumnSpec entries. Sort columns not already in the ViewSpec
+        /// are added as hidden columns.
+        /// </summary>
+        private ViewSpec ApplySortSpecs(JArray sortArray, ViewSpec viewSpec,
+            ColumnResolver.ResolveResult result)
         {
-            var sortToken = root[nameof(REPORT.sort)];
-            if (!(sortToken is JArray sortArray) || sortArray.Count == 0)
-                return null;
+            var columns = viewSpec.Columns.ToList();
+            int sortIndex = 0;
 
-            var sorts = new List<RowFilter.ColumnSort>();
             foreach (var item in sortArray)
             {
                 string columnName = (string)item[nameof(REPORT.column)];
@@ -988,9 +978,45 @@ namespace pwiz.Skyline.ToolsUI
                 string dirString = (string)item[nameof(REPORT.direction)];
                 var direction = ParseSortDirection(dirString);
 
-                sorts.Add(new RowFilter.ColumnSort(new ColumnId(columnName), direction));
+                // Resolve column name to PropertyPath using the column index
+                if (!result.ColumnIndex.TryGetValue(columnName, out var columnInfo))
+                {
+                    var suggestions = ColumnResolver.FindSuggestions(columnName, result.ColumnIndex.Keys);
+                    if (suggestions.Count > 0)
+                    {
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"Unknown sort column {0}. Did you mean: {1}?",
+                                columnName.SingleQuote(),
+                                string.Join(@", ", suggestions.Select(s => s.SingleQuote()))));
+                    }
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unknown sort column {0}.", columnName.SingleQuote()));
+                }
+
+                // Find the column in the existing ViewSpec by matching PropertyPath
+                int colIndex = columns.FindIndex(c =>
+                    Equals(c.PropertyPath, columnInfo.PropertyPath));
+                if (colIndex >= 0)
+                {
+                    columns[colIndex] = columns[colIndex]
+                        .SetSortIndex(sortIndex)
+                        .SetSortDirection(direction);
+                }
+                else
+                {
+                    // Sort column not in select list: add as hidden
+                    columns.Add(new ColumnSpec(columnInfo.PropertyPath)
+                        .SetHidden(true)
+                        .SetSortIndex(sortIndex)
+                        .SetSortDirection(direction));
+                    Log(string.Format(@"Added hidden sort column: {0}", columnName));
+                }
+
+                sortIndex++;
             }
-            return sorts;
+
+            Log(string.Format(@"Applied {0} sort column(s) to ViewSpec", sortIndex));
+            return viewSpec.SetColumns(columns);
         }
 
         private static ListSortDirection ParseSortDirection(string direction)
