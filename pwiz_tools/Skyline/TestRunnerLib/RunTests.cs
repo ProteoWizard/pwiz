@@ -161,6 +161,8 @@ namespace TestRunnerLib
         public int DotMemoryWarmupRuns { get; set; }
         public int DotMemoryWaitRuns { get; set; }
         public bool DotMemoryCollectAllocations { get; set; } // Collect allocation stack traces
+        public List<int> DotMemoryAtTests { get; set; } // Snapshot tickets consumed as tests match; -1 = keep running
+        public bool ProfilingComplete { get; private set; } // Set when all configured snapshots are done
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
@@ -353,112 +355,23 @@ namespace TestRunnerLib
             stopwatch.Start();
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
-            long crtLeakedBytes = 0;
             var saveTmp = Environment.GetEnvironmentVariable(@"TMP");
 
-            var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
+            if (string.IsNullOrEmpty(dmpDir))
+                dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
 
-            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
-            {
-                try
-                {
-                    if (string.IsNullOrEmpty(dmpDir))
-                    {
-                        dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
-                        Log("[WARNING] No log path provided - using test results dir ({0})", dmpDir);
-                    }
-
-                    Directory.CreateDirectory(dmpDir);
-
-                    var path = Path.Combine(dmpDir, "pre_" + dumpFileName);
-                    if (!MiniDump.WriteMiniDump(path))
-                        Log("[WARNING] Failed to write pre mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
-                }
-                catch(Exception ex)
-                {
-                    Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
-                }
-            }
+            var preDumpPath = WritePreMiniDumpIfRequested(test, pass, testNumber, dmpDir);
 
             string tmpTestDir = null; // If non-null, we've put temp files in an elaborately named temp directory, so delete it when done
 
             try
             {
-                // Create test class.
-                var testObject = Activator.CreateInstance(test.TestClassType);
-
-                // Set the TestContext.
-                TestContext.HasPassed = false;
-                TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
-                TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
-                TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
-                TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
-                TestContext.Properties["TestName"] = test.TestMethod.Name;
-                TestContext.Properties["UnicodeDecoration"] = test.DoNotUseUnicode ? null : _unicodeSubdirName; // N.B. "UnicodeDecoration" must agree with ExtensionTestContext.cs
-                TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
-                TestContext.Properties["TestPass"] = pass.ToString();
-                if (IsParallelClient)
-                {
-                    Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
-                }
-
-                if (test.SetTestContext != null)
-                {
-                    var context = new object[] { TestContext };
-                    test.SetTestContext.Invoke(testObject, context);
-                }
-
-                // Switch to selected culture.
-                LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
-                LocalizationHelper.InitThread();
-
-
-                // Set the TMP file path to something peculiar - helps guarantee support for
-                // unusual user names since temp file path is usually in the user directory
-                // Also helps detect 3rd party tools that leave temp files behind
-                tmpTestDir = SetTMP(test);
-                CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
-
-
-                if (test.SkipTestUntil == null || DateTime.UtcNow >= test.SkipTestUntil)
-                {
-                    if (test.SkipTestUntil != null)
-                        Log("Note: SkipTestUntil attribute is present, but the skip date has been reached so the test will run.");
-
-                    // Run the test and time it.
-                    if (test.TestInitialize != null)
-                        test.TestInitialize.Invoke(testObject, null);
-
-                    if (CheckCrtLeaks > 0)
-                    {
-                        // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
-                        // If we ever want to enable this functionality again, we need to find another .dll
-                        // to put this in.
-                        //CrtDebugHeap.Checkpoint();
-                    }
-                    test.TestMethod.Invoke(testObject, null);
-                    if (CheckCrtLeaks > 0)
-                    {
-                        //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
-                    }
-
-                    // Need to set the test outcome to passed or it won't get set which impacts cleanup
-                    TestContext.HasPassed = true;
-                    if (test.TestCleanup != null)
-                        test.TestCleanup.Invoke(testObject, null);
-                }
-                else if (test.SkipTestUntil != null)
-                {
-                    Log("Skipping due to SkipTestUntil attribute (until {0})", test.SkipTestUntil.Value.ToShortDateString());
-                }
-
-                // Check for any left over files
-                var allEntries = CleanUpTestDir(tmpTestDir, true);
-                if (allEntries.Count > 0)
-                {
-                    allEntries.Insert(0, string.Format("The test {0} left these temp files behind:", test.TestMethod.Name));
-                    throw new IOException(string.Join("\r\n", allEntries));
-                }
+                // Run test in a separate method so the test class instance is not kept
+                // alive on this method's stack frame during GC leak checking. In Debug
+                // builds, the JIT extends local variable lifetimes to the end of the
+                // method for debuggability, which would prevent the test instance (and
+                // everything it references, including SkylineWindow) from being collected.
+                tmpTestDir = RunTestInstance(test, pass);
             }
             catch (Exception e)
             {
@@ -506,31 +419,8 @@ namespace TestRunnerLib
             // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
 
-            // Check for GC leaks - objects registered by test code that should
-            // have been collected after FlushMemory's full GC cycle.
-            // Skip when memory profiling - pin survivors for dotMemory inspection.
-            if (DotMemoryWarmupRuns > 0)
-            {
-                GarbageCollectionTracker.PinSurvivors();
-            }
-            else if (exception != null)
-            {
-                GarbageCollectionTracker.Clear();
-            }
-            else
-            {
-                var leakMessage = GarbageCollectionTracker.CheckForLeaks();
-                if (leakMessage != null)
-                {
-                    Log("!!! {0} GC-LEAK {1}\r\n", test.TestMethod.Name, leakMessage);
-                    exception = new Exception(leakMessage);
-                }
-            }
-
-            _process.Refresh();
-
-            // Take dotMemory snapshots at configured iteration counts
-            TakeDotMemorySnapshotIfNeeded(test.TestMethod.Name);
+            // GC leak checking and dotMemory snapshot handling
+            exception = HandlePostTestProfiling(test.TestMethod.Name, pass, testNumber, exception);
 
             var heapCounts = ReportSystemHeaps
                 ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
@@ -546,36 +436,8 @@ namespace TestRunnerLib
             LastUserHandleCount = GetHandleCount(User32Test.HandleType.user);
             LastGdiHandleCount = GetHandleCount(User32Test.HandleType.gdi);
 
-            if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
-            {
-                try
-                {
-                    var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
-                    if (leak > test.MinidumpLeakThreshold.Value)
-                    {
-                        var path = Path.Combine(dmpDir, "post_" + dumpFileName);
-                        if (!MiniDump.WriteMiniDump(path))
-                            Log("[WARNING] Failed to write post mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
-                    }
-                    else
-                    {
-                        var prePath = Path.Combine(dmpDir, "pre_" + dumpFileName);
-                      
-                        var i = 5;
-                        while (i-- > 0)
-                        {
-                            File.Delete(prePath);
-                            if (!File.Exists(prePath))
-                                break;
-                            Thread.Sleep(200);
-                        }
-                    }
-                }
-                catch(Exception ex)
-                {
-                    Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
-                }
-            }
+            var leak = (TotalMemoryBytes - previousPrivateBytes) / MB;
+            WritePostMiniDumpIfRequested(test, preDumpPath, leak);
 
             if (exception == null)
             {
@@ -615,8 +477,7 @@ namespace TestRunnerLib
 
                     Log("# Handles " + string.Join("\t", sortedHandleCounts.Select(c => c.Type + ": " + c.Count)) + Environment.NewLine);
                 }
-                if (crtLeakedBytes > CheckCrtLeaks)
-                    Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
+                // CRT leak checking removed - was disabled (required special debug pwiz_cli_data.dll build)
 
                 if (heapOutput && ReportSystemHeaps)
                 {
@@ -690,6 +551,133 @@ namespace TestRunnerLib
             if (report != null)
                 Log(report);
             ScreenshotComparisonResults.ClearCurrentResults();
+        }
+
+        /// <summary>
+        /// Creates the test class instance, sets up context, runs the test, and cleans up.
+        /// Separated from Run() so the test instance local goes out of scope when this
+        /// method returns, ensuring it can be garbage collected before GC leak checking.
+        /// </summary>
+        /// <returns>The temporary test directory path, or null if none was created.</returns>
+        private string RunTestInstance(TestInfo test, int pass)
+        {
+            // Create test class.
+            var testObject = Activator.CreateInstance(test.TestClassType);
+
+            // Set the TestContext.
+            TestContext.HasPassed = false;
+            TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
+            TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
+            TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
+            TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
+            TestContext.Properties["TestName"] = test.TestMethod.Name;
+            TestContext.Properties["UnicodeDecoration"] = test.DoNotUseUnicode ? null : _unicodeSubdirName; // N.B. "UnicodeDecoration" must agree with ExtensionTestContext.cs
+            TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+            TestContext.Properties["TestPass"] = pass.ToString();
+            if (IsParallelClient)
+            {
+                Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
+            }
+
+            if (test.SetTestContext != null)
+            {
+                var context = new object[] { TestContext };
+                test.SetTestContext.Invoke(testObject, context);
+            }
+
+            // Switch to selected culture.
+            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
+            LocalizationHelper.InitThread();
+
+            // Set the TMP file path to something peculiar - helps guarantee support for
+            // unusual user names since temp file path is usually in the user directory
+            // Also helps detect 3rd party tools that leave temp files behind
+            var tmpTestDir = SetTMP(test);
+            CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
+
+            if (test.SkipTestUntil == null || DateTime.UtcNow >= test.SkipTestUntil)
+            {
+                if (test.SkipTestUntil != null)
+                    Log("Note: SkipTestUntil attribute is present, but the skip date has been reached so the test will run.");
+
+                // Run the test and time it.
+                if (test.TestInitialize != null)
+                    test.TestInitialize.Invoke(testObject, null);
+
+                test.TestMethod.Invoke(testObject, null);
+
+                // Need to set the test outcome to passed or it won't get set which impacts cleanup
+                TestContext.HasPassed = true;
+                if (test.TestCleanup != null)
+                    test.TestCleanup.Invoke(testObject, null);
+            }
+            else if (test.SkipTestUntil != null)
+            {
+                Log("Skipping due to SkipTestUntil attribute (until {0})", test.SkipTestUntil.Value.ToShortDateString());
+            }
+
+            // Check for any left over files
+            var allEntries = CleanUpTestDir(tmpTestDir, true);
+            if (allEntries.Count > 0)
+            {
+                allEntries.Insert(0, string.Format("The test {0} left these temp files behind:", test.TestMethod.Name));
+                throw new IOException(string.Join("\r\n", allEntries));
+            }
+
+            return tmpTestDir;
+        }
+
+        /// <summary>
+        /// Writes a "pre_" minidump before the test runs, if WriteMiniDumps is enabled
+        /// and the test has a MinidumpLeakThreshold attribute.
+        /// </summary>
+        /// <returns>The full path of the pre-dump file, or null if no dump was written.</returns>
+        private string WritePreMiniDumpIfRequested(TestInfo test, int pass, int testNumber, string dmpDir)
+        {
+            if (!WriteMiniDumps || test.MinidumpLeakThreshold == null)
+                return null;
+
+            var dumpFileName = string.Format("pre_{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp",
+                pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
+            var path = Path.Combine(dmpDir, dumpFileName);
+            WriteMiniDump(path);
+            return path;
+        }
+
+        /// <summary>
+        /// Writes a "post_" minidump after a leak is detected, using the pre-dump path
+        /// to derive the post-dump filename.
+        /// </summary>
+        private void WritePostMiniDumpIfRequested(TestInfo test, string preDumpPath, long leak)
+        {
+            if (preDumpPath == null)
+                return;
+            if (leak < test.MinidumpLeakThreshold)
+            {
+                FileEx.SafeDelete(preDumpPath, true);
+            }
+            else
+            {
+                var path = preDumpPath.Replace(@"\pre_", @"\post_");
+                WriteMiniDump(path);
+            }
+        }
+
+        private void WriteMiniDump(string path)
+        {
+            try
+            {
+                var dumpDir = Path.GetDirectoryName(path);
+                if (dumpDir != null)    // Keep ReSharper happy
+                    Directory.CreateDirectory(dumpDir);
+
+                if (!MiniDump.WriteMiniDump(path))
+                    Log("[WARNING] Failed to write mini dump to '{0}' (GetLastError() = {1})", path, Marshal.GetLastWin32Error());
+            }
+            catch (Exception ex)
+            {
+                Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
+            }
         }
 
         private string SetTMP(TestInfo test)
@@ -1203,10 +1191,37 @@ namespace TestRunnerLib
         }
 
         /// <summary>
+        /// Handles all post-test profiling: GC leak checks, dotMemory snapshots,
+        /// and ProfilingComplete signaling. Returns the exception to propagate
+        /// (may be the original or a new GC-LEAK exception).
+        /// </summary>
+        private Exception HandlePostTestProfiling(string testName, int pass, int testNumber, Exception exception)
+        {
+            // Check for GC leaks - objects registered by test code that should
+            // have been collected after FlushMemory's full GC cycle.
+            var gcLeakMessage = GarbageCollectionTracker.CheckAfterTest(
+                testName, DotMemoryWarmupRuns, exception, Log);
+            if (gcLeakMessage != null)
+            {
+                Log("!!! {0} GC-LEAK {1}\n", testName, gcLeakMessage);
+                exception = new Exception(gcLeakMessage);
+            }
+
+            _process.Refresh();
+
+            // Take dotMemory snapshots at configured iteration counts or test numbers
+            TakeDotMemorySnapshotIfNeeded(testName);
+            TakeDotMemorySnapshotAtTest(testName, pass, testNumber);
+
+            return exception;
+        }
+
+        /// <summary>
         /// Takes dotMemory snapshots at configured iteration counts when running under dotMemory profiler.
         /// Set DotMemoryWarmupRuns > 0 to enable. DotMemoryWaitRuns controls the second snapshot:
         ///   0 = single snapshot after warmup only
         ///   N = second snapshot after warmup + N additional runs
+        /// Sets ProfilingComplete after the final configured snapshot.
         /// </summary>
         private void TakeDotMemorySnapshotIfNeeded(string testName)
         {
@@ -1223,13 +1238,40 @@ namespace TestRunnerLib
                 var snapshotName = $"{testName}_Warmup_After{DotMemoryWarmupRuns}";
                 Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
                 MemoryProfiler.Snapshot(snapshotName);
+
+                // Single-snapshot mode: done after warmup
+                if (DotMemoryWaitRuns <= 0)
+                    ProfilingComplete = true;
             }
             else if (DotMemoryWaitRuns > 0 && _dotMemoryIterationCount == DotMemoryWarmupRuns + DotMemoryWaitRuns)
             {
                 var snapshotName = $"{testName}_Analysis_After{DotMemoryWarmupRuns + DotMemoryWaitRuns}";
                 Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
                 MemoryProfiler.Snapshot(snapshotName);
+                ProfilingComplete = true;
             }
+        }
+
+        /// <summary>
+        /// Takes a dotMemory snapshot after specific test numbers within a pass.
+        /// Each matching test number is a "snapshot ticket" consumed on use.
+        /// Duplicates (e.g. "5,6,5,5") allow snapshots at the same test across passes.
+        /// Use -1 as a sentinel to keep running indefinitely (never matches a test).
+        /// Sets ProfilingComplete when no tickets remain.
+        /// </summary>
+        private void TakeDotMemorySnapshotAtTest(string testName, int pass, int testNumber)
+        {
+            if (DotMemoryAtTests == null || !DotMemoryAtTests.Remove(testNumber))
+                return;
+
+            MemoryProfiler.CollectAllocations = DotMemoryCollectAllocations;
+
+            var snapshotName = $"Pass{pass}_Test{testNumber}_{testName}";
+            Log("\n# Taking dotMemory snapshot: {0}\n", snapshotName);
+            MemoryProfiler.Snapshot(snapshotName);
+
+            if (DotMemoryAtTests.Count == 0)
+                ProfilingComplete = true;
         }
 
         public string TeamCityPassName(int pass)

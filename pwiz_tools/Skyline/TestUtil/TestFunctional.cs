@@ -2787,10 +2787,9 @@ namespace pwiz.SkylineTestUtil
 
         private void WaitForSkyline()
         {
-            FileStreamManager.Default.ConnectionPool.ClearHistory();
             using var restoreTracking = new ScopedAction(
-                () => ConnectionPool.TrackHistory = true,
-                () => ConnectionPool.TrackHistory = false);
+                FileStreamManager.Default.StartTrackingHistory,
+                FileStreamManager.Default.EndTrackingHistory);
 
             try
             {
@@ -2968,9 +2967,9 @@ namespace pwiz.SkylineTestUtil
                 WaitForBackgroundLoaders();
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
-                if (FileStreamManager.Default.HasPooledStreams)
+                var report = FileStreamManager.Default.ReportPooledStreams();
+                if (report != null)
                 {
-                    var report = FileStreamManager.Default.ReportPooledStreams();
                     var message = TextUtil.LineSeparate("Streams left open:", string.Empty, report);
                     Console.WriteLine(message);
                     Program.AddTestException(new IOException(message));

@@ -45,7 +45,7 @@ namespace pwiz.SkylineTest.Reporting
             SkylineViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
 
             string testFile = TestContext.GetTestResultsPath("TestInvariantExport.csv");
-            viewContext.ExportToFile(null, GetTestReport(skylineDataSchema), testFile, TextUtil.SEPARATOR_CSV);
+            viewContext.ExportViewToFile(GetTestReport(skylineDataSchema), testFile, TextUtil.SEPARATOR_CSV);
             string strExported = File.ReadAllText(testFile);
             Assert.AreEqual(ExpectedInvariantReport, strExported);
             // Assert that the file written out was UTF8 encoding without any byte order mark
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTest.Reporting
             SkylineViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
 
             string testFile = TestContext.GetTestResultsPath("TestExportWithCurrentLanguage.csv");
-            viewContext.ExportToFile(null, GetTestReport(skylineDataSchema), testFile, TextUtil.CsvSeparator);
+            viewContext.ExportViewToFile(GetTestReport(skylineDataSchema), testFile, TextUtil.CsvSeparator);
             string strExported = File.ReadAllText(testFile);
             var actualLines = strExported.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var expectedLines = ExpectedInvariantReport.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
