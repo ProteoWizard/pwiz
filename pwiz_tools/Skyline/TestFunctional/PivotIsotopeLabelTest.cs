@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowDocumentGrid(true);
             });
             var documentGrid = FindOpenForm<DocumentGridForm>();
-            RunDlg<ViewEditor>(()=>documentGrid.NavBar.CustomizeView(), viewEditor =>
+            RunDlg<ViewEditor>(() => documentGrid.NavBar.CustomizeView(), viewEditor =>
             {
                 var ppPeptides = PropertyPath.Root.Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
                     .Property(nameof(Protein.Peptides)).LookupAllItems();
@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyPivot(false, false);
             VerifyPivot(false, true);
             VerifyPivot(true, false);
-            VerifyPivot(false, false);
+            VerifyPivot(true, true);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public IEnumerable<string> GetDsvRows(DataGridView dataGridView, char separator)
+        private IEnumerable<string> GetDsvRows(DataGridView dataGridView, char separator)
         {
             yield return MakeDsvRow(separator,
                 dataGridView.Columns.OfType<DataGridViewColumn>().Select(col => col.HeaderText));
