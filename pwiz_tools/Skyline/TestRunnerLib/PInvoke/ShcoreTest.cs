@@ -21,7 +21,7 @@ namespace TestRunnerLib.PInvoke
 {
     public static class ShcoreTest
     {
-        [DllImport("Shcore.dll")]
+        [DllImport("shcore.dll")]
         private static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
 
         /// <summary>
