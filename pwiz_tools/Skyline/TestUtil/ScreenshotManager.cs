@@ -449,7 +449,7 @@ namespace pwiz.SkylineTestUtil
                 RunUI(screenshotControl,() => screenshotControl.Focus());
             }
 
-            Thread.Sleep(500);  // Allow activation message processing on the UI thread
+            Thread.Sleep(100);  // Allow activation message processing on the UI thread
 
             RunUI(screenshotControl, () => HideSensitiveFocusDisplay(screenshotControl));
 

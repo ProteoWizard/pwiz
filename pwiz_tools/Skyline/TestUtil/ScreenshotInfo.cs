@@ -198,7 +198,9 @@ namespace pwiz.SkylineTestUtil
         private static readonly HashSet<long> _allowedColorMappings = BuildAllowedColorMappings(
             (255, 255, 255, 243, 243, 243),  // White -> light gray (system background)
             (255, 255, 255, 249, 249, 249),  // White -> near-white (system background)
-            (225, 225, 225, 253, 253, 253)   // Gray -> near-white (system border/control color)
+            (225, 225, 225, 253, 253, 253),  // Gray -> near-white (system border/control color)
+            (244, 241, 249, 243, 243, 243),  // Purple-tinted gray -> neutral gray (Win11 accent color bleed in title bar)
+            (241, 243, 249, 243, 243, 243)   // Blue-tinted gray -> neutral gray (Win11 accent color bleed in title bar)
         );
 
         private static HashSet<long> BuildAllowedColorMappings(params (int r1, int g1, int b1, int r2, int g2, int b2)[] mappings)
@@ -392,6 +394,30 @@ namespace pwiz.SkylineTestUtil
                             Color.FromArgb((int)((kvp.Key >> 40) & 0xFF), (int)((kvp.Key >> 32) & 0xFF), (int)((kvp.Key >> 24) & 0xFF)),
                             Color.FromArgb((int)((kvp.Key >> 16) & 0xFF), (int)((kvp.Key >> 8) & 0xFF), (int)(kvp.Key & 0xFF))));
             }
+        }
+
+        /// <summary>
+        /// Fast pixel comparison between two bitmaps, returning the percentage of differing pixels.
+        /// Uses the same color tolerance and allowed color mappings as the full comparison.
+        /// </summary>
+        public static double QuickDiffPercent(Bitmap reference, Bitmap current, int colorTolerance = 3)
+        {
+            if (reference.Width != current.Width || reference.Height != current.Height)
+                return 100.0;
+
+            int diffCount = 0;
+            int totalPixels = reference.Width * reference.Height;
+
+            for (int y = 0; y < reference.Height; y++)
+            {
+                for (int x = 0; x < reference.Width; x++)
+                {
+                    if (!ColorsMatch(reference.GetPixel(x, y), current.GetPixel(x, y), colorTolerance))
+                        diffCount++;
+                }
+            }
+
+            return totalPixels > 0 ? 100.0 * diffCount / totalPixels : 0;
         }
 
         /// <summary>

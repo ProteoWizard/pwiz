@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
@@ -175,7 +176,7 @@ namespace pwiz.Skyline.Util
                     if (label.Length + 2 < maxLength)
                         continue;
                     maxLength = Math.Max(label.Length, maxLength);
-                    int labelWidth = SystemMetrics.GetTextWidth(font, label);
+                    int labelWidth = MeasureTextWidth(font, label);
                     if (labelWidth > result)
                     {
                         result = labelWidth;
@@ -184,6 +185,19 @@ namespace pwiz.Skyline.Util
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Measures text width using a fixed 96-DPI Graphics context to ensure consistent
+        /// results regardless of screen DPI, matching ZedGraph's DPI-independent rendering.
+        /// </summary>
+        private static int MeasureTextWidth(Font font, string text)
+        {
+            using (var bmp = new Bitmap(1, 1))
+            using (var g = Graphics.FromImage(bmp)) // Bitmap defaults to 96 DPI
+            {
+                return TextRenderer.MeasureText(g, text, font).Width;
+            }
         }
 
         private bool RemoveRepeatedLabelText(Font font, float dpAvailable, float dxAvailable)

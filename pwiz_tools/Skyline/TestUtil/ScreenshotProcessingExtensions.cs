@@ -245,10 +245,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static Rectangle AdjustToBitmapCoords(this Rectangle rect, Size bmpSize)
         {
-            // If the rect origin is within the bitmap, assume it's already bitmap-relative
-            if (rect.X >= 0 && rect.X < bmpSize.Width && rect.Y >= 0 && rect.Y < bmpSize.Height)
-                return rect;
-            // Otherwise, it's screen coordinates — subtract the screen origin
+            // Always subtract the screen origin to convert screen coordinates to bitmap coordinates.
+            // For the primary screen (origin 0,0), this is a no-op.
             var screen = Screen.FromPoint(rect.Location);
             rect.X -= screen.Bounds.X;
             rect.Y -= screen.Bounds.Y;

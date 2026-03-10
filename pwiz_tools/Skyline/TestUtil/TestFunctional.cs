@@ -2185,18 +2185,93 @@ namespace pwiz.SkylineTestUtil
         private void CaptureScreenShot(Control screenshotForm, bool fullScreen,
             string filePath, Func<Bitmap, Bitmap> processShot, string description = null)
         {
-            Thread.Sleep(1500); // Wait for UI to settle down
-            _shotManager.ActivateScreenshotForm(screenshotForm);
+            WaitForScreenshotToSettle(screenshotForm, fullScreen, processShot);
             _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot, description: description);
         }
 
         private void CompareScreenShot(Control screenshotForm, bool fullScreen,
             Func<Bitmap, Bitmap> processShot, string description)
         {
-            Thread.Sleep(1500); // Wait for UI to settle down
-            _shotManager.ActivateScreenshotForm(screenshotForm);
+            WaitForScreenshotToSettle(screenshotForm, fullScreen, processShot);
             var shotPic = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot, description: description);
             ScreenshotComparer.Compare(ScreenshotCounter, shotPic, description);
+        }
+
+        /// <summary>
+        /// Waits for the UI to settle by comparing screenshots against the existing reference.
+        /// Starts at 300ms, retries every 200ms until the screenshot matches within 1% or 1500ms elapsed.
+        /// Falls back to a full 1500ms wait if no reference screenshot exists.
+        /// </summary>
+        private void WaitForScreenshotToSettle(Control screenshotForm, bool fullScreen,
+            Func<Bitmap, Bitmap> processShot)
+        {
+            const int INITIAL_WAIT_MS = 200;
+            const int RETRY_INTERVAL_MS = 200;
+            const int MAX_WAIT_MS = 1500;
+            const double SETTLE_THRESHOLD = 1.0;
+
+            var settleTimer = System.Diagnostics.Stopwatch.StartNew();
+
+            // Try to load existing reference screenshot
+            Bitmap referenceBmp = null;
+            if (TutorialScreenshotPath != null)
+            {
+                var refPath = Path.Combine(TutorialScreenshotPath, $"s-{ScreenshotCounter:D2}.png");
+                if (File.Exists(refPath))
+                    referenceBmp = new Bitmap(refPath);
+            }
+
+            long loadMs = settleTimer.ElapsedMilliseconds;
+
+            if (referenceBmp == null)
+            {
+                Thread.Sleep(MAX_WAIT_MS);
+                Console.WriteLine($"  [Settle s-{ScreenshotCounter:D2}] no ref, slept {MAX_WAIT_MS}ms");
+                return;
+            }
+
+            using (referenceBmp)
+            {
+                Thread.Sleep(INITIAL_WAIT_MS);
+                var activateTimer = System.Diagnostics.Stopwatch.StartNew();
+                _shotManager.ActivateScreenshotForm(screenshotForm);
+                long activateMs = activateTimer.ElapsedMilliseconds;
+                int retries = 0;
+
+                while (settleTimer.ElapsedMilliseconds < MAX_WAIT_MS)
+                {
+                    var retryTimer = System.Diagnostics.Stopwatch.StartNew();
+
+                    using (var shot = _shotManager.TakeShot(screenshotForm, fullScreen, null, processShot))
+                    {
+                        long shotMs = retryTimer.ElapsedMilliseconds;
+                        var diffPct = QuickDiffPercent(referenceBmp, shot);
+                        long diffMs = retryTimer.ElapsedMilliseconds;
+                        retries++;
+
+                        Console.WriteLine($"  [Settle s-{ScreenshotCounter:D2}] retry {retries}: shot={shotMs}ms diff={diffMs - shotMs}ms ({shot.Width}x{shot.Height}) result={diffPct:F1}%");
+
+                        if (diffPct <= SETTLE_THRESHOLD)
+                        {
+                            Console.WriteLine($"  [Settle s-{ScreenshotCounter:D2}] settled in {settleTimer.ElapsedMilliseconds}ms ({retries} retries, load={loadMs}ms, activate={activateMs}ms)");
+                            return;
+                        }
+                    }
+
+                    Thread.Sleep(RETRY_INTERVAL_MS);
+                }
+                Console.WriteLine($"  [Settle s-{ScreenshotCounter:D2}] timeout after {settleTimer.ElapsedMilliseconds}ms ({retries} retries, load={loadMs}ms, activate={activateMs}ms)");
+            }
+        }
+
+        /// <summary>
+        /// Fast pixel comparison between two bitmaps, returning the percentage of differing pixels.
+        /// Delegates to ScreenshotDiff.QuickDiffPercent which uses the same color tolerance
+        /// and allowed color mappings as the full comparison.
+        /// </summary>
+        private static double QuickDiffPercent(Bitmap reference, Bitmap current)
+        {
+            return ScreenshotDiff.QuickDiffPercent(reference, current);
         }
 
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
