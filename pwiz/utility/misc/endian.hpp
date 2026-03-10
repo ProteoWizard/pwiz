@@ -1,5 +1,5 @@
 //
-// $Id$ 
+// $Id$
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
@@ -7,16 +7,16 @@
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -79,13 +79,13 @@ inline unsigned int endianize32(unsigned int n)
 
 inline unsigned long long endianize64(unsigned long long n)
 {
-    return ((n&0x00000000000000ffll)<<56) | 
-           ((n&0x000000000000ff00ll)<<40) | 
-           ((n&0x0000000000ff0000ll)<<24) | 
+    return ((n&0x00000000000000ffll)<<56) |
+           ((n&0x000000000000ff00ll)<<40) |
+           ((n&0x0000000000ff0000ll)<<24) |
            ((n&0x00000000ff000000ll)<<8)  |
-           ((n&0x000000ff00000000ll)>>8)  | 
+           ((n&0x000000ff00000000ll)>>8)  |
            ((n&0x0000ff0000000000ll)>>24) |
-           ((n&0x00ff000000000000ll)>>40) | 
+           ((n&0x00ff000000000000ll)>>40) |
            ((n&0xff00000000000000ll)>>56);
 }
 
@@ -101,7 +101,7 @@ inline unsigned long long endianize64(unsigned long long n)
 
 
 } // namespace util
-} // namespace pwiz 
+} // namespace pwiz
 
 
 #endif // _ENDIAN_HPP_

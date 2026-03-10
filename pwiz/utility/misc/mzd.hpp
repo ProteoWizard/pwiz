@@ -19,16 +19,12 @@ namespace mzd
     /// @brief Implementation of endianness
     namespace binary
     {
-        const bool is_big_endian() {
-            // The <bit> header isn't available on the minimum version of C++, so falling back on the method used in MSNumpress.cpp
-            // the
-            // #ifdef PWIZ_BIG_ENDIAN
-            // return false;
-            // #else
-            // return true;
-            // #endif
-            const int ONE = 1;
-            return *((char*)&(ONE)) == 1;
+        constexpr bool is_big_endian() {
+            #ifdef PWIZ_BIG_ENDIAN
+            return true;
+            #else
+            return false;
+            #endif
         }
 
         template <typename Z>
@@ -69,7 +65,7 @@ namespace mzd
             static byte_view as_little_endian(Z value)
             {
                 auto view = byte_view(value);
-                if (is_big_endian())
+                if constexpr (is_big_endian())
                 {
                     view.byteswap();
                 }
@@ -79,7 +75,7 @@ namespace mzd
             static byte_view as_little_endian(std::array<uint8_t, sizeof(Z)> value)
             {
                 auto view = byte_view(value);
-                if (is_big_endian())
+                if constexpr (is_big_endian())
                 {
                     view.byteswap();
                 }
@@ -98,7 +94,18 @@ namespace mzd
 
             int byteswap()
             {
-                std::reverse(this->begin(), this->end());
+                if constexpr (sizeof(Z) == 4)
+                {
+                    inner.value = (Z)pwiz::util::endianize32((uint64_t)inner.value);
+                }
+                else if constexpr (sizeof(Z) == 8)
+                {
+                    inner.value = (Z)pwiz::util::endianize64((uint64_t)inner.value);
+                }
+                else
+                {
+                    std::reverse(this->begin(), this->end());
+                }
                 return 0;
             }
 
@@ -178,7 +185,7 @@ namespace mzd
                     auto value = data[j];
                     byte_view<T> view = byte_view(value);
                     auto buf = view.buffer();
-                    if (is_big_endian())
+                    if constexpr (is_big_endian())
                     {
                         buffer.push_back(buf[(sizeof(T) - 1) - i]);
                     }
@@ -210,7 +217,7 @@ namespace mzd
                     auto value = data[j];
                     byte_view<T> view = byte_view(value);
                     auto buf = view.buffer();
-                    if (is_big_endian())
+                    if constexpr (is_big_endian())
                     {
                         buffer.push_back(buf[(sizeof(T) - 1) - i]);
                     }
@@ -237,7 +244,7 @@ namespace mzd
             {
                 auto datum = &data[i % nData];
                 auto byteView = reinterpret_cast<uint8_t *>(datum);
-                if (is_big_endian())
+                if constexpr (is_big_endian())
                 {
                     byteView[(sizeof(T) - 1) - (i / nData)] = buffer[i];
                 }
@@ -426,14 +433,15 @@ namespace mzd
 
             byte_view<uint64_t> view;
             std::memcpy((void*)&view, data.data(), 8);
-            if (is_big_endian())
+            if constexpr (is_big_endian())
             {
                 view.byteswap();
             }
             auto offset = view.value();
 
             std::memcpy((void *)&view, data.data() + 8, 8);
-            if (is_big_endian()) {
+            if constexpr (is_big_endian())
+            {
                 view.byteswap();
             }
             auto n_values = view.value();
@@ -861,7 +869,7 @@ namespace mzd
             throw runtime_error(ss.str());
         }
         outBuffer.resize(outputBound);
-        if (binary::is_big_endian() && sizeof(T) > 1)
+        if constexpr (binary::is_big_endian() && sizeof(T) > 1)
         {
             buffer_t revEndian;
             revEndian.reserve(data.size() * sizeof(T));
@@ -953,7 +961,7 @@ namespace mzd
             throw runtime_error(ss.str());
         }
         dataBuffer.resize(used / sizeof(T));
-        if (binary::is_big_endian() && sizeof(T) > 1)
+        if constexpr (binary::is_big_endian() && sizeof(T) > 1)
         {
             for (size_t i = 0; i < dataBuffer.size(); i++)
             {

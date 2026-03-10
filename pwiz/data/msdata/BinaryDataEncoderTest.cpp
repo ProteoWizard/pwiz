@@ -82,14 +82,14 @@ const char* sampleEncodedNumpressPic_ =     "aMhoyGjIaMhpyGnIachpyGnF2DacUvRpxa5
 const char* sampleEncodedNumpressPicZlib_ = "eJzLOJEBhpkwePSG2ZygL5lH17nNCQyGiGWciFEsDJhYFfIxJbVVtc8AAAjsG4c=";
 const char* sampleEncodedModified64BigZlib_ = "eJxzyGRg7Jor/r/+/X8wcMhkYG6rrWz9j+CzNsVpL6m/D+ez19nrxf+H85UzTM3Y1zFAAZCfZbZjz2okfo6F9eE5SPw8y/0yTUj8Amun41EOPalVCRB+kc2xI6oOk08KH4DwS+y8hZ46TF5R6gDhl9mf3zzDoast4gGEX+EYssweybwqp5uvbiPxa1ziGzMRfAYU4FB0AEzbf4DyK6G0CpSud4DQkVB+E0S9Qz9EHACREFv+";
 
-const char *sampleEncoded32BigZstd_ = "KLUv/SCglQMAooUVI5Ap6f8wG+ooxNBTx5myJ8Z7RyqKxbiZWyBI4wguP50Q0YUUn7hv7lf6S/8Z/OorBN/oo4UisewEULiIZSF13MOyCtUxLFuBDrdAGAjJMhA5Y/+ZsQELADFDwL2VzLJUJiALyAcyA+lAE+Du3JIE";
-const char *sampleEncoded64BigZstd_ = "KLUv/WBAAFUGAGQJQGkAAYqdF/8AQGkAA4Z9eYUAQGkABYJeK6QAQGkAB34/Ll8AQGkjaDU2B64AQGkjaja4vKsAQGkjbDg7w5wAQGkjbjm/HIIAQGkjcDtCx1pAjGV6YHI8xsQlQJPJE8B0PksS5UCTqHVAdj/Ps5hAioZY4HhBVKY/ekLZ6tt8RF+BaXLAP/B5AEAkf0BZgsCPQAAAAAAAGABgIMgMjAaygdaAa0A0yNaTBLD1jNETNhoMBAYCA5k5PsgH5APyAfmAfEA+IJ8MHAE=";
+const char *sampleEncoded32Zstd_ = "KLUv/SCghQMAVAUMAEhDAAAAABwsPEIbSVJicoIbSUPTK2NEkhtJQ55InkSiG0lDqkOdRLIbSUPHMlREwtLiAAAAlkMAAIA/AADIQwAAIEEAAPpDAADIQgAAFkQAAHpECwBzyALyQWYZQiYgC8gHkoHmgBPg7txyBA==";
+const char *sampleEncoded64Zstd_ = "KLUv/WBAAJ0FAMQH/xedigEAaUAAhXl9hgOkK16CBV8uP34Hrgc2NWgjq7y4Nmqcwzs4bIIcvzluWsdCO3BgemWMQCXExjxywBPJk0DlEks+dEB1qJNAmLPPP3bgWIaKQD+mVEF42+rZQnppgV9EfMBy8D8AeUAAJEBAf0AAAFlAwIJAAECPQBoAIAY4AmyANoAMlYunSgQtAASAARg9MabgBjAQGAgMBAYCQwOjgdHAaLALMBoYPdPoDBwB";
 
-const char *sampleEncoded32BigShuffleZstd_ = "KLUv/SCg/QIAVAQMABwALAA8AEIAUgBiAHIAgtOSnqKqssfCANIA4gAbKxtIG0MbMkhJY0meSZ1JVEgAloDIIPrIFnpDAEQAQz9DQUNCREQKAGAAyG6up5jDALlcZqW2nTksR1w94AQ=";
-const char *sampleEncoded64BigShuffleZstd_ = "KLUv/WBAAEUGADKMKDBQV5oDMMVtyxAfQoJeCNrkHRcEo8xspk1AaAEyuVPW08mMkTEP1ohQh6DUFd0W6hS/Pt2VQBFaxLKMKbPUJcqhTwZ9OXMgTp0Gb9a0Kkx4WnBpz4k8JeYktTlKU9S9SLLliKQQP+56yBwwRhsyFF1YEpuq+khUEYoQkA8CE8pjR44bNVoFBgS4stezUw2m7bSMVgWrMDk4CZlUb/VWL+Vzrw4Ag+IGxQ2KQ9LyjgTyZg7LkYvL5yZhch1pDr5JDBChzmEB";
+const char *sampleEncoded32ShuffleZstd_ = "KLUv/SCg/QIAVAQMABwALAA8AEIAUgBiAHIAgtOSnqKqssfCANIA4gAbKxtIG0MbMkhJY0meSZ1JVEgAloDIIPrIFnpDAEQAQz9DQUNCREQKAGAAyG6up5jDALlcZqW2nTksR1w94AQ=";
+const char *sampleEncoded64ShuffleZstd_ = "KLUv/WBAAD0GADIMKjIwc9IawKBH6X442Jy+dOTi9k0fskbmRtDHm1FJn/8+YigSr2eHAr2kZTwCsMpwNCmdAnd3d9g9lazC5AAldFo1VmO1lO1a761VF8y1c2VcR6aKUISAfBCcUh47ctyoUVRgQIARSyF+sHtoOWCQNmQ4urBkVnXVtOdEnhJzltokpTmKvUiy5cmgL2cOxKnT4M2aogoTohZsfWJXAkVoMcsypkxTlyiHAgwAgADIbq6jm4TJ9TRzWI64Au8E2wm2E2znBpw=";
 
-const char *sampleEncoded32BigDictZstd_ = "KLUv/SCszQQAoskjMWCnJB0wDAp4zGVGLxjjwDBtld4xPnF0ADVvgdMNRG1A505A9bvcvs99377Pfd+3PwWgzuJScBKbGWvOjPFc0IJVPpStJ0uODPmx44bTnuYQquAE3gGMHpyq1OCub8R3+x58EyGa6NBEhiYuNDGhiQZNJGhiQBNXTUw1Mevb1Depb6xvq++z7VGiPw0cuiACAIDjAWAB";
-const char *sampleEncoded64BigDictZstd_ = "KLUv/WAgAD0GADQKAAD4AB0AP0AA8CRZaXJ5f4KKjI+TkwAjwABAwIZlQKjJAAEDBQdoamxucHJ0dnh6fFh6AHUTAIqGgn41Njg5Ozw+P0FCROBgAEDAAJ19Xj82uDu/QsZLz1TZXxd5Ky4HvMMcx8QSs6bqgQAA/4WkX66rnIJaJeWYP9tpBQAGAAcACAAJAAoACwAMAA0ZDhwPGxAYEQASABMABAAUARUCFgMXGg8AQbH45IK2uEEBiz03DbDYe9MqsA02A0QHnQaWAMQtwAI=";
+const char *sampleEncoded32DictZstd_ = "KLUv/SCspQMAtAWEAB0ADBwsPEJSYnKCkqKywtLix9MAqp4bMisAQ0gAgCDISEmWyPoWVGN6nZ4AP0FCQ0QFAAYABwAIAAkACgALAAwADRkOHA8bEBgRABIAEwAEABQBFQIWAxcaCgBAEIBXsBdnWNMCbt+iSuMZKjBtAG0=";
+const char *sampleEncoded64DictZstd_ = "KLUv/WAgAPUFAAQK+AAdAP+FpF+uq5yCWiXlmD/baQAXeSsuB7zDHMfEErOm6oEAnX1ePza4O79CxkvPVNlfAIqGgn41Njg5Ozw+P0FCROBgAEDAAAEDBQdoamxucHJ0dnh6fFh6AHUTI8AAQMCGZUCoyQDwJFlpcnl/goqMj5OTAD9ABQAGAAcACAAJAAoACwAMAA0ZDhwPGxAYEQASABMABAAUARUCFgMXGgwAwE5AV3xfIpR2MxZLaD6DChwAOABwADBtAG0=";
 
 const char *
     regressionTest(const BinaryDataEncoder::Config &config, bool expectNumpressIgnored)
@@ -150,34 +150,34 @@ const char *
         return sampleEncoded64BigZlib_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
         config.compression == BinaryDataEncoder::Compression_Zstd)
     {
-        return sampleEncoded64BigZstd_;
+        return sampleEncoded64Zstd_;
     }
     if (config.precision == BinaryDataEncoder::Precision_32 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
         config.compression == BinaryDataEncoder::Compression_Zstd)
     {
-        return sampleEncoded32BigZstd_;
+        return sampleEncoded32Zstd_;
     }
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
         config.compression == BinaryDataEncoder::Compression_ByteShuffleZstd)
     {
-        return sampleEncoded64BigShuffleZstd_;
+        return sampleEncoded64ShuffleZstd_;
     }
     if (config.precision == BinaryDataEncoder::Precision_32 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
         config.compression == BinaryDataEncoder::Compression_ByteShuffleZstd)
     {
-        return sampleEncoded32BigShuffleZstd_;
+        return sampleEncoded32ShuffleZstd_;
     }
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
         config.compression == BinaryDataEncoder::Compression_DictZstd)
     {
-        return sampleEncoded64BigDictZstd_;
+        return sampleEncoded64DictZstd_;
+    }
+    if (config.precision == BinaryDataEncoder::Precision_32 &&
+        config.compression == BinaryDataEncoder::Compression_DictZstd)
+    {
+        return sampleEncoded32DictZstd_;
     }
     throw runtime_error("[BinaryDataEncoderTest::regressionTest()] Untested configuration.");
 }
@@ -343,25 +343,36 @@ void test()
     testConfiguration(config);
 
     config.precision = BinaryDataEncoder::Precision_64;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     config.compression = BinaryDataEncoder::Compression_Zstd;
     testConfiguration(config);
 
     config.precision = BinaryDataEncoder::Precision_32;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     config.compression = BinaryDataEncoder::Compression_Zstd;
     testConfiguration(config);
 
     config.precision = BinaryDataEncoder::Precision_64;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_ByteShuffleZstd;
+    testConfiguration(config);
+
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     config.compression = BinaryDataEncoder::Compression_ByteShuffleZstd;
     testConfiguration(config);
 
     config.precision = BinaryDataEncoder::Precision_64;
-    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
     config.compression = BinaryDataEncoder::Compression_DictZstd;
     testConfiguration(config);
 
+    config.precision = BinaryDataEncoder::Precision_32;
+    config.byteOrder = BinaryDataEncoder::ByteOrder_LittleEndian;
+    config.compression = BinaryDataEncoder::Compression_DictZstd;
+    testConfiguration(config);
+
+    config.byteOrder = BinaryDataEncoder::ByteOrder_BigEndian;
     // test the numpress stuff with and without zlib, and to see if it honors error limits
     config.compression = BinaryDataEncoder::Compression_None;
     config.precision = BinaryDataEncoder::Precision_64;
