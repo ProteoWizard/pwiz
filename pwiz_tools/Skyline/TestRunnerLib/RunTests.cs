@@ -497,6 +497,11 @@ namespace TestRunnerLib
             Thread.CurrentThread.CurrentCulture = saveCulture;
             Thread.CurrentThread.CurrentUICulture = saveUICulture;
 
+            // Release strong refs pinned from the previous test's leak check BEFORE
+            // collecting, so they don't act as roots that keep the current test's
+            // objects alive (cascade prevention).
+            GarbageCollectionTracker.ClearPins();
+
             // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
 
