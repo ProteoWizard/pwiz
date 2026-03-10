@@ -752,8 +752,6 @@ Config parseCommandLine(int argc, char** argv)
     if (zlib)
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
 
-    *os_ << "zlib? " << zlib << " | zstd? " << zstd << std::endl;
-
     if (zstd)
     {
         config.writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zstd;
