@@ -596,7 +596,7 @@ if ! [ without-mz5 ]
 
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
-path-constant ZSTD_SOURCE : $(PWIZ_LIBRARIES_PATH)/zstd-1.5.7 ;
+path-constant ZSTD_SOURCE : $(zstd_src) ;
 path-constant GD_SOURCE : $(PWIZ_LIBRARIES_PATH)/libgd-2.1.0alpha ;
 path-constant PNG_SOURCE : $(PWIZ_LIBRARIES_PATH)/libpng-1.5.6 ;
 path-constant FREETYPE_SOURCE : $(PWIZ_LIBRARIES_PATH)/freetype-VER-2-13-3 ;
