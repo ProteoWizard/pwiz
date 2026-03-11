@@ -49,7 +49,6 @@ namespace mzd
             }
 
             tcb::span<uint8_t, sizeof(Z)> buffer(){
-                // return this->inner.view;
                 return tcb::span<uint8_t, sizeof(Z)>(reinterpret_cast<byte_t *>(&this -> inner), sizeof(Z));
             }
 
@@ -371,11 +370,6 @@ namespace mzd
         template <typename T, typename I>
         int decode_values(const buffer_t &data, size_t offset, size_t n_values, std::vector<T> &values)
         {
-            // auto start = data.begin() + 16;
-            // auto end = data.begin() + offset;
-            // byte_view<I> block;
-
-            // buffer_span_t slice(start, end);
             if (data.size() < offset) {
                 std::stringstream ss;
                 ss << "Malformed dictionary, expected at least " << offset << " bytes but only found " <<  data.size();
@@ -398,11 +392,6 @@ namespace mzd
         template <typename T, typename K>
         int decode_indices(const buffer_t &data, size_t offset, std::vector<T> &values_lookup, std::vector<T> &values)
         {
-            // auto start = data.begin() + offset;
-            // auto end = data.end();
-            // byte_view<K> block;
-
-            // buffer_span_t slice(start, end);
             if (data.size() < offset) {
                 std::stringstream ss;
                 ss << "Malformed dictionary, expected at least " << offset << " bytes but only found " <<  data.size();
@@ -931,9 +920,6 @@ namespace mzd
         auto outputBound = ZSTD_getFrameContentSize(buffer.data(), buffer.size());
         if (ZSTD_isError(outputBound))
         {
-            // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
-            // std::cout << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode)) << std::endl;
-            // return outputBound;
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             std::stringstream ss;
             ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
@@ -947,9 +933,6 @@ namespace mzd
             buffer.size());
         if (ZSTD_isError(used))
         {
-            // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
-            // std::cout << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode)) << std::endl;
-            // return used;
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             std::stringstream ss;
             ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
