@@ -4927,14 +4927,11 @@ namespace pwiz.Skyline
         public ViewMenu ViewMenu { get; private set; }
         public RefineMenu RefineMenu { get; private set; }
 
-        public ChromatogramContextMenu ChromatogramContextMenu { get; private set; }
-
         private void InitializeMenus()
         {
             _skylineMenuControls.Add(RefineMenu = new RefineMenu(this));
             _skylineMenuControls.Add(EditMenu = new EditMenu(this));
             _skylineMenuControls.Add(ViewMenu= new ViewMenu(this));
-            _skylineMenuControls.Add(ChromatogramContextMenu = new ChromatogramContextMenu(this));
             refineToolStripMenuItem.DropDownItems.Clear();
             refineToolStripMenuItem.DropDownItems.AddRange(RefineMenu.DropDownItems.ToArray());
             editToolStripMenuItem.DropDownItems.Clear();

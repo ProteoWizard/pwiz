@@ -58,6 +58,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using pwiz.Skyline.Controls.Lists;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model.Lib;
 using ZedGraph;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
@@ -1663,16 +1664,19 @@ namespace pwiz.Skyline
 
         void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, PaneKey paneKey, ContextMenuStrip menuStrip, ChromFileInfoId chromFileInfoId)
         {
-            ChromatogramContextMenu.BuildChromatogramMenu(zedGraphControl, paneKey, menuStrip, chromFileInfoId);
+            using var chromatogramContextMenu = new ChromatogramContextMenu(this);
+            chromatogramContextMenu.BuildChromatogramMenu(zedGraphControl, paneKey, menuStrip, chromFileInfoId);
         }
 
         private void AddRelativeAbundanceFormattingForm(ToolStrip menuStrip, int iInsert)
         {
-            ChromatogramContextMenu.AddRelativeAbundanceFormattingMenu(menuStrip, iInsert);
+            using var chromatogramContextMenu = new ChromatogramContextMenu(this);
+            chromatogramContextMenu.AddRelativeAbundanceFormattingMenu(menuStrip, iInsert);
         }
         private void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
-            ChromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
+            using var chromatogramContextMenu = new ChromatogramContextMenu(this);
+            chromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
         }
 
         public void ShowChromatogramLegends(bool show)
@@ -3085,7 +3089,8 @@ namespace pwiz.Skyline
                 var isotopeLabelType = graph.GraphPaneFromPoint(mousePt) != null
                     ? graph.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
                     : null;
-                ChromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
+                using var chromatogramContextMenu = new ChromatogramContextMenu(this);
+                chromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
             }
 
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);
@@ -4047,7 +4052,8 @@ namespace pwiz.Skyline
                 var isotopeLabelType = graphSummary.GraphPaneFromPoint(mousePt) != null
                     ? graphSummary.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
                     : null;
-                ChromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
+                using var chromatogramContextMenu = new ChromatogramContextMenu(this);
+                chromatogramContextMenu.AddApplyRemovePeak(menuStrip, isotopeLabelType, -1, ref iInsert);
             }
 
             // Remove some ZedGraph menu items not of interest

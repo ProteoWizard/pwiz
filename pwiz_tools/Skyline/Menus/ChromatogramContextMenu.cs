@@ -91,18 +91,6 @@ namespace pwiz.Skyline.Menus
             menuStrip.Items.Insert(iInsert++, exemplaryPeakMenuItem);
 
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
-            if (retentionTimesContextMenuItem.DropDownItems.Count == 0)
-            {
-                retentionTimesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    allRTContextMenuItem,
-                    bestRTContextMenuItem,
-                    thresholdRTContextMenuItem,
-                    noneRTContextMenuItem,
-                    rawTimesMenuItemSplitter,
-                    rawTimesContextMenuItem
-                });
-            }
             if (retentionPredict)
             {
                 retentionTimePredContextMenuItem.Checked = set.ShowRetentionTimePred;
@@ -141,30 +129,8 @@ namespace pwiz.Skyline.Menus
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
             AddTransitionContextMenu(menuStrip, iInsert++);
             menuStrip.Items.Insert(iInsert++, transformChromContextMenuItem);
-            // Sometimes child menuitems are stripped from the parent
-            if (transformChromContextMenuItem.DropDownItems.Count == 0)
-            {
-                transformChromContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    transformChromNoneContextMenuItem,
-                    transformChromInterpolatedContextMenuItem,
-                    secondDerivativeContextMenuItem,
-                    smoothSGChromContextMenuItem
-                });
-            }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator17);
             menuStrip.Items.Insert(iInsert++, autoZoomContextMenuItem);
-            // Sometimes child menuitems are stripped from the parent
-            if (autoZoomContextMenuItem.DropDownItems.Count == 0)
-            {
-                autoZoomContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    autoZoomNoneContextMenuItem,
-                    autoZoomBestPeakContextMenuItem,
-                    autoZoomRTWindowContextMenuItem,
-                    autoZoomBothContextMenuItem
-                });
-            }
             lockYChromContextMenuItem.Checked = set.LockYChrom;
             menuStrip.Items.Insert(iInsert++, lockYChromContextMenuItem);
             synchronizeZoomingContextMenuItem.Checked = set.AutoZoomAllChromatograms;
@@ -303,26 +269,6 @@ namespace pwiz.Skyline.Menus
         public void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
             menuStrip.Items.Insert(iInsert, transitionsContextMenuItem);
-            // Sometimes child menuitems are stripped from the parent
-            if (transitionsContextMenuItem.DropDownItems.Count == 0)
-            {
-                transitionsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                {
-                    allTranContextMenuItem,
-                    precursorsTranContextMenuItem,
-                    productsTranContextMenuItem,
-                    singleTranContextMenuItem,
-                    totalTranContextMenuItem,
-                    toolStripSeparatorTran,
-                    basePeakContextMenuItem,
-                    ticContextMenuItem,
-                    qcContextMenuItem,
-                    toolStripSeparatorOnlyQuantitative,
-                    onlyQuantitativeContextMenuItem,
-                    toolStripSeparatorSplitGraph,
-                    splitGraphContextMenuItem,
-                });
-            }
         }
         #endregion
 
