@@ -3399,7 +3399,7 @@ namespace pwiz.Skyline
                     if (DocumentOperations.SaveDocument(_doc, saveFile))
                         _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
                     else
-                        _out.WriteLine(Resources.CommandLine_SaveFile_File__0__save_canceled, Path.GetFileName(saveFile));
+                        _out.WriteLine(SkylineResources.CommandLine_SaveFile_File__0__save_canceled, Path.GetFileName(saveFile));
                 },
                 string.Format(
                     Resources
