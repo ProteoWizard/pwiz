@@ -706,6 +706,12 @@
     <Compile Include="Menus\ChromatogramContextMenu.Designer.cs">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menus\DetectionsContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\DetectionsContextMenu.Designer.cs">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\EditMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3321,6 +3327,17 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ChromatogramContextMenu.zh-CHS.resx">
       <DependentUpon>ChromatogramContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.ja.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\DetectionsContextMenu.zh-CHS.resx">
+      <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\EditMenu.ja.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>

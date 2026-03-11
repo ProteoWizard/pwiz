@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="detectionsTargetPrecursorToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x30D7;&#x30EA;&#x30AB;&#x30FC;&#x30B5;&#x30FC;</value>
+  </data>
+  <data name="detectionsTargetPeptideToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x30DA;&#x30D7;&#x30C1;&#x30C9;</value>
+  </data>
+  <data name="detectionsTargetToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x30BF;&#x30FC;&#x30B2;&#x30C3;&#x30C8;</value>
+  </data>
+  <data name="detectionsGraphTypeReplicateToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x7E70;&#x308A;&#x8FD4;&#x3057;&#x6E2C;&#x5B9A;</value>
+  </data>
+  <data name="detectionsGraphTypeHistogramToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x30D2;&#x30B9;&#x30C8;&#x30B0;&#x30E9;&#x30E0;</value>
+  </data>
+  <data name="detectionsGraphTypeToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x30B0;&#x30E9;&#x30D5;&#x30BF;&#x30A4;&#x30D7;</value>
+  </data>
+  <data name="detectionsShowSelectionToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x9078;&#x629E;</value>
+  </data>
+  <data name="detectionsShowLegendToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x51E1;&#x4F8B;</value>
+  </data>
+  <data name="detectionsShowMeanToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x5E73;&#x5747;&#x3068;&#x6A19;&#x6E96;&#x504F;&#x5DEE;</value>
+  </data>
+  <data name="detectionsShowAtLeastNToolStripMenuItem.Text" xml:space="preserve">
+    <value>N&#x500B;&#x4EE5;&#x4E0A;&#x306E;&#x7E70;&#x308A;&#x8FD4;&#x3057;&#x6E2C;&#x5B9A;</value>
+  </data>
+  <data name="detectionsShowToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x8868;&#x793A;</value>
+  </data>
+  <data name="detectionsYScaleOneToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x30DA;&#x30D7;&#x30C1;&#x30C9;&#x6570;</value>
+  </data>
+  <data name="detectionsYScalePercentToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x30D1;&#x30FC;&#x30BB;&#x30F3;&#x30C8;</value>
+  </data>
+  <data name="detectionsYScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>Y&#x76EE;&#x76DB;&#x308A;</value>
+  </data>
+  <data name="detectionsPropertiesToolStripMenuItem.Text" xml:space="preserve">
+    <value>&#x30D7;&#x30ED;&#x30D1;&#x30C6;&#x30A3;...</value>
+  </data>
+</root>
