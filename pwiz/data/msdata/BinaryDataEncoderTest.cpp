@@ -34,7 +34,7 @@ using namespace pwiz::msdata;
 namespace bfs = boost::filesystem;
 
 
-ostream* os_ = &std::cout;
+ostream* os_ = 0;
 
 
 double sampleData_[] =

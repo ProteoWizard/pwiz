@@ -1,4 +1,7 @@
-#include <iostream>
+#ifndef _MZDHPP_
+#define _MZDHPP_
+
+
 #include <zstd.h>
 #include <array>
 #include <vector>
@@ -7,6 +10,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <sstream>
+#include <stdexcept>
 #include "pwiz/utility/misc/span.hpp"
 #include "pwiz/utility/misc/endian.hpp"
 
@@ -28,38 +32,30 @@ namespace mzd
         }
 
         template <typename Z>
-        union _byte_view_impl
-        {
-            Z value;
-            std::array<uint8_t, sizeof(Z)> view;
-        };
-
-        template <typename Z>
         struct byte_view
         {
-            _byte_view_impl<Z> inner;
+            Z inner;
 
             byte_view() {}
 
             byte_view(const Z value)
             {
-                std::memcpy((void*)(&this->inner.value), (void*)(&value), sizeof(Z));
-                // this->inner.value = value;
+                std::memcpy((void*)(&this->inner), (void*)(&value), sizeof(Z));
             }
 
             Z value()
             {
-                return this->inner.value;
+                return this->inner;
             }
 
-            std::array<uint8_t, sizeof(Z)> &buffer()
-            {
-                return this->inner.view;
+            tcb::span<uint8_t, sizeof(Z)> buffer(){
+                // return this->inner.view;
+                return tcb::span<uint8_t, sizeof(Z)>(reinterpret_cast<byte_t *>(&this -> inner), sizeof(Z));
             }
 
             byte_view(std::array<uint8_t, sizeof(Z)> view)
             {
-                this->inner.view = view;
+                std::memcpy((void *)(&this->inner), (void *)(&view), sizeof(Z));
             }
 
             static byte_view as_little_endian(Z value)
@@ -84,23 +80,23 @@ namespace mzd
 
             auto begin()
             {
-                return this->inner.view.begin();
+                return tcb::span(reinterpret_cast<byte_t*>(&this->inner), sizeof(Z)).begin();
             }
 
             auto end()
             {
-                return this->inner.view.end();
+                return tcb::span(reinterpret_cast<byte_t*>(&this->inner), sizeof(Z)).end();
             }
 
             int byteswap()
             {
                 if constexpr (sizeof(Z) == 4)
                 {
-                    inner.value = (Z)pwiz::util::endianize32((uint64_t)inner.value);
+                    inner = *reinterpret_cast<Z *>(pwiz::util::endianize32(*reinterpret_cast<uint32_t *>(&inner)));
                 }
                 else if constexpr (sizeof(Z) == 8)
                 {
-                    inner.value = (Z)pwiz::util::endianize64((uint64_t)inner.value);
+                    inner = *reinterpret_cast<Z *>(pwiz::util::endianize64(*reinterpret_cast<uint64_t *>(&inner)));
                 }
                 else
                 {
@@ -113,9 +109,10 @@ namespace mzd
         };
 
         template <typename Z>
-        ostream &operator<<(ostream &os, byte_view<Z>& view) {
+        std::ostream &operator<<(std::ostream &os, byte_view<Z> &view)
+        {
             os << "[ ";
-            for_each(view.begin(), view.end(), [&os](byte_t &c)
+            std::for_each(view.begin(), view.end(), [&os](byte_t &c)
                         { os << (int)c << ' '; });
             os << "]";
             return os;
@@ -232,7 +229,7 @@ namespace mzd
 
         /// @brief Reverses the byte shuffling done by `tranpose` to read values from `buffer` back out into `data`
         /// @tparam T
-        /// @param buffer The transposesd data
+        /// @param buffer The transposed data
         /// @param data Where to store the un-transposed data
         template <typename T>
         void reverse_transpose(const buffer_span_t &buffer, std::vector<T> &data)
@@ -322,19 +319,19 @@ namespace mzd
 
             auto n_values = value_codes_sorted.size();
 
-            if (n_values <= pow(2, 8))
+            if (n_values <= std::numeric_limits<uint8_t>::max())
             {
                 return encode_dictionary_indices<T, I, uint8_t>(data, value_codes_sorted, transposeBuffer, outBuffer);
             }
-            else if (n_values <= pow(2, 16))
+            else if (n_values <= std::numeric_limits<uint16_t>::max())
             {
                 return encode_dictionary_indices<T, I, uint16_t>(data, value_codes_sorted, transposeBuffer, outBuffer);
             }
-            else if (n_values <= pow(2, 32))
+            else if (n_values <= std::numeric_limits<uint32_t>::max())
             {
                 return encode_dictionary_indices<T, I, uint32_t>(data, value_codes_sorted, transposeBuffer, outBuffer);
             }
-            else if (n_values <= pow(2, 64))
+            else if (n_values <= std::numeric_limits<uint64_t>::max())
             {
                 return encode_dictionary_indices<T, I, uint64_t>(data, value_codes_sorted, transposeBuffer, outBuffer);
             }
@@ -379,6 +376,11 @@ namespace mzd
             // byte_view<I> block;
 
             // buffer_span_t slice(start, end);
+            if (data.size() < offset) {
+                std::stringstream ss;
+                ss << "Malformed dictionary, expected at least " << offset << " bytes but only found " <<  data.size();
+                throw runtime_error(ss.str());
+            }
             buffer_span_t slice(data.data() + 16, offset - 16);
             std::vector<I> blocks;
             reverse_transpose(slice, blocks);
@@ -401,12 +403,24 @@ namespace mzd
             // byte_view<K> block;
 
             // buffer_span_t slice(start, end);
+            if (data.size() < offset) {
+                std::stringstream ss;
+                ss << "Malformed dictionary, expected at least " << offset << " bytes but only found " <<  data.size();
+                throw runtime_error(ss.str());
+            }
             buffer_span_t slice(data.data() + offset, data.size() - offset);
             std::vector<K> blocks;
             reverse_transpose<K>(slice, blocks);
 
+            size_t sz = values_lookup.size();
+
             for (auto idx : blocks)
             {
+                if (idx >= sz) {
+                    std::stringstream ss;
+                    ss << "Malformed dictionary, decoded index " << idx << " but dictionary contains only " << sz << " values";
+                    throw runtime_error(ss.str());
+                }
                 T val = values_lookup[idx];
                 values.push_back(val);
             }
@@ -464,19 +478,19 @@ namespace mzd
             if (value_size == 1)
             {
                 decode_values<T, uint8_t>(data, offset, n_values, value_lookup);
-                if (n_values < pow(2, 8))
+                if (n_values < std::numeric_limits<uint8_t>::max())
                 {
                     decode_indices<T, uint8_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 16))
+                else if (n_values < std::numeric_limits<uint16_t>::max())
                 {
                     decode_indices<T, uint16_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 32))
+                else if (n_values < std::numeric_limits<uint32_t>::max())
                 {
                     decode_indices<T, uint32_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 64))
+                else if (n_values < std::numeric_limits<uint64_t>::max())
                 {
                     decode_indices<T, uint64_t>(data, offset, value_lookup, outBuffer);
                 }
@@ -488,19 +502,19 @@ namespace mzd
             else if (value_size == 2)
             {
                 decode_values<T, uint16_t>(data, offset, n_values, value_lookup);
-                if (n_values < pow(2, 8))
+                if (n_values < std::numeric_limits<uint8_t>::max())
                 {
                     decode_indices<T, uint8_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 16))
+                else if (n_values < std::numeric_limits<uint16_t>::max())
                 {
                     decode_indices<T, uint16_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 32))
+                else if (n_values < std::numeric_limits<uint32_t>::max())
                 {
                     decode_indices<T, uint32_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 64))
+                else if (n_values < std::numeric_limits<uint64_t>::max())
                 {
                     decode_indices<T, uint64_t>(data, offset, value_lookup, outBuffer);
                 }
@@ -512,19 +526,19 @@ namespace mzd
             else if (value_size == 4)
             {
                 decode_values<T, uint32_t>(data, offset, n_values, value_lookup);
-                if (n_values < pow(2, 8))
+                if (n_values < std::numeric_limits<uint8_t>::max())
                 {
                     decode_indices<T, uint8_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 16))
+                else if (n_values < std::numeric_limits<uint16_t>::max())
                 {
                     decode_indices<T, uint16_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 32))
+                else if (n_values < std::numeric_limits<uint32_t>::max())
                 {
                     decode_indices<T, uint32_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 64))
+                else if (n_values < std::numeric_limits<uint64_t>::max())
                 {
                     decode_indices<T, uint64_t>(data, offset, value_lookup, outBuffer);
                 }
@@ -536,19 +550,19 @@ namespace mzd
             else if (value_size == 8)
             {
                 decode_values<T, uint64_t>(data, offset, n_values, value_lookup);
-                if (n_values < pow(2, 8))
+                if (n_values < std::numeric_limits<uint8_t>::max())
                 {
                     decode_indices<T, uint8_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 16))
+                else if (n_values < std::numeric_limits<uint16_t>::max())
                 {
                     decode_indices<T, uint16_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 32))
+                else if (n_values < std::numeric_limits<uint32_t>::max())
                 {
                     decode_indices<T, uint32_t>(data, offset, value_lookup, outBuffer);
                 }
-                else if (n_values < pow(2, 64))
+                else if (n_values < std::numeric_limits<uint64_t>::max())
                 {
                     decode_indices<T, uint64_t>(data, offset, value_lookup, outBuffer);
                 }
@@ -603,9 +617,8 @@ namespace mzd
         {
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
-            // return outputBound;
         }
         outBuffer.resize(outputBound);
         auto used = ZSTD_compress(
@@ -618,9 +631,8 @@ namespace mzd
         {
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
-            // return used;
         }
         outBuffer.resize(used);
         return 0;
@@ -663,9 +675,8 @@ namespace mzd
         {
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
-            // return outputBound;
         }
         transposeBuffer.resize(outputBound);
         auto used = ZSTD_decompress(
@@ -677,9 +688,8 @@ namespace mzd
         {
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
-            // return used;
         }
         transposeBuffer.resize(used);
         inner::reverse_transpose(transposeBuffer, dataBuffer);
@@ -765,9 +775,8 @@ namespace mzd
         if (ZSTD_isError(outputBound)) {
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
-            // return outputBound;
         }
         outBuffer.resize(outputBound);
         auto used = ZSTD_compress(
@@ -780,9 +789,8 @@ namespace mzd
         {
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
-            // return used;
         }
         outBuffer.resize(used);
         return 0;
@@ -822,9 +830,8 @@ namespace mzd
         {
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
-            // return outputBound;
         }
         dictBuffer.resize(outputBound);
         auto used = ZSTD_decompress(
@@ -834,12 +841,9 @@ namespace mzd
             buffer.size());
         if (ZSTD_isError(used))
         {
-            // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
-            // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            // return used;
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
         }
         dataBuffer.clear();
@@ -860,12 +864,9 @@ namespace mzd
         auto outputBound = ZSTD_compressBound(data.size() * sizeof(T));
         if (ZSTD_isError(outputBound))
         {
-            // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
-            // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-            // return outputBound;
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
         }
         outBuffer.resize(outputBound);
@@ -887,12 +888,9 @@ namespace mzd
                 level);
             if (ZSTD_isError(used))
             {
-                // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
-                // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-                // return used;
                 ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
                 std::stringstream ss;
-                ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+                ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
                 throw runtime_error(ss.str());
             }
             outBuffer.resize(used);
@@ -907,12 +905,9 @@ namespace mzd
                 level);
             if (ZSTD_isError(used))
             {
-                // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
-                // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
-                // return used;
                 ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
                 std::stringstream ss;
-                ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+                ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
                 throw runtime_error(ss.str());
             }
             outBuffer.resize(used);
@@ -937,11 +932,11 @@ namespace mzd
         if (ZSTD_isError(outputBound))
         {
             // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
-            // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
+            // std::cout << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode)) << std::endl;
             // return outputBound;
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(outputBound);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
         }
         dataBuffer.resize(outputBound / sizeof(T));
@@ -953,11 +948,11 @@ namespace mzd
         if (ZSTD_isError(used))
         {
             // ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
-            // std::cout << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode)) << std::endl;
+            // std::cout << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode)) << std::endl;
             // return used;
             ZSTD_ErrorCode errCode = ZSTD_getErrorCode(used);
             std::stringstream ss;
-            ss << "Zstd error: " << errCode << " " << string(ZSTD_getErrorName(errCode)) << " " << string(ZSTD_getErrorString(errCode));
+            ss << "Zstd error: " << errCode << " " << std::string(ZSTD_getErrorName(errCode)) << " " << std::string(ZSTD_getErrorString(errCode));
             throw runtime_error(ss.str());
         }
         dataBuffer.resize(used / sizeof(T));
@@ -989,3 +984,5 @@ namespace mzd
     }
 
 }
+
+#endif

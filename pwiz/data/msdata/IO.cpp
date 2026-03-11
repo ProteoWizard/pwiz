@@ -2419,17 +2419,34 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                     config.numpress = BinaryDataEncoder::Numpress_Linear;
                     config.compression = BinaryDataEncoder::Compression_Zlib;
                     break;
+                case MS_MS_Numpress_linear_prediction_compression_followed_by_zstd_compression:
+                    config.numpress = BinaryDataEncoder::Numpress_Linear;
+                    config.compression = BinaryDataEncoder::Compression_Zstd;
+                    break;
                 case MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression:
                     config.numpress = BinaryDataEncoder::Numpress_Pic;
                     config.compression = BinaryDataEncoder::Compression_Zlib;
+                    break;
+                case MS_MS_Numpress_positive_integer_compression_followed_by_zstd_compression:
+                    config.numpress = BinaryDataEncoder::Numpress_Pic;
+                    config.compression = BinaryDataEncoder::Compression_Zstd;
                     break;
                 case MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression:
                     config.numpress = BinaryDataEncoder::Numpress_Slof;
                     config.compression = BinaryDataEncoder::Compression_Zlib;
                     break;
+                case MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression:
+                    config.numpress = BinaryDataEncoder::Numpress_Slof;
+                    config.compression = BinaryDataEncoder::Compression_Zstd;
+                    break;
                 default:
                     throw runtime_error("[IO::HandlerBinaryDataArray] Unknown compression type.");
             }
+        }
+
+        if ((config.compression == BinaryDataEncoder::Compression_DictZstd || config.compression == BinaryDataEncoder::Compression_ByteShuffleZstd)
+            && config.numpress != BinaryDataEncoder::Numpress_None) {
+            throw runtime_error("[IO::HandlerBinaryDataArray] Cannot combine complex Zstd compression with Numpress!");
         }
 
         // with mzMLb, binary data type is used to indicate whether the array should be restored into a BinaryDataArray or an IntegerDataArray

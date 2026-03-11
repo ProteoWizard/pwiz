@@ -390,17 +390,17 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&zlib)->implicit_value(true),
             ": use zlib compression for binary data (add =off to disable compression)")
         ("zstd",
-            po::value<bool>(&zstd)->implicit_value(true),
-            ": use Zstandard compression for binary data"
+            po::value<bool>(&zstd)->zero_tokens(),
+            ": use Zstandard compression for binary data. This applies to all data arrays, instead of zlib, even if zlib=off is specified"
         )
         ("mzShuffleZstd",
             po::value<bool>(&mz_zstd_shuffle)->zero_tokens(),
-            ": use byte-shuffling Zstandard compression for m/z values"
+            ": use byte-shuffling Zstandard compression for m/z and time values"
         )
         (
             "dictZstd",
             po::value<bool>(&mz_im_zstd_dict)->zero_tokens(),
-            ": use dictionary encoding followed by Zstandard compression for m/z and ion mobility values"
+            ": use dictionary encoding followed by Zstandard compression for m/z and ion mobility values. This overrides --mzShuffleZstd"
         )
         ("numpressLinear",
             po::value<double>(&ms_numpress_linear)->implicit_value(ms_numpress_linear_default, toString(ms_numpress_linear_default)),
