@@ -66,6 +66,11 @@ namespace pwiz.Skyline
     {
         SrmDocument OpenDocument(string skylineFile);
         SrmDocument NewDocument(string skylineFile, bool overwrite);
+
+        /// <summary>
+        /// Returns false if operation is canceled by the user. Otherwise, it throws
+        /// an exception if there is a true failure, like an IOException.
+        /// </summary>
         bool SaveDocument(SrmDocument doc, string saveFile);
     }
 
@@ -517,10 +522,8 @@ namespace pwiz.Skyline
                 }
 
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
-                _out.WriteLine(SkylineResources.CommandLine_SaveFile_Saving_file___);
-                if (!DocumentOperations.SaveDocument(_doc, saveFile))
+                if (!SaveFile(saveFile, commandArgs))
                     return false;
-                _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
 
                 _skylineFile = saveFile;
             }
@@ -1024,6 +1027,7 @@ namespace pwiz.Skyline
             if (ReferenceEquals(_doc, docBefore))
             {
                 _doc = docOriginal;
+                _out.WriteLine(Resources.CommandLine_LogNewEntries_Document_unchanged);
                 return;
             }
             LogNewEntries(Document.AuditLog.AuditLogEntries, setSeenEntries);
@@ -3392,8 +3396,10 @@ namespace pwiz.Skyline
             _out.WriteLine(SkylineResources.CommandLine_SaveFile_Saving_file___);
             return HandleExceptions(commandArgs, () =>
                 {
-                    SaveDocument(_doc, saveFile, _out);
-                    _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
+                    if (DocumentOperations.SaveDocument(_doc, saveFile))
+                        _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
+                    else
+                        _out.WriteLine(Resources.CommandLine_SaveFile_File__0__save_canceled, Path.GetFileName(saveFile));
                 },
                 string.Format(
                     Resources
@@ -4700,19 +4706,8 @@ namespace pwiz.Skyline
 
         bool IDocumentOperations.SaveDocument(SrmDocument doc, string saveFile)
         {
-            try
-            {
-                SaveDocument(doc, saveFile, _out);
-                return true;
-            }
-            catch (Exception x)
-            {
-                _out.WriteLine(
-                    Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_,
-                    saveFile);
-                _out.WriteLine(x.Message);
-                return false;
-            }
+            SaveDocument(doc, saveFile, _out);
+            return true;    // It didn't throw an exception and there is no user cancellation with the command-line.
         }
 
         #endregion

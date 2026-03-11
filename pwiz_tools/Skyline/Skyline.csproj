@@ -2667,6 +2667,9 @@
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ScreenCapturePermissionDlg.resx">
+      <DependentUpon>ScreenCapturePermissionDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.ja.resx">
       <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
     </EmbeddedResource>
