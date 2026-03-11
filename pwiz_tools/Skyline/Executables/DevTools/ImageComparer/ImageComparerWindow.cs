@@ -393,6 +393,18 @@ namespace ImageComparer
                     case ImageSource.disk:
                         imageBytes = File.ReadAllBytes(file.Path);
                         break;
+                    case ImageSource.developer_screenshots:
+                        {
+                            var altPath = file.GetAlternatePath();
+                            if (altPath == null)
+                                throw new InvalidOperationException(
+                                    $"Cannot determine alternate screenshot path for {file.Path}");
+                            if (!File.Exists(altPath))
+                                throw new FileNotFoundException(
+                                    $"Alternate screenshot not found: {altPath}");
+                            imageBytes = File.ReadAllBytes(altPath);
+                        }
+                        break;
                     case ImageSource.web:
                     default:
                         {
@@ -605,10 +617,29 @@ namespace ImageComparer
                 toolStripFileList.Items.Clear();
             else
             {
-                var changedFiles = GitFileHelper.GetChangedFilePaths(folderPath);
-                var listScreenshots = changedFiles.Where(ScreenshotFile.IsMatch)
-                    .OrderBy(s => s, StringComparer.InvariantCultureIgnoreCase)
-                    .Select(f => new ScreenshotFile(f)).ToArray();
+                ScreenshotFile[] listScreenshots;
+                bool isTutorialScreenshotsFolder = folderPath.IndexOf("TutorialScreenshots",
+                    StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if (isTutorialScreenshotsFolder)
+                {
+                    // Enumerate all screenshot PNGs (no git status needed)
+                    listScreenshots = Directory.GetFiles(folderPath, "*.png", SearchOption.AllDirectories)
+                        .Where(ScreenshotFile.IsMatch)
+                        .OrderBy(s => s, StringComparer.InvariantCultureIgnoreCase)
+                        .Select(f => new ScreenshotFile(f)).ToArray();
+
+                    // Auto-switch to developer_screenshots comparison mode
+                    SetOldImageSource(ImageSource.developer_screenshots);
+                }
+                else
+                {
+                    var changedFiles = GitFileHelper.GetChangedFilePaths(folderPath);
+                    listScreenshots = changedFiles.Where(ScreenshotFile.IsMatch)
+                        .OrderBy(s => s, StringComparer.InvariantCultureIgnoreCase)
+                        .Select(f => new ScreenshotFile(f)).ToArray();
+                }
+
                 comboBox.BeginUpdate();
                 comboBox.DataSource = listScreenshots;
                 comboBox.DisplayMember = "RelativePath";
@@ -838,7 +869,7 @@ namespace ImageComparer
             }
         }
 
-        private static readonly ImageSource[] OLD_IMAGE_SOURCES = { ImageSource.git, ImageSource.web };
+        private static readonly ImageSource[] OLD_IMAGE_SOURCES = { ImageSource.git, ImageSource.web, ImageSource.developer_screenshots };
 
         private ImageSource OldImageSource
         {
@@ -874,6 +905,12 @@ namespace ImageComparer
                     helpTip.SetToolTip(buttonImageSource,
                         LineSeparate(_defaultImageSourceTipText.Split('\n').First(),
                             "Current: Git HEAD"));
+                    break;
+                case ImageSource.developer_screenshots:
+                    buttonImageSource.Image = Resources.gitsource;
+                    helpTip.SetToolTip(buttonImageSource,
+                        LineSeparate(_defaultImageSourceTipText.Split('\n').First(),
+                            "Current: Developer Screenshots"));
                     break;
                 case ImageSource.disk:
                 default:
@@ -926,6 +963,7 @@ namespace ImageComparer
             // Update menu check marks
             menuItemGit.Checked = OldImageSource == ImageSource.git;
             menuItemWeb.Checked = OldImageSource == ImageSource.web;
+            menuItemDevScreenshots.Checked = OldImageSource == ImageSource.developer_screenshots;
 
             // Show context menu below the button
             contextMenuImageSource.Show(buttonImageSource, new Point(0, buttonImageSource.Height));
@@ -939,6 +977,11 @@ namespace ImageComparer
         private void menuItemWeb_Click(object sender, EventArgs e)
         {
             SetOldImageSource(ImageSource.web);
+        }
+
+        private void menuItemDevScreenshots_Click(object sender, EventArgs e)
+        {
+            SetOldImageSource(ImageSource.developer_screenshots);
         }
 
         private void SetOldImageSource(ImageSource source)
