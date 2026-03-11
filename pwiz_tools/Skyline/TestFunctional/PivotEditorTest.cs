@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
                 exportDlg.SetUseInvariantLanguage(false);
                 exportDlg.OkDialog(localizedTsv, '\t');
             });
-            AssertEx.NoDiff(TextUtil.LineSeparate(TextUtil.LineSeparate(localizedPreviewRows)), File.ReadAllText(localizedTsv));
+            AssertEx.NoDiff(TextUtil.LineSeparate(localizedPreviewRows), File.ReadAllText(localizedTsv));
 
             RunUI(()=>SkylineWindow.SaveDocument());
         }
@@ -295,6 +295,7 @@ namespace pwiz.SkylineTestFunctional
             });
             return result;
         }
+
         private IEnumerable<string> GetDsvRows(DataGridView dataGridView, char separator)
         {
             yield return MakeDsvRow(separator,

@@ -190,7 +190,6 @@ namespace pwiz.Skyline.Model.Databinding
             if (layout == null || layout.RowTransforms.Count == 0)
             {
                 rowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
-                layout?.ApplyFormats(rowItemEnumerator.ColumnFormats);
             }
 
             if (rowItemEnumerator == null)
@@ -207,6 +206,7 @@ namespace pwiz.Skyline.Model.Databinding
                     ItemProperties = bindingListSource.ItemProperties
                 };
             }
+            layout?.ApplyFormats(rowItemEnumerator.ColumnFormats);
             rowItemEnumerator.SetProgressMonitor(progressMonitor, status);
             rowItemExporter.Export(stream, rowItemEnumerator);
             status = rowItemEnumerator.Status;
