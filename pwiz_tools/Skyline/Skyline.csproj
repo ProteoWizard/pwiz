@@ -712,6 +712,12 @@
     <Compile Include="Menus\DetectionsContextMenu.Designer.cs">
       <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menus\MassErrorsContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\MassErrorsContextMenu.Designer.cs">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\EditMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3338,6 +3344,17 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\DetectionsContextMenu.zh-CHS.resx">
       <DependentUpon>DetectionsContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.ja.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\MassErrorsContextMenu.zh-CHS.resx">
+      <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\EditMenu.ja.resx">
       <DependentUpon>EditMenu.cs</DependentUpon>

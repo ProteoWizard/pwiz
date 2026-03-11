@@ -1673,7 +1673,7 @@ namespace pwiz.Skyline
             using var chromatogramContextMenu = new ChromatogramContextMenu(this);
             chromatogramContextMenu.AddRelativeAbundanceFormattingMenu(menuStrip, iInsert);
         }
-        private void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
+        internal void AddTransitionContextMenu(ToolStrip menuStrip, int iInsert)
         {
             using var chromatogramContextMenu = new ChromatogramContextMenu(this);
             chromatogramContextMenu.AddTransitionContextMenu(menuStrip, iInsert);
@@ -2785,7 +2785,10 @@ namespace pwiz.Skyline
             else if (controller is AreaGraphController)
                 BuildAreaGraphMenu(controller.GraphSummary, menuStrip, mousePt);
             else if (controller is MassErrorGraphController)
-                BuildMassErrorGraphMenu(controller.GraphSummary, menuStrip);
+            {
+                using var massErrorsContextMenu = new MassErrorsContextMenu(this);
+                massErrorsContextMenu.BuildMassErrorGraphMenu(controller.GraphSummary, menuStrip);
+            }
             else if (controller is DetectionsGraphController)
             {
                 using var detectionsContextMenu = new DetectionsContextMenu(this);
@@ -3107,7 +3110,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void AddScopeContextMenu(ToolStrip menuStrip, int iInsert)
+        internal void AddScopeContextMenu(ToolStrip menuStrip, int iInsert)
         {
             menuStrip.Items.Insert(iInsert, scopeContextMenuItem);
             if (scopeContextMenuItem.DropDownItems.Count == 0)
@@ -3120,7 +3123,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private int AddReplicatesContextMenu(ToolStrip menuStrip, int iInsert)
+        internal int AddReplicatesContextMenu(ToolStrip menuStrip, int iInsert)
         {
             if (DocumentUI.Settings.HasResults &&
                 DocumentUI.Settings.MeasuredResults.Chromatograms.Count > 1)
@@ -3139,7 +3142,7 @@ namespace pwiz.Skyline
             return iInsert;
         }
 
-        private void AddPeptideOrderContextMenu(ToolStrip menuStrip, int iInsert)
+        internal void AddPeptideOrderContextMenu(ToolStrip menuStrip, int iInsert)
         {
             menuStrip.Items.Insert(iInsert, peptideOrderContextMenuItem);
             if (peptideOrderContextMenuItem.DropDownItems.Count == 0)
@@ -4281,7 +4284,7 @@ namespace pwiz.Skyline
             Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString();
         }
 
-        private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
+        internal int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
             ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
@@ -4944,11 +4947,6 @@ namespace pwiz.Skyline
             Settings.Default.MassErrorGraphTypes.Remove(graph.Type);
         }
 
-        private void massErrorReplicateComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorReplicateComparison();
-        }
-        
         public void ShowMassErrorReplicateComparison()
         {
             Settings.Default.MassErrorGraphTypes.Insert(0, GraphTypeSummary.replicate);
@@ -4957,11 +4955,6 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void massErrorPeptideComparisonMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorPeptideGraph();
-        }
-        
         public void ShowMassErrorPeptideGraph()
         {
             Settings.Default.MassErrorGraphTypes.Insert(0, GraphTypeSummary.peptide);
@@ -4970,21 +4963,11 @@ namespace pwiz.Skyline
             SynchronizeSummaryZooming();
         }
 
-        private void massErrorHistogramMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorHistogramGraph();
-        }
-
         public void ShowMassErrorHistogramGraph()
         {
             Settings.Default.MassErrorGraphTypes.Insert(0, GraphTypeSummary.histogram);
             ShowGraphMassError(true, GraphTypeSummary.histogram);
             UpdateMassErrorGraph();
-        }
-
-        private void massErrorHistogram2DMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorHistogramGraph2D();
         }
 
         public void ShowMassErrorHistogramGraph2D()
@@ -4999,213 +4982,12 @@ namespace pwiz.Skyline
             _listGraphMassError.ForEach(g => g.UpdateUI());
         }
 
-        internal void massErrorMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var types = Settings.Default.MassErrorGraphTypes;
-            massErrorReplicateComparisonContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.replicate);
-            massErrorPeptideComparisonContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.peptide);
-            massErrorHistogramContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram);
-            massErrorHistogram2DContextMenuItem.Checked = GraphChecked(_listGraphMassError, types, GraphTypeSummary.histogram2d);
-        }
 
-        private void BuildMassErrorGraphMenu(GraphSummary graph, ToolStrip menuStrip)
-        {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == @"unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator25); // TODO: Use another separator?
-
-            // Insert skyline specific menus
-            var set = Settings.Default;
-            int iInsert = 0;
-            var graphType = graph.Type;
-            menuStrip.Items.Insert(iInsert++, massErrorGraphContextMenuItem);
-            if (massErrorGraphContextMenuItem.DropDownItems.Count == 0) {
-                massErrorGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        massErrorReplicateComparisonContextMenuItem,
-                        massErrorPeptideComparisonContextMenuItem,
-                        massErrorHistogramContextMenuItem,
-                        massErrorHistogram2DContextMenuItem
-                    });
-            }
-
-            menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
-            if (graphType == GraphTypeSummary.peptide ||
-                graphType == GraphTypeSummary.replicate)
-            {
-                AddTransitionContextMenu(menuStrip, iInsert++);
-            }
-            if (graphType == GraphTypeSummary.replicate)
-            {
-                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
-                var massErrorReplicateGraphPane = graph.GraphPanes.FirstOrDefault() as MassErrorReplicateGraphPane;
-                if (massErrorReplicateGraphPane != null)
-                {
-                    // If the mass error graph is being displayed and it shows a legend, 
-                    // display the "Legend" option
-                    if (massErrorReplicateGraphPane.CanShowMassErrorLegend)
-                    {
-                        showMassErrorLegendContextMenuItem.Checked = set.ShowMassErrorLegend; // TODO: Mass error legend
-                        menuStrip.Items.Insert(iInsert++, showMassErrorLegendContextMenuItem);
-                    }
-                }
-            }
-            else if (graphType == GraphTypeSummary.peptide)
-            {
-                AddPeptideOrderContextMenu(menuStrip, iInsert++);
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                AddScopeContextMenu(menuStrip, iInsert++);
-            }
-            else if (graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d)
-            {
-                iInsert = AddReplicatesContextMenu(menuStrip, iInsert);
-                iInsert = AddPointsContextMenu(menuStrip, iInsert);
-                massErrorTargetsContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets;
-                massErrorDecoysContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.decoys;
-                bool trained = DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained;
-                massErrorTargets1FDRContextMenuItem.Visible = trained;
-                massErrorTargets1FDRContextMenuItem.Checked = MassErrorGraphController.PointsType == PointsTypeMassError.targets_1FDR;
-                if (!trained && massErrorTargets1FDRContextMenuItem.Checked)
-                {
-                    massErrorTargetsContextMenuItem.Checked = true;
-                }
-                iInsert = AddBinCountContextMenu(menuStrip, iInsert);
-                iInsert = AddTransitionsMassErrorContextMenu(menuStrip, iInsert);
-            }
-            if (graphType == GraphTypeSummary.histogram2d)
-            {
-                iInsert = AddXAxisContextMenu(menuStrip, iInsert);
-                menuStrip.Items.Insert(iInsert++, massErrorlogScaleContextMenuItem);
-                massErrorlogScaleContextMenuItem.Checked = Settings.Default.MassErrorHistogram2DLogScale;
-            }
-            if (graphType == GraphTypeSummary.peptide || (null != Settings.Default.GroupByReplicateAnnotation && graphType == GraphTypeSummary.replicate))
-            {
-                menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
-                peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
-            }
-
-            if (graphType == GraphTypeSummary.peptide ||
-                graphType == GraphTypeSummary.replicate)
-            {
-                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
-                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
-            }
-
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
-            menuStrip.Items.Insert(iInsert++, massErrorPropsContextMenuItem);
-            menuStrip.Items.Insert(iInsert, toolStripSeparator28);
-
-            // Remove some ZedGraph menu items not of interest
-            foreach (var item in items)
-            {
-                string tag = (string)item.Tag;
-                if (tag == @"set_default" || tag == @"show_val")
-                    menuStrip.Items.Remove(item);
-            }
-        }
-
-        private int AddPointsContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-                menuStrip.Items.Insert(iInsert++, massErrorPointsContextMenuItem);
-                if (massErrorPointsContextMenuItem.DropDownItems.Count == 0) {
-                    massErrorPointsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        massErrorTargetsContextMenuItem,
-                        massErrorTargets1FDRContextMenuItem,
-                        massErrorDecoysContextMenuItem
-                    });
-                }
-            return iInsert;
-        }
-
-        private int AddBinCountContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert++, binCountContextMenuItem);
-            if (binCountContextMenuItem.DropDownItems.Count == 0) {
-                binCountContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                       ppm05ContextMenuItem,
-                       ppm10ContextMenuItem,
-                       ppm15ContextMenuItem,
-                       ppm20ContextMenuItem
-                    });
-            }
-            return iInsert;
-        }
-
-        private int AddTransitionsMassErrorContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert++, massErrorTransitionsContextMenuItem);
-            if (massErrorTransitionsContextMenuItem.DropDownItems.Count == 0) {
-                massErrorTransitionsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                       massErrorAllTransitionsContextMenuItem,
-                       massErrorBestTransitionsContextMenuItem,
-                       toolStripSeparator55,
-                       MassErrorPrecursorsContextMenuItem,
-                       MassErrorProductsContextMenuItem
-                    });
-            }
-            return iInsert;
-        }
-        private int AddXAxisContextMenu(ToolStrip menuStrip, int iInsert)
-        {
-            menuStrip.Items.Insert(iInsert++, massErrorXAxisContextMenuItem);
-            if (massErrorXAxisContextMenuItem.DropDownItems.Count == 0) {
-                massErrorXAxisContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        massErorrRetentionTimeContextMenuItem,
-                        massErrorMassToChargContextMenuItem
-                    });
-            }
-            return iInsert;
-        }
-
-        private void massErrorTransitionsContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            massErrorAllTransitionsContextMenuItem.Checked = MassErrorGraphController.HistogramTransiton == TransitionMassError.all;
-            massErrorBestTransitionsContextMenuItem.Checked = MassErrorGraphController.HistogramTransiton == TransitionMassError.best;
-
-            MassErrorPrecursorsContextMenuItem.Checked = MassErrorGraphController.HistogramDisplayType == DisplayTypeMassError.precursors;
-            MassErrorProductsContextMenuItem.Checked = MassErrorGraphController.HistogramDisplayType == DisplayTypeMassError.products;
-        }
-
-        private void massErrorAllTransitionsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeMassErrorTransition(TransitionMassError.all);
-        }
-
-        private void massErrorBestTransitionsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeMassErrorTransition(TransitionMassError.best);
-        }
 
         public void ChangeMassErrorTransition(TransitionMassError transitionMassError)
         {
             MassErrorGraphController.HistogramTransiton = transitionMassError;
             UpdateMassErrorGraph();
-        }
-
-        private void MassErrorPrecursorsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeMassErrorDisplayType(DisplayTypeMassError.precursors);
-        }
-
-        private void MassErrorProductsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ChangeMassErrorDisplayType(DisplayTypeMassError.products);
         }
 
         public void ChangeMassErrorDisplayType(DisplayTypeMassError displayType)
@@ -5214,32 +4996,10 @@ namespace pwiz.Skyline
             UpdateMassErrorGraph();
         }
 
-        private void massErrorXAxisContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            massErrorMassToChargContextMenuItem.Checked = MassErrorGraphController.Histogram2DXAxis == Histogram2DXAxis.mass_to_charge;
-            massErorrRetentionTimeContextMenuItem.Checked = MassErrorGraphController.Histogram2DXAxis == Histogram2DXAxis.retention_time;
-        }
-
-
-        private void massErorrRetentionTimeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateXAxis(Histogram2DXAxis.retention_time);
-        }
-
-        private void massErrorMassToChargContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateXAxis(Histogram2DXAxis.mass_to_charge);
-        }
-
         public void UpdateXAxis(Histogram2DXAxis Xaxis)
         {
             MassErrorGraphController.Histogram2DXAxis = Xaxis;
             UpdateMassErrorGraph();
-        }
-
-        private void showMassErrorLegendContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorLegend(!Settings.Default.ShowMassErrorLegend);
         }
 
         public void ShowMassErrorLegend(bool show)
@@ -5248,49 +5008,10 @@ namespace pwiz.Skyline
             UpdateSummaryGraphs();
         }
 
-        private void massErrorlogScaleContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SwitchLogScale();
-        }
-
         public void SwitchLogScale()
         {
             Settings.Default.MassErrorHistogram2DLogScale = !Settings.Default.MassErrorHistogram2DLogScale;
             UpdateMassErrorGraph();
-        }
-
-        private void binCountContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            UpdatePpmMenuItem(ppm05ContextMenuItem, 0.5);
-            UpdatePpmMenuItem(ppm10ContextMenuItem, 1.0);
-            UpdatePpmMenuItem(ppm15ContextMenuItem, 1.5);
-            UpdatePpmMenuItem(ppm20ContextMenuItem, 2.0);
-        }
-
-        private void UpdatePpmMenuItem(ToolStripMenuItem toolStripMenuItem, double ppm)
-        {
-            toolStripMenuItem.Checked = Settings.Default.MassErorrHistogramBinSize == ppm;
-            toolStripMenuItem.Text = string.Format(@"{0:F01} ppm", ppm);
-        }
-
-        private void ppm05ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBinSize(0.5);
-        }
-
-        private void ppm10ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBinSize(1);
-        }
-
-        private void ppm15ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBinSize(1.5);
-        }
-
-        private void ppm20ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            UpdateBinSize(2);
         }
 
         public void UpdateBinSize(double bin)
@@ -5299,30 +5020,10 @@ namespace pwiz.Skyline
             UpdateMassErrorGraph();
         }
 
-        private void massErrorTargetsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsTypeMassError(PointsTypeMassError.targets);
-        }
-
-        private void massErrorDecoysContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsTypeMassError(PointsTypeMassError.decoys);
-        }
-
-        private void massErrorTargets1FDRContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowPointsTypeMassError(PointsTypeMassError.targets_1FDR);
-        }
-
         public void ShowPointsTypeMassError(PointsTypeMassError pointsTypeMassError)
         {
             MassErrorGraphController.PointsType = pointsTypeMassError;
             UpdateMassErrorGraph();
-        }
-
-        private void massErrorPropsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowMassErrorPropertyDlg();
         }
 
         public void ShowMassErrorPropertyDlg()
