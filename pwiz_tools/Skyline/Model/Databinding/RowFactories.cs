@@ -189,13 +189,17 @@ namespace pwiz.Skyline.Model.Databinding
             RowItemEnumerator rowItemEnumerator = null;
             if (layout == null || layout.RowTransforms.Count == 0)
             {
-
                 rowItemEnumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
+                layout?.ApplyFormats(rowItemEnumerator.ColumnFormats);
             }
 
             if (rowItemEnumerator == null)
             {
                 using var bindingListSource = new BindingListSource(cancellationToken);
+                if (layout != null)
+                {
+                    bindingListSource.ApplyLayout(layout);
+                }
                 bindingListSource.SetView(viewInfo, rowSource);
                 cancellationToken.ThrowIfCancellationRequested();
                 rowItemEnumerator = new RowItemList(bindingListSource.ReportResults.RowItems)
@@ -203,7 +207,6 @@ namespace pwiz.Skyline.Model.Databinding
                     ItemProperties = bindingListSource.ItemProperties
                 };
             }
-            layout?.ApplyFormats(rowItemEnumerator.ColumnFormats);
             rowItemEnumerator.SetProgressMonitor(progressMonitor, status);
             rowItemExporter.Export(stream, rowItemEnumerator);
             status = rowItemEnumerator.Status;

@@ -16,10 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -33,10 +29,15 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace pwiz.SkylineTestFunctional
 {
-    // ReSharper disable LocalizableElement
     [TestClass]
     public class PivotEditorTest : AbstractFunctionalTest
     {
@@ -98,6 +99,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(invariantPreviewForm);
             WaitForConditionUI(() => invariantPreviewForm.IsComplete);
+            var invariantPreviewRows = CallUI(()=>GetDsvRows(invariantPreviewForm.DataGridView, '\t').ToList());
 
             var meanCvCaption = AggregateOperation.Mean.QualifyColumnCaption(
                 AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption("NormalizedArea")));
@@ -119,6 +121,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(localizedPreviewForm);
             WaitForConditionUI(() => localizedPreviewForm.IsComplete);
+            var localizedPreviewRows = CallUI(()=>GetDsvRows(localizedPreviewForm.DataGridView, '\t').ToList());
             var localizer = localizedPreviewForm.DataboundGridControl.BindingListSource.ViewInfo.DataSchema
                 .DataSchemaLocalizer;
             var localizedMeanCvCaption = meanCvCaption.GetCaption(localizer);
@@ -136,6 +139,25 @@ namespace pwiz.SkylineTestFunctional
             documentSettingsDlg.ChooseViewsControl.CheckedViews =
                 new []{PersistedViews.MainGroup.Id.ViewName(pivotTestViewName)};
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
+
+            var invariantTsv = TestFilesDir.GetTestPath("Invariant.tsv");
+            RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportDlg =>
+            {
+                exportDlg.ReportName = pivotTestViewName;
+                exportDlg.SetUseInvariantLanguage(true);
+                exportDlg.OkDialog(invariantTsv, '\t');
+            });
+            AssertEx.NoDiff(TextUtil.LineSeparate(invariantPreviewRows), File.ReadAllText(invariantTsv));
+
+            var localizedTsv = TestFilesDir.GetTestPath("Localized.tsv");
+            RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportDlg =>
+            {
+                exportDlg.ReportName = pivotTestViewName;
+                exportDlg.SetUseInvariantLanguage(false);
+                exportDlg.OkDialog(localizedTsv, '\t');
+            });
+            AssertEx.NoDiff(TextUtil.LineSeparate(TextUtil.LineSeparate(localizedPreviewRows)), File.ReadAllText(localizedTsv));
+
             RunUI(()=>SkylineWindow.SaveDocument());
         }
 
@@ -272,6 +294,22 @@ namespace pwiz.SkylineTestFunctional
                 result = dataGridView.Columns.OfType<DataGridViewColumn>().Select(col => col.HeaderText).ToArray();
             });
             return result;
+        }
+        private IEnumerable<string> GetDsvRows(DataGridView dataGridView, char separator)
+        {
+            yield return MakeDsvRow(separator,
+                dataGridView.Columns.OfType<DataGridViewColumn>().Select(col => col.HeaderText));
+            foreach (DataGridViewRow row in dataGridView.Rows)
+            {
+                yield return MakeDsvRow(separator, row.Cells.OfType<DataGridViewCell>()
+                    .Select(cell => cell.FormattedValue?.ToString() ?? string.Empty));
+            }
+        }
+
+        private static string MakeDsvRow(char separator, IEnumerable<object> values)
+        {
+            return string.Join(separator.ToString(),
+                values.Select(value => DsvWriter.ToDsvField(separator, value?.ToString() ?? string.Empty)));
         }
     }
 }
