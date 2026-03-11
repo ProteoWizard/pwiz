@@ -4850,15 +4850,6 @@ namespace pwiz.Skyline
         }
 
 
-        private void koinaLibMatchItem_Click(object sender, EventArgs e)
-        {
-            koinaLibMatchItem.Checked = !koinaLibMatchItem.Checked;
-
-            if (koinaLibMatchItem.Checked)
-                KoinaUIHelpers.CheckKoinaSettings(this, this);
-
-            _graphSpectrumSettings.Koina = koinaLibMatchItem.Checked;
-        }
 
         public bool ValidateSource()
         {
@@ -4899,11 +4890,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private void mirrorMenuItem_Click(object sender, EventArgs e)
-        {
-            mirrorMenuItem.Checked = !mirrorMenuItem.Checked;
-            _graphSpectrumSettings.Mirror = mirrorMenuItem.Checked;
-        }
 
         private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
