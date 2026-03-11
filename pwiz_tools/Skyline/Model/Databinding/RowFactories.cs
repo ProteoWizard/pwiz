@@ -214,6 +214,10 @@ namespace pwiz.Skyline.Model.Databinding
             if (rowItemEnumerator == null)
             {
                 using var bindingListSource = new BindingListSource(cancellationToken);
+                if (layout != null)
+                {
+                    bindingListSource.ApplyLayout(layout);
+                }
                 bindingListSource.SetView(viewInfo, rowSource);
                 if (columnSorts != null && columnSorts.Count > 0)
                     bindingListSource.RowFilter = RowFilter.Empty.SetColumnSorts(columnSorts);
