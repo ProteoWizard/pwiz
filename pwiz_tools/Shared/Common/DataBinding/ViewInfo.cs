@@ -186,7 +186,7 @@ namespace pwiz.Common.DataBinding
         public StreamingRowItemEnumerator GetStreamingRowItemEnumerator(CancellationToken cancellationToken,
             IRowSource rowSource)
         {
-            if (SortColumns.Count > 0 || HasTotals)
+            if (SortColumns.Count > 0)
             {
                 return null;
             }
