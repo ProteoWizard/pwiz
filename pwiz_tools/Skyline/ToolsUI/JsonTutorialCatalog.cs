@@ -122,7 +122,7 @@ namespace pwiz.Skyline.ToolsUI
             // Write to file
             filePath = filePath ?? GetTutorialFilePath(t.FolderName, language);
             DirectoryEx.CreateForFilePath(filePath);
-            File.WriteAllText(filePath, markdown, Encoding.UTF8);
+            File.WriteAllText(filePath, markdown, new UTF8Encoding(false));
 
             var result = new JObject
             {

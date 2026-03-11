@@ -48,58 +48,45 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScreenCapturePermissionDlg));
             this.labelMessage = new System.Windows.Forms.Label();
             this.cbDoNotAskAgain = new System.Windows.Forms.CheckBox();
             this.btnAllow = new System.Windows.Forms.Button();
             this.btnDeny = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            //
+            // 
             // labelMessage
-            //
-            this.labelMessage.Location = new System.Drawing.Point(12, 20);
+            // 
+            resources.ApplyResources(this.labelMessage, "labelMessage");
             this.labelMessage.Name = "labelMessage";
-            this.labelMessage.Size = new System.Drawing.Size(360, 40);
-            this.labelMessage.TabIndex = 0;
-            this.labelMessage.Text = AlertsResources.ScreenCapturePermissionDlg_Message;
-            //
+            // 
             // cbDoNotAskAgain
-            //
-            this.cbDoNotAskAgain.AutoSize = true;
-            this.cbDoNotAskAgain.Location = new System.Drawing.Point(15, 72);
+            // 
+            resources.ApplyResources(this.cbDoNotAskAgain, "cbDoNotAskAgain");
             this.cbDoNotAskAgain.Name = "cbDoNotAskAgain";
-            this.cbDoNotAskAgain.Size = new System.Drawing.Size(134, 17);
-            this.cbDoNotAskAgain.TabIndex = 1;
-            this.cbDoNotAskAgain.Text = AlertsResources.ScreenCapturePermissionDlg_DoNotAskAgain;
             this.cbDoNotAskAgain.UseVisualStyleBackColor = true;
-            //
+            // 
             // btnAllow
-            //
-            this.btnAllow.Location = new System.Drawing.Point(216, 100);
+            // 
+            resources.ApplyResources(this.btnAllow, "btnAllow");
             this.btnAllow.Name = "btnAllow";
-            this.btnAllow.Size = new System.Drawing.Size(75, 23);
-            this.btnAllow.TabIndex = 2;
-            this.btnAllow.Text = AlertsResources.ScreenCapturePermissionDlg_Allow;
             this.btnAllow.UseVisualStyleBackColor = true;
             this.btnAllow.Click += new System.EventHandler(this.btnAllow_Click);
-            //
+            // 
             // btnDeny
-            //
+            // 
             this.btnDeny.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnDeny.Location = new System.Drawing.Point(297, 100);
+            resources.ApplyResources(this.btnDeny, "btnDeny");
             this.btnDeny.Name = "btnDeny";
-            this.btnDeny.Size = new System.Drawing.Size(75, 23);
-            this.btnDeny.TabIndex = 3;
-            this.btnDeny.Text = AlertsResources.ScreenCapturePermissionDlg_Deny;
             this.btnDeny.UseVisualStyleBackColor = true;
             this.btnDeny.Click += new System.EventHandler(this.btnDeny_Click);
-            //
+            // 
             // ScreenCapturePermissionDlg
-            //
+            // 
             this.AcceptButton = this.btnAllow;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnDeny;
-            this.ClientSize = new System.Drawing.Size(384, 136);
             this.Controls.Add(this.btnDeny);
             this.Controls.Add(this.btnAllow);
             this.Controls.Add(this.cbDoNotAskAgain);
@@ -109,10 +96,9 @@ namespace pwiz.Skyline.Alerts
             this.MinimizeBox = false;
             this.Name = "ScreenCapturePermissionDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = AlertsResources.ScreenCapturePermissionDlg_Title;
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion
