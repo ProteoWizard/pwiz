@@ -257,7 +257,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var columnConditionNumber = documentGrid.DataGridView.Columns.OfType<DataGridViewColumn>()
-                    .FirstOrDefault(col => col.HeaderText == "ConditionNumber");
+                    .FirstOrDefault(col => col.HeaderText == @"ConditionNumber");
                 Assert.IsNotNull(columnConditionNumber);
                 documentGrid.DataGridView.Sort(columnConditionNumber, ListSortDirection.Ascending);
             });
