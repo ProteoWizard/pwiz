@@ -1,3 +1,21 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using pwiz.Common.Collections;
 using System;
 using System.Collections.Generic;
@@ -8,6 +26,24 @@ using System.Text;
 
 namespace pwiz.Common.DataBinding
 {
+    /// <summary>
+    /// Interface for lists of values that are displayed in a single cell in a DataGridView.
+    /// The default filter handler for this type is <see cref="Filtering.ListFilterHandler"/> which
+    /// handles getting the user to specify lists of values of the correct type and handles operations such as
+    /// <see cref="FilterOperations.OP_CONTAINS"/> appropriately.
+    /// When a report is exported to a format like .parquet, these might be represented as an Array
+    /// in the parquet schema
+    /// </summary>
+    public interface IListColumnValue
+    {
+        Array ToArray();
+        int Count { get; }
+        IEnumerable<object> AsEnumerable();
+    }
+
+    /// <summary>
+    /// Methods for creating <see cref="ListColumnValue{T}"/>.
+    /// </summary>
     public static class ListColumnValue
     {
         public static Type GetElementType(Type type)
@@ -44,6 +80,9 @@ namespace pwiz.Common.DataBinding
             return new Impl<T>(items);
         }
 
+        /// <summary>
+        /// Returns the items, converted to string using the specified localed and the appropriate CSV list separator.
+        /// </summary>
         public static string ItemsToString<T>(IFormatProvider formatProvider, IEnumerable<T> items)
         {
             if (items == null)
@@ -51,7 +90,7 @@ namespace pwiz.Common.DataBinding
                 return string.Empty;
             }
             var csvSeparator = GetCsvSeparator(formatProvider);
-            return string.Join(csvSeparator.ToString(), items.Select(item => DsvWriter.ToDsvField(csvSeparator, Convert.ToString(item))));
+            return string.Join(csvSeparator.ToString(), items.Select(item => DsvWriter.ToDsvField(csvSeparator, Convert.ToString(item, formatProvider))));
         }
 
         public static ListColumnValue<string> Parse(string line, char separator)
@@ -119,13 +158,10 @@ namespace pwiz.Common.DataBinding
         }
     }
 
-    public interface IListColumnValue
-    {
-        Array ToArray();
-        int Count { get; }
-        IEnumerable<object> AsEnumerable();
-    }
-
+    /// <summary>
+    /// Class for lists of values that are displayed in a single cell in a DataGridView.
+    /// To construct one of these, use the static method <see cref="ListColumnValue.FromItems{T}(IEnumerable{T})"/>.
+    /// </summary>
     public abstract class ListColumnValue<T> : IListColumnValue
     {
         protected ListColumnValue(IEnumerable<T> items)

@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Util
     /// A list of objects which formats itself as a comma separated list, and passes
     /// the formatting parameters to the list elements.
     /// </summary>
-    public class FormattableList<T> : ListColumnValue<T>, IFormattable
+    public class FormattableList<T> : ListColumnValue<T>, IFormattable where T : IFormattable
     {
         public FormattableList(IList<T> list) : base(list)
         {

@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -37,13 +39,20 @@ namespace pwiz.SkylineTest
             var doubles = new[] { Math.PI, Math.E };
             var list = new FormattableList<double>(doubles);
             Assert.IsInstanceOfType(list, typeof(IFormattable));
-            Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), doubles.Select(Convert.ToString)),
-                Convert.ToString(list));
-            Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), doubles.Select(Convert.ToString)),
-                Convert.ToString(list, CultureInfo.CurrentCulture));
-            Assert.AreEqual(string.Join(TextUtil.SEPARATOR_CSV.ToString(),
-                    doubles.Select(d => Convert.ToString(d, CultureInfo.InvariantCulture))),
-                Convert.ToString(list, CultureInfo.InvariantCulture));
+
+            Assert.AreEqual(list.ToString(), Convert.ToString(list));
+            Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), doubles.Select(Convert.ToString)), Convert.ToString(list));
+            Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), doubles.Select(d=>d.ToString(Formats.Percent, CultureInfo.CurrentCulture))),
+                list.ToString(Formats.Percent, CultureInfo.CurrentCulture));
+            foreach (var cultureInfo in GetTestCultureInfos())
+            {
+                Assert.AreEqual(list.ToString(null, cultureInfo), Convert.ToString(list, cultureInfo));
+                var csvSeparator = TextUtil.GetCsvSeparator(cultureInfo).ToString();
+                Assert.AreEqual(string.Join(csvSeparator, doubles.Select(d=>Convert.ToString(d, cultureInfo))),
+                    Convert.ToString(list, cultureInfo));
+                Assert.AreEqual(string.Join(csvSeparator, doubles.Select(d=>d.ToString(Formats.Percent, cultureInfo))),
+                    list.ToString(Formats.Percent, cultureInfo));
+            }
         }
 
         [TestMethod]
@@ -53,22 +62,52 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(typeof(IFormattable).IsAssignableFrom(typeof(ListColumnValue<string>)));
             var strings = new[] { "Hello", "World" };
             var stringListColumnValue = ListColumnValue.FromItems(strings);
-            Assert.IsInstanceOfType(stringListColumnValue, typeof(IFormattable));
+            Assert.AreEqual(stringListColumnValue.ToString(), Convert.ToString(stringListColumnValue));
             Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), strings), Convert.ToString(stringListColumnValue));
-            Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(), strings),
-                Convert.ToString(stringListColumnValue, CultureInfo.CurrentCulture));
-            Assert.AreEqual(string.Join(TextUtil.SEPARATOR_CSV.ToString(), strings),
-                Convert.ToString(stringListColumnValue, CultureInfo.InvariantCulture));
+            var formattableStringList = stringListColumnValue as IFormattable;
+            Assert.IsNotNull(formattableStringList);
+            Assert.AreEqual(stringListColumnValue.ToString(), formattableStringList.ToString(null, CultureInfo.CurrentCulture));
+            Assert.AreEqual(stringListColumnValue.ToString(), formattableStringList.ToString(Formats.Percent, CultureInfo.CurrentCulture));
+
             var doubles = new[] { Math.PI, Math.E };
             var doublesListColumnValue = ListColumnValue.FromItems(doubles);
             Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(),
-                doubles.Select(v => v.ToString(CultureInfo.CurrentCulture))), Convert.ToString(doublesListColumnValue));
-            Assert.AreEqual(string.Join(TextUtil.CsvSeparator.ToString(),
-                    doubles.Select(v => v.ToString(CultureInfo.CurrentCulture))),
-                Convert.ToString(doublesListColumnValue, CultureInfo.CurrentCulture));
-            Assert.AreEqual(string.Join(TextUtil.SEPARATOR_CSV.ToString(),
-                    doubles.Select(v => v.ToString(CultureInfo.CurrentCulture))),
-                Convert.ToString(doublesListColumnValue, CultureInfo.InvariantCulture));
+                doubles.Select(Convert.ToString)), Convert.ToString(doublesListColumnValue));
+
+            var formattableDoublesList = doublesListColumnValue as IFormattable;
+            Assert.IsNotNull(formattableDoublesList);
+            // Verify that format argument is ignored
+            Assert.AreEqual(formattableDoublesList.ToString(null, CultureInfo.CurrentCulture),
+                formattableDoublesList.ToString(Formats.Percent, CultureInfo.CurrentCulture));
+
+            foreach (var cultureInfo in GetTestCultureInfos())
+            {
+                var csvSeparator = TextUtil.GetCsvSeparator(cultureInfo).ToString();
+                Assert.AreEqual(string.Join(csvSeparator, strings),
+                    Convert.ToString(stringListColumnValue, cultureInfo));
+                Assert.AreEqual(Convert.ToString(stringListColumnValue, cultureInfo), formattableStringList.ToString(null, cultureInfo));
+                Assert.AreEqual(Convert.ToString(stringListColumnValue, cultureInfo), formattableStringList.ToString(Formats.Percent, cultureInfo));
+                
+
+                Assert.AreEqual(string.Join(csvSeparator, doubles.Select(d=>Convert.ToString(d, cultureInfo))),
+                    Convert.ToString(doublesListColumnValue, cultureInfo));
+                Assert.AreEqual(Convert.ToString(doublesListColumnValue, cultureInfo),
+                    formattableDoublesList.ToString(null, cultureInfo));
+                Assert.AreEqual(Convert.ToString(doublesListColumnValue, cultureInfo),
+                    formattableDoublesList.ToString(Formats.Percent, cultureInfo));
+            }
+        }
+
+        private IList<CultureInfo> GetTestCultureInfos()
+        {
+            return new[]
+            {
+                CultureInfo.CurrentCulture,
+                CultureInfo.InvariantCulture,
+                CultureInfo.GetCultureInfo("en-US"),
+                CultureInfo.GetCultureInfo("tr-TR"),
+                CultureInfo.GetCultureInfo("fr-FR")
+            };
         }
     }
 }

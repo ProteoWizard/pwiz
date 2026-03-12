@@ -16,8 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -36,7 +39,6 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
-    // ReSharper disable LocalizableElement
     [TestClass]
     public class PivotEditorTest : AbstractFunctionalTest
     {
@@ -61,19 +63,19 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => documentGrid.IsComplete);
             DoFirstPivot(documentGrid);
             WaitForConditionUI(() => documentGrid.IsComplete);
-            int unfilteredRowCount = documentGrid.RowCount;
+            var unfilteredRowCount = documentGrid.RowCount;
             Assert.AreNotEqual(0, unfilteredRowCount);
             FilterOutNaN(documentGrid);
             SortOnConditionNumber(documentGrid);
             WaitForConditionUI(() => documentGrid.IsComplete);
-            int filteredRowCount = documentGrid.RowCount;
+            var filteredRowCount = documentGrid.RowCount;
             Assert.AreNotEqual(0, filteredRowCount);
             Assert.AreNotEqual(unfilteredRowCount, filteredRowCount);
             Assert.IsTrue(unfilteredRowCount > filteredRowCount);
             DoSecondPivot(documentGrid);
             WaitForConditionUI(() => documentGrid.IsComplete);
             var nameLayoutDlg = ShowDialog<NameLayoutForm>(documentGrid.NavBar.RememberCurrentLayout);
-            RunUI(()=>nameLayoutDlg.LayoutName = meanCvByConditionNumber);
+            RunUI(() => nameLayoutDlg.LayoutName = meanCvByConditionNumber);
             OkDialog(nameLayoutDlg, nameLayoutDlg.OkDialog);
             var manageLayoutsForm = ShowDialog<ManageLayoutsForm>(documentGrid.NavBar.ManageLayouts);
             RunUI(() =>
@@ -84,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(manageLayoutsForm, manageLayoutsForm.OkDialog);
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
-            RunUI(()=>
+            RunUI(() =>
             {
                 exportLiveReportDlg.SetUseInvariantLanguage(true);
                 exportLiveReportDlg.ReportName = pivotTestViewName;
@@ -98,6 +100,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(invariantPreviewForm);
             WaitForConditionUI(() => invariantPreviewForm.IsComplete);
+            var invariantPreviewRows = CallUI(() => GetDsvRows(invariantPreviewForm.DataGridView, '\t').ToList());
 
             var meanCvCaption = AggregateOperation.Mean.QualifyColumnCaption(
                 AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption("NormalizedArea")));
@@ -119,6 +122,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(localizedPreviewForm);
             WaitForConditionUI(() => localizedPreviewForm.IsComplete);
+            var localizedPreviewRows = CallUI(() => GetDsvRows(localizedPreviewForm.DataGridView, '\t').ToList());
             var localizer = localizedPreviewForm.DataboundGridControl.BindingListSource.ViewInfo.DataSchema
                 .DataSchemaLocalizer;
             var localizedMeanCvCaption = meanCvCaption.GetCaption(localizer);
@@ -134,9 +138,28 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(invariantPreviewForm, invariantPreviewForm.Close);
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             documentSettingsDlg.ChooseViewsControl.CheckedViews =
-                new []{PersistedViews.MainGroup.Id.ViewName(pivotTestViewName)};
+                new[] { PersistedViews.MainGroup.Id.ViewName(pivotTestViewName) };
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
-            RunUI(()=>SkylineWindow.SaveDocument());
+
+            var invariantTsv = TestFilesDir.GetTestPath("Invariant.tsv");
+            RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportDlg =>
+            {
+                exportDlg.ReportName = pivotTestViewName;
+                exportDlg.SetUseInvariantLanguage(true);
+                exportDlg.OkDialog(invariantTsv, '\t');
+            });
+            AssertEx.NoDiff(TextUtil.LineSeparate(invariantPreviewRows), File.ReadAllText(invariantTsv));
+
+            var localizedTsv = TestFilesDir.GetTestPath("Localized.tsv");
+            RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportDlg =>
+            {
+                exportDlg.ReportName = pivotTestViewName;
+                exportDlg.SetUseInvariantLanguage(false);
+                exportDlg.OkDialog(localizedTsv, '\t');
+            });
+            AssertEx.NoDiff(TextUtil.LineSeparate(localizedPreviewRows), File.ReadAllText(localizedTsv));
+
+            RunUI(() => SkylineWindow.SaveDocument());
         }
 
         private void CreateBaseView(DocumentGridForm documentGrid)
@@ -159,7 +182,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             });
             Assert.AreEqual(columnsToKeep.Length, viewEditor.ChooseColumnsTab.ColumnCount);
-            PropertyPath pathNormalizedArea = PropertyPath.Root.Property("Proteins").LookupAllItems()
+            var pathNormalizedArea = PropertyPath.Root.Property("Proteins").LookupAllItems()
                 .Property("Peptides").LookupAllItems()
                 .Property("Results").LookupAllItems().Property("Value").Property("Quantification")
                 .Property("NormalizedArea");
@@ -179,10 +202,7 @@ namespace pwiz.SkylineTestFunctional
                     viewEditor.ChooseColumnsTab.AddColumn(column);
                 }
             });
-            RunUI(() =>
-            {
-                viewEditor.ViewName = pivotTestViewName;
-            });
+            RunUI(() => { viewEditor.ViewName = pivotTestViewName; });
             OkDialog(viewEditor, viewEditor.OkDialog);
         }
 
@@ -193,10 +213,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(5, pivotEditor.AvailableColumnList.Items.Count);
                 pivotEditor.AvailableColumnList.SelectedIndices.Clear();
-                for (int i = 0; i < 4; i++)
+                for (var i = 0; i < 4; i++)
                 {
                     pivotEditor.AvailableColumnList.SelectedIndices.Add(i);
                 }
+
                 pivotEditor.AddRowHeader();
                 Assert.AreEqual(1, pivotEditor.AvailableColumnList.Items.Count);
                 pivotEditor.AvailableColumnList.SelectedIndices.Clear();
@@ -209,7 +230,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void FilterOutNaN(DocumentGridForm documentGrid)
         {
-            var columnIdCv = new ColumnId(AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption("NormalizedArea")));
+            var columnIdCv =
+                new ColumnId(AggregateOperation.Cv.QualifyColumnCaption(new ColumnCaption("NormalizedArea")));
             DataGridViewColumn columnCv = null;
             RunUI(() =>
             {
@@ -235,7 +257,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var columnConditionNumber = documentGrid.DataGridView.Columns.OfType<DataGridViewColumn>()
-                    .FirstOrDefault(col => col.HeaderText == "ConditionNumber");
+                    .FirstOrDefault(col => col.HeaderText == @"ConditionNumber");
                 Assert.IsNotNull(columnConditionNumber);
                 documentGrid.DataGridView.Sort(columnConditionNumber, ListSortDirection.Ascending);
             });
@@ -248,10 +270,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.AreEqual(5, pivotEditor.AvailableColumnList.Items.Count);
                 pivotEditor.AvailableColumnList.SelectedIndices.Clear();
-                foreach (int i in Enumerable.Range(0, 2))
+                foreach (var i in Enumerable.Range(0, 2))
                 {
                     pivotEditor.AvailableColumnList.SelectedIndices.Add(i);
                 }
+
                 pivotEditor.AddRowHeader();
                 pivotEditor.AvailableColumnList.SelectedIndices.Clear();
                 pivotEditor.AvailableColumnList.SelectedIndices.Add(1);
@@ -272,6 +295,23 @@ namespace pwiz.SkylineTestFunctional
                 result = dataGridView.Columns.OfType<DataGridViewColumn>().Select(col => col.HeaderText).ToArray();
             });
             return result;
+        }
+
+        private IEnumerable<string> GetDsvRows(DataGridView dataGridView, char separator)
+        {
+            yield return MakeDsvRow(separator,
+                dataGridView.Columns.OfType<DataGridViewColumn>().Select(col => col.HeaderText));
+            foreach (DataGridViewRow row in dataGridView.Rows)
+            {
+                yield return MakeDsvRow(separator, row.Cells.OfType<DataGridViewCell>()
+                    .Select(cell => cell.FormattedValue?.ToString() ?? string.Empty));
+            }
+        }
+
+        private static string MakeDsvRow(char separator, IEnumerable<object> values)
+        {
+            return string.Join(separator.ToString(),
+                values.Select(value => DsvWriter.ToDsvField(separator, value?.ToString() ?? string.Empty)));
         }
     }
 }

@@ -22,7 +22,6 @@ using pwiz.Common.SystemUtil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
@@ -46,8 +45,6 @@ namespace pwiz.Common.DataBinding
             Caption = that.Caption;
             Format = that.Format;
             Hidden = that.Hidden;
-            SortIndex = that.SortIndex;
-            SortDirection = that.SortDirection;
             Total = that.Total;
         }
         public string Name { get; private set; }
@@ -69,16 +66,6 @@ namespace pwiz.Common.DataBinding
         public ColumnSpec SetHidden(bool value)
         {
             return new ColumnSpec(this) {Hidden = value};
-        }
-        public int? SortIndex { get; private set; }
-        public ColumnSpec SetSortIndex(int? value)
-        {
-            return new ColumnSpec(this){SortIndex = value};
-        }
-        public ListSortDirection? SortDirection { get; private set; }
-        public ColumnSpec SetSortDirection(ListSortDirection? value)
-        {
-            return new ColumnSpec(this){SortDirection = value};
         }
         public TotalOperation Total { get; private set; }
         public TotalOperation TotalOperation { get { return Total; } }
@@ -115,17 +102,6 @@ namespace pwiz.Common.DataBinding
                     Hidden = "true" == reader.GetAttribute("hidden"),
                     Total = total,
                 };
-            string sortIndex = reader.GetAttribute("sortindex");
-            if (sortIndex != null)
-            {
-                columnSpec.SortIndex = Convert.ToInt32(sortIndex);
-            }
-            string sortDirection = reader.GetAttribute("sortdirection");
-            if (sortDirection != null)
-            {
-                columnSpec.SortDirection = (ListSortDirection) Enum.Parse(typeof(ListSortDirection), sortDirection);
-            }
-            
             
             bool empty = reader.IsEmptyElement;
             reader.ReadElementString("column");
@@ -156,14 +132,6 @@ namespace pwiz.Common.DataBinding
             {
                 writer.WriteAttributeString("hidden", "true");
             }
-            if (SortIndex != null)
-            {
-                writer.WriteAttributeString("sortindex", SortIndex.ToString());
-            }
-            if (SortDirection != null)
-            {
-                writer.WriteAttributeString("sortdirection", SortDirection.ToString());
-            }
             if (Total != TotalOperation.GroupBy)
             {
                 writer.WriteAttributeString("total", Total.ToString());
@@ -192,8 +160,6 @@ namespace pwiz.Common.DataBinding
                 && Equals(other.Caption, Caption) 
                 && Equals(other.Format, Format)
                 && Equals(other.Hidden, Hidden)
-                && Equals(other.SortIndex, SortIndex)
-                && Equals(other.SortDirection, SortDirection)
                 && Equals(other.Total, Total);
         }
 
@@ -213,8 +179,6 @@ namespace pwiz.Common.DataBinding
                 result = (result*397) ^ (Caption != null ? Caption.GetHashCode() : 0);
                 result = (result*397) ^ (Format != null ? Format.GetHashCode() : 0);
                 result = (result*397) ^ Hidden.GetHashCode();
-                result = (result*397) ^ (SortIndex != null ? SortIndex.GetHashCode() : 0);
-                result = (result*397) ^ (SortDirection != null ? SortDirection.GetHashCode() : 0);
                 result = (result*397) ^ Total.GetHashCode();
                 return result;
             }
