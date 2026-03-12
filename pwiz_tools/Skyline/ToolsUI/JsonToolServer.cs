@@ -1202,18 +1202,18 @@ namespace pwiz.Skyline.ToolsUI
         {
             public SrmDocument OpenDocument(string skylineFile)
             {
-                SrmDocument result = null;
+                bool success = false;
                 Program.MainWindow.Invoke(new Action(() =>
                 {
-                    if (Program.MainWindow.OpenFile(skylineFile))
-                        result = Program.MainWindow.Document;
+                    success = Program.MainWindow.OpenFile(skylineFile);
                 }));
-                return result;
+                if (!success)
+                    return null;
+                return WaitForDocumentLoaded();
             }
 
             public SrmDocument NewDocument(string skylineFile, bool overwrite)
             {
-                SrmDocument result = null;
                 Program.MainWindow.Invoke(new Action(() =>
                 {
                     if (overwrite)
@@ -1225,9 +1225,43 @@ namespace pwiz.Skyline.ToolsUI
                     // Save empty document to set DocumentFilePath so subsequent
                     // --save commands know the correct path
                     Program.MainWindow.SaveDocument(skylineFile);
-                    result = Program.MainWindow.Document;
                 }));
-                return result;
+                return WaitForDocumentLoaded();
+            }
+
+            /// <summary>
+            /// Wait for background loaders to finish so that the document returned
+            /// to <see cref="CommandLine"/> is fully loaded, matching the contract
+            /// of the command-line <see cref="IDocumentOperations"/> implementation.
+            /// Without this wait, background loading can advance the MainWindow document
+            /// past the snapshot returned here, causing stale-document undo entries.
+            /// </summary>
+            private static SrmDocument WaitForDocumentLoaded()
+            {
+                var doc = Program.MainWindow.Document;
+                if (doc.IsLoaded)
+                    return doc;
+
+                using (var loaded = new ManualResetEventSlim())
+                {
+                    EventHandler<DocumentChangedEventArgs> handler = (s, e) =>
+                    {
+                        if (Program.MainWindow.Document.IsLoaded)
+                            loaded.Set();
+                    };
+                    ((IDocumentContainer)Program.MainWindow).Listen(handler);
+                    try
+                    {
+                        // Re-check after subscribing to avoid missed-signal race
+                        if (!Program.MainWindow.Document.IsLoaded)
+                            loaded.Wait(TimeSpan.FromMinutes(5));
+                    }
+                    finally
+                    {
+                        ((IDocumentContainer)Program.MainWindow).Unlisten(handler);
+                    }
+                }
+                return Program.MainWindow.Document;
             }
 
             public bool SaveDocument(SrmDocument doc, string saveFile)

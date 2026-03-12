@@ -161,6 +161,20 @@ namespace SkylineMcpConnector
 
         private void DeployMcpServer()
         {
+            if (!McpServerDeployer.IsDotNet8Installed())
+            {
+                var result = MessageBox.Show(this,
+                    "The AI Connector requires the .NET 8.0 Desktop Runtime, which was not found on this computer.\n\n" +
+                    "Would you like to open the download page?",
+                    ".NET 8.0 Required",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes)
+                    Process.Start(McpServerDeployer.DotNetDownloadUrl);
+                labelStatus.Text = ".NET 8.0 Desktop Runtime is required.";
+                return;
+            }
+
             try
             {
                 if (!McpServerDeployer.Deploy())
