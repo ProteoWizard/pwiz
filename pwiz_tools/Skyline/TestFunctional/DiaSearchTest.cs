@@ -498,7 +498,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.SearchControl.Cancel();
             });
 
-            WaitForConditionUI(60000, () => searchSucceeded.HasValue, 
+            WaitForConditionUI(60000, () => searchSucceeded.HasValue,
                 () => importPeptideSearchDlg.SearchControl.LogText);
             RunUI(() => Assert.IsFalse(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             searchSucceeded = null;
