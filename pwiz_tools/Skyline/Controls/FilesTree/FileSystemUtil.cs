@@ -15,7 +15,9 @@
  */
 
 using System;
+using System.CodeDom;
 using System.IO;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.FilesTree
 {
@@ -82,31 +84,43 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// CONSIDER: how should this handle a filePath that's too long and throws PathTooLongException?
         public static bool IsFileInDirectory(string directoryPath, string filePath)
         {
-            var normalizedDirectoryPath = Normalize(directoryPath);
-            if (normalizedDirectoryPath == null)
-                return false;
-
-            if(!normalizedDirectoryPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
-               !normalizedDirectoryPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+            try
             {
-                normalizedDirectoryPath += Path.DirectorySeparatorChar;
+                var normalizedDirectoryPath = Normalize(directoryPath);
+                if (normalizedDirectoryPath == null)
+                    return false;
+
+                if (!normalizedDirectoryPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
+                    !normalizedDirectoryPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+                {
+                    normalizedDirectoryPath += Path.DirectorySeparatorChar;
+                }
+
+                var normalizedFilePath = Normalize(filePath);
+                if (normalizedFilePath == null)
+                    return false;
+
+                var normalizedFileDirectoryPath = Path.GetDirectoryName(normalizedFilePath);
+                if (normalizedFileDirectoryPath == null)
+                    return false;
+
+                if (!normalizedFileDirectoryPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
+                    !normalizedFileDirectoryPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+                {
+                    normalizedFileDirectoryPath += Path.DirectorySeparatorChar;
+                }
+
+                return PathEquals(normalizedDirectoryPath, normalizedFileDirectoryPath);
             }
-
-            var normalizedFilePath = Normalize(filePath);
-            if (normalizedFilePath == null)
-                return false;
-
-            var normalizedFileDirectoryPath = Path.GetDirectoryName(normalizedFilePath);
-            if (normalizedFileDirectoryPath == null)
-                return false;
-
-            if (!normalizedFileDirectoryPath.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
-                !normalizedFileDirectoryPath.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+            catch (Exception e)
             {
-                normalizedFileDirectoryPath += Path.DirectorySeparatorChar;
+                if (e is ObjectDisposedException || !ExceptionUtil.IsProgrammingDefect(e))
+                {
+                    throw;
+                }
+                var message = $"Error comparing directory path '{directoryPath}' with file path '{filePath}':" + e.Message;
+                throw new ApplicationException(message, e);
             }
-
-            return PathEquals(normalizedDirectoryPath, normalizedFileDirectoryPath);
         }
 
         /// <summary>
