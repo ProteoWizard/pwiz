@@ -753,23 +753,34 @@ namespace pwiz.Skyline.ToolsUI
             string ext = Path.GetExtension(filePath);
             var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
 
+            var rowTransforms = new List<IRowTransform>();
+            if (sortSpecs != null && sortSpecs.Count > 0)
+            {
+                rowTransforms.Add(RowFilter.Empty.SetColumnSorts(sortSpecs));
+            }
             // When the viewSpec has pivot operations (PivotKey/PivotValue), the export
             // must use BindingListSource instead of streaming to process cross-tab totals.
-            // RowFactories.ExportReport uses streaming when layout and sortSpecs are
-            // null/empty, bypassing pivot processing. Force BindingListSource by adding
+            // RowFactories.ExportReport uses streaming when layout has no row transforms,
+            // bypassing pivot processing. Force BindingListSource by adding
             // a no-op sort on the first GroupBy column.
-            if (viewSpec.HasTotals && (sortSpecs == null || sortSpecs.Count == 0))
+            if (viewSpec.HasTotals && rowTransforms.Count == 0)
             {
                 Log(@"Pivot detected: injecting sort for BindingListSource path");
                 var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
                 if (groupByCol != null)
                 {
-                    sortSpecs = new List<RowFilter.ColumnSort>
+                    rowTransforms.Add(RowFilter.Empty.SetColumnSorts(new[]
                     {
                         new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
                             ListSortDirection.Ascending)
-                    };
+                    }));
                 }
+            }
+
+            ViewLayout layout = null;
+            if (rowTransforms.Count > 0)
+            {
+                layout = new ViewLayout(string.Empty).ChangeRowTransforms(rowTransforms);
             }
 
             DirectoryEx.CreateForFilePath(filePath);
@@ -779,7 +790,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (!saver.CanSave())
                     throw new IOException(LlmInstruction.SpaceSeparate(@"Cannot write to", filePath));
                 IProgressStatus status = new ProgressStatus(string.Empty);
-                rowFactories.ExportReport(saver.Stream, viewSpec, sortSpecs, null, exporter,
+                rowFactories.ExportReport(saver.Stream, viewSpec, layout, exporter,
                     Program.MainWindow, ref status);
                 saver.Commit();
             }
