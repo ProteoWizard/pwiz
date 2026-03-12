@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaReplicateComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>Replicate Comparison</value>
+  </data>
+  <data name="areaPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaPeptideComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>Peptide Comparison</value>
+  </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Text" xml:space="preserve">
+    <value>Relative Abundance</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Text" xml:space="preserve">
+    <value>CV 2D Histogram</value>
+  </data>
+  <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaGraphContextMenuItem.Text" xml:space="preserve">
+    <value>Graph</value>
+  </data>
+  <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="barAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="lineAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="graphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
+    <value>Graph Type</value>
+  </data>
+  <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
+    <value>Normalized To</value>
+  </data>
+  <data name="abundanceTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="abundanceTargetsMenuItem.Text" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="abundanceTargetsProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="abundanceTargetsProteinsMenuItem.Text" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Text" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
+    <value>Exclude</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
+    <value>Peptide Lists</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Text" xml:space="preserve">
+    <value>Standards</value>
+  </data>
+  <data name="showPeakAreaLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showPeakAreaLegendContextMenuItem.Text" xml:space="preserve">
+    <value>Legend</value>
+  </data>
+  <data name="showLibraryPeakAreaContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showLibraryPeakAreaContextMenuItem.Text" xml:space="preserve">
+    <value>Show Library</value>
+  </data>
+  <data name="showDotProductToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showDotProductToolStripMenuItem.Text" xml:space="preserve">
+    <value>Show Dot Product</value>
+  </data>
+  <data name="peptideLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="peptideLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>Log Scale</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>Log Scale</value>
+  </data>
+  <data name="areaPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaPropsContextMenuItem.Text" xml:space="preserve">
+    <value>Properties...</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
+  </data>
+  <data name="areaCV05binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV10binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV15binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV20binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVtargetsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 22</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 22</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Text" xml:space="preserve">
+    <value>Decoys</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Best</value>
+  </data>
+  <data name="toolStripSeparator58.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 6</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Products</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
+    <value>Normalized To</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>Log Scale</value>
+  </data>
+  <data name="removeAboveCVCutoffToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="removeAboveCVCutoffToolStripMenuItem.Text" xml:space="preserve">
+    <value>Remove Above CV Cutoff</value>
+  </data>
+  <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
+    <value>206, 6</value>
+  </data>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>150, 150</value>
+  </data>
+  <data name=">>$this.Name" xml:space="preserve">
+    <value>PeakAreasContextMenu</value>
+  </data>
+  <data name=">>$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

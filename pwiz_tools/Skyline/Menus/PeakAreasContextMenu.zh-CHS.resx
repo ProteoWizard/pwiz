@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaReplicateComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>重复测定比较</value>
+  </data>
+  <data name="areaPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaPeptideComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>肽段比较</value>
+  </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Text" xml:space="preserve">
+    <value>相对丰度</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Text" xml:space="preserve">
+    <value>CV 直方图</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Text" xml:space="preserve">
+    <value>CV 2D 直方图</value>
+  </data>
+  <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaGraphContextMenuItem.Text" xml:space="preserve">
+    <value>图</value>
+  </data>
+  <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>96, 22</value>
+  </data>
+  <data name="barAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
+    <value>条状</value>
+  </data>
+  <data name="lineAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>96, 22</value>
+  </data>
+  <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
+    <value>行</value>
+  </data>
+  <data name="graphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
+    <value>图表类型</value>
+  </data>
+  <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
+    <value>归一化到</value>
+  </data>
+  <data name="abundanceTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="abundanceTargetsMenuItem.Text" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="abundanceTargetsProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="abundanceTargetsProteinsMenuItem.Text" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Text" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
+    <value>排除</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
+    <value>肽段列表</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Text" xml:space="preserve">
+    <value>标准</value>
+  </data>
+  <data name="showPeakAreaLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showPeakAreaLegendContextMenuItem.Text" xml:space="preserve">
+    <value>图例</value>
+  </data>
+  <data name="showLibraryPeakAreaContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showLibraryPeakAreaContextMenuItem.Text" xml:space="preserve">
+    <value>显示库</value>
+  </data>
+  <data name="showDotProductToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showDotProductToolStripMenuItem.Text" xml:space="preserve">
+    <value>显示点积</value>
+  </data>
+  <data name="peptideLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="peptideLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>对数尺度</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>对数尺度</value>
+  </data>
+  <data name="areaPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaPropsContextMenuItem.Text" xml:space="preserve">
+    <value>属性…</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
+    <value>Bin 宽度</value>
+  </data>
+  <data name="areaCV05binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV10binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV15binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV20binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVtargetsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 22</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 22</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Text" xml:space="preserve">
+    <value>诱饵</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
+    <value>点</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>计数</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>最佳</value>
+  </data>
+  <data name="toolStripSeparator58.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 6</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Text" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
+    <value>子离子</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>离子对</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
+    <value>归一化到</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>对数尺度</value>
+  </data>
+  <data name="removeAboveCVCutoffToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="removeAboveCVCutoffToolStripMenuItem.Text" xml:space="preserve">
+    <value>删除 CV 截止值以上</value>
+  </data>
+  <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
+    <value>206, 6</value>
+  </data>
+</root>

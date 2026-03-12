@@ -718,6 +718,12 @@
     <Compile Include="Menus\MassErrorsContextMenu.Designer.cs">
       <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menus\PeakAreasContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\PeakAreasContextMenu.Designer.cs">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\RetentionTimesContextMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3367,6 +3373,17 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\MassErrorsContextMenu.zh-CHS.resx">
       <DependentUpon>MassErrorsContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.ja.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\PeakAreasContextMenu.zh-CHS.resx">
+      <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RetentionTimesContextMenu.ja.resx">
       <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>

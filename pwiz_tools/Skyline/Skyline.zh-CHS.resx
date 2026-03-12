@@ -386,63 +386,6 @@
   <data name="toolStripSeparator25.Size" type="System.Drawing.Size, System.Drawing">
     <value>187, 6</value>
   </data>
-  <metadata name="contextMenuPeakAreas.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1124, 17</value>
-  </metadata>
-  <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="areaReplicateComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>重复测定比较</value>
-  </data>
-  <data name="areaPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="areaPeptideComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>肽段比较</value>
-  </data>
-  <data name="areaRelativeAbundanceContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="areaRelativeAbundanceContextMenuItem.Text" xml:space="preserve">
-    <value>相对丰度</value>
-  </data>
-  <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="areaCVHistogramContextMenuItem.Text" xml:space="preserve">
-    <value>CV 直方图</value>
-  </data>
-  <data name="areaCVHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 22</value>
-  </data>
-  <data name="areaCVHistogram2DContextMenuItem.Text" xml:space="preserve">
-    <value>CV 2D 直方图</value>
-  </data>
-  <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaGraphContextMenuItem.Text" xml:space="preserve">
-    <value>图</value>
-  </data>
-  <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 22</value>
-  </data>
-  <data name="barAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
-    <value>条状</value>
-  </data>
-  <data name="lineAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 22</value>
-  </data>
-  <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
-    <value>行</value>
-  </data>
-  <data name="graphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
-    <value>图表类型</value>
-  </data>
   <data name="peptideOrderDocumentContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>154, 22</value>
   </data>
@@ -491,12 +434,6 @@
   <data name="replicateOrderContextMenuItem.Text" xml:space="preserve">
     <value>优化</value>
   </data>
-  <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
-    <value>归一化到</value>
-  </data>
   <data name="documentScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
   </data>
@@ -515,48 +452,6 @@
   <data name="scopeContextMenuItem.Text" xml:space="preserve">
     <value>范围</value>
   </data>
-  <data name="abundanceTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="abundanceTargetsMenuItem.Text" xml:space="preserve">
-    <value>目标</value>
-  </data>
-  <data name="excludeTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
-    <value>排除</value>
-  </data>
-  <data name="showPeakAreaLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="showPeakAreaLegendContextMenuItem.Text" xml:space="preserve">
-    <value>图例</value>
-  </data>
-  <data name="showLibraryPeakAreaContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="showLibraryPeakAreaContextMenuItem.Text" xml:space="preserve">
-    <value>显示库</value>
-  </data>
-  <data name="showDotProductToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="showDotProductToolStripMenuItem.Text" xml:space="preserve">
-    <value>显示点积</value>
-  </data>
-  <data name="peptideLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="peptideLogScaleContextMenuItem.Text" xml:space="preserve">
-    <value>对数尺度</value>
-  </data>
-  <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
-    <value>对数尺度</value>
-  </data>
   <data name="peptideCvsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
   </data>
@@ -565,12 +460,6 @@
   </data>
   <data name="toolStripSeparator28.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
-  </data>
-  <data name="areaPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaPropsContextMenuItem.Text" xml:space="preserve">
-    <value>属性…</value>
   </data>
   <data name="groupByReplicateContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>122, 22</value>
@@ -583,132 +472,6 @@
   </data>
   <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
     <value>分组依据</value>
-  </data>
-  <data name="areaCV05binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 22</value>
-  </data>
-  <data name="areaCV10binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 22</value>
-  </data>
-  <data name="areaCV15binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 22</value>
-  </data>
-  <data name="areaCV20binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 22</value>
-  </data>
-  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
-    <value>Bin 宽度</value>
-  </data>
-  <data name="areaCVtargetsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 22</value>
-  </data>
-  <data name="areaCVdecoysToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 22</value>
-  </data>
-  <data name="areaCVdecoysToolStripMenuItem.Text" xml:space="preserve">
-    <value>诱饵</value>
-  </data>
-  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
-    <value>点</value>
-  </data>
-  <data name="areaCVAllTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>129, 22</value>
-  </data>
-  <data name="areaCVAllTransitionsToolStripMenuItem.Text" xml:space="preserve">
-    <value>全部</value>
-  </data>
-  <data name="areaCVCountTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>129, 22</value>
-  </data>
-  <data name="areaCVCountTransitionsToolStripMenuItem.Text" xml:space="preserve">
-    <value>计数</value>
-  </data>
-  <data name="areaCVBestTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>129, 22</value>
-  </data>
-  <data name="areaCVBestTransitionsToolStripMenuItem.Text" xml:space="preserve">
-    <value>最佳</value>
-  </data>
-  <data name="toolStripSeparator58.Size" type="System.Drawing.Size, System.Drawing">
-    <value>126, 6</value>
-  </data>
-  <data name="areaCVPrecursorsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>129, 22</value>
-  </data>
-  <data name="areaCVPrecursorsToolStripMenuItem.Text" xml:space="preserve">
-    <value>母离子</value>
-  </data>
-  <data name="areaCVProductsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>129, 22</value>
-  </data>
-  <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
-    <value>子离子</value>
-  </data>
-  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
-    <value>离子对</value>
-  </data>
-  <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
-    <value>归一化到</value>
-  </data>
-  <data name="areaCVLogScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="areaCVLogScaleToolStripMenuItem.Text" xml:space="preserve">
-    <value>对数尺度</value>
-  </data>
-  <data name="removeAboveCVCutoffToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="removeAboveCVCutoffToolStripMenuItem.Text" xml:space="preserve">
-    <value>删除 CV 截止值以上</value>
-  </data>
-  <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
-    <value>206, 6</value>
-  </data>
-  <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 478</value>
-  </data>
-  <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
-    <value>contextMenuPeakAreas</value>
-  </data>
-  <data name="&gt;&gt;contextMenuPeakAreas.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="abundanceTargetsProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="abundanceTargetsProteinsMenuItem.Text" xml:space="preserve">
-    <value>蛋白质</value>
-  </data>
-  <data name="abundanceTargetsPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="abundanceTargetsPeptidesMenuItem.Text" xml:space="preserve">
-    <value>肽段</value>
-  </data>
-  <data name="excludeTargetsPeptideListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
-    <value>肽段列表</value>
-  </data>
-  <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 22</value>
-  </data>
-  <data name="excludeTargetsStandardsMenuItem.Text" xml:space="preserve">
-    <value>标准</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dockPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -1800,60 +1563,6 @@
   <data name="&gt;&gt;toolStripSeparator25.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;areaGraphContextMenuItem.Name" xml:space="preserve">
-    <value>areaGraphContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaGraphContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaReplicateComparisonContextMenuItem.Name" xml:space="preserve">
-    <value>areaReplicateComparisonContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaReplicateComparisonContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaPeptideComparisonContextMenuItem.Name" xml:space="preserve">
-    <value>areaPeptideComparisonContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaPeptideComparisonContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaRelativeAbundanceContextMenuItem.Name" xml:space="preserve">
-    <value>areaRelativeAbundanceContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaRelativeAbundanceContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVHistogramContextMenuItem.Name" xml:space="preserve">
-    <value>areaCVHistogramContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVHistogramContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVHistogram2DContextMenuItem.Name" xml:space="preserve">
-    <value>areaCVHistogram2DContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVHistogram2DContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;graphTypeToolStripMenuItem.Name" xml:space="preserve">
-    <value>graphTypeToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;graphTypeToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;barAreaGraphDisplayTypeMenuItem.Name" xml:space="preserve">
-    <value>barAreaGraphDisplayTypeMenuItem</value>
-  </data>
-  <data name="&gt;&gt;barAreaGraphDisplayTypeMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lineAreaGraphDisplayTypeMenuItem.Name" xml:space="preserve">
-    <value>lineAreaGraphDisplayTypeMenuItem</value>
-  </data>
-  <data name="&gt;&gt;lineAreaGraphDisplayTypeMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;peptideOrderContextMenuItem.Name" xml:space="preserve">
     <value>peptideOrderContextMenuItem</value>
   </data>
@@ -1902,12 +1611,6 @@
   <data name="&gt;&gt;replicateOrderAcqTimeContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;areaNormalizeContextMenuItem.Name" xml:space="preserve">
-    <value>areaNormalizeContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaNormalizeContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;scopeContextMenuItem.Name" xml:space="preserve">
     <value>scopeContextMenuItem</value>
   </data>
@@ -1926,48 +1629,6 @@
   <data name="&gt;&gt;proteinScopeContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;abundanceTargetsMenuItem.Name" xml:space="preserve">
-    <value>abundanceTargetsMenuItem</value>
-  </data>
-  <data name="&gt;&gt;abundanceTargetsMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;excludeTargetsMenuItem.Name" xml:space="preserve">
-    <value>excludeTargetsMenuItem</value>
-  </data>
-  <data name="&gt;&gt;excludeTargetsMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showPeakAreaLegendContextMenuItem.Name" xml:space="preserve">
-    <value>showPeakAreaLegendContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showPeakAreaLegendContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showLibraryPeakAreaContextMenuItem.Name" xml:space="preserve">
-    <value>showLibraryPeakAreaContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showLibraryPeakAreaContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showDotProductToolStripMenuItem.Name" xml:space="preserve">
-    <value>showDotProductToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showDotProductToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;relativeAbundanceLogScaleContextMenuItem.Name" xml:space="preserve">
-    <value>relativeAbundanceLogScaleContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;relativeAbundanceLogScaleContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;peptideLogScaleContextMenuItem.Name" xml:space="preserve">
-    <value>peptideLogScaleContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;peptideLogScaleContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;peptideCvsContextMenuItem.Name" xml:space="preserve">
     <value>peptideCvsContextMenuItem</value>
   </data>
@@ -1980,12 +1641,6 @@
   <data name="&gt;&gt;toolStripSeparator28.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;areaPropsContextMenuItem.Name" xml:space="preserve">
-    <value>areaPropsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaPropsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;groupReplicatesByContextMenuItem.Name" xml:space="preserve">
     <value>groupReplicatesByContextMenuItem</value>
   </data>
@@ -1996,144 +1651,6 @@
     <value>groupByReplicateContextMenuItem</value>
   </data>
   <data name="&gt;&gt;groupByReplicateContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVbinWidthToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVbinWidthToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVbinWidthToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCV05binWidthToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCV05binWidthToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCV05binWidthToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCV10binWidthToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCV10binWidthToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCV10binWidthToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCV15binWidthToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCV15binWidthToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCV15binWidthToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCV20binWidthToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCV20binWidthToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCV20binWidthToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;pointsToolStripMenuItem.Name" xml:space="preserve">
-    <value>pointsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;pointsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVtargetsToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVtargetsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVtargetsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVdecoysToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVdecoysToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVdecoysToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVTransitionsToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVTransitionsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVTransitionsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVAllTransitionsToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVAllTransitionsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVAllTransitionsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVCountTransitionsToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVCountTransitionsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVCountTransitionsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVBestTransitionsToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVBestTransitionsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVBestTransitionsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator58.Name" xml:space="preserve">
-    <value>toolStripSeparator58</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator58.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVPrecursorsToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVPrecursorsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVPrecursorsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVProductsToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVProductsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVProductsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVNormalizedToToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVNormalizedToToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVNormalizedToToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;areaCVLogScaleToolStripMenuItem.Name" xml:space="preserve">
-    <value>areaCVLogScaleToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;areaCVLogScaleToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;removeAboveCVCutoffToolStripMenuItem.Name" xml:space="preserve">
-    <value>removeAboveCVCutoffToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;removeAboveCVCutoffToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator57.Name" xml:space="preserve">
-    <value>toolStripSeparator57</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator57.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;abundanceTargetsProteinsMenuItem.Name" xml:space="preserve">
-    <value>abundanceTargetsProteinsMenuItem</value>
-  </data>
-  <data name="&gt;&gt;abundanceTargetsProteinsMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;abundanceTargetsPeptidesMenuItem.Name" xml:space="preserve">
-    <value>abundanceTargetsPeptidesMenuItem</value>
-  </data>
-  <data name="&gt;&gt;abundanceTargetsPeptidesMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;excludeTargetsPeptideListMenuItem.Name" xml:space="preserve">
-    <value>excludeTargetsPeptideListMenuItem</value>
-  </data>
-  <data name="&gt;&gt;excludeTargetsPeptideListMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;excludeTargetsStandardsMenuItem.Name" xml:space="preserve">
-    <value>excludeTargetsStandardsMenuItem</value>
-  </data>
-  <data name="&gt;&gt;excludeTargetsStandardsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;statusGeneral.Name" xml:space="preserve">

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaReplicateComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>繰り返し測定の比較</value>
+  </data>
+  <data name="areaPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaPeptideComparisonContextMenuItem.Text" xml:space="preserve">
+    <value>ペプチドの比較</value>
+  </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaRelativeAbundanceContextMenuItem.Text" xml:space="preserve">
+    <value>相対的存在量</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Text" xml:space="preserve">
+    <value>CVヒストグラム</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 22</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Text" xml:space="preserve">
+    <value>CV 2Dヒストグラム</value>
+  </data>
+  <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaGraphContextMenuItem.Text" xml:space="preserve">
+    <value>グラフ</value>
+  </data>
+  <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>96, 22</value>
+  </data>
+  <data name="barAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
+    <value>棒</value>
+  </data>
+  <data name="lineAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>96, 22</value>
+  </data>
+  <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
+    <value>線</value>
+  </data>
+  <data name="graphTypeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="graphTypeToolStripMenuItem.Text" xml:space="preserve">
+    <value>グラフタイプ</value>
+  </data>
+  <data name="areaNormalizeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
+    <value>正規化</value>
+  </data>
+  <data name="abundanceTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="abundanceTargetsMenuItem.Text" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="abundanceTargetsProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="abundanceTargetsProteinsMenuItem.Text" xml:space="preserve">
+    <value>タンパク質</value>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="abundanceTargetsPeptidesMenuItem.Text" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
+    <value>除外</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
+    <value>ペプチドのリスト</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="excludeTargetsStandardsMenuItem.Text" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="showPeakAreaLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showPeakAreaLegendContextMenuItem.Text" xml:space="preserve">
+    <value>凡例</value>
+  </data>
+  <data name="showLibraryPeakAreaContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showLibraryPeakAreaContextMenuItem.Text" xml:space="preserve">
+    <value>ライブラリを表示</value>
+  </data>
+  <data name="showDotProductToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="showDotProductToolStripMenuItem.Text" xml:space="preserve">
+    <value>内積を表示</value>
+  </data>
+  <data name="peptideLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="peptideLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>対数目盛り</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>対数目盛り</value>
+  </data>
+  <data name="areaPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaPropsContextMenuItem.Text" xml:space="preserve">
+    <value>プロパティ...</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
+    <value>ビン幅</value>
+  </data>
+  <data name="areaCV05binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV10binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV15binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCV20binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVtargetsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 22</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 22</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Text" xml:space="preserve">
+    <value>デコイ</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
+    <value>点</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVCountTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>数</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>最良</value>
+  </data>
+  <data name="toolStripSeparator58.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 6</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Text" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
+    <value>プロダクト</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>トランジション</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
+    <value>正規化</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>対数目盛り</value>
+  </data>
+  <data name="removeAboveCVCutoffToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="removeAboveCVCutoffToolStripMenuItem.Text" xml:space="preserve">
+    <value>CVカットオフより上を削除</value>
+  </data>
+  <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
+    <value>206, 6</value>
+  </data>
+</root>
