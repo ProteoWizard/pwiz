@@ -381,7 +381,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     
                     var message = string.Format("Error processing files: {0}",
-                        TextUtil.CommaSeparateListItems(additionalFilePaths??Array.Empty<string>().Prepend(filePath)));
+                        TextUtil.CommaSeparateListItems((additionalFilePaths??Array.Empty<string>()).Prepend(filePath)));
                     Program.ReportException(new ApplicationException(message, ex));
                 }
             }
