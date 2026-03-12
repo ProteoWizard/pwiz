@@ -343,6 +343,18 @@
   <data name="SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_" xml:space="preserve">
     <value>Download {0}</value>
   </data>
+  <data name="SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_" xml:space="preserve">
+    <value>A settings preset named '{0}' already exists. Do you want to replace it?</value>
+  </data>
+  <data name="SearchSettingsControl_SaveConfig" xml:space="preserve">
+    <value>&amp;Save Config</value>
+  </data>
+  <data name="SearchSettingsControl_SaveSettingsPreset" xml:space="preserve">
+    <value>Save Settings Preset</value>
+  </data>
+  <data name="SearchSettingsControl_SettingsPreset" xml:space="preserve">
+    <value>Settings Preset:</value>
+  </data>
   <data name="TransitionSettingsControl_GetTransitionSettings_Max_m_z__0__must_not_be_less_than_min_m_z__1__" xml:space="preserve">
     <value>Max m/z {0} must not be less than min m/z {1}.</value>
   </data>
