@@ -57,7 +57,24 @@ namespace pwiz.Skyline.Menus
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator25 = new System.Windows.Forms.ToolStripSeparator();
+            this.contextMenuMassErrors = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuMassErrors.SuspendLayout();
             this.SuspendLayout();
+            //
+            // contextMenuMassErrors
+            //
+            this.contextMenuMassErrors.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.massErrorGraphContextMenuItem,
+            this.massErrorPropsContextMenuItem,
+            this.showMassErrorLegendContextMenuItem,
+            this.massErrorPointsContextMenuItem,
+            this.binCountContextMenuItem,
+            this.massErrorTransitionsContextMenuItem,
+            this.massErrorXAxisContextMenuItem,
+            this.massErrorlogScaleContextMenuItem,
+            this.toolStripSeparator25});
+            this.contextMenuMassErrors.Name = "contextMenuMassErrors";
+            resources.ApplyResources(this.contextMenuMassErrors, "contextMenuMassErrors");
             //
             // massErrorGraphContextMenuItem
             //
@@ -246,12 +263,14 @@ namespace pwiz.Skyline.Menus
             //
             resources.ApplyResources(this, "$this");
             this.Name = "MassErrorsContextMenu";
+            this.contextMenuMassErrors.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
+        private System.Windows.Forms.ContextMenuStrip contextMenuMassErrors;
         private System.Windows.Forms.ToolStripMenuItem massErrorGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorPeptideComparisonContextMenuItem;

@@ -137,6 +137,7 @@ namespace pwiz.Skyline
         private readonly List<BackgroundLoader> _backgroundLoaders;
         private readonly object _documentChangeLock = new object();
         private readonly List<SkylineControl> _skylineMenuControls = new List<SkylineControl>();
+        private TreeNodeContextMenu _treeNodeContextMenu;
         private readonly ImmediateWindowWarningListener _immediateWindowWarningListener;
 
         /// <summary>
@@ -146,6 +147,7 @@ namespace pwiz.Skyline
         {
             InitializeComponent();
             InitializeMenus();
+            _treeNodeContextMenu = new TreeNodeContextMenu(this);
             _undoManager = new UndoManager(this);
             _undoRedoButtons = new UndoRedoButtons(_undoManager,
                 EditMenu.UndoMenuItem, undoToolBarButton,
@@ -1605,24 +1607,6 @@ namespace pwiz.Skyline
             SequenceTree.HighlightFindMatch(owner, findResult.FindMatch);
         }
 
-        private void modifyPeptideMenuItem_Click(object sender, EventArgs e)
-        {
-            var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            var nodeTranTree = SequenceTree.GetNodeOfType<TransitionTreeNode>();
-            if (nodeTranTree == null && nodeTranGroupTree != null && nodeTranGroupTree.DocNode.TransitionGroup.IsCustomIon)
-            {
-                ModifySmallMoleculeTransitionGroup();
-            }
-            else if (nodeTranTree != null && nodeTranTree.DocNode.Transition.IsNonPrecursorNonReporterCustomIon())
-            {
-                ModifyTransition(nodeTranTree);
-            }
-            else
-            {
-                ModifyPeptide();
-            }
-        }
-
         public void ModifySmallMoleculeTransitionGroup()
         {
             EditMenu.ModifySmallMoleculeTransitionGroup();
@@ -1636,65 +1620,6 @@ namespace pwiz.Skyline
         public void ModifyTransition(TransitionTreeNode nodeTranTree)
         {
             EditMenu.ModifyTransition(nodeTranTree);
-        }
-
-        private void noStandardMenuItem_Click(object sender, EventArgs e)
-        {
-            SetStandardType(null);
-        }
-
-        private void qcStandardMenuItem_Click(object sender, EventArgs e)
-        {
-            SetStandardType(PeptideDocNode.STANDARD_TYPE_QC);
-        }
-
-        private void normStandardMenuItem_Click(object sender, EventArgs e)
-        {
-            SetStandardType(StandardType.GLOBAL_STANDARD);
-        }
-
-        private void surrogateStandardMenuItem_Click(object sender, EventArgs e)
-        {
-            SetStandardType(StandardType.SURROGATE_STANDARD);
-        }
-
-        private void irtStandardContextMenuItem_Click(object sender, EventArgs e)
-        {
-            MessageDlg.Show(this, TextUtil.LineSeparate(SkylineResources.SkylineWindow_irtStandardContextMenuItem_Click_The_standard_peptides_for_an_iRT_calculator_can_only_be_set_in_the_iRT_calculator_editor_,
-                SkylineResources.SkylineWindow_irtStandardContextMenuItem_Click_In_the_Peptide_Settings___Prediction_tab__click_the_calculator_button_to_edit_the_current_iRT_calculator_));
-        }
-
-
-        private void setStandardTypeContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            UpdateStandardTypeMenu();
-        }
-
-        private void UpdateStandardTypeMenu()
-        {
-            var selectedPeptides = SequenceTree.SelectedDocNodes
-                .OfType<PeptideDocNode>().ToArray();
-            var selectedStandardTypes = selectedPeptides.Select(peptide => peptide.GlobalStandardType)
-                .Distinct().ToArray();
-            foreach (var menuItemStandardType in GetStandardTypeMenuItems())
-            {
-                var toolStripMenuItem = menuItemStandardType.Key;
-                var standardType = menuItemStandardType.Value;
-                if (standardType == StandardType.IRT)
-                {
-                    // Only show iRT menu item when there is an iRT calculator
-                    var rtRegression = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-                    toolStripMenuItem.Visible = rtRegression == null || !(rtRegression.Calculator is RCalcIrt);
-                    toolStripMenuItem.Enabled = selectedStandardTypes.Contains(StandardType.IRT);
-                }
-                else
-                {
-                    toolStripMenuItem.Enabled = selectedPeptides.Length >= 1 &&
-                                                !selectedStandardTypes.Contains(StandardType.IRT);
-                }
-                toolStripMenuItem.Checked = selectedStandardTypes.Length == 1 &&
-                                            selectedStandardTypes[0] == standardType;
-            }
         }
 
         public void SetStandardType(StandardType standardType)
@@ -1728,24 +1653,6 @@ namespace pwiz.Skyline
             }
         }
 
-        public IDictionary<ToolStripMenuItem, StandardType> GetStandardTypeMenuItems()
-        {
-            var dict = new Dictionary<ToolStripMenuItem, StandardType>
-            {
-                {noStandardContextMenuItem, null},
-                {normStandardContextMenuItem, StandardType.GLOBAL_STANDARD},
-                {surrogateStandardContextMenuItem, StandardType.SURROGATE_STANDARD},
-                {qcStandardContextMenuItem, StandardType.QC},
-                {irtStandardContextMenuItem, StandardType.IRT},
-            };
-            foreach (var entry in EditMenu.GetStandardTypeMenuItems())
-            {
-                dict.Add(entry.Key, entry.Value);
-            }
-
-            return dict;
-        }
-
         public bool HasSelectedTargetPeptides()
         {
             return SequenceTree.SelectedDocNodes.Any(nodeSel =>
@@ -1753,11 +1660,6 @@ namespace pwiz.Skyline
                     var nodePep = nodeSel as PeptideDocNode;
                     return nodePep != null && !nodePep.IsDecoy;
                 });
-        }
-
-        private void editSpectrumFilterContextMenuItem_Click(object sender, EventArgs args)
-        {
-            EditMenu.EditSpectrumFilter();
         }
 
         public void ShowUniquePeptidesDlg()
@@ -1838,106 +1740,13 @@ namespace pwiz.Skyline
         #endregion // Edit menu
 
         #region Context menu
-
-        private void contextMenuTreeNode_Opening(object sender, CancelEventArgs e)
-        {
-            var treeNode = SequenceTree.SelectedNode as TreeNodeMS;
-            bool enabled = (SequenceTree.SelectedNode is IClipboardDataProvider && treeNode != null
-                && treeNode.IsInSelection);
-            copyContextMenuItem.Enabled = enabled;
-            cutContextMenuItem.Enabled = enabled;
-            deleteContextMenuItem.Enabled = enabled;
-            if (SequenceTree.SelectedNodes.Count > 0)
-            {
-                expandSelectionContextMenuItem.Enabled = true;
-                expandSelectionContextMenuItem.Visible = true;
-            }
-            else
-            {
-                expandSelectionContextMenuItem.Enabled = false;
-                expandSelectionContextMenuItem.Visible = false;
-            }
-            if (Settings.Default.UIMode == UiModes.PROTEOMIC)
-            {
-                expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Protein;
-                expandSelectionPeptidesContextMenuItem.Text = PeptideDocNode.TITLE;
-            }
-            else
-            {
-                expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Molecule_List;
-                expandSelectionPeptidesContextMenuItem.Text = PeptideDocNode.TITLE_MOLECULE;
-            }
-            pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
-            editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
-            removePeakContextMenuItem.Visible = (SequenceTree.SelectedNode is TransitionTreeNode && enabled);
-            bool enabledModify = SequenceTree.GetNodeOfType<PeptideTreeNode>() != null;
-            var transitionTreeNode = SequenceTree.SelectedNode as TransitionTreeNode;
-            if (transitionTreeNode != null && transitionTreeNode.DocNode.Transition.IsPrecursor() && transitionTreeNode.DocNode.Transition.IsCustom())
-                enabledModify = false; // Don't offer to modify generated custom precursor nodes
-            modifyPeptideContextMenuItem.Visible = enabledModify && enabled;
-            setStandardTypeContextMenuItem.Visible = (HasSelectedTargetPeptides() && enabled);
-            // Custom molecule support
-            var nodePepGroupTree = SequenceTree.SelectedNode as PeptideGroupTreeNode;
-            var nodePepTree = SequenceTree.SelectedNode as PeptideTreeNode;
-            addMoleculeContextMenuItem.Visible = enabled && nodePepGroupTree != null && 
-                (nodePepGroupTree.DocNode.IsEmpty || nodePepGroupTree.DocNode.IsNonProteomic);
-            addSmallMoleculePrecursorContextMenuItem.Visible = enabledModify && nodePepTree != null && !nodePepTree.DocNode.IsProteomic;
-            var nodeTranGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
-            addTransitionMoleculeContextMenuItem.Visible = enabled && nodeTranGroupTree != null &&
-                nodeTranGroupTree.PepNode.Peptide.IsCustomMolecule;
-            editSpectrumFilterContextMenuItem.Visible = SequenceTree.SelectedPaths
-                .SelectMany(path => DocumentUI.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).Any();
-            var selectedQuantitativeValues = SelectedQuantitativeValues();
-            if (selectedQuantitativeValues.Length == 0)
-            {
-                toggleQuantitativeContextMenuItem.Visible = false;
-                markTransitionsQuantitativeContextMenuItem.Visible = false;
-            }
-            else if (selectedQuantitativeValues.Length == 2)
-            {
-                toggleQuantitativeContextMenuItem.Visible = false;
-                markTransitionsQuantitativeContextMenuItem.Visible = true;
-            }
-            else
-            {
-                markTransitionsQuantitativeContextMenuItem.Visible = false;
-
-                if (selectedQuantitativeValues[0])
-                {
-                    toggleQuantitativeContextMenuItem.Checked = true;
-                    toggleQuantitativeContextMenuItem.Visible 
-                        = SequenceTree.SelectedNodes.All(node => node is TransitionTreeNode);
-                }
-                else
-                {
-                    toggleQuantitativeContextMenuItem.Checked = false;
-                    toggleQuantitativeContextMenuItem.Visible = true;
-                }
-            }
-        }
-
-        private void pickChildrenContextMenuItem_Click(object sender, EventArgs e) { ShowPickChildrenInternal(true); }
+        // contextMenuTreeNode_Opening and tree node context menu handlers moved to TreeNodeContextMenu
 
         public void ShowPickChildrenInternal(bool okOnDeactivate)
         {
             SequenceTree.ShowPickList(okOnDeactivate);
         }
-        private void expandSelectionNoneContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.ExpandSelectionBulk(typeof(SrmTreeNodeParent));
-        }
-        private void expandSelectionProteinsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.ExpandSelectionBulk(typeof(PeptideGroupTreeNode));
-        }
-        private void expandSelectionPeptidesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.ExpandSelectionBulk(typeof(PeptideTreeNode));
-        }
-        private void expandSelectionPrecursorsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.ExpandSelectionBulk(typeof(TransitionGroupTreeNode));
-        }
+
         /// <summary>
         /// Shows pop-up pick list for tests, with no automatic OK on deactivation of the pick list,
         /// since this can cause failures, if the test computer is in use during the tests.
@@ -1945,32 +1754,6 @@ namespace pwiz.Skyline
         public void ShowPickChildrenInTest()
         {
             ShowPickChildrenInternal(false);
-        }
-
-        private void singleReplicateTreeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.ShowReplicate = ReplicateDisplay.single;
-        }
-
-        private void bestReplicateTreeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.ShowReplicate = ReplicateDisplay.best;
-
-            // Make sure the best result index is active for the current peptide.
-            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            if (nodePepTree != null)
-            {
-                int iBest = nodePepTree.DocNode.BestResult;
-                if (iBest != -1)
-                    SelectedResultsIndex = iBest;
-            }
-        }
-
-        private void replicatesTreeContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ReplicateDisplay replicate = SequenceTree.ShowReplicate;
-            singleReplicateTreeContextMenuItem.Checked = (replicate == ReplicateDisplay.single);
-            bestReplicateTreeContextMenuItem.Checked = (replicate == ReplicateDisplay.best);
         }
 
         #endregion
@@ -2104,21 +1887,6 @@ namespace pwiz.Skyline
             FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonName);
         }
         
-
-        private void addMoleculeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddSmallMolecule();
-        }
-
-        private void addSmallMoleculePrecursorContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddSmallMolecule();
-        }
-
-        private void addTransitionMoleculeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            AddSmallMolecule();
-        }
 
         private TransitionDocNode[] GetDefaultPrecursorTransitions(SrmDocument doc, TransitionGroup tranGroup)
         {
@@ -3638,38 +3406,13 @@ namespace pwiz.Skyline
             }
         }
 
-        public ContextMenuStrip ContextMenuTreeNode { get { return contextMenuTreeNode; } }
-        public ToolStripMenuItem SetStandardTypeContextMenuItem { get { return setStandardTypeContextMenuItem; } }
-        public ToolStripMenuItem IrtStandardContextMenuItem { get { return irtStandardContextMenuItem; } }
+        public ContextMenuStrip ContextMenuTreeNode => _treeNodeContextMenu.ContextMenuStrip;
+        public ToolStripMenuItem SetStandardTypeContextMenuItem => _treeNodeContextMenu.SetStandardTypeContextMenuItem;
+        public ToolStripMenuItem IrtStandardContextMenuItem => _treeNodeContextMenu.IrtStandardContextMenuItem;
 
         public void ShowTreeNodeContextMenu(Point pt)
         {
-            SequenceTree.HideEffects();
-            var settings = DocumentUI.Settings;
-            // Show the ratios sub-menu when there are results and a choice of
-            // internal standard types.
-            ratiosContextMenuItem.Visible =
-                settings.HasResults &&
-                    (settings.HasGlobalStandardArea ||
-                    (settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count > 1 &&
-                     settings.PeptideSettings.Modifications.HasHeavyModifications));
-            contextMenuTreeNode.Show(SequenceTree, pt);
-        }
-
-        private void ratiosContextMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ToolStripMenuItem menu = ratiosContextMenuItem;
-            menu.DropDownItems.Clear();
-            var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes;
-            for (int i = 0; i < standardTypes.Count; i++)
-            {
-                SelectRatioHandler.Create(this, menu, standardTypes[i].Title, NormalizeOption.FromIsotopeLabelType(standardTypes[i]));
-            }
-            if (DocumentUI.Settings.HasGlobalStandardArea)
-            {
-                SelectRatioHandler.Create(this, menu, ratiosToGlobalStandardsMenuItem.Text,
-                    NormalizeOption.FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS));
-            }
+            _treeNodeContextMenu.ShowTreeNodeContextMenu(pt);
         }
 
         private class SelectRatioHandler
@@ -4705,7 +4448,7 @@ namespace pwiz.Skyline
         /// Returns the unique values of TransitionDocNode.Quantitative on all selected transitions.
         /// Returns an empty array if no transitions are selected.
         /// </summary>
-        private bool[] SelectedQuantitativeValues()
+        internal bool[] SelectedQuantitativeValues()
         {
             return SequenceTree.SelectedDocNodes
                 .SelectMany(EnumerateTransitions)
@@ -4727,16 +4470,6 @@ namespace pwiz.Skyline
             }
 
             return new TransitionDocNode[0];
-        }
-
-        private void toggleQuantitativeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            MarkQuantitative(!toggleQuantitativeContextMenuItem.Checked);
-        }
-
-        private void markTransitionsQuantitativeContextMenuItem_Click(object sender, EventArgs e)
-        {
-            MarkQuantitative(true);
         }
 
         [MethodImpl(MethodImplOptions.NoOptimization)]

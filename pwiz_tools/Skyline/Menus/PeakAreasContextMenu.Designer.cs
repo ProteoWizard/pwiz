@@ -71,6 +71,33 @@ namespace pwiz.Skyline.Menus
             this.areaCVLogScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeAboveCVCutoffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator57 = new System.Windows.Forms.ToolStripSeparator();
+            this.contextMenuPeakAreas = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuPeakAreas.SuspendLayout();
+            this.SuspendLayout();
+            //
+            // contextMenuPeakAreas
+            //
+            this.contextMenuPeakAreas.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaGraphContextMenuItem,
+            this.graphTypeToolStripMenuItem,
+            this.areaNormalizeContextMenuItem,
+            this.abundanceTargetsMenuItem,
+            this.excludeTargetsMenuItem,
+            this.showPeakAreaLegendContextMenuItem,
+            this.showLibraryPeakAreaContextMenuItem,
+            this.showDotProductToolStripMenuItem,
+            this.peptideLogScaleContextMenuItem,
+            this.relativeAbundanceLogScaleContextMenuItem,
+            this.areaPropsContextMenuItem,
+            this.areaCVbinWidthToolStripMenuItem,
+            this.pointsToolStripMenuItem,
+            this.areaCVTransitionsToolStripMenuItem,
+            this.areaCVNormalizedToToolStripMenuItem,
+            this.areaCVLogScaleToolStripMenuItem,
+            this.removeAboveCVCutoffToolStripMenuItem,
+            this.toolStripSeparator57});
+            this.contextMenuPeakAreas.Name = "contextMenuPeakAreas";
+            resources.ApplyResources(this.contextMenuPeakAreas, "contextMenuPeakAreas");
             //
             // areaGraphContextMenuItem
             //
@@ -334,11 +361,13 @@ namespace pwiz.Skyline.Menus
             //
             this.toolStripSeparator57.Name = "toolStripSeparator57";
             resources.ApplyResources(this.toolStripSeparator57, "toolStripSeparator57");
+            this.contextMenuPeakAreas.ResumeLayout(false);
             this.ResumeLayout(false);
         }
 
         #endregion
 
+        private System.Windows.Forms.ContextMenuStrip contextMenuPeakAreas;
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;

@@ -724,6 +724,12 @@
     <Compile Include="Menus\PeakAreasContextMenu.Designer.cs">
       <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
     </Compile>
+    <Compile Include="Menus\TreeNodeContextMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Menus\TreeNodeContextMenu.Designer.cs">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="Menus\RetentionTimesContextMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3384,6 +3390,17 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\PeakAreasContextMenu.zh-CHS.resx">
       <DependentUpon>PeakAreasContextMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.ja.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Menus\TreeNodeContextMenu.zh-CHS.resx">
+      <DependentUpon>TreeNodeContextMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\RetentionTimesContextMenu.ja.resx">
       <DependentUpon>RetentionTimesContextMenu.cs</DependentUpon>

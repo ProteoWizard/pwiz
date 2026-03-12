@@ -71,6 +71,32 @@ namespace pwiz.Skyline.Menus
             this.removeRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timePropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator38 = new System.Windows.Forms.ToolStripSeparator();
+            this.contextMenuRetentionTimes = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuRetentionTimes.SuspendLayout();
+            this.SuspendLayout();
+            //
+            // contextMenuRetentionTimes
+            //
+            this.contextMenuRetentionTimes.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timeGraphContextMenuItem,
+            this.timePlotContextMenuItem,
+            this.timePointsContextMenuItem,
+            this.rtValueMenuItem,
+            this.showRTLegendContextMenuItem,
+            this.refineRTContextMenuItem,
+            this.predictionRTContextMenuItem,
+            this.setRTThresholdContextMenuItem,
+            this.setRegressionMethodContextMenuItem,
+            this.toolStripSeparator22,
+            this.createRTRegressionContextMenuItem,
+            this.chooseCalculatorContextMenuItem,
+            this.toolStripSeparator23,
+            this.removeRTOutliersContextMenuItem,
+            this.removeRTContextMenuItem,
+            this.timePropsContextMenuItem,
+            this.toolStripSeparator38});
+            this.contextMenuRetentionTimes.Name = "contextMenuRetentionTimes";
+            resources.ApplyResources(this.contextMenuRetentionTimes, "contextMenuRetentionTimes");
             //
             // timeGraphContextMenuItem
             //
@@ -311,10 +337,13 @@ namespace pwiz.Skyline.Menus
             //
             this.toolStripSeparator38.Name = "toolStripSeparator38";
             resources.ApplyResources(this.toolStripSeparator38, "toolStripSeparator38");
+            this.contextMenuRetentionTimes.ResumeLayout(false);
+            this.ResumeLayout(false);
         }
 
         #endregion
 
+        private System.Windows.Forms.ContextMenuStrip contextMenuRetentionTimes;
         private System.Windows.Forms.ToolStripMenuItem timeGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem timePeptideComparisonContextMenuItem;

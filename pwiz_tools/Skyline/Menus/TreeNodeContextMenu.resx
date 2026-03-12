@@ -1,0 +1,479 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <metadata name="contextMenuTreeNode.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>556, 17</value>
+  </metadata>
+  <data name="cutContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="cutContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="cutContextMenuItem.Text" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="copyContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="copyContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="copyContextMenuItem.Text" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="pasteContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="pasteContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="pasteContextMenuItem.Text" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="deleteContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="deleteContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="deleteContextMenuItem.Text" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 6</value>
+  </data>
+  <data name="expandSelectionNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 22</value>
+  </data>
+  <data name="expandSelectionNoneContextMenuItem.Text" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 22</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Text" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 22</value>
+  </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Text" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 22</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Text" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="expandSelectionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="expandSelectionContextMenuItem.Text" xml:space="preserve">
+    <value>Expand Selection</value>
+  </data>
+  <data name="pickChildrenContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="pickChildrenContextMenuItem.Text" xml:space="preserve">
+    <value>Pick Children</value>
+  </data>
+  <data name="addMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="addMoleculeContextMenuItem.Text" xml:space="preserve">
+    <value>Add Molecule...</value>
+  </data>
+  <data name="addSmallMoleculePrecursorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="addSmallMoleculePrecursorContextMenuItem.Text" xml:space="preserve">
+    <value>Add Precursor...</value>
+  </data>
+  <data name="addTransitionMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="addTransitionMoleculeContextMenuItem.Text" xml:space="preserve">
+    <value>Add Transition...</value>
+  </data>
+  <data name="removePeakContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="removePeakContextMenuItem.Text" xml:space="preserve">
+    <value>Remove Peak</value>
+  </data>
+  <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="noStandardContextMenuItem.Text" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="normStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="normStandardContextMenuItem.Text" xml:space="preserve">
+    <value>Global Standard</value>
+  </data>
+  <data name="surrogateStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="surrogateStandardContextMenuItem.Text" xml:space="preserve">
+    <value>Surrogate Standard</value>
+  </data>
+  <data name="qcStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="qcStandardContextMenuItem.Text" xml:space="preserve">
+    <value>QC</value>
+  </data>
+  <data name="irtStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>175, 22</value>
+  </data>
+  <data name="irtStandardContextMenuItem.Text" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="setStandardTypeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="setStandardTypeContextMenuItem.Text" xml:space="preserve">
+    <value>Set Standard Type</value>
+  </data>
+  <data name="modifyPeptideContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="modifyPeptideContextMenuItem.Text" xml:space="preserve">
+    <value>Modify...</value>
+  </data>
+  <data name="modifyPeptideContextMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="editSpectrumFilterContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
+    <value>Edit Spectrum Filter...</value>
+  </data>
+  <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="toggleQuantitativeContextMenuItem.Text" xml:space="preserve">
+    <value>Quantitative</value>
+  </data>
+  <data name="markTransitionsQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="markTransitionsQuantitativeContextMenuItem.Text" xml:space="preserve">
+    <value>Mark Transitions Quantitative</value>
+  </data>
+  <data name="toolStripSeparator7.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 6</value>
+  </data>
+  <data name="editNoteContextMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Fuchsia</value>
+  </data>
+  <data name="editNoteContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="editNoteContextMenuItem.Text" xml:space="preserve">
+    <value>Edit Note</value>
+  </data>
+  <data name="toolStripSeparatorRatios.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 6</value>
+  </data>
+  <data name="ratiosToGlobalStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>163, 22</value>
+  </data>
+  <data name="ratiosToGlobalStandardsMenuItem.Text" xml:space="preserve">
+    <value>Global Standards</value>
+  </data>
+  <data name="ratiosContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="ratiosContextMenuItem.Text" xml:space="preserve">
+    <value>Ratios To</value>
+  </data>
+  <data name="singleReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 22</value>
+  </data>
+  <data name="singleReplicateTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Single</value>
+  </data>
+  <data name="bestReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 22</value>
+  </data>
+  <data name="bestReplicateTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Best</value>
+  </data>
+  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 22</value>
+  </data>
+  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 418</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
+    <value>contextMenuTreeNode</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
+    <value>cutContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;cutContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;copyContextMenuItem.Name" xml:space="preserve">
+    <value>copyContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;copyContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pasteContextMenuItem.Name" xml:space="preserve">
+    <value>pasteContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;pasteContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;deleteContextMenuItem.Name" xml:space="preserve">
+    <value>deleteContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;deleteContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+    <value>toolStripSeparator1</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionNoneContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionNoneContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionNoneContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionProteinsContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionProteinsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionProteinsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPeptidesContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionPeptidesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPeptidesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPrecursorsContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionPrecursorsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPrecursorsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pickChildrenContextMenuItem.Name" xml:space="preserve">
+    <value>pickChildrenContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;pickChildrenContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addMoleculeContextMenuItem.Name" xml:space="preserve">
+    <value>addMoleculeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addMoleculeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addSmallMoleculePrecursorContextMenuItem.Name" xml:space="preserve">
+    <value>addSmallMoleculePrecursorContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addSmallMoleculePrecursorContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addTransitionMoleculeContextMenuItem.Name" xml:space="preserve">
+    <value>addTransitionMoleculeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addTransitionMoleculeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removePeakContextMenuItem.Name" xml:space="preserve">
+    <value>removePeakContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removePeakContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;setStandardTypeContextMenuItem.Name" xml:space="preserve">
+    <value>setStandardTypeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;setStandardTypeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;noStandardContextMenuItem.Name" xml:space="preserve">
+    <value>noStandardContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;noStandardContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;normStandardContextMenuItem.Name" xml:space="preserve">
+    <value>normStandardContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;normStandardContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardContextMenuItem.Name" xml:space="preserve">
+    <value>surrogateStandardContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;surrogateStandardContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;qcStandardContextMenuItem.Name" xml:space="preserve">
+    <value>qcStandardContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;qcStandardContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;irtStandardContextMenuItem.Name" xml:space="preserve">
+    <value>irtStandardContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;irtStandardContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;modifyPeptideContextMenuItem.Name" xml:space="preserve">
+    <value>modifyPeptideContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;modifyPeptideContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Name" xml:space="preserve">
+    <value>editSpectrumFilterContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toggleQuantitativeContextMenuItem.Name" xml:space="preserve">
+    <value>toggleQuantitativeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;toggleQuantitativeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;markTransitionsQuantitativeContextMenuItem.Name" xml:space="preserve">
+    <value>markTransitionsQuantitativeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;markTransitionsQuantitativeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator7.Name" xml:space="preserve">
+    <value>toolStripSeparator7</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;editNoteContextMenuItem.Name" xml:space="preserve">
+    <value>editNoteContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editNoteContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorRatios.Name" xml:space="preserve">
+    <value>toolStripSeparatorRatios</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorRatios.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ratiosContextMenuItem.Name" xml:space="preserve">
+    <value>ratiosContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ratiosContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ratiosToGlobalStandardsMenuItem.Name" xml:space="preserve">
+    <value>ratiosToGlobalStandardsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ratiosToGlobalStandardsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;replicatesTreeContextMenuItem.Name" xml:space="preserve">
+    <value>replicatesTreeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;replicatesTreeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;singleReplicateTreeContextMenuItem.Name" xml:space="preserve">
+    <value>singleReplicateTreeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;singleReplicateTreeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bestReplicateTreeContextMenuItem.Name" xml:space="preserve">
+    <value>bestReplicateTreeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;bestReplicateTreeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+</root>

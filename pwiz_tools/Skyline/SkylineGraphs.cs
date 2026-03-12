@@ -1544,11 +1544,6 @@ namespace pwiz.Skyline
             EditMenu.ApplyPeak(subsequent, group);
         }
 
-        private void removePeakMenuItem_Click(object sender, EventArgs e)
-        {
-            EditMenu.RemovePeak(true);
-        }
-
         public void RemovePeak()
         {
             EditMenu.RemovePeak(false);
