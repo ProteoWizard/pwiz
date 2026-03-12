@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.CodeDom;
 using System.IO;
 using pwiz.Skyline.Util;
 
