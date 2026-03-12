@@ -167,9 +167,7 @@ namespace pwiz.Skyline.Controls.Graphs
                              new DefaultStateProvider();
 
             Type = type;
-            Text = Controller.Text + @" - " + Type.CustomToString();
             Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, _documentContainer.Document.DocumentType); // Use terminology like "Molecule Comparison" instead of "Peptide Comparison" as appropriate
-
             UpdateUI();
         }
 
@@ -306,13 +304,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void UpdateUI(bool selectionChanged = true)
         {
-            UpdateGraph(selectionChanged);
+            UpdateUIWithoutToolbar(selectionChanged);
             UpdateToolbar();
         }
 
         public void UpdateUIWithoutToolbar(bool selectionChanged = true)
         {
             UpdateGraph(selectionChanged);
+            Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(), _documentContainer.Document.DocumentType);
         }
 
         private bool SplitterDistanceValid(double distance)

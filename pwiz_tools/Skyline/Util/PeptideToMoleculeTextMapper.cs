@@ -21,6 +21,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -41,6 +42,12 @@ namespace pwiz.Skyline.Util
         public class PeptideToMoleculeTextMapper
         {
             public static readonly PeptideToMoleculeTextMapper SMALL_MOLECULE_MAPPER = new PeptideToMoleculeTextMapper(SrmDocument.DOCUMENT_TYPE.small_molecules, null);
+
+            // Stores original (pre-translation) texts for persistent menu items translated in place.
+            // Allows restoring to proteomic text before each translation pass so that switching
+            // back from Mixed/SmallMolecule to Proteomic mode correctly reverts item texts.
+            private static readonly ConditionalWeakTable<ToolStripItem, OriginalMenuItemText> _originalMenuTexts =
+                new ConditionalWeakTable<ToolStripItem, OriginalMenuItemText>();
 
             private readonly List<KeyValuePair<string, string>> TRANSLATION_TABLE;
             private List<ToolTip> ToolTips; // Used when working on an entire form
@@ -210,9 +217,16 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            // For all items in a menu, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if menu item is not purely proteomic
-            // Update keyboard accelerators as needed
-            public static void TranslateMenuItems(ToolStripItemCollection items, SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender)
+            /// <summary>
+            /// For all items in a menu, attempt to take a string like "{0} peptides" and return one like "{0} molecules" if menu item is not purely proteomic.
+            /// Update keyboard accelerators as needed.
+            /// </summary>
+            /// <param name="items">The menu items to translate.</param>
+            /// <param name="modeUI">The current UI mode (proteomic, small_molecules, or mixed).</param>
+            /// <param name="extender">The ModeUIExtender that tracks which components should be translated.</param>
+            /// <param name="recurse">If true, recursively translate submenu items. Use true for context menus,
+            /// false when called from AdjustMenusForModeUI which handles its own recursion with text preservation.</param>
+            public static void TranslateMenuItems(ToolStripItemCollection items, SrmDocument.DOCUMENT_TYPE modeUI, ModeUIExtender extender, bool recurse = false)
             {
                 var mapper = new PeptideToMoleculeTextMapper(modeUI, extender);
                 if (items != null)
@@ -255,7 +269,31 @@ namespace pwiz.Skyline.Util
                         }
                         item.Visible = isActive;
                     }
+                    // Restore each active item to its original text before translating.
+                    // Without this, persistent menu items become stuck in molecule-mode text
+                    // and cannot revert when switching back to Proteomic mode.
+                    foreach (var item in activeItems)
+                    {
+                        OriginalMenuItemText original;
+                        if (!_originalMenuTexts.TryGetValue(item, out original))
+                            _originalMenuTexts.Add(item, new OriginalMenuItemText { Text = item.Text, ToolTipText = item.ToolTipText });
+                        else
+                        {
+                            item.Text = original.Text;
+                            item.ToolTipText = original.ToolTipText;
+                        }
+                    }
+
                     mapper.Translate(activeItems); // Update the menu items that aren't inherently wrong for current UI mode
+
+                    if (recurse)
+                    {
+                        // Recursively translate submenu items (e.g. "Peptide Comparison" under the Graph submenu)
+                        foreach (var menuItem in activeItems.OfType<ToolStripMenuItem>().Where(m => m.HasDropDownItems))
+                        {
+                            TranslateMenuItems(menuItem.DropDownItems, modeUI, extender, true);
+                        }
+                    }
                 }
             }
 
@@ -445,6 +483,12 @@ namespace pwiz.Skyline.Util
                                 .Select(item => item.Key).ToHashSet()
                             : null;
                 return inappropriateComponents;
+            }
+
+            private class OriginalMenuItemText
+            {
+                public string Text;
+                public string ToolTipText;
             }
 
             private void FindInUseKeyboardAccelerators(IEnumerable controls)

@@ -18,6 +18,7 @@
  */
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -179,9 +180,14 @@ namespace pwiz.Skyline.Menus
             {
                 string tag = (string)item.Tag;
                 if (tag == @"set_default" || tag == @"show_val")
+                {
                     menuStrip.Items.Remove(item);
+                }
             }
             ZedGraphClipboard.AddToContextMenu(zedGraphControl, menuStrip);
+
+            // Translate "Peptide" to "Molecule" etc. based on UI mode (recurses into submenus)
+            Helpers.PeptideToMoleculeTextMapper.TranslateMenuItems(menuStrip.Items, Program.ModeUI, modeUIHandler, recurse: true);
         }
 
         /// <summary>
