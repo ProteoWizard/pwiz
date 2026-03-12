@@ -9,16 +9,6 @@ IF DEFINED TEAMCITY_VERSION (
 REM Remove C++ build artifacts to free up space
 rmdir /s /q build-nt-x86
 
-REM TEMPORARY: Run only tests with screenshot failures to debug TC display issues
-set FailedTests=0
-FOR %%I IN (TestAuditLogTutorial TestMs1Tutorial TestDiaTutorial TestDiaSearchStellarTutorialDraft TestDiaTtofTutorial TestPeakBoundaryImputationDiaTutorial) DO (
-pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I pass0=on teamcitytestsuite=TestTutorial loop=1 language=en perftests=on teamcitytestdecoration=on runsmallmoleculeversions=off showheader=off pause=-4
-IF ERRORLEVEL 1 set /a FailedTests += 1
-call :cleanup
-)
-echo %FailedTests% tests failed.
-exit /b %FailedTests%
-
 pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestTutorial.dll listonly > tests.txt
 powershell "Get-Content tests.txt | ForEach-Object { $_.split(\"`t\")[1] }" > tutorialTestNames.txt
 pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestPerf.dll listonly > tests.txt
