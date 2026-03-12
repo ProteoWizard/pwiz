@@ -7,20 +7,19 @@
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
 // limitations under the License.
 //
 
-#include <iostream>
 #include "BinaryDataEncoder.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem.hpp"
@@ -37,7 +36,7 @@ namespace bfs = boost::filesystem;
 ostream* os_ = 0;
 
 
-double sampleData_[] =
+double sampleData_[] = 
 {
     200.00018816645022000000, 0.00000000000000000000,
     200.00043034083151000000, 0.00000000000000000000,
@@ -65,7 +64,7 @@ double sampleData_[] =
 const int sampleDataSize_ = sizeof(sampleData_)/sizeof(double);
 
 
-// regression test strings
+// regression test strings 
 const char* sampleEncoded32Big_ = "Q0gADAAAAABDSAAcAAAAAENIACwAAAAAQ0gAPAAAAABDSRtCAAAAAENJG1IAAAAAQ0kbYgAAAABDSRtyAAAAAENJG4JEYyvTQ0kbkkSeSJ5DSRuiRJ1DqkNJG7JEVDLHQ0kbwgAAAABDSRvSAAAAAENJG+IAAAAAQ0gAAAAAAABDlgAAP4AAAEPIAABBIAAAQ/oAAELIAABEFgAARHoAAA==";
 const char* sampleEncoded32Little_ = "DABIQwAAAAAcAEhDAAAAACwASEMAAAAAPABIQwAAAABCG0lDAAAAAFIbSUMAAAAAYhtJQwAAAAByG0lDAAAAAIIbSUPTK2NEkhtJQ55InkSiG0lDqkOdRLIbSUPHMlREwhtJQwAAAADSG0lDAAAAAOIbSUMAAAAAAABIQwAAAAAAAJZDAACAPwAAyEMAACBBAAD6QwAAyEIAABZEAAB6RA==";
 const char* sampleEncoded64Little_ = "/xedigEAaUAAAAAAAAAAAIV5fYYDAGlAAAAAAAAAAACkK16CBQBpQAAAAAAAAAAAXy4/fgcAaUAAAAAAAAAAAK4HNjVoI2lAAAAAAAAAAACrvLg2aiNpQAAAAAAAAAAAnMM7OGwjaUAAAAAAAAAAAIIcvzluI2lAAAAAAAAAAABax0I7cCNpQAAAAGB6ZYxAJcTGPHIjaUAAAADAE8mTQOUSSz50I2lAAAAAQHWok0CYs88/diNpQAAAAOBYhopAP6ZUQXgjaUAAAAAAAAAAANvq2UJ6I2lAAAAAAAAAAABpgV9EfCNpQAAAAAAAAAAAAAAAAAAAaUAAAAAAAAAAAAAAAAAAwHJAAAAAAAAA8D8AAAAAAAB5QAAAAAAAACRAAAAAAABAf0AAAAAAAABZQAAAAAAAwIJAAAAAAABAj0A=";
@@ -110,7 +109,7 @@ const char *
             return (BinaryDataEncoder::Compression_Zlib==config.compression)?sampleEncodedNumpressSlofZlib_:sampleEncodedNumpressSlof_;
     }
     if (config.precision == BinaryDataEncoder::Precision_32 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
         config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded32Little_;
 
@@ -120,32 +119,32 @@ const char *
         return sampleEncoded32Big_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
         config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded64Little_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian && 
         config.compression == BinaryDataEncoder::Compression_None)
         return sampleEncoded64Big_;
 
     if (config.precision == BinaryDataEncoder::Precision_32 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
         config.compression == BinaryDataEncoder::Compression_Zlib)
         return sampleEncoded32LittleZlib_;
-
+     
     if (config.precision == BinaryDataEncoder::Precision_32 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian && 
         config.compression == BinaryDataEncoder::Compression_Zlib)
         return sampleEncoded32BigZlib_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_LittleEndian && 
         config.compression == BinaryDataEncoder::Compression_Zlib)
         return sampleEncoded64LittleZlib_;
 
     if (config.precision == BinaryDataEncoder::Precision_64 &&
-        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian &&
+        config.byteOrder == BinaryDataEncoder::ByteOrder_BigEndian && 
         config.compression == BinaryDataEncoder::Compression_Zlib)
         return sampleEncoded64BigZlib_;
 
@@ -182,7 +181,7 @@ const char *
     throw runtime_error("[BinaryDataEncoderTest::regressionTest()] Untested configuration.");
 }
 
-
+ 
 void testConfiguration(const BinaryDataEncoder::Config& config_in)
 {
     BinaryDataEncoder::Config config(config_in);
@@ -198,7 +197,7 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     copy(sampleData_, sampleData_ + sampleDataSize_, binaryInt.begin());
 
     bool checkNumpressMaxErrorSupression = (BinaryDataEncoder::Numpress_None != config.numpress)&&(config.numpressLinearErrorTolerance>0);
-    if (checkNumpressMaxErrorSupression)
+    if (checkNumpressMaxErrorSupression) 
     {
         binary[1] = numeric_limits<double>::max( )-.1; // attempt to blow out the numpress lossiness limiter
         binary[3] = -binary[1]; // attempt to blow out the numpress lossiness limiter
@@ -210,7 +209,7 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     {
         *os_ << "original: " << binary.size() << endl;
         *os_ << setprecision(20) << fixed;
-        copy(binary.begin(), binary.end(), ostream_iterator<double>(*os_, " "));
+        copy(binary.begin(), binary.end(), ostream_iterator<double>(*os_, " ")); 
         *os_ << endl;
     }
 
@@ -275,10 +274,10 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
     const double epsilon = config.precision == BinaryDataEncoder::Precision_64 ? 1e-14 : 1e-5 ;
 
     auto jt = decoded.begin();
-    switch (config.numpress)
-    {
-    case BinaryDataEncoder::Numpress_Linear:
-    case BinaryDataEncoder::Numpress_Slof:
+    switch (config.numpress) 
+    { 
+    case BinaryDataEncoder::Numpress_Linear: 
+    case BinaryDataEncoder::Numpress_Slof: 
     case BinaryDataEncoder::Numpress_Pic:
         // lossy compression
         for (auto it = binary.begin(); it!=binary.end(); ++it, ++jt)
@@ -287,7 +286,7 @@ void testConfiguration(const BinaryDataEncoder::Config& config_in)
                 unit_assert_equal(*it, *jt, 0.1);
             else if (*it > *jt)
                 unit_assert((*jt)/(*it) > .999 );
-            else
+            else 
                 unit_assert((*it)/(*jt) > .999 );
         }
         break;
@@ -416,10 +415,10 @@ void testBadFile(const string& filename)
         return;
     }
 
-    if (os_) *os_ << " (" << filesize << " bytes)\n";
+    if (os_) *os_ << " (" << filesize << " bytes)\n"; 
 
     unit_assert(filesize%sizeof(double) == 0);
-
+    
     // read data from file into memory
 
     vector<double> data(filesize/sizeof(double));
@@ -442,11 +441,11 @@ void testBadFile(const string& filename)
 
     BinaryDataEncoder encoder(config);
     string encoded;
-    encoder.encode(data, encoded);
+    encoder.encode(data, encoded); 
 
     BinaryData<double> decoded;
     encoder.decode(encoded, decoded);
-
+    
     // verify
 
     unit_assert(decoded.size() == data.size());
@@ -461,7 +460,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        vector<string> filenames;
+        vector<string> filenames;  
 
         for (int i=1; i<argc; i++)
         {

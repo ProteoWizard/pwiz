@@ -7,16 +7,16 @@
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
 // limitations under the License.
 //
 
@@ -106,10 +106,10 @@ void filterArray(const void* byteBuffer, size_t byteCount, vector<unsigned char>
     fos.push(filter_type());
     fos.push(back_inserter(result));
     fos.write((const char*)byteBuffer, byteCount);
-    fos.pop();
+    fos.pop(); 
     fos.pop(); // forces buffer to flush
 
-/*
+/* 
     // original implementation, using technique in boost iostreams docs
     // this doesn't flush properly in all cases -- see unit test
     ostringstream result;
@@ -569,7 +569,7 @@ void copyBuffer(const void* byteBuffer, size_t byteCount, pwiz::util::BinaryData
 {
     const float_type* floatBuffer = reinterpret_cast<const float_type*>(byteBuffer);
 
-    if (byteCount % sizeof(float_type) != 0)
+    if (byteCount % sizeof(float_type) != 0) 
         throw runtime_error("[BinaryDataEncoder::copyBuffer()] Bad byteCount.");
 
     size_t floatCount = byteCount / sizeof(float_type);
@@ -801,7 +801,7 @@ void BinaryDataEncoder::Impl::decode(const char *encodedData, size_t length, pwi
                 copyBuffer<T, T>(byteBuffer, byteCount, result);
             }
             break;
-        default:
+        default: 
             throw runtime_error("BinaryDataEncoder::Impl::decode  unknown numpress method");
             break;
    }
@@ -925,7 +925,7 @@ void writeConfig(ostream& os, const BinaryDataEncoder::Config& config, CVID cvid
 
     if (cOverrideItr != config.numpressOverrides.end())
         c = cOverrideItr->second;
-    else
+    else 
         c = config.numpress;
     const char *commaspace =  (BinaryDataEncoder::Compression_Zlib == config.compression)?", ":" ";
     switch (c) {
@@ -1000,7 +1000,7 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const BinaryDataEncoder::Config& 
 
     os << endl << "    m/z: ";
     writeConfig(os, config, MS_m_z_array);
-
+    
     os << endl << "    intensity: ";
     writeConfig(os, config, MS_intensity_array);
 
@@ -1008,7 +1008,7 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const BinaryDataEncoder::Config& 
     writeConfig(os, config, MS_time_array);
 
     os << endl << (config.byteOrder==BinaryDataEncoder::ByteOrder_LittleEndian ? "ByteOrder_LittleEndian" : "ByteOrder_BigEndian") << endl;
-    return os;
+    return os;   
 }
 
 

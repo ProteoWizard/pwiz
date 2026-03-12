@@ -7,18 +7,19 @@
 // Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
 // limitations under the License.
 //
+
 
 
 #include "pwiz_tools/common/FullReaderList.hpp"
@@ -50,7 +51,7 @@ using namespace pwiz::util;
 ostream* os_ = &cout;
 
 
-/// Holds the results of the parseCommandLine function.
+/// Holds the results of the parseCommandLine function. 
 struct Config : public Reader::Config
 {
     vector<string> filenames;
@@ -122,7 +123,7 @@ ostream& operator<<(ostream& os, const Config& config)
 {
     os << "format: " << config.writeConfig << endl;
     os << "outputPath: " << config.outputPath << endl;
-    os << "extension: " << config.extension << endl;
+    os << "extension: " << config.extension << endl; 
     os << "contactFilename: " << config.contactFilename << endl;
     os << "runIndexSet: " << config.runIndexSet << endl;
     os << endl;
@@ -227,7 +228,7 @@ Config parseCommandLine(int argc, char** argv)
           << "\n"
           << "Return value: # of failed files.\n"
           << "\n";
-
+        
     Config config;
     string filelistFilename;
     string configFilename;
@@ -240,7 +241,7 @@ Config parseCommandLine(int argc, char** argv)
     bool format_CMS1 = false;
     bool format_MS2 = false;
     bool format_CMS2 = false;
-    bool format_mzMLb = false;
+    bool format_mzMLb = false;    
     int mzMLb_chunk_size = 0;
     bool format_mz5 = false;
     bool precision_32 = false;
@@ -285,7 +286,7 @@ Config parseCommandLine(int argc, char** argv)
         ("outdir,o",
             po::value<string>(&config.outputPath)->default_value(config.outputPath),
             ": set output directory ('-' for stdout, '.' for current directory) [.]")
-        ("config,c",
+        ("config,c", 
             po::value<string>(&configFilename),
             ": configuration file (optionName=value)")
         ("outfile",
@@ -493,7 +494,7 @@ Config parseCommandLine(int argc, char** argv)
 
     po::positional_options_description pod_args;
     pod_args.add(label_args, -1);
-
+   
     po::options_description od_parse;
     od_parse.add(od_config).add(od_args);
 
@@ -669,15 +670,15 @@ Config parseCommandLine(int argc, char** argv)
                 throw user_error("[msconvert] Not built with mzMLb support.");
 #endif
                 config.extension = ".mzMLb";
-                break;
+                break;                
             case MSDataFile::Format_MZ5:
 #ifdef WITHOUT_MZ5
-                throw user_error("[msconvert] Not built with mz5 support.");
+                throw user_error("[msconvert] Not built with mz5 support."); 
 #endif
                 config.extension = ".mz5";
                 break;
             default:
-                throw user_error("[msconvert] Unsupported format.");
+                throw user_error("[msconvert] Unsupported format."); 
         }
         if (config.writeConfig.gzipped)
         {
@@ -719,14 +720,14 @@ Config parseCommandLine(int argc, char** argv)
     {
         config.writeConfig.binaryDataEncoderConfig.precision
             = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array]
-            = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array]
+            = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] 
             = BinaryDataEncoder::Precision_32;
     }
     else if (precision_64)
     {
         config.writeConfig.binaryDataEncoderConfig.precision
             = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_m_z_array]
-            = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array]
+            = config.writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] 
             = BinaryDataEncoder::Precision_64;
     }
 
@@ -797,22 +798,22 @@ Config parseCommandLine(int argc, char** argv)
         config.writeConfig.binaryDataEncoderConfig.numpressLinearErrorTolerance = BinaryDataEncoder_default_numpressLinearErrorTolerance;
         config.writeConfig.binaryDataEncoderConfig.numpressSlofErrorTolerance = BinaryDataEncoder_default_numpressSlofErrorTolerance;
     }
-    if (ms_numpress_pic)
+    if (ms_numpress_pic) 
     {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = BinaryDataEncoder::Numpress_Pic;
-    }
-    if (ms_numpress_slof>=0)
+    }    
+    if (ms_numpress_slof>=0) 
     {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_intensity_array] = BinaryDataEncoder::Numpress_Slof;
         config.writeConfig.binaryDataEncoderConfig.numpressSlofErrorTolerance = ms_numpress_slof;
     }
-    if (ms_numpress_linear>=0)
+    if (ms_numpress_linear>=0) 
     {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressLinearErrorTolerance = ms_numpress_linear;
     }
-    if (ms_numpress_linear_abs_tolerance>=0)
+    if (ms_numpress_linear_abs_tolerance>=0) 
     {
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
@@ -830,7 +831,7 @@ void addContactInfo(MSData& msd, const string& contactFilename)
     ifstream is(contactFilename.c_str());
     if (!is)
     {
-        cerr << "unable to read contact info: " << contactFilename << endl;
+        cerr << "unable to read contact info: " << contactFilename << endl; 
         return;
     }
 
@@ -1046,7 +1047,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
         MSData& msd = *msdList[i];
         try
         {
-            // process the data
+            // process the data 
 
             if (!config.contactFilename.empty())
                 addContactInfo(msd, config.contactFilename);
@@ -1126,7 +1127,7 @@ int go(const Config& config, const string& args)
         if (config.filenames.size() > 1 && running_on_wine())
             *os_ << "Warning: when running on Wine it is recommended to only process one file at a time" << endl;
 
-        for (vector<string>::const_iterator it=config.filenames.begin();
+        for (vector<string>::const_iterator it=config.filenames.begin(); 
              it!=config.filenames.end(); ++it)
         {
             try

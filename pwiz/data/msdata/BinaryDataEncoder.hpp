@@ -7,16 +7,16 @@
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
 // limitations under the License.
 //
 
@@ -55,7 +55,7 @@ class PWIZ_API_DECL BinaryDataEncoder
     enum Prediction {Prediction_None, Prediction_Delta, Prediction_Linear};
     enum Format {Format_MzML, Format_MzMLb}; // if Format_MzMLb, we do not base64 encode, endianise or compress
     enum Type {Type_None, Type_Spectrum, Type_Chromatogram}; // mzMLb needs to know whether this BinaryDataArray is a spectrum or chromatogram (for HDF5 dataset name) [*this not essential*]
-
+    
     /// encoding/decoding configuration
     struct PWIZ_API_DECL Config
     {
@@ -71,7 +71,7 @@ class PWIZ_API_DECL BinaryDataEncoder
         Prediction prediction;
         Format format;
         Type type;
-        int truncation; // how many bits mantissa to truncate (and hence not store)
+        int truncation; // how many bits mantissa to truncate (and hence not store)      
 
         std::map<cv::CVID, Compression> compressionOverrides;
         std::map<cv::CVID, Precision> precisionOverrides;
@@ -99,7 +99,7 @@ class PWIZ_API_DECL BinaryDataEncoder
 
     const Config& getConfig() const; // get the config actually used - may differ from input for numpress use
 
-    /// encode binary data as a text string
+    /// encode binary data as a text string 
     void encode(const std::vector<double>& data, std::string& result, size_t* binaryByteCount = NULL) const;
     void encode(const std::vector<std::int64_t>& data, std::string& result, size_t* binaryByteCount = NULL) const;
 
