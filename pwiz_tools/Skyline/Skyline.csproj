@@ -451,6 +451,7 @@
       <DependentUpon>DetectionToolbarProperties.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\GraphDataCalculator.cs" />
+    <Compile Include="Controls\Graphs\LabelLayoutRunner.cs" />
     <Compile Include="Controls\Graphs\MatchExpressionListDlg.cs">
       <SubType>Form</SubType>
     </Compile>

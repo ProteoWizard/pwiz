@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2004  John Champion
+//Copyright Â© 2004  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,10 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 
 namespace ZedGraph
@@ -51,8 +54,17 @@ namespace ZedGraph
         private Random _randGenerator = new Random(123);
         private PointF _chartOffset;
         private Dictionary<TextObj, LabeledPoint> _labeledPoints = new Dictionary<TextObj, LabeledPoint>();
-
+        private const float CROSSOVER_PENALTY = 5000f;
+        private const float LABEL_OVERLAP_PENALTY = 5000f;
+        private const float TARGET_OVERLAP_PENALTY = 3000f;
+        private const float CONNECTOR_LABEL_OVERLAP_PENALTY = 1500f;
+        private const float DISTANCE_SCALE = 10000f;
         public Dictionary<TextObj, LabeledPoint> LabeledPoints => _labeledPoints;
+
+        public class LayoutResult
+        {
+            public Dictionary<LabeledPoint, PointF> Placements;
+        }
 
         public List<LabeledPoint.PointLayout> PointsLayout
         {
@@ -71,14 +83,13 @@ namespace ZedGraph
             FillDensityGrid();
         }
 
-        private class GridCell
+        public class GridCell
         {
-            public PointF _location;
             public RectangleF _bounds;
             public float _density;
+            public int _pointCount;
             // public PointF _gradient;
             public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
-            public Point _indices;
         }
 
         // First index row, second index line
@@ -99,63 +110,129 @@ namespace ZedGraph
                     var location = new Point(j * _cellSize, i * _cellSize) + chartOffset;
                     _densityGrid[i][j] = new GridCell()
                     {
-                        _location = location,
                         _bounds = new RectangleF(location, new SizeF(_cellSize, _cellSize)),
-                        _indices = new Point(j, i)
                     };
                 }
             }
 
-            foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
+            foreach (var line in GetMarkerLinesSnapshot())
             {
-                for (var i = 0; i < line.Points.Count; i++)
+                int pointCount;
+                try
                 {
-                    if (!line.GetCoords(this._graph, i, out var coords))
-                    {
-                        continue;
-                    }
-
-                    var sides = Array.ConvertAll(coords.Split(','), int.Parse);
-                    var markerRect = new Rectangle(sides[0], sides[1], sides[2] - sides[0],
-                        sides[3] - sides[1]);
-
-                    foreach (var cell in GetRectangleCells(markerRect))
-                    {
-                        var intersect = RectangleF.Intersect(markerRect, cell._bounds);
-                        if (intersect != Rectangle.Empty)
-                        {
-                            cell._density += intersect.Height * intersect.Width;
-                        }
-                    }
+                    pointCount = line.Points.Count;
                 }
-            }
-        }
-
-        private bool GetPointMarkerRectangle(PointF pt, out RectangleF rect)
-        {
-            rect = RectangleF.Empty;
-            foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
-            {
-                for (var i = 0; i < line.Points.Count; i++)
+                catch (InvalidOperationException)
                 {
-                    var screenPt = _graph.TransformCoord(line.Points[i].X, line.Points[i].Y, CoordType.AxisXYScale);
-                    if (Math.Abs(screenPt.X - pt.X) < 1 && Math.Abs(screenPt.Y - pt.Y) < 1 )
+                    continue;
+                }
 
+                for (var i = 0; i < pointCount; i++)
+                {
+                    try
                     {
                         if (!line.GetCoords(this._graph, i, out var coords))
                         {
                             continue;
                         }
+
                         var sides = Array.ConvertAll(coords.Split(','), int.Parse);
-                        rect = new Rectangle(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
-                        return true;
-                    }                }
+                        var markerRect = new Rectangle(sides[0], sides[1], sides[2] - sides[0],
+                            sides[3] - sides[1]);
+
+                        foreach (var cell in GetRectangleCells(markerRect))
+                        {
+                            var intersect = RectangleF.Intersect(markerRect, cell._bounds);
+                            if (intersect != Rectangle.Empty)
+                            {
+                                cell._density += intersect.Height * intersect.Width;
+                            }
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        break;
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        break;
+                    }
+                }
             }
-            return false;
+        }
+
+        private LineItem[] GetMarkerLinesSnapshot()
+        {
+            try
+            {
+                return _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None).ToArray();
+            }
+            catch (InvalidOperationException)
+            {
+                return Array.Empty<LineItem>();
+            }
+        }
+
+        private void GetPointMarkerRectangle(PointF pt, out RectangleF rect)
+        {
+            rect = RectangleF.Empty;
+            foreach (var line in GetMarkerLinesSnapshot())
+            {
+                int pointCount;
+                try
+                {
+                    pointCount = line.Points.Count;
+                }
+                catch (InvalidOperationException)
+                {
+                    continue;
+                }
+
+                for (var i = 0; i < pointCount; i++)
+                {
+                    PointF screenPt;
+                    try
+                    {
+                        var point = line.Points[i];
+                        screenPt = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        break;
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        break;
+                    }
+
+                    if (Math.Abs(screenPt.X - pt.X) < 1 && Math.Abs(screenPt.Y - pt.Y) < 1 )
+                    {
+                        try
+                        {
+                            if (!line.GetCoords(this._graph, i, out var coords))
+                            {
+                                continue;
+                            }
+                            var sides = Array.ConvertAll(coords.Split(','), int.Parse);
+                            rect = new Rectangle(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
+                            return;
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            break;
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
-        /// Calculates goal function for a labeled point and a suggested label position.
+        /// Calculates goal function for a labeled point and a suggested label position. This does not include point-to-point
+        /// pairwise interactions, only the cost of this label placement itself.
         /// All coordinates are in screen pixels.
         /// </summary>
         /// <param name="pt">Center of the label box, in pixels</param>
@@ -164,7 +241,7 @@ namespace ZedGraph
         /// <param name="targetMarkerRect"> enclosing rectangle of the target point marker. We want to avoid
         /// overlaps with it as much as possible.</param>
         /// <returns>goal function value.</returns>
-        private float GoalFunction(PointF pt, PointF targetPoint, SizeF labelSize, RectangleF targetMarkerRect)
+        private float EvaluateLabelBaseCost(PointF pt, PointF targetPoint, SizeF labelSize, RectangleF targetMarkerRect)
         {
             var pathCellCoord = CellIndexesFromXY(targetPoint);
             if (!IndexesWithinGrid(pathCellCoord))
@@ -194,7 +271,7 @@ namespace ZedGraph
 
             // overlap with the target point is bad, we should penalize it heavily
             if (RectangleF.Intersect(rect, targetMarkerRect) != RectangleF.Empty)
-                totalOverlap += 1500;
+                totalOverlap += TARGET_OVERLAP_PENALTY;
             // penalize this point if there is more points between it and its label
             // we find the cells between the two points by traversing the vector intersection
             // with the grid
@@ -237,28 +314,12 @@ namespace ZedGraph
                     pathDensity += CellFromPoint(pathCellCoord)._density;
             }
 
-            // calculate the crossover penalty. For each previously labeled point we find if there is an intersection 
-            // between vector V from this point q to the suggested label position and the vector U from the previously
-            // labeled point p to its label position. We do this by solving the equation p + rR = q + sV where r and s
-            // are parameters. If r and s both are <= 1, then the vectors intersect.
-            // For each crossover we penalize the goal function by some large number because we really do not want crossovers to happen.
-            var penalty = 0.0;
-            var thisVector = new VectorF(targetPoint, pt);
-            foreach (var point in _labeledPoints)
-            {
-                if (point.Value.LabelVector.Start.Equals(targetPoint))
-                    break;
-                if (thisVector.DoIntersect(point.Value.LabelVector))
-                    penalty += 2000;
-            }
-
-            // penalize the goal if the label is completely or partially outside of the chart area
             var visibleArea = RectArea(RectangleF.Intersect(rect, _graph.Chart.Rect));
             var clipPenalty = 0.0f;
             if (visibleArea > 0)
                 clipPenalty = (1 - visibleArea / RectArea(rect)) * 500.0f;
 
-            return (float)((20000 * dist + totalOverlap) + penalty + 0.2 * pathDensity) + clipPenalty;
+            return (float)((DISTANCE_SCALE * dist + totalOverlap) + 0.2 * pathDensity) + clipPenalty;
         }
 
         private IEnumerable<GridCell> GetRectangleCells(RectangleF rect)
@@ -281,17 +342,17 @@ namespace ZedGraph
         /// Density grid accessor
         /// </summary>
         /// <param name="pt"></param>
-        private GridCell CellFromPoint(Point pt)
+        public GridCell CellFromPoint(Point pt)
         {
             return _densityGrid[pt.Y][pt.X];
         }
 
-        private Point CellIndexesFromXY(PointF pt)
+        public Point CellIndexesFromXY(PointF pt)
         {
             return new Point((int)((pt.X - _chartOffset.X) / _cellSize), (int)((pt.Y - _chartOffset.Y) / _cellSize));
         }
 
-        private bool IndexesWithinGrid(Point pt)
+        public bool IndexesWithinGrid(Point pt)
         {
             return pt.X >= 0 && pt.X < _densityGridSize.Width && pt.Y >= 0 && pt.Y < _densityGridSize.Height;
         }
@@ -310,146 +371,369 @@ namespace ZedGraph
         }
 
         private float RectArea(RectangleF rect) { return rect.Width * rect.Height; }
-
-        public const int SEARCH_COUNT_COARSE = 80;
-        public const int SEARCH_COUNT_FINE = 15;
-
-        /**
-         * Algorighm overview:
-         * Divide the graph into a grid with cell size equals the label height (the smallest dimension).
-         * Each cell is assigned the average density of the occupied pixels and a vector of the density gradient.
-         * For each label to place the cells in it's vicinity are searched for the least density.
-         * Then the found cell is used to do a random search around it in general direction of the density gradient
-         * using the target function. The target function takes into account area of overlap, and location (direction and distance)
-         * of the label relative to it's data point.
-         *  The algorighm works in screen coordinates (pixels). There is no need to use user coordinates here.
-         *  Returns true if the label has been successfully placed, false otherwise.
-         * Note that TextObj location is top-center, not top-left
-         */
-        public bool PlaceLabel(LabeledPoint labPoint, Graphics g)
+        private static RectangleF RectFromTopCenter(PointF topCenter, SizeF labelSize)
         {
-            var labelRect = _graph.GetRectScreen(labPoint.Label, g);
-            // do not attempt placement if the chart is too small
-            if (labelRect.Height > _graph.Chart.Rect.Height)
-                return false;
-            if ((labelRect.Width / 2) > _graph.Chart.Rect.Width)
-                return false;
+            return new RectangleF(topCenter.X - labelSize.Width / 2, topCenter.Y, labelSize.Width, labelSize.Height);
+        }
 
-            var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
-            var labelLength = (int)Math.Ceiling(1.0 * labelRect.Width / _cellSize); // label length in grid units
-
-            var pointCell = new Point((int)((targetPoint.X - _chartOffset.X) / _cellSize),
-                (int)((targetPoint.Y - _chartOffset.Y) / _cellSize));
-            if (!new Rectangle(Point.Empty, _densityGridSize).Contains(pointCell))
-                return false;
-            var goal = float.MaxValue;
-            var goalCell = Point.Empty;
-            var gridRect = Rectangle.Empty;
-            // 4 is more or less arbitrary here, just to avoid search area 1 cell wide and make the search more efficient.
-            if (labelLength < _densityGridSize.Width - 4)
-                gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength, _densityGridSize.Height - 1);
-            else 
-                gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength/2 - 1, _densityGridSize.Height - 1);
-            var points = new List<Point>();
-
-            GetPointMarkerRectangle(targetPoint, out var targetMarkerRect);
-            var totalCount = SEARCH_COUNT_COARSE * 5;
-            for (var count = SEARCH_COUNT_COARSE; count > 0; count--)
-            {
-                // make sure we are not stuck in this loop if the search area is exhausted.
-                 if (totalCount-- <= 0)
-                     break;
-                var randomGridPoint = pointCell +
-                                      new Size(GetRandom(_densityGridSize.Width), GetRandom(_densityGridSize.Height));
-
-                //the label shouldn't overlap the data point and must be within the grid limits
-                if (randomGridPoint.Y == pointCell.Y && randomGridPoint.X > pointCell.X - labelLength &&
-                    randomGridPoint.X < pointCell.X
-                    || !gridRect.Contains(randomGridPoint))
-                    continue;
-                if (points.Contains(randomGridPoint))
-                {
-                    count++; // avoid computing goal function for points already checked
-                    continue;
-                }
-
-                points.Add(randomGridPoint);
-                var goalEstimate = GoalFunction(CellFromPoint(randomGridPoint)._location, targetPoint, labelRect.Size, targetMarkerRect);
-                if (goalEstimate < goal)
-                {
-                    goal = goalEstimate;
-                    goalCell = randomGridPoint;
-                }
-            }
-
-            var roughGoal = goal;
-            // Search the cell neighborhood for a better position
-            var goalPoint = _densityGrid[goalCell.Y][goalCell.X]._location;
+        private RectangleF AllowedRect(SizeF labelSize)
+        {
             var chartRect = _graph.Chart.Rect;
-            var allowedRect = RectangleF.Empty;
-            if (chartRect.Width > labelRect.Width * 1.2)
+            var left = chartRect.Left + labelSize.Width / 2;
+            var top = chartRect.Top + labelSize.Height/2;
+            var width = Math.Max(0, chartRect.Width - labelSize.Width);
+            var height = Math.Max(0, chartRect.Height - labelSize.Height);
+            return new RectangleF(left, top, width, height);
+        }
+
+        private PointF ClampToAllowed(PointF candidate, SizeF labelSize)
+        {
+            var allowed = AllowedRect(labelSize);
+            var x = Math.Min(allowed.Right, Math.Max(allowed.Left, candidate.X));
+            var y = Math.Min(allowed.Bottom, Math.Max(allowed.Top, candidate.Y));
+            return new PointF(x, y);
+        }
+
+        private PointF ScreenToLabelLocation(PointF topCenter, SizeF labelSize)
+        {
+            _graph.ReverseTransform(new PointF(topCenter.X, topCenter.Y + labelSize.Height / 2), out var x, out var y);
+            return new PointF((float)x, (float)y);
+        }
+
+        private PointF GetTopCenter(LabeledPoint labPoint, Graphics g)
+        {
+            var rect = _graph.GetRectScreen(labPoint.Label, g);
+            return new PointF(rect.Left + rect.Width / 2, rect.Top);
+        }
+
+        private PointF GetTopCenterFromLabelLocation(TextObj label, PointF labelLocation, Graphics g)
+        {
+            var tempLabel = label.Clone();
+            tempLabel.Location.X = labelLocation.X;
+            tempLabel.Location.Y = labelLocation.Y;
+            var rect = _graph.GetRectScreen(tempLabel, g);
+            return new PointF(rect.Left + rect.Width / 2, rect.Top);
+        }
+
+        private Dictionary<LabeledPoint, PointF> CopyPlacement(Dictionary<LabeledPoint, PointF> source)
+        {
+            return source.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        /// <summary>
+        /// Calculates part of the cost for a single label placement due to its own parameters, without considering
+        /// interactions with other labels.
+        /// </summary>
+        /// <param name="point">Point to estimate</param>
+        /// <param name="sizes">List of the label sizes</param>
+        /// <param name="targets">Point locations</param>
+        /// <param name="targetMarkers">Point marker rectangles</param>
+        /// <param name="placements">Label top-center positions</param>
+        /// <returns></returns>
+        private float BaseCost(LabeledPoint point, IDictionary<LabeledPoint, SizeF> sizes,
+            IDictionary<LabeledPoint, PointF> targets, IDictionary<LabeledPoint, RectangleF> targetMarkers,
+            IDictionary<LabeledPoint, PointF> placements)
+        {
+            return EvaluateLabelBaseCost(placements[point], targets[point], sizes[point], targetMarkers[point]);
+        }
+
+        /// <summary>
+        /// Calculates pairwise cost between two labeled points given their label placements.
+        /// </summary>
+        private float PairCost(LabeledPoint p1, LabeledPoint p2, IDictionary<LabeledPoint, SizeF> sizes,
+            IDictionary<LabeledPoint, PointF> targets, IDictionary<LabeledPoint, PointF> placements)
+        {
+            var size1 = sizes[p1];
+            var size2 = sizes[p2];
+            var rect1 = new RectangleF(placements[p1].X - size1.Width / 2, placements[p1].Y, size1.Width, size1.Height);
+            var rect2 = new RectangleF(placements[p2].X - size2.Width / 2, placements[p2].Y, size2.Width, size2.Height);
+
+            var start1 = targets[p1];
+            var end1 = new PointF(rect1.Left + rect1.Width / 2, rect1.Top + rect1.Height / 2);
+            var start2 = targets[p2];
+            var end2 = new PointF(rect2.Left + rect2.Width / 2, rect2.Top + rect2.Height / 2);
+
+            // Expanded bounding boxes that include both label rectangle and connector endpoints
+            var minAx = Math.Min(Math.Min(rect1.Left, rect1.Right), Math.Min(start1.X, end1.X));
+            var maxAx = Math.Max(Math.Max(rect1.Left, rect1.Right), Math.Max(start1.X, end1.X));
+            var minAy = Math.Min(Math.Min(rect1.Top, rect1.Bottom), Math.Min(start1.Y, end1.Y));
+            var maxAy = Math.Max(Math.Max(rect1.Top, rect1.Bottom), Math.Max(start1.Y, end1.Y));
+
+            var minBx = Math.Min(Math.Min(rect2.Left, rect2.Right), Math.Min(start2.X, end2.X));
+            var maxBx = Math.Max(Math.Max(rect2.Left, rect2.Right), Math.Max(start2.X, end2.X));
+            var minBy = Math.Min(Math.Min(rect2.Top, rect2.Bottom), Math.Min(start2.Y, end2.Y));
+            var maxBy = Math.Max(Math.Max(rect2.Top, rect2.Bottom), Math.Max(start2.Y, end2.Y));
+
+            float cost = 0;
+            if (maxAx >= minBx && maxBx >= minAx && maxAy >= minBy && maxBy >= minAy)
             {
-                allowedRect = new RectangleF(chartRect.X + labelRect.Width / 2, chartRect.Y,
-                    chartRect.Width - labelRect.Width, chartRect.Height - labelRect.Height);
-            }
-            else
-            {
-                allowedRect = new RectangleF(chartRect.X + labelRect.Width / 2, chartRect.Y,
-                    chartRect.Width - labelRect.Width / 2, chartRect.Height - labelRect.Height);
-            }
-            for (var count = SEARCH_COUNT_FINE; count > 0; count--)
-            {
-                var p = goalPoint + new Size(GetRandom(_cellSize * 2), GetRandom(_cellSize * 2));
-                if (!allowedRect.Contains(p))   // label should not overlap chart's borders
-                    continue;
-                var goalEstimate1 = GoalFunction(p, targetPoint, labelRect.Size, targetMarkerRect);
-                if (goalEstimate1 < goal)
+                // Calculate penalty for label overlap
+                var intersect = RectangleF.Intersect(rect1, rect2);
+                if (!intersect.IsEmpty)
                 {
-                    goal = goalEstimate1;
-                    goalPoint = p;
+                    var intersectArea = intersect.Width * intersect.Height;
+                    var rect1Area = rect1.Width * rect1.Height;
+                    var rect2Area = rect2.Width * rect2.Height;
+                    cost += LABEL_OVERLAP_PENALTY * intersectArea / Math.Max(1, Math.Min(rect1Area, rect2Area));
+                }
+                // calculate the crossover penalty. For each previously labeled point we find if there is an intersection 
+                // between vector V from this point q to the suggested label position and the vector U from the previously
+                // labeled point p to its label position. We do this by solving the equation p + rR = q + sV where r and s
+                // are parameters. If r and s both are <= 1, then the vectors intersect.
+                // For each crossover we penalize the goal function by some large number because we really do not want crossovers to happen.
+                // penalize the goal if the label is completely or partially outside of the chart area
+                var v1 = new VectorF(start1, end1);
+                var v2 = new VectorF(start2, end2);
+                if (v1.DoIntersect(v2))
+                    cost += CROSSOVER_PENALTY;
+            }
+
+            // Penalize when a connector crosses the other label's rectangle
+            if (SegmentIntersectsRect(start1, end1, rect2))
+                cost += CONNECTOR_LABEL_OVERLAP_PENALTY;
+            if (SegmentIntersectsRect(start2, end2, rect1))
+                cost += CONNECTOR_LABEL_OVERLAP_PENALTY;
+
+            return cost;
+        }
+
+        /// <summary>
+        /// Places all labels using a simulated annealing search. Saved layout entries are treated as fixed.
+        /// </summary>
+        public LayoutResult ComputePlacementsSimulatedAnnealing(List<LabeledPoint> points, Graphics g,
+            List<LabeledPoint.PointLayout> savedLayout, CancellationToken cancellationToken, IProgress<int> progress)
+        {
+            if (!points.Any())
+                return null;
+            var labelSizes = points.ToDictionary(p => p, p => _graph.GetRectScreen(p.Label, g).Size);
+            if (labelSizes.Values.Any(sz => sz.Height <= 0 || sz.Width <= 0))
+                return null;
+            labelSizes.ToList().ForEach(kv => kv.Key.LabelArea = kv.Value.Height * kv.Value.Width); // calculate label area for later use in the sampling function
+
+            var targetPoints = points.ToDictionary(p => p, p => _graph.TransformCoord(p.Point.X, p.Point.Y, CoordType.AxisXYScale));
+            var targetMarkers = new Dictionary<LabeledPoint, RectangleF>();
+            foreach (var point in points)
+            {
+                GetPointMarkerRectangle(targetPoints[point], out var rect);
+                targetMarkers[point] = rect;
+            }
+
+            var savedLookup = savedLayout ?? new List<LabeledPoint.PointLayout>();
+            var placements = new Dictionary<LabeledPoint, PointF>();    // label top-center positions
+            var movablePoints = new List<LabeledPoint>();
+            var avgLabelLength = labelSizes.Values.Any() ? labelSizes.Values.Average(sz => sz.Width) : _cellSize;
+            // Place saved points first, build the list of points that have to be optimized
+            foreach (var point in points)
+            {
+                var savedPoint = savedLookup.FirstOrDefault(p => point.Point.Equals(p.PointLocation));
+                var size = labelSizes[point];
+                if (size.Height > _graph.Chart.Rect.Height || size.Width / 2 > _graph.Chart.Rect.Width)
+                    continue;
+
+                if (savedPoint != null)
+                {
+                    var topCenter = GetTopCenterFromLabelLocation(point.Label, savedPoint.LabelLocation, g);
+                    placements[point] = ClampToAllowed(topCenter, size);
+                }
+                else
+                {
+                    var target = targetPoints[point];
+                    // Start near the point with a random offset on the order of the average label length
+                    var offsetMag = avgLabelLength * .6f;
+                    var initial = new PointF(target.X + GetRandom(offsetMag), target.Y - size.Height - 2 + GetRandom(offsetMag));
+                    placements[point] = ClampToAllowed(initial, size);
+                    movablePoints.Add(point);
                 }
             }
 
-            var labelLocation = new PointF(goalPoint.X, goalPoint.Y + labelRect.Height / 2);
-            _graph.ReverseTransform(new PointF(labelLocation.X, labelLocation.Y), out var x, out var y);
-
-            labPoint.Label.Location.X = x;
-            labPoint.Label.Location.Y = y;
-
-            // update density grid to prevent overlaps
-            var newScreenRectangle = _graph.GetRectScreen(labPoint.Label, g);
-            var newLabelRectangle = ToRectangle(newScreenRectangle);
-
-            foreach (var cell in GetRectangleCells(newLabelRectangle))
+            if (placements.Count == 0)
+                return null;
+            var pointList = placements.Keys.ToList();
+            var baseCosts = pointList.ToDictionary(p => p,
+                p => BaseCost(p, labelSizes, targetPoints, targetMarkers, placements));
+            // Precompute pairwise costs
+            var pairCosts = pointList.ToDictionary(p => p, p => new Dictionary<LabeledPoint, float>());
+            float pairSum = 0;
+            for (var i = 0; i < pointList.Count; i++)
             {
-                var cellOverlap = RectangleF.Intersect(newLabelRectangle, cell._bounds);
-                var densityIncrement = cellOverlap.Height * cellOverlap.Width;
-                cell._density += 2.0f * densityIncrement;
+                for (var j = i + 1; j < pointList.Count; j++)
+                {
+                    var cost = PairCost(pointList[i], pointList[j], labelSizes, targetPoints, placements);
+                    pairCosts[pointList[i]][pointList[j]] = cost;
+                    pairCosts[pointList[j]][pointList[i]] = cost;
+                    pairSum += cost;
+                }
             }
 
-            labPoint.LabelVector = new VectorF(targetPoint, goalPoint);
-            _labeledPoints[labPoint.Label] = labPoint;
+            float currentCost = baseCosts.Values.Sum() + pairSum;
+
+            var startTemp = 7.0f;
+            var minTemp = 0.1f;
+            // Linear cooling
+            var maxIterations = Math.Max(700, points.Count * 75);
+            var cooling = (startTemp - minTemp) / maxIterations;
+            var acceptanceScale = 1.0f * points.Count;
+            var bestPlacement = CopyPlacement(placements);
+            var bestCost = currentCost;
+            var lastPercent = -1;
+            progress?.Report(0);
+#if DEBUG
+            // Log the annealing process for debugging
+            StreamWriter log = null;
+            try
+            {
+                var logPath = Path.Combine(Path.GetTempPath(), @"LabelLayoutAnneal.csv");
+                if (File.Exists(logPath))
+                    File.Delete(logPath);
+                log = new StreamWriter(logPath);
+                log.WriteLine(@"iteration,point_count,temperature,cost, delta, jump");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(@$"LabelLayout: unable to open anneal log file: {ex.Message}");
+                log = null;
+            }
+#endif
+            for (var iter = 0; iter < maxIterations; iter++)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return null;
+
+                var temp = startTemp - cooling * iter;
+                if (temp < minTemp || !movablePoints.Any())
+                    break;
+
+                var point = movablePoints[_randGenerator.Next(movablePoints.Count)];
+                var step = _cellSize * (0.5f + temp);
+                var proposed = placements[point] + new SizeF(GetRandom(step), GetRandom(step));
+                proposed = ClampToAllowed(proposed, labelSizes[point]);
+                var currentPos = placements[point];
+
+                // Remove old contributions for this point
+                var removedBase = baseCosts[point];
+                var removedPair = pairCosts[point].Values.Sum();
+                var removedCost = removedBase + removedPair;
+                placements[point] = proposed;
+
+                var newBase = BaseCost(point, labelSizes, targetPoints, targetMarkers, placements);
+                var oldPairs = new Dictionary<LabeledPoint, float>(pairCosts[point]);
+                float newPairSum = 0;
+                foreach (var other in pointList)
+                {
+                    if (ReferenceEquals(other, point))
+                        continue;
+                    var cost = PairCost(point, other, labelSizes, targetPoints, placements);
+                    pairCosts[point][other] = cost;
+                    pairCosts[other][point] = cost;
+                    newPairSum += cost;
+                }
+                var addedCost = newBase + newPairSum;
+
+                var newCost = currentCost - removedCost + addedCost;
+                var delta = newCost - currentCost;
+
+                var accept = delta < 0 || Math.Exp(-delta / Math.Max(temp, 0.0001f)/acceptanceScale) > _randGenerator.NextDouble();
+                if (accept)
+                {
+                    baseCosts[point] = newBase;
+                    currentCost = newCost;
+                    if (newCost < bestCost)
+                    {
+                        bestCost = newCost;
+                        bestPlacement = CopyPlacement(placements);
+                    }
+                }
+                else
+                {
+                    placements[point] = currentPos;
+                    foreach (var kvp in oldPairs)
+                    {
+                        pairCosts[point][kvp.Key] = kvp.Value;
+                        pairCosts[kvp.Key][point] = kvp.Value;
+                    }
+                }
+                var percent = (int)Math.Round((iter + 1) * 100.0 / maxIterations);
+                if (percent != lastPercent)
+                {
+                    lastPercent = percent;
+                    progress?.Report(percent);
+                }
+#if DEBUG
+                var jump = accept && delta > 0 ? 1 : 0;
+                if (log != null)
+                    log.WriteLine($"{iter},{points.Count.ToString()},{temp.ToString(CultureInfo.InvariantCulture)}," +
+                                  $"{bestCost.ToString(CultureInfo.InvariantCulture)}, {delta.ToString(CultureInfo.InvariantCulture)}, {jump}");
+            }
+            if (log != null)
+                log.Dispose();
+#else
+            }
+#endif
+            progress?.Report(100);
+            placements = bestPlacement;
+            return new LayoutResult
+            {
+                Placements = placements
+            };
+        }
+
+        public bool ApplyPlacements(LayoutResult result, Graphics g)
+        {
+            if (result == null || result.Placements.Count == 0)
+                return false;
+
+            var labelSizes = result.Placements.Keys.ToDictionary(p => p, p => _graph.GetRectScreen(p.Label, g).Size);
+            if (labelSizes.Values.Any(sz => sz.Height <= 0 || sz.Width <= 0))
+                return false;
+
+            _labeledPoints.Clear();
+            foreach (var kv in result.Placements)
+            {
+                var point = kv.Key;
+                var labelSize = labelSizes[point];
+                var labelLocation = ScreenToLabelLocation(kv.Value, labelSize);
+                AddLabel(point, labelLocation);
+            }
+
             return true;
         }
 
-        // mostly for debugging support
-        public float CalculateGoalFunction(LabeledPoint labPoint)
+        /// <summary>
+        /// Calculates the total goal function for the current layout (all labels).
+        /// </summary>
+        public float CalculateTotalCost(Graphics g)
         {
-            if (labPoint == null)
+            if (!_labeledPoints.Any())
                 return 0;
-            var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
-            var hasTargetMarker = GetPointMarkerRectangle(targetPoint, out var targetMarkerRect);
-            RectangleF labelRect;
-            using (var g = Graphics.FromHwnd(IntPtr.Zero))
-                labelRect = _graph.GetRectScreen(labPoint.Label, g);
-            var labScreenCoords = _graph.TransformCoord(labPoint.Label.Location.X, labPoint.Label.Location.Y, CoordType.AxisXYScale);
-            labScreenCoords = new PointF(labScreenCoords.X, labScreenCoords.Y - labelRect.Height/2);
-            return GoalFunction(labScreenCoords, targetPoint, labelRect.Size, targetMarkerRect);
+
+            var points = _labeledPoints.Values.ToList();
+            var labelSizes = points.ToDictionary(p => p, p => _graph.GetRectScreen(p.Label, g).Size);
+            var targetPoints = points.ToDictionary(p => p, p => _graph.TransformCoord(p.Point.X, p.Point.Y, CoordType.AxisXYScale));
+            var targetMarkers = new Dictionary<LabeledPoint, RectangleF>();
+            foreach (var p in points)
+            {
+                GetPointMarkerRectangle(targetPoints[p], out var rect);
+                targetMarkers[p] = rect;
+            }
+
+            var placements = points.ToDictionary(p => p, p => GetTopCenter(p, g));
+
+            double total = 0;
+            foreach (var p in points)
+                total += BaseCost(p, labelSizes, targetPoints, targetMarkers, placements);
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                for (int j = i + 1; j < points.Count; j++)
+                    total += PairCost(points[i], points[j], labelSizes, targetPoints, placements);
+            }
+
+            return (float)total;
         }
 
         /// <summary>
         /// Places the label at the specified coordinates and updates the density grid so that
-        /// the future calls to PlaceLabel take avoid overlaps and crossovers with this label
+        /// future placement calls avoid overlaps and crossovers with this label
         /// </summary>
         /// <param name="labPoint">Point to add. It is assumed that this LabeledPoint object already has
         /// Label and Point components </param>
@@ -500,9 +784,8 @@ namespace ZedGraph
         public static SizeF CalculateConnectorSize(LabeledPoint labPoint, Graphics g, GraphPane graph)
         {
             var rect = graph.GetRectScreen(labPoint.Label, g);
-            InflateRectangle(ref rect, -1);
             var targetPoint = graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
-
+            InflateRectangle(ref rect, -1);
             var diag1 = new VectorF(rect.Location, new PointF(rect.X + rect.Width, rect.Y + rect.Height));
             var diag2 = new VectorF(new PointF(rect.X, rect.Y + rect.Height), new PointF(rect.Right, rect.Y));
             var center = new PointF(rect.Left + rect.Width / 2, rect.Top + rect.Height / 2);
@@ -522,15 +805,6 @@ namespace ZedGraph
             return new SizeF((float)(x - labPoint.Point.X), (float)(y - labPoint.Point.Y));
         }
 
-        public LabeledPoint FindById(object id)
-        {
-            var res = _labeledPoints.ToList().FindAll(lpt => lpt.Value.UniqueID.Equals(id)).Select(pair => pair.Value).ToList();
-            if (res.Any())
-                return res.First();
-            else
-                return null;
-        }
-
         public bool IsPointVisible(PointPair point)
         {
             var chartRect = new RectangleF((float)_graph.XAxis.Scale.Min, (float)_graph.YAxis.Scale.Min,
@@ -546,6 +820,33 @@ namespace ZedGraph
             rect.Width += size2;
             rect.Height += size2;
         }
+
+        private static bool SegmentIntersectsRect(PointF a, PointF b, RectangleF rect)
+        {
+            // Quick reject on bounding boxes
+            var minX = Math.Min(a.X, b.X);
+            var maxX = Math.Max(a.X, b.X);
+            var minY = Math.Min(a.Y, b.Y);
+            var maxY = Math.Max(a.Y, b.Y);
+            if (maxX < rect.Left || minX > rect.Right || maxY < rect.Top || minY > rect.Bottom)
+                return false;
+
+            // If either endpoint inside rect, it's an overlap
+            if (rect.Contains(a) || rect.Contains(b))
+                return true;
+
+            var tl = rect.Location;
+            var tr = new PointF(rect.Right, rect.Top);
+            var bl = new PointF(rect.Left, rect.Bottom);
+            var br = new PointF(rect.Right, rect.Bottom);
+
+            var seg = new VectorF(a, b);
+            return seg.DoIntersect(new VectorF(tl, tr)) ||
+                   seg.DoIntersect(new VectorF(tr, br)) ||
+                   seg.DoIntersect(new VectorF(br, bl)) ||
+                   seg.DoIntersect(new VectorF(bl, tl));
+        }
+
     }
 
     public class LabeledPoint
@@ -584,6 +885,7 @@ namespace ZedGraph
 
         public VectorF LabelVector { get; set; }
         public CurveItem Curve { get; set; }
+        public double LabelArea { get; set; }
 
         public Location ConnectorLoc { get; private set; }
         public PointF LabelPosition { get; private set; }

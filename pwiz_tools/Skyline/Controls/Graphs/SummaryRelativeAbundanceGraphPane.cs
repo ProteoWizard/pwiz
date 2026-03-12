@@ -61,6 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private const int PROGRESS_INITIAL_DELAY_MS = 300; // Wait before showing progress bar
         private const int PROGRESS_UPDATE_INTERVAL_MS = 100; // Throttle progress UI updates after first show
         private NodeTip _toolTip;
+        private readonly LabelLayoutRunner _labelLayoutRunner = new LabelLayoutRunner();
+        private bool _suppressAxisChangeLayout;
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
@@ -73,6 +75,9 @@ namespace pwiz.Skyline.Controls.Graphs
             _labeledPoints = new List<LabeledPoint>();
 
             AxisChangeEvent += this_AxisChangeEvent;
+            LayoutRequested += this_LayoutRequested;
+            graphSummary.GraphControl.ZoomAllOutEvent += GraphControl_ZoomAllOutEvent;
+            graphSummary.GraphControl.Resize += GraphControl_Resize;
             Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
             graphSummary.GraphControl.LabelDragEvent += zedGraphControl_LabelDragComplete;
             graphSummary.GraphControl.EditModifierKeys = Keys.Alt;  // enable label drag with Alt key
@@ -94,6 +99,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 receiver,
                 CleanCacheForIncrementalUpdates);
             _graphDataReceiver.ProgressChange += UpdateProgressHandler;
+        }
+
+        private void StartLabelLayoutAsync(List<LabeledPoint> labeledPoints, List<LabeledPoint.PointLayout> savedLayout = null)
+        {
+            _labelLayoutRunner.Start(
+                GraphSummary?.GraphControl,
+                labeledPoints,
+                savedLayout,
+                layout => _labelsLayout = layout ?? new List<LabeledPoint.PointLayout>());
         }
 
         /// <summary>
@@ -232,8 +246,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             base.OnClose(e);
             AxisChangeEvent -= this_AxisChangeEvent;
+            LayoutRequested -= this_LayoutRequested;
+            GraphSummary.GraphControl.ZoomAllOutEvent -= GraphControl_ZoomAllOutEvent;
+            GraphSummary.GraphControl.Resize -= GraphControl_Resize;
             Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
             GraphSummary.GraphControl.LabelDragEvent -= zedGraphControl_LabelDragComplete;
+            _labelLayoutRunner.Cancel(Program.MainWindow);
             _toolTip?.HideTip();
             _toolTip?.Dispose();
         }
@@ -319,9 +337,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
-                    GraphSummary.GraphControl.Invalidate();
+                    StartLabelLayoutAsync(_labeledPoints);
                 }
             }
         }
@@ -489,9 +505,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Clear only when new data is ready for seamless transition
-            Clear();
-            _labeledPoints.Clear();
-            _graphData = newGraphData;
+            _suppressAxisChangeLayout = true;
+            try
+            {
+                Clear();
+                _labeledPoints.Clear();
+                _graphData = newGraphData;
             // Find selected index - quick O(n) scan on UI thread
             _graphData.SelectedIndex = _graphData.FindSelectedIndex(selectedProtein);
             bool dataChanged = _graphData.MinY != oldGraphData?.MinY || _graphData.MaxY != oldGraphData?.MaxY;
@@ -544,21 +563,25 @@ namespace pwiz.Skyline.Controls.Graphs
                     unmatchedPoints = unmatchedPoints.Except(matchedPoints).ToList();
                 }
             }
-            AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
-            if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
-                UpdateAxes();
-            if (Settings.Default.GroupComparisonAvoidLabelOverlap)
-            {
-                AdjustLabelSpacings(_labeledPoints, _labelsLayout);
-                _labelsLayout = GraphSummary.GraphControl.GraphPane?.Layout?.PointsLayout;
+                AddPoints(new PointPairList(unmatchedPoints), Color.Gray, DotPlotUtil.PointSizeToFloat(PointSize.normal), false, PointSymbol.Circle);
+                if(dataChanged || Settings.Default.RelativeAbundanceLogScale != YAxis.Scale.IsLog)
+                    UpdateAxes();
+                if (Settings.Default.GroupComparisonAvoidLabelOverlap)
+                {
+                    StartLabelLayoutAsync(_labeledPoints, _labelsLayout);
+                }
+                else
+                {
+                    EnableLabelLayout = false;
+                    DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale,
+                        GraphSummary.GraphControl.GraphPane.Rect.Height);
+                }
+                GraphSummary.GraphControl.Invalidate();
             }
-            else
+            finally
             {
-                EnableLabelLayout = false;
-                DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale,
-                    GraphSummary.GraphControl.GraphPane.Rect.Height);
+                _suppressAxisChangeLayout = false;
             }
-            GraphSummary.GraphControl.Invalidate();
         }
 
         public bool IsComplete
@@ -608,20 +631,36 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void this_AxisChangeEvent(GraphPane pane)
         {
+            if (_suppressAxisChangeLayout)
+                return;
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
-                    AdjustLabelSpacings(_labeledPoints);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                    StartLabelLayoutAsync(_labeledPoints);
                 }
                 else
                 {
-                    AdjustLabelSpacings(_labeledPoints, _labelsLayout);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
+                    StartLabelLayoutAsync(_labeledPoints, _labelsLayout);
                     //UpdateConnectors();
                 }
             }
+        }
+
+        private void this_LayoutRequested(object sender, EventArgs e)
+        {
+            if (sender is GraphPane pane)
+                this_AxisChangeEvent(pane);
+        }
+
+        private void GraphControl_ZoomAllOutEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        {
+            this_AxisChangeEvent(this);
+        }
+
+        private void GraphControl_Resize(object sender, EventArgs e)
+        {
+            this_AxisChangeEvent(this);
         }
 
         private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
