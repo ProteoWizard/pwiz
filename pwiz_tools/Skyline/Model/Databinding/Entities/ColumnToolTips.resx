@@ -781,7 +781,7 @@ The options for determining this value can be specified on the Quantification ta
     <value>A comma separated list of all neutral losses from this fragment</value>
   </data>
   <data name="LossFormulas">
-    <value>A comma separated list of the chemical forumulas for all neutral losses from this fragment, or empty if not all losses have formulas</value>
+    <value>A comma separated list of the chemical formulas for all neutral losses from this fragment, or empty if not all losses have formulas</value>
   </data>
   <data name="LossNeutralMass">
     <value>The total mass of all neutral losses from this fragment.</value>
