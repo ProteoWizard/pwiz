@@ -192,6 +192,11 @@ namespace pwiz.SkylineTestFunctional
             SetZoom(true);
             TestScale(452, 456, 0, 400);
 
+            // Test cursor-tracking tooltip on spectrum (2 lines: m/z + intensity).
+            TestTooltip(false);
+            // Verify a specific m/z value in the zoomed spectrum (452-456 range).
+            TestTooltip(453.3, null, 453.2979, 18);
+
             // Check zoomed heatmap.
             SetSpectrum(false);
             TestScale(452, 456, 2.61, 4.34);
@@ -237,6 +242,11 @@ namespace pwiz.SkylineTestFunctional
             TestScale(0, 2000, 3.2, 3.8);
             SetFilter(false);
             TestScale(0, 2000, 0, 15);
+
+            // Test cursor-tracking tooltip on heatmap (3 lines: m/z + drift time + intensity).
+            TestTooltip(true);
+            // Verify a specific (m/z, ion mobility) in the unzoomed heatmap.
+            TestTooltip(447, 3.5, 447.2277, 3.45, 21);
             SetZoom(true);
             TestScale(452, 456, 2.61, 4.34);
 
@@ -318,6 +328,87 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             ClickChromatogram(32.96, 17, PaneKey.PRODUCTS);
             TestPropertySheet(expectedPropertiesProduct2);
+        }
+
+        /// <summary>
+        /// Verifies cursor-tracking tooltip produces correctly structured output
+        /// with the expected labels and parseable numeric values.
+        /// </summary>
+        private static void TestTooltip(bool isHeatMap)
+        {
+            string tooltipText = null;
+            int expectedLines = isHeatMap ? 3 : 2;
+            RunUI(() => tooltipText = SkylineWindow.GraphFullScan.TestGetTooltipText());
+            Assert.IsNotNull(tooltipText, "Tooltip returned null");
+            var lines = tooltipText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            Assert.AreEqual(expectedLines, lines.Length,
+                string.Format("Expected {0} lines, got: {1}", expectedLines, tooltipText));
+
+            // First line is always m/z with a parseable value
+            var mzParts = lines[0].Split(new[] { @" | " }, StringSplitOptions.None);
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_mz, mzParts[0]);
+            Assert.IsTrue(double.TryParse(mzParts[1], out _), "m/z value not parseable: " + mzParts[1]);
+
+            // Last line is always Intensity with a parseable value
+            var intParts = lines[expectedLines - 1].Split(new[] { @" | " }, StringSplitOptions.None);
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Intensity, intParts[0]);
+            Assert.IsTrue(double.TryParse(intParts[1], out _), "Intensity value not parseable: " + intParts[1]);
+
+            // Middle line (heatmap only) is ion mobility with a parseable value
+            if (isHeatMap)
+            {
+                var midParts = lines[1].Split(new[] { @" | " }, StringSplitOptions.None);
+                Assert.IsTrue(double.TryParse(midParts[1], out _), "Ion mobility value not parseable: " + midParts[1]);
+            }
+        }
+
+        /// <summary>
+        /// Verifies tooltip for a specific data coordinate returns expected values.
+        /// For spectrum: x is m/z, y is ignored (pass null for imExpected).
+        /// For heatmap: x is m/z, y is ion mobility (pass non-null imExpected).
+        /// </summary>
+        private static void TestTooltip(double searchX, double? searchY,
+            double mzExpected, double intensityExpected)
+        {
+            TestTooltip(searchX, searchY, mzExpected, null, intensityExpected);
+        }
+
+        private static void TestTooltip(double searchX, double? searchY,
+            double mzExpected, double? imExpected, double intensityExpected)
+        {
+            string tooltipText = null;
+            double sy = searchY ?? double.NaN;
+            RunUI(() => tooltipText = SkylineWindow.GraphFullScan.TestGetTooltipText(searchX, sy));
+            Assert.IsNotNull(tooltipText,
+                string.Format("Tooltip returned null at ({0}, {1})", searchX, sy));
+
+            int expectedLines = imExpected.HasValue ? 3 : 2;
+            var lines = tooltipText.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            Assert.AreEqual(expectedLines, lines.Length,
+                string.Format("Expected {0} lines, got: {1}", expectedLines, tooltipText));
+
+            // m/z
+            var mzParts = lines[0].Split(new[] { @" | " }, StringSplitOptions.None);
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_mz, mzParts[0]);
+            Assert.IsTrue(double.TryParse(mzParts[1], out var mz));
+            AssertEx.AreEqual(mzExpected, mz, 0.01,
+                string.Format("m/z (full tooltip: {0})", tooltipText.Replace(Environment.NewLine, " / ")));
+
+            // Intensity (always last line)
+            var intParts = lines[expectedLines - 1].Split(new[] { @" | " }, StringSplitOptions.None);
+            Assert.AreEqual(GraphsResources.GraphFullScan_ToolTip_Intensity, intParts[0]);
+            Assert.IsTrue(double.TryParse(intParts[1], out var intensity));
+            AssertEx.AreEqual(intensityExpected, intensity, 1,
+                string.Format("Intensity (full tooltip: {0})", tooltipText.Replace(Environment.NewLine, " / ")));
+
+            // Ion mobility (middle line, heatmap only)
+            if (imExpected.HasValue)
+            {
+                var midParts = lines[1].Split(new[] { @" | " }, StringSplitOptions.None);
+                Assert.IsTrue(double.TryParse(midParts[1], out var im));
+                AssertEx.AreEqual(imExpected.Value, im, 0.01,
+                    string.Format("Ion mobility (full tooltip: {0})", tooltipText.Replace(Environment.NewLine, " / ")));
+            }
         }
 
         private static void ClickFullScan(double x, double y)

@@ -1382,7 +1382,25 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("GraphFullScan_SetSpectraUI__peak_type_not_available", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Intensity.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_Intensity {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_Intensity", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_mz {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_mz", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0:0.0000}.
         /// </summary>
