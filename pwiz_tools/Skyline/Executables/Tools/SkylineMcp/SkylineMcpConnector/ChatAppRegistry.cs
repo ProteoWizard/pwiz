@@ -50,13 +50,37 @@ namespace SkylineMcpConnector
 
         // -- Claude Desktop --
 
+        private const string CLAUDE_DESKTOP_CONFIG = "claude_desktop_config.json";
+        private const string CLAUDE_DESKTOP_SUBPATH = @"Claude\" + CLAUDE_DESKTOP_CONFIG;
+        private const string CLAUDE_STORE_PACKAGE_PREFIX = "Claude_";
+
         private static string ClaudeDesktopConfigPath
         {
             get
             {
-                return Path.Combine(
+                // Standard install: %APPDATA%\Claude\claude_desktop_config.json
+                string standardPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "Claude", "claude_desktop_config.json");
+                    CLAUDE_DESKTOP_SUBPATH);
+                if (File.Exists(standardPath))
+                    return standardPath;
+
+                // Windows Store install: %LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\Claude\
+                string packagesDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Packages");
+                if (Directory.Exists(packagesDir))
+                {
+                    foreach (string dir in Directory.GetDirectories(packagesDir, CLAUDE_STORE_PACKAGE_PREFIX + "*"))
+                    {
+                        string storePath = Path.Combine(dir, "LocalCache", "Roaming", CLAUDE_DESKTOP_SUBPATH);
+                        if (File.Exists(storePath))
+                            return storePath;
+                    }
+                }
+
+                // Neither found — return the standard path (IsClaudeDesktopInstalled will return false)
+                return standardPath;
             }
         }
 
@@ -421,6 +445,19 @@ namespace SkylineMcpConnector
                 process.Dispose();
             }
             return result.ToArray();
+        }
+
+        /// <summary>
+        /// Returns true if the MCP server is registered in any installed AI client.
+        /// Used to auto-expand the setup panel on first launch.
+        /// </summary>
+        public static bool AnyClientRegistered()
+        {
+            return (IsClaudeDesktopInstalled() && IsRegisteredInClaudeDesktop()) ||
+                   (IsClaudeCodeInstalled() && IsRegisteredInClaudeCode()) ||
+                   (IsGeminiCliInstalled() && IsRegisteredInGeminiCli()) ||
+                   (IsVSCodeInstalled() && IsRegisteredInVSCode()) ||
+                   (IsCursorInstalled() && IsRegisteredInCursor());
         }
     }
 }

@@ -139,6 +139,13 @@ namespace SkylineMcpConnector
 
             DeployMcpServer();
             StartSkylineMonitor(processId);
+
+            // Auto-expand setup panel on first use when no AI clients are registered
+            if (!ChatAppRegistry.AnyClientRegistered())
+            {
+                _setupExpanded = true;
+                ShowHideSetupPane();
+            }
         }
 
         private static bool IsSupportedVersion(Version version)
